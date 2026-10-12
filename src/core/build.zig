@@ -784,7 +784,8 @@ const FnBuilder = struct {
         }
         try self.guardViewRebind(self.local(store.slot), span);
         var place: ?Place = null;
-        const value = try self.expressionPlace(store.value, &place);
+        const borrowed_context = self.module().zero_rc and !assign and @import("borrowed_provider.zig").initializer(self.mb.input.program, self.checked, store.value);
+        const value = if (borrowed_context) try self.borrowedProvider(store.value, span) else try self.expressionPlace(store.value, &place);
         const block = self.current orelse return;
         try self.providerStore(store, place, value, assign, span);
         try self.write(self.local(store.slot), block, value);
@@ -1709,6 +1710,24 @@ const FnBuilder = struct {
             if (shape.error_tag == tag) _ = try self.emit(.{ .op = .err_trace, .ty = .void, .data = @backingInt(ir.TraceMode.origin), .span = span });
         }
         return made;
+    }
+
+    /// A local parameter-rooted provider context borrows each field without clearing ownership pins.
+    fn borrowedProvider(self: *FnBuilder, id: typed.NodeId, span: u32) Error!ir.Ref {
+        const ty = try self.typeOf(id);
+        const stored = self.module().compound(ty).record;
+        const values = try self.allocator().alloc(ir.Ref, stored.len);
+        @memset(values, .none);
+        for (self.nodeOf(id).data.record) |field| {
+            const value = try self.expression(field.value);
+            if (self.current == null) return .none;
+            values[field.index] = try self.boxFor(stored[field.index], value, span);
+        }
+        const callee = @import("borrowed_provider.zig").declare(self.allocator(), self.module(), ty) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.UnsupportedInstruction => return self.mb.refuse("invalid borrowed provider context", span),
+        };
+        return self.emit(.{ .op = .call, .ty = ty, .a = @fromBackingInt(callee), .data = try self.extraSlice(values), .span = span });
     }
 
     /// `Name(fields)`: the fields are evaluated in the order written and placed in declaration order.

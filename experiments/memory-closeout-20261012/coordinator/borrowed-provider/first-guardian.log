@@ -1,0 +1,22 @@
+build-slot: gate slot 1, FIFO ticket 283 after 0s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 18 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 4/88 failed (cognitive-complexity, twin-drift, bool-ops-per-condition, line-length)
+guardian: failures grouped by check (4):
+  cognitive-complexity (1 finding)
+    - src/core/single_owner.zig: fn expression cognitive complexity 26 (limit: 25)
+      fix: extract helpers; reduce nested control flow.
+  twin-drift (2 findings)
+    - src/core/borrow_selection.zig:165: twin-drift: fn takes (20 lines) and src/core/borrowed_provider.zig:271 (19 lines) share 62% of their body and differ in 15 line(s) — reconcile the two copies or lift the shared part into one fn (// twin-drift-ok: <why> if the divergence is deliberate)
+      fix: reconcile the two copies, or lift the shared part into one fn both call. If the divergence is deliberate, say so above either copy: `// twin-drift-ok: <why>`. what drifted: only in src/core/borrow_selection.zig: `if (inst.a.index() >= module.functions.items.len or index >= 64) return true;`, `const signature = module.functions.items[inst.a.index()].signature;`; only in src/core/borrowed_provider.zig: `if (inst.a == .none or inst.a.index() >= module.functions.items.len or index >= 64) return true;`, `const sig = module.functions.items[inst.a.index()].signature;`; (+11 more)
+    - src/core/borrow_selection.zig:189: twin-drift: fn declare (15 lines) and src/core/borrowed_provider.zig:199 (16 lines) share 77% of their body and differ in 7 line(s) — reconcile the two copies or lift the shared part into one fn (// twin-drift-ok: <why> if the divergence is deliberate)
+      fix: reconcile the two copies, or lift the shared part into one fn both call. If the divergence is deliberate, say so above either copy: `// twin-drift-ok: <why>`. what drifted: only in src/core/borrow_selection.zig: `const symbol = try name(a, dictionary, value);`, `.params = try a.dupe(ir.Type, &.{ value, dictionary, value }),`; only in src/core/borrowed_provider.zig: `if (!module.valid(ty) or module.kind(ty) != .record) return error.UnsupportedInstruction;`, `const symbol = try std.fmt.allocPrint(a, "{s}{d}", .{ prefix, @backingInt(ty) });`; (+3 more)
+  bool-ops-per-condition (1 finding)
+    - src/core/borrowed_provider.zig:106: condition has 4 boolean ops (cap 3)
+      fix: split into nested/sequential ifs, or extract into a named bool.
+  line-length (1 finding)
+    - src/core/own.zig:399: line is 241 chars (hard limit 240)
+      fix: split the expression when doing so improves readability
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

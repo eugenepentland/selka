@@ -3,6 +3,7 @@ const std = @import("std");
 const ir = @import("ir.zig");
 const selection = @import("borrow_selection.zig");
 const providers = @import("aggregate_provider.zig");
+const contexts = @import("borrowed_provider.zig");
 const verify = @import("verify_ir.zig");
 
 pub const Error = std.mem.Allocator.Error || selection.Error;
@@ -20,7 +21,8 @@ fn present(module: *const ir.Module, function: *const ir.Function) Error!bool {
 /// Check each marker-bearing function once, never once per marker. Local shape
 /// checks run first so malformed operand tables cannot reach the general verifier.
 pub fn validate(a: std.mem.Allocator, module: *const ir.Module, function: *const ir.Function) Error!void {
-    if (!try present(module, function)) return;
+    if (!try present(module, function) and !contexts.contains(module, function)) return;
+    try contexts.validate(a, module, function);
     if (providers.hasMarker(module, function)) try providers.validate(module, function);
     try selection.validate(a, module, function);
     // The general verifier owns scratch tables for one invocation, not the
@@ -38,6 +40,7 @@ pub fn validate(a: std.mem.Allocator, module: *const ir.Module, function: *const
 pub fn validateModule(a: std.mem.Allocator, module: *const ir.Module) Error!void {
     for (module.functions.items) |*function| {
         _ = try providers.marker(module, function);
+        _ = try contexts.declaration(module, function);
         _ = try selection.declaration(module, function);
         try validate(a, module, function);
     }

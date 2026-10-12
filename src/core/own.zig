@@ -396,10 +396,15 @@ const Analysis = struct {
                 // Source `mut` and inferred consuming parameters both receive one count.
                 .param => if (ownedParameter(f.signature, instruction.data)) .owned else .borrowed,
                 .str_const, .undef => .immortal,
-                .call => if (self.viewSource(instruction) orelse self.encodedSource(instruction)) |source| blk: {
-                    self.parent[i] = source;
-                    break :blk .borrowed;
-                } else .owned,
+                .call => blk: {
+                    if ((@import("borrowed_provider.zig").call(self.module, f, instruction) catch return error.Unsupported) != null)
+                        break :blk .borrowed;
+                    if (self.viewSource(instruction) orelse self.encodedSource(instruction)) |source| {
+                        self.parent[i] = source;
+                        break :blk .borrowed;
+                    }
+                    break :blk .owned;
+                },
                 .record_make => if (borrowedItem(self.module, f, instruction)) |parent| blk: {
                     self.parent[i] = parent;
                     break :blk .borrowed;
@@ -2056,6 +2061,7 @@ fn arrayIndex(f: *const ir.Function, left: ir.Ref, right: ir.Ref) enum { same, d
 /// returned by a call, or a `mut` parameter.
 fn ownedRecord(module: *const ir.Module, f: *const ir.Function, record: ir.Inst) bool {
     if (borrowedItem(module, f, record) != null) return false;
+    if ((@import("borrowed_provider.zig").call(module, f, record) catch null) != null) return false;
     if ((selections.call(module, f, record) catch null) != null) return false;
     return switch (record.op) {
         .record_make, .record_set, .array_set, .phi, .call, .union_take, .box_take => true,

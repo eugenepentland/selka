@@ -162,10 +162,11 @@ pub fn validate(a: std.mem.Allocator, module: *const ir.Module, function: *const
     }
 }
 
-fn takes(module: *const ir.Module, function: *const ir.Function, inst: ir.Inst, index: usize) bool {
+/// Whether this operand transfers ownership or stores a borrowed value.
+pub fn takes(module: *const ir.Module, function: *const ir.Function, inst: ir.Inst, index: usize) bool {
     if (index == 0 and inst.op.consumesOperand0()) return true;
     if (inst.op == .call) {
-        if (inst.a.index() >= module.functions.items.len or index >= 64) return true;
+        if (inst.a == .none or inst.a.index() >= module.functions.items.len or index >= 64) return true;
         const signature = module.functions.items[inst.a.index()].signature;
         return (signature.owned | signature.consumes) & (@as(u64, 1) << @intCast(index)) != 0;
     }
@@ -173,6 +174,7 @@ fn takes(module: *const ir.Module, function: *const ir.Function, inst: ir.Inst, 
         if (index == 0) return false;
         const callee = resolve(function, inst.a) catch return true;
         const ty = function.inst(callee).ty;
+        if (!module.valid(ty)) return true;
         if (module.kind(ty) != .@"fn" or index > 64) return true;
         const signature = module.compound(ty).@"fn";
         return (signature.owned | signature.consumes) & (@as(u64, 1) << @intCast(index - 1)) != 0;

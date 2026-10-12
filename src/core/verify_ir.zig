@@ -76,6 +76,10 @@ pub fn verifyModule(arena: std.mem.Allocator, module: *const ir.Module, failure:
             failure.* = .{ .function = f.name, .reason = "invalid compiler-only provider lifetime marker" };
             return error.InvalidIr;
         };
+        _ = @import("borrowed_provider.zig").declaration(module, f) catch {
+            failure.* = .{ .function = f.name, .reason = "invalid borrowed provider context declaration" };
+            return error.InvalidIr;
+        };
         _ = @import("borrow_selection.zig").declaration(module, f) catch {
             failure.* = .{ .function = f.name, .reason = "invalid borrowed selection marker declaration" };
             return error.InvalidIr;
@@ -604,6 +608,7 @@ const Verifier = struct {
                     if (ty != param and !span_input) break :blk false;
                 }
                 _ = @import("aggregate_provider.zig").call(m, self.f, inst) catch break :blk false;
+                _ = @import("borrowed_provider.zig").call(m, self.f, inst) catch break :blk false;
                 _ = @import("borrow_selection.zig").call(m, self.f, inst) catch break :blk false;
                 break :blk true;
             },

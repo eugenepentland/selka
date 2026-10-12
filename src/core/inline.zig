@@ -70,6 +70,7 @@ pub fn cfgCallerDemandWithScratch(arena: std.mem.Allocator, scratch: std.mem.All
             if (call.op != .call or call.a.index() == index) continue;
             if (demand) |handles| try handles.ensure(@intCast(call.a.index()));
             const callee = &module.functions.items[call.a.index()];
+            if (@import("borrowed_provider.zig").contains(module, callee)) continue;
             const helper = cfg.qualifies(callee);
             if (!helper) {
                 // Each clone adds at most the callee's instructions and a jump.
@@ -143,6 +144,7 @@ pub fn leafCallerDemand(arena: std.mem.Allocator, scratch: std.mem.Allocator, mo
             if (call.op != .call or call.a.index() == index) continue;
             if (demand) |handles| try handles.ensure(@intCast(call.a.index()));
             const callee = &module.functions.items[call.a.index()];
+            if (@import("borrowed_provider.zig").contains(module, callee)) continue;
             const result = leaf(callee) orelse continue;
             if (proof.needsProof(callee)) {
                 if (known == null) known = try facts.analyze(scratch, caller, .{ .fold = false, .mark = false, .params = parameters });

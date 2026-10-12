@@ -449,6 +449,7 @@ const ModuleState = struct {
 
     fn declareExtern(self: *ModuleState, index: u32) !void {
         if (try @import("borrow_selection.zig").declaration(self.module, &self.module.functions.items[index])) return;
+        if (try @import("borrowed_provider.zig").declaration(self.module, &self.module.functions.items[index])) return;
         const function = &self.module.functions.items[index];
         return self.external(function, self.functionName(index));
     }
@@ -3837,6 +3838,13 @@ const FunctionEmitter = struct {
 
     /// Emit a direct or indirect call under the internal aggregate ABI.
     pub fn call(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error!void {
+        if ((try @import("borrowed_provider.zig").call(self.state.module, self.function, inst)) != null) {
+            var construction = inst;
+            construction.op = .record_make;
+            construction.a = .none;
+            try self.recordMake(out, name, construction);
+            return;
+        }
         if (try self.borrowedSelection(out, name, inst)) return;
         const m = self.state.module;
         const signature = if (inst.op == .call_indirect) m.compound(self.typeOf(inst.a)).@"fn" else m.functions.items[inst.a.index()].signature;

@@ -1,0 +1,11 @@
+build-slot: build slot 2, FIFO ticket 927 after 0s
+cf5527b7dc866c8da312dd5f0267bc5f1a5757f26be73dee8ac2f90e0c2b6983
+03610896c51629e2c0b352faea90fd256b77b74cad04d3a86975a7583f2cc29f
+test-core
++- verification action core member 0 w
+guardian/test: 8 test(s) selected by filter: "borrowed provider"
+guardian/test: test wall 0.00s
+guardian/test: PASS — 8 passed
+guardian/test: RESULT {"passed":8,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-memory-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/6387fc8962f178cfe8647692ef716374/test "--guardian-filter=borrowed provider" --cache-dir=./.zig-cache --seed=0x955f5c30 --listen=-
+

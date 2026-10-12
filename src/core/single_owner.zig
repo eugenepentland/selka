@@ -165,6 +165,7 @@ const State = struct {
     transferable: bool = false,
     dependency: usize = none,
     ambiguous_borrow: bool = false,
+    provider_context: bool = false,
 };
 const Access = enum { read, move, mutate, update, writeback };
 fn writebackBase(access: Access) Access {
@@ -305,6 +306,7 @@ const Checker = struct {
             const message = try std.fmt.allocPrint(c.diagnostic_allocator, "'{s}' was moved or is unavailable on this path; use .copy() when both values are needed", .{local.name});
             return c.reject(span, "E_SINGLE_OWNER_MOVED", message);
         }
+        if (c.state[root].provider_context and access != .read) return c.reject(span, borrow_error, "a borrowed provider context is read-only and cannot be moved, stored or returned");
         if (c.state[slot].ambiguous_borrow and access != .read) return c.reject(span, borrow_error, "a dictionary default selection is read-only; make an explicit .copy() before changing it");
         if (c.view(local.ty) and access != .read) return c.reject(span, view_escape, "views are read-only; use .copy() for independent owned storage");
         const write = access != .read;
@@ -491,6 +493,11 @@ const Checker = struct {
         if (store.unpack != null) return c.checkUnpack(store, initializing, span);
         const slot = @backingInt(store.slot);
         const local = c.function.scope.locals[slot];
+        if (c.zero_rc and initializing and @import("borrowed_provider.zig").initializer(c.program, c.function, store.value)) {
+            for (c.program.nodes[@backingInt(store.value)].data.record) |field| try c.expression(field.value, .read);
+            c.state[slot] = .{ .available = true, .borrowed = true, .provider_context = true };
+            return;
+        }
         if (c.view(local.ty)) {
             if (local.mutable and !c.temporary(slot)) return c.reject(span, view_unsupported, "view bindings are immutable in this prototype; create a new const view");
             try c.expression(store.value, .read);
@@ -557,6 +564,13 @@ const Checker = struct {
         }
     }
 
+    fn checkProviderField(c: *Checker, base: typed.NodeId, ty: typed.Type, access: Access, span: Span) Error!void {
+        if (access == .read or !c.owns(ty)) return;
+        const root = c.origin(base) orelse return;
+        if (c.state[root].provider_context)
+            return c.reject(span, borrow_error, "a borrowed provider context cannot transfer a provider field; pass it to a read-only helper");
+    }
+
     fn expression(c: *Checker, id: typed.NodeId, access: Access) Error!void {
         const node = c.program.nodes[@backingInt(id)];
         if (c.view(node.ty) and access != .read) return c.reject(node.span, view_escape, "views cannot be moved into owning storage; use .copy()");
@@ -589,6 +603,7 @@ const Checker = struct {
                 try c.expression(binary.right, .read);
             },
             .field => |field| {
+                try c.checkProviderField(field.base, node.ty, access, node.span);
                 if (access == .move and c.owns(node.ty)) return c.reject(node.span, borrow_error, "moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper");
                 try c.expression(field.base, if (access == .mutate or access == .update) .mutate else .read);
             },
