@@ -206,6 +206,8 @@ test "zero RC array transfer analysis preserves unknown index and conditional li
         \\    const held = cells[read_index]
         \\    cells[write_index].value = 9
         \\    return len(held.text)
+        \\func main() -> int:
+        \\    return 0
     );
     try std.testing.expect(std.mem.indexOf(u8, unknown, "retain") != null);
     const conditional = try support.ownedText(arena.allocator(), slot_records ++
@@ -215,6 +217,8 @@ test "zero RC array transfer analysis preserves unknown index and conditional li
         \\    if replace:
         \\        cells[0] = held
         \\    return cells[0].value
+        \\func main() -> int:
+        \\    return 0
     );
     try std.testing.expect(std.mem.indexOf(u8, conditional, "retain") != null);
 }
