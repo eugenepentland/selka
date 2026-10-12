@@ -74,7 +74,7 @@ pub fn Checks(comptime Checker: type) type {
         /// Check a bare name: a constant-length type parameter, a local read (rejecting an
         /// arena binding or a consumed owned value), or a function used as a value.
         pub fn checkName(self: *Checker, node: ast.Node, name: @FieldType(@FieldType(ast.Node, "data"), "name"), out: *typed.Node) Error!void {
-            return impl.checkName(Checker, self, node, name, out);
+            return impl.checkName(Checker, self, node, name, out, false);
         }
         /// Check a method called on a capability reached through an expression, such
         /// as a record field (`ctx.fs.read_file(path)`), with the receiver already
@@ -247,7 +247,11 @@ fn indirectCall(comptime Checker: type, self: *Checker, node: ast.Node, call: @F
 
 /// Check a bare name: a constant-length type parameter, a local read (rejecting an
 /// arena binding or a consumed owned value), or a function used as a value.
-fn checkName(comptime Checker: type, self: *Checker, node: ast.Node, name: @FieldType(@FieldType(ast.Node, "data"), "name"), out: *typed.Node) Error!void {
+/// A list inspection reads its storage without acknowledging pending Results.
+pub fn checkBorrowedName(comptime Checker: type, self: *Checker, node: ast.Node, name: source.Span, out: *typed.Node) Error!void {
+    return checkName(Checker, self, node, name, out, true);
+}
+fn checkName(comptime Checker: type, self: *Checker, node: ast.Node, name: @FieldType(@FieldType(ast.Node, "data"), "name"), out: *typed.Node, borrowing: bool) Error!void {
     if (self.current_function) |id| {
         const key = self.instance_keys.items[@backingInt(id)];
         for (self.syntaxFunction(id).signature.type_parameters, 0..) |parameter, index| {
@@ -295,8 +299,10 @@ fn checkName(comptime Checker: type, self: *Checker, node: ast.Node, name: @Fiel
             local.declaration,
             local.ownership.transfer_span,
         );
-        local.ownership.transfer_available = false;
-        local.ownership.transfer_span = name;
+        if (!borrowing or !@import("record_layouts.zig").pendingList(self.catalog.records, local.ty)) {
+            local.ownership.transfer_available = false;
+            local.ownership.transfer_span = name;
+        }
     }
     self.locals.items[@backingInt(slot)].usage.reads += 1;
     out.ty = self.locals.items[@backingInt(slot)].ty;

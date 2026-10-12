@@ -229,6 +229,12 @@ pub fn supports(value: Value, requirement: requirements.Requirement, parameters:
         .nominal => |value_type| result: {
             const index = catalog.templates.store.?.index;
             const declaration = index.declarations.items[value_type.declaration];
+            const list = index.names.get("List") == value_type.declaration;
+            const list_value_requirement = list and (requirement == .copy or requirement == .storable);
+            if (list_value_requirement or (declaration.kind == .result and requirement == .storable)) {
+                for (value_type.arguments) |argument| if (!supports(argument, requirement, parameters, catalog)) break :result false;
+                break :result true;
+            }
             if (requirement == .equality and index.names.get("Option") == value_type.declaration) {
                 if (value_type.arguments.len != 1) break :result false;
                 break :result supports(value_type.arguments[0], requirement, parameters, catalog);

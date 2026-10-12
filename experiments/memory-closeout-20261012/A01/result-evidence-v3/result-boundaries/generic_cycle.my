@@ -1,0 +1,11 @@
+record First[T: storable]:
+    children: Second[T][]
+    pending: Result[int, int]
+record Second[T: storable]:
+    children: First[T][]
+func ignored[T: storable](value: First[T]) -> int:
+    const children, pending = value
+    _ = pending
+    return len(children)
+func main() -> int:
+    return 0

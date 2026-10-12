@@ -1,0 +1,9 @@
+build-slot: FIFO ticket 368, position 14; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 368, position 12; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 368, position 10; earlier build tickets must run first; waiting (121s so far)
+build-slot: FIFO ticket 368, position 8; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 368, position 2; earlier build tickets must run first; waiting (241s so far)
+build-slot: build slot 2, FIFO ticket 368 after 251s
+generic_cycle.my:7:5: error[E_TYPE]: a destructuring assignment binds the values of a tuple; `First[T]` is not one — bind it with one name instead
+      const children, pending = value
+      ^

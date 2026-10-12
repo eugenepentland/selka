@@ -29,7 +29,8 @@ joins before returning. A task-item marker preserves exact trap item indices.
 Evidence harness `qualify.py` writes exclusively under its `--output` directory.
 It covers sizes 0/1/many/uneven, cheap and expensive callbacks, managed records,
 nested maps, tagged outcomes, `Result`, and discarded outputs at 1/2/8 workers.
-Five counted pipelines and separate ThreadSanitizer binaries are planned.
+Five counted pipelines and separate ThreadSanitizer binaries have passed on the
+private prototype; integrated requalification remains pending.
 `scaling.my` accepts `size repetitions cheap|expensive` for controlled allocation
 and A09 timing/RSS comparisons; instrumentation stays off timing binaries.
 
@@ -67,6 +68,71 @@ prototype-allocations,prototype-smoke,prototype-matrix,prototype-repeat-managed}
 and `core-tests.log`, `build.log`, `commit.log`. Reports and compressed raw counters
 will be retained under A01 before handoff.
 
-Pending: remaining five-pipeline source/ThreadSanitizer matrix, A09 runtime/RSS
-measurement on frozen integrated revision, integrated C1 requalification, and
-final retirement edits coordinated by A10.
+The later prototype matrix passed all eighteen combined-source executions. Its
+trap executions were correctly tagged `(item 17)`, but an incorrect old oracle
+recorded failures. Those raw failures are preserved; the corrected oracle will
+be rerun on the final candidate. Fatal trap exits are excluded from normal-exit
+managed-leak assertions.
+
+## Expanded Result-list implementation
+
+The user explicitly expanded scope to include stored Results and `parallel.map`
+callbacks returning Results. The complete source contract is in
+`result-list-contract.md`; the implementation separates storage eligibility from
+pending handling obligations. Explicit acknowledgment, whole-list transfer,
+independent copies, borrowed inspection, and per-element handling are checked
+locally. Resource/capability, dictionary/set, boxed pending and copy-trait
+boundaries remain rejected. Nested ordinary Result payloads are supported.
+
+Additional coordinator reservations cover `generic_bodies.zig`,
+`nominal_templates.zig`, `record_layouts.zig`, `symbolic_shapes.zig`,
+`symbolic_types.zig`, `type_catalog.zig`, `sema_calls.zig`,
+`sema_collections.zig`, `sema_expressions.zig`, `sema_gathers.zig`,
+`sema_loops.zig`, and the precise existing `managed_lists_test.zig` update.
+Coordinator authored shared changes in `SPEC.md`, `typed.zig`, `sema_shared.zig`,
+and the `src/root_test.zig` registration for `a01_result_shapes_test.zig`.
+A06 requested the narrow tuple `.copy()` parser exception included here and owns
+its independent counted native regression. A08's comprehension iteration origin
+fix is preserved; the coordinator resolves that already-integrated three-line
+overlap.
+
+Native compiler v3 SHA256
+`a6795771960a0540e9c573b99dc5117d8450b8010e242ed485744eb725edf320`
+passed eighteen Result-list executions (six modes, 1/2/8 workers), with zero RC
+events and managed leaks in all counted runs, plus 100 release and 100 TSan
+eight-worker repetitions. Raw results, reproducible compressed counters, exact
+harness and identities are in `result-evidence-v3/`. Five Core and twenty-one
+frontend checks also passed, including public cross-module obligations.
+
+The final symbolic cycle correction follows that v3 compiler: incomplete active
+cycle results are never memoized, while complete acyclic results remain cached.
+A07 approved this within the existing 100,000-work refusal bound. The final focused
+run passed five Core and eight frontend checks, including 64 repeated queries of
+mutually recursive generic list types with a pending field after the back edge.
+A mutation check, rebuilt v4 compiler, and final combined/Result/trap matrix are
+queued; their results must not be inferred from v3. A03's expanded census and A08's
+cross-compiler cache probe pin the Result source hash and await integrated C1.
+
+The A03 supplemental fixture SHA256 is
+`6c5ad78bda5b1908889e1a32956456bacbf615ecbc5d36b2fbc7100875865cf6`;
+expected output is `27 4 5 4 5\n3889\n`. C0 refuses it with
+`E_GENERIC_REQUIREMENT`. The independent unhandled-list fixture refuses with
+`E_RESULT_UNHANDLED`.
+
+## Independent native driver repair
+
+Commit `38dc781a897182ffbf1fff0906ec319a007a9154` keeps uncached per-unit objects
+alive until native linking finishes. Two focused fallback checks passed, including
+two units, repeated unproved-tool builds and success/failure cleanup. Evidence is
+in `native-driver/`. A08 found this machine's loader-cache digest differs from the
+approved runtime profile; no trust configuration was changed. Native cache-reuse
+qualification remains a separate machine boundary.
+
+## Remaining integration work
+
+A09 runtime/RSS measurements, exact integrated C1 requalification, normal-command
+C2 checks, and active RC retirement remain pending. `qualify.py --ordinary` omits
+the prototype selector for C2/C3 and records that choice. No default or retirement
+milestone is claimed. Guest test migrations were explicitly transferred to A03;
+remaining local `tests/lang` diffs are excluded from A01 commits.
+

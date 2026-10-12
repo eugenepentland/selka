@@ -118,7 +118,7 @@ pub const Index = struct {
         const parameters = try allocator.alloc(requirements.Parameter, count);
         const fields_out = try allocator.alloc(Field, count);
         var copy_required: requirements.Set = .{};
-        copy_required.include(.copy);
+        if (!std.mem.eql(u8, name, "Result")) copy_required.include(if (std.mem.eql(u8, name, "List")) .storable else .copy);
         for (parameters, fields_out, 0..) |*parameter_out, *field, i| {
             parameter_out.* = .{ .name = span, .requirements = copy_required };
             field.* = .{ .name = span, .ty = .{ .parameter = i }, .builtin_name = if (kind == .result) (if (i == 0) "ok" else "err") else null };
@@ -562,7 +562,16 @@ pub const Index = struct {
             .builtin => |ty| builtinGuarantees(ty),
             .parameter => |id| parameters[id].requirements,
             .named => |id| self.declarations.items[id].guarantees,
-            .application => |application| self.declarations.items[application.declaration].guarantees,
+            .application => |application| application_result: {
+                const declaration = self.declarations.items[application.declaration];
+                if (self.names.get("List") != application.declaration and declaration.kind != .tuple and declaration.kind != .result) break :application_result declaration.guarantees;
+                var result = if (declaration.kind == .result) requirements.Set{ .bits = 16 } else copyGuarantee();
+                for (application.arguments) |argument| {
+                    const child = self.guarantees(argument, parameters);
+                    result.bits &= child.bits | @as(u5, 14);
+                }
+                break :application_result result;
+            },
             .array => |array| array_result: {
                 const empty = array.length_parameter == null and array.length == 0;
                 if (empty or self.guarantees(array.element, parameters).contains(.copy)) break :array_result copyGuarantee();
@@ -601,7 +610,7 @@ pub const Index = struct {
     }
     fn inferStorable(self: *Index) void {
         for (self.declarations.items) |*declaration| {
-            if (declaration.kind != .result and declaration.kind != .resource) declaration.guarantees.include(.storable);
+            if (declaration.kind != .resource) declaration.guarantees.include(.storable);
         }
         var changed = true;
         while (changed) {
@@ -626,7 +635,12 @@ pub const Index = struct {
     fn copyDependencies(self: *Index, value: Expression, parameters: []const requirements.Parameter, owner: usize, reverse: []std.ArrayList(usize), pending: *std.ArrayList(usize)) Error!void {
         switch (value) {
             .named => |id| try reverse[id].append(self.context.allocator, owner),
-            .application => |application| try reverse[application.declaration].append(self.context.allocator, owner),
+            .application => |application| {
+                try reverse[application.declaration].append(self.context.allocator, owner);
+                if (self.names.get("List") == application.declaration or self.declarations.items[application.declaration].kind == .tuple) {
+                    for (application.arguments) |argument| try self.copyDependencies(argument, parameters, owner, reverse, pending);
+                }
+            },
             .array => |array| if (array.length != 0) {
                 try self.copyDependencies(array.element, parameters, owner, reverse, pending);
             },
@@ -728,10 +742,11 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
     for (index.declarations.items) |declaration| {
         if (declaration.parameters.len == 0 or declaration.kind != .buffer) continue;
         const element = declaration.fields[0];
-        if (!index.guarantees(element.ty.?, declaration.parameters).contains(.copy)) return sink.fail(
+        const requirement: requirements.Requirement = if (declaration.builtin_name != null and std.mem.eql(u8, declaration.builtin_name.?, "List")) .storable else .copy;
+        if (!index.guarantees(element.ty.?, declaration.parameters).contains(requirement)) return sink.fail(
             eRequirement,
             element.name,
-            "managed collection elements must guarantee copy",
+            "managed list elements must guarantee storable; other collection elements must guarantee copy",
         );
     }
     for (index.declarations.items) |declaration| for (declaration.fields) |field| if (field.ty) |value| try index.checkArguments(value, declaration.parameters);

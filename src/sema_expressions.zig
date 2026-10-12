@@ -54,7 +54,7 @@ pub fn Checks(comptime Checker: type) type {
         /// Check one expression tree iteratively through the work queue, starting from the
         /// temporaries an enclosing expression already holds, and return its typed node.
         pub fn expressionWithTemporaries(self: *Checker, root: ast.NodeId, inherited: []const typed.Type) Error!typed.NodeId {
-            return impl.expressionWithTemporaries(Checker, self, root, inherited);
+            return impl.expressionWithTemporaries(Checker, self, root, inherited, false);
         }
         /// Recognize a contextual Option or Result constructor whose type comes from an equality peer.
         pub fn awaitsPeerType(self: *Checker, id: ast.NodeId) Error!bool {
@@ -288,7 +288,7 @@ fn queueDictionary(comptime Checker: type, self: *Checker, work: *std.ArrayList(
     const node = self.syntax.nodes.items[@backingInt(id)];
     const entries = node.data.dictionary_literal;
 
-    try work.append(self.allocator, .{ .id = id, .emit = true });
+    try work.append(self.allocator, .{ .id = id, .mode = .emit });
     const expected = self.expected_types.get(node.span);
     var index = entries.len;
     while (index > 0) {
@@ -326,7 +326,7 @@ fn queueVariant(comptime Checker: type, self: *Checker, work: *std.ArrayList(Wor
             const index = try self.catalog.field(record.id, self.src, initializer.name, self.sink);
             try self.hint(initializer.value, record.fields[index].ty);
         }
-        try work.append(self.allocator, .{ .id = id, .emit = true });
+        try work.append(self.allocator, .{ .id = id, .mode = .emit });
         try self.queueFields(work, initializers);
         return true;
     }
@@ -334,7 +334,7 @@ fn queueVariant(comptime Checker: type, self: *Checker, work: *std.ArrayList(Wor
         const variant_type = try variantType(Checker, self, variant, self.syntax.nodes.items[@backingInt(id)].span);
         const tag = try self.catalog.variant(variant_type, self.src, variant.name, self.sink);
         if (self.catalog.records[variant_type.recordIndex()].shape.variants.?.cases[tag].payload) |payload| try self.hint(value, payload);
-        try work.append(self.allocator, .{ .id = id, .emit = true });
+        try work.append(self.allocator, .{ .id = id, .mode = .emit });
         try work.append(self.allocator, .{ .id = value });
         return true;
     }
@@ -422,7 +422,7 @@ fn queueBinary(comptime Checker: type, self: *Checker, work: *std.ArrayList(Work
     // A comparison chain checks its own operands, in source order.
     if (b.chained) return false;
     try self.hintBinary(node);
-    try work.append(self.allocator, .{ .id = id, .emit = true });
+    try work.append(self.allocator, .{ .id = id, .mode = .emit });
     if (try queuePeerFirst(Checker, self, work, b)) return true;
     try work.append(self.allocator, .{ .id = b.right, .checkpoint = if (b.op == .logical_and or b.op == .logical_or) .{ .condition = b.left, .truth = b.op == .logical_and } else null });
     try work.append(self.allocator, .{ .id = b.left });
@@ -432,13 +432,13 @@ fn queueExpression(comptime Checker: type, self: *Checker, work: *std.ArrayList(
     const node = try self.collectionSyntax(id);
     switch (node.data) {
         .file_operation => |operation| {
-            try work.append(self.allocator, .{ .id = id, .emit = true });
+            try work.append(self.allocator, .{ .id = id, .mode = .emit });
             if (operation.argument) |value| try work.append(self.allocator, .{ .id = value });
             return true;
         },
         .buffer_operation => |operation| {
             try hintBufferArguments(Checker, self, operation);
-            try work.append(self.allocator, .{ .id = id, .emit = true });
+            try work.append(self.allocator, .{ .id = id, .mode = .emit });
             var i = operation.arguments.len;
             while (i > 0) {
                 i -= 1;
@@ -449,81 +449,86 @@ fn queueExpression(comptime Checker: type, self: *Checker, work: *std.ArrayList(
         .match_expression => return false,
         .variant => |variant| return queueVariant(Checker, self, work, id, variant),
         .index => |access| {
-            try work.append(self.allocator, .{ .id = id, .emit = true });
+            try work.append(self.allocator, .{ .id = id, .mode = .emit });
             try work.append(self.allocator, .{ .id = access.index });
-            try work.append(self.allocator, .{ .id = access.base });
+            try work.append(self.allocator, .{ .id = access.base, .mode = .borrow_result_list });
             return true;
         },
         .replace => |replace| {
-            try work.append(self.allocator, .{ .id = id, .emit = true });
+            try work.append(self.allocator, .{ .id = id, .mode = .emit });
             try work.append(self.allocator, .{ .id = replace.value });
             try work.append(self.allocator, .{ .id = replace.index });
             try work.append(self.allocator, .{ .id = replace.base });
             return true;
         },
-        .length, .unwrap, .propagate => |base| {
-            try work.append(self.allocator, .{ .id = id, .emit = true });
+        .length => |base| {
+            try work.append(self.allocator, .{ .id = id, .mode = .emit });
+            try work.append(self.allocator, .{ .id = base, .mode = .borrow_result_list });
+            return true;
+        },
+        .unwrap, .propagate => |base| {
+            try work.append(self.allocator, .{ .id = id, .mode = .emit });
             try work.append(self.allocator, .{ .id = base });
             return true;
         },
         .restrict_resource => |restrict| {
-            try work.append(self.allocator, .{ .id = id, .emit = true });
+            try work.append(self.allocator, .{ .id = id, .mode = .emit });
             try work.append(self.allocator, .{ .id = restrict.value });
             return true;
         },
         .resource_io => |io| {
-            try work.append(self.allocator, .{ .id = id, .emit = true });
+            try work.append(self.allocator, .{ .id = id, .mode = .emit });
             if (io.value) |value| try work.append(self.allocator, .{ .id = value });
             return true;
         },
         .environment_get => |get| {
-            try work.append(self.allocator, .{ .id = id, .emit = true });
+            try work.append(self.allocator, .{ .id = id, .mode = .emit });
             try hintByteArray(Checker, self, get.name);
             try work.append(self.allocator, .{ .id = get.name });
             try work.append(self.allocator, .{ .id = get.capability });
             return true;
         },
         .complete_resource => |complete| {
-            try work.append(self.allocator, .{ .id = id, .emit = true });
+            try work.append(self.allocator, .{ .id = id, .mode = .emit });
             try work.append(self.allocator, .{ .id = complete.value });
             return true;
         },
         .acquire_resource => |acquire| {
-            try work.append(self.allocator, .{ .id = id, .emit = true });
+            try work.append(self.allocator, .{ .id = id, .mode = .emit });
             try work.append(self.allocator, .{ .id = acquire.request });
             try work.append(self.allocator, .{ .id = acquire.capability });
             return true;
         },
         .external_read => |read| {
-            try work.append(self.allocator, .{ .id = id, .emit = true });
+            try work.append(self.allocator, .{ .id = id, .mode = .emit });
             try work.append(self.allocator, .{ .id = read.capability });
             return true;
         },
         .stand_in => |stand| {
-            try work.append(self.allocator, .{ .id = id, .emit = true });
+            try work.append(self.allocator, .{ .id = id, .mode = .emit });
             if (stand.second) |second| try work.append(self.allocator, .{ .id = second });
             try work.append(self.allocator, .{ .id = stand.first });
             return true;
         },
         .cast, .wrap => |cast| {
-            try work.append(self.allocator, .{ .id = id, .emit = true });
+            try work.append(self.allocator, .{ .id = id, .mode = .emit });
             try work.append(self.allocator, .{ .id = cast.value });
             return true;
         },
         .arena_escape => |copy| {
-            try work.append(self.allocator, .{ .id = id, .emit = true });
+            try work.append(self.allocator, .{ .id = id, .mode = .emit });
             try work.append(self.allocator, .{ .id = copy.value });
             return true;
         },
         .dictionary_literal => return queueDictionary(Checker, self, work, id),
         .record => |record| {
             try hintRecordFields(Checker, self, record);
-            try work.append(self.allocator, .{ .id = id, .emit = true });
+            try work.append(self.allocator, .{ .id = id, .mode = .emit });
             try self.queueFields(work, record.fields);
             return true;
         },
         .field => |field| {
-            try work.append(self.allocator, .{ .id = id, .emit = true });
+            try work.append(self.allocator, .{ .id = id, .mode = .emit });
             try work.append(self.allocator, .{ .id = field.base });
             return true;
         },
@@ -537,7 +542,7 @@ fn queueExpression(comptime Checker: type, self: *Checker, work: *std.ArrayList(
             // `NAME.method(...)` on a `str` or `bytes` constant is checked in
             // place too: the receiver is the constant, not a queued operand.
             if (try self.constantReceiver(call) != null) return false;
-            try work.append(self.allocator, .{ .id = id, .emit = true });
+            try work.append(self.allocator, .{ .id = id, .mode = .emit });
             if (try queueCapabilityCall(Checker, self, work, call)) return true;
             if (self.environmentMethod(call) != null) return true;
             // `embed_bytes("path")` reads its literal from the syntax tree, so the
@@ -586,7 +591,7 @@ fn queueExpression(comptime Checker: type, self: *Checker, work: *std.ArrayList(
             if (u.op == .is_none) {
                 try self.hintOptionOperand(u.operand);
             } else if (self.expected_types.get(node.span)) |expected| try self.hint(u.operand, expected);
-            try work.append(self.allocator, .{ .id = id, .emit = true });
+            try work.append(self.allocator, .{ .id = id, .mode = .emit });
             try work.append(self.allocator, .{ .id = u.operand });
             return true;
         },
@@ -594,7 +599,7 @@ fn queueExpression(comptime Checker: type, self: *Checker, work: *std.ArrayList(
         // A `mut` marker is transparent: the value it wraps is checked on its
         // own, and the node itself reuses the resolved target's type and data.
         .mut_argument => |inner| {
-            try work.append(self.allocator, .{ .id = id, .emit = true });
+            try work.append(self.allocator, .{ .id = id, .mode = .emit });
             try work.append(self.allocator, .{ .id = inner });
             return true;
         },
@@ -685,7 +690,7 @@ fn checkPropagation(comptime Checker: type, self: *Checker, node: ast.Node, oper
     );
     return .{ .span = node.span, .ty = element, .data = .{ .propagate = .{ .value = value, .output = self.return_type } } };
 }
-fn checkedExpression(comptime Checker: type, self: *Checker, node: ast.Node, minimum_literal: ?Literal, temporaries: []const typed.Type) Error!typed.Node {
+fn checkedExpression(comptime Checker: type, self: *Checker, node: ast.Node, minimum_literal: ?Literal, temporaries: []const typed.Type, borrowing: bool) Error!typed.Node {
     try rejectInContract(Checker, self, node);
     var out: typed.Node = .{ .span = node.span, .ty = .i64, .data = undefined };
     if (lambdaIndex(Checker, self, node.span)) |lambda_index| {
@@ -790,7 +795,10 @@ fn checkedExpression(comptime Checker: type, self: *Checker, node: ast.Node, min
                 out.data = .{ .variant = .{ .tag = tag, .value = value } };
             }
         },
-        .index => |access| try self.checkValueIndex(node, access, &out),
+        .index => |access| {
+            try namedPendingList(Checker, self, self.resolved[@backingInt(access.base)].?);
+            try self.checkValueIndex(node, access, &out);
+        },
         .replace => |replace| {
             const base = self.resolved[@backingInt(replace.base)].?;
             const index_value = self.resolved[@backingInt(replace.index)].?;
@@ -862,7 +870,7 @@ fn checkedExpression(comptime Checker: type, self: *Checker, node: ast.Node, min
             out.ty = self.locals.items[@backingInt(slot)].ty;
             out.data = .{ .local = slot };
         },
-        .name => |name| try self.checkName(node, name, &out),
+        .name => |name| if (borrowing) try @import("sema_calls.zig").checkBorrowedName(Checker, self, node, name, &out) else try self.checkName(node, name, &out),
         .call => return checkExpressionCall(Checker, self, node, temporaries),
         .unary => |u| return self.checkUnary(node, u),
         .binary => |b| try self.checkValueBinary(b, &out),
@@ -908,6 +916,7 @@ fn checkStandIn(comptime Checker: type, self: *Checker, stand: @FieldType(@Field
 fn checkLength(comptime Checker: type, self: *Checker, node: ast.Node, input: ast.NodeId) Error!typed.Node {
     const base = self.resolved[@backingInt(input)].?;
     const receiver_type = self.nodes.items[@backingInt(base)].ty;
+    try namedPendingList(Checker, self, base);
     if (dictionary_views.identify(self.catalog, receiver_type)) |view| if (view != .item) {
         const mapping = try dictionary_views.owner(Checker, self, node.span, base);
         return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(mapping, .length, &.{}, false);
@@ -1033,13 +1042,13 @@ fn consumedTemporaries(comptime Checker: type, self: *Checker, node: ast.Node, o
 }
 /// Check one expression tree iteratively through the work queue, starting from the
 /// temporaries an enclosing expression already holds, and return its typed node.
-fn expressionWithTemporaries(comptime Checker: type, self: *Checker, root: ast.NodeId, inherited: []const typed.Type) Error!typed.NodeId {
+fn expressionWithTemporaries(comptime Checker: type, self: *Checker, root: ast.NodeId, inherited: []const typed.Type, borrowing: bool) Error!typed.NodeId {
     var work: std.ArrayList(Work) = .empty;
     defer work.deinit(self.allocator);
     var temporaries: std.ArrayList(typed.Type) = .empty;
     defer temporaries.deinit(self.allocator);
     try temporaries.appendSlice(self.allocator, inherited);
-    try work.append(self.allocator, .{ .id = root });
+    try work.append(self.allocator, .{ .id = root, .mode = if (borrowing) .borrow_result_list else .check });
     while (work.pop()) |task| {
         if (task.sorted_key) {
             const parent = self.syntax.nodes.items[@backingInt(task.id)];
@@ -1080,7 +1089,7 @@ fn expressionWithTemporaries(comptime Checker: type, self: *Checker, root: ast.N
         }
         const node = try self.collectionSyntax(task.id);
         const minimum_literal = try self.minimum(node);
-        if (!task.emit and minimum_literal == null) {
+        if (task.mode != .emit and minimum_literal == null) {
             if (try queueExpression(Checker, self, &work, task.id)) continue;
         }
         const original_expected = self.expected_types.get(node.span);
@@ -1093,7 +1102,7 @@ fn expressionWithTemporaries(comptime Checker: type, self: *Checker, root: ast.N
             while (prelude.optionShape(payload, self.catalog.records)) |shape| payload = shape.element;
             try self.expected_types.put(self.allocator, node.span, payload);
         };
-        const out = try checkedExpression(Checker, self, node, minimum_literal, temporaries.items);
+        const out = try checkedExpression(Checker, self, node, minimum_literal, temporaries.items, task.mode == .borrow_result_list);
         if (original_expected) |expected| try self.expected_types.put(self.allocator, node.span, expected);
         try dictionary_views.validateUse(Checker, self, task.id, out.ty);
         const consumed = try consumedTemporaries(Checker, self, node, out);
@@ -1120,4 +1129,17 @@ test "text methods whose one operand is more text get the receiver type as their
 /// chain (`PY-CHAIN-1`), which checks its own operands and leaves none.
 fn binaryTemporaries(binary: @FieldType(@FieldType(ast.Node, "data"), "binary")) usize {
     return if (binary.chained) 0 else 2;
+}
+
+/// Borrow a named Result list for a local inspection, preserving its obligation.
+pub fn borrowList(comptime Checker: type, self: *Checker, root: ast.NodeId, inherited: []const typed.Type) Error!typed.NodeId {
+    const value = try expressionWithTemporaries(Checker, self, root, inherited, true);
+    try namedPendingList(Checker, self, value);
+    return value;
+}
+
+fn namedPendingList(comptime Checker: type, self: *Checker, value: typed.NodeId) Error!void {
+    const node = self.nodes.items[@backingInt(value)];
+    if (record_layouts.pendingList(self.catalog.records, node.ty) and node.data != .local)
+        return self.sink.fail(eResultOperation, node.span, "bind the pending Result list before inspecting it; acknowledge the remaining elements explicitly");
 }

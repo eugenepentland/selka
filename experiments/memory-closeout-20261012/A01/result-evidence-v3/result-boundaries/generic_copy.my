@@ -1,0 +1,8 @@
+func duplicate[T: storable](values: T[]) -> T[]:
+    const output = values.copy()
+    _ = values
+    return output
+func main() -> int:
+    const results: Result[int, int][] = [Ok(3)]
+    _ = duplicate(results)
+    return 0

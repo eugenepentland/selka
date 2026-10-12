@@ -1,0 +1,26 @@
+build-slot: FIFO ticket 382, position 19; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 382, position 12; earlier build tickets must run first; waiting (61s so far)
+build-slot: FIFO ticket 382, position 10; earlier build tickets must run first; waiting (121s so far)
+build-slot: FIFO ticket 382, position 8; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 382, position 7; earlier build tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 382, position 3; earlier build tickets must run first; waiting (302s so far)
+build-slot: build slot 2, FIFO ticket 382 after 347s
+f20517e635ca2a8f6c81a5214eb33872f137ebca4ce57dd53fcbf5086fd52360
+d144d9b7a03164be1d63daccb1b8366c6fdc0f7d8c72146628287f20983a4058
+test-units
++- verification action unit member 0 w
+guardian/test: 8 test(s) selected by filter: "A01" — 1 match by name, 7 unnamed test block(s) run regardless
+guardian/test: test wall 0.00s
+guardian/test: PASS — 8 passed
+guardian/test: RESULT {"passed":8,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-memory-20261012-A01/zig-out/libexec/mylang/components ./.zig-cache/o/c1b66bcdbfa2914d3c674d7ea6c0ac28/test --guardian-filter=A01 --cache-dir=./.zig-cache --seed=0x6b9648aa --listen=-
+
+test-core
++- verification action core member 0 w
+guardian/test: 5 test(s) selected by filter: "A01"
+guardian/test: test wall 0.24s; slowest over 50ms:
+guardian/test:   0.22s  a01_native_driver_test.test.A01 uncached native multiunit objects survive link and clean after success and failure
+guardian/test: PASS — 5 passed
+guardian/test: RESULT {"passed":5,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-memory-20261012-A01/zig-out/libexec/mylang/components ./.zig-cache/o/f5006d34c7bd3353e290fe1e4920dc7e/test --guardian-filter=A01 --cache-dir=./.zig-cache --seed=0x6b9648aa --listen=-
+

@@ -1,0 +1,4 @@
+func main() -> int:
+    const values: Result[Filesystem, str][] = []
+    _ = values
+    return 0

@@ -1,0 +1,3 @@
+func main() -> int:
+    const results: Result[str, str][] = [Ok("pending") ]
+    return len(results)

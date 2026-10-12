@@ -1,0 +1,29 @@
+build-slot: FIFO ticket 351, position 1; all 2 build slot(s) busy; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 351 after 10s
+f20517e635ca2a8f6c81a5214eb33872f137ebca4ce57dd53fcbf5086fd52360
+d144d9b7a03164be1d63daccb1b8366c6fdc0f7d8c72146628287f20983a4058
+test-core
++- verification action core member 0 w
+guardian/test: 5 test(s) selected by filter: "A01", "managed Result lists", "nominal template" (+3 more)
+guardian/test: test wall 0.36s; slowest over 50ms:
+guardian/test:   0.31s  a01_native_driver_test.test.A01 uncached native multiunit objects survive link and clean after success and failure
+guardian/test: PASS — 5 passed
+guardian/test: RESULT {"passed":5,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-memory-20261012-A01/zig-out/libexec/mylang/components ./.zig-cache/o/c4de2da872128fbc531e8b5725d18ad7/test --guardian-filter=A01 "--guardian-filter=managed Result lists" "--guardian-filter=nominal template" "--guardian-filter=generic result" "--guardian-filter=builtin Result" "--guardian-filter=pending result" --cache-dir=./.zig-cache --seed=0x72a9ac73 --listen=-
+
+test-units
++- verification action unit member 0 w
+guardian/test: 21 test(s) selected by filter: "A01", "managed Result lists", "nominal template" (+3 more) — 14 match by name, 7 unnamed test block(s) run regardless
+guardian/test: SLOW  46.72s  nominal_type_syntax_test.test.unused nominal templates retain only unconditional concrete prelude schemas
+guardian/test: SLOW  83.97s  nominal_type_syntax_test.test.public nominal templates survive cached syntax and project relocation with requirements intact
+guardian/test: SLOW  23.31s  generic_results_test.test.generic result construction nested matching and native emission survive allocation failures
+guardian/test: SLOW  11.43s  managed_lists_test.test.managed Result lists preserve obligations independently from storage eligibility
+guardian/test: test wall 165.52s; slowest over 50ms:
+guardian/test:   83.97s  nominal_type_syntax_test.test.public nominal templates survive cached syntax and project relocation with requirements intact
+guardian/test:   46.72s  nominal_type_syntax_test.test.unused nominal templates retain only unconditional concrete prelude schemas
+guardian/test:   23.31s  generic_results_test.test.generic result construction nested matching and native emission survive allocation failures
+guardian/test:   11.43s  managed_lists_test.test.managed Result lists preserve obligations independently from storage eligibility
+guardian/test: PASS — 21 passed
+guardian/test: RESULT {"passed":21,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-memory-20261012-A01/zig-out/libexec/mylang/components ./.zig-cache/o/5740a23da479dc8cfcc89ec832f4ffcb/test --guardian-filter=A01 "--guardian-filter=managed Result lists" "--guardian-filter=nominal template" "--guardian-filter=generic result" "--guardian-filter=builtin Result" "--guardian-filter=pending result" --cache-dir=./.zig-cache --seed=0x72a9ac73 --listen=-
+

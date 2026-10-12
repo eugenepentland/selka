@@ -1,0 +1,171 @@
+import parallel
+
+
+record Item:
+    text: str
+    values: int[]
+
+func managed_make(value: int) -> Item:
+    return Item(text="item-" + str(value), values=[value, value + 1])
+
+func managed_transform(value: Item) -> Item:
+    return Item(text=value.text + "!", values=value.values.copy())
+
+func managed_square(value: int) -> int:
+    return value * value
+
+func managed_nested(values: int[]) -> int[]:
+    return parallel.map(values, managed_square)
+
+func managed_main(out: Stream) -> int:
+    mut source: int[] = []
+    for i in range(64):
+        source.append(i)
+    mut items = parallel.map(source, managed_make)
+    const changed = parallel.map(items, managed_transform)
+    if items[0].text != "item-0" or changed[63].text != "item-63!":
+        return 1
+    items.clear()
+    mut total = 0
+    for item in changed:
+        total += item.values[0]
+    if total != 2016 or len(source) != 64:
+        return 2
+    const nested_result = parallel.map([[1, 2], [3, 4]], managed_nested)
+    if nested_result[1][1] != 16:
+        return 3
+    const empty: int[] = []
+    if len(parallel.map(empty, managed_square)) != 0:
+        return 4
+    out.print(total, changed[0].text, nested_result[1][1])
+    return 0
+
+
+enum Outcome:
+    good(values: str[])
+    bad(message: str)
+
+func outcome_attempt(value: int) -> Outcome:
+    if value % 3 == 0:
+        return Outcome.bad(message="bad-" + str(value))
+    return Outcome.good(values=["good-" + str(value)])
+
+func outcome_inspect(value: Outcome) -> int:
+    match value:
+        case Outcome.good(values=values):
+            return len(values[0])
+        case Outcome.bad(message=message):
+            return len(message)
+
+func outcome_main(out: Stream) -> int:
+    mut source: int[] = []
+    for i in range(64):
+        source.append(i)
+    const outcomes = parallel.map(source, outcome_attempt)
+    const sizes = parallel.map(outcomes, outcome_inspect)
+    mut total = 0
+    for size in sizes:
+        total += size
+    if total != 416:
+        return 1
+    _ = parallel.map(source, outcome_attempt)
+    out.print(total)
+    return 0
+
+
+func ranges_square(value: int) -> int:
+    return value * value
+
+func ranges_expensive(value: int) -> int:
+    mut result = value
+    for i in range(1000 + value % 17):
+        result = (result * 17 + i) % 1000003
+    return result
+
+func ranges_main(out: Stream) -> int:
+    mut checksum = 0
+    for size in [0, 1, 2, 7, 8, 9, 31, 32, 33, 65, 257, 1025]:
+        mut values: int[] = []
+        for i in range(size):
+            values.append(i)
+        const squares = parallel.map(values, ranges_square)
+        const costly = parallel.map(values, ranges_expensive)
+        if len(squares) != size or len(costly) != size:
+            return 1
+        for i in range(size):
+            if squares[i] != ranges_square(i) or costly[i] != ranges_expensive(i):
+                return 2
+            checksum += squares[i]
+        _ = parallel.map(values, ranges_square)
+    out.print(checksum)
+    return 0
+
+
+func result_attempt(value: int) -> Result[str, str]:
+    if value % 3 == 0:
+        return Err("bad-" + str(value))
+    return Ok("good-" + str(value))
+
+func result_handled(value: int) -> str:
+    match result_attempt(value):
+        case Ok(text):
+            return text
+        case Err(text):
+            return text
+
+func result_inspect(value: str) -> int:
+    return len(value)
+
+func result_main(out: Stream) -> int:
+    mut source: int[] = []
+    for i in range(257):
+        source.append(i)
+    const outcomes = parallel.map(source, result_handled)
+    const sizes = parallel.map(outcomes, result_inspect)
+    mut total = 0
+    for size in sizes:
+        total += size
+    _ = parallel.map(source, result_handled)
+    out.print(total)
+    return 0
+
+
+record Wide:
+    first: str
+    second: str
+    values: int[]
+    names: str[]
+    number: int
+    last: str
+
+func wide_make(value: int) -> Wide:
+    return Wide(first="a" + str(value), second="b" + str(value), values=[value, value + 1], names=["n" + str(value)], number=value, last="z" + str(value))
+
+func wide_transform(value: Wide) -> Wide:
+    return Wide(first=value.first + "!", second=value.second.copy(), values=value.values.copy(), names=value.names.copy(), number=value.number + 1, last=value.last + "!")
+
+func wide_main(out: Stream) -> int:
+    mut source: int[] = []
+    for i in range(65):
+        source.append(i)
+    mut initial = parallel.map(source, wide_make)
+    const changed = parallel.map(initial, wide_transform)
+    initial.clear()
+    mut total = 0
+    for i in range(65):
+        if changed[i].first != "a" + str(i) + "!" or changed[i].last != "z" + str(i) + "!":
+            return 1
+        if changed[i].values[1] != i + 1 or changed[i].names[0] != "n" + str(i):
+            return 2
+        total += changed[i].number
+    _ = parallel.map(source, wide_make)
+    out.print(total)
+    return 0
+
+func main(out: Stream) -> int:
+    _ = managed_main(out)
+    _ = outcome_main(out)
+    _ = ranges_main(out)
+    _ = result_main(out)
+    _ = wide_main(out)
+    return 0

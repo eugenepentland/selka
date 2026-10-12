@@ -17,7 +17,7 @@ pub const Pending = struct { available: bool, transfer_span: ?source.Span };
 pub const Work = struct {
     default_value: bool = false,
     id: ast.NodeId,
-    emit: bool = false,
+    mode: enum { check, emit, borrow_result_list } = .check,
     checkpoint: ?option_flow.Guard = null,
     sorted_key: bool = false,
     verify: ?struct { pending: []const Pending, facts: []const usize } = null,

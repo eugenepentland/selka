@@ -1,7 +1,7 @@
 import parallel
 
 func fail(value: int) -> int:
-    return 42 / (value - 17)
+    return 42 // (value - 17)
 
 func main(out: Stream) -> int:
     mut source: int[] = []

@@ -8,6 +8,7 @@ const sema_shared = @import("sema_shared.zig");
 const buffer_operations = @import("buffer_operations.zig");
 const ManagedKind = @import("runtime_values.zig").ManagedKind;
 const BufferKind = buffer_operations.Kind;
+const eResultOperation = diagnostic.result_operation;
 const collections = @import("collection_lower.zig");
 const iteration_place = @import("iteration_place.zig");
 const option_flow = @import("option_flow.zig");
@@ -22,6 +23,7 @@ const byte_buffer_name = @import("nominal_templates.zig").byte_buffer_name;
 const eResourceResult = diagnostic.resource_result;
 const eImmutable = diagnostic.immutable;
 const std = @import("std");
+const copy_arity = "copy takes no arguments";
 const dictionary_views = @import("dictionary_views.zig");
 const eCollectionMethod = sema_shared.eCollectionMethod;
 const ast = @import("ast.zig");
@@ -235,7 +237,10 @@ fn collectionSyntax(comptime Checker: type, self: *Checker, id: ast.NodeId) Erro
             }
             // `values.sort(key=..., reverse=...)` stays a call: its operands
             // are named, and it lowers to a keyed sort, not one operation.
-            if (self.listSortOwner(call) != null) return node;
+            if (self.listSortOwner(call) != null) {
+                try pendingListOperation(Checker, self, value_type, .sort, node.span);
+                return node;
+            }
             if (value_type.isAggregate() and self.catalog.records[value_type.recordIndex()].isCollection()) {
                 try call_arguments.positional(call, self.sink);
                 const name = self.src.text(call.name);
@@ -260,8 +265,12 @@ fn collectionSyntax(comptime Checker: type, self: *Checker, id: ast.NodeId) Erro
                         .arguments = call.arguments.len,
                     });
                 node.data = .{ .buffer_operation = .{ .kind = kind, .owner = owner, .arguments = call.arguments } };
-            } else if (record_layouts.tupleRecord(self.catalog.records, value_type) != null)
-                return self.sink.fail("E_TYPE", call.name, "a tuple has no methods; take it apart with `head, rest = value`");
+            } else if (record_layouts.tupleRecord(self.catalog.records, value_type) != null) {
+                if (!std.mem.eql(u8, self.src.text(call.name), "copy")) return self.sink.fail("E_TYPE", call.name, "a tuple has no methods; take it apart with `head, rest = value`");
+                try call_arguments.positional(call, self.sink);
+                if (call.type_arguments.len != 0 or call.arguments.len != 0) return self.sink.fail("E_ARITY", call.name, copy_arity);
+                node.data = .{ .buffer_operation = .{ .kind = .copy, .owner = owner, .arguments = call.arguments } };
+            }
         };
     }
     if (node.data == .field) {
@@ -305,8 +314,8 @@ fn checkListLiteral(comptime Checker: type, self: *Checker, node: ast.Node, inpu
         if (element) |ty_value| try self.require(actual, ty_value, self.syntax.nodes.items[@backingInt(input)].span) else element = actual;
     }
     if (expected == null) expected = try collections.listType(&self.catalog, element.?, node.span);
-    if (!typed.storable(element.?, self.catalog.records) or typed.moveOnly(element.?, self.catalog.records) or self.requiresHandling(element.?))
-        return self.sink.fail(eListType, node.span, "list elements require copyable storable values without pending results");
+    if (!typed.storable(element.?, self.catalog.records) or typed.moveOnly(element.?, self.catalog.records))
+        return self.sink.fail(eListType, node.span, "list elements require storable values without owned resources");
     return (collections.Builder(Checker){ .checker = self, .span = node.span }).literal(expected.?, values);
 }
 /// Bind a comprehension's element name to a fresh slot for the duration of its body.
@@ -320,6 +329,9 @@ fn bindElement(comptime Checker: type, self: *Checker, name: source.Span, slot: 
     // a statement loop element, even after it loses its synthetic local name.
     self.locals.items[@backingInt(slot)].origin = .iteration;
     self.locals.items[@backingInt(slot)].ownership.initialized = true;
+    self.locals.items[@backingInt(slot)].ownership.transfer_available = self.transfers(self.locals.items[@backingInt(slot)].ty);
+    // Comprehension names borrow their source elements just like statement loops.
+    self.locals.items[@backingInt(slot)].origin = .iteration;
     return self.bindScoped(text, slot);
 }
 /// Build `[value for name in source if condition]` as a checked loop over a fresh list,
@@ -330,7 +342,7 @@ fn checkComprehension(comptime Checker: type, self: *Checker, node: ast.Node, ea
         .range => |bounds| return checkRangeComprehension(Checker, self, b, node, each, bounds),
         .iterable => |iterable| iterable,
     };
-    const source_value = try self.expressionWithTemporaries(iterable_node, temporaries);
+    const source_value = try @import("sema_expressions.zig").borrowList(Checker, self, iterable_node, temporaries);
     const view = dictionary_views.identify(self.catalog, self.nodes.items[@backingInt(source_value)].ty);
     const projected = view != null and view.? != .item;
     const iterable = if (projected) try dictionary_views.owner(Checker, self, node.span, source_value) else source_value;
@@ -406,6 +418,8 @@ fn comprehensionBody(comptime Checker: type, self: *Checker, b: collections.Buil
     defer self.unbindScoped(self.src.text(each.name), hidden);
     const facts = try self.option_facts.snapshot(self.allocator);
     defer self.option_facts.restore(facts);
+    if (each.filter != null and self.requiresHandling(self.locals.items[@backingInt(slot)].ty))
+        return self.sink.fail(eResultOperation, node.span, "a filtered comprehension could skip pending Results; use an explicit handling loop");
     const condition_value = if (each.filter) |condition| checked: {
         const value = try self.expression(condition);
         try self.require(self.nodes.items[@backingInt(value)].ty, .bool, self.syntax.nodes.items[@backingInt(condition)].span);
@@ -414,10 +428,11 @@ fn comprehensionBody(comptime Checker: type, self: *Checker, b: collections.Buil
     } else null;
     const produced = try self.expression(each.output);
     const produced_type = self.nodes.items[@backingInt(produced)].ty;
+    try self.requireHandled(@backingInt(slot), node.span);
     // `{value for ...}` adds each value to a fresh set instead (SET-1).
     if (each.set) try self.requireSetElement(produced_type, node.span);
-    if (!typed.storable(produced_type, self.catalog.records) or typed.moveOnly(produced_type, self.catalog.records) or self.requiresHandling(produced_type))
-        return self.sink.fail(eListType, node.span, "list elements require copyable storable values without pending results");
+    if (!typed.storable(produced_type, self.catalog.records) or typed.moveOnly(produced_type, self.catalog.records))
+        return self.sink.fail(eListType, node.span, "list elements require storable values without owned resources");
     const output = try b.local(if (each.set) try set_lower.setType(&self.catalog, produced_type, node.span) else try collections.listType(&self.catalog, produced_type, node.span));
     const sets: set_lower.Builder(Checker) = .{ .b = b };
     const kept = if (each.set) try sets.add(output, produced) else try b.stmt(.{ .discard = try b.operation(output, .append, &.{produced}) });
@@ -650,6 +665,7 @@ fn checkCollectionMethod(comptime Checker: type, self: *Checker, node: ast.Node,
     // Only a list's `sort` takes named operands, and passing any operand
     // to it is the Python keyword form.
     if (std.mem.eql(u8, name, "sort") and call.arguments.len != 0) {
+        try pendingListOperation(Checker, self, owner_type, .sort, node.span);
         try self.requireWritableRoot(call.base);
         return self.checkMethodListSort(node, base, temporaries);
     }
@@ -720,6 +736,7 @@ fn checkCollectionSlice(comptime Checker: type, self: *Checker, node: ast.Node, 
     const input = self.nodes.items[@backingInt(base)].ty;
     if (!input.isAggregate() or !self.catalog.records[input.recordIndex()].isCollection()) return self.sink.fail(eCollectionMethod, node.span, "slicing requires a list or str");
     const schema = self.catalog.records[input.recordIndex()];
+    try pendingListOperation(Checker, self, input, .slice, node.span);
     if (schema.collection.kind == .dictionary) return self.sink.fail(eCollectionMethod, node.span, "dictionary keys do not support slices");
     const start = if (slice.start) |value| try self.expressionWithTemporaries(value, temporaries) else null;
     const end = if (slice.end) |value| try self.expressionWithTemporaries(value, temporaries) else null;
@@ -738,7 +755,7 @@ fn checkCollectionSlice(comptime Checker: type, self: *Checker, node: ast.Node, 
 /// check the receiver, then the access against it.
 fn checkListAccess(comptime Checker: type, self: *Checker, node: ast.Node, operation: ListAccess, temporaries: []const typed.Type) Error!typed.Node {
     if (operation.kind.mutates()) try self.requireWritableRoot(operation.base);
-    const base = try self.expressionWithTemporaries(operation.base, temporaries);
+    const base = try @import("sema_expressions.zig").borrowList(Checker, self, operation.base, temporaries);
     return checkCollectionAccess(Checker, self, node, .{
         .base = base,
         .kind = operation.kind,
@@ -753,9 +770,10 @@ fn checkCollectionAccess(comptime Checker: type, self: *Checker, node: ast.Node,
     const inputs = call.inputs;
     const temporaries = call.temporaries;
     const owner_type = self.nodes.items[@backingInt(base)].ty;
+    try pendingListOperation(Checker, self, owner_type, kind, node.span);
     const managed_owner = owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].isCollection();
     if (kind == .copy and !managed_owner) {
-        if (inputs.len != 0) return self.sink.fail("E_ARITY", node.span, "copy takes no arguments");
+        if (inputs.len != 0) return self.sink.fail("E_ARITY", node.span, copy_arity);
         if (owner_type.capabilityIndex() != null or owner_type.isFile() or typed.moveOnly(owner_type, self.catalog.records))
             return self.sink.fail(eCollectionMethod, node.span, "resource and move-only values cannot be copied");
         if (!owner_type.isAggregate()) return self.nodes.items[@backingInt(base)];
@@ -1134,8 +1152,12 @@ fn checkBufferOperation(comptime Checker: type, self: *Checker, _: ast.Node, ope
     const owner = try self.resolve(operation.owner);
     const local = &self.locals.items[@backingInt(owner)];
     const collection = local.ty.isAggregate() and self.catalog.records[local.ty.recordIndex()].isCollection();
+    if (record_layouts.pendingList(self.catalog.records, local.ty)) {
+        if (!local.ownership.transfer_available) return self.sink.failTransfer("E_RESULT_CONSUMED", out.span, local.declaration, local.ownership.transfer_span);
+        try pendingListOperation(Checker, self, local.ty, operation.kind, out.span);
+    }
     if (operation.kind == .copy and !collection) {
-        if (operation.arguments.len != 0) return self.sink.fail("E_ARITY", out.span, "copy takes no arguments");
+        if (operation.arguments.len != 0) return self.sink.fail("E_ARITY", out.span, copy_arity);
         if (local.ty.capabilityIndex() != null or local.ty.isFile() or typed.moveOnly(local.ty, self.catalog.records))
             return self.sink.fail(eCollectionMethod, out.span, "resource and move-only values cannot be copied");
         local.usage.reads += 1;
@@ -1308,4 +1330,13 @@ fn checkPythonText(comptime Checker: type, self: *Checker, operation: @FieldType
     out.ty = try collections.operationType(&self.catalog, local.ty, operation.kind, operation.owner);
     out.data = .{ .buffer_operation = .{ .kind = operation.kind, .owner = owner, .arguments = arguments } };
     return true;
+}
+
+/// Pending list elements may only be added, transferred, inspected or explicitly copied.
+fn pendingListOperation(comptime Checker: type, self: *Checker, owner: typed.Type, kind: BufferKind, span: source.Span) Error!void {
+    if (!record_layouts.pendingList(self.catalog.records, owner)) return;
+    switch (kind) {
+        .append, .pop, .pop_at, .copy, .read, .length, .capacity, .iteration_check => {},
+        else => return self.sink.fail(eResultOperation, span, "this operation would implicitly discard or copy pending Results; handle elements or explicitly discard the whole list"),
+    }
 }

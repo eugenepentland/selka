@@ -1,0 +1,8 @@
+build-slot: FIFO ticket 344, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 344 after 5s
+result_list release pass
+result_list debug pass
+result_list verify pass
+result_list optimized_debug pass
+result_list no_facts pass
+result_list tsan pass

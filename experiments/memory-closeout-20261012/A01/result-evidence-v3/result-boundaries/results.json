@@ -1,0 +1,52 @@
+{
+  "resource": {
+    "status": 1,
+    "stdout": "",
+    "stderr": "resource.my:3:19: error[E_GENERIC_REQUIREMENT]: type argument does not guarantee the nominal template's required operations\n      const values: Result[File, str][] = []\n                    ^\n  note: resource.my:1:1: type parameter requirements are declared here\n"
+  },
+  "capability": {
+    "status": 1,
+    "stdout": "",
+    "stderr": "capability.my:1:1: error[E_LIST_CAPABILITY]: managed list elements cannot contain allocator or provider capabilities\n  func main() -> int:\n  ^\n"
+  },
+  "dictionary": {
+    "status": 1,
+    "stdout": "",
+    "stderr": "dictionary.my:2:29: error[E_GENERIC_REQUIREMENT]: type argument does not guarantee the nominal template's required operations\n      const values: dict[int, Result[int, int]] = {}\n                              ^\n  note: dictionary.my:1:1: type parameter requirements are declared here\n"
+  },
+  "set": {
+    "status": 1,
+    "stdout": "",
+    "stderr": "set.my:2:23: error[E_GENERIC_REQUIREMENT]: type argument does not guarantee the nominal template's required operations\n      const values: set[Result[int, int]] = {}\n                        ^\n  note: set.my:1:1: type parameter requirements are declared here\n"
+  },
+  "boxed": {
+    "status": 1,
+    "stdout": "",
+    "stderr": "boxed.my:1:5: error[E_GENERIC_REQUIREMENT]: type argument does not guarantee the nominal template's required operations\n  record Node:\n      ^\n  note: boxed.my:1:1: type parameter requirements are declared here\n"
+  },
+  "nominal_copy": {
+    "status": 1,
+    "stdout": "",
+    "stderr": "nominal_copy.my:6:16: error[E_GENERIC_REQUIREMENT]: type argument does not guarantee the nominal template's required operations\n      value: Box[Pending]\n                 ^\n  note: nominal_copy.my:1:12: type parameter requirements are declared here\n"
+  },
+  "recursive_list": {
+    "status": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "generic_pop": {
+    "status": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  "generic_ignore": {
+    "status": 1,
+    "stdout": "",
+    "stderr": "generic_ignore.my:2:5: error[E_RESULT_UNHANDLED]: result-bearing binding leaves scope without handling or transfer\n      return 0\n      ^\n  note: generic_ignore.my:1:26: unhandled result-bearing binding\n"
+  },
+  "generic_copy": {
+    "status": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+}

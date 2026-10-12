@@ -1,0 +1,8 @@
+record Box[T]:
+    value: T
+record Pending:
+    values: Result[int, int][]
+record Bad:
+    value: Box[Pending]
+func main() -> int:
+    return 0

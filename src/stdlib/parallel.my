@@ -2,8 +2,9 @@
 # workers borrow distinct elements in bounded contiguous chunks. All work joins
 # before map returns; callback results become independently owned output elements.
 # Ordinary builds use this sequential implementation with identical values.
-public func map[T: copy + storable, R: copy + storable](values: T[], function: func(T) -> R) -> R[]:
+public func map[T: storable, R: storable](values: T[], function: func(T) -> R) -> R[]:
     mut out: R[] = []
     for value in values:
         out.append(function(value))
+    _ = values
     return out

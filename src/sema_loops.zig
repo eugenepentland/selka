@@ -98,7 +98,7 @@ fn statementForEach(comptime Checker: type, self: *Checker, stmt: ast.Statement,
     defer self.option_facts.restore(loop_facts);
     if (try preludeIteration(Checker, self, stmt, each)) |statements| return .{ .block = statements };
     const b: collections.Builder(Checker) = .{ .checker = self, .span = stmt.span };
-    const source_value = try self.expression(each.iterable);
+    const source_value = try @import("sema_expressions.zig").borrowList(Checker, self, each.iterable, &.{});
     const view = dictionary_views.identify(self.catalog, self.nodes.items[@backingInt(source_value)].ty);
     const projected = view != null and view.? != .item;
     const iterable = if (projected) try dictionary_views.owner(Checker, self, stmt.span, source_value) else source_value;
@@ -134,17 +134,19 @@ fn statementForEach(comptime Checker: type, self: *Checker, stmt: ast.Statement,
         self.locals.items[@backingInt(slot)].name = self.src.text(name);
         self.locals.items[@backingInt(slot)].declaration = name;
         self.locals.items[@backingInt(slot)].ownership.initialized = true;
+        self.locals.items[@backingInt(slot)].ownership.transfer_available = self.transfers(self.locals.items[@backingInt(slot)].ty) and !isDiscard(self.src, name);
         self.locals.items[@backingInt(slot)].origin = .iteration;
         earlier.* = try self.bindScoped(self.src.text(name), slot);
     };
     defer for (names, hidden) |maybe_name, earlier| if (maybe_name) |name| self.unbindScoped(self.src.text(name), earlier);
-    const before = try self.pendingState(self.locals.items.len);
+    const before = try self.pendingState(@backingInt(first_slot));
     const loop_id = self.loops.next;
     self.loops.next += 1;
     try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before });
     defer _ = self.loops.active.pop();
     const init_before = try self.initSnapshot();
     const body = try self.statement(each.body);
+    if (!body.terminates) try self.requireHandled(@backingInt(first_slot), stmt.span);
     _ = self.counters.remove(index);
     const owner = try endWalk(Checker, self, b, &source_walk, each.body);
     const prepared = try walkSource(Checker, b, source_walk, iterable, owner, each.body);
@@ -286,7 +288,11 @@ fn preludeIteration(comptime Checker: type, self: *Checker, stmt: ast.Statement,
     if (paired != (each.index_name != null)) return self.sink.fail(eCollectionMethod, stmt.span, "zip binds two iteration names and reversed binds one");
     for (call.arguments) |id| try self.hintEmptyPreludeList(id, .i64);
     const sources = try self.allocator.alloc(typed.NodeId, call.arguments.len);
-    for (call.arguments, sources) |id, *slot| slot.* = try self.expression(id);
+    for (call.arguments, sources) |id, *slot| {
+        slot.* = try @import("sema_expressions.zig").borrowList(Checker, self, id, &.{});
+        if (@import("record_layouts.zig").pendingList(self.catalog.records, self.nodes.items[@backingInt(slot.*)].ty))
+            return self.sink.fail("E_RESULT_OPERATION", node.span, "iterate a pending Result list directly and acknowledge its remaining elements explicitly");
+    }
     const builtins: prelude_builtins.Prelude(Checker) = .{ .checker = self };
     const left_type = self.nodes.items[@backingInt(sources[0])].ty;
     const zip = if (paired) try builtins.reserveZip(stmt.span, left_type, self.nodes.items[@backingInt(sources[1])].ty) else null;

@@ -209,8 +209,8 @@ fn statementGatherStep(comptime Checker: type, self: *Checker, stmt: ast.Stateme
                 const sets: set_lower.Builder(Checker) = .{ .b = b };
                 return .{ .block = try self.allocator.dupe(typed.StatementId, &.{try sets.add(result, value)}) };
             }
-            if (!typed.storable(element, self.catalog.records) or typed.moveOnly(element, self.catalog.records) or self.requiresHandling(element))
-                return self.sink.fail(collections.list_type_error, stmt.span, "list elements require copyable storable values without pending results");
+            if (!typed.storable(element, self.catalog.records) or typed.moveOnly(element, self.catalog.records))
+                return self.sink.fail(collections.list_type_error, stmt.span, "list elements require storable values without owned resources");
             const list_type = if (expectedElement(Checker, self, sink) != null) sink.expected.? else try collections.listType(&self.catalog, element, stmt.span);
             try self.require(element, self.catalog.records[list_type.recordIndex()].shape.buffer.?, self.syntax.nodes.items[@backingInt(step.value)].span);
             const result = try accumulator(Checker, self, b, list_type);

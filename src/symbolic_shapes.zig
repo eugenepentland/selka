@@ -357,7 +357,8 @@ pub const Context = struct {
             .length, .length_parameter => .{},
             .parameter => |id| .{
                 .move_only = self.parameters[id].requirements.contains(.storable) and !self.parameters[id].requirements.contains(.copy),
-                .requires_handling = self.parameters[id].requirements.contains(.codec) and !self.parameters[id].requirements.contains(.storable),
+                .requires_handling = !self.parameters[id].requirements.contains(.copy) and
+                    (self.parameters[id].requirements.contains(.codec) or self.parameters[id].requirements.contains(.storable)),
             },
             .concrete => |ty| .{
                 .move_only = typed.moveOnly(ty, self.catalog.records),
@@ -365,7 +366,7 @@ pub const Context = struct {
                 .cleanup = if (ty.isAggregate()) self.contracts.cleanup[ty.recordIndex()] else 0,
             },
             .nominal => |nominal_value| switch (self.kind(value).?) {
-                .buffer => .{},
+                .buffer => if (self.collectionKind(value) == .list) nominal_value.properties else .{},
                 else => nominal_value.properties,
             },
             .array => null,
@@ -378,6 +379,11 @@ pub const Context = struct {
             return value.array.element;
         }
         const shape = try self.schema(value, span);
+        if (shape.kind == .buffer and self.collectionKind(value) == .list) {
+            if (cursor.* != 0) return null;
+            cursor.* += 1;
+            return value.nominal.arguments[0];
+        }
         result.requires_handling = result.requires_handling or shape.kind == .result;
         while (cursor.* < shape.fields.len) {
             const index = cursor.*;
@@ -389,7 +395,7 @@ pub const Context = struct {
     /// Derive contracts over stored children with an explicit stack, never by expanding type arguments.
     pub fn properties(self: Context, value: Value, span: source.Span) Error!Properties {
         if (self.leaf(value)) |known| return known;
-        const Visit = struct { value: Value, next: usize = 0, result: Properties = .{} };
+        const Visit = struct { value: Value, next: usize = 0, result: Properties = .{}, cyclic: bool = false };
         var stack: std.ArrayList(Visit) = .empty;
         defer stack.deinit(self.arena.allocator());
         try stack.append(self.arena.allocator(), .{ .value = value });
@@ -403,12 +409,14 @@ pub const Context = struct {
                     // A recursive value type reaches itself again through a
                     // boxed field (RECURSIVE-VALUES-2); the visit already on
                     // the stack answers for that repeat.
-                    if (child_type == .nominal and onStack(self, stack.items, child_type)) continue;
+                    if (child_type == .nominal and markCycle(self, stack.items, child_type)) continue;
                     try stack.append(self.arena.allocator(), .{ .value = child_type });
                     continue;
                 }
                 result = stack.items[last].result;
-                if (visit.value == .nominal) visit.value.nominal.properties = result;
+                // A cyclic child can finish before an ancestor supplies a pending
+                // field. Cache only complete acyclic results, never that prefix.
+                if (visit.value == .nominal and !visit.cyclic) visit.value.nominal.properties = result;
             }
             _ = stack.pop();
             if (stack.items.len == 0) return result.?;
@@ -420,9 +428,14 @@ pub const Context = struct {
         return error.InternalError;
     }
 };
-/// Whether a nominal value is already being derived further down `visits`.
-fn onStack(self: Context, visits: anytype, value: Value) bool {
-    for (visits) |visit| if (visit.value == .nominal and symbolic.same(visit.value, value, self.catalog)) return true;
+/// Mark every active participant so a partial cyclic result cannot be memoized.
+/// The existing symbolic work budget still bounds all revisits.
+fn markCycle(self: Context, visits: anytype, value: Value) bool {
+    for (visits, 0..) |visit, index| {
+        if (visit.value != .nominal or !symbolic.same(visit.value, value, self.catalog)) continue;
+        for (visits[index..]) |*member| member.cyclic = true;
+        return true;
+    }
     return false;
 }
 /// Coalesce equivalent expanded requirement members by resolved identity and

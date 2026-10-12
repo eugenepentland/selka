@@ -32,7 +32,7 @@ const Checker = struct {
                 move_only = move_only or typed.moveOnly(field.ty, records);
             };
         }
-        records[record_index].contract.storable = can_store and !requires_handling;
+        records[record_index].contract.storable = can_store;
         records[record_index].contract.move_only = move_only;
         records[record_index].contract.requires_handling = requires_handling;
     }
@@ -95,10 +95,12 @@ const Checker = struct {
 pub fn validate(allocator: std.mem.Allocator, records: []typed.Record, sink: *diagnostic.Sink) Error!void {
     var checker: Checker = .{ .allocator = allocator, .records = records, .sink = sink };
     try checker.validateLayouts();
-    // Managed edges do not affect value layout, but all their elements must be copyable.
+    try resultObligations(allocator, records);
+    // Lists preserve pending Result obligations; other containers still require copyable elements.
     for (records) |schema| if (schema.isCollection()) {
         const element = schema.shape.buffer.?;
-        if (!typed.storable(element, records) or typed.moveOnly(element, records)) return sink.fail("E_LIST_ELEMENT", schema.declaration, "managed list elements must be copyable values without resources or result obligations");
+        const pending_other = schema.collection.kind != .list and typed.requiresHandling(element, records);
+        if (!typed.storable(element, records) or typed.moveOnly(element, records) or pending_other) return sink.fail("E_LIST_ELEMENT", schema.declaration, "managed collection elements cannot own resources; pending Results require a list");
     };
     const capabilities = try dependencies(allocator, records, .capability);
     defer allocator.free(capabilities);
@@ -109,6 +111,47 @@ pub fn validate(allocator: std.mem.Allocator, records: []typed.Record, sink: *di
     defer allocator.free(files);
     try boxedContents(records, capabilities, files, sink);
     try @import("cell_types.zig").validate(allocator, records, sink);
+}
+
+/// Result obligations follow managed list edges as well as inline fields. Each
+/// edge and newly pending schema is visited once, including recursive lists.
+fn resultObligations(allocator: std.mem.Allocator, records: []typed.Record) std.mem.Allocator.Error!void {
+    const parents = try allocator.alloc(std.ArrayList(usize), records.len);
+    @memset(parents, .empty);
+    defer {
+        for (parents) |*edges| edges.deinit(allocator);
+        allocator.free(parents);
+    }
+    var pending: std.ArrayList(usize) = .empty;
+    defer pending.deinit(allocator);
+    for (records, 0..) |schema, index| {
+        if (schema.contract.requires_handling) try pending.append(allocator, index);
+        if (schema.shape.array) |array| {
+            if (array.length != 0) try resultParent(allocator, parents, array.element, index);
+        } else if (schema.shape.buffer) |element| {
+            try resultParent(allocator, parents, element, index);
+        } else if (schema.shape.variants) |variants| {
+            for (variants.cases) |case| if (case.payload) |payload| try resultParent(allocator, parents, payload, index);
+        } else for (schema.fields) |field| try resultParent(allocator, parents, field.ty, index);
+    }
+    var cursor: usize = 0;
+    while (cursor < pending.items.len) : (cursor += 1) {
+        for (parents[pending.items[cursor]].items) |parent| {
+            if (records[parent].contract.requires_handling) continue;
+            records[parent].contract.requires_handling = true;
+            try pending.append(allocator, parent);
+        }
+    }
+}
+
+fn resultParent(allocator: std.mem.Allocator, parents: []std.ArrayList(usize), element: typed.Type, parent: usize) std.mem.Allocator.Error!void {
+    if (element.isAggregate()) try parents[element.recordIndex()].append(allocator, parent);
+}
+
+/// Named list inspection borrows storage without acknowledging its pending elements.
+pub fn pendingList(records: []const typed.Record, ty: typed.Type) bool {
+    return ty.isAggregate() and records[ty.recordIndex()].shape.buffer != null and
+        records[ty.recordIndex()].collection.kind == .list and typed.requiresHandling(ty, records);
 }
 
 /// RECURSIVE-VALUES-2: a boxed value is shared by every copy of its holder,

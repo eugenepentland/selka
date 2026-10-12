@@ -243,7 +243,7 @@ fn tupleContract(elements: []const typed.Type, records: []const typed.Record) ty
         move_only = move_only or typed.moveOnly(element, records);
         requires_handling = requires_handling or typed.requiresHandling(element, records);
     }
-    return .{ .storable = storable and !requires_handling, .move_only = move_only, .requires_handling = requires_handling };
+    return .{ .storable = storable, .move_only = move_only, .requires_handling = requires_handling };
 }
 
 /// Compose a diagnostic message with a sorted `; declared <label>: a, b` hint.

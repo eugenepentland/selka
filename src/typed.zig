@@ -362,7 +362,8 @@ fn equalitySupport(ty: Type, records: []const Record, visited: *[64]usize, depth
 pub fn moveOnly(ty: Type, records: []const Record) bool {
     return ty.isAggregate() and records[ty.recordIndex()].contract.move_only;
 }
-/// Values whose destruction requires neither result handling nor external provider effects.
+/// Values eligible for managed storage without external resource cleanup;
+/// pending Result obligations are tracked separately.
 pub fn storable(ty: Type, records: []const Record) bool {
     return !ty.isAggregate() or records[ty.recordIndex()].contract.storable;
 }
