@@ -1,0 +1,49 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support-install/bin/mylang",
+  "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+  "overlay": true,
+  "check_only": false,
+  "harness_sha256": "e0cac7ac8672c337959ce6d4405a09c7d8e8957e71d82833b1421dcdd359b3a9",
+  "cases": {
+    "storage": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/storage.my",
+        "original_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+        "source_sha256": "0c6c631c86493f669b77388ce5608c379dbbb9f327f8967af8c41666376bf58e",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-storage-v2/storage/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-storage-v2/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-storage-v2/storage/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-storage-v2/storage/release/program.ll"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "a05_durable.my:40:42: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public func message(error: Error) -> str effects(managed_allocation):\n                                           ^\na05_memo.my:15:42: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public func message(error: Error) -> str effects(managed_allocation):\n                                           ^\na05_persistent_memo.my:25:42: warning[W_DERIVED_EFFECTS]: `effects(managed_allocation)` is exactly what the parameters imply; remove it\n  public func message(error: Error) -> str effects(managed_allocation):\n                                           ^\nmain.my:1:1: error[E_CORE_UNSUPPORTED]: the new core does not support unaudited zero-RC runtime helper myl_core_callable_digest_272a134f014550b22ba018c82d2a6154ece55498a6713f20a71584e70f3ef4d7 yet\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "a05_cache_record.my": "3cbe85235ed0d5b420857f537f05c301a9a6d4c299eee8b13061d1b0403dee3d",
+          "a05_durable.my": "a9ccf8dae16c35d21d00f2a58106b53b8b48ed342920676fee1b2a20a2c1c048",
+          "a05_hashes.my": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+          "a05_memo.my": "2caf1702f85b10d25361d47beddb64b991467806bd25de0eea9c5a4844e94fc6",
+          "a05_persistent_memo.my": "712ff57eb69e6dd2d24950ef554fe27c50610d264df4650d153ec18d2ca52885",
+          "main.my": "0c6c631c86493f669b77388ce5608c379dbbb9f327f8967af8c41666376bf58e"
+        }
+      }
+    }
+  },
+  "failures": 1,
+  "compiler_source_revision": "4c4c1663680fa4c290691867107eee24b504604d",
+  "compiler_identity_authority": "coordinator published immutable support-install identity"
+}

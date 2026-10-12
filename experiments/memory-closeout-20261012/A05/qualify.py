@@ -77,6 +77,7 @@ def network_provider():
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--compiler', type=Path, required=True)
+    p.add_argument('--compiler-revision', help='Exact source revision of the independently built compiler')
     p.add_argument('--zig', type=Path, required=True)
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--overlay', action='store_true')
@@ -104,6 +105,7 @@ def main():
     def overlay(text):
         return re.sub(r'^import (\w+)$',lambda m:'import a05_'+m[1]+' as '+m[1] if m[1] in modules else m[0],text,flags=re.M)
     report={'base':'fbfcaa7a923186a8e773c3760f81c10aa345a432','compiler':str(a.compiler),'compiler_sha256':digest(a.compiler),'overlay':a.overlay,'check_only':a.check_only,'harness_sha256':digest(__file__),'cases':{}}
+    report['compiler_source_revision']=a.compiler_revision
     failures=0
     for name,(source,expected) in sources.items():
         if a.cases and name not in a.cases: continue
@@ -139,18 +141,23 @@ def main():
                 if name=='network':
                     provider,thread=network_provider()
                     run_env.update(A05_ENDPOINT=provider['endpoint'],MYLANG_OPTIONS='--restrict --allow-endpoint='+provider['endpoint']+' --allow-env=A05_ENDPOINT')
-                ran=run_command([str(binary)],cwd=runtime,env=run_env,capture_output=True,text=True,timeout=120)
+                ran=run_command([str(binary)],cwd=runtime,env=run_env,capture_output=True,timeout=120)
+                raw_stdout=ran.stdout if isinstance(ran.stdout,bytes) else ran.stdout.encode()
+                raw_stderr=ran.stderr if isinstance(ran.stderr,bytes) else ran.stderr.encode()
                 if provider is not None:
                     thread.join(timeout=20)
                     result['provider']=provider
 
-                result.update(run_status=ran.returncode,stdout=ran.stdout,stderr=ran.stderr,binary_sha256=digest(binary),llvm_sha256=digest(llvm))
+                result.update(run_status=ran.returncode,stdout=raw_stdout.decode(errors='replace'),stdout_hex=raw_stdout.hex(),stderr=raw_stderr.decode(errors='replace'),binary_sha256=digest(binary),llvm_sha256=digest(llvm))
                 if counts.exists(): result['audit']=audit.audit(counts)
                 symbols=subprocess.run(['nm',str(binary)],capture_output=True,text=True,check=True).stdout
                 result['legacy_symbols']=[s for s in ('myl_core_retain','myl_core_release','myl_core_share') if s in symbols]
                 code=llvm.read_text()
                 result['legacy_llvm']=[s for s in ('@myl_core_retain','@myl_core_release','@myl_core_share(','load atomic i32') if s in code]
                 result['passed']=ran.returncode==expected and not ran.stderr and result.get('audit',{}).get('observed_rc_free',False) and result['audit']['managed_leak_free'] and not result['legacy_symbols'] and not result['legacy_llvm']
+                if name=='stream_borrow':
+                    result['expected_stdout_hex']='00ff4100ff4100ff4142'
+                    result['passed'] &= raw_stdout.hex()==result['expected_stdout_hex']
             if result.get('provider'):
                 result['passed'] &= result['provider'].get('closed')==3 and result['provider'].get('received')=='6364' and 'error' not in result['provider']
             failures += not result['passed']

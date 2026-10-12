@@ -1,0 +1,13 @@
+# spec-case: NEW-CORE-S5-STREAM-WRITE-1
+func main(out: Stream) -> int:
+    mut data = bytes([0, 255, 65])
+    assert out.write(data) == 3
+    mut buffer = byte_buffer([0, 255, 65])
+    assert out.write(buffer) == 3
+    data = b"replaced"
+    assert data == b"replaced"
+    assert buffer.append_byte(66)
+    assert out.write(buffer) == 4
+    mut empty: int[] = []
+    buffer = byte_buffer(empty)
+    return 0

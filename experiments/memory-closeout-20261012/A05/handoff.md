@@ -149,3 +149,18 @@ and changed-line counts for all seven assigned files and two stdlib fixtures.
 
 The source-only generated-main batch still refuses at library/compiler blockers;
 these source migrations are integration inputs, not guest pass claims.
+
+## Interim integrated feedback
+
+Coordinator support-install source `4c4c1663680fa4c290691867107eee24b504604d`,
+compiler SHA256 `ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5`,
+is an interim compiler, not C1. Full container keys/items snapshot case passes
+with zero RC/live bytes and clean LLVM/symbols. Source persistence now passes
+lexical lock checks. Copying retained journal suffix elements explicitly preserves
+snapshot semantics; the next block is the generated `function_digest` helper's
+audit contract. Generic network resources still refuse.
+
+`export-status.json` maps passing fixture references to public declarations while
+keeping final qualification pending. Stream binary and buffer helpers have been
+audited with A07; their executable regression is prepared and awaits the helper
+contract. These open helper/source boundaries remain rollout blockers.

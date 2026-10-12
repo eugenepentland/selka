@@ -176,7 +176,8 @@ public func run(fs: Filesystem, request: Request, compute: func(bytes, bytes) ->
                 return Err(Error.Corrupt)
             published = fields[2] == "published"
             expected_output = fields[3].copy()
-            artifacts = fields[4:]
+            for index in range(4, len(fields)):
+                artifacts.append(fields[index].copy())
             if len(artifacts) > len(request.chunks):
                 return Err(Error.Corrupt)
             if published and len(artifacts) != len(request.chunks):

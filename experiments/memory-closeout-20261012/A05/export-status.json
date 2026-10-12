@@ -1,0 +1,2067 @@
+{
+  "scope": "C0 and interim/overlay fixture evidence, not final integrated export qualification",
+  "public_declarations": 120,
+  "public_functions": 95,
+  "declarations_with_at_least_one_passing_fixture_reference": 88,
+  "items": [
+    {
+      "module": "cache_record",
+      "name": "Error",
+      "kind": "enum",
+      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "cache_record",
+      "name": "message",
+      "kind": "func",
+      "contract": "Borrows error; returns immutable static reason or an independent copy of dynamic detail.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-independent.json",
+          "case": "cache_record",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "47033e03923a805716ee4c41855732d2df6573cba4df8e8c6cd6232eddc86aa0",
+          "overlay": false,
+          "binary_sha256": "bc575e912cfa4392f737bda3f80c50892a531f4403185c7897b8cc409b30c340"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/overlay-release.json",
+          "case": "cache_record",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "9bd5e272720a3ae780c7a387b3bbf51810bcfe3efc238dea5b4ff09d00fcc996",
+          "overlay": true,
+          "binary_sha256": "951feb710befccf92072571ae2b407699808d3aefd73d1b221ea9f9a8c0682dc"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "cache_record",
+      "name": "encode",
+      "kind": "func",
+      "contract": "Borrows string list; returns independent canonical checksummed bytes.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-independent.json",
+          "case": "cache_record",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "47033e03923a805716ee4c41855732d2df6573cba4df8e8c6cd6232eddc86aa0",
+          "overlay": false,
+          "binary_sha256": "bc575e912cfa4392f737bda3f80c50892a531f4403185c7897b8cc409b30c340"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/overlay-release.json",
+          "case": "cache_record",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "9bd5e272720a3ae780c7a387b3bbf51810bcfe3efc238dea5b4ff09d00fcc996",
+          "overlay": true,
+          "binary_sha256": "951feb710befccf92072571ae2b407699808d3aefd73d1b221ea9f9a8c0682dc"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "cache_record",
+      "name": "decode",
+      "kind": "func",
+      "contract": "Borrows input bytes; returns independently owned decoded strings or scalar error.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-independent.json",
+          "case": "cache_record",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "47033e03923a805716ee4c41855732d2df6573cba4df8e8c6cd6232eddc86aa0",
+          "overlay": false,
+          "binary_sha256": "bc575e912cfa4392f737bda3f80c50892a531f4403185c7897b8cc409b30c340"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/overlay-release.json",
+          "case": "cache_record",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "9bd5e272720a3ae780c7a387b3bbf51810bcfe3efc238dea5b4ff09d00fcc996",
+          "overlay": true,
+          "binary_sha256": "951feb710befccf92072571ae2b407699808d3aefd73d1b221ea9f9a8c0682dc"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "durable",
+      "name": "Step",
+      "kind": "record",
+      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "durable",
+      "name": "Request",
+      "kind": "record",
+      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "durable",
+      "name": "Report",
+      "kind": "record",
+      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "durable",
+      "name": "Error",
+      "kind": "enum",
+      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "durable",
+      "name": "message",
+      "kind": "func",
+      "contract": "Borrows error; returns immutable static reason or an independent copy of dynamic detail.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "durable",
+      "name": "run",
+      "kind": "func",
+      "contract": "Borrows capability/request/callback; scoped directory lease and bounded publication; returns independent state/digest or owned error.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "environment",
+      "name": "fixed",
+      "kind": "func",
+      "contract": "Borrows dictionary; creates owned root provider with copied name/value bytes.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-independent-batch2.json",
+          "case": "providers",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f",
+          "overlay": false,
+          "binary_sha256": "2628f58de11a34bb212e3596911585db40b3bde49cb7a0e4c248180a15457636"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "filesystem",
+      "name": "memory",
+      "kind": "func",
+      "contract": "Creates an owned root provider with independent in-memory filesystem storage.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-independent-batch2.json",
+          "case": "providers",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f",
+          "overlay": false,
+          "binary_sha256": "2628f58de11a34bb212e3596911585db40b3bde49cb7a0e4c248180a15457636"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "hashes",
+      "name": "sha256",
+      "kind": "func",
+      "contract": "Borrows input bytes; returns independent digest text.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-independent.json",
+          "case": "cache_record",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "47033e03923a805716ee4c41855732d2df6573cba4df8e8c6cd6232eddc86aa0",
+          "overlay": false,
+          "binary_sha256": "bc575e912cfa4392f737bda3f80c50892a531f4403185c7897b8cc409b30c340"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/overlay-release.json",
+          "case": "cache_record",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "9bd5e272720a3ae780c7a387b3bbf51810bcfe3efc238dea5b4ff09d00fcc996",
+          "overlay": true,
+          "binary_sha256": "951feb710befccf92072571ae2b407699808d3aefd73d1b221ea9f9a8c0682dc"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "pi",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+          "overlay": false,
+          "binary_sha256": "03e50e615c0bad23c328afe59efe9d4f6faeb4dad1cfa85e117782224d808bff"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math_extra",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "6481c446a352ac939fedf7fad3ec7a428c726567c4d12696d0fc37fc268521e5",
+          "overlay": false,
+          "binary_sha256": "ff3c24c7be940d179321f665daa6c960b777f82739968c271e638e4c7d095ae2"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "e",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+          "overlay": false,
+          "binary_sha256": "03e50e615c0bad23c328afe59efe9d4f6faeb4dad1cfa85e117782224d808bff"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "nan",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+          "overlay": false,
+          "binary_sha256": "03e50e615c0bad23c328afe59efe9d4f6faeb4dad1cfa85e117782224d808bff"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "infinity",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+          "overlay": false,
+          "binary_sha256": "03e50e615c0bad23c328afe59efe9d4f6faeb4dad1cfa85e117782224d808bff"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "is_nan",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+          "overlay": false,
+          "binary_sha256": "03e50e615c0bad23c328afe59efe9d4f6faeb4dad1cfa85e117782224d808bff"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "is_inf",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+          "overlay": false,
+          "binary_sha256": "03e50e615c0bad23c328afe59efe9d4f6faeb4dad1cfa85e117782224d808bff"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "is_finite",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+          "overlay": false,
+          "binary_sha256": "03e50e615c0bad23c328afe59efe9d4f6faeb4dad1cfa85e117782224d808bff"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "fabs",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+          "overlay": false,
+          "binary_sha256": "03e50e615c0bad23c328afe59efe9d4f6faeb4dad1cfa85e117782224d808bff"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math_extra",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "6481c446a352ac939fedf7fad3ec7a428c726567c4d12696d0fc37fc268521e5",
+          "overlay": false,
+          "binary_sha256": "ff3c24c7be940d179321f665daa6c960b777f82739968c271e638e4c7d095ae2"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "sign",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+          "overlay": false,
+          "binary_sha256": "03e50e615c0bad23c328afe59efe9d4f6faeb4dad1cfa85e117782224d808bff"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "trunc",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+          "overlay": false,
+          "binary_sha256": "03e50e615c0bad23c328afe59efe9d4f6faeb4dad1cfa85e117782224d808bff"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "floor",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+          "overlay": false,
+          "binary_sha256": "03e50e615c0bad23c328afe59efe9d4f6faeb4dad1cfa85e117782224d808bff"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "ceil",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+          "overlay": false,
+          "binary_sha256": "03e50e615c0bad23c328afe59efe9d4f6faeb4dad1cfa85e117782224d808bff"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "round",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+          "overlay": false,
+          "binary_sha256": "03e50e615c0bad23c328afe59efe9d4f6faeb4dad1cfa85e117782224d808bff"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "sqrt",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+          "overlay": false,
+          "binary_sha256": "03e50e615c0bad23c328afe59efe9d4f6faeb4dad1cfa85e117782224d808bff"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "sin",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math_extra",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "6481c446a352ac939fedf7fad3ec7a428c726567c4d12696d0fc37fc268521e5",
+          "overlay": false,
+          "binary_sha256": "ff3c24c7be940d179321f665daa6c960b777f82739968c271e638e4c7d095ae2"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "cos",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math_extra",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "6481c446a352ac939fedf7fad3ec7a428c726567c4d12696d0fc37fc268521e5",
+          "overlay": false,
+          "binary_sha256": "ff3c24c7be940d179321f665daa6c960b777f82739968c271e638e4c7d095ae2"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "pow",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+          "overlay": false,
+          "binary_sha256": "03e50e615c0bad23c328afe59efe9d4f6faeb4dad1cfa85e117782224d808bff"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "fmin",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+          "overlay": false,
+          "binary_sha256": "03e50e615c0bad23c328afe59efe9d4f6faeb4dad1cfa85e117782224d808bff"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "fmax",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+          "overlay": false,
+          "binary_sha256": "03e50e615c0bad23c328afe59efe9d4f6faeb4dad1cfa85e117782224d808bff"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "min",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+          "overlay": false,
+          "binary_sha256": "03e50e615c0bad23c328afe59efe9d4f6faeb4dad1cfa85e117782224d808bff"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "integer_extrema",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "6d5ecc8e225b828152404291d1924c69d6984f956aa7d781aff048f378bab1b0",
+          "overlay": false,
+          "binary_sha256": "036225b2b4d069f7b869e3376cb8377af9057c42bc4800208fe72c67f6308112"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "max",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+          "overlay": false,
+          "binary_sha256": "03e50e615c0bad23c328afe59efe9d4f6faeb4dad1cfa85e117782224d808bff"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "integer_extrema",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "6d5ecc8e225b828152404291d1924c69d6984f956aa7d781aff048f378bab1b0",
+          "overlay": false,
+          "binary_sha256": "036225b2b4d069f7b869e3376cb8377af9057c42bc4800208fe72c67f6308112"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "clamp",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+          "overlay": false,
+          "binary_sha256": "03e50e615c0bad23c328afe59efe9d4f6faeb4dad1cfa85e117782224d808bff"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "integer_extrema",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "6d5ecc8e225b828152404291d1924c69d6984f956aa7d781aff048f378bab1b0",
+          "overlay": false,
+          "binary_sha256": "036225b2b4d069f7b869e3376cb8377af9057c42bc4800208fe72c67f6308112"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "abs",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+          "overlay": false,
+          "binary_sha256": "03e50e615c0bad23c328afe59efe9d4f6faeb4dad1cfa85e117782224d808bff"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "gcd",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+          "overlay": false,
+          "binary_sha256": "03e50e615c0bad23c328afe59efe9d4f6faeb4dad1cfa85e117782224d808bff"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "lcm",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+          "overlay": false,
+          "binary_sha256": "03e50e615c0bad23c328afe59efe9d4f6faeb4dad1cfa85e117782224d808bff"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "math",
+      "name": "isqrt",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "math",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "37a47ca724998fef0eb5c84707a6cd60bfea2d3858a99c26ae7b4f209f51dd02",
+          "overlay": false,
+          "binary_sha256": "03e50e615c0bad23c328afe59efe9d4f6faeb4dad1cfa85e117782224d808bff"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "memo",
+      "name": "Key",
+      "kind": "enum",
+      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/overlay-release.json",
+          "case": "memo",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "28074a03530fda44404c885eaf79a2484723ea9193a76c0a76ed5445ec4da64e",
+          "overlay": true,
+          "binary_sha256": "8023a325c32c5fd0a5a300030a7ac5cbe881594f3d5251a231dda3127fda3f42"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "memo",
+      "name": "Error",
+      "kind": "enum",
+      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/overlay-release.json",
+          "case": "memo",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "28074a03530fda44404c885eaf79a2484723ea9193a76c0a76ed5445ec4da64e",
+          "overlay": true,
+          "binary_sha256": "8023a325c32c5fd0a5a300030a7ac5cbe881594f3d5251a231dda3127fda3f42"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "memo",
+      "name": "message",
+      "kind": "func",
+      "contract": "Borrows error; returns immutable static reason or an independent copy of dynamic detail.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/overlay-release.json",
+          "case": "memo",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "28074a03530fda44404c885eaf79a2484723ea9193a76c0a76ed5445ec4da64e",
+          "overlay": true,
+          "binary_sha256": "8023a325c32c5fd0a5a300030a7ac5cbe881594f3d5251a231dda3127fda3f42"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "memo",
+      "name": "Entry",
+      "kind": "record",
+      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "memo",
+      "name": "Cache",
+      "kind": "record",
+      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "memo",
+      "name": "Lookup",
+      "kind": "record",
+      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "memo",
+      "name": "create",
+      "kind": "func",
+      "contract": "Borrows callback; returns independent empty cache or owned error.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/overlay-release.json",
+          "case": "memo",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "28074a03530fda44404c885eaf79a2484723ea9193a76c0a76ed5445ec4da64e",
+          "overlay": true,
+          "binary_sha256": "8023a325c32c5fd0a5a300030a7ac5cbe881594f3d5251a231dda3127fda3f42"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "memo",
+      "name": "call",
+      "kind": "func",
+      "contract": "Mutably borrows cache; borrows key and callback input; retained key/value and returned value are independent owned snapshots.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/overlay-release.json",
+          "case": "memo",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "28074a03530fda44404c885eaf79a2484723ea9193a76c0a76ed5445ec4da64e",
+          "overlay": true,
+          "binary_sha256": "8023a325c32c5fd0a5a300030a7ac5cbe881594f3d5251a231dda3127fda3f42"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "memo",
+      "name": "clear",
+      "kind": "func",
+      "contract": "Mutably borrows cache; destroys only its owned entries; independent copies survive.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/overlay-release.json",
+          "case": "memo",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "28074a03530fda44404c885eaf79a2484723ea9193a76c0a76ed5445ec4da64e",
+          "overlay": true,
+          "binary_sha256": "8023a325c32c5fd0a5a300030a7ac5cbe881594f3d5251a231dda3127fda3f42"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "memo",
+      "name": "count",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/overlay-release.json",
+          "case": "memo",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "28074a03530fda44404c885eaf79a2484723ea9193a76c0a76ed5445ec4da64e",
+          "overlay": true,
+          "binary_sha256": "8023a325c32c5fd0a5a300030a7ac5cbe881594f3d5251a231dda3127fda3f42"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "memo",
+      "name": "capacity",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/overlay-release.json",
+          "case": "memo",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "28074a03530fda44404c885eaf79a2484723ea9193a76c0a76ed5445ec4da64e",
+          "overlay": true,
+          "binary_sha256": "8023a325c32c5fd0a5a300030a7ac5cbe881594f3d5251a231dda3127fda3f42"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "network",
+      "name": "Connection",
+      "kind": "resource",
+      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "network",
+      "name": "Chunk",
+      "kind": "record",
+      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "network",
+      "name": "Connected",
+      "kind": "result",
+      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "network",
+      "name": "Read",
+      "kind": "result",
+      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "network",
+      "name": "Written",
+      "kind": "result",
+      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "network",
+      "name": "Failure",
+      "kind": "record",
+      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "network",
+      "name": "Closed",
+      "kind": "result",
+      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "network",
+      "name": "denied",
+      "kind": "func",
+      "contract": "Creates an owned deterministic denied root provider.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "network",
+      "name": "denied_here",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "network",
+      "name": "describe",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "network",
+      "name": "connect",
+      "kind": "func",
+      "contract": "Acquires one resource dependent on the Network provider; resource-result path requires qualification.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "network",
+      "name": "read",
+      "kind": "func",
+      "contract": "Reads a live dependent resource into an independent fixed-array result; resource path requires qualification.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "network",
+      "name": "write",
+      "kind": "func",
+      "contract": "Copies fixed-array data synchronously into provider scratch; resource path requires qualification.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "network",
+      "name": "close",
+      "kind": "func",
+      "contract": "Completes handle on success or returns live resource in failure; source/IR ownership path requires qualification.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "persistent_memo",
+      "name": "Options",
+      "kind": "record",
+      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "persistent_memo",
+      "name": "Lookup",
+      "kind": "record",
+      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "persistent_memo",
+      "name": "Error",
+      "kind": "enum",
+      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "persistent_memo",
+      "name": "message",
+      "kind": "func",
+      "contract": "Borrows error; returns immutable static reason or an independent copy of dynamic detail.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "persistent_memo",
+      "name": "call",
+      "kind": "func",
+      "contract": "Borrows capability/key/callback; scoped directory lease joins cleanup; returns independent result snapshot or owned error.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "pool",
+      "name": "Pool",
+      "kind": "record",
+      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "pool",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "fc66330fe249457c917fdffb19b8f2f73e1290fbac9abf03b5f4d12142926ec2",
+          "overlay": false,
+          "binary_sha256": "008ef22e8a42b1ba874827d53e95af4ecd6ebd753aeb071711bc3f2425199f8a"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "pool",
+      "name": "Handle",
+      "kind": "record",
+      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "pool",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "fc66330fe249457c917fdffb19b8f2f73e1290fbac9abf03b5f4d12142926ec2",
+          "overlay": false,
+          "binary_sha256": "008ef22e8a42b1ba874827d53e95af4ecd6ebd753aeb071711bc3f2425199f8a"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "pool",
+      "name": "create",
+      "kind": "func",
+      "contract": "Borrows source list and copies each value into independent pool slots.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "pool",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "fc66330fe249457c917fdffb19b8f2f73e1290fbac9abf03b5f4d12142926ec2",
+          "overlay": false,
+          "binary_sha256": "008ef22e8a42b1ba874827d53e95af4ecd6ebd753aeb071711bc3f2425199f8a"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "pool",
+      "name": "occupied",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "pool",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "fc66330fe249457c917fdffb19b8f2f73e1290fbac9abf03b5f4d12142926ec2",
+          "overlay": false,
+          "binary_sha256": "008ef22e8a42b1ba874827d53e95af4ecd6ebd753aeb071711bc3f2425199f8a"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "pool",
+      "name": "insert",
+      "kind": "func",
+      "contract": "Mutably borrows pool, borrows value and copies it into a slot; returns scalar generational handle.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "pool",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "fc66330fe249457c917fdffb19b8f2f73e1290fbac9abf03b5f4d12142926ec2",
+          "overlay": false,
+          "binary_sha256": "008ef22e8a42b1ba874827d53e95af4ecd6ebd753aeb071711bc3f2425199f8a"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "pool",
+      "name": "get",
+      "kind": "func",
+      "contract": "Borrows pool/handle; returns independently copied optional value.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "pool",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "fc66330fe249457c917fdffb19b8f2f73e1290fbac9abf03b5f4d12142926ec2",
+          "overlay": false,
+          "binary_sha256": "008ef22e8a42b1ba874827d53e95af4ecd6ebd753aeb071711bc3f2425199f8a"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "pool",
+      "name": "set",
+      "kind": "func",
+      "contract": "Mutably borrows pool, borrows value and independently copies replacement; returns false for stale handles.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "pool",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "fc66330fe249457c917fdffb19b8f2f73e1290fbac9abf03b5f4d12142926ec2",
+          "overlay": false,
+          "binary_sha256": "008ef22e8a42b1ba874827d53e95af4ecd6ebd753aeb071711bc3f2425199f8a"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "pool",
+      "name": "remove",
+      "kind": "func",
+      "contract": "Mutably borrows pool; invalidates generation and retains slot capacity; returns false for stale handles.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "pool",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "fc66330fe249457c917fdffb19b8f2f73e1290fbac9abf03b5f4d12142926ec2",
+          "overlay": false,
+          "binary_sha256": "008ef22e8a42b1ba874827d53e95af4ecd6ebd753aeb071711bc3f2425199f8a"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "pool",
+      "name": "count",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "pool",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "fc66330fe249457c917fdffb19b8f2f73e1290fbac9abf03b5f4d12142926ec2",
+          "overlay": false,
+          "binary_sha256": "008ef22e8a42b1ba874827d53e95af4ecd6ebd753aeb071711bc3f2425199f8a"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "pool",
+      "name": "capacity",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "pool",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "fc66330fe249457c917fdffb19b8f2f73e1290fbac9abf03b5f4d12142926ec2",
+          "overlay": false,
+          "binary_sha256": "008ef22e8a42b1ba874827d53e95af4ecd6ebd753aeb071711bc3f2425199f8a"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "pool",
+      "name": "handles",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "pool",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "fc66330fe249457c917fdffb19b8f2f73e1290fbac9abf03b5f4d12142926ec2",
+          "overlay": false,
+          "binary_sha256": "008ef22e8a42b1ba874827d53e95af4ecd6ebd753aeb071711bc3f2425199f8a"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "random",
+      "name": "Random",
+      "kind": "record",
+      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "random",
+      "name": "from_word",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "time_random",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "ee0b8555f8322a628db13718d55258b3cdc60df6ae9ca3436b072ad361345557",
+          "overlay": false,
+          "binary_sha256": "715e3856b4f8918fda16b6d2fb0443044781ecc519c28e2f25bc1e66231e82b5"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "random",
+      "name": "seeded",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "time_random",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "ee0b8555f8322a628db13718d55258b3cdc60df6ae9ca3436b072ad361345557",
+          "overlay": false,
+          "binary_sha256": "715e3856b4f8918fda16b6d2fb0443044781ecc519c28e2f25bc1e66231e82b5"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "random",
+      "name": "from_entropy",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-independent-batch2.json",
+          "case": "providers",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f",
+          "overlay": false,
+          "binary_sha256": "2628f58de11a34bb212e3596911585db40b3bde49cb7a0e4c248180a15457636"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "random",
+      "name": "seeded_entropy",
+      "kind": "func",
+      "contract": "Creates an owned deterministic root provider.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-independent-batch2.json",
+          "case": "providers",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f",
+          "overlay": false,
+          "binary_sha256": "2628f58de11a34bb212e3596911585db40b3bde49cb7a0e4c248180a15457636"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "random",
+      "name": "next_word",
+      "kind": "func",
+      "contract": "Mutable arguments transfer into the call and write back; ordinary arguments borrow; returned managed values must own independent storage.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "time_random",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "ee0b8555f8322a628db13718d55258b3cdc60df6ae9ca3436b072ad361345557",
+          "overlay": false,
+          "binary_sha256": "715e3856b4f8918fda16b6d2fb0443044781ecc519c28e2f25bc1e66231e82b5"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "random",
+      "name": "random",
+      "kind": "func",
+      "contract": "Mutable arguments transfer into the call and write back; ordinary arguments borrow; returned managed values must own independent storage.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "time_random",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "ee0b8555f8322a628db13718d55258b3cdc60df6ae9ca3436b072ad361345557",
+          "overlay": false,
+          "binary_sha256": "715e3856b4f8918fda16b6d2fb0443044781ecc519c28e2f25bc1e66231e82b5"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "random",
+      "name": "randint",
+      "kind": "func",
+      "contract": "Mutable arguments transfer into the call and write back; ordinary arguments borrow; returned managed values must own independent storage.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "time_random",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "ee0b8555f8322a628db13718d55258b3cdc60df6ae9ca3436b072ad361345557",
+          "overlay": false,
+          "binary_sha256": "715e3856b4f8918fda16b6d2fb0443044781ecc519c28e2f25bc1e66231e82b5"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "random",
+      "name": "choice",
+      "kind": "func",
+      "contract": "Mutably borrows generator; borrows source list; returns copied optional selected value.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "time_random",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "ee0b8555f8322a628db13718d55258b3cdc60df6ae9ca3436b072ad361345557",
+          "overlay": false,
+          "binary_sha256": "715e3856b4f8918fda16b6d2fb0443044781ecc519c28e2f25bc1e66231e82b5"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "random",
+      "name": "shuffle",
+      "kind": "func",
+      "contract": "Mutably borrows generator/list; preserves independent managed elements while permuting.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "time_random",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "ee0b8555f8322a628db13718d55258b3cdc60df6ae9ca3436b072ad361345557",
+          "overlay": false,
+          "binary_sha256": "715e3856b4f8918fda16b6d2fb0443044781ecc519c28e2f25bc1e66231e82b5"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "sort",
+      "name": "compare_strs",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "sort",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "1e966e156f458334e3bbc153fe7cf535a2996f0e316028e5eb547145ef703567",
+          "overlay": false,
+          "binary_sha256": "26579a245e35629c49e6816b155831f05c00ac2540443ec01ab397f09db6ce9c"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "sort",
+      "name": "sort_ints",
+      "kind": "func",
+      "contract": "Borrows input; returns independent owned list and managed elements.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "sort",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "1e966e156f458334e3bbc153fe7cf535a2996f0e316028e5eb547145ef703567",
+          "overlay": false,
+          "binary_sha256": "26579a245e35629c49e6816b155831f05c00ac2540443ec01ab397f09db6ce9c"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "sort",
+      "name": "sort_floats",
+      "kind": "func",
+      "contract": "Borrows input; returns independent owned list and managed elements.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "sort",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "1e966e156f458334e3bbc153fe7cf535a2996f0e316028e5eb547145ef703567",
+          "overlay": false,
+          "binary_sha256": "26579a245e35629c49e6816b155831f05c00ac2540443ec01ab397f09db6ce9c"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "sort",
+      "name": "sort_strs",
+      "kind": "func",
+      "contract": "Borrows input; returns independent owned list and managed elements.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "sort",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "1e966e156f458334e3bbc153fe7cf535a2996f0e316028e5eb547145ef703567",
+          "overlay": false,
+          "binary_sha256": "26579a245e35629c49e6816b155831f05c00ac2540443ec01ab397f09db6ce9c"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "sort",
+      "name": "sort_by_key",
+      "kind": "func",
+      "contract": "Borrows input; returns independent owned list and managed elements.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "sort",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "1e966e156f458334e3bbc153fe7cf535a2996f0e316028e5eb547145ef703567",
+          "overlay": false,
+          "binary_sha256": "26579a245e35629c49e6816b155831f05c00ac2540443ec01ab397f09db6ce9c"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "sort",
+      "name": "is_sorted_ints",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "sort",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "1e966e156f458334e3bbc153fe7cf535a2996f0e316028e5eb547145ef703567",
+          "overlay": false,
+          "binary_sha256": "26579a245e35629c49e6816b155831f05c00ac2540443ec01ab397f09db6ce9c"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "sort",
+      "name": "binary_search",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "sort",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "1e966e156f458334e3bbc153fe7cf535a2996f0e316028e5eb547145ef703567",
+          "overlay": false,
+          "binary_sha256": "26579a245e35629c49e6816b155831f05c00ac2540443ec01ab397f09db6ce9c"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "sort",
+      "name": "min_int",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "sort",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "1e966e156f458334e3bbc153fe7cf535a2996f0e316028e5eb547145ef703567",
+          "overlay": false,
+          "binary_sha256": "26579a245e35629c49e6816b155831f05c00ac2540443ec01ab397f09db6ce9c"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "sort",
+      "name": "max_int",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "sort",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "1e966e156f458334e3bbc153fe7cf535a2996f0e316028e5eb547145ef703567",
+          "overlay": false,
+          "binary_sha256": "26579a245e35629c49e6816b155831f05c00ac2540443ec01ab397f09db6ce9c"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "sort",
+      "name": "min_str",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "sort",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "1e966e156f458334e3bbc153fe7cf535a2996f0e316028e5eb547145ef703567",
+          "overlay": false,
+          "binary_sha256": "26579a245e35629c49e6816b155831f05c00ac2540443ec01ab397f09db6ce9c"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "sort",
+      "name": "unique_ints",
+      "kind": "func",
+      "contract": "Borrows input; returns independent owned list and managed elements.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "sort",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "1e966e156f458334e3bbc153fe7cf535a2996f0e316028e5eb547145ef703567",
+          "overlay": false,
+          "binary_sha256": "26579a245e35629c49e6816b155831f05c00ac2540443ec01ab397f09db6ce9c"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "sort",
+      "name": "unique_strs",
+      "kind": "func",
+      "contract": "Borrows input; returns independent owned list and managed elements.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release.json",
+          "case": "sort",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "1e966e156f458334e3bbc153fe7cf535a2996f0e316028e5eb547145ef703567",
+          "overlay": false,
+          "binary_sha256": "26579a245e35629c49e6816b155831f05c00ac2540443ec01ab397f09db6ce9c"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "time",
+      "name": "Duration",
+      "kind": "record",
+      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "time",
+      "name": "Instant",
+      "kind": "record",
+      "contract": "Public type; owned managed fields, explicit copies for independent snapshots; resources move only.",
+      "baseline_executable_source_references": [],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "time",
+      "name": "nanoseconds",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "time_random",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "ee0b8555f8322a628db13718d55258b3cdc60df6ae9ca3436b072ad361345557",
+          "overlay": false,
+          "binary_sha256": "715e3856b4f8918fda16b6d2fb0443044781ecc519c28e2f25bc1e66231e82b5"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-independent-batch2.json",
+          "case": "providers",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f",
+          "overlay": false,
+          "binary_sha256": "2628f58de11a34bb212e3596911585db40b3bde49cb7a0e4c248180a15457636"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "time",
+      "name": "microseconds",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "time_random",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "ee0b8555f8322a628db13718d55258b3cdc60df6ae9ca3436b072ad361345557",
+          "overlay": false,
+          "binary_sha256": "715e3856b4f8918fda16b6d2fb0443044781ecc519c28e2f25bc1e66231e82b5"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "time",
+      "name": "milliseconds",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "time_random",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "ee0b8555f8322a628db13718d55258b3cdc60df6ae9ca3436b072ad361345557",
+          "overlay": false,
+          "binary_sha256": "715e3856b4f8918fda16b6d2fb0443044781ecc519c28e2f25bc1e66231e82b5"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "time",
+      "name": "seconds",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "time_random",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "ee0b8555f8322a628db13718d55258b3cdc60df6ae9ca3436b072ad361345557",
+          "overlay": false,
+          "binary_sha256": "715e3856b4f8918fda16b6d2fb0443044781ecc519c28e2f25bc1e66231e82b5"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "time",
+      "name": "sum",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "time_random",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "ee0b8555f8322a628db13718d55258b3cdc60df6ae9ca3436b072ad361345557",
+          "overlay": false,
+          "binary_sha256": "715e3856b4f8918fda16b6d2fb0443044781ecc519c28e2f25bc1e66231e82b5"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "time",
+      "name": "difference",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "time_random",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "ee0b8555f8322a628db13718d55258b3cdc60df6ae9ca3436b072ad361345557",
+          "overlay": false,
+          "binary_sha256": "715e3856b4f8918fda16b6d2fb0443044781ecc519c28e2f25bc1e66231e82b5"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "time",
+      "name": "compare",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "time_random",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "ee0b8555f8322a628db13718d55258b3cdc60df6ae9ca3436b072ad361345557",
+          "overlay": false,
+          "binary_sha256": "715e3856b4f8918fda16b6d2fb0443044781ecc519c28e2f25bc1e66231e82b5"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "time",
+      "name": "to_seconds",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "time_random",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "ee0b8555f8322a628db13718d55258b3cdc60df6ae9ca3436b072ad361345557",
+          "overlay": false,
+          "binary_sha256": "715e3856b4f8918fda16b6d2fb0443044781ecc519c28e2f25bc1e66231e82b5"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "time",
+      "name": "to_milliseconds",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "time_random",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "ee0b8555f8322a628db13718d55258b3cdc60df6ae9ca3436b072ad361345557",
+          "overlay": false,
+          "binary_sha256": "715e3856b4f8918fda16b6d2fb0443044781ecc519c28e2f25bc1e66231e82b5"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "time",
+      "name": "now",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-independent-batch2.json",
+          "case": "providers",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f",
+          "overlay": false,
+          "binary_sha256": "2628f58de11a34bb212e3596911585db40b3bde49cb7a0e4c248180a15457636"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "time",
+      "name": "simulated_clock",
+      "kind": "func",
+      "contract": "Creates an owned deterministic root provider.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-independent-batch2.json",
+          "case": "providers",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f",
+          "overlay": false,
+          "binary_sha256": "2628f58de11a34bb212e3596911585db40b3bde49cb7a0e4c248180a15457636"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "time",
+      "name": "advance",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-independent-batch2.json",
+          "case": "providers",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f",
+          "overlay": false,
+          "binary_sha256": "2628f58de11a34bb212e3596911585db40b3bde49cb7a0e4c248180a15457636"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "time",
+      "name": "from_unix_nanoseconds",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "time_random",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "ee0b8555f8322a628db13718d55258b3cdc60df6ae9ca3436b072ad361345557",
+          "overlay": false,
+          "binary_sha256": "715e3856b4f8918fda16b6d2fb0443044781ecc519c28e2f25bc1e66231e82b5"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-independent-batch2.json",
+          "case": "providers",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "e52167dcc88c39bcb8fd9c3ae278d025ae769ccbf3bad3c1399ef50170aeea2f",
+          "overlay": false,
+          "binary_sha256": "2628f58de11a34bb212e3596911585db40b3bde49cb7a0e4c248180a15457636"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "time",
+      "name": "after",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "time_random",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "ee0b8555f8322a628db13718d55258b3cdc60df6ae9ca3436b072ad361345557",
+          "overlay": false,
+          "binary_sha256": "715e3856b4f8918fda16b6d2fb0443044781ecc519c28e2f25bc1e66231e82b5"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "time",
+      "name": "elapsed",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "time_random",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "ee0b8555f8322a628db13718d55258b3cdc60df6ae9ca3436b072ad361345557",
+          "overlay": false,
+          "binary_sha256": "715e3856b4f8918fda16b6d2fb0443044781ecc519c28e2f25bc1e66231e82b5"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    },
+    {
+      "module": "time",
+      "name": "expired",
+      "kind": "func",
+      "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/C0-release-batch2.json",
+          "case": "time_random",
+          "mode": "release",
+          "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+          "source_sha256": "ee0b8555f8322a628db13718d55258b3cdc60df6ae9ca3436b072ad361345557",
+          "overlay": false,
+          "binary_sha256": "715e3856b4f8918fda16b6d2fb0443044781ecc519c28e2f25bc1e66231e82b5"
+        }
+      ],
+      "final_C1_qualification": "pending",
+      "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
+    }
+  ]
+}

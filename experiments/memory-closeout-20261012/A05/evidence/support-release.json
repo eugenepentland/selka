@@ -1,0 +1,193 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support-install/bin/mylang",
+  "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+  "overlay": true,
+  "check_only": false,
+  "harness_sha256": "e0cac7ac8672c337959ce6d4405a09c7d8e8957e71d82833b1421dcdd359b3a9",
+  "cases": {
+    "containers": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/containers.my",
+        "original_sha256": "e951a0494256e5090d77b8efdd56d77f3d20e47c446d736b3b3ea1e3ebeb047b",
+        "source_sha256": "e951a0494256e5090d77b8efdd56d77f3d20e47c446d736b3b3ea1e3ebeb047b",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-release/containers/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-release/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-release/containers/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-release/containers/release/program.ll"
+        ],
+        "build_status": 0,
+        "build_stdout": "",
+        "build_stderr": "",
+        "expected_status": 0,
+        "passed": true,
+        "source_files": {
+          "a05_cache_record.my": "3cbe85235ed0d5b420857f537f05c301a9a6d4c299eee8b13061d1b0403dee3d",
+          "a05_durable.my": "d2b95d581eec0dead092caaf804f6b8a5c1888f40a846b276e19f8362f231bd8",
+          "a05_hashes.my": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+          "a05_memo.my": "2caf1702f85b10d25361d47beddb64b991467806bd25de0eea9c5a4844e94fc6",
+          "a05_persistent_memo.my": "712ff57eb69e6dd2d24950ef554fe27c50610d264df4650d153ec18d2ca52885",
+          "main.my": "e951a0494256e5090d77b8efdd56d77f3d20e47c446d736b3b3ea1e3ebeb047b"
+        },
+        "run_status": 0,
+        "stdout": "",
+        "stderr": "",
+        "binary_sha256": "f4fa86826c79f58b8d436366711e446752b4158c88d05fd5fde0c1db07c1234b",
+        "llvm_sha256": "684ed34e52cbfd746b2d7ec319a1c01cdeaa731e918aefbc908a962eb2ef5114",
+        "audit": {
+          "counter_file": ".tmp/memory-closeout/A05/support-release/containers/release/counts.json",
+          "counter_sha256": "0550928551477e9ddbae6848b6c534b9c46813723216459a5a9d9cc0cd401fb4",
+          "observed_rc_free": true,
+          "managed_leak_free": true,
+          "emitted_rc": {
+            "retain": 0,
+            "release": 0,
+            "unique_test": 0
+          },
+          "runtime_rc": {
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0
+          },
+          "direct_frees": 91,
+          "memory": {
+            "allocs": 573,
+            "alloc_bytes": 40528,
+            "frees": 573,
+            "reallocs": 0,
+            "peak_live_bytes": 28368,
+            "live_bytes_at_exit": 0
+          },
+          "executed_rc_sites": [],
+          "runtime_rc_functions": []
+        },
+        "legacy_symbols": [],
+        "legacy_llvm": []
+      }
+    },
+    "network_denied": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/network_denied.my",
+        "original_sha256": "2ea76a80a1c18726df21bacaf7ff0a5f4fff17a170c886988479fc7e34861650",
+        "source_sha256": "2ea76a80a1c18726df21bacaf7ff0a5f4fff17a170c886988479fc7e34861650",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-release/network_denied/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-release/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-release/network_denied/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-release/network_denied/release/program.ll"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "@stdlib/network.my:71:12: error[E_SINGLE_OWNER_UNSUPPORTED]: this expression is outside the single-owner prototype\n      return acquire_resource[Connected](net, request)\n             ^\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "a05_cache_record.my": "3cbe85235ed0d5b420857f537f05c301a9a6d4c299eee8b13061d1b0403dee3d",
+          "a05_durable.my": "d2b95d581eec0dead092caaf804f6b8a5c1888f40a846b276e19f8362f231bd8",
+          "a05_hashes.my": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+          "a05_memo.my": "2caf1702f85b10d25361d47beddb64b991467806bd25de0eea9c5a4844e94fc6",
+          "a05_persistent_memo.my": "712ff57eb69e6dd2d24950ef554fe27c50610d264df4650d153ec18d2ca52885",
+          "main.my": "2ea76a80a1c18726df21bacaf7ff0a5f4fff17a170c886988479fc7e34861650"
+        }
+      }
+    },
+    "storage": {
+      "release": {
+        "original_source": "experiments/memory-closeout-20261012/A05/samples/storage.my",
+        "original_sha256": "51e00a18bf63eafcedeb3775e343e248b08f7fa54ccc9444ddf06b993c450c31",
+        "source_sha256": "0c6c631c86493f669b77388ce5608c379dbbb9f327f8967af8c41666376bf58e",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-release/storage/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-release/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-release/storage/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-release/storage/release/program.ll"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "a05_durable.my:179:25: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n              artifacts = fields[4:]\n                          ^\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "a05_cache_record.my": "3cbe85235ed0d5b420857f537f05c301a9a6d4c299eee8b13061d1b0403dee3d",
+          "a05_durable.my": "d2b95d581eec0dead092caaf804f6b8a5c1888f40a846b276e19f8362f231bd8",
+          "a05_hashes.my": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+          "a05_memo.my": "2caf1702f85b10d25361d47beddb64b991467806bd25de0eea9c5a4844e94fc6",
+          "a05_persistent_memo.my": "712ff57eb69e6dd2d24950ef554fe27c50610d264df4650d153ec18d2ca52885",
+          "main.my": "0c6c631c86493f669b77388ce5608c379dbbb9f327f8967af8c41666376bf58e"
+        }
+      }
+    },
+    "guest_stdlib": {
+      "release": {
+        "original_source": "tests/value_semantics/stdlib.my",
+        "original_sha256": "bb8a1c40b247cc767b7652b89c27885a964f28ab55d19224ed4e607e29fbbe61",
+        "source_sha256": "e78fe218b8906368a2d894585ef2b966bbc0bd2dc821329749089e559b0d41bb",
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support-install/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-release/guest_stdlib/release/source/main.my",
+          "--experimental-zero-rc",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-release/cache",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--release",
+          "--counters",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-release/guest_stdlib/release/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support-release/guest_stdlib/release/program.ll"
+        ],
+        "build_status": 1,
+        "build_stdout": "",
+        "build_stderr": "@stdlib/network.my:71:12: error[E_SINGLE_OWNER_UNSUPPORTED]: this expression is outside the single-owner prototype\n      return acquire_resource[Connected](net, request)\n             ^\n",
+        "expected_status": 0,
+        "passed": false,
+        "source_files": {
+          "a05_cache_record.my": "3cbe85235ed0d5b420857f537f05c301a9a6d4c299eee8b13061d1b0403dee3d",
+          "a05_durable.my": "d2b95d581eec0dead092caaf804f6b8a5c1888f40a846b276e19f8362f231bd8",
+          "a05_hashes.my": "7b8901f23d0c1be415d273b91ee8519feb53d60d280f88c2d5ef5232b4f2d438",
+          "a05_memo.my": "2caf1702f85b10d25361d47beddb64b991467806bd25de0eea9c5a4844e94fc6",
+          "a05_persistent_memo.my": "712ff57eb69e6dd2d24950ef554fe27c50610d264df4650d153ec18d2ca52885",
+          "main.my": "e78fe218b8906368a2d894585ef2b966bbc0bd2dc821329749089e559b0d41bb"
+        }
+      }
+    }
+  },
+  "failures": 3,
+  "compiler_source_revision": "4c4c1663680fa4c290691867107eee24b504604d",
+  "compiler_identity_authority": "coordinator published immutable support-install identity"
+}

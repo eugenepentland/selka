@@ -17,3 +17,23 @@ No entries above were added to `zero_rc.contract` by A05. They require A07's sou
 `core_durable_access` checks authority before opening paths, closes each parent descriptor, frees temporary read buffers, directly destroys partial listings on errors, and does not retry another root after a rename with uncertain directory sync. Directory leases use the same registered resource cleanup as files. Native durability is intentionally unavailable for `filesystem.memory()`; local dedicated directories are used for qualification instead.
 
 Dictionary replacement destroys the old managed value; pop distinguishes transferred key/value fields from destroyed fields. Independent dictionary copies deep-copy managed children in zero-RC; the RC cloning branch remains pending retirement. Keyed owned sort consumes independent source/key storage and returns the permuted source; its temporary native scratch is freed and its managed key copy destroyed. Neither native scratch nor provider buffers are fully represented by managed allocation counters.
+
+
+## Added stream and callable-identity audits
+
+`myl_core_stream_write_bytes` and `myl_core_stream_write_buffer` borrow a scalar
+file descriptor and managed block, return void, and synchronously copy the full
+payload to static stream buffering or independent TLS staging. The parallel
+commit copies staging bytes into stream storage; fatal raw writes are synchronous.
+No guest pointer is stored, retained or destroyed. Lowering reads length only
+while the borrowed input remains live. A07 received the exact `.{} ` contracts;
+`stream_borrow.my` tests arbitrary binary bytes and owner replacement/mutation
+before output flush. No wildcard output-helper admission is proposed.
+
+Generated `myl_core_callable_digest_` helpers take only a scalar function pointer
+and return static `str_const` text (hex digest or empty), after compiler
+finalization replaces the declaration with internal dispatch. The digest binds
+compiler/tool/target/CPU/build context and the transitive canonical implementation.
+A07 must validate generated-name/finalization boundaries before the `.fresh`
+result contract is added; A05 did not change the registry. This helper currently
+blocks source persistence even after lexical directory-lock ownership passes.
