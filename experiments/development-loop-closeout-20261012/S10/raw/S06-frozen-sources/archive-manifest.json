@@ -1,0 +1,26 @@
+{
+  "binary_sha256": "d1cc599a0de7b362c243d9caedb2f73dedacb9d031406d78516bd08776c84f00",
+  "qualification": "rejected standalone candidate; original source path since restored; archived content is frozen",
+  "sources": [
+    {
+      "archive": "C0_discovery.zig",
+      "sha256": "fbb55c3e1a7a4fb6ef9e1d2f3cc1173bb796636f95a7e01bc2adbe21e058590d",
+      "bytes": 9489
+    },
+    {
+      "archive": "discovery_profile.zig",
+      "sha256": "a8835c68ebbcf2dbf16ac15401c5d9284eebbd4e96435332968cf29da8edc73f",
+      "bytes": 5102
+    },
+    {
+      "archive": "rejected_discovery.zig",
+      "sha256": "578dd98f5d8b9380c9a6fdc63f71e1e11326e598c7469a1de4d19bfe508edfab",
+      "bytes": 14366
+    },
+    {
+      "archive": "typed_shim.zig",
+      "sha256": "9342358376547aaea67de80629da7da689e6913bb3d2b61ad13cc92d71f4da5d",
+      "bytes": 201
+    }
+  ]
+}

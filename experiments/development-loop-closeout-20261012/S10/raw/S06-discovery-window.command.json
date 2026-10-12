@@ -1,0 +1,21 @@
+{
+  "argv": [
+    "scripts/build-slot.sh",
+    "timing",
+    "timeout",
+    "30s",
+    "/usr/bin/python3",
+    "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/experiments/development-loop-closeout-20261012/S10/timing_fixture.py",
+    "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S06/.tmp/S06/discovery-profile-final",
+    "d1cc599a0de7b362c243d9caedb2f73dedacb9d031406d78516bd08776c84f00",
+    "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/experiments/development-loop-closeout-20261012/S10/raw/S06-discovery"
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10",
+  "status": 0,
+  "elapsed_seconds_including_queue": 12.085960764903575,
+  "cache_environment": {
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.zig-s10-debug-cache",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.tmp-s10"
+  }
+}

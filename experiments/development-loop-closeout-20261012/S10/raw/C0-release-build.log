@@ -1,0 +1,7 @@
+build-slot: build slot 1, FIFO ticket 3547 after 0s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: diff-scoped vs fbfcaa7a923186a8e773c3760f81c10aa345a432: 0/681 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 17 finding(s), none in scope — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs fbfcaa7a923186a8e773c3760f81c10aa345a432, 0 file(s) in scope
+bcacd6ea67566dda26c26e04eef595a57d6c048e2327fd6fc30c7297032846cd
+dd74f2f3dd20e490c287491be8742e0194956b098a455e3f89457f8025aa9b69

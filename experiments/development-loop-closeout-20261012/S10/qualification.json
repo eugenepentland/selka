@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "C0": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "bootstrap_reference": "dff9304b9cd7bc72e66f9feb20f1b05281d67333",
+  "estimators": {"median": "statistics.median", "p95": "sorted samples[ceil(0.95*n)-1]", "short_loop_repetitions": 40, "qualification": "empirical p95 only; uncertainty and temporal variability remain explicit; five operational samples are not stable p95"},
+  "timing": {"admission": "scripts/build-slot.sh timing", "queue": "separate from execution", "window": "bounded command timeout, prepared binaries, no nested admission", "memory_owner": "/home/epentland/ai/canopy/mylang-memory-20261012-A09", "schedule": "await coordinator cross-team confirmation"},
+  "modes": ["Debug compiler developer-loop", "ReleaseFast compiler timing", "guest release runtime"],
+  "cache_tiers": {"operational_baseline": "new private Zig local and verification/project caches; shared Zig global/native runtime warm state explicitly recorded", "verification_cold": "new receipt store only", "project_cold": "new guest project cache plus private runtime/compiler store", "compiler_cold": "new private Zig local/global cache; no shared wiping", "bootstrap_cold": "separate authenticated seed/build tiers"},
+  "matrix": ["unchanged retained/one-shot", "test-only", "fixture add/delete/rename", "documentation", "tooling", "pure helper", "semantic rule", "runtime/lifetime/mode/ABI", "component implementation/seed/schema", "revert", "second worktree", "cold tiers", "concurrent subscribers/cancel", "timeout/crash/publication", "corrupt/evicted/watch lost", "ABA/symlink/PATH/negative lookup", "profiles/fuzz/Juice", "large inputs/RSS/fds/artifact size", "selfhost parity/bootstrap/ratios"],
+  "targets": {"ordinary_useful_feedback_seconds": 5, "ordinary_p95_seconds": 15, "unchanged_complete": "remeasure baseline before target", "selfhost_each_required_row_median_and_p95_ratio_max": 1.5},
+  "status": "unqualified; acquisition in progress"
+}

@@ -1,0 +1,6 @@
+1/1 discovery_profile.test.S06 discovery paired exact inventory profile...S06 modules=1 declarations_per_module=8 tests=8 old_ns=148595 new_ns=159305 old_module_comparisons=8 old_declaration_comparisons=36 new_hash_lookups=16
+S06 modules=32 declarations_per_module=32 tests=1024 old_ns=4478457 new_ns=4529516 old_module_comparisons=32768 old_declaration_comparisons=16896 new_hash_lookups=2048
+S06 modules=128 declarations_per_module=128 tests=16384 old_ns=147652323 new_ns=84461464 old_module_comparisons=2097152 old_declaration_comparisons=1056768 new_hash_lookups=32768
+S06 shared_roots=128 selected_per_root=16 program_functions=2048 old_ns=89342089 new_ns=90997543
+OK
+All 1 tests passed.
