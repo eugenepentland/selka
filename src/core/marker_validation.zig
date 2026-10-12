@@ -2,14 +2,17 @@
 const std = @import("std");
 const ir = @import("ir.zig");
 const selection = @import("borrow_selection.zig");
+const providers = @import("aggregate_provider.zig");
 const verify = @import("verify_ir.zig");
 
 pub const Error = std.mem.Allocator.Error || selection.Error;
 
-fn present(module: *const ir.Module, function: *const ir.Function) bool {
+fn present(module: *const ir.Module, function: *const ir.Function) Error!bool {
     for (function.insts.items) |inst| {
-        if (inst.op != .call or inst.a.index() >= module.functions.items.len) continue;
-        if (std.mem.startsWith(u8, module.functions.items[inst.a.index()].name, selection.prefix)) return true;
+        if (inst.op != .call) continue;
+        if (inst.a == .none or inst.a.index() >= module.functions.items.len) return error.UnsupportedInstruction;
+        const name = module.functions.items[inst.a.index()].name;
+        if (std.mem.startsWith(u8, name, selection.prefix) or std.mem.startsWith(u8, name, providers.prefix)) return true;
     }
     return false;
 }
@@ -17,7 +20,8 @@ fn present(module: *const ir.Module, function: *const ir.Function) bool {
 /// Check each marker-bearing function once, never once per marker. Local shape
 /// checks run first so malformed operand tables cannot reach the general verifier.
 pub fn validate(a: std.mem.Allocator, module: *const ir.Module, function: *const ir.Function) Error!void {
-    if (!present(module, function)) return;
+    if (!try present(module, function)) return;
+    if (providers.hasMarker(module, function)) try providers.validate(module, function);
     try selection.validate(a, module, function);
     // The general verifier owns scratch tables for one invocation, not the
     // caller's lifetime. Some ownership/cache callers pass a backing allocator.
@@ -33,6 +37,7 @@ pub fn validate(a: std.mem.Allocator, module: *const ir.Module, function: *const
 /// Fresh bodies and declarations receive the same proof as decoded cache bodies.
 pub fn validateModule(a: std.mem.Allocator, module: *const ir.Module) Error!void {
     for (module.functions.items) |*function| {
+        _ = try providers.marker(module, function);
         _ = try selection.declaration(module, function);
         try validate(a, module, function);
     }

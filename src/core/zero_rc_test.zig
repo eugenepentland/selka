@@ -2340,3 +2340,61 @@ fn tupleStore(program: language.typed.Program) !*language.typed.Statement {
     }
     return error.TestUnexpectedResult;
 }
+
+// spec-case: NEW-CORE-ZERO-RC-PROVIDER-FIELDS-1
+// spec-case: NEW-CORE-ZERO-RC-ABI-1
+test "zero RC aggregate provider markers reject malformed calls before ownership" {
+    const ir = @import("ir.zig");
+    const provider = @import("aggregate_provider.zig");
+    const markers = @import("marker_validation.zig");
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var module: ir.Module = .{ .zero_rc = true, .single_owner = true };
+    const ty = try module.intern(a, .{ .record = &.{ .capability, .str } });
+    try module.functions.append(a, .{ .name = try std.fmt.allocPrint(a, "{s}{d}", .{ provider.prefix, @backingInt(ty) }), .signature = .{ .params = &.{ty}, .ret = .void, .linkage = .runtime_c } });
+    var function: ir.Function = .{ .name = "pin", .signature = .{ .params = &.{ty}, .ret = .void } };
+    try function.insts.appendSlice(a, &.{
+        .{ .op = .param, .ty = ty, .data = 0 },
+        .{ .op = .call, .ty = .void, .a = @fromBackingInt(0), .data = (ir.ExtraSlice{ .start = 0, .len = 1 }).pack() },
+        .{ .op = .ret, .ty = .void },
+    });
+    try function.extra.append(a, @fromBackingInt(0));
+    var block: ir.Block = .{};
+    try block.insts.appendSlice(a, &.{ @fromBackingInt(1), @fromBackingInt(2) });
+    try function.blocks.append(a, block);
+    try markers.validate(std.testing.allocator, &module, &function);
+    const original = function.insts.items[1];
+    const malformed = [_]ir.Inst{
+        .{ .op = .call, .ty = .void, .a = @fromBackingInt(0), .data = std.math.maxInt(u64) },
+        .{ .op = .call, .ty = .void, .a = @fromBackingInt(0), .data = (ir.ExtraSlice{ .start = 0, .len = 0 }).pack() },
+        .{ .op = .call, .ty = .i64, .a = @fromBackingInt(0), .data = original.data },
+        .{ .op = .call, .ty = .void, .a = .none, .data = original.data },
+        .{ .op = .call, .ty = .void, .a = @fromBackingInt(100), .data = original.data },
+    };
+    for (malformed) |invalid| {
+        function.insts.items[1] = invalid;
+        try std.testing.expectError(error.UnsupportedInstruction, provider.call(&module, &function, invalid));
+        try std.testing.expectError(error.UnsupportedInstruction, markers.validate(std.testing.allocator, &module, &function));
+    }
+    function.insts.items[1] = original;
+    function.extra.items[0] = .none;
+    try std.testing.expectError(error.UnsupportedInstruction, markers.validate(std.testing.allocator, &module, &function));
+    function.extra.items[0] = @fromBackingInt(0);
+    function.insts.items[0].ty = .str;
+    try std.testing.expectError(error.UnsupportedInstruction, markers.validate(std.testing.allocator, &module, &function));
+    function.insts.items[0].ty = ty;
+    function.insts.items[0].op = .copy;
+    function.insts.items[0].a = @fromBackingInt(0);
+    try std.testing.expectError(error.UnsupportedInstruction, markers.validate(std.testing.allocator, &module, &function));
+    function.insts.items[0] = .{ .op = .param, .ty = ty, .data = 0 };
+    function.blocks.items[0].insts.items[1] = .none;
+    try std.testing.expectError(error.UnsupportedInstruction, markers.validate(std.testing.allocator, &module, &function));
+    function.blocks.items[0].insts.items[1] = @fromBackingInt(2);
+    function.insts.items[2].ty = @fromBackingInt(std.math.maxInt(u32));
+    try std.testing.expectError(error.UnsupportedInstruction, markers.validate(std.testing.allocator, &module, &function));
+    function.insts.items[2].ty = .void;
+    try module.functions.items[0].insts.append(a, .{ .op = .ret, .ty = .void });
+    try std.testing.expectError(error.UnsupportedInstruction, provider.marker(&module, &module.functions.items[0]));
+    try std.testing.expectError(error.UnsupportedInstruction, markers.validate(std.testing.allocator, &module, &function));
+}

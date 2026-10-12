@@ -1,0 +1,8 @@
+build-slot: FIFO ticket 899, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 899 after 15s
+guardian/test: 5 test(s) selected by filter: "aggregate provider"
+All 5 tests passed.
+guardian/test: test wall 0.18s; slowest over 50ms:
+guardian/test:   0.17s  a08_provider_cache_test.test.zero RC A08 aggregate provider pins survive cache replay and earlier type discovery edits
+guardian/test: PASS — 5 passed
+guardian/test: RESULT {"passed":5,"failed":0,"skipped":0}

@@ -603,6 +603,7 @@ const Verifier = struct {
                     const span_input = (ty == .str_view or ty == .bytes) and admittedView(callee, i);
                     if (ty != param and !span_input) break :blk false;
                 }
+                _ = @import("aggregate_provider.zig").call(m, self.f, inst) catch break :blk false;
                 _ = @import("borrow_selection.zig").call(m, self.f, inst) catch break :blk false;
                 break :blk true;
             },

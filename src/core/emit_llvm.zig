@@ -3816,7 +3816,7 @@ const FunctionEmitter = struct {
     }
 
     fn specialRuntimeCall(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) Error!bool {
-        if (try @import("aggregate_provider.zig").call(self.state.module, inst)) return true;
+        if (try @import("aggregate_provider.zig").call(self.state.module, self.function, inst)) return true;
         if (try @import("emit_render.zig").runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return true;
         if (try emit_bytes.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return true;
         if (try emit_text.runtimeCall(@TypeOf(self), @TypeOf(out), self, out, name, inst)) return true;

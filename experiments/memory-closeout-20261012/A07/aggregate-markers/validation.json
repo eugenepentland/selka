@@ -1,0 +1,22 @@
+{
+  "base": "1aa8e42c5cdcb6efd39bfbe384550866e9612ac6",
+  "fix": "Always-on exact aggregate provider pin declaration/call proof, bounded argument/copy/table/type checks before shared CFG verifier, invalid callee rejection even without surviving marker identity.",
+  "focused": {
+    "passed": 5,
+    "failed": 0,
+    "includes": [
+      "malformed body/callee/arity/range/ref/type/cycle/block-tail",
+      "existing provider cache replay/physical identity",
+      "source copy/invalidation negatives"
+    ]
+  },
+  "first_attempt": "test-core could not provision immutable legacy seed components; no test pass claimed. Compiled registered core-test-binary and directly ran same registered group under admission. Full gate remains coordinator requirement.",
+  "source_sha256": {
+    "src/core/aggregate_provider.zig": "846d7a8bf7d8322e2e64b74e236d6033b087cbb7fb620766dacf05a5646668f5",
+    "src/core/marker_validation.zig": "53f0cbee43951722e9ab665c70d53e1fe334378800fe6976b8ae9482db395a07",
+    "src/core/emit_llvm.zig": "7fe54685ef9578ebca549dec82a99ba33abd9e96615e033eb9e57e1258066e06",
+    "src/core/verify_ir.zig": "8f539a5222a0d5648adff69c58dd06a15020b82cc74c00754adaed1afffc737c",
+    "src/core/zero_rc_test.zig": "0d18685655ff85e28444b510731216e8dd6fe81c155fdb7f856b7feb35d23a87"
+  },
+  "test_binary_sha256": "744d63514728821b41938c6825e0e67f973df4dae8adef3697af233457e8f066"
+}
