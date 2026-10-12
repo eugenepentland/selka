@@ -25,10 +25,10 @@ pub fn concat(comptime Context: type, b: Context, left: ir.Ref, right: ir.Ref, s
     const second = try b.emit(.{ .op = .list_len, .ty = .u64, .a = right, .span = span });
     const length = try b.emit(.{ .op = .add, .ty = .u64, .a = first, .b = second, .check = .exact, .span = span });
     const empty = try b.emit(.{ .op = .list_new, .ty = ty, .a = length, .span = span });
-    return append(Context, b, try append(Context, b, empty, left, span), right, span);
+    return append(Context, b, try append(Context, b, empty, left, span, false), right, span, false);
 }
 
-fn append(comptime Context: type, b: Context, initial: ir.Ref, source: ir.Ref, span: u32) Error!ir.Ref {
+fn append(comptime Context: type, b: Context, initial: ir.Ref, source: ir.Ref, span: u32, comptime independent: bool) Error!ir.Ref {
     const ty = b.typeOfRef(initial);
     const element = b.module().compound(ty).list;
     const result = try b.synthetic(ty);
@@ -47,10 +47,14 @@ fn append(comptime Context: type, b: Context, initial: ir.Ref, source: ir.Ref, s
     try b.seal(body);
     try b.seal(end);
     b.current = body;
-    const value = try b.emit(.{ .op = .list_get, .ty = element, .a = source, .b = index, .check = .exact, .span = span });
-    const pushed = try b.emit(.{ .op = .list_push, .ty = ty, .a = try b.read(result, body), .b = value, .span = span });
-    try b.write(result, b.current.?, pushed);
-    try b.write(counter, b.current.?, try b.emit(.{ .op = .add, .ty = .u64, .a = index, .b = try b.constant(.u64, 1), .span = span }));
+    var value = try b.emit(.{ .op = .list_get, .ty = element, .a = source, .b = index, .check = .exact, .span = span });
+    // Repetition promises independent elements. Copy each borrowed child before
+    // transferring it into the output; ordinary list stores still require moves.
+    if (independent and b.module().zero_rc) value = try b.copyOwned(value, span);
+    const at = b.current.?;
+    const pushed = try b.emit(.{ .op = .list_push, .ty = ty, .a = try b.read(result, at), .b = value, .span = span });
+    try b.write(result, at, pushed);
+    try b.write(counter, at, try b.emit(.{ .op = .add, .ty = .u64, .a = index, .b = try b.constant(.u64, 1), .span = span }));
     try b.jump(header);
     try b.seal(header);
     b.enter(end);
@@ -114,7 +118,8 @@ pub fn repeat(comptime Context: type, b: Context, left: ir.Ref, right: ir.Ref, s
     const header = try b.newBlock();
     const body = try b.newBlock();
     const end = try b.newBlock();
-    try b.jump(header);
+    const nonempty = try b.emit(.{ .op = .cmp, .ty = .bool, .a = length, .b = try b.constant(.u64, 0), .data = @backingInt(ir.Predicate.ne), .span = span });
+    try b.branch(nonempty, header, end, span);
     b.current = header;
     const index = try b.read(counter, header);
     const more = try b.emit(.{ .op = .cmp, .ty = .bool, .a = index, .b = wide, .data = @backingInt(ir.Predicate.lt), .span = span });
@@ -122,7 +127,7 @@ pub fn repeat(comptime Context: type, b: Context, left: ir.Ref, right: ir.Ref, s
     try b.seal(body);
     try b.seal(end);
     b.current = body;
-    const next = try append(Context, b, try b.read(result, body), collection, span);
+    const next = try append(Context, b, try b.read(result, body), collection, span, true);
     try b.write(result, b.current.?, next);
     try b.write(counter, b.current.?, try b.emit(.{ .op = .add, .ty = wide_ty, .a = index, .b = try b.constant(wide_ty, 1), .check = .exact, .span = span }));
     try b.jump(header);

@@ -1,0 +1,8 @@
+record Holder:
+    values: int[]
+
+
+func main() -> int:
+    mut holder = Holder(values=[7])
+    holder.values *= 2
+    return len(holder.values)

@@ -1,0 +1,3 @@
+func main() -> int:
+    const count: int = 9223372036854775807
+    return len("x" * count)

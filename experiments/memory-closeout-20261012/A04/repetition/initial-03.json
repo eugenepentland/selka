@@ -1,0 +1,55 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+  "compiler_sha256": "0080aa0b08f8aaa8780e7e6caf05f2c056d0765844b391cabd2254e332625342",
+  "source_sha256": "adc14501794b13c51d47c09a9d98d375c17f60746cb0baf03fb752ea3a4ad114",
+  "results": [
+    {
+      "mode": "ordinary",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/a04_repetition_ownership.my"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "a04_repetition_ownership.my:61:5: error[E_TYPE]: expected int[], found int\n      holder.values *= 2\n      ^\n"
+    },
+    {
+      "mode": "ordinary",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/a04_repetition_ownership.my",
+        "--release"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/a04_repetition_ownership.my:61:5: error[E_TYPE]: expected int[], found int\n      holder.values *= 2\n      ^\n"
+    },
+    {
+      "mode": "zero_rc",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/a04_repetition_ownership.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "a04_repetition_ownership.my:61:5: error[E_TYPE]: expected int[], found int\n      holder.values *= 2\n      ^\n"
+    },
+    {
+      "mode": "zero_rc",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/a04_repetition_ownership.my",
+        "--experimental-zero-rc",
+        "--release"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/tests/lang/a04_repetition_ownership.my:61:5: error[E_TYPE]: expected int[], found int\n      holder.values *= 2\n      ^\n"
+    }
+  ]
+}

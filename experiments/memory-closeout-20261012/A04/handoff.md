@@ -58,3 +58,35 @@ legacy alternatives to remove only after stage approval: the uniqueness check in
 `core_text_append_bytes` and the retained alias in `myl_core_text_encode`.
 The selected zero-RC paths already copy static append sources and return an
 independent bytes owner from text encoding. A07 has this retirement inventory.
+
+## Additional guest migrations and repetition repair
+
+The coordinator subsequently reserved 19 existing text/codec guest files to A04.
+Commit `fe582983f` keeps all 133 public tests, exact originals and migration burden
+in `migrations/`. Interim A10 support-compiler execution passes all 74 runnable
+ordinary tests and 72 checked-ownership tests; two native-lowering refusals and
+five source-refused files remain explicit. See `migrations/README.md` for owners
+and reproducers. These sources need an integrated-compiler rerun.
+
+The repetition reproducer required additional coordinator reservations:
+`src/repetition.zig`, `src/sema_idioms.zig`, `src/core/build_values.zig` and
+`src/core/runtime/core_values.c`. Repetition now remains a typed binary operation;
+text/bytes use the existing borrowed-input, fresh-output runtime helper without a
+gathered list. List repetition copies each managed child before moving it into the
+output, as `PY-REPEAT-1` already requires. Named `*=` rebinds the independent result.
+Empty lists bypass the count loop, and the octet size guard includes its terminator.
+A07 approved the static ownership/cleanup review and owns the two explicit helper
+contracts. The coordinator extended `SPEC.md`; A04 did not edit shared contracts.
+
+The nested/wide list fixture passed counted execution in all five modes on A04's
+compiler SHA256 `077aa182f221694ed29e1757a1a6f249bdd8196018804f8e459747c8c193dff8`.
+Every lane reports zero RC, zero managed exit-live bytes, and clean LLVM/symbol
+audits (`repetition/lists-01/`). This is a prototype source-diff artifact, not C1.
+Full text/byte native qualification must consume A07's helper-contract additions;
+earlier unaudited-helper refusals are retained in `repetition/initial-02.json`.
+Nested-place `holder.values *= count` remains the existing `E_TYPE` boundary in
+both modes; mutable parameter and field arguments retain positive coverage.
+`repetition/ordinary-01.json` also passes the 17 existing Python expression guest
+tests and the new complete fixture; both oversized nonempty repetition probes
+trap `R_MEMORY_BUDGET` under the explicit 8 MiB ceiling. No runtime/RSS speedup or
+allocation reduction is inferred from these correctness probes.

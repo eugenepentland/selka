@@ -7,7 +7,8 @@ int64_t myl_core_octets_compare(const myl_block *a, const myl_block *b) {
 }
 
 myl_block *myl_core_octets_repeat_unsigned(const myl_block *source, uint64_t count) {
-    if (source->len && count > (uint64_t)INT64_MAX / (uint64_t)source->len) out_of_memory();
+    /* The trailing terminator is part of the signed allocation capacity. */
+    if (source->len && count > (uint64_t)(INT64_MAX - 1) / (uint64_t)source->len) out_of_memory();
     size_t n = (size_t)((uint64_t)source->len * count);
     myl_block *result = block_new(MYL_KIND_STR, (int64_t)n + 1, 1);
     result->len = (int64_t)n;

@@ -1,0 +1,54 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+  "compiler_sha256": "c5e446afe1afca9a5bf424543329f78407684e2ac2a55ab15bd853dc0ed09a7b",
+  "results": [
+    {
+      "mode": "ordinary",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "check",
+        "tests/lang/a04_repetition_ownership.my"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "mode": "ordinary",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "run",
+        "tests/lang/a04_repetition_ownership.my",
+        "--release"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "mode": "zero-rc",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "check",
+        "tests/lang/a04_repetition_ownership.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "mode": "zero-rc",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+        "run",
+        "tests/lang/a04_repetition_ownership.my",
+        "--experimental-zero-rc",
+        "--release"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "tests/lang/a04_repetition_ownership.my:1:1: error[E_CORE_UNSUPPORTED]: the new core does not support unaudited zero-RC runtime helper myl_core_octets_repeat_signed yet\n"
+    }
+  ]
+}
