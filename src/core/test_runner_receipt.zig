@@ -14,6 +14,7 @@ const ir = @import("ir.zig");
 const Error = @import("test_runner_property.zig").Error;
 const Digest = [32]u8;
 const planner = @import("mylang").cache_plan_adapter;
+const environment_identity = @import("mylang").environment_identity;
 
 /// Command resources and freshly resolved project configuration.
 pub const Context = struct {
@@ -153,23 +154,12 @@ fn environmentSettings(context: Context, hash: *std.crypto.hash.Blake3) Error!vo
     for (environment.items) |item| field(hash, item);
 }
 
-/// The C compiler and Zig toolchain inputs a receipt keys besides every `MYL_` and
-/// `MYLANG_` variable, which the runtime and the core read.
-const toolchain_variables = [_][]const u8{
-    "CCC_OVERRIDE_OPTIONS", "COMPILER_PATH",     "CPATH",             "C_INCLUDE_PATH", "CPLUS_INCLUDE_PATH", "GCC_EXEC_PREFIX",
-    "LIBRARY_PATH",         "OBJC_INCLUDE_PATH", "SOURCE_DATE_EPOCH", "ZIG",            "ZIG_LIB_DIR",        "ZIG_LIBC",
-};
-/// `MYLANG_` variables that place caches, size the worker pool or choose which
-/// process runs a test, and so change no outcome.
-const placement_variables = [_][]const u8{ "MYLANG_JOBS", "MYLANG_CORE_RUNTIME_CACHE", "MYLANG_COMPILER_SHARED_CACHE", tool_ticket.hint, "MYLANG_TEST_ISOLATE", "MYLANG_TEST_CHILDREN", options.shared_cache_variable };
-
-/// Whether a variable can change a test's outcome. A shell's `_` and `OLDPWD` or a
-/// terminal's variables cannot; a test that reads the environment is never reused.
+/// Whether a variable can change a test's outcome: the keyed class of the
+/// environment identity contract (ENV-IDENTITY-1). A shell's `_` and `OLDPWD`, a
+/// terminal's variables, cache and telemetry placement cannot; a test that reads
+/// the environment is never reused.
 fn keyedVariable(name: []const u8) bool {
-    for (placement_variables) |placement| if (std.mem.eql(u8, name, placement)) return false;
-    if (std.mem.startsWith(u8, name, "MYL_") or std.mem.startsWith(u8, name, "MYLANG_")) return true;
-    for (toolchain_variables) |variable| if (std.mem.eql(u8, name, variable)) return true;
-    return false;
+    return environment_identity.keyed(name);
 }
 
 /// What emission reads from one test's program besides the keyed settings.
@@ -723,6 +713,52 @@ test "receipt settings ignore shell and terminal variables and key toolchain and
     try std.testing.expect(!std.mem.eql(u8, &plain, &optioned));
     try environment.put("ZIG_LIB_DIR", "/other-lib");
     try std.testing.expect(!std.mem.eql(u8, &optioned, &try settings(context, &inputs)));
+}
+
+/// The toolchain variables the receipt keyed through its own list before the
+/// environment identity contract replaced it, and two `MYL_`/`MYLANG_` samples.
+const formerly_keyed = [_][]const u8{
+    "CCC_OVERRIDE_OPTIONS", "COMPILER_PATH",     "CPATH",             "C_INCLUDE_PATH", "CPLUS_INCLUDE_PATH", "GCC_EXEC_PREFIX",
+    "LIBRARY_PATH",         "OBJC_INCLUDE_PATH", "SOURCE_DATE_EPOCH", "ZIG",            "ZIG_LIB_DIR",        "ZIG_LIBC",
+    "MYL_CORE_TEXTWALK",    "MYLANG_OPTIONS",
+};
+/// The placement variables the receipt ignored before the contract, plus the
+/// verification telemetry directories that once invalidated every receipt.
+const never_keyed = [_][]const u8{
+    "MYLANG_JOBS",                      "MYLANG_CORE_RUNTIME_CACHE", "MYLANG_COMPILER_SHARED_CACHE", tool_ticket.hint,
+    "MYLANG_TEST_ISOLATE",              "MYLANG_TEST_CHILDREN",      options.shared_cache_variable,  "MYLANG_TEST_TELEMETRY_DIR",
+    "SELKA_VERIFICATION_TELEMETRY_DIR", "_",                         "OLDPWD",
+};
+
+/// The first name whose `keyedVariable` answer differs from `expected`, or "".
+fn firstKeyedMismatch(names: []const []const u8, expected: bool) []const u8 {
+    for (names) |name| if (keyedVariable(name) != expected) return name;
+    return "";
+}
+
+/// `settings` after putting `value` under every name in `names`.
+fn settingsWith(context: Context, environment: *std.process.Environ.Map, names: []const []const u8, value: []const u8) !Digest {
+    for (names) |name| try environment.put(name, value);
+    var inputs: std.ArrayList(Dependency) = .empty;
+    return settings(context, &inputs);
+}
+
+// spec-case: ENV-IDENTITY-1
+test "receipt environment keys what the old lists keyed and never the placement or telemetry variables" {
+    try std.testing.expectEqualStrings("", firstKeyedMismatch(&formerly_keyed, true));
+    try std.testing.expectEqualStrings("", firstKeyedMismatch(&never_keyed, false));
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    const context = try fakeToolContext(a, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a), &environment);
+    const plain = try settingsWith(context, &environment, &.{}, "");
+    try std.testing.expectEqual(plain, try settingsWith(context, &environment, &never_keyed, "/per-request/telemetry-1"));
+    try std.testing.expectEqual(plain, try settingsWith(context, &environment, &never_keyed, "/per-request/telemetry-2"));
+    try std.testing.expect(!std.mem.eql(u8, &plain, &try settingsWith(context, &environment, &.{"MYLANG_MEMORY_LIMIT"}, "1G")));
 }
 
 // spec-case: SELFHOST-CACHE-IDENTITY-1

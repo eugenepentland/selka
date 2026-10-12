@@ -232,6 +232,11 @@ pub const verification_cache = [_][]const u8{
     "scripts/verification_measurement.py",
     "scripts/verification_measurement_test.py",
     "scripts/verification_code_identity_test.py",
+    // The environment identity contract, its Python reader and golden fixture.
+    "src/environment_identity.zon",
+    "scripts/verification_environment.py",
+    "scripts/verification_environment_test.py",
+    "test/fixtures/environment-identity/",
 };
 
 /// Persistent coordinator startup watches the complete developer implementation.

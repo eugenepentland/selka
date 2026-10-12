@@ -78,6 +78,8 @@ pub const navigation_syntax = @import("navigation_syntax.zig");
 pub const component_adapter = @import("component_adapter.zig");
 /// Verified independently built planner used by every test receipt path.
 pub const cache_plan_adapter = @import("cache_plan_adapter.zig");
+/// Which environment variables enter identities and reach children (ENV-IDENTITY-1).
+pub const environment_identity = @import("environment_identity.zig");
 pub const quality = @import("quality.zig");
 pub const duplicates = @import("duplicates.zig");
 /// `mylang lint` driver, rule registry and profiles.

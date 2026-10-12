@@ -626,6 +626,11 @@ pub fn build(b: *std.Build) void {
     unit.root_module.addImport("memory_budget", budget);
     unit.root_module.addImport("compiler_root", unit.root_module);
     addUserDocs(b, unit.root_module);
+    // The environment identity golden fixture (ENV-IDENTITY-2) is embedded, so it
+    // is a compile input of the unit binary rather than a path read at run time.
+    for ([_][]const u8{ "environment", "classification", "tools", "digest" }) |name| {
+        unit.root_module.addAnonymousImport(b.fmt("environment-identity/{s}.txt", .{name}), .{ .root_source_file = b.path(b.fmt("test/fixtures/environment-identity/{s}.txt", .{name})) });
+    }
     // Unit tests build and run guest programs with `mylang`, which the root cannot
     // import (NEW-CORE-S5-UNITS-1), through one shared cache.
     const native_test_options = b.addOptions();
@@ -943,7 +948,7 @@ pub fn build(b: *std.Build) void {
     coverage_step.dependOn(&coverage_run.step);
     test_step.dependOn(coverage_step);
     const verification_tests = b.step("test-verification-cache", "Verify action receipt admission and immutable input snapshots");
-    for ([_][]const u8{ "scripts/verify_cache_test.py", "scripts/verification_snapshot_test.py", "scripts/verification_process_test.py", "scripts/verification_report_test.py", "scripts/verification_budgets_test.py", "scripts/build_slot_test.py", "scripts/verification_telemetry_test.py", "scripts/verification_producers_test.py", "scripts/verification_policy_test.py", "scripts/verification_profiles_test.py", "scripts/verification_qualification_test.py", "scripts/development_loop_workloads_test.py", "scripts/verification_native_telemetry_test.py", "scripts/verification_guest_telemetry_test.py", "scripts/verification_measurement_test.py", "scripts/verification_code_identity_test.py" }, 0..) |script, member| {
+    for ([_][]const u8{ "scripts/verify_cache_test.py", "scripts/verification_snapshot_test.py", "scripts/verification_process_test.py", "scripts/verification_report_test.py", "scripts/verification_budgets_test.py", "scripts/build_slot_test.py", "scripts/verification_telemetry_test.py", "scripts/verification_producers_test.py", "scripts/verification_policy_test.py", "scripts/verification_profiles_test.py", "scripts/verification_qualification_test.py", "scripts/development_loop_workloads_test.py", "scripts/verification_native_telemetry_test.py", "scripts/verification_guest_telemetry_test.py", "scripts/verification_measurement_test.py", "scripts/verification_code_identity_test.py", "scripts/verification_environment_test.py" }, 0..) |script, member| {
         const verification_run = driver(b, b.fmt("python3 {s}", .{script}), rss.script, "verification_cache");
         const module = std.fs.path.stem(script);
         verification_run.addArgs(&.{ "python3", "scripts/verification_telemetry.py", "--action-id", "verification_cache", "--member", b.fmt("{d}", .{member}), "--output-directory-env", "SELKA_VERIFICATION_TELEMETRY_DIR", module });
