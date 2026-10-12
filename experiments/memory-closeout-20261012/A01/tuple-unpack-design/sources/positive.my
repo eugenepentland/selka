@@ -1,0 +1,60 @@
+func pair(mut events: int[]) -> tuple[str, str]:
+    events.append(1)
+    return "first-" + str(1), "second-" + str(2)
+func index(mut events: int[], value: int) -> int:
+    events.append(value)
+    return 0
+func owned() -> tuple[str, str[]]:
+    return "owned-" + str(3), ["child-" + str(4)]
+func clone(value: tuple[str, str[]]) -> tuple[str, str[]]:
+    const text, children = value.copy()
+    return text, children
+func optional(value: tuple[int, str]?) -> str:
+    if value is None:
+        return "missing"
+    const number, text = value.copy()
+    assert number == 7
+    return text
+func early() -> str:
+    const text, _ = owned()
+    return text
+func fallible() -> Result[str, str]:
+    const text, _ = owned()
+    return Err(text)
+func main(out: Stream) -> int:
+    mut first = "first-" + str(1)
+    mut second = "second-" + str(2)
+    first, second = second, first
+    assert first == "second-2" and second == "first-1"
+    mut words = ["a" + str(1), "b" + str(2)]
+    words[0], words[1] = words[1].copy(), words[0].copy()
+    assert words == ["b2", "a1"]
+    mut events: int[] = []
+    words[index(mut events, 2)], words[index(mut events, 3)] = pair(mut events)
+    assert events == [1, 2, 3] and words == ["second-2", "a1"]
+    const original = owned()
+    const duplicate = clone(original)
+    const original_text, original_rows = original
+    const copied_text, copied_rows = duplicate
+    assert original_text == copied_text and original_rows == copied_rows
+    const nested = (owned(), "sibling-" + str(5))
+    const child, sibling = nested
+    const child_text, child_rows = child
+    assert sibling == "sibling-5" and child_text == "owned-3" and child_rows == ["child-4"]
+    for i in range(16):
+        const _, rows = owned()
+        assert rows == ["child-4"]
+    assert early() == "owned-3"
+    match fallible():
+        case Ok(value):
+            assert False
+        case Err(error):
+            assert error == "owned-3"
+    assert optional(Some((7, "option-" + str(6)))) == "option-6"
+    assert optional(None) == "missing"
+    mut a = 3
+    mut b = 4
+    a, b = b, a
+    assert a == 4 and b == 3
+    out.print("tuple-unpack", len(events))
+    return 0

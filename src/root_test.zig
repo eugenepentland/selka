@@ -3,6 +3,7 @@
 /// reach the front end through `compiler_root`.
 pub const compiler_language = @import("compiler.zig");
 test {
+    _ = @import("a01_tuple_origins_test.zig");
     _ = @import("a01_result_shapes_test.zig");
     _ = @import("frontend_migration_test.zig");
     _ = @import("iteration_place_test.zig");

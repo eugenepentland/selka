@@ -146,4 +146,5 @@ comptime {
     _ = @import("a01_dict_items_test.zig");
     _ = @import("a04_slice_lifetime_test.zig");
     _ = @import("a01_fresh_field_test.zig");
+    _ = @import("a01_tuple_unpack_test.zig");
 }

@@ -1,0 +1,13 @@
+diff --git a/src/typed.zig b/src/typed.zig
+--- a/src/typed.zig
++++ b/src/typed.zig
+@@ -633,1 +633,8 @@
+-pub const Store = struct { slot: LocalId, value: NodeId, element: bool = false };
++pub const Store = struct {
++    slot: LocalId,
++    value: NodeId,
++    element: bool = false,
++    /// Initialize-only complete tuple staging: consume the hidden whole slot,
++    /// bind every non-null field slot, and destroy explicitly ignored fields.
++    unpack: ?[]const ?LocalId = null,
++};

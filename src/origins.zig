@@ -275,12 +275,7 @@ fn applyBlockStatements(context: *const Context, function: typed.Function, origi
 /// a write through it is a write to the container's owner.
 fn bindStatement(context: *const Context, function: typed.Function, origins: []Origin, statement: typed.Statement, depth: usize) bool {
     switch (statement.data) {
-        .initialize, .assign => |store| {
-            // VALUE-SEMANTICS-4: a named local receives its own copy.
-            if (copiedHome(context.program, function, store.slot)) return false;
-            const value = context.nodeOrigin(function, origins, store.value, depth);
-            return widen(origins, @backingInt(store.slot), value);
-        },
+        .initialize, .assign => |store| return bindStore(context, function, origins, store, depth),
         .range_loop => |range| {
             var grew = false;
             for ([_]typed.Store{ range.plan().start, range.plan().end }) |store| {
@@ -304,6 +299,23 @@ fn bindStatement(context: *const Context, function: typed.Function, origins: []O
         },
         else => return false,
     }
+}
+
+/// Complete tuple staging carries the same conservative child origins as the
+/// field projections it replaces; ownership transfer does not erase effects.
+fn bindStore(context: *const Context, function: typed.Function, origins: []Origin, store: typed.Store, depth: usize) bool {
+    // VALUE-SEMANTICS-4: a named local receives its own copy.
+    if (copiedHome(context.program, function, store.slot)) return false;
+    const value = context.nodeOrigin(function, origins, store.value, depth);
+    var grew = widen(origins, @backingInt(store.slot), value);
+    if (store.unpack) |fields| for (fields) |field| {
+        const slot = field orelse continue;
+        const ty = function.scope.locals[@backingInt(slot)].ty;
+        if (!typed.carriesWritableStorage(context.program.records, ty)) continue;
+        if (copiedHome(context.program, function, slot)) continue;
+        grew = widen(origins, @backingInt(slot), value) or grew;
+    };
+    return grew;
 }
 
 /// Under value semantics, whether a store into `slot` gives it a copy that

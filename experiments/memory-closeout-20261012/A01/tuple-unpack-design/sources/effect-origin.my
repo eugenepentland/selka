@@ -1,0 +1,7 @@
+class Counter:
+    value: int
+func hidden(mut pair: tuple[Counter, int]) -> Unit effects():
+    mut counter, _ = pair
+    counter.value += 1
+func main() -> int:
+    return 0

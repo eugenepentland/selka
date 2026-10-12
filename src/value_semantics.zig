@@ -174,10 +174,19 @@ pub const Facts = struct {
     }
 
     fn recordStore(self: *Facts, counts: []u8, store: typed.Store) void {
-        const index = @backingInt(store.slot);
+        self.recordSlot(counts, store.slot, store.value);
+        // Staged fields follow the whole RHS path just as their former field
+        // projections did; the metadata does not evaluate that path again.
+        if (store.unpack) |fields| for (fields) |field| {
+            if (field) |slot| self.recordSlot(counts, slot, store.value);
+        };
+    }
+
+    fn recordSlot(self: *Facts, counts: []u8, slot: typed.LocalId, value: typed.NodeId) void {
+        const index = @backingInt(slot);
         counts[index] +|= 1;
         // Several stores of one path still name one root; different roots name none.
-        self.stores[index] = if (counts[index] == 1) store.value else if (self.stores[index]) |previous| sameRoot(self.program, previous, store.value) else null;
+        self.stores[index] = if (counts[index] == 1) value else if (self.stores[index]) |previous| sameRoot(self.program, previous, value) else null;
     }
 
     /// Whether `id` is a path (fields, indexes, updates) rooted at local
