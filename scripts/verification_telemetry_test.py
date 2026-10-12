@@ -104,6 +104,15 @@ class TelemetryTests(unittest.TestCase):
         self.assertEqual(report.process_observations(dict(observed, user_cpu_seconds=float('inf')))['status'], 'unknown')
         self.assertEqual(report.process_observations(dict(observed, peak_rss_bytes=-1))['status'], 'unknown')
         self.assertEqual(report.process_observations()['status'], 'unknown')
+        self.assertEqual(report.process_observations(dict(observed, user_cpu_seconds=10 ** 400))['status'], 'unknown')
+        malformed_process = record()
+        malformed_process['process'] = dict(observed, user_cpu_seconds=10 ** 400)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'sidecar.json'
+            self.assertTrue(telemetry.write_document(path, malformed_process))
+            result = report.test_timings(path)
+            self.assertEqual(result['status'], 'observed')
+            self.assertEqual(result['process']['status'], 'unknown')
 
     def test_invalid_documents_never_claim_coverage(self):
         variants = [record(selected=True), record(selected=0), record(complete='yes'),

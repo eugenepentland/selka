@@ -336,5 +336,5 @@ def process_observations(observation=None):
         return dict(status='observed', scope='runner-process', user_cpu_seconds=cpu[0],
                     system_cpu_seconds=cpu[1], peak_rss_bytes=rss,
                     rss_scope='process-lifetime-high-water', aggregate_peak_rss_bytes=None)
-    except (KeyError, TypeError):
+    except (KeyError, TypeError, OverflowError):
         return unknown
