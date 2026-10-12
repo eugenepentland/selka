@@ -1,0 +1,3152 @@
+{
+  "coverage": 13,
+  "arms": {
+    "mylang-original-rc": {
+      "complete_cells": 13,
+      "wall_ratio_vs": {
+        "mylang-original-rc": 1.0,
+        "mylang-migrated-rc": 1.0191823652934109,
+        "mylang-zero-rc": 0.43075431221759136,
+        "zig-fast": 1.8146821345576285,
+        "zig-safe": 1.1049230351248993,
+        "rust": 1.3871974689053646,
+        "go": 1.3498386598349377
+      },
+      "largest_case_median_peak_rss_mib": 46.453125
+    },
+    "mylang-migrated-rc": {
+      "complete_cells": 13,
+      "wall_ratio_vs": {
+        "mylang-original-rc": 0.9811786722900286,
+        "mylang-migrated-rc": 1.0,
+        "mylang-zero-rc": 0.42264694414486076,
+        "zig-fast": 1.780527407413689,
+        "zig-safe": 1.0841269165865175,
+        "rust": 1.3610885707446538,
+        "go": 1.3244329040625957
+      },
+      "largest_case_median_peak_rss_mib": 46.62890625
+    },
+    "mylang-zero-rc": {
+      "complete_cells": 13,
+      "wall_ratio_vs": {
+        "mylang-original-rc": 2.3215089707444636,
+        "mylang-migrated-rc": 2.3660410038532147,
+        "mylang-zero-rc": 1.0,
+        "zig-fast": 4.212800854425247,
+        "zig-safe": 2.5650887380246545,
+        "rust": 3.2203913682578182,
+        "go": 3.133662557864492
+      },
+      "largest_case_median_peak_rss_mib": 95.9921875
+    },
+    "zig-fast": {
+      "complete_cells": 13,
+      "wall_ratio_vs": {
+        "mylang-original-rc": 0.5510606959514558,
+        "mylang-migrated-rc": 0.5616313435200379,
+        "mylang-zero-rc": 0.23737177107471658,
+        "zig-fast": 1.0,
+        "zig-safe": 0.6088796567087218,
+        "rust": 0.764430002637088,
+        "go": 0.743843031310821
+      },
+      "largest_case_median_peak_rss_mib": 35.34375
+    },
+    "zig-safe": {
+      "complete_cells": 13,
+      "wall_ratio_vs": {
+        "mylang-original-rc": 0.9050404129613978,
+        "mylang-migrated-rc": 0.9224012287681229,
+        "mylang-zero-rc": 0.38985006061431177,
+        "zig-fast": 1.6423606684537069,
+        "zig-safe": 1.0,
+        "rust": 1.255469770117117,
+        "go": 1.2216585381282716
+      },
+      "largest_case_median_peak_rss_mib": 41.6015625
+    },
+    "rust": {
+      "complete_cells": 13,
+      "wall_ratio_vs": {
+        "mylang-original-rc": 0.7208779012472525,
+        "mylang-migrated-rc": 0.7347060444809247,
+        "mylang-zero-rc": 0.310521264544621,
+        "zig-fast": 1.3081642485907874,
+        "zig-safe": 0.7965145986005817,
+        "rust": 1.0,
+        "go": 0.9730688601242138
+      },
+      "largest_case_median_peak_rss_mib": 40.55859375
+    },
+    "go": {
+      "complete_cells": 13,
+      "wall_ratio_vs": {
+        "mylang-original-rc": 0.7408292781614975,
+        "mylang-migrated-rc": 0.7550401359952453,
+        "mylang-zero-rc": 0.3191154061851106,
+        "zig-fast": 1.3443696558368934,
+        "zig-safe": 0.8185593345355902,
+        "rust": 1.0276764995566177,
+        "go": 1.0
+      },
+      "largest_case_median_peak_rss_mib": 73.078125
+    }
+  },
+  "cells": {
+    "lox/tree/fib": {
+      "warmups": 2,
+      "identities": {
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/fib.tree.28.lox": "be2e695e8e83fb548c1280b86975bfac88a1121fd1f292edc1566a14e5426f0a",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-migrated-rc": "d0eaa00b0b5cab6aa9eaa461a4a8279eb15522c86cb288484f6278ae8c75dd6f",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-original-rc": "9c8f5d3e1b0be06ae9134be40627bc0e1c1b913097f93d4bdc3c2a16a974fc04",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero": "a87f5bae25a477178189d093d720d0f23ddb76aba07f0de99788ad1004520029",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-go": "4d458b9e5305a2be24360a9d5d9c58f7bc828c9f9433eb6bae984066c4081b63",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-rust": "4d869a184a5f1a666113d30ad93a27ac703f39bb56c28e69e0bf739375d03dab",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-fast": "0c884acc8e3e2c0e7930910f0f21e89de7078b932368f19f11dc72fb3e3924da",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-safe": "96c97215aaddd5f90ebb61a80b388289a763bf9b8e976009c09b98a3068b4b03",
+        "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/bench/expected/fib.tree.out": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655"
+      },
+      "arms": {
+        "mylang-original-rc": {
+          "wall": {
+            "0": 0.160118402,
+            "1": 0.160745209,
+            "2": 0.161582285,
+            "3": 0.161810908,
+            "4": 0.164066328,
+            "5": 0.161888327,
+            "6": 0.161415268,
+            "7": 0.16287713,
+            "8": 0.160853874
+          },
+          "rss": [
+            5832,
+            5836,
+            5836
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.161582285,
+            "min": 0.160118402,
+            "max": 0.164066328
+          },
+          "rss_summary": {
+            "median": 5836,
+            "min": 5832,
+            "max": 5836
+          }
+        },
+        "mylang-migrated-rc": {
+          "wall": {
+            "0": 0.152243672,
+            "1": 0.163413513,
+            "2": 0.154763725,
+            "3": 0.153872255,
+            "4": 0.152752664,
+            "5": 0.156138564,
+            "6": 0.15349169,
+            "7": 0.152169201,
+            "8": 0.153245457
+          },
+          "rss": [
+            5700,
+            5700,
+            5700
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.15349169,
+            "min": 0.152169201,
+            "max": 0.163413513
+          },
+          "rss_summary": {
+            "median": 5700,
+            "min": 5700,
+            "max": 5700
+          }
+        },
+        "mylang-zero-rc": {
+          "wall": {
+            "0": 0.322414594,
+            "1": 0.322819756,
+            "2": 0.323842186,
+            "3": 0.323927909,
+            "4": 0.326084064,
+            "5": 0.321823122,
+            "6": 0.322725183,
+            "7": 0.325014489,
+            "8": 0.330160894
+          },
+          "rss": [
+            7852,
+            7848,
+            7848
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.323842186,
+            "min": 0.321823122,
+            "max": 0.330160894
+          },
+          "rss_summary": {
+            "median": 7848,
+            "min": 7848,
+            "max": 7852
+          }
+        },
+        "zig-fast": {
+          "wall": {
+            "0": 0.093454623,
+            "1": 0.093025858,
+            "2": 0.092960938,
+            "3": 0.092578568,
+            "4": 0.092548695,
+            "5": 0.092905341,
+            "6": 0.09265832,
+            "7": 0.092549309,
+            "8": 0.092574264
+          },
+          "rss": [
+            2208,
+            2208,
+            2208
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.09265832,
+            "min": 0.092548695,
+            "max": 0.093454623
+          },
+          "rss_summary": {
+            "median": 2208,
+            "min": 2208,
+            "max": 2208
+          }
+        },
+        "zig-safe": {
+          "wall": {
+            "0": 0.161375997,
+            "1": 0.161033376,
+            "2": 0.160299813,
+            "3": 0.159310891,
+            "4": 0.159713871,
+            "5": 0.159928765,
+            "6": 0.159518266,
+            "7": 0.160902893,
+            "8": 0.1598405
+          },
+          "rss": [
+            3104,
+            3100,
+            3104
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.159928765,
+            "min": 0.159310891,
+            "max": 0.161375997
+          },
+          "rss_summary": {
+            "median": 3104,
+            "min": 3100,
+            "max": 3104
+          }
+        },
+        "rust": {
+          "wall": {
+            "0": 0.135692471,
+            "1": 0.133958419,
+            "2": 0.136059662,
+            "3": 0.136425796,
+            "4": 0.136107477,
+            "5": 0.136031433,
+            "6": 0.136779108,
+            "7": 0.134930371,
+            "8": 0.139044832
+          },
+          "rss": [
+            4344,
+            4408,
+            4344
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.136059662,
+            "min": 0.133958419,
+            "max": 0.139044832
+          },
+          "rss_summary": {
+            "median": 4344,
+            "min": 4344,
+            "max": 4408
+          }
+        },
+        "go": {
+          "wall": {
+            "0": 0.111716027,
+            "1": 0.111269359,
+            "2": 0.111260984,
+            "3": 0.111587632,
+            "4": 0.111792085,
+            "5": 0.111665209,
+            "6": 0.113342205,
+            "7": 0.111666809,
+            "8": 0.112058258
+          },
+          "rss": [
+            9360,
+            9392,
+            9232
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.111666809,
+            "min": 0.111260984,
+            "max": 0.113342205
+          },
+          "rss_summary": {
+            "median": 9360,
+            "min": 9232,
+            "max": 9392
+          }
+        }
+      }
+    },
+    "lox/tree/binary_trees": {
+      "warmups": 2,
+      "identities": {
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/binary_trees.tree.10.lox": "fa3e536c73bc273bc8cd5ca4f4c81a6edd0c224e18aa764b34043b794f4850e4",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-migrated-rc": "d0eaa00b0b5cab6aa9eaa461a4a8279eb15522c86cb288484f6278ae8c75dd6f",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-original-rc": "9c8f5d3e1b0be06ae9134be40627bc0e1c1b913097f93d4bdc3c2a16a974fc04",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero": "a87f5bae25a477178189d093d720d0f23ddb76aba07f0de99788ad1004520029",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-go": "4d458b9e5305a2be24360a9d5d9c58f7bc828c9f9433eb6bae984066c4081b63",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-rust": "4d869a184a5f1a666113d30ad93a27ac703f39bb56c28e69e0bf739375d03dab",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-fast": "0c884acc8e3e2c0e7930910f0f21e89de7078b932368f19f11dc72fb3e3924da",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-safe": "96c97215aaddd5f90ebb61a80b388289a763bf9b8e976009c09b98a3068b4b03",
+        "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/bench/expected/binary_trees.tree.out": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056"
+      },
+      "arms": {
+        "mylang-original-rc": {
+          "wall": {
+            "0": 0.26651422,
+            "1": 0.254716803,
+            "2": 0.261442254,
+            "3": 0.243817526,
+            "4": 0.243367857,
+            "5": 0.246425525,
+            "6": 0.238959669,
+            "7": 0.240083055,
+            "8": 0.24389627
+          },
+          "rss": [
+            7556,
+            7552,
+            7556
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.24389627,
+            "min": 0.238959669,
+            "max": 0.26651422
+          },
+          "rss_summary": {
+            "median": 7556,
+            "min": 7552,
+            "max": 7556
+          }
+        },
+        "mylang-migrated-rc": {
+          "wall": {
+            "0": 0.263453027,
+            "1": 0.25305953,
+            "2": 0.262129758,
+            "3": 0.243103899,
+            "4": 0.245765256,
+            "5": 0.246686309,
+            "6": 0.239533003,
+            "7": 0.245889827,
+            "8": 0.239683136
+          },
+          "rss": [
+            7540,
+            7540,
+            7544
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.245889827,
+            "min": 0.239533003,
+            "max": 0.263453027
+          },
+          "rss_summary": {
+            "median": 7540,
+            "min": 7540,
+            "max": 7544
+          }
+        },
+        "mylang-zero-rc": {
+          "wall": {
+            "0": 0.596352322,
+            "1": 0.600442871,
+            "2": 0.62109302,
+            "3": 0.57202263,
+            "4": 0.572669546,
+            "5": 0.576847448,
+            "6": 0.562409292,
+            "7": 0.565514744,
+            "8": 0.56925273
+          },
+          "rss": [
+            12088,
+            12092,
+            12084
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.572669546,
+            "min": 0.562409292,
+            "max": 0.62109302
+          },
+          "rss_summary": {
+            "median": 12088,
+            "min": 12084,
+            "max": 12092
+          }
+        },
+        "zig-fast": {
+          "wall": {
+            "0": 0.129144603,
+            "1": 0.129710494,
+            "2": 0.130340777,
+            "3": 0.119685745,
+            "4": 0.122644139,
+            "5": 0.120366312,
+            "6": 0.120275471,
+            "7": 0.119258826,
+            "8": 0.119342899
+          },
+          "rss": [
+            3744,
+            3744,
+            3744
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.120366312,
+            "min": 0.119258826,
+            "max": 0.130340777
+          },
+          "rss_summary": {
+            "median": 3744,
+            "min": 3744,
+            "max": 3744
+          }
+        },
+        "zig-safe": {
+          "wall": {
+            "0": 0.268874381,
+            "1": 0.262681012,
+            "2": 0.265188922,
+            "3": 0.249154085,
+            "4": 0.250229403,
+            "5": 0.249670765,
+            "6": 0.247929738,
+            "7": 0.248479903,
+            "8": 0.24788451
+          },
+          "rss": [
+            4632,
+            4628,
+            4632
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.249670765,
+            "min": 0.24788451,
+            "max": 0.268874381
+          },
+          "rss_summary": {
+            "median": 4632,
+            "min": 4628,
+            "max": 4632
+          }
+        },
+        "rust": {
+          "wall": {
+            "0": 0.164494475,
+            "1": 0.168900886,
+            "2": 0.170301162,
+            "3": 0.153509822,
+            "4": 0.153827555,
+            "5": 0.16155736,
+            "6": 0.151436517,
+            "7": 0.152047983,
+            "8": 0.151456738
+          },
+          "rss": [
+            5944,
+            6068,
+            5944
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.153827555,
+            "min": 0.151436517,
+            "max": 0.170301162
+          },
+          "rss_summary": {
+            "median": 5944,
+            "min": 5944,
+            "max": 6068
+          }
+        },
+        "go": {
+          "wall": {
+            "0": 0.192307877,
+            "1": 0.199152585,
+            "2": 0.19304506,
+            "3": 0.180867378,
+            "4": 0.180717515,
+            "5": 0.203144308,
+            "6": 0.175974306,
+            "7": 0.177603799,
+            "8": 0.177370867
+          },
+          "rss": [
+            11700,
+            11448,
+            11984
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.180867378,
+            "min": 0.175974306,
+            "max": 0.203144308
+          },
+          "rss_summary": {
+            "median": 11700,
+            "min": 11448,
+            "max": 11984
+          }
+        }
+      }
+    },
+    "lox/tree/closures": {
+      "warmups": 2,
+      "identities": {
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/closures.tree.200000.lox": "039b3c8a51a0614e2ad75dcdd85b7f8b26320e11086cbe9b5b5fffdc363e04aa",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-migrated-rc": "d0eaa00b0b5cab6aa9eaa461a4a8279eb15522c86cb288484f6278ae8c75dd6f",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-original-rc": "9c8f5d3e1b0be06ae9134be40627bc0e1c1b913097f93d4bdc3c2a16a974fc04",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero": "a87f5bae25a477178189d093d720d0f23ddb76aba07f0de99788ad1004520029",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-go": "4d458b9e5305a2be24360a9d5d9c58f7bc828c9f9433eb6bae984066c4081b63",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-rust": "4d869a184a5f1a666113d30ad93a27ac703f39bb56c28e69e0bf739375d03dab",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-fast": "0c884acc8e3e2c0e7930910f0f21e89de7078b932368f19f11dc72fb3e3924da",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-safe": "96c97215aaddd5f90ebb61a80b388289a763bf9b8e976009c09b98a3068b4b03",
+        "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/bench/expected/closures.tree.out": "8dacb3b0327cbd368e9c06434c1dd66b88f2a69dba30a2f64fc0dd78570cf7f0"
+      },
+      "arms": {
+        "mylang-original-rc": {
+          "wall": {
+            "0": 0.358701975,
+            "1": 0.358151405,
+            "2": 0.351721615,
+            "3": 0.35595553,
+            "4": 0.355860273,
+            "5": 0.355786767,
+            "6": 0.354174947,
+            "7": 0.366344348,
+            "8": 0.352408329
+          },
+          "rss": [
+            6628,
+            6628,
+            6628
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.355860273,
+            "min": 0.351721615,
+            "max": 0.366344348
+          },
+          "rss_summary": {
+            "median": 6628,
+            "min": 6628,
+            "max": 6628
+          }
+        },
+        "mylang-migrated-rc": {
+          "wall": {
+            "0": 0.342370001,
+            "1": 0.343172228,
+            "2": 0.343409271,
+            "3": 0.347775374,
+            "4": 0.343006182,
+            "5": 0.352760726,
+            "6": 0.341074938,
+            "7": 0.351843863,
+            "8": 0.343842321
+          },
+          "rss": [
+            6620,
+            6624,
+            6620
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.343409271,
+            "min": 0.341074938,
+            "max": 0.352760726
+          },
+          "rss_summary": {
+            "median": 6620,
+            "min": 6620,
+            "max": 6624
+          }
+        },
+        "mylang-zero-rc": {
+          "wall": {
+            "0": 0.752452707,
+            "1": 0.755202844,
+            "2": 0.753484405,
+            "3": 0.762974676,
+            "4": 0.752751216,
+            "5": 0.765550547,
+            "6": 0.7827863,
+            "7": 0.790326338,
+            "8": 0.842158912
+          },
+          "rss": [
+            9736,
+            9740,
+            9732
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.762974676,
+            "min": 0.752452707,
+            "max": 0.842158912
+          },
+          "rss_summary": {
+            "median": 9736,
+            "min": 9732,
+            "max": 9740
+          }
+        },
+        "zig-fast": {
+          "wall": {
+            "0": 0.177249446,
+            "1": 0.1741415,
+            "2": 0.169409015,
+            "3": 0.168568651,
+            "4": 0.170218737,
+            "5": 0.168542709,
+            "6": 0.16816385,
+            "7": 0.171581781,
+            "8": 0.170755774
+          },
+          "rss": [
+            2464,
+            2464,
+            2464
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.170218737,
+            "min": 0.16816385,
+            "max": 0.177249446
+          },
+          "rss_summary": {
+            "median": 2464,
+            "min": 2464,
+            "max": 2464
+          }
+        },
+        "zig-safe": {
+          "wall": {
+            "0": 0.282225746,
+            "1": 0.288619654,
+            "2": 0.284487024,
+            "3": 0.283914666,
+            "4": 0.289566448,
+            "5": 0.287747313,
+            "6": 0.282360274,
+            "7": 0.284462022,
+            "8": 0.283890641
+          },
+          "rss": [
+            2860,
+            2864,
+            2860
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.284462022,
+            "min": 0.282225746,
+            "max": 0.289566448
+          },
+          "rss_summary": {
+            "median": 2860,
+            "min": 2860,
+            "max": 2864
+          }
+        },
+        "rust": {
+          "wall": {
+            "0": 0.247855692,
+            "1": 0.24400339,
+            "2": 0.247995715,
+            "3": 0.24195585,
+            "4": 0.244742901,
+            "5": 0.243151643,
+            "6": 0.245054329,
+            "7": 0.248666269,
+            "8": 0.244576802
+          },
+          "rss": [
+            4464,
+            4472,
+            4340
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.244742901,
+            "min": 0.24195585,
+            "max": 0.248666269
+          },
+          "rss_summary": {
+            "median": 4464,
+            "min": 4340,
+            "max": 4472
+          }
+        },
+        "go": {
+          "wall": {
+            "0": 0.222021538,
+            "1": 0.223722612,
+            "2": 0.227612579,
+            "3": 0.221756673,
+            "4": 0.220921253,
+            "5": 0.223549954,
+            "6": 0.2210838,
+            "7": 0.222606224,
+            "8": 0.228988917
+          },
+          "rss": [
+            9072,
+            9072,
+            23256
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.222606224,
+            "min": 0.220921253,
+            "max": 0.228988917
+          },
+          "rss_summary": {
+            "median": 9072,
+            "min": 9072,
+            "max": 23256
+          }
+        }
+      }
+    },
+    "lox/tree/equality": {
+      "warmups": 2,
+      "identities": {
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/equality.tree.300000.lox": "eef5c48b7874cc83c2170a5bd3cb92e346457fef0ebecd7ac01aa18c6ae2d5c1",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-migrated-rc": "d0eaa00b0b5cab6aa9eaa461a4a8279eb15522c86cb288484f6278ae8c75dd6f",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-original-rc": "9c8f5d3e1b0be06ae9134be40627bc0e1c1b913097f93d4bdc3c2a16a974fc04",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero": "a87f5bae25a477178189d093d720d0f23ddb76aba07f0de99788ad1004520029",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-go": "4d458b9e5305a2be24360a9d5d9c58f7bc828c9f9433eb6bae984066c4081b63",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-rust": "4d869a184a5f1a666113d30ad93a27ac703f39bb56c28e69e0bf739375d03dab",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-fast": "0c884acc8e3e2c0e7930910f0f21e89de7078b932368f19f11dc72fb3e3924da",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-safe": "96c97215aaddd5f90ebb61a80b388289a763bf9b8e976009c09b98a3068b4b03",
+        "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/bench/expected/equality.tree.out": "2d5c043a952d70ef9564858b25a01a30613abfb3d1562f67ef8d089646bbf786"
+      },
+      "arms": {
+        "mylang-original-rc": {
+          "wall": {
+            "0": 0.336053664,
+            "1": 0.339611816,
+            "2": 0.346603346,
+            "3": 0.3453041,
+            "4": 0.338664074,
+            "5": 0.341089427,
+            "6": 0.356226678,
+            "7": 0.360025366,
+            "8": 0.354622773
+          },
+          "rss": [
+            5832,
+            5832,
+            5832
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.3453041,
+            "min": 0.336053664,
+            "max": 0.360025366
+          },
+          "rss_summary": {
+            "median": 5832,
+            "min": 5832,
+            "max": 5832
+          }
+        },
+        "mylang-migrated-rc": {
+          "wall": {
+            "0": 0.330708283,
+            "1": 0.341003092,
+            "2": 0.334010256,
+            "3": 0.330297397,
+            "4": 0.332378142,
+            "5": 0.333678377,
+            "6": 0.339539663,
+            "7": 0.347353393,
+            "8": 0.347689746
+          },
+          "rss": [
+            5824,
+            5820,
+            5824
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.334010256,
+            "min": 0.330297397,
+            "max": 0.347689746
+          },
+          "rss_summary": {
+            "median": 5824,
+            "min": 5820,
+            "max": 5824
+          }
+        },
+        "mylang-zero-rc": {
+          "wall": {
+            "0": 0.573819543,
+            "1": 0.598435119,
+            "2": 0.569167619,
+            "3": 0.565454022,
+            "4": 0.565985002,
+            "5": 0.563402901,
+            "6": 0.579537164,
+            "7": 0.592772334,
+            "8": 0.594206534
+          },
+          "rss": [
+            10236,
+            10232,
+            10240
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.573819543,
+            "min": 0.563402901,
+            "max": 0.598435119
+          },
+          "rss_summary": {
+            "median": 10236,
+            "min": 10232,
+            "max": 10240
+          }
+        },
+        "zig-fast": {
+          "wall": {
+            "0": 0.198085032,
+            "1": 0.199633029,
+            "2": 0.195841099,
+            "3": 0.200141031,
+            "4": 0.201421655,
+            "5": 0.197951964,
+            "6": 0.203267014,
+            "7": 0.225931065,
+            "8": 0.204290183
+          },
+          "rss": [
+            2464,
+            2464,
+            2464
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.200141031,
+            "min": 0.195841099,
+            "max": 0.225931065
+          },
+          "rss_summary": {
+            "median": 2464,
+            "min": 2464,
+            "max": 2464
+          }
+        },
+        "zig-safe": {
+          "wall": {
+            "0": 0.221917442,
+            "1": 0.215082939,
+            "2": 0.220441362,
+            "3": 0.217021328,
+            "4": 0.226035103,
+            "5": 0.216267433,
+            "6": 0.224787234,
+            "7": 0.241343932,
+            "8": 0.223085359
+          },
+          "rss": [
+            3620,
+            3620,
+            3620
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.221917442,
+            "min": 0.215082939,
+            "max": 0.241343932
+          },
+          "rss_summary": {
+            "median": 3620,
+            "min": 3620,
+            "max": 3620
+          }
+        },
+        "rust": {
+          "wall": {
+            "0": 0.213164325,
+            "1": 0.222788272,
+            "2": 0.229448134,
+            "3": 0.213787686,
+            "4": 0.208658661,
+            "5": 0.217382556,
+            "6": 0.216335023,
+            "7": 0.217518883,
+            "8": 0.215723602
+          },
+          "rss": [
+            4456,
+            4472,
+            4344
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.216335023,
+            "min": 0.208658661,
+            "max": 0.229448134
+          },
+          "rss_summary": {
+            "median": 4456,
+            "min": 4344,
+            "max": 4472
+          }
+        },
+        "go": {
+          "wall": {
+            "0": 0.169581009,
+            "1": 0.167526195,
+            "2": 0.173185321,
+            "3": 0.179360957,
+            "4": 0.171804758,
+            "5": 0.173425596,
+            "6": 0.179363246,
+            "7": 0.17861297,
+            "8": 0.175034671
+          },
+          "rss": [
+            8872,
+            8904,
+            7472
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.173425596,
+            "min": 0.167526195,
+            "max": 0.179363246
+          },
+          "rss_summary": {
+            "median": 8872,
+            "min": 7472,
+            "max": 8904
+          }
+        }
+      }
+    },
+    "lox/tree/instantiation": {
+      "warmups": 2,
+      "identities": {
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/instantiation.tree.50000.lox": "30066fcb9c72bccd083f57819fa0f4d04785e4c2e36e8c44ddda9db8c1764b6c",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-migrated-rc": "d0eaa00b0b5cab6aa9eaa461a4a8279eb15522c86cb288484f6278ae8c75dd6f",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-original-rc": "9c8f5d3e1b0be06ae9134be40627bc0e1c1b913097f93d4bdc3c2a16a974fc04",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero": "a87f5bae25a477178189d093d720d0f23ddb76aba07f0de99788ad1004520029",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-go": "4d458b9e5305a2be24360a9d5d9c58f7bc828c9f9433eb6bae984066c4081b63",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-rust": "4d869a184a5f1a666113d30ad93a27ac703f39bb56c28e69e0bf739375d03dab",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-fast": "0c884acc8e3e2c0e7930910f0f21e89de7078b932368f19f11dc72fb3e3924da",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-safe": "96c97215aaddd5f90ebb61a80b388289a763bf9b8e976009c09b98a3068b4b03",
+        "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/bench/expected/instantiation.tree.out": "1833dec4f1106eb4e293cc1cdf906c6c3c576d000a51b001d8da50a853dd22ec"
+      },
+      "arms": {
+        "mylang-original-rc": {
+          "wall": {
+            "0": 0.227481889,
+            "1": 0.22699077,
+            "2": 0.22683775,
+            "3": 0.223321778,
+            "4": 0.220608866,
+            "5": 0.223737387,
+            "6": 0.222379992,
+            "7": 0.23289588,
+            "8": 0.22558141
+          },
+          "rss": [
+            5512,
+            5512,
+            5512
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.22558141,
+            "min": 0.220608866,
+            "max": 0.23289588
+          },
+          "rss_summary": {
+            "median": 5512,
+            "min": 5512,
+            "max": 5512
+          }
+        },
+        "mylang-migrated-rc": {
+          "wall": {
+            "0": 0.228256889,
+            "1": 0.234966885,
+            "2": 0.227976569,
+            "3": 0.222139796,
+            "4": 0.227006353,
+            "5": 0.219630837,
+            "6": 0.230387229,
+            "7": 0.254683007,
+            "8": 0.243799815
+          },
+          "rss": [
+            5344,
+            5344,
+            5344
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.228256889,
+            "min": 0.219630837,
+            "max": 0.254683007
+          },
+          "rss_summary": {
+            "median": 5344,
+            "min": 5344,
+            "max": 5344
+          }
+        },
+        "mylang-zero-rc": {
+          "wall": {
+            "0": 0.493140343,
+            "1": 0.496795121,
+            "2": 0.503684021,
+            "3": 0.492828669,
+            "4": 0.500220849,
+            "5": 0.493321774,
+            "6": 0.508577125,
+            "7": 0.513573455,
+            "8": 0.502805551
+          },
+          "rss": [
+            8600,
+            8600,
+            8600
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.500220849,
+            "min": 0.492828669,
+            "max": 0.513573455
+          },
+          "rss_summary": {
+            "median": 8600,
+            "min": 8600,
+            "max": 8600
+          }
+        },
+        "zig-fast": {
+          "wall": {
+            "0": 0.125857711,
+            "1": 0.126522572,
+            "2": 0.125191347,
+            "3": 0.126523516,
+            "4": 0.126359208,
+            "5": 0.12862081,
+            "6": 0.126685113,
+            "7": 0.129115663,
+            "8": 0.129269791
+          },
+          "rss": [
+            2144,
+            2144,
+            2144
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.126523516,
+            "min": 0.125191347,
+            "max": 0.129269791
+          },
+          "rss_summary": {
+            "median": 2144,
+            "min": 2144,
+            "max": 2144
+          }
+        },
+        "zig-safe": {
+          "wall": {
+            "0": 0.233930807,
+            "1": 0.231593837,
+            "2": 0.230040332,
+            "3": 0.23813117,
+            "4": 0.236001805,
+            "5": 0.23487373,
+            "6": 0.236112784,
+            "7": 0.237098441,
+            "8": 0.23607111
+          },
+          "rss": [
+            2820,
+            2820,
+            2820
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.236001805,
+            "min": 0.230040332,
+            "max": 0.23813117
+          },
+          "rss_summary": {
+            "median": 2820,
+            "min": 2820,
+            "max": 2820
+          }
+        },
+        "rust": {
+          "wall": {
+            "0": 0.152018994,
+            "1": 0.141477208,
+            "2": 0.14132848,
+            "3": 0.145715439,
+            "4": 0.139878222,
+            "5": 0.145806125,
+            "6": 0.14294473,
+            "7": 0.148592354,
+            "8": 0.147076818
+          },
+          "rss": [
+            4296,
+            4232,
+            4284
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.145715439,
+            "min": 0.139878222,
+            "max": 0.152018994
+          },
+          "rss_summary": {
+            "median": 4284,
+            "min": 4232,
+            "max": 4296
+          }
+        },
+        "go": {
+          "wall": {
+            "0": 0.199892137,
+            "1": 0.19914721,
+            "2": 0.197414881,
+            "3": 0.199689167,
+            "4": 0.197960182,
+            "5": 0.199145191,
+            "6": 0.201921881,
+            "7": 0.211542351,
+            "8": 0.204456851
+          },
+          "rss": [
+            9376,
+            9148,
+            8880
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.199689167,
+            "min": 0.197414881,
+            "max": 0.211542351
+          },
+          "rss_summary": {
+            "median": 9148,
+            "min": 8880,
+            "max": 9376
+          }
+        }
+      }
+    },
+    "lox/tree/invocation": {
+      "warmups": 2,
+      "identities": {
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/invocation.tree.150000.lox": "cf8844b4a8a54ec2cb5c289886270feea87a00b142bd883f0e20b0d36860aeae",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-migrated-rc": "d0eaa00b0b5cab6aa9eaa461a4a8279eb15522c86cb288484f6278ae8c75dd6f",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-original-rc": "9c8f5d3e1b0be06ae9134be40627bc0e1c1b913097f93d4bdc3c2a16a974fc04",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero": "a87f5bae25a477178189d093d720d0f23ddb76aba07f0de99788ad1004520029",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-go": "4d458b9e5305a2be24360a9d5d9c58f7bc828c9f9433eb6bae984066c4081b63",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-rust": "4d869a184a5f1a666113d30ad93a27ac703f39bb56c28e69e0bf739375d03dab",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-fast": "0c884acc8e3e2c0e7930910f0f21e89de7078b932368f19f11dc72fb3e3924da",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-safe": "96c97215aaddd5f90ebb61a80b388289a763bf9b8e976009c09b98a3068b4b03",
+        "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/bench/expected/invocation.tree.out": "aceaf168c6709487a120d0059d87a99ab4aad4ee7f8a4d05a91c8ee20161ef75"
+      },
+      "arms": {
+        "mylang-original-rc": {
+          "wall": {
+            "0": 0.620278342,
+            "1": 0.592234296,
+            "2": 0.609624135,
+            "3": 0.613662521,
+            "4": 0.615858844,
+            "5": 0.586677387,
+            "6": 0.599935865,
+            "7": 0.605895151,
+            "8": 0.611487423
+          },
+          "rss": [
+            5032,
+            5032,
+            5032
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.609624135,
+            "min": 0.586677387,
+            "max": 0.620278342
+          },
+          "rss_summary": {
+            "median": 5032,
+            "min": 5032,
+            "max": 5032
+          }
+        },
+        "mylang-migrated-rc": {
+          "wall": {
+            "0": 0.792398596,
+            "1": 0.598730702,
+            "2": 0.623462584,
+            "3": 0.624044725,
+            "4": 0.607397132,
+            "5": 0.602355473,
+            "6": 0.616859626,
+            "7": 0.612267301,
+            "8": 0.600926581
+          },
+          "rss": [
+            5184,
+            5180,
+            5184
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.612267301,
+            "min": 0.598730702,
+            "max": 0.792398596
+          },
+          "rss_summary": {
+            "median": 5184,
+            "min": 5180,
+            "max": 5184
+          }
+        },
+        "mylang-zero-rc": {
+          "wall": {
+            "0": 1.683468675,
+            "1": 1.59894863,
+            "2": 1.692658535,
+            "3": 1.660154079,
+            "4": 1.651895386,
+            "5": 1.616762137,
+            "6": 1.6260003,
+            "7": 1.60492333,
+            "8": 1.65066518
+          },
+          "rss": [
+            7948,
+            7944,
+            7948
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 1.65066518,
+            "min": 1.59894863,
+            "max": 1.692658535
+          },
+          "rss_summary": {
+            "median": 7948,
+            "min": 7944,
+            "max": 7948
+          }
+        },
+        "zig-fast": {
+          "wall": {
+            "0": 0.470928612,
+            "1": 0.426122337,
+            "2": 0.425024259,
+            "3": 0.444786396,
+            "4": 0.45385182,
+            "5": 0.44127121,
+            "6": 0.432957227,
+            "7": 0.440077841,
+            "8": 0.427883356
+          },
+          "rss": [
+            2144,
+            2144,
+            2144
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.440077841,
+            "min": 0.425024259,
+            "max": 0.470928612
+          },
+          "rss_summary": {
+            "median": 2144,
+            "min": 2144,
+            "max": 2144
+          }
+        },
+        "zig-safe": {
+          "wall": {
+            "0": 0.924078362,
+            "1": 0.794575493,
+            "2": 0.780362562,
+            "3": 0.806873233,
+            "4": 0.81554288,
+            "5": 0.81050132,
+            "6": 0.787343766,
+            "7": 0.784563701,
+            "8": 0.781964945
+          },
+          "rss": [
+            2820,
+            2820,
+            2820
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.794575493,
+            "min": 0.780362562,
+            "max": 0.924078362
+          },
+          "rss_summary": {
+            "median": 2820,
+            "min": 2820,
+            "max": 2820
+          }
+        },
+        "rust": {
+          "wall": {
+            "0": 0.507125697,
+            "1": 0.473095974,
+            "2": 0.477562667,
+            "3": 0.490149853,
+            "4": 0.498137827,
+            "5": 0.484298804,
+            "6": 0.482144667,
+            "7": 0.480618701,
+            "8": 0.482788235
+          },
+          "rss": [
+            3996,
+            4024,
+            4024
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.482788235,
+            "min": 0.473095974,
+            "max": 0.507125697
+          },
+          "rss_summary": {
+            "median": 4024,
+            "min": 3996,
+            "max": 4024
+          }
+        },
+        "go": {
+          "wall": {
+            "0": 0.649809126,
+            "1": 0.648108088,
+            "2": 0.644372613,
+            "3": 0.65500254,
+            "4": 0.675904786,
+            "5": 0.638292819,
+            "6": 0.638168669,
+            "7": 0.643081977,
+            "8": 0.647835846
+          },
+          "rss": [
+            9084,
+            8776,
+            9192
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.647835846,
+            "min": 0.638168669,
+            "max": 0.675904786
+          },
+          "rss_summary": {
+            "median": 9084,
+            "min": 8776,
+            "max": 9192
+          }
+        }
+      }
+    },
+    "lox/tree/method_call": {
+      "warmups": 2,
+      "identities": {
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/method_call.tree.50000.lox": "2fa5eb6aa749d981ff203181a194cc5fb6e85b1cd853639844075dc7b6d82ba7",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-migrated-rc": "d0eaa00b0b5cab6aa9eaa461a4a8279eb15522c86cb288484f6278ae8c75dd6f",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-original-rc": "9c8f5d3e1b0be06ae9134be40627bc0e1c1b913097f93d4bdc3c2a16a974fc04",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero": "a87f5bae25a477178189d093d720d0f23ddb76aba07f0de99788ad1004520029",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-go": "4d458b9e5305a2be24360a9d5d9c58f7bc828c9f9433eb6bae984066c4081b63",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-rust": "4d869a184a5f1a666113d30ad93a27ac703f39bb56c28e69e0bf739375d03dab",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-fast": "0c884acc8e3e2c0e7930910f0f21e89de7078b932368f19f11dc72fb3e3924da",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-safe": "96c97215aaddd5f90ebb61a80b388289a763bf9b8e976009c09b98a3068b4b03",
+        "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/bench/expected/method_call.tree.out": "21d91041c5d1a59661f8936571ee5c87e96f6f0c7a532b52ec17c5b9bea8220b"
+      },
+      "arms": {
+        "mylang-original-rc": {
+          "wall": {
+            "0": 0.55265994,
+            "1": 0.577107954,
+            "2": 0.564729214,
+            "3": 0.550451063,
+            "4": 0.564534456,
+            "5": 0.5699922,
+            "6": 0.5831876,
+            "7": 0.650258949,
+            "8": 0.582324785
+          },
+          "rss": [
+            5192,
+            5192,
+            5192
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.5699922,
+            "min": 0.550451063,
+            "max": 0.650258949
+          },
+          "rss_summary": {
+            "median": 5192,
+            "min": 5192,
+            "max": 5192
+          }
+        },
+        "mylang-migrated-rc": {
+          "wall": {
+            "0": 0.548300268,
+            "1": 0.566536138,
+            "2": 0.558895917,
+            "3": 0.539261772,
+            "4": 0.556099446,
+            "5": 0.559097648,
+            "6": 0.646895988,
+            "7": 0.621263881,
+            "8": 0.549394773
+          },
+          "rss": [
+            5184,
+            5184,
+            5184
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.558895917,
+            "min": 0.539261772,
+            "max": 0.646895988
+          },
+          "rss_summary": {
+            "median": 5184,
+            "min": 5184,
+            "max": 5184
+          }
+        },
+        "mylang-zero-rc": {
+          "wall": {
+            "0": 1.328902103,
+            "1": 1.322479845,
+            "2": 1.380581439,
+            "3": 1.333940074,
+            "4": 1.407098375,
+            "5": 1.405172895,
+            "6": 1.445726037,
+            "7": 1.465704298,
+            "8": 1.365691357
+          },
+          "rss": [
+            8112,
+            8112,
+            8136
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 1.380581439,
+            "min": 1.322479845,
+            "max": 1.465704298
+          },
+          "rss_summary": {
+            "median": 8112,
+            "min": 8112,
+            "max": 8136
+          }
+        },
+        "zig-fast": {
+          "wall": {
+            "0": 0.291494115,
+            "1": 0.305893168,
+            "2": 0.303504119,
+            "3": 0.28894526,
+            "4": 0.293378002,
+            "5": 0.303083086,
+            "6": 0.294156434,
+            "7": 0.327602748,
+            "8": 0.413831298
+          },
+          "rss": [
+            2144,
+            2144,
+            2144
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.303083086,
+            "min": 0.28894526,
+            "max": 0.413831298
+          },
+          "rss_summary": {
+            "median": 2144,
+            "min": 2144,
+            "max": 2144
+          }
+        },
+        "zig-safe": {
+          "wall": {
+            "0": 0.491276079,
+            "1": 0.48787629,
+            "2": 0.495147782,
+            "3": 0.483929252,
+            "4": 0.492534689,
+            "5": 0.507063063,
+            "6": 0.487120634,
+            "7": 0.543468044,
+            "8": 0.510387075
+          },
+          "rss": [
+            2820,
+            2820,
+            2820
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.492534689,
+            "min": 0.483929252,
+            "max": 0.543468044
+          },
+          "rss_summary": {
+            "median": 2820,
+            "min": 2820,
+            "max": 2820
+          }
+        },
+        "rust": {
+          "wall": {
+            "0": 0.355657392,
+            "1": 0.385034074,
+            "2": 0.36207116,
+            "3": 0.339321382,
+            "4": 0.35141659,
+            "5": 0.362801772,
+            "6": 0.346658624,
+            "7": 0.396155551,
+            "8": 0.46896632
+          },
+          "rss": [
+            3996,
+            4136,
+            4152
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.36207116,
+            "min": 0.339321382,
+            "max": 0.46896632
+          },
+          "rss_summary": {
+            "median": 4136,
+            "min": 3996,
+            "max": 4152
+          }
+        },
+        "go": {
+          "wall": {
+            "0": 0.454296947,
+            "1": 0.503594299,
+            "2": 0.465946107,
+            "3": 0.454295244,
+            "4": 0.460750488,
+            "5": 0.467853804,
+            "6": 0.44239104,
+            "7": 0.567772498,
+            "8": 0.479241647
+          },
+          "rss": [
+            8724,
+            9028,
+            9032
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.465946107,
+            "min": 0.44239104,
+            "max": 0.567772498
+          },
+          "rss_summary": {
+            "median": 9028,
+            "min": 8724,
+            "max": 9032
+          }
+        }
+      }
+    },
+    "lox/tree/properties": {
+      "warmups": 2,
+      "identities": {
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/properties.tree.100000.lox": "d60e0a6dc356f3b9bc51e2f25fdc3a9b5b7cd26daf9a045adcd511b295438199",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-migrated-rc": "d0eaa00b0b5cab6aa9eaa461a4a8279eb15522c86cb288484f6278ae8c75dd6f",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-original-rc": "9c8f5d3e1b0be06ae9134be40627bc0e1c1b913097f93d4bdc3c2a16a974fc04",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero": "a87f5bae25a477178189d093d720d0f23ddb76aba07f0de99788ad1004520029",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-go": "4d458b9e5305a2be24360a9d5d9c58f7bc828c9f9433eb6bae984066c4081b63",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-rust": "4d869a184a5f1a666113d30ad93a27ac703f39bb56c28e69e0bf739375d03dab",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-fast": "0c884acc8e3e2c0e7930910f0f21e89de7078b932368f19f11dc72fb3e3924da",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-safe": "96c97215aaddd5f90ebb61a80b388289a763bf9b8e976009c09b98a3068b4b03",
+        "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/bench/expected/properties.tree.out": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597"
+      },
+      "arms": {
+        "mylang-original-rc": {
+          "wall": {
+            "0": 0.561980523,
+            "1": 0.558886735,
+            "2": 0.561284439,
+            "3": 0.550014903,
+            "4": 0.549523204,
+            "5": 0.552623034,
+            "6": 0.560431811,
+            "7": 0.568069435,
+            "8": 0.67373519
+          },
+          "rss": [
+            5064,
+            5188,
+            5192
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.560431811,
+            "min": 0.549523204,
+            "max": 0.67373519
+          },
+          "rss_summary": {
+            "median": 5188,
+            "min": 5064,
+            "max": 5192
+          }
+        },
+        "mylang-migrated-rc": {
+          "wall": {
+            "0": 0.581976843,
+            "1": 0.553314275,
+            "2": 0.558749466,
+            "3": 0.552933232,
+            "4": 0.552865418,
+            "5": 0.553691614,
+            "6": 0.564549192,
+            "7": 0.573964606,
+            "8": 0.655508538
+          },
+          "rss": [
+            5184,
+            5184,
+            5184
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.558749466,
+            "min": 0.552865418,
+            "max": 0.655508538
+          },
+          "rss_summary": {
+            "median": 5184,
+            "min": 5184,
+            "max": 5184
+          }
+        },
+        "mylang-zero-rc": {
+          "wall": {
+            "0": 1.87928703,
+            "1": 1.907917146,
+            "2": 1.821116454,
+            "3": 1.814246044,
+            "4": 1.851250476,
+            "5": 1.819063876,
+            "6": 1.81513657,
+            "7": 1.835744707,
+            "8": 1.909552273
+          },
+          "rss": [
+            8484,
+            8492,
+            8488
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 1.835744707,
+            "min": 1.814246044,
+            "max": 1.909552273
+          },
+          "rss_summary": {
+            "median": 8488,
+            "min": 8484,
+            "max": 8492
+          }
+        },
+        "zig-fast": {
+          "wall": {
+            "0": 0.336031426,
+            "1": 0.35641985,
+            "2": 0.34796339,
+            "3": 0.343374552,
+            "4": 0.345393062,
+            "5": 0.3556429,
+            "6": 0.350729393,
+            "7": 0.349473907,
+            "8": 0.353305951
+          },
+          "rss": [
+            2144,
+            2144,
+            2144
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.349473907,
+            "min": 0.336031426,
+            "max": 0.35641985
+          },
+          "rss_summary": {
+            "median": 2144,
+            "min": 2144,
+            "max": 2144
+          }
+        },
+        "zig-safe": {
+          "wall": {
+            "0": 0.593516366,
+            "1": 0.605343562,
+            "2": 0.604610708,
+            "3": 0.603640426,
+            "4": 0.60533799,
+            "5": 0.910466035,
+            "6": 0.613067441,
+            "7": 0.611655699,
+            "8": 0.603887604
+          },
+          "rss": [
+            2820,
+            2820,
+            2820
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.60533799,
+            "min": 0.593516366,
+            "max": 0.910466035
+          },
+          "rss_summary": {
+            "median": 2820,
+            "min": 2820,
+            "max": 2820
+          }
+        },
+        "rust": {
+          "wall": {
+            "0": 0.421913907,
+            "1": 0.429052985,
+            "2": 0.424636305,
+            "3": 0.42235267,
+            "4": 0.418645069,
+            "5": 0.414825976,
+            "6": 0.421942481,
+            "7": 0.423381329,
+            "8": 0.431356027
+          },
+          "rss": [
+            3996,
+            4024,
+            4024
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.42235267,
+            "min": 0.414825976,
+            "max": 0.431356027
+          },
+          "rss_summary": {
+            "median": 4024,
+            "min": 3996,
+            "max": 4024
+          }
+        },
+        "go": {
+          "wall": {
+            "0": 0.508700006,
+            "1": 0.504550136,
+            "2": 0.509340025,
+            "3": 0.506126703,
+            "4": 0.507301775,
+            "5": 0.506529457,
+            "6": 0.506464359,
+            "7": 0.513213938,
+            "8": 0.559994536
+          },
+          "rss": [
+            8912,
+            8820,
+            10056
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.507301775,
+            "min": 0.504550136,
+            "max": 0.559994536
+          },
+          "rss_summary": {
+            "median": 8912,
+            "min": 8820,
+            "max": 10056
+          }
+        }
+      }
+    },
+    "lox/tree/string_equality": {
+      "warmups": 2,
+      "identities": {
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.tree.10000.lox": "b48a8677baa2e673c0d164b722ebd71461242ac5e9f53e962a483b172055d1c7",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-migrated-rc": "d0eaa00b0b5cab6aa9eaa461a4a8279eb15522c86cb288484f6278ae8c75dd6f",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-original-rc": "9c8f5d3e1b0be06ae9134be40627bc0e1c1b913097f93d4bdc3c2a16a974fc04",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero": "a87f5bae25a477178189d093d720d0f23ddb76aba07f0de99788ad1004520029",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-go": "4d458b9e5305a2be24360a9d5d9c58f7bc828c9f9433eb6bae984066c4081b63",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-rust": "4d869a184a5f1a666113d30ad93a27ac703f39bb56c28e69e0bf739375d03dab",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-fast": "0c884acc8e3e2c0e7930910f0f21e89de7078b932368f19f11dc72fb3e3924da",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-safe": "96c97215aaddd5f90ebb61a80b388289a763bf9b8e976009c09b98a3068b4b03",
+        "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/bench/expected/string_equality.tree.out": "876e13f4e07bb39705302c01f445ffd2d2c3b180a207e4d959d6b671c67da09b"
+      },
+      "arms": {
+        "mylang-original-rc": {
+          "wall": {
+            "0": 0.455646229,
+            "1": 0.448835883,
+            "2": 0.457518097,
+            "3": 0.457940273,
+            "4": 0.459593186,
+            "5": 0.457837981,
+            "6": 0.457186941,
+            "7": 0.465312777,
+            "8": 0.482642566
+          },
+          "rss": [
+            5704,
+            5704,
+            5700
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.457837981,
+            "min": 0.448835883,
+            "max": 0.482642566
+          },
+          "rss_summary": {
+            "median": 5704,
+            "min": 5700,
+            "max": 5704
+          }
+        },
+        "mylang-migrated-rc": {
+          "wall": {
+            "0": 0.471725342,
+            "1": 0.464912814,
+            "2": 0.469626113,
+            "3": 0.479150687,
+            "4": 0.461154093,
+            "5": 0.463052857,
+            "6": 0.485378035,
+            "7": 0.477737998,
+            "8": 0.482336549
+          },
+          "rss": [
+            5696,
+            5700,
+            5696
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.471725342,
+            "min": 0.461154093,
+            "max": 0.485378035
+          },
+          "rss_summary": {
+            "median": 5696,
+            "min": 5696,
+            "max": 5700
+          }
+        },
+        "mylang-zero-rc": {
+          "wall": {
+            "0": 1.153700332,
+            "1": 1.149931244,
+            "2": 1.149339958,
+            "3": 1.159612265,
+            "4": 1.159570677,
+            "5": 1.131544472,
+            "6": 1.161496403,
+            "7": 1.156550258,
+            "8": 1.185453998
+          },
+          "rss": [
+            8812,
+            8812,
+            8812
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 1.156550258,
+            "min": 1.131544472,
+            "max": 1.185453998
+          },
+          "rss_summary": {
+            "median": 8812,
+            "min": 8812,
+            "max": 8812
+          }
+        },
+        "zig-fast": {
+          "wall": {
+            "0": 0.158767311,
+            "1": 0.162510719,
+            "2": 0.163546372,
+            "3": 0.159846942,
+            "4": 0.159915535,
+            "5": 0.158312414,
+            "6": 0.163810822,
+            "7": 0.164266452,
+            "8": 0.164630619
+          },
+          "rss": [
+            2304,
+            2304,
+            2304
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.162510719,
+            "min": 0.158312414,
+            "max": 0.164630619
+          },
+          "rss_summary": {
+            "median": 2304,
+            "min": 2304,
+            "max": 2304
+          }
+        },
+        "zig-safe": {
+          "wall": {
+            "0": 0.202855412,
+            "1": 0.210084275,
+            "2": 0.209050884,
+            "3": 0.207004313,
+            "4": 0.205453686,
+            "5": 0.204766098,
+            "6": 0.209582299,
+            "7": 0.2106361,
+            "8": 0.209921895
+          },
+          "rss": [
+            2820,
+            2820,
+            2820
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.209050884,
+            "min": 0.202855412,
+            "max": 0.2106361
+          },
+          "rss_summary": {
+            "median": 2820,
+            "min": 2820,
+            "max": 2820
+          }
+        },
+        "rust": {
+          "wall": {
+            "0": 0.397999866,
+            "1": 0.396492416,
+            "2": 0.394328156,
+            "3": 0.396273877,
+            "4": 0.383938474,
+            "5": 0.386538244,
+            "6": 0.395791018,
+            "7": 0.413139571,
+            "8": 0.408565851
+          },
+          "rss": [
+            4460,
+            4472,
+            4468
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.396273877,
+            "min": 0.383938474,
+            "max": 0.413139571
+          },
+          "rss_summary": {
+            "median": 4468,
+            "min": 4460,
+            "max": 4472
+          }
+        },
+        "go": {
+          "wall": {
+            "0": 0.186861509,
+            "1": 0.181552163,
+            "2": 0.187146998,
+            "3": 0.19913688,
+            "4": 0.187732107,
+            "5": 0.187529908,
+            "6": 0.185478359,
+            "7": 0.19679461,
+            "8": 0.194585242
+          },
+          "rss": [
+            6352,
+            6352,
+            6352
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.187529908,
+            "min": 0.181552163,
+            "max": 0.19913688
+          },
+          "rss_summary": {
+            "median": 6352,
+            "min": 6352,
+            "max": 6352
+          }
+        }
+      }
+    },
+    "lox/tree/strings": {
+      "warmups": 2,
+      "identities": {
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/strings.tree.300000.lox": "2435eb29b0ed4fd5e0512eaebc7ee55f65a0337109b10100d383342edea2adab",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-migrated-rc": "d0eaa00b0b5cab6aa9eaa461a4a8279eb15522c86cb288484f6278ae8c75dd6f",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-original-rc": "9c8f5d3e1b0be06ae9134be40627bc0e1c1b913097f93d4bdc3c2a16a974fc04",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero": "a87f5bae25a477178189d093d720d0f23ddb76aba07f0de99788ad1004520029",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-go": "4d458b9e5305a2be24360a9d5d9c58f7bc828c9f9433eb6bae984066c4081b63",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-rust": "4d869a184a5f1a666113d30ad93a27ac703f39bb56c28e69e0bf739375d03dab",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-fast": "0c884acc8e3e2c0e7930910f0f21e89de7078b932368f19f11dc72fb3e3924da",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-safe": "96c97215aaddd5f90ebb61a80b388289a763bf9b8e976009c09b98a3068b4b03",
+        "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/bench/expected/strings.tree.out": "e4d563316c0e9f5ccddf477f14ca54e9e5a7a58bee5f2e7a60382f48fd5bf988"
+      },
+      "arms": {
+        "mylang-original-rc": {
+          "wall": {
+            "0": 0.185458544,
+            "1": 0.187644601,
+            "2": 0.187953783,
+            "3": 0.173901543,
+            "4": 0.171842376,
+            "5": 0.171986473,
+            "6": 0.163743186,
+            "7": 0.165038495,
+            "8": 0.163922798
+          },
+          "rss": [
+            5676,
+            5676,
+            5672
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.171986473,
+            "min": 0.163743186,
+            "max": 0.187953783
+          },
+          "rss_summary": {
+            "median": 5676,
+            "min": 5672,
+            "max": 5676
+          }
+        },
+        "mylang-migrated-rc": {
+          "wall": {
+            "0": 0.204555728,
+            "1": 0.181290973,
+            "2": 0.187081519,
+            "3": 0.171311108,
+            "4": 0.168537296,
+            "5": 0.167390989,
+            "6": 0.164524242,
+            "7": 0.16066666,
+            "8": 0.162264834
+          },
+          "rss": [
+            5668,
+            5668,
+            5668
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.168537296,
+            "min": 0.16066666,
+            "max": 0.204555728
+          },
+          "rss_summary": {
+            "median": 5668,
+            "min": 5668,
+            "max": 5668
+          }
+        },
+        "mylang-zero-rc": {
+          "wall": {
+            "0": 0.444991816,
+            "1": 0.431458277,
+            "2": 0.434068611,
+            "3": 0.413535717,
+            "4": 0.409100308,
+            "5": 0.40900594,
+            "6": 0.393929126,
+            "7": 0.38838576,
+            "8": 0.387997325
+          },
+          "rss": [
+            8728,
+            8728,
+            8736
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.409100308,
+            "min": 0.387997325,
+            "max": 0.444991816
+          },
+          "rss_summary": {
+            "median": 8728,
+            "min": 8728,
+            "max": 8736
+          }
+        },
+        "zig-fast": {
+          "wall": {
+            "0": 0.092408894,
+            "1": 0.104725983,
+            "2": 0.098252698,
+            "3": 0.090117648,
+            "4": 0.08915305,
+            "5": 0.089251812,
+            "6": 0.087009668,
+            "7": 0.087363927,
+            "8": 0.095441697
+          },
+          "rss": [
+            2432,
+            2432,
+            2432
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.090117648,
+            "min": 0.087009668,
+            "max": 0.104725983
+          },
+          "rss_summary": {
+            "median": 2432,
+            "min": 2432,
+            "max": 2432
+          }
+        },
+        "zig-safe": {
+          "wall": {
+            "0": 0.16521652,
+            "1": 0.174023371,
+            "2": 0.171946954,
+            "3": 0.169208739,
+            "4": 0.157498782,
+            "5": 0.157302692,
+            "6": 0.15116538,
+            "7": 0.151991738,
+            "8": 0.150737759
+          },
+          "rss": [
+            3896,
+            3896,
+            3896
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.157498782,
+            "min": 0.150737759,
+            "max": 0.174023371
+          },
+          "rss_summary": {
+            "median": 3896,
+            "min": 3896,
+            "max": 3896
+          }
+        },
+        "rust": {
+          "wall": {
+            "0": 0.128057261,
+            "1": 0.136548915,
+            "2": 0.13718187,
+            "3": 0.123887446,
+            "4": 0.124150696,
+            "5": 0.123016982,
+            "6": 0.122466002,
+            "7": 0.121729722,
+            "8": 0.124042915
+          },
+          "rss": [
+            4476,
+            4428,
+            4344
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.124042915,
+            "min": 0.121729722,
+            "max": 0.13718187
+          },
+          "rss_summary": {
+            "median": 4428,
+            "min": 4344,
+            "max": 4476
+          }
+        },
+        "go": {
+          "wall": {
+            "0": 0.129647458,
+            "1": 0.128151962,
+            "2": 0.129384874,
+            "3": 0.119395596,
+            "4": 0.117963095,
+            "5": 0.119377758,
+            "6": 0.113029273,
+            "7": 0.113212803,
+            "8": 0.116098509
+          },
+          "rss": [
+            8592,
+            8748,
+            9072
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.119377758,
+            "min": 0.113029273,
+            "max": 0.129647458
+          },
+          "rss_summary": {
+            "median": 8748,
+            "min": 8592,
+            "max": 9072
+          }
+        }
+      }
+    },
+    "lox/tree/trees": {
+      "warmups": 2,
+      "identities": {
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/trees.tree.5.lox": "23667ffaea75fed6a2fea42bc900cd0aecb66089af9a18cac13816a6b6f3a176",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-migrated-rc": "d0eaa00b0b5cab6aa9eaa461a4a8279eb15522c86cb288484f6278ae8c75dd6f",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-original-rc": "9c8f5d3e1b0be06ae9134be40627bc0e1c1b913097f93d4bdc3c2a16a974fc04",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero": "a87f5bae25a477178189d093d720d0f23ddb76aba07f0de99788ad1004520029",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-go": "4d458b9e5305a2be24360a9d5d9c58f7bc828c9f9433eb6bae984066c4081b63",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-rust": "4d869a184a5f1a666113d30ad93a27ac703f39bb56c28e69e0bf739375d03dab",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-fast": "0c884acc8e3e2c0e7930910f0f21e89de7078b932368f19f11dc72fb3e3924da",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-safe": "96c97215aaddd5f90ebb61a80b388289a763bf9b8e976009c09b98a3068b4b03",
+        "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/bench/expected/trees.tree.out": "17ab3b16ce7c5de5f4592400fb2b7e34eedbc57f86b65d948015ebfe1bd33ff5"
+      },
+      "arms": {
+        "mylang-original-rc": {
+          "wall": {
+            "0": 0.247245315,
+            "1": 0.247692462,
+            "2": 0.248413647,
+            "3": 0.246816799,
+            "4": 0.248698222,
+            "5": 0.248398796,
+            "6": 0.237422455,
+            "7": 0.242685042,
+            "8": 0.243465136
+          },
+          "rss": [
+            47568,
+            47572,
+            47568
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.247245315,
+            "min": 0.237422455,
+            "max": 0.248698222
+          },
+          "rss_summary": {
+            "median": 47568,
+            "min": 47568,
+            "max": 47572
+          }
+        },
+        "mylang-migrated-rc": {
+          "wall": {
+            "0": 0.24200514,
+            "1": 0.238866365,
+            "2": 0.242489897,
+            "3": 0.239004447,
+            "4": 0.241343778,
+            "5": 0.239221305,
+            "6": 0.234682041,
+            "7": 0.232111846,
+            "8": 0.233302694
+          },
+          "rss": [
+            47748,
+            47748,
+            47748
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.239004447,
+            "min": 0.232111846,
+            "max": 0.242489897
+          },
+          "rss_summary": {
+            "median": 47748,
+            "min": 47748,
+            "max": 47748
+          }
+        },
+        "mylang-zero-rc": {
+          "wall": {
+            "0": 0.51971147,
+            "1": 0.523264543,
+            "2": 0.521664802,
+            "3": 0.522884137,
+            "4": 0.521673631,
+            "5": 0.520837369,
+            "6": 0.507060722,
+            "7": 0.50564693,
+            "8": 0.512878554
+          },
+          "rss": [
+            98292,
+            98296,
+            98296
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.520837369,
+            "min": 0.50564693,
+            "max": 0.523264543
+          },
+          "rss_summary": {
+            "median": 98296,
+            "min": 98292,
+            "max": 98296
+          }
+        },
+        "zig-fast": {
+          "wall": {
+            "0": 0.140181337,
+            "1": 0.141572001,
+            "2": 0.139679277,
+            "3": 0.139634818,
+            "4": 0.13890996,
+            "5": 0.138406617,
+            "6": 0.149095132,
+            "7": 0.137575557,
+            "8": 0.151135856
+          },
+          "rss": [
+            36192,
+            36192,
+            36192
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.139679277,
+            "min": 0.137575557,
+            "max": 0.151135856
+          },
+          "rss_summary": {
+            "median": 36192,
+            "min": 36192,
+            "max": 36192
+          }
+        },
+        "zig-safe": {
+          "wall": {
+            "0": 0.223868291,
+            "1": 0.226009784,
+            "2": 0.222410517,
+            "3": 0.222206764,
+            "4": 0.221056104,
+            "5": 0.222668809,
+            "6": 0.215058123,
+            "7": 0.230360209,
+            "8": 0.215502229
+          },
+          "rss": [
+            42600,
+            42600,
+            42600
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.222410517,
+            "min": 0.215058123,
+            "max": 0.230360209
+          },
+          "rss_summary": {
+            "median": 42600,
+            "min": 42600,
+            "max": 42600
+          }
+        },
+        "rust": {
+          "wall": {
+            "0": 0.163274866,
+            "1": 0.162618587,
+            "2": 0.161484148,
+            "3": 0.162277001,
+            "4": 0.162916416,
+            "5": 0.162583747,
+            "6": 0.169884278,
+            "7": 0.159314596,
+            "8": 0.155125041
+          },
+          "rss": [
+            41532,
+            41576,
+            41532
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.162583747,
+            "min": 0.155125041,
+            "max": 0.169884278
+          },
+          "rss_summary": {
+            "median": 41532,
+            "min": 41532,
+            "max": 41576
+          }
+        },
+        "go": {
+          "wall": {
+            "0": 0.190779283,
+            "1": 0.186362306,
+            "2": 0.194661101,
+            "3": 0.186002927,
+            "4": 0.192769709,
+            "5": 0.191273691,
+            "6": 0.185498344,
+            "7": 0.184337707,
+            "8": 0.186585365
+          },
+          "rss": [
+            74832,
+            72592,
+            83632
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.186585365,
+            "min": 0.184337707,
+            "max": 0.194661101
+          },
+          "rss_summary": {
+            "median": 74832,
+            "min": 72592,
+            "max": 83632
+          }
+        }
+      }
+    },
+    "lox/tree/zoo": {
+      "warmups": 2,
+      "identities": {
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/zoo.tree.3000000.lox": "a23818e098b14c6243a549e8560e4977e2e8bffb60e69af63ee88c7b7e33ddb8",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-migrated-rc": "d0eaa00b0b5cab6aa9eaa461a4a8279eb15522c86cb288484f6278ae8c75dd6f",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-original-rc": "9c8f5d3e1b0be06ae9134be40627bc0e1c1b913097f93d4bdc3c2a16a974fc04",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero": "a87f5bae25a477178189d093d720d0f23ddb76aba07f0de99788ad1004520029",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-go": "4d458b9e5305a2be24360a9d5d9c58f7bc828c9f9433eb6bae984066c4081b63",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-rust": "4d869a184a5f1a666113d30ad93a27ac703f39bb56c28e69e0bf739375d03dab",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-fast": "0c884acc8e3e2c0e7930910f0f21e89de7078b932368f19f11dc72fb3e3924da",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-safe": "96c97215aaddd5f90ebb61a80b388289a763bf9b8e976009c09b98a3068b4b03",
+        "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/bench/expected/zoo.tree.out": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016"
+      },
+      "arms": {
+        "mylang-original-rc": {
+          "wall": {
+            "0": 0.546550087,
+            "1": 0.552614874,
+            "2": 0.54483904,
+            "3": 0.55058165,
+            "4": 0.548492093,
+            "5": 0.551133526,
+            "6": 0.550738759,
+            "7": 0.546282479,
+            "8": 0.551854314
+          },
+          "rss": [
+            5356,
+            5356,
+            5356
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.55058165,
+            "min": 0.54483904,
+            "max": 0.552614874
+          },
+          "rss_summary": {
+            "median": 5356,
+            "min": 5356,
+            "max": 5356
+          }
+        },
+        "mylang-migrated-rc": {
+          "wall": {
+            "0": 0.517903702,
+            "1": 0.517144944,
+            "2": 0.523305826,
+            "3": 0.514715548,
+            "4": 0.515843823,
+            "5": 0.530493395,
+            "6": 0.525829767,
+            "7": 0.531970719,
+            "8": 0.522173008
+          },
+          "rss": [
+            5348,
+            5348,
+            5348
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.522173008,
+            "min": 0.514715548,
+            "max": 0.531970719
+          },
+          "rss_summary": {
+            "median": 5348,
+            "min": 5348,
+            "max": 5348
+          }
+        },
+        "mylang-zero-rc": {
+          "wall": {
+            "0": 1.308924681,
+            "1": 1.300114643,
+            "2": 1.306448403,
+            "3": 1.313350005,
+            "4": 1.308658562,
+            "5": 1.326764134,
+            "6": 1.334989739,
+            "7": 1.318886707,
+            "8": 1.323456211
+          },
+          "rss": [
+            8444,
+            8448,
+            8444
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 1.313350005,
+            "min": 1.300114643,
+            "max": 1.334989739
+          },
+          "rss_summary": {
+            "median": 8444,
+            "min": 8444,
+            "max": 8448
+          }
+        },
+        "zig-fast": {
+          "wall": {
+            "0": 0.347685774,
+            "1": 0.347991176,
+            "2": 0.347818107,
+            "3": 0.349615789,
+            "4": 0.343738796,
+            "5": 0.345720547,
+            "6": 0.346430709,
+            "7": 0.345229767,
+            "8": 0.345614472
+          },
+          "rss": [
+            2272,
+            2272,
+            2272
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.346430709,
+            "min": 0.343738796,
+            "max": 0.349615789
+          },
+          "rss_summary": {
+            "median": 2272,
+            "min": 2272,
+            "max": 2272
+          }
+        },
+        "zig-safe": {
+          "wall": {
+            "0": 0.586092489,
+            "1": 0.595773738,
+            "2": 0.588886158,
+            "3": 0.5907821,
+            "4": 0.588690756,
+            "5": 0.586782342,
+            "6": 0.587793027,
+            "7": 0.589866832,
+            "8": 0.588368643
+          },
+          "rss": [
+            2940,
+            2940,
+            2940
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.588690756,
+            "min": 0.586092489,
+            "max": 0.595773738
+          },
+          "rss_summary": {
+            "median": 2940,
+            "min": 2940,
+            "max": 2940
+          }
+        },
+        "rust": {
+          "wall": {
+            "0": 0.445514135,
+            "1": 0.447273367,
+            "2": 0.444813698,
+            "3": 0.443383475,
+            "4": 0.445452761,
+            "5": 0.446960068,
+            "6": 0.442036162,
+            "7": 0.445675138,
+            "8": 0.451085881
+          },
+          "rss": [
+            4296,
+            4252,
+            4188
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.445514135,
+            "min": 0.442036162,
+            "max": 0.451085881
+          },
+          "rss_summary": {
+            "median": 4252,
+            "min": 4188,
+            "max": 4296
+          }
+        },
+        "go": {
+          "wall": {
+            "0": 0.509867893,
+            "1": 0.511144973,
+            "2": 0.512570457,
+            "3": 0.510380467,
+            "4": 0.510394535,
+            "5": 0.510211347,
+            "6": 0.511948164,
+            "7": 0.517634266,
+            "8": 0.511193883
+          },
+          "rss": [
+            9008,
+            8776,
+            8796
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.511144973,
+            "min": 0.509867893,
+            "max": 0.517634266
+          },
+          "rss_summary": {
+            "median": 8796,
+            "min": 8776,
+            "max": 9008
+          }
+        }
+      }
+    },
+    "lox/tree/zoo_batch": {
+      "warmups": 2,
+      "identities": {
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/zoo_batch.tree.40.lox": "d1c9ec6b50a59d014b6fe1d6d761404070b19d8a94dea1878435a0db34540d0f",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-migrated-rc": "d0eaa00b0b5cab6aa9eaa461a4a8279eb15522c86cb288484f6278ae8c75dd6f",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-original-rc": "9c8f5d3e1b0be06ae9134be40627bc0e1c1b913097f93d4bdc3c2a16a974fc04",
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-lox/.tmp/lox-eda-20261012/lox/bin/lox-zero": "a87f5bae25a477178189d093d720d0f23ddb76aba07f0de99788ad1004520029",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-go": "4d458b9e5305a2be24360a9d5d9c58f7bc828c9f9433eb6bae984066c4081b63",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-rust": "4d869a184a5f1a666113d30ad93a27ac703f39bb56c28e69e0bf739375d03dab",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-fast": "0c884acc8e3e2c0e7930910f0f21e89de7078b932368f19f11dc72fb3e3924da",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-safe": "96c97215aaddd5f90ebb61a80b388289a763bf9b8e976009c09b98a3068b4b03",
+        "/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/bench/expected/zoo_batch.tree.out": "96c7f4674ee2ab05724af164ad07904320aa13dd5cd3ca8b72b29c07c662b8bf"
+      },
+      "arms": {
+        "mylang-original-rc": {
+          "wall": {
+            "0": 0.481076812,
+            "1": 0.497008001,
+            "2": 0.480473239,
+            "3": 0.480306219,
+            "4": 0.487944885,
+            "5": 0.487042512,
+            "6": 0.482937824,
+            "7": 0.482686116,
+            "8": 0.483010841
+          },
+          "rss": [
+            5352,
+            5356,
+            5356
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.482937824,
+            "min": 0.480306219,
+            "max": 0.497008001
+          },
+          "rss_summary": {
+            "median": 5356,
+            "min": 5352,
+            "max": 5356
+          }
+        },
+        "mylang-migrated-rc": {
+          "wall": {
+            "0": 0.458868173,
+            "1": 0.454672958,
+            "2": 0.458140954,
+            "3": 0.459463684,
+            "4": 0.459985437,
+            "5": 0.456279413,
+            "6": 0.458874398,
+            "7": 0.46167641,
+            "8": 0.460713941
+          },
+          "rss": [
+            5348,
+            5348,
+            5348
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.458874398,
+            "min": 0.454672958,
+            "max": 0.46167641
+          },
+          "rss_summary": {
+            "median": 5348,
+            "min": 5348,
+            "max": 5348
+          }
+        },
+        "mylang-zero-rc": {
+          "wall": {
+            "0": 1.137161043,
+            "1": 1.139211064,
+            "2": 1.120571872,
+            "3": 1.178520164,
+            "4": 1.146661238,
+            "5": 1.152492939,
+            "6": 1.150714982,
+            "7": 1.12318493,
+            "8": 1.138526015
+          },
+          "rss": [
+            8440,
+            8440,
+            8432
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 1.139211064,
+            "min": 1.120571872,
+            "max": 1.178520164
+          },
+          "rss_summary": {
+            "median": 8440,
+            "min": 8432,
+            "max": 8440
+          }
+        },
+        "zig-fast": {
+          "wall": {
+            "0": 0.30031574,
+            "1": 0.298906161,
+            "2": 0.298542259,
+            "3": 0.301567059,
+            "4": 0.299658637,
+            "5": 0.300257041,
+            "6": 0.298468788,
+            "7": 0.299803435,
+            "8": 0.298689943
+          },
+          "rss": [
+            2272,
+            2272,
+            2272
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.299658637,
+            "min": 0.298468788,
+            "max": 0.301567059
+          },
+          "rss_summary": {
+            "median": 2272,
+            "min": 2272,
+            "max": 2272
+          }
+        },
+        "zig-safe": {
+          "wall": {
+            "0": 0.492442677,
+            "1": 0.492554486,
+            "2": 0.492188106,
+            "3": 0.497618968,
+            "4": 0.496054044,
+            "5": 0.495680353,
+            "6": 0.493540795,
+            "7": 0.495451418,
+            "8": 0.496047989
+          },
+          "rss": [
+            2940,
+            2940,
+            2940
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.495451418,
+            "min": 0.492188106,
+            "max": 0.497618968
+          },
+          "rss_summary": {
+            "median": 2940,
+            "min": 2940,
+            "max": 2940
+          }
+        },
+        "rust": {
+          "wall": {
+            "0": 0.368339911,
+            "1": 0.384386431,
+            "2": 0.368243232,
+            "3": 0.368757177,
+            "4": 0.375651236,
+            "5": 0.367782449,
+            "6": 0.367222276,
+            "7": 0.368166171,
+            "8": 0.375337242
+          },
+          "rss": [
+            4252,
+            4252,
+            4184
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.368339911,
+            "min": 0.367222276,
+            "max": 0.384386431
+          },
+          "rss_summary": {
+            "median": 4252,
+            "min": 4184,
+            "max": 4252
+          }
+        },
+        "go": {
+          "wall": {
+            "0": 0.437159024,
+            "1": 0.441773249,
+            "2": 0.437034411,
+            "3": 0.438019388,
+            "4": 0.441569711,
+            "5": 0.437973863,
+            "6": 0.437040788,
+            "7": 0.436188542,
+            "8": 0.445542436
+          },
+          "rss": [
+            8988,
+            8928,
+            8748
+          ],
+          "failures": [],
+          "wall_summary": {
+            "median": 0.437973863,
+            "min": 0.436188542,
+            "max": 0.445542436
+          },
+          "rss_summary": {
+            "median": 8928,
+            "min": 8748,
+            "max": 8988
+          }
+        }
+      }
+    }
+  },
+  "binary_sha256": {
+    "zig-safe": "96c97215aaddd5f90ebb61a80b388289a763bf9b8e976009c09b98a3068b4b03",
+    "zig-fast": "0c884acc8e3e2c0e7930910f0f21e89de7078b932368f19f11dc72fb3e3924da",
+    "rust": "4d869a184a5f1a666113d30ad93a27ac703f39bb56c28e69e0bf739375d03dab",
+    "go": "4d458b9e5305a2be24360a9d5d9c58f7bc828c9f9433eb6bae984066c4081b63",
+    "mylang-original-rc": "9c8f5d3e1b0be06ae9134be40627bc0e1c1b913097f93d4bdc3c2a16a974fc04",
+    "mylang-migrated-rc": "d0eaa00b0b5cab6aa9eaa461a4a8279eb15522c86cb288484f6278ae8c75dd6f",
+    "mylang-zero-rc": "a87f5bae25a477178189d093d720d0f23ddb76aba07f0de99788ad1004520029"
+  },
+  "receipts": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/initial-fib/tree-fib.r0-9.w2.rss3.json",
+      "sha256": "e851eead6dcc091444cd38ba9f98b34f3fc7d47ec636773fc5ebb2c32dce5a4c"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-binary_trees.r0-3.w2.rss0.json",
+      "sha256": "b9b20ee6cbd25c854d85116b14476dbe6f04bc610603a4fcd3f117276ae9159a"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-binary_trees.r3-6.w0.rss0.json",
+      "sha256": "34aadaf6080e75126b249734d2dd014660c82282df6db8f6bba9653d25ab6f53"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-binary_trees.r6-9.w0.rss0.json",
+      "sha256": "79cb9f24b12e97f296160632fb8ef7c3e9e140989cb68d680f4f695ffab01024"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-binary_trees.r9-9.w0.rss3.json",
+      "sha256": "7d78b557d5a3764ea0b4436ce9e2fc752dfb760ff9f133104dce20ba719a4f2e"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-closures.r0-3.w2.rss0.json",
+      "sha256": "f9aab1999b7c344f6b67d435628c4d6ce7396f3a72f4a0dd3ab9c639c06052f8"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-closures.r3-6.w0.rss0.json",
+      "sha256": "1980cb773951b7a7bddfa0f5dc0efb6c1c9181e283d1a22b50e109eb25007b4a"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-closures.r6-9.w0.rss0.json",
+      "sha256": "c5a90f8a88b2d5804e59edec831f039bed86fba4d3f2224c1354f23e3b1eaaa7"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-closures.r9-9.w0.rss3.json",
+      "sha256": "69c41a004d0a39723eefffd282e9d9564a8af55cd948bb857c616b6b56d9435c"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-equality.r0-3.w2.rss0.json",
+      "sha256": "4f5c55ff2e05a51837d16f61d655b45baa05d24aefbdeb94a3407118b82897e6"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-equality.r3-6.w0.rss0.json",
+      "sha256": "75b863a2de4b6d6690700672022c9153a014492eddd0c248de454a24046736f6"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-equality.r6-9.w0.rss0.json",
+      "sha256": "6f555eff5cecf555042ff0a9877149bfbf23bf09fdf49d4d0acc2ae1001fbafd"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-equality.r9-9.w0.rss3.json",
+      "sha256": "ddbf2b8ddf086a9d660a7d23dce8646ee4ca22ab33ad9072056a2ac1e19acce7"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-instantiation.r0-3.w2.rss0.json",
+      "sha256": "95b8e013f572d84f9971ec730fc18b9570e9e340c1778c37fe5d1dd02cfdc094"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-instantiation.r3-6.w0.rss0.json",
+      "sha256": "21b5d72ce8da7ced5d42f3ef34eb1dce98b9e41525627d0f9913608e694b74e3"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-instantiation.r6-9.w0.rss0.json",
+      "sha256": "3aa222b77325d92105c3a9dd3d00d30da1faac44937b955d5f7f1197a74e25bd"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-instantiation.r9-9.w0.rss3.json",
+      "sha256": "c1c9d1be0122a49913b96602f39389812bd09c0d45ce1ecbbd45fd2a547ff2c8"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-invocation.r0-3.w2.rss0.json",
+      "sha256": "859d7ff15900fe38b40de22b2f66b570c513471ca820c284aaa0cc1194e530c7"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-invocation.r3-6.w0.rss0.json",
+      "sha256": "0612af23b7d1d346ee1b065a175461bce31e9f40dd396cdad9eb39cd3d4ab549"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-invocation.r6-9.w0.rss0.json",
+      "sha256": "a6c2ec08621c0cb2282910e460c2692d7ea1342e00f84818728aae7b6f89c705"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-invocation.r9-9.w0.rss3.json",
+      "sha256": "95b20e19d7e178db2175c15e6a18c6b2a71044c29cbdba56c3fd9e66050e558e"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-method_call.r0-3.w2.rss0.json",
+      "sha256": "67ff6d26d34714ea6b315b4209200470bc3a69d246d91421f030ddb6686ffd16"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-method_call.r3-6.w0.rss0.json",
+      "sha256": "16ca7365ecd43c487b13d4d7fc873ae184bb451b6bb762ed3d12ba4a8e447054"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-method_call.r6-9.w0.rss0.json",
+      "sha256": "a9d43e21581a9fc8d74329b2494c6393423ea697a472bf2bacea6ea51fc0f433"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-method_call.r9-9.w0.rss3.json",
+      "sha256": "444db1e7add5a27134a0667c57915a5077afc81dbe9b21ce5cdc5e8173854787"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-properties.r0-3.w2.rss0.json",
+      "sha256": "48498784dd9685910cb18f6fc224dc264239f1a35c18e740e5cc946e6e0a74e2"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-properties.r3-6.w0.rss0.json",
+      "sha256": "bd5221a16f6e145d8785a9f8ca6e428e0fbbdd9e7c56389fccbde358ce8a77d9"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-properties.r6-9.w0.rss0.json",
+      "sha256": "d91af6ce38a84f7837deeb29492b5cd80f1ea34e13ef7ddf1f1d5654849e2e75"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-properties.r9-9.w0.rss3.json",
+      "sha256": "6a4c4735d1a60ab3f2e8895fa891406fb80e3ee1459ac51df67368af61efd0b8"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-string_equality.r0-3.w2.rss0.json",
+      "sha256": "045a5841bc4c5634b0842b17c167dad3b7a444fa7aaafd336e2b8bd20cef7439"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-string_equality.r3-6.w0.rss0.json",
+      "sha256": "3d1e8f132d56b6746f9fcff63127e6c103a6714d50e87054b1af50ea23ae8efe"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-string_equality.r6-9.w0.rss0.json",
+      "sha256": "9c5befa85304571a6c03df1dfdd37c707d6224deea09679583298e920730df44"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-string_equality.r9-9.w0.rss3.json",
+      "sha256": "4a3e04ab4c5426bf2cd5ea3c6318d8b65a82966c29b5ba3ec7f5b54203b8629d"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-strings.r0-3.w2.rss0.json",
+      "sha256": "439fa787e3f7813ef0746262625638e40aced7476f350358d98f71da9e168dbc"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-strings.r3-6.w0.rss0.json",
+      "sha256": "78a3dbb416780ece16e40b7a8ab28bb8d6abd1d7ffa82d4d301ee1ced08a87ea"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-strings.r6-9.w0.rss0.json",
+      "sha256": "ae383f41cadf63fdffc12aabbd51f2864df67d1c2283333fed732bfe5f956a90"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-strings.r9-9.w0.rss3.json",
+      "sha256": "7c12f48957baf9d8d278a76359cad5d460d2213f801dec863d6fbc97dedf02b5"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-trees.r0-3.w2.rss0.json",
+      "sha256": "f76d9a724c8ac0807cce3dfe41fe4d62043cdefe66f32d8a4dcb38858a38a719"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-trees.r3-6.w0.rss0.json",
+      "sha256": "1e56c06de814ed63c0d6c9b671e68d2f27b9129a82c0b3eeda20d1198e4aaf8c"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-trees.r6-9.w0.rss0.json",
+      "sha256": "5412ea8093acb51d5385a5e0d9f35a137a44af25871a26999790bf8c589636de"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-trees.r9-9.w0.rss3.json",
+      "sha256": "bef49b0b1b5cabf64a08313900d65b5d50001426b0c162521b362c9b6a33efdb"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-zoo.r0-3.w2.rss0.json",
+      "sha256": "32d004a9573b06334b3c4c32abfe54cd6f38cb594538236e082bcb96ac084172"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-zoo.r3-6.w0.rss0.json",
+      "sha256": "c17e148585147fe0fa543f9117e1c54477bcca77aabe33bb16da1d8a66b05d2c"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-zoo.r6-9.w0.rss0.json",
+      "sha256": "e2e0e1b41e5fb22cf0a67ac500910fe97d80ebe7a4cef45a0b394c83cb3375cd"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-zoo.r9-9.w0.rss3.json",
+      "sha256": "81a8f620372b5210d143f6bc5e1e009b2f6633af24ae569affc9159a2c96d35c"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-zoo_batch.r0-3.w2.rss0.json",
+      "sha256": "fbb1d6ea32d295425a6d532874d9a2b7aed33388525ecd895ec345d017ee2d67"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-zoo_batch.r3-6.w0.rss0.json",
+      "sha256": "92d8d34178929987d5dcf23fe8bfdfdbbb7e5ca5e7cc93995e527b5d3fefe7e6"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-zoo_batch.r6-9.w0.rss0.json",
+      "sha256": "7cff949b46067bda5688aff7a3d06e1d2ce93e0087c51ac4caffbc5f3558e65a"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012/experiments/lox-eda-zero-rc-20261012/bench/results/lox-remaining/tree-zoo_batch.r9-9.w0.rss3.json",
+      "sha256": "3b3a0578b8a82fd6a2d68cef3384658d071286efc0b8c953bdc7f4a3097ee7c2"
+    }
+  ]
+}
