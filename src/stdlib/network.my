@@ -1,4 +1,5 @@
-# One open stream returned by `connect`. It owns a host handle until `close`.
+# One open stream returned by `connect`. Read and write consume and close it.
+# Close consumes it too; a failed completion returns the live owner in Failure.
 public resource Connection: network
 
 
@@ -71,13 +72,13 @@ public func connect(net: Network) -> Connected effects(network):
     return acquire_resource[Connected](net, request)
 
 
-# Read up to `N` bytes from a live connection; EOF is reported in the chunk.
+# Consume a live connection and read up to `N` bytes; EOF is reported in the chunk.
 public func read[const N: u64](connection: Connection) -> Read[N] effects(network):
     mut owned_connection = connection
     return read_resource[Read[N]](owned_connection)
 
 
-# Write a fixed byte array and report the bytes the provider accepted.
+# Consume a live connection, write fixed bytes, and report the accepted count.
 public func write[const N: u64](connection: Connection, data: FixedArray[u8, N]) -> Written effects(network):
     mut owned_connection = connection
     return write_resource[Written](owned_connection, data)

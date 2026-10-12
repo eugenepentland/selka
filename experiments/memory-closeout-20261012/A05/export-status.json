@@ -2,7 +2,7 @@
   "scope": "C0 and interim/overlay fixture evidence, not final integrated export qualification",
   "public_declarations": 120,
   "public_functions": 95,
-  "declarations_with_at_least_one_passing_fixture_reference": 104,
+  "declarations_with_at_least_one_passing_fixture_reference": 118,
   "items": [
     {
       "module": "cache_record",
@@ -1192,7 +1192,17 @@
       "name": "Connection",
       "kind": "resource",
       "contract": "Affine native handle dependent on a live Network provider. Public read/write/close transfer the Connection. Read/write borrow it only inside their callee, then cleanup closes the handle; close returns ownership on failure.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support4-network-values.json",
+          "case": "network_values",
+          "mode": "release",
+          "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+          "source_sha256": "bf1b89644a71a87947c0bba6273ad1d516fb5e3d2cc8379b0b8977259eb60d04",
+          "overlay": false,
+          "binary_sha256": "d5422dedfe077933418481ee66f863aed4fabbbb8ebd441c48f5c0ec18da53df"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -1201,7 +1211,17 @@
       "name": "Chunk",
       "kind": "record",
       "contract": "Fixed-size byte-array value with bounded length and EOF flag. Runtime provider results validate length against the static capacity.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support4-network-values.json",
+          "case": "network_values",
+          "mode": "release",
+          "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+          "source_sha256": "bf1b89644a71a87947c0bba6273ad1d516fb5e3d2cc8379b0b8977259eb60d04",
+          "overlay": false,
+          "binary_sha256": "d5422dedfe077933418481ee66f863aed4fabbbb8ebd441c48f5c0ec18da53df"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -1210,7 +1230,26 @@
       "name": "Connected",
       "kind": "result",
       "contract": "Fresh acquisition carrier transfers Connection on success; scalar error owns no native handle.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support4-libraries.json",
+          "case": "network_denied",
+          "mode": "release",
+          "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+          "source_sha256": "2ea76a80a1c18726df21bacaf7ff0a5f4fff17a170c886988479fc7e34861650",
+          "overlay": false,
+          "binary_sha256": "b22aefc0ec538722ef50fb5612b1e39978748257aeeb14b97f82597a40e6115f"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support4-libraries.json",
+          "case": "network",
+          "mode": "release",
+          "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+          "source_sha256": "7a81a88fae0610802cd70ca08079fd116dbf229407721b28e21324af865822b7",
+          "overlay": false,
+          "binary_sha256": "25e107eb76499421141b6e179055feb94325736f2e4a907f46fecab89c39f798"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -1219,7 +1258,17 @@
       "name": "Read",
       "kind": "result",
       "contract": "Fresh fixed-size Chunk or scalar error. Public network.read consumes Connection; native read_resource borrows it until wrapper cleanup releases it.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support4-libraries.json",
+          "case": "network",
+          "mode": "release",
+          "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+          "source_sha256": "7a81a88fae0610802cd70ca08079fd116dbf229407721b28e21324af865822b7",
+          "overlay": false,
+          "binary_sha256": "25e107eb76499421141b6e179055feb94325736f2e4a907f46fecab89c39f798"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -1228,7 +1277,17 @@
       "name": "Written",
       "kind": "result",
       "contract": "Scalar accepted-byte count or error. Public network.write consumes Connection; fixed input bytes and native IO operation borrow during the call.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support4-libraries.json",
+          "case": "network",
+          "mode": "release",
+          "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+          "source_sha256": "7a81a88fae0610802cd70ca08079fd116dbf229407721b28e21324af865822b7",
+          "overlay": false,
+          "binary_sha256": "25e107eb76499421141b6e179055feb94325736f2e4a907f46fecab89c39f798"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -1237,7 +1296,17 @@
       "name": "Failure",
       "kind": "record",
       "contract": "Owns the uncompleted Connection and scalar code after completion failure; destruction must release exactly once while provider lives.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support4-network-values.json",
+          "case": "network_values",
+          "mode": "release",
+          "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+          "source_sha256": "bf1b89644a71a87947c0bba6273ad1d516fb5e3d2cc8379b0b8977259eb60d04",
+          "overlay": false,
+          "binary_sha256": "d5422dedfe077933418481ee66f863aed4fabbbb8ebd441c48f5c0ec18da53df"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -1246,7 +1315,17 @@
       "name": "Closed",
       "kind": "result",
       "contract": "Successful completion has scalar bool; failure transfers resource ownership in Failure. Neither branch permits a provider escape.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support4-libraries.json",
+          "case": "network",
+          "mode": "release",
+          "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+          "source_sha256": "7a81a88fae0610802cd70ca08079fd116dbf229407721b28e21324af865822b7",
+          "overlay": false,
+          "binary_sha256": "25e107eb76499421141b6e179055feb94325736f2e4a907f46fecab89c39f798"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -1255,7 +1334,17 @@
       "name": "denied",
       "kind": "func",
       "contract": "Creates an owned deterministic denied root provider.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support4-libraries.json",
+          "case": "network_denied",
+          "mode": "release",
+          "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+          "source_sha256": "2ea76a80a1c18726df21bacaf7ff0a5f4fff17a170c886988479fc7e34861650",
+          "overlay": false,
+          "binary_sha256": "b22aefc0ec538722ef50fb5612b1e39978748257aeeb14b97f82597a40e6115f"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -1264,7 +1353,17 @@
       "name": "denied_here",
       "kind": "func",
       "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support4-libraries.json",
+          "case": "network_denied",
+          "mode": "release",
+          "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+          "source_sha256": "2ea76a80a1c18726df21bacaf7ff0a5f4fff17a170c886988479fc7e34861650",
+          "overlay": false,
+          "binary_sha256": "b22aefc0ec538722ef50fb5612b1e39978748257aeeb14b97f82597a40e6115f"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -1273,7 +1372,17 @@
       "name": "describe",
       "kind": "func",
       "contract": "Ordinary arguments borrow; returned managed values must own independent storage; scalar/capability results preserve their value contract.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support4-libraries.json",
+          "case": "network_denied",
+          "mode": "release",
+          "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+          "source_sha256": "2ea76a80a1c18726df21bacaf7ff0a5f4fff17a170c886988479fc7e34861650",
+          "overlay": false,
+          "binary_sha256": "b22aefc0ec538722ef50fb5612b1e39978748257aeeb14b97f82597a40e6115f"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -1282,7 +1391,26 @@
       "name": "connect",
       "kind": "func",
       "contract": "Acquires one resource dependent on the Network provider; resource-result path requires qualification.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support4-libraries.json",
+          "case": "network_denied",
+          "mode": "release",
+          "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+          "source_sha256": "2ea76a80a1c18726df21bacaf7ff0a5f4fff17a170c886988479fc7e34861650",
+          "overlay": false,
+          "binary_sha256": "b22aefc0ec538722ef50fb5612b1e39978748257aeeb14b97f82597a40e6115f"
+        },
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support4-libraries.json",
+          "case": "network",
+          "mode": "release",
+          "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+          "source_sha256": "7a81a88fae0610802cd70ca08079fd116dbf229407721b28e21324af865822b7",
+          "overlay": false,
+          "binary_sha256": "25e107eb76499421141b6e179055feb94325736f2e4a907f46fecab89c39f798"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -1291,7 +1419,17 @@
       "name": "read",
       "kind": "func",
       "contract": "Consumes its affine Connection, returns an independent fixed-size Chunk or scalar error, and closes the handle when its local owner is destroyed. No repeated use of the consumed caller variable.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support4-libraries.json",
+          "case": "network",
+          "mode": "release",
+          "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+          "source_sha256": "7a81a88fae0610802cd70ca08079fd116dbf229407721b28e21324af865822b7",
+          "overlay": false,
+          "binary_sha256": "25e107eb76499421141b6e179055feb94325736f2e4a907f46fecab89c39f798"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -1300,7 +1438,17 @@
       "name": "write",
       "kind": "func",
       "contract": "Consumes its affine Connection and borrows fixed-size input; returns scalar count/error and closes the local owner at return. No repeated use of the consumed caller variable.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support4-libraries.json",
+          "case": "network",
+          "mode": "release",
+          "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+          "source_sha256": "7a81a88fae0610802cd70ca08079fd116dbf229407721b28e21324af865822b7",
+          "overlay": false,
+          "binary_sha256": "25e107eb76499421141b6e179055feb94325736f2e4a907f46fecab89c39f798"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },
@@ -1309,7 +1457,17 @@
       "name": "close",
       "kind": "func",
       "contract": "Completes handle on success or returns live resource in failure; source/IR ownership path requires qualification.",
-      "baseline_executable_source_references": [],
+      "baseline_executable_source_references": [
+        {
+          "report": "experiments/memory-closeout-20261012/A05/evidence/support4-libraries.json",
+          "case": "network",
+          "mode": "release",
+          "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+          "source_sha256": "7a81a88fae0610802cd70ca08079fd116dbf229407721b28e21324af865822b7",
+          "overlay": false,
+          "binary_sha256": "25e107eb76499421141b6e179055feb94325736f2e4a907f46fecab89c39f798"
+        }
+      ],
       "final_C1_qualification": "pending",
       "note": "Source reference plus passing full fixture. This is not a per-branch coverage trace; original inventory source hash remains C0."
     },

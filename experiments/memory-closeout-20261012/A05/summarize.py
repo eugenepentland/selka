@@ -15,7 +15,7 @@ def main():
             continue
         for case,modes in data.get('cases',{}).items():
             for mode,value in modes.items():
-                if value.get('passed'):
+                if value.get('passed') and not value.get('expected_refusal'):
                     runs.setdefault(value['original_source'],[]).append({
                         'report':str(report.relative_to(ROOT)), 'case':case, 'mode':mode,
                         'compiler_sha256':data.get('compiler_sha256'),

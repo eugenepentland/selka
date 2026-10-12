@@ -1,0 +1,17 @@
+# spec-case: NETWORK-SURFACE-1
+import network
+
+func discard_carrier(connection: network.Connection) -> int:
+    const failed = network.Failure(resource=connection, code=17)
+    return failed.code - 17
+
+func main(net: Network) -> int:
+    const bytes = FixedArray[u8, 2]([97u8, 98u8])
+    const chunk = network.Chunk[2](bytes=bytes, length=2u64, eof=True)
+    assert chunk.length == 2u64 and chunk.eof and chunk.bytes[1] == 98u8
+    with net.host("127.0.0.1:43781") as scoped:
+        match network.connect(scoped):
+            case network.Connected.ok(connection):
+                return discard_carrier(connection)
+            case network.Connected.err(_):
+                return 1

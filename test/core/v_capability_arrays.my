@@ -1,6 +1,7 @@
-# Fixed arrays of capabilities (NEW-CORE-S5-CAP-COLLECTIONS-1): `[N]Stream`, `[N]Host` and
-# `[N]Filesystem` as locals, record fields, union payloads, `mut` parameters and results,
-# indexed, iterated, copied and rewritten. Stdout and stderr match the old core's.
+# Fixed arrays of Stream/Host handles (NEW-CORE-S5-CAP-COLLECTIONS-1) remain valid
+# locals, record fields, union payloads, mut parameters and results. Filesystems
+# use named owners; the original owning-array source is a negative A05 regression.
+# Stdout, stderr and the provider read order match the original fixture.
 import filesystem
 
 record Grid:

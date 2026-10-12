@@ -778,7 +778,9 @@
       "ownership_contract": "Affine native handle dependent on a live Network provider. Public read/write/close transfer the Connection. Read/write borrow it only inside their callee, then cleanup closes the handle; close returns ownership on failure.",
       "qualification": "pending executable coverage",
       "evidence": [],
-      "source_coverage": []
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/network_values.my"
+      ]
     },
     {
       "module": "network",
@@ -791,7 +793,9 @@
       "ownership_contract": "Fixed-size byte-array value with bounded length and EOF flag. Runtime provider results validate length against the static capacity.",
       "qualification": "pending executable coverage",
       "evidence": [],
-      "source_coverage": []
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/network_values.my"
+      ]
     },
     {
       "module": "network",
@@ -850,7 +854,9 @@
       "ownership_contract": "Owns the uncompleted Connection and scalar code after completion failure; destruction must release exactly once while provider lives.",
       "qualification": "pending executable coverage",
       "evidence": [],
-      "source_coverage": []
+      "source_coverage": [
+        "experiments/memory-closeout-20261012/A05/samples/network_values.my"
+      ]
     },
     {
       "module": "network",

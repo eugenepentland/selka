@@ -53,15 +53,15 @@ def run_command(argv, **options):
             return value.decode(errors='replace') if isinstance(value,bytes) else value or ''
         return subprocess.CompletedProcess(argv,124,text(error.stdout),text(error.stderr)+'\ncommand timed out\n')
 
-def network_provider():
+def network_provider(connections=3):
     server=socket.socket(); server.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1); server.bind(('127.0.0.1',43781)); server.listen(3); server.settimeout(15)
     state={'endpoint':'127.0.0.1:'+str(server.getsockname()[1]),'closed':0,'received':''}
     def serve():
         try:
-            for index in range(3):
+            for index in range(connections):
                 connection,_=server.accept(); connection.settimeout(15)
                 with connection:
-                    if index==0: connection.sendall(b'ab')
+                    if index==0 and connections==3: connection.sendall(b'ab')
                     received=b''
                     while True:
                         part=connection.recv(16)
@@ -95,6 +95,7 @@ def main():
     env=dict(os.environ,ZIG=str(a.zig),MYLANG_ZIG=str(a.zig),MYL_CORE_LEAKCHECK='1')
     for key in ('MYLANG_COUNTERS','MYLANG_OPTIONS','MYLANG_CORE_SANITIZE'): env.pop(key,None)
     sources={p.stem:(p,0) for p in sorted((HERE/'samples').glob('*.my'))}
+    sources['capability_array_negative']=(HERE/'negative/capability_array.my',0)
     for name in ('sort','math','integer_extrema'):
         sources[name]=(ROOT/f'src/stdlib/fixtures/{name}.my',42)
     for name in ('pool','time_random'):
@@ -103,6 +104,8 @@ def main():
     for name in ('application_cache','capability_fields','rc_capability_values','rc_contract_results','test_capabilities'):
         sources['guest_'+name]=(ROOT/'tests/lang'/str(name+'.my'),0)
     sources['guest_stdlib']=(ROOT/'tests/value_semantics/stdlib.my',0)
+    unknown=set(a.cases or ())-sources.keys()
+    if unknown: p.error('unknown cases: '+', '.join(sorted(unknown)))
     modules={'memo','persistent_memo','durable','cache_record','hashes'}
     def overlay(text):
         return re.sub(r'^import (\w+)$',lambda m:'import a05_'+m[1]+' as '+m[1] if m[1] in modules else m[0],text,flags=re.M)
@@ -113,7 +116,9 @@ def main():
     for name,(source,expected) in sources.items():
         if a.cases and name not in a.cases: continue
         report['cases'][name]={}
+        expected_refusal=name=='capability_array_negative'
         for mode in a.modes:
+            if expected_refusal and mode!=a.modes[0]: continue
             directory=a.output/name/mode; directory.mkdir(parents=True,exist_ok=True)
             project=directory/'source'; project.mkdir(exist_ok=True)
             text=source.read_text()
@@ -128,23 +133,27 @@ def main():
                 text=overlay(text)
             main=project/'main.my'; main.write_text(text)
             binary=directory/'program'; llvm=directory/'program.ll'
-            argv=[str(a.compiler),'check' if a.check_only else 'build',str(main)]
+            source_only=a.check_only or expected_refusal
+            argv=[str(a.compiler),'check' if source_only else 'build',str(main)]
             if not a.ordinary_command: argv += ['--experimental-zero-rc']
             argv += ['--cache-dir',str(a.output/'cache')]
-            if not a.check_only: argv += ['--zig',str(a.zig),*MODES[mode],'--counters','-o',str(binary),'--emit-llvm',str(llvm)]
+            if not source_only: argv += ['--zig',str(a.zig),*MODES[mode],'--counters','-o',str(binary),'--emit-llvm',str(llvm)]
             ran=run_command(([str(ROOT/'scripts/build-slot.sh'),'build'] if a.admit else [])+argv,cwd=ROOT,env=env,capture_output=True,text=True,timeout=1800)
             result={'original_source':str(source.relative_to(ROOT)),'original_sha256':digest(source),'source_sha256':digest(main),'argv':argv,'build_status':ran.returncode,'build_stdout':ran.stdout,'build_stderr':ran.stderr,'expected_status':expected,'passed':False}
             (directory/'build.stdout').write_text(ran.stdout); (directory/'build.stderr').write_text(ran.stderr)
             result['source_files']={str(p.relative_to(project)):digest(p) for p in sorted(project.glob('*.my'))}
-            if ran.returncode==0 and a.check_only: result['passed']=True
+            if expected_refusal:
+                result['expected_refusal']='E_ZERO_RC_UNSUPPORTED'
+                result['passed']=ran.returncode!=0 and result['expected_refusal'] in ran.stderr
+            elif ran.returncode==0 and a.check_only: result['passed']=True
             elif ran.returncode==0:
                 runtime=directory/'run'; runtime.mkdir(exist_ok=True)
                 for sub in ('persistent','durable'): (runtime/sub).mkdir(exist_ok=True)
                 counts=directory/'counts.json'
                 run_env=dict(env,MYLANG_COUNTERS=str(counts))
                 provider=None
-                if name=='network':
-                    provider,thread=network_provider()
+                if name in ('network','network_values'):
+                    provider,thread=network_provider(3 if name=='network' else 1)
                     run_env.update(A05_ENDPOINT=provider['endpoint'],MYLANG_OPTIONS='--restrict --allow-endpoint='+provider['endpoint']+' --allow-env=A05_ENDPOINT')
                 ran=run_command([str(binary)],cwd=runtime,env=run_env,capture_output=True,timeout=120)
                 raw_stdout=ran.stdout if isinstance(ran.stdout,bytes) else ran.stdout.encode()
@@ -164,7 +173,9 @@ def main():
                     result['expected_stdout_hex']='00ff4100ff4100ff4142'
                     result['passed'] &= raw_stdout.hex()==result['expected_stdout_hex']
             if result.get('provider'):
-                result['passed'] &= result['provider'].get('closed')==3 and result['provider'].get('received')=='6364' and 'error' not in result['provider']
+                expected_connections=3 if name=='network' else 1
+                expected_received='6364' if name=='network' else ''
+                result['passed'] &= result['provider'].get('closed')==expected_connections and result['provider'].get('received')==expected_received and 'error' not in result['provider']
             failures += not result['passed']
             report['cases'][name][mode]=result
             (directory/'result.json').write_text(json.dumps(result,indent=2)+'\n')

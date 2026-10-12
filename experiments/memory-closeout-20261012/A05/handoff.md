@@ -232,3 +232,47 @@ C0 source is retained as `negative/capability_array.my`, and refuses with
 `E_ZERO_RC_UNSUPPORTED`; owning capability arrays remain an explicit boundary.
 This does not replace the separate capability-field method contract or claim that
 owning capability aggregates are supported.
+
+Support4 source `66890fbc5135a771e6a423724d13c30018ab717f`, compiler SHA256
+`4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375`, fixes native
+object lifetime. Seven of ten release cases pass: useful network computation,
+deterministic acquisition denial, error descriptions, exact binary stream writes,
+byte repetition, application-cache assertions and migrated value-semantics stdlib.
+Every passed case has zero RC events/exit-live bytes and clean LLVM/symbol checks.
+Network read/write wrappers consume their Connection, and all three loopback
+connections close; the binary stream fixture preserves the exact embedded-zero/
+non-UTF8 output after input replacement. See `evidence/support4-libraries.json`.
+
+Three failures remain in that ten-case denominator. Persistence returns a miss
+where the fixture requires reuse: both generated callable-digest helpers return
+empty text while native toolchain authority is unavailable, so no receipt is
+created. The expected hit remains unchanged. Two capability fixtures expose the
+same checker bug: `with fs.read_only()` falls through to the unscoped-capability
+rejection because the scope switch omits `restrict_resource`; A07 owns the fix.
+The public inventory now has 118/120 declarations with counted passing fixture
+references; only `durable.run` and `persistent_memo.call` need their full storage
+contracts. These counts mix labelled interim revisions, never final C1.
+
+The direct Connection/Chunk/Failure fixture passes release on support4
+(`evidence/support4-network-values.json`). Extracting the scalar error code consumes
+the affine Failure carrier and drops its resource child; the loopback peer observes
+EOF, with zero RC/live bytes and clean LLVM/symbols. The initial probe attempted a
+second discard after that field access and correctly refused; its separate receipt
+is retained. The original owning capability-array source also refuses as expected
+through the qualification harness. Its ordinary-command option can rerun this
+negative at C2/C3. Source refusals remain distinct from admitted guest execution.
+
+The unchanged original `rc_contract_results.my` separately passes counted release
+on support4 (`evidence/support4-file-results.json`), including managed success/error
+postconditions and forwarded `Result[TextFile, str]` under `with try`. It has zero
+RC events/managed exit-live bytes and clean LLVM/symbol checks. The earlier
+returned-file blocker is resolved; capability-field aggregates remain separate.
+
+The coordinator subsequently approved bounded provider ownership in ordinary
+record/tuple fields, with whole-aggregate lifetime pinning and no capability
+copies. A05 prepared the corresponding `capability_fields.my` migration: all
+field-method and value assertions remain, dependent narrowing uses lexical scopes,
+and an ordinary borrowed helper preserves the alias observation. Its three owned
+payload returns copy explicitly. `migrations.json` records the new source pair;
+qualification awaits the coordinator's aggregate-root implementation. Owning
+capability arrays/lists/dictionaries/variants/boxes remain outside this contract.
