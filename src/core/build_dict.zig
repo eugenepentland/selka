@@ -8,6 +8,34 @@ const ordinal_symbol = "myl_core_dict_ordinal";
 /// Allocation or an unsupported source construct stops lowering.
 pub const Error = error{ OutOfMemory, Unsupported };
 
+/// Evaluated inputs of a borrowing lookup. Explicit copying can select its
+/// source before forming an owning phi, without repeating effects or lookup.
+pub const DefaultSelection = struct { dict: ir.Ref, probe: ir.Ref, fallback: ir.Ref };
+
+/// Copy only the selected borrowed lookup value before constructing an owning join.
+pub fn copyDefault(comptime Context: type, b: Context, selection: DefaultSelection, span: u32) Error!ir.Ref {
+    const ty = b.module().compound(b.typeOfRef(selection.dict)).dict.value;
+    const result = try b.synthetic(ty);
+    const found = try b.newBlock();
+    const missing = try b.newBlock();
+    const end = try b.newBlock();
+    try b.branch(try present(Context, b, selection.probe, span), found, missing, span);
+    try b.seal(found);
+    b.enter(found);
+    const selected = try valueAt(Context, b, selection.dict, selection.probe, span);
+    const copied = try b.copyOwned(selected, span);
+    try b.write(result, b.current.?, copied);
+    try b.jump(end);
+    try b.seal(missing);
+    b.enter(missing);
+    const copied_default = try b.copyOwned(selection.fallback, span);
+    try b.write(result, b.current.?, copied_default);
+    try b.jump(end);
+    try b.seal(end);
+    b.enter(end);
+    return b.read(result, end);
+}
+
 /// Hashable scalar and text keys supported by the dictionary runtime.
 pub fn keySupported(module: ir.Module, key: ir.Type) bool {
     if (key.integer() != null or key == .bool or key == .void) return true;
@@ -170,7 +198,11 @@ pub fn operation(comptime Context: type, b: Context, op: Operation, ty: ir.Type,
             const stored_key = try storedKey(Context, b, dict, key);
             const probe = try find(Context, b, dict, stored_key, span);
             if (op.kind == .contains) return present(Context, b, probe, span);
-            if (op.kind == .get) return selectValue(Context, b, dict, probe, fallback, false, span);
+            if (op.kind == .get) {
+                const result = try selectValue(Context, b, dict, probe, fallback, false, span);
+                if (b.module().zero_rc and b.module().managed(ty)) try b.rememberDefault(result, .{ .dict = dict, .probe = probe, .fallback = fallback });
+                return result;
+            }
             try requirePresent(Context, b, probe, span);
             if (out) |place| place.* = try b.extendPlace(try b.placeOfLocal(owner), .{ .mapping = stored_key });
             return valueAt(Context, b, dict, probe, span);

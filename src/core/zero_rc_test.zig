@@ -1694,6 +1694,53 @@ test "zero RC optional narrowing preserves hidden payload availability and mutat
 }
 
 // spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC dictionary default explicit copies select before the owning join" {
+    try executes(std.testing.allocator,
+        \\enum Choice:
+        \\    numbers(value: int[])
+        \\    text(value: str)
+        \\func fallback(mut calls: int, value: str) -> bytes:
+        \\    calls += 1
+        \\    return value.encode()
+        \\func main(out: Stream) -> int:
+        \\    mut mapping = {"hit": b"stored"}
+        \\    mut calls = 0
+        \\    const hit = mapping.get("hit", fallback(mut calls, "ignored")).copy()
+        \\    const miss = mapping.get("miss", fallback(mut calls, "chosen")).copy()
+        \\    mut supplied = b"caller"
+        \\    const independent = mapping.get("absent", supplied).copy()
+        \\    const nested = mapping.get("absent", mapping.get("hit", supplied)).copy()
+        \\    mapping.clear()
+        \\    supplied = b"changed"
+        \\    assert calls == 2
+        \\    assert hit == b"stored" and miss == b"chosen"
+        \\    assert independent == b"caller" and nested == b"stored"
+        \\    mut choices = {"hit": Choice.numbers(value=[1, 2])}
+        \\    const selected = choices.get("hit", Choice.text(value="unused")).copy()
+        \\    choices.clear()
+        \\    match selected:
+        \\        case Choice.numbers(value=values):
+        \\            out.print(len(values))
+        \\        case Choice.text(value=value):
+        \\            out.print(len(value))
+        \\    return 0
+    , "2\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-VIEWS-1
+test "zero RC dictionary fallback views refuse ambiguous owner provenance" {
+    try refuses(std.testing.allocator,
+        \\func main(args: str[]) -> int:
+        \\    const values: dict[str, bytes] = {"present": b"stored"}
+        \\    const key = str(len(args))
+        \\    mut fallback = ("abc" + key).encode()
+        \\    const view = values.get(key, fallback).borrow(0, 3)
+        \\    fallback = ("changed" + key).encode()
+        \\    return int(view[0])
+    , "E_ZERO_RC_VIEW_ESCAPE");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
 test "zero RC setdefault copies borrowed hit and inserted payloads independently" {
     try executes(std.testing.allocator,
         \\func fallback(mut calls: int, value: int) -> int[]:

@@ -164,6 +164,7 @@ const State = struct {
     view_definition: ?typed.NodeId = null,
     transferable: bool = false,
     dependency: usize = none,
+    ambiguous_borrow: bool = false,
 };
 const Access = enum { read, move, mutate, update, writeback };
 fn writebackBase(access: Access) Access {
@@ -367,6 +368,24 @@ const Checker = struct {
         return c.zero_rc and ty.isAggregate() and c.program.records[ty.recordIndex()].collection.kind == .string;
     }
 
+    /// A dictionary default can borrow either the dictionary or its fallback.
+    /// Receiver temporaries may read/copy it, but cannot anchor a stored view.
+    fn ambiguousBorrow(c: *const Checker, id: typed.NodeId) bool {
+        return switch (c.program.nodes[@backingInt(id)].data) {
+            .local => |slot| c.state[@backingInt(slot)].ambiguous_borrow,
+            .field => |field| c.ambiguousBorrow(field.base),
+            .index => |index| c.ambiguousBorrow(index.base),
+            .wrap, .unwrap, .cast => |value| c.ambiguousBorrow(value),
+            .block_value => |block| c.ambiguousBorrow(block.value),
+            .buffer_operation => |operation| switch (operation.kind) {
+                .get => true,
+                .read, .key_at, .value_at, .borrow_view, .slice => c.state[@backingInt(operation.owner)].ambiguous_borrow,
+                else => false,
+            },
+            else => false,
+        };
+    }
+
     /// An element update can read only the exact element being rebuilt. Keep
     /// the containing operation's loan active for all replacement operands.
     fn sameIndexWriteback(c: *const Checker, base: typed.NodeId, index: typed.NodeId, from_end: bool, value: typed.NodeId) bool {
@@ -445,6 +464,7 @@ const Checker = struct {
                     .transferable = c.wholeOwner(store.value),
                     .view_definition = store.value,
                     .dependency = c.state[source].dependency,
+                    .ambiguous_borrow = c.ambiguousBorrow(store.value),
                 };
                 return;
             }
@@ -674,6 +694,8 @@ const Checker = struct {
         if (c.zero_rc and (operation.kind == .snapshot or operation.kind == .view))
             return c.reject(node.span, zero_unsupported, "shared snapshots and retained views are unsupported; use .borrow() for a checked view or .copy() for ownership");
         const owner = @backingInt(operation.owner);
+        if (c.zero_rc and c.view(node.ty) and c.state[owner].ambiguous_borrow)
+            return c.reject(node.span, view_escape, "a view cannot borrow from a dictionary lookup with a fallback; copy the selected value into a named owner first");
         if (operation.kind == .copy) {
             if (c.zero_rc and providers.contains(c.provider_types, c.function.scope.locals[owner].ty))
                 return c.reject(node.span, zero_unsupported, "provider owners cannot be copied; borrow the enclosing record or move it");
@@ -748,6 +770,7 @@ const Checker = struct {
         for (c.state, first, second) |*out, left, right| {
             out.* = left;
             out.available = left.available and right.available;
+            out.ambiguous_borrow = left.ambiguous_borrow or right.ambiguous_borrow;
             // Only compiler-created loans have roots. A differing root cannot
             // describe one definite borrowed value after this join.
             const same_ownership = left.root == right.root and left.borrowed == right.borrowed and left.transferable == right.transferable;

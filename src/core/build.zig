@@ -462,6 +462,7 @@ const Ssa = struct {
     prepared: std.AutoHashMapUnmanaged(u32, PreparedPath) = .empty,
     /// Exact nested reconstruction reads share their parent's normalized index.
     array_indices: std.AutoHashMapUnmanaged(typed.NodeId, ir.Ref) = .empty,
+    dictionary_defaults: std.AutoHashMapUnmanaged(ir.Ref, build_dict.DefaultSelection) = .empty,
 };
 
 /// Where `break` and `continue` of one checked loop go.
@@ -1089,7 +1090,14 @@ const FnBuilder = struct {
 
     /// Recursively materialize an independent owner using the selected contract.
     pub fn copyOwned(self: *FnBuilder, value: ir.Ref, span: u32) Error!ir.Ref {
+        if (self.ssa.dictionary_defaults.get(self.function.resolve(value))) |selection|
+            return build_dict.copyDefault(@TypeOf(self), self, selection, span);
         return single_owner_copy.copy(@TypeOf(self), self, value, span);
+    }
+
+    /// Preserve one evaluated lookup for an immediately requested independent copy.
+    pub fn rememberDefault(self: *FnBuilder, value: ir.Ref, selection: build_dict.DefaultSelection) Error!void {
+        try self.ssa.dictionary_defaults.put(self.allocator(), self.function.resolve(value), selection);
     }
 
     /// The type of the value `ref` stands for.
@@ -2338,6 +2346,10 @@ const FnBuilder = struct {
 
     fn bufferOperation(self: *FnBuilder, operation: BufferOperation, ty: ir.Type, span: u32, out: ?*?Place) Error!ir.Ref {
         const receiver_type = self.ssa.types.items[self.local(operation.owner)];
+        if (self.module().zero_rc and operation.kind == .copy) {
+            const source = try self.receiverOf(operation.owner);
+            if (self.ssa.dictionary_defaults.contains(self.function.resolve(source))) return self.copyOwned(source, span);
+        }
         if (try build_view.dispatch(@TypeOf(self), self, operation, ty, receiver_type, span)) |value| return value;
         const result = try self.bufferOperationRaw(operation, ty, span, out);
         // A length is `u64` in the IR; a `len()` of a view or buffer typed `int` converts it,
