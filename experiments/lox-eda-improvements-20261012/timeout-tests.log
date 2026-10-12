@@ -1,0 +1,70 @@
+build-slot: FIFO ticket 2483, position 14; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 2483, position 14; earlier build tickets must run first; waiting (61s so far)
+build-slot: FIFO ticket 2483, position 14; earlier build tickets must run first; waiting (121s so far)
+build-slot: FIFO ticket 2483, position 14; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 2483, position 14; earlier build tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 2483, position 14; earlier build tickets must run first; waiting (302s so far)
+build-slot: FIFO ticket 2483, position 14; earlier build tickets must run first; waiting (362s so far)
+build-slot: FIFO ticket 2483, position 13; earlier build tickets must run first; waiting (422s so far)
+build-slot: FIFO ticket 2483, position 13; earlier build tickets must run first; waiting (482s so far)
+build-slot: FIFO ticket 2483, position 13; earlier build tickets must run first; waiting (543s so far)
+build-slot: FIFO ticket 2483, position 13; earlier build tickets must run first; waiting (603s so far)
+build-slot: FIFO ticket 2483, position 13; earlier build tickets must run first; waiting (663s so far)
+build-slot: FIFO ticket 2483, position 13; earlier build tickets must run first; waiting (723s so far)
+build-slot: FIFO ticket 2483, position 13; earlier build tickets must run first; waiting (784s so far)
+build-slot: FIFO ticket 2483, position 13; earlier build tickets must run first; waiting (844s so far)
+build-slot: FIFO ticket 2483, position 13; earlier build tickets must run first; waiting (904s so far)
+build-slot: FIFO ticket 2483, position 13; earlier build tickets must run first; waiting (960s so far)
+build-slot: FIFO ticket 2483, position 13; earlier build tickets must run first; waiting (1020s so far)
+build-slot: FIFO ticket 2483, position 13; earlier build tickets must run first; waiting (1080s so far)
+build-slot: FIFO ticket 2483, position 13; earlier build tickets must run first; waiting (1140s so far)
+build-slot: FIFO ticket 2483, position 13; earlier build tickets must run first; waiting (1201s so far)
+build-slot: FIFO ticket 2483, position 13; earlier build tickets must run first; waiting (1261s so far)
+build-slot: FIFO ticket 2483, position 13; earlier build tickets must run first; waiting (1321s so far)
+build-slot: FIFO ticket 2483, position 13; earlier build tickets must run first; waiting (1381s so far)
+build-slot: FIFO ticket 2483, position 13; earlier build tickets must run first; waiting (1442s so far)
+build-slot: FIFO ticket 2483, position 13; earlier build tickets must run first; waiting (1502s so far)
+build-slot: FIFO ticket 2483, position 12; earlier build tickets must run first; waiting (1562s so far)
+build-slot: FIFO ticket 2483, position 12; earlier build tickets must run first; waiting (1622s so far)
+build-slot: FIFO ticket 2483, position 12; earlier build tickets must run first; waiting (1683s so far)
+build-slot: FIFO ticket 2483, position 12; earlier build tickets must run first; waiting (1743s so far)
+build-slot: FIFO ticket 2483, position 12; earlier build tickets must run first; waiting (1803s so far)
+build-slot: FIFO ticket 2483, position 12; earlier build tickets must run first; waiting (1863s so far)
+build-slot: FIFO ticket 2483, position 12; earlier build tickets must run first; waiting (1924s so far)
+build-slot: FIFO ticket 2483, position 12; earlier build tickets must run first; waiting (1984s so far)
+build-slot: FIFO ticket 2483, position 12; earlier build tickets must run first; waiting (2044s so far)
+build-slot: FIFO ticket 2483, position 12; earlier build tickets must run first; waiting (2104s so far)
+build-slot: FIFO ticket 2483, position 12; earlier build tickets must run first; waiting (2164s so far)
+build-slot: FIFO ticket 2483, position 12; earlier build tickets must run first; waiting (2220s so far)
+build-slot: FIFO ticket 2483, position 10; earlier build tickets must run first; waiting (2280s so far)
+build-slot: FIFO ticket 2483, position 2; earlier build tickets must run first; waiting (2340s so far)
+build-slot: build slot 2, FIFO ticket 2483 after 2350s
+test_before_and_candidate_have_independent_deadline_statuses (__main__.DeadlineTests.test_before_and_candidate_have_independent_deadline_statuses) ... ok
+test_changed_absolute_ceiling_cannot_inherit_calibration (__main__.DeadlineTests.test_changed_absolute_ceiling_cannot_inherit_calibration) ... Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/measure.py", line 169, in <module>
+    if __name__=='__main__':main()
+                            ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/measure.py", line 57, in main
+    assert relative_policy['absolute_ceiling_seconds']==a.guest_timeout, 'absolute deadline changed between chunks'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: absolute deadline changed between chunks
+ok
+test_changed_environment_cannot_inherit_calibration (__main__.DeadlineTests.test_changed_environment_cannot_inherit_calibration) ... Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/measure.py", line 169, in <module>
+    if __name__=='__main__':main()
+                            ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/measure.py", line 49, in main
+    assert normalized(prior['spec'])==normalized(spec), 'execution spec changed between chunks'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: execution spec changed between chunks
+ok
+test_failed_calibration_skips_both_checked_sources (__main__.DeadlineTests.test_failed_calibration_skips_both_checked_sources) ... ok
+test_failed_reference_does_not_launch_checked_guest (__main__.DeadlineTests.test_failed_reference_does_not_launch_checked_guest) ... ok
+test_fast_guest_completes_with_wall_and_rss (__main__.DeadlineTests.test_fast_guest_completes_with_wall_and_rss) ... ok
+test_slow_guest_is_censored_once_and_not_retried_in_later_chunk (__main__.DeadlineTests.test_slow_guest_is_censored_once_and_not_retried_in_later_chunk) ... ok
+test_timeout_kills_descendant_process (__main__.DeadlineTests.test_timeout_kills_descendant_process) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 9.623s
+
+OK
