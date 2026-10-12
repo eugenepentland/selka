@@ -1,0 +1,89 @@
+{
+  "format": 1,
+  "stopping_criterion": "Complete registered verification green; record existing performance differences; stop",
+  "status": "completed_user_revised_endpoint",
+  "C0": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "branch": "codex/memory-closeout-20261012",
+  "verified_revision": "941bf4c18449492dadaf1a17ba20e35ff702ba0e",
+  "verification": {
+    "attempt": 5,
+    "source_revision": "941bf4c18449492dadaf1a17ba20e35ff702ba0e",
+    "status": "passed",
+    "log": "verify-attempt-5.log",
+    "worktree": "/home/epentland/ai/canopy/mylang-memory-20261012-verify-02",
+    "component_inputs": "Same qualified owned pin/archive as attempt4",
+    "changes_since_previous_gate": "six fixture-separator blank lines, A09 evidence-only performance report",
+    "exit_code": 0,
+    "command": [
+      "python3",
+      "-B",
+      "scripts/verify_cache.py",
+      "--zig",
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "--",
+      "-Dcomponent-owned-compiler-pin=/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+      "-Dcomponent-seed-source=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar",
+      "-j4",
+      "--maxrss",
+      "8589934592"
+    ],
+    "selected_actions": 45,
+    "reused_actions": 0,
+    "build_steps_passed": 135,
+    "build_steps_total": 135,
+    "registered_test_pass_entries": 3061,
+    "shard_skip_entries": 26810,
+    "build_admitted_seconds": 13.841009960975498,
+    "gate_admitted_seconds": 493.575726963114,
+    "inputs_stable": true,
+    "compiler_sha256": "178de446d467e61aa6f7f60e3f74715f1ed5efde555f62f11f6e5e6bbba3ca26",
+    "components": [
+      {
+        "artifact": "cache-plan-9d4dc5a5e0da07914022d47fcfa93c525798ea9c7104fb93cea4470a707f260d",
+        "component": "cache-plan",
+        "format": 1,
+        "key": "dc930688523c5b7e2a9568eb06868cf567d7a4bf6976d91e2e38bc979ec09aa6",
+        "memory_mode": "zero-rc-v1",
+        "protocol": 2,
+        "schema": 2,
+        "sha256": "9d4dc5a5e0da07914022d47fcfa93c525798ea9c7104fb93cea4470a707f260d",
+        "manifest_sha256": "9b3bc7585ff281a590005b98fb1c42ab5936f7e02b2090d38dfccbe076392207"
+      },
+      {
+        "artifact": "test-index-99fc4c6592f2ff3bc77fbb00b302ec083614964cb09f433532729d66a3aefa52",
+        "component": "test-index",
+        "format": 1,
+        "key": "64dc47ba86e10c81f03630e9f3f62aa787cd2cd8447187190554d8fe3b0396cf",
+        "memory_mode": "zero-rc-v1",
+        "protocol": 1,
+        "schema": 1,
+        "sha256": "99fc4c6592f2ff3bc77fbb00b302ec083614964cb09f433532729d66a3aefa52",
+        "manifest_sha256": "51ca773214b0a2b85168f3beaa3eb676b30aeadf3eef74bda61d11c441a4a29b"
+      }
+    ],
+    "guardian": {
+      "diff_scoped_passed": 88,
+      "whole_tree_passed": 88,
+      "log": "guardian-final.log"
+    },
+    "performance_measured": false
+  },
+  "post_gate_changes": "evidence and report files only",
+  "original_milestones": {
+    "qualified_implementation": "not_claimed; expanded common qualification and measurements incomplete",
+    "zero_rc_default": "deferred; opt-in remains",
+    "legacy_rc_retirement": "deferred; active guest RC/COW remains"
+  },
+  "performance": {
+    "report": "A09/final-performance-handoff.md",
+    "data": "A09/final-performance-handoff.json",
+    "measured_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+    "runtime_cases": 3,
+    "runtime_observations": 66,
+    "matched_counter_configurations": 15,
+    "remaining_runtime_rss_compile_measurements": "deferred_by_user",
+    "final_gate_revision_measured": false
+  },
+  "remaining_work": "ledger.json current_blockers; A10/equality/handoff.md parked unintegrated patch",
+  "publication": "local commits only; no push or main/self-hosting merge"
+}

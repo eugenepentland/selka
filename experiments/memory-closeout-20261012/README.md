@@ -1,148 +1,140 @@
 # Memory-management closeout, 12 October 2026
 
-Execution in progress. None of the three release milestones is yet qualified.
-The session launched one coordinator and ten concurrent workers in independent sibling
-worktrees. A06 and A07 later became unavailable; their saved work is being completed
-by the coordinator and existing workers. The original checkout and its unrelated edits are preserved.
+The user revised the stopping point: finish the complete verification gate, record
+performance differences already measured, then stop. Further performance work,
+default promotion and legacy RC retirement are deferred. The complete gate passed on
+`941bf4c18449492dadaf1a17ba20e35ff702ba0e`. Work is stopped at that endpoint.
+[Final receipt](coordinator/exploratory-verify-02/attempt-5.json) ·
+[Machine-readable results](results.json).
 
-C0 is `fbfcaa7a923186a8e773c3760f81c10aa345a432`, exactly `origin/development`
-at kickoff. Both documented ancestor checks passed. Integration branch:
-`codex/memory-closeout-20261012`.
+Work is local on `codex/memory-closeout-20261012`. C0 is
+`fbfcaa7a923186a8e773c3760f81c10aa345a432`, exactly `origin/development` at kickoff;
+both documented ancestor checks passed. One coordinator and ten workers ran in
+separate sibling worktrees. After A06/A07 became unavailable, the coordinator and
+existing workers completed their saved followups. The original dirty checkout,
+GitHub branches and immutable bootstrap seed history remain untouched.
+[Kickoff and tools](kickoff.json) · [item ledger](ledger.json).
 
-| Milestone | Status |
+| Original milestone | Status at the revised stopping point |
 | --- | --- |
-| Qualified implementation | Pending integrated candidate and full verification |
-| Zero-RC default | Pending implementation qualification |
-| Active legacy RC retirement | Pending default qualification and installed component boundary |
+| Qualified implementation | Not claimed: expanded common qualification and measurements remain incomplete |
+| Zero-RC default | Deferred; checked ownership remains opt-in |
+| Active legacy RC retirement | Deferred; active guest RC/COW remains |
 
-The [kickoff record](kickoff.json) pins toolchain, Guardian, worktrees, host,
-admission budget and preserved checkout. The [public export census](public-exports-C0.json)
-records all 206 public declarations across the current standard-library modules;
-A04/A05 supply contracts and executable coverage. [Item ledger](ledger.json).
+## Final verification
 
-The freshly rebuilt C0 compiler installation is recorded in A09's installation
-manifest; it preserves `bin/`, `libexec/` and `tools/` together. Historical reports
-remain immutable and are not new measurements. Each worker publishes its sources,
-raw results and handoff under its own A01–A10 directory.
+`verify_cache.py` completed all 45 selected actions fresh, with zero reused
+verification receipts and stable frozen inputs. Zig reported 135/135 build steps
+and 3,061 test-pass entries; shard-filtered skip entries remain in the raw receipt.
+Live-source formatting passed all 858 checked files. Guardian passed all 88 checks
+both in the gate and in a separate whole-tree run. The exact command, selected
+component inputs, compiler and installed-component hashes, action keys and raw
+logs are preserved with the [receipt](coordinator/exploratory-verify-02/attempt-5.json).
+Evidence/report-only commits after that revision do not change the tested source.
+No further benchmarks or implementation changes followed the green gate.
 
-Publication is not authorized by this handoff. Work remains on local branches;
-no push or self-hosting branch merge is part of this run.
+## Integrated implementation
 
-## Current integration evidence
+The branch includes bounded parallel-map chunks; the user-approved Result-list
+support; capacity arithmetic guards; managed list operations; explicit-copy library
+and application migrations; checked guest-test command/cache plumbing; and fixes
+for transfers, borrowed selections, tuple unpacking, field writebacks, numeric ABI,
+provider cleanup and warm generic memo cache hydration. Ownership and lifetime
+annotations were not added to the language.
 
-The fresh C0 census passed all 81 cases and 131 counted executions. Within the
-original 30, 23 still allocate and 7 are allocation-free; all migrated cases run
-without RC or managed exit-live bytes. This is baseline evidence, not final
-candidate qualification. See [the C0 report](A03/C0-release/REPORT.md).
+The complete registered gate includes compiler tests, guest tests, documentation,
+formatting, lint and Guardian requirements. Its earlier failures are preserved under
+[verification attempts](coordinator/exploratory-verify-02/attempt-3.json). Followup
+fixes restore the original record-copy bounds and moving-Unicode-cursor bound,
+update stale admitted-operation and generated-unit expectations, preserve extrema
+assertions behind lint-compatible wrappers, discover the current cache format, and
+forward the exact selected pin/archive into the real empty-PATH bootstrap test.
+Focused worker passes do not substitute for the complete gate.
 
-Integrated work includes bounded map scheduling, allocation-overflow guards,
-managed-list permutation operations, command and cache mode plumbing, independent
-library snapshots, borrowed comprehensions and sorting, repetition, bounded affine
-resource lifetimes, and compiler regressions found by the larger survey. Focused
-worker results identify their own revisions; they do not certify a later binary.
+Recursive structural equality remains an explicit checked-ownership limitation.
+Its new borrowed implementation passed focused native tests but failed a recursive
+canonical-cache shadow comparison. The [unapplied patch and reproducer](A10/equality/handoff.md)
+are preserved. No test was dropped to qualify it and no RC fallback was introduced.
 
-The user-expanded Result-list implementation is integrated. Support5 passes its
-release/ThreadSanitizer Result-map cases at 1/2/8 workers. These results identify
-their actual source and binary; they do not qualify a final candidate.
+## Shared-compiler evidence
 
-Support5 is source `a1f19edf255c8c0886731d8d7cce450d5f657720`, compiler SHA256
-`8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789`. The native
-object-lifetime bug is fixed and the host loader-cache change was independently
-reviewed. Installed components still use the historical RC-seed package, which
-remains an explicit package blocker.
+Support7 is the earlier measured compiler, source
+`bed11cf3bf3102ffec44487e431a1573fdf02ad5`, SHA256
+`540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef`.
+Its complete installation and selected owned-component recipe are pinned in the
+[installation identity](coordinator/support7/support7-identity.json). These results
+are not relabeled as results for the later gate revision.
 
-The original 30 release sanity run on Support5 passes all 30 cases and 72 counted
-executions: 23 allocating, 7 allocation-free, zero RC events and zero managed
-exit-live bytes. All 72 source/input matched comparisons have identical allocation
-traffic and managed peaks to freshly built C0. Final five-mode qualification is
-pending.
+- [Census](A03/Support7-full/REPORT.md): 435 builds and 695 counted executions pass
+  across five modes, including all original 30 cases and the expanded corpus.
+  Normal counted runs have correct output, zero RC events and zero managed exit-live
+  bytes, with LLVM/symbol checks. The original 30 allocation counts are below.
+- [Four application shapes](coordinator/support7/applications/summary.json):
+  20 builds and 60 counted executions pass, including parallel workers 1/2/8.
+- A04's 80 public functions and five types are classified; its expanded original
+  source suite passes 1,330 checked/ordinary native tests. A05's remaining exports
+  are classified, but its Support7 matrix has four warm-memo failures among 180
+  native lanes; the subsequent fix has focused evidence, not a final common rerun.
+- A01's shared-compiler map, Result, trap, cleanup and supported ThreadSanitizer/task
+  stress matrices pass. Intentional fatal exits are reported separately from normal
+  managed-leak checks.
+- The actual owned installation passes 42 component tests and 688 fresh counted
+  protocol cases. A08's 39 cache probes pass. Compile scaling remains unmeasured.
 
-Public-library and four-application fixtures have passing intermediate matrices;
-Support5 passes 40 cache probes and 52 command/analysis/cost rows. Each worker
-report identifies its artifact and refused cases. Later integrated fixes cover
-single-item dictionary borrowing, readonly managed dictionary defaults, complete
-tuple staging, fresh field receivers, scalar field snapshots, numeric formatter
-ABI, slice lifetimes, interior mutable calls and named provider transfers.
-These focused results do not qualify a final common compiler.
+| Original 30, workload allocations | Allocating | Allocation-free | Refused / executing RC |
+| --- | ---: | ---: | ---: |
+| Release, verified release, optimized debug | 23 | 7 | 0 / 0 |
+| Unoptimized debug, release without facts | 28 | 2 | 0 / 0 |
 
-Support6 is source `5167c588be79dd43d21d5013c36db15110bf239b`, Debug compiler SHA256
-`bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4`. It is not C1.
-[Its original A06 checks](coordinator/support6/a06-summary.json) record 56/64
-guest sources, 21/23 additional sources, and both counted native `ce2_effects`
-modes passing. Refusals remain in the denominators. Later explicit-copy migrations
-pass five modes for borrowed elements and row snapshots. The scalar-child-write
-fix for `v_nested` is integrated and passes its worker's five-mode checks; it still
-needs the common compiler rerun.
+Whole-program accounting includes entry/setup and reports allocations in all 30.
+The broader guest-source survey retains failures and unsupported contracts in its
+denominator; passing the pinned census does not qualify every language shape.
 
-A10 independently rebuilt a ReleaseFast compiler from that exact source, SHA256
-`29cfbd13390692757ce3add9cf61d8398eff283760d16cedb3c5b9addaa03e26`. Both owned
-component protocol suites passed 688 counted executions on the Debug and this
-ReleaseFast compiler, with zero RC events and managed exit-live bytes. A10's
-actual installed owned components also passed 42 pure tests and protocol oracles.
-See [the package evidence](A10/packaging-support6-candidate/qualification-state.json).
-The original Support6 Debug installation retains its historical libexec; the new
-owned installation is separate. Normal component defaults remain unchanged.
-Explicit qualified pin options now allow development builds without invoking the
-immutable legacy seed's known native-object lifetime defect.
+## Performance and package boundaries
 
-Provider transfer, tuple and borrowed-default implementations are integrated but
-still need the next common-artifact library/application matrices. Bounded local
-borrowed-provider wrappers, managed selection between distinct input owners,
-scalar record-field writes inside lists, independent set children and managed
-generator folds are now integrated with focused regressions. Source histories and
-failed cases remain visible in the ledger.
+The [performance handoff](A09/final-performance-handoff.md) and its
+[machine-readable data](A09/final-performance-handoff.json) preserve 15 matched
+C0/Support7 counter configurations per compiler and three completed runtime cases
+(66 observations). Remaining runtime cases, valid
+final RSS comparisons and compile scaling are deferred at the user's request.
 
-Support7 is frozen at `bed11cf3bf3102ffec44487e431a1573fdf02ad5`. Its complete
-ReleaseFast installation was built successfully with the independently qualified
-owned component compiler pin; compiler SHA256
-`540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef`. The source, command and installation boundary are recorded
-in [the installation identity](coordinator/support7/support7-identity.json). It is a proposed
-qualification candidate, not a completed milestone. The verification coordinator
-also needs to admit and bind the explicit component pin/archive options before
-the complete gate can qualify that same package.
+| Recorded guest workload | C0 median | Support7 median | Change |
+| --- | ---: | ---: | ---: |
+| JSON array lookup | 310.611 ms | 302.566 ms | −2.59% |
+| JSON object lookup | 316.188 ms | 302.066 ms | −4.47% |
+| Record unpack | 173.003 ms | 169.327 ms | −2.12%; ranges overlap |
 
-A09 corrected a measured RSS harness defect: outer Python-child rusage included
-launcher memory before exec. New RSS-only GNU-time measurements discriminate
-small and large native children independently of a 256 MiB launcher allocation.
-Old pilot RSS observations are explicitly invalid; no final RSS claim uses them.
-The final schedule separates 330 runtime samples, 90 RSS samples, and 30
-size-aligned counted configurations from the 435-build/695-run census. Eight
-immutable C0 counted builds fail ordinary native linking. Those failures remain
-recorded. A separately identified exact-artifact native adapter now passes all 15
-C0 configurations, with zero RC events and managed exit-live bytes. The final
-candidate must use the matched adapter and normal/manual controls; those results
-are still pending.
+These are two warmup pairs and nine alternating measured pairs per case, on the
+same host and matched inputs. Full ranges and all samples are retained in the
+handoff. Parallel workloads show substantial managed-allocation reductions, but
+their runtime and RSS comparisons were deferred.
 
-The exploratory full gate on `245e892f8518943ee44a0cc6009ab4b4fa6bca43` failed
-after 45 fresh actions (no reuse). Raw evidence remains in
-`coordinator/exploratory-verify-01/`. The dictionary snapshot defect is fixed in
-later sources, but complete verification must still pass on frozen final inputs.
-Focused tests do not replace that gate.
+Instrumented allocation traffic, managed peaks, guest time and process RSS are
+separate metrics. Earlier launcher-contaminated RSS observations are invalid.
 
-## Latest shared-compiler qualification
+The original A01 prototype reduced 4,097-element cheap-map total allocations from
+12,308 to 16/37/111 at 1/2/8 workers. This is identified prototype evidence, not a
+final timing claim; output and independently owned callback results may still grow
+with input size. [Map evidence](A01/handoff.md).
 
-Support7 passes the complete 435-build/695-execution counted census in five modes.
-Within the original 30-case denominator, 23 allocate and 7 remain workload-allocation-free;
-all admitted counted executions have correct results, zero RC events and no managed
-exit leaks. The four mandatory application shapes also pass 20 builds and 60 runs,
-including the parallel 1/2/8-worker matrix. See [application evidence](coordinator/support7/applications/summary.json).
+A02 retained the existing capacity growth policy after its bounded comparison:
+smaller initial capacities reduce singleton storage but increase reallocation
+traffic elsewhere. It is a measured rejected experiment, not a production saving.
+[Capacity decision](A02/README.md).
 
-The actual complete owned Support7 installation passes 42 component tests and 688
-fresh counted protocol cases. Fifteen input-matched C0/Support7 counter configurations
-pass through the same verified v2 native adapter; timing currently covers only three
-cases/66 observations. Remaining runtime, RSS and compile-scaling evidence is pending.
-Earlier package and counter-link blockers above describe superseded artifacts, whose
-failures remain preserved.
+The later text cursor repair reduces measured walked bytes from 1,201,439,895 to
+1,639,865 on its recorded fixture, with unchanged managed allocation metrics.
+The record-writeback repair restores two existing LLVM memcpy counts from 2 to 0.
+These are operation-count observations on their respective worker artifacts; they
+are not guest-time or RSS measurements on the final gate compiler.
 
-Qualification is still blocked. Actual native guest-test execution found recursive
-equality and indirect mutable-call gaps, a disjoint scalar writeback error, recursive
-optional field-update refusal, and warm generic memo callback cache hydration failure.
-Each has a reproducer and owner in the ledger. Source admission alone is not a pass.
-The full registered gate now accepts the exact owned component pin/archive; its current
-attempt has detected four fixture-formatting failures, fixed in subsequent integration
-source. No full-gate or release milestone is claimed yet.
+The verification build uses an explicitly qualified owned component compiler pin
+and matching source archive. This avoids the immutable historical seed's known
+native-object lifetime defect without rewriting or silently repinning that seed.
+Normal component default selection and active guest RC retirement are still pending.
+A green registered gate therefore does not make the entire installed language
+package RC-free. Migration instructions and current source contracts are in
+[ownership documentation](../../docs/tooling/ownership.md) and the worker handoffs.
 
-Integrated followups also restore three avoided JSON literal allocations through a
-small read-only helper and repair field-ownership discovery after inlining. Their worker
-results are separate from frozen Support7; the next common compiler must rerun affected
-qualification. Default promotion and active RC retirement are still unapplied.
+No publication is authorized: the branch has not been pushed and no self-hosting
+branch or GitHub `main` merge is part of this run.

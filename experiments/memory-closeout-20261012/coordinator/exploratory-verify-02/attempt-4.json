@@ -1,0 +1,21 @@
+{
+  "attempt": 4,
+  "source_revision": "79ac22d3acbf10d70308918470feb16f11117726",
+  "status": "failed",
+  "log": "verify-attempt-4.log",
+  "worktree": "/home/epentland/ai/canopy/mylang-memory-20261012-verify-02",
+  "component_inputs": "Same exact qualified owned pin/archive and shared component cache as attempt3; recorded there by content hash",
+  "stopping_criterion": "Complete gate green; performance work deferred by user",
+  "exit_code": 1,
+  "selected_actions": 45,
+  "reused_actions": 0,
+  "build_admitted_seconds": 16.817053319886327,
+  "gate_admitted_seconds": 603.9613696821034,
+  "inputs_stable": true,
+  "registered_tests_passed": 3061,
+  "failed_steps": 1,
+  "failures": [
+    "src/core/a05_scalar_mut_fixture.my formatting"
+  ],
+  "fix": "28a3c9f0c"
+}
