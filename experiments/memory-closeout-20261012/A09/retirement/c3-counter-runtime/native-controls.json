@@ -1,0 +1,1630 @@
+{
+  "scope": "Native scratch-runtime telemetry controls; no production retirement or final guest ABI claim",
+  "base": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "combined_runtime_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/retirement-combined-support7/native/core_rt.c",
+  "combined_runtime_sha256": "ca2ded335995f2d6f76c9900b172d74c20800cbe2885af4f3d39bf72a1eb7ca1",
+  "control_source_sha256": "82a2a59185e9e8f3f5071fcf7479fec03c80e4e2fd7cd184e0f19cecec8f5fd8",
+  "counter_patch_sha256": "74a87be05cda44c353444ad0a013255252ed73951b9afdb8d86e492d99537c2b",
+  "audit_of_preserved_executions": true,
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "records": {
+    "before": {
+      "runtime_sha256": "708fa431a33bf24033471c1a912ca0e8cd3f0ef4d5b0e48f59e6608021ebee59",
+      "instrumented_runtime_sha256": "88d03fa41fd150f8a050c9627cfabe08c39b55eca53f11931ef7a8bbb66ffa57",
+      "binary_sha256": "970501f5ba215f02c52f82ee10564bb1026c102e5a19df821b8ff10d0d77b8b5",
+      "runs": [
+        {
+          "length": 128,
+          "workers": 1,
+          "counts_sha256": "6c671838a908c68ca44741a49140a42353e34a2a5485789340e2482a0095dc8e",
+          "totals": {
+            "calls": 1,
+            "allocs": 7,
+            "alloc_bytes": 3280,
+            "frees": 7,
+            "free_bytes": 3280,
+            "list_grows": 5,
+            "list_grow_bytes": 960,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 1,
+            "list_copy_bytes": 1024,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 2160,
+            "live_bytes_at_exit": 0
+          },
+          "kinds": {
+            "retain": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "release": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "release_unique": {
+              "count": 2,
+              "bytes": 0,
+              "extra": 0
+            },
+            "unique_test": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "list_copy": {
+              "count": 1,
+              "bytes": 1024,
+              "extra": 0
+            },
+            "dict_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "buffer_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "text_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "record_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "list_push": {
+              "count": 128,
+              "bytes": 1024,
+              "extra": 960
+            },
+            "element_load": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "element_store": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "bounds_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "overflow_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "division_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "shift_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "other_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            }
+          },
+          "passed": true
+        },
+        {
+          "length": 128,
+          "workers": 2,
+          "counts_sha256": "3db72f5e5496675102700236665d1d9c8d0c0d9432228fd6d7aec9ef4b5926be",
+          "totals": {
+            "calls": 2,
+            "allocs": 14,
+            "alloc_bytes": 6560,
+            "frees": 14,
+            "free_bytes": 6560,
+            "list_grows": 10,
+            "list_grow_bytes": 1920,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 2,
+            "list_copy_bytes": 2048,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 2160,
+            "live_bytes_at_exit": 0
+          },
+          "kinds": {
+            "retain": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "release": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "release_unique": {
+              "count": 4,
+              "bytes": 0,
+              "extra": 0
+            },
+            "unique_test": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "list_copy": {
+              "count": 2,
+              "bytes": 2048,
+              "extra": 0
+            },
+            "dict_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "buffer_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "text_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "record_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "list_push": {
+              "count": 256,
+              "bytes": 2048,
+              "extra": 1920
+            },
+            "element_load": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "element_store": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "bounds_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "overflow_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "division_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "shift_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "other_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            }
+          },
+          "passed": true
+        },
+        {
+          "length": 128,
+          "workers": 8,
+          "counts_sha256": "17f5b8d2ccd09891cb902508c426e01d72d1afbee1674678418f018a2f75e426",
+          "totals": {
+            "calls": 8,
+            "allocs": 56,
+            "alloc_bytes": 26240,
+            "frees": 56,
+            "free_bytes": 26240,
+            "list_grows": 40,
+            "list_grow_bytes": 7680,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 8,
+            "list_copy_bytes": 8192,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 2160,
+            "live_bytes_at_exit": 0
+          },
+          "kinds": {
+            "retain": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "release": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "release_unique": {
+              "count": 16,
+              "bytes": 0,
+              "extra": 0
+            },
+            "unique_test": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "list_copy": {
+              "count": 8,
+              "bytes": 8192,
+              "extra": 0
+            },
+            "dict_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "buffer_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "text_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "record_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "list_push": {
+              "count": 1024,
+              "bytes": 8192,
+              "extra": 7680
+            },
+            "element_load": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "element_store": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "bounds_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "overflow_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "division_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "shift_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "other_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            }
+          },
+          "passed": true
+        },
+        {
+          "length": 65537,
+          "workers": 1,
+          "counts_sha256": "3055958482aa71762d5af7b9010b13fb566eff8242e64b5542eae1a596ee4df0",
+          "totals": {
+            "calls": 1,
+            "allocs": 7,
+            "alloc_bytes": 530528,
+            "frees": 7,
+            "free_bytes": 1582096,
+            "list_grows": 5,
+            "list_grow_bytes": 960,
+            "reallocs": 10,
+            "realloc_added_bytes": 1051568,
+            "realloc_moves": 3,
+            "realloc_moved_bytes": 852064,
+            "list_copies": 1,
+            "list_copy_bytes": 524296,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 1580976,
+            "live_bytes_at_exit": 0
+          },
+          "kinds": {
+            "retain": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "release": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "release_unique": {
+              "count": 2,
+              "bytes": 0,
+              "extra": 0
+            },
+            "unique_test": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "list_copy": {
+              "count": 1,
+              "bytes": 524296,
+              "extra": 0
+            },
+            "dict_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "buffer_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "text_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "record_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "list_push": {
+              "count": 65537,
+              "bytes": 524296,
+              "extra": 853024
+            },
+            "element_load": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "element_store": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "bounds_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "overflow_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "division_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "shift_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "other_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            }
+          },
+          "passed": true
+        },
+        {
+          "length": 65537,
+          "workers": 2,
+          "counts_sha256": "e6011b06be63ed92f7001a19526e5b95324b6d372c874014fe78dd2d914e0ede",
+          "totals": {
+            "calls": 2,
+            "allocs": 14,
+            "alloc_bytes": 1061056,
+            "frees": 14,
+            "free_bytes": 3164192,
+            "list_grows": 10,
+            "list_grow_bytes": 1920,
+            "reallocs": 20,
+            "realloc_added_bytes": 2103136,
+            "realloc_moves": 6,
+            "realloc_moved_bytes": 1573056,
+            "list_copies": 2,
+            "list_copy_bytes": 1048592,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 3161952,
+            "live_bytes_at_exit": 0
+          },
+          "kinds": {
+            "retain": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "release": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "release_unique": {
+              "count": 4,
+              "bytes": 0,
+              "extra": 0
+            },
+            "unique_test": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "list_copy": {
+              "count": 2,
+              "bytes": 1048592,
+              "extra": 0
+            },
+            "dict_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "buffer_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "text_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "record_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "list_push": {
+              "count": 131074,
+              "bytes": 1048592,
+              "extra": 1574976
+            },
+            "element_load": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "element_store": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "bounds_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "overflow_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "division_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "shift_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "other_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            }
+          },
+          "passed": true
+        },
+        {
+          "length": 65537,
+          "workers": 8,
+          "counts_sha256": "44d894e53d9e43f3fa8e69a54fb5f06a5e973f50527d17d68ed9fe5f11660146",
+          "totals": {
+            "calls": 8,
+            "allocs": 56,
+            "alloc_bytes": 4240240,
+            "frees": 56,
+            "free_bytes": 12652784,
+            "list_grows": 40,
+            "list_grow_bytes": 7680,
+            "reallocs": 80,
+            "realloc_added_bytes": 8412544,
+            "realloc_moves": 20,
+            "realloc_moved_bytes": 6095488,
+            "list_copies": 8,
+            "list_copy_bytes": 4194368,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 10800672,
+            "live_bytes_at_exit": 0
+          },
+          "kinds": {
+            "retain": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "release": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "release_unique": {
+              "count": 16,
+              "bytes": 0,
+              "extra": 0
+            },
+            "unique_test": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "list_copy": {
+              "count": 8,
+              "bytes": 4194368,
+              "extra": 0
+            },
+            "dict_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "buffer_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "text_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "record_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "list_push": {
+              "count": 524296,
+              "bytes": 4194368,
+              "extra": 6103168
+            },
+            "element_load": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "element_store": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "bounds_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "overflow_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "division_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "shift_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "other_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            }
+          },
+          "passed": true
+        }
+      ]
+    },
+    "prepared": {
+      "runtime_sha256": "ca2ded335995f2d6f76c9900b172d74c20800cbe2885af4f3d39bf72a1eb7ca1",
+      "instrumented_runtime_sha256": "fa1147f0a58b01254932ee86fac50443a7db4f2e9689324b44c6e4034ec52d13",
+      "binary_sha256": "9337218bfc0faf1557149601e1b84ae1919087650bd0aea61013f972317cb867",
+      "runs": [
+        {
+          "length": 128,
+          "workers": 1,
+          "counts_sha256": "6c671838a908c68ca44741a49140a42353e34a2a5485789340e2482a0095dc8e",
+          "totals": {
+            "calls": 1,
+            "allocs": 7,
+            "alloc_bytes": 3280,
+            "frees": 7,
+            "free_bytes": 3280,
+            "list_grows": 5,
+            "list_grow_bytes": 960,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 1,
+            "list_copy_bytes": 1024,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 2160,
+            "live_bytes_at_exit": 0
+          },
+          "kinds": {
+            "retain": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "release": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "release_unique": {
+              "count": 2,
+              "bytes": 0,
+              "extra": 0
+            },
+            "unique_test": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "list_copy": {
+              "count": 1,
+              "bytes": 1024,
+              "extra": 0
+            },
+            "dict_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "buffer_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "text_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "record_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "list_push": {
+              "count": 128,
+              "bytes": 1024,
+              "extra": 960
+            },
+            "element_load": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "element_store": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "bounds_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "overflow_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "division_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "shift_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "other_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            }
+          },
+          "passed": true
+        },
+        {
+          "length": 128,
+          "workers": 2,
+          "counts_sha256": "3db72f5e5496675102700236665d1d9c8d0c0d9432228fd6d7aec9ef4b5926be",
+          "totals": {
+            "calls": 2,
+            "allocs": 14,
+            "alloc_bytes": 6560,
+            "frees": 14,
+            "free_bytes": 6560,
+            "list_grows": 10,
+            "list_grow_bytes": 1920,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 2,
+            "list_copy_bytes": 2048,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 2160,
+            "live_bytes_at_exit": 0
+          },
+          "kinds": {
+            "retain": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "release": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "release_unique": {
+              "count": 4,
+              "bytes": 0,
+              "extra": 0
+            },
+            "unique_test": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "list_copy": {
+              "count": 2,
+              "bytes": 2048,
+              "extra": 0
+            },
+            "dict_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "buffer_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "text_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "record_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "list_push": {
+              "count": 256,
+              "bytes": 2048,
+              "extra": 1920
+            },
+            "element_load": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "element_store": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "bounds_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "overflow_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "division_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "shift_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "other_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            }
+          },
+          "passed": true
+        },
+        {
+          "length": 128,
+          "workers": 8,
+          "counts_sha256": "870a875b2b0cc14f72884cbe2463305a0a1e368b2a28ff54e96d688f9dd0a8f3",
+          "totals": {
+            "calls": 8,
+            "allocs": 56,
+            "alloc_bytes": 26240,
+            "frees": 56,
+            "free_bytes": 26240,
+            "list_grows": 40,
+            "list_grow_bytes": 7680,
+            "reallocs": 0,
+            "realloc_added_bytes": 0,
+            "realloc_moves": 0,
+            "realloc_moved_bytes": 0,
+            "list_copies": 8,
+            "list_copy_bytes": 8192,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 3224,
+            "live_bytes_at_exit": 0
+          },
+          "kinds": {
+            "retain": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "release": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "release_unique": {
+              "count": 16,
+              "bytes": 0,
+              "extra": 0
+            },
+            "unique_test": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "list_copy": {
+              "count": 8,
+              "bytes": 8192,
+              "extra": 0
+            },
+            "dict_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "buffer_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "text_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "record_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "list_push": {
+              "count": 1024,
+              "bytes": 8192,
+              "extra": 7680
+            },
+            "element_load": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "element_store": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "bounds_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "overflow_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "division_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "shift_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "other_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            }
+          },
+          "passed": true
+        },
+        {
+          "length": 65537,
+          "workers": 1,
+          "counts_sha256": "3055958482aa71762d5af7b9010b13fb566eff8242e64b5542eae1a596ee4df0",
+          "totals": {
+            "calls": 1,
+            "allocs": 7,
+            "alloc_bytes": 530528,
+            "frees": 7,
+            "free_bytes": 1582096,
+            "list_grows": 5,
+            "list_grow_bytes": 960,
+            "reallocs": 10,
+            "realloc_added_bytes": 1051568,
+            "realloc_moves": 3,
+            "realloc_moved_bytes": 852064,
+            "list_copies": 1,
+            "list_copy_bytes": 524296,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 1580976,
+            "live_bytes_at_exit": 0
+          },
+          "kinds": {
+            "retain": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "release": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "release_unique": {
+              "count": 2,
+              "bytes": 0,
+              "extra": 0
+            },
+            "unique_test": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "list_copy": {
+              "count": 1,
+              "bytes": 524296,
+              "extra": 0
+            },
+            "dict_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "buffer_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "text_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "record_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "list_push": {
+              "count": 65537,
+              "bytes": 524296,
+              "extra": 853024
+            },
+            "element_load": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "element_store": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "bounds_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "overflow_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "division_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "shift_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "other_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            }
+          },
+          "passed": true
+        },
+        {
+          "length": 65537,
+          "workers": 2,
+          "counts_sha256": "ffb31cd49660de889f0017b0a5552779fac882bc399d6f2e73c7d37469fe1e73",
+          "totals": {
+            "calls": 2,
+            "allocs": 14,
+            "alloc_bytes": 1061056,
+            "frees": 14,
+            "free_bytes": 3164192,
+            "list_grows": 10,
+            "list_grow_bytes": 1920,
+            "reallocs": 20,
+            "realloc_added_bytes": 2103136,
+            "realloc_moves": 5,
+            "realloc_moved_bytes": 1507488,
+            "list_copies": 2,
+            "list_copy_bytes": 1048592,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 3161952,
+            "live_bytes_at_exit": 0
+          },
+          "kinds": {
+            "retain": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "release": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "release_unique": {
+              "count": 4,
+              "bytes": 0,
+              "extra": 0
+            },
+            "unique_test": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "list_copy": {
+              "count": 2,
+              "bytes": 1048592,
+              "extra": 0
+            },
+            "dict_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "buffer_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "text_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "record_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "list_push": {
+              "count": 131074,
+              "bytes": 1048592,
+              "extra": 1509408
+            },
+            "element_load": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "element_store": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "bounds_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "overflow_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "division_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "shift_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "other_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            }
+          },
+          "passed": true
+        },
+        {
+          "length": 65537,
+          "workers": 8,
+          "counts_sha256": "b7ca19d0edcc02bea54d78b70066aaa94b8479625af919594ee074b231c34ef7",
+          "totals": {
+            "calls": 8,
+            "allocs": 56,
+            "alloc_bytes": 4216336,
+            "frees": 56,
+            "free_bytes": 12624864,
+            "list_grows": 40,
+            "list_grow_bytes": 7680,
+            "reallocs": 80,
+            "realloc_added_bytes": 8408528,
+            "realloc_moves": 17,
+            "realloc_moved_bytes": 5177888,
+            "list_copies": 8,
+            "list_copy_bytes": 4194368,
+            "dict_copies": 0,
+            "dict_copy_bytes": 0,
+            "buffer_copies": 0,
+            "buffer_copy_bytes": 0,
+            "text_copies": 0,
+            "text_copy_bytes": 0,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 0,
+            "dict_grow_bytes": 0,
+            "buffer_grows": 0,
+            "buffer_grow_bytes": 0,
+            "text_grows": 0,
+            "text_grow_bytes": 0,
+            "text_appends": 0,
+            "text_append_bytes": 0,
+            "buffer_pushes": 0,
+            "buffer_appends": 0,
+            "buffer_append_bytes": 0,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 6848376,
+            "live_bytes_at_exit": 0
+          },
+          "kinds": {
+            "retain": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "release": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "release_unique": {
+              "count": 16,
+              "bytes": 0,
+              "extra": 0
+            },
+            "unique_test": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "list_copy": {
+              "count": 8,
+              "bytes": 4194368,
+              "extra": 0
+            },
+            "dict_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "buffer_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "text_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "record_copy": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "list_push": {
+              "count": 524296,
+              "bytes": 4194368,
+              "extra": 5185568
+            },
+            "element_load": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "element_store": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "bounds_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "overflow_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "division_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "shift_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            },
+            "other_check": {
+              "count": 0,
+              "bytes": 0,
+              "extra": 0
+            }
+          },
+          "passed": true
+        }
+      ]
+    }
+  },
+  "passed": true,
+  "limitations": [
+    "C3 parser ABI argument is synthetic for these native controls; no guest LLVM was emitted.",
+    "Core task scheduler synchronization is unchanged by the counter patch; native controls use pthread join.",
+    "Peak and moved bytes vary across separately scheduled allocator runs.",
+    "Large multithreaded usable allocation bytes vary with allocator rounding; every run still balances alloc+realloc bytes against frees.",
+    "Small-list and serial-large traffic, all event counts and element-copy traffic agree exactly before/after."
+  ]
+}

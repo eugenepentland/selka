@@ -1,0 +1,147 @@
+--- a/src/core/emit_count.zig
++++ b/src/core/emit_count.zig
+@@ -1,6 +1,6 @@
+ //! Counting builds (`mylang build --counters`, NEW-CORE-COUNTERS-1..7): what the
+-//! emitter adds to a unit so the program records, at run time, the count updates,
+-//! uniqueness tests, copies and element traffic its emitted code executes, each at
++//! emitter adds to a unit so the program records allocations, checks,
++//! direct destruction, copies and element traffic its emitted code executes, each at
+ //! its own site. Nothing here runs unless `emit_llvm.Options.counters` is set; a
+ //! build without it emits exactly the text it emitted before counting existed.
+ //!
+@@ -23,13 +23,13 @@
+ /// What one site counts. `runtime/core_count.c` lists the same names in the same
+ /// order (`myl_count_kinds`), and the JSON report uses them.
+ pub const Kind = enum(u8) {
+-    /// An inline count increment of one block (`c0` executions).
++    /// Historical v1 slot: no producer after RC retirement; always zero.
+     retain,
+-    /// An inline count decrement of one block (`c0` executions).
++    /// Historical v1 slot: no producer after RC retirement; always zero.
+     release,
+-    /// The release of a block ownership proved unique: a free with no count test.
++    /// Direct destruction of an owned block; this remains an active counter.
+     release_unique,
+-    /// An `is_unique` test: `c0` tests, `c2` of them found the block unique.
++    /// Historical v1 slot: no producer after RC retirement; always zero.
+     unique_test,
+     /// A `list_copy`: `c0` copies, `c1` element bytes (credited by the runtime).
+     list_copy,
+@@ -37,7 +37,7 @@
+     dict_copy,
+     /// A `buffer_copy`: `c0` copies, `c1` bytes (credited by the runtime).
+     buffer_copy,
+-    /// A `str_from_view` (a text copy-on-write copy or a view materialized): `c0`, `c1` bytes.
++    /// Text materialized from a view: `c0` copies, `c1` bytes.
+     text_copy,
+     /// A record, union or array over four words copied with `llvm.memcpy`/`memmove`:
+     /// `c0` copies, `c1` bytes. The detail names the operation that copies it.
+@@ -185,12 +185,8 @@
+ /// `emit_llvm.runtime_fast_paths`, but every list allocation and every free goes
+ /// through the runtime, which counts it. Pushes with room stay inline.
+ pub const fast_paths =
+-    \\@myl_core_free_lists = external thread_local(localexec) global [33 x ptr]
+-    \\declare preserve_mostcc void @myl_core_retain_slow(ptr) nounwind cold
+-    \\declare preserve_mostcc void @myl_core_release_slow(ptr) nounwind cold
+     \\declare ptr @myl_core_list_new_slow(i64, i64) nounwind
+     \\declare ptr @myl_core_list_grow(ptr, i64) nounwind
+-    \\declare void @myl_core_free_block(ptr) nounwind cold
+     \\define internal ptr @myl_core_list_new(i64 %cap, i64 %size) alwaysinline nounwind {
+     \\entry:
+     \\  %made = call ptr @myl_core_list_new_slow(i64 %cap, i64 %size)
+@@ -220,10 +216,5 @@
+     \\  %room = call ptr @myl_core_list_reserve(ptr %list, i64 %size)
+     \\  ret ptr %room
+     \\}
+-    \\define internal void @myl_core_free(ptr %block) alwaysinline nounwind {
+-    \\entry:
+-    \\  call void @myl_core_free_block(ptr %block)
+-    \\  ret void
+-    \\}
+     \\
+ ;
+--- a/src/core/count_runtime.zig
++++ b/src/core/count_runtime.zig
+@@ -59,26 +59,6 @@
+         .anchor = "    myl_block *copy = shape->kind == 6 ? myl_core_box_new(child->size) : block_new(MYL_KIND_LIST, count, child->size);\n",
+         .after = "    if (shape->kind == 7) myl_count_copy(MYL_COUNT_LIST_COPIES, (size_t)count * child->size);\n",
+     },
+-    .{
+-        .anchor = "static void count_retain(myl_block *block) {\n    if (!block) return;\n    uint32_t count = count_load(block);\n",
+-        .after = "    if (count != MYL_SATURATED) myl_count_event(MYL_COUNT_RUNTIME_RETAINS, 0);\n",
+-    },
+-    .{
+-        .anchor = "static bool count_release(myl_block *block) {\n    if (!block) return false;\n    uint32_t count = count_load(block);\n",
+-        .after = "    if (count != MYL_SATURATED) myl_count_event(MYL_COUNT_RUNTIME_RELEASES, 0);\n",
+-    },
+-    .{
+-        .anchor = "void myl_core_retain_slow(myl_block *block) {\n    uint32_t count = count_load(block);\n",
+-        .after = "    if (count >= MYL_SHARED && count != MYL_SATURATED) myl_count_event(MYL_COUNT_SHARED_RETAINS, 0);\n",
+-    },
+-    .{
+-        .anchor = "static bool count_release_shared(myl_block *block) {\n    uint32_t count = count_load(block);\n",
+-        .after = "    if (count != MYL_SATURATED) myl_count_event(MYL_COUNT_SHARED_RELEASES, 0);\n",
+-    },
+-    .{
+-        .anchor = "    child->count = count | MYL_SHARED;\n",
+-        .after = "    uint32_t myl_share_class = class_of(child);\n    myl_count_event(MYL_COUNT_SHARE_MARKS, myl_share_class ? (size_t)myl_share_class * MYL_GRANULE : malloc_usable_size(child));\n",
+-    },
+     .{ .anchor = "    memcpy(other->hashes, meta->hashes, (size_t)meta->elen * 8);\n", .after = "    myl_count_copy(MYL_COUNT_DICT_COPIES, (size_t)meta->elen * ((size_t)meta->desc->stride + 8));\n" },
+     .{
+         .anchor = "    memcpy(block_data(grown), block_data(dict), (size_t)meta->elen * meta->desc->stride);\n",
+--- a/src/core/runtime/core_count.h
++++ b/src/core/runtime/core_count.h
+@@ -17,17 +17,14 @@
+     MYL_COUNT_DICT_COPIES = 14,     /* dict_copy, entry and hash bytes */
+     MYL_COUNT_BUFFER_COPIES = 16,   /* buffer_copy, bytes */
+     MYL_COUNT_TEXT_COPIES = 18,     /* str_from_view, bytes */
+-    MYL_COUNT_RUNTIME_RETAINS = 20, /* retains done by the runtime (a copy's children) */
+-    MYL_COUNT_RUNTIME_RELEASES = 22, /* releases done by the runtime (a free's children) */
++    /* Slots 20..23 are reserved zero-valued v1 RC telemetry. */
+     MYL_COUNT_DICT_GROWS = 24,      /* dictionaries grown, entry and hash bytes copied */
+     MYL_COUNT_BUFFER_GROWS = 26,    /* byte buffers grown, bytes copied */
+     MYL_COUNT_TEXT_GROWS = 28,      /* text appends that moved the text, bytes copied */
+     MYL_COUNT_TEXT_APPENDS = 30,    /* out-of-line text appends, bytes appended */
+     MYL_COUNT_BUFFER_PUSHES = 32,   /* out-of-line byte pushes, bytes */
+     MYL_COUNT_BUFFER_APPENDS = 34,  /* out-of-line byte appends (`append_range`, numbers), bytes */
+-    MYL_COUNT_SHARED_RETAINS = 36,
+-    MYL_COUNT_SHARED_RELEASES = 38,
+-    MYL_COUNT_SHARE_MARKS = 40,     /* marked blocks and their allocated bytes */
++    /* Slots 36..41 are reserved zero-valued v1 sharing telemetry. */
+     MYL_COUNT_SLOTS = 42
+ };
+ 
+--- a/src/core/runtime/core_count.c
++++ b/src/core/runtime/core_count.c
+@@ -9,6 +9,10 @@
+  * exit) go to `<outside>`. At exit, or when a trap ends the process, the counts
+  * are written as one JSON document (`mylang-counters-v1`) to the path in
+  * `MYLANG_COUNTERS`, else to `mylang-counters.json` in the working directory.
++ * RC event fields remain explicit zero-valued historical v1 telemetry.
++ * Their hooks are retired; they are not observations of count operations.
++ * release_unique still records direct destruction. Slot/kind ordinals remain
++ * stable, and consumers must require every field rather than default omissions.
+  * Nothing is printed on the program's own streams unless the file cannot be
+  * written. Thread-local slots are combined after task quiescence. */
+ 
+@@ -103,7 +107,8 @@
+             memory_order_relaxed, memory_order_relaxed)) {}
+ }
+ 
+-/* Site kinds, in `emit_count.Kind` order. */
++/* Site kinds, in `emit_count.Kind` order. Indices 0, 1 and 3 are
++   reserved historical zero fields; index 2 is active direct destruction. */
+ static const char *const myl_count_kinds[] = {
+     "retain", "release", "release_unique", "unique_test", "list_copy", "dict_copy",
+     "buffer_copy", "text_copy", "record_copy", "list_push", "element_load", "element_store",
+@@ -111,7 +116,9 @@
+ };
+ enum { MYL_COUNT_KINDS = sizeof myl_count_kinds / sizeof myl_count_kinds[0] };
+ 
+-/* Function slot names (core_count.h), one per used slot; null marks an unused one. */
++/* Function slot names (core_count.h), including historical zero fields
++   at slots 20/22/36/38/40/41. No active hook writes those slots.
++   A null name marks a slot omitted from the v1 JSON schema. */
+ static const char *const myl_count_slot_names[MYL_COUNT_SLOTS] = {
+     "calls", NULL, "allocs", "alloc_bytes", "frees", "free_bytes",
+     "list_grows", "list_grow_bytes", "reallocs", "realloc_added_bytes", "realloc_moves", "realloc_moved_bytes",

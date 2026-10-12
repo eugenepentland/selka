@@ -1,5 +1,16 @@
 # A09 handoff — prepared runtime matrix, frozen baselines and versioning fix
 
+Latest coordinated C3 request: `retirement/c3-counter-runtime/counters.patch`
+targets four counter files at Support7 `bed11cf3bf3102ffec44487e431a1573fdf02ad5`.
+It is unapplied and must accompany A02 runtime/A07 emitter retirement. Twenty
+synthetic parser controls and twelve native scratch-runtime controls pass;
+all anchors apply, allocation/growth/copy/direct-destruction telemetry remains,
+and all native runs have zero managed exit-live bytes. Historical v1 RC columns
+remain required explicit compatibility zeros, with no claim they observe RC
+events after their hooks are removed. Structural proof is independently required.
+Initial harness failures and their corrected interpretation are preserved in
+the draft README and raw archive. No final guest/package C3 proof is claimed.
+
 Latest preparation: `C1-schedule.md/json` distinguish 330 runtime launches,
 90 separate RSS launches, 30 planned size-aligned counted configurations and
 the independent 435-build/695-run census. The corrected RSS harness is commit
