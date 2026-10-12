@@ -282,6 +282,37 @@ print(json.dumps([stale.co_consts[0],fresh.co_consts[0],loaded_code_sha256(stale
         self.assertNotEqual(loaded_code_sha256(detached), actual)
         self.assertEqual(loaded_code_sha256(compile(source, filename, 'exec', dont_inherit=True)), actual)
 
+    def test_source_authentication_matches_actual_immutable_loaded_helper(self):
+        source = Path(identity.__file__).read_bytes()
+        self.assertIsNone(identity.authenticate_code_source(source, identity._LOADED_CODE_OBJECT))
+        stale = source.replace(b'_TEXT_CHUNK = 8192', b'_TEXT_CHUNK = 8193')
+        self.assertRaisesRegex(CodeIdentityError, 'does not match',
+                               identity.authenticate_code_source, stale, identity._LOADED_CODE_OBJECT)
+        detached = compile('pass', identity._LOADED_CODE_OBJECT.co_filename, 'exec')
+        self.assertRaisesRegex(CodeIdentityError, 'does not match',
+                               identity.authenticate_code_source, source, detached)
+
+    def test_source_authentication_does_not_read_files_or_hash_later_source(self):
+        source = Path(identity.__file__).read_bytes()
+        before = identity.LOADED_CODE_SHA256
+        with patch('builtins.open', side_effect=AssertionError('authentication file read')):
+            self.assertIsNone(identity.authenticate_code_source(source, identity._LOADED_CODE_OBJECT))
+            self.assertEqual(loaded_code_sha256(identity._LOADED_CODE_OBJECT), before)
+
+    def test_source_authentication_unknown_syntax_and_bytes_fail_closed(self):
+        code = self.code(None)
+        self.assertRaisesRegex(CodeIdentityError, 'inputs', identity.authenticate_code_source, 'text', code)
+        self.assertRaisesRegex(CodeIdentityError, 'inputs', identity.authenticate_code_source, b'pass', None)
+        self.assertRaisesRegex(CodeIdentityError, 'cannot compile', identity.authenticate_code_source, b'invalid +', code)
+        self.assertRaisesRegex(CodeIdentityError, 'byte bound', identity.authenticate_code_source,
+                               b'#' * (identity._MAX_AUTH_SOURCE_BYTES + 1), code)
+
+    def test_source_authentication_distinguishes_typed_equal_constant_values(self):
+        code = compile('x=True', 'same.py', 'exec')
+        self.assertEqual(code.co_consts[0], 1)
+        self.assertRaisesRegex(CodeIdentityError, 'does not match',
+                               identity.authenticate_code_source, b'x=1', code)
+
     def test_helper_implementation_changes_are_explicitly_bound(self):
         source = Path(identity.__file__).read_bytes()
         original = compile(source, identity._LOADED_CODE_OBJECT.co_filename, 'exec')

@@ -17,6 +17,7 @@ _LOADED_CODE_OBJECT = sys._getframe().f_code
 FORMAT_VERSION = 1
 _DOMAIN = b'mylang-verification-loaded-code-v1\0'
 _TEXT_CHUNK = 8192
+_MAX_AUTH_SOURCE_BYTES = 1 << 20
 _CODE_ATTRIBUTES = (
     'co_argcount', 'co_posonlyargcount', 'co_kwonlyargcount', 'co_nlocals',
     'co_stacksize', 'co_flags', 'co_code', 'co_consts', 'co_names', 'co_varnames',
@@ -167,6 +168,26 @@ def loaded_code_sha256(code: CodeType, *, limits: CodeLimits | None = None) -> s
                    sys.flags.optimize))
     encoder.value(code)
     return encoder.digest.hexdigest()
+
+
+def authenticate_code_source(source: bytes, expected: CodeType) -> None:
+    """Compare watched source with immutable loaded code; perform no file reads.
+
+    Callers must bind these exact bytes to a current watched content digest and
+    retain that watch through use/publication. This proves code equivalence only,
+    never filesystem authority. Unsupported or stale source raises an error.
+    """
+    if type(source) is not bytes or type(expected) is not CodeType:
+        raise CodeIdentityError('unsupported source authentication inputs')
+    if len(source) > _MAX_AUTH_SOURCE_BYTES:
+        raise CodeIdentityError('bootstrap source byte bound exceeded')
+    try:
+        compiled = compile(source, expected.co_filename, 'exec', dont_inherit=True,
+                           optimize=sys.flags.optimize)
+    except (SyntaxError, ValueError, OverflowError, RecursionError) as error:
+        raise CodeIdentityError('watched bootstrap source cannot compile') from error
+    if loaded_code_sha256(compiled) != loaded_code_sha256(expected):
+        raise CodeIdentityError('loaded bootstrap code does not match watched source')
 
 
 # Bind the encoder's own loaded implementation for explicit consumer identity and
