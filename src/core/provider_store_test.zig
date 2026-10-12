@@ -11,11 +11,10 @@ fn lowers(parent: std.mem.Allocator, source: []const u8) !void {
     var arena = std.heap.ArenaAllocator.init(parent);
     defer arena.deinit();
     const a = arena.allocator();
-    var unit = try language.Compilation.init(a, "provider-store.my", source);
-    unit.check() catch |err| {
-        for (unit.diagnostics.items) |diagnostic| report("{s}: {s}\n", .{ diagnostic.code, diagnostic.message });
-        return err;
-    };
+    var entry: Entry = .{ .bytes = source };
+    var project: language.embedded_project.Program = undefined;
+    try project.init(a, .{ .context = &entry, .read = Entry.read });
+    const unit = &project.compilation;
     var failure: ownership.Failure = .{};
     ownership.checkMode(a, unit.program.?, &failure, true) catch |err| {
         report("{s}: {s}\n", .{ failure.code, failure.message });
@@ -124,4 +123,39 @@ test "zero RC aggregate provider roots cannot copy or invalidate active field sc
         \\        _ = file.write("still live")
         \\    return 0
     , "E_SINGLE_OWNER_OVERLAP");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-PROVIDER-FIELDS-1
+test "zero RC provider construction consumes the old whole binding pin" {
+    try lowers(std.testing.allocator,
+        \\import filesystem
+        \\
+        \\record Ports:
+        \\    first: Filesystem
+        \\    second: Filesystem
+        \\
+        \\record App:
+        \\    ports: Ports
+        \\    label: str
+        \\
+        \\func make(value: int) -> App:
+        \\    const ports = Ports(first=filesystem.memory(), second=filesystem.memory())
+        \\    return App(ports=ports, label="app-" + str(value))
+        \\
+        \\func main() -> int:
+        \\    mut app = make(1)
+        \\    app.label = "changed"
+        \\    assert not app.ports.first.exists("missing")
+        \\    const moved = app
+        \\    assert moved.label == "changed"
+        \\    mut replacement = make(2)
+        \\    replacement = make(3)
+        \\    assert not replacement.ports.second.exists("missing")
+        \\    const nested = Ports(first=filesystem.memory(), second=filesystem.memory())
+        \\    const final = App(ports=nested, label="final")
+        \\    if final.label == "final":
+        \\        assert not final.ports.first.exists("missing")
+        \\        return 0
+        \\    return 1
+    );
 }

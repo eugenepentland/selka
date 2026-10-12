@@ -1,0 +1,37 @@
+{
+  "base": "006e2355a5e9ddd7d81ffaf6be3b496ed075e8f6",
+  "status": "focused integration checks passed; C1 not qualified",
+  "source_sha256": {
+    "src/core/build.zig": "5ac62c5bc4cda0037a948ad576232607c1d00a8910d7bb017cba528ffcd5785a",
+    "src/core/provider_store_test.zig": "240c1edf0a13891d05f883d524725d573ec05f70020304874c19c60c6b9ae8b6",
+    "src/typed.zig": "5faa8d6e53431577c5d5481c4f95f71db4d6618cec462746bc206117198f4bfd"
+  },
+  "change": "Clear the old whole provider binding after checked transfer into record construction/reconstruction; field projections remain borrows.",
+  "checks": [
+    {
+      "log": "provider-transfer-focused.log",
+      "status": "blocked before tests",
+      "cause": "immutable legacy seed deletes uncached native objects before link under changed host closure"
+    },
+    {
+      "log": "integrated-ownership-focused.log",
+      "status": "pass",
+      "tests": 4,
+      "exit_status": 0,
+      "scope": "provider construction and lifetime lowering; exact borrowed selection cost contract"
+    },
+    {
+      "log": "integrated-borrow-mut-focused.log",
+      "status": "pass",
+      "tests": 10,
+      "exit_status": 0,
+      "scope": "integrated borrowed defaults and interior mutable call regressions"
+    }
+  ],
+  "component_selection": "Explicit qualified owned Support6 compiler pin and source archive from A10; no default or seed history change.",
+  "pending": [
+    "five-mode exact A05 named provider application cases on frozen integrated artifact",
+    "complete verification and Guardian on final source",
+    "all three release milestones"
+  ]
+}

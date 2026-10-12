@@ -808,6 +808,26 @@ const FnBuilder = struct {
         if (!assign) try self.ssa.resources.append(self.allocator(), .{ .owner = .none, .depth = self.loops.items.len, .pin = slot });
     }
 
+    /// A whole provider owner transferred into a value must leave no lexical pin
+    /// on its old binding. Field projections remain the enclosing owner's borrows.
+    fn clearProviderSource(self: *FnBuilder, source: ?Place, ty: typed.Type) Error!void {
+        if (!self.module().zero_rc or !try self.mb.hasProvider(ty)) return;
+        const place = source orelse return;
+        if (place.steps.len != 0) return;
+        const old = try self.read(place.root, self.current.?);
+        const empty = try self.detached(.{ .op = .undef, .ty = self.typeOfRef(old) });
+        try self.write(place.root, self.current.?, empty);
+    }
+
+    /// Record construction consumes each checked owned field in source order.
+    fn recordFieldValue(self: *FnBuilder, node: typed.NodeId) Error!ir.Ref {
+        if (!self.module().zero_rc or !try self.mb.hasProvider(self.nodeOf(node).ty)) return self.expression(node);
+        var place: ?Place = null;
+        const value = try self.expressionPlace(node, &place);
+        if (self.current != null) try self.clearProviderSource(place, self.nodeOf(node).ty);
+        return value;
+    }
+
     /// Lower a checked statement and preserve lexical cleanup on every exit.
     pub fn statement(self: *FnBuilder, id: typed.StatementId) Error!void {
         if (self.current == null) return;
@@ -1681,7 +1701,7 @@ const FnBuilder = struct {
         @memset(values, .none);
         for (fields) |init| {
             if (init.index >= stored.len) return self.mb.refuse(refuse_field_index, span);
-            const value = try self.expression(init.value);
+            const value = try self.recordFieldValue(init.value);
             if (self.current == null) return .none;
             values[init.index] = try self.boxFor(stored[init.index], value, span);
         }
@@ -1692,13 +1712,16 @@ const FnBuilder = struct {
 
     /// `update`: the base with each listed field replaced.
     fn recordUpdate(self: *FnBuilder, base_node: typed.NodeId, fields: []const typed.FieldInit, span: u32) Error!ir.Ref {
-        var base = try self.expression(base_node);
+        var place: ?Place = null;
+        const provider = self.module().zero_rc and try self.mb.hasProvider(self.nodeOf(base_node).ty);
+        var base = try self.expressionPlace(base_node, if (provider) &place else null);
         if (self.current == null) return .none;
         for (fields) |init| {
-            const value = try self.expression(init.value);
+            const value = try self.recordFieldValue(init.value);
             if (self.current == null) return .none;
             base = try self.fieldSet(base, init.index, value, span);
         }
+        try self.clearProviderSource(place, self.nodeOf(base_node).ty);
         return base;
     }
 
