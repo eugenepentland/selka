@@ -1,0 +1,12 @@
+record Cell:
+    value: int
+    text: str
+
+func change(mut cells: FixedArray[Cell, 2], index: int):
+    cells[index].value = 9
+
+func main(args: str[], out: Stream) -> int:
+    mut cells = FixedArray[Cell, 2]([Cell(value=1, text="left-" + str(len(args))), Cell(value=2, text="right-" + str(len(args)))])
+    change(mut cells, len(args) % 2)
+    out.print(cells[0].value, cells[1].value)
+    return 0

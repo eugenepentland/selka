@@ -1,0 +1,44 @@
+fn main(list[str], cap) -> i64
+b0:
+  %4 = list_len u64 param0
+  %5 = convert.exact i64 %4
+  %6 = call str myl_core_str_from_i64(%5)
+  %7 = str_append str str0, %6
+  %8 = record_make record{i64, str} 1:i64, %7
+  %11 = list_len u64 param0
+  %12 = convert.exact i64 %11
+  %13 = call str myl_core_str_from_i64(%12)
+  %14 = str_append str str1, %13
+  %15 = record_make record{i64, str} 2:i64, %14
+  %16 = record_make [2]record{i64, str} %8, %15
+  %17 = list_len u64 param0
+  %18 = convert.exact i64 %17
+  %20 = floor_rem.exact i64 %18, 2:i64
+  %21 = call [2]record{i64, str} change(%16, %20)
+  %23 = array_get.exact record{i64, str} %21, 0:i64
+  %24 = record_get i64 %23, field0
+  %26 = array_get.exact record{i64, str} %21, 1:i64
+  %27 = record_get i64 %26, field0
+  print param1, %24, %27
+  ret 0:i64
+fn myl_core_str_from_i64(i64) -> str extern
+fn change([2]record{i64, str}, i64) -> [2]record{i64, str}
+b0:
+  %3 = cmp.lt bool param1, 0:i64
+  branch %3, b1, b2
+b1: ; preds b0
+  %6 = add i64 param1, 2:i64
+  jump b2
+b2: ; preds b0 b1
+  %8 = phi i64 param1, %6
+  %9 = array_get.exact record{i64, str} param0, %8
+  %11 = record_set record{i64, str} %9, field0, 9:i64
+  %13 = cmp.lt bool param1, 0:i64
+  branch %13, b3, b4
+b3: ; preds b2
+  %16 = add i64 param1, 2:i64
+  jump b4
+b4: ; preds b2 b3
+  %18 = phi i64 param1, %16
+  %19 = array_set.exact [2]record{i64, str} param0, %18, %11
+  ret %19

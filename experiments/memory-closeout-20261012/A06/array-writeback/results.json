@@ -1,0 +1,39 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A07/.tmp/memory-closeout/A07/zig-cache/o/ee2cac1ef98c14f4fc0db0db56801e98/mylang",
+  "compiler_sha256": "1371106862576f87152587b12de37d09f10a907e5c80d6d8e66e65a1a917fd2c",
+  "source_sha256": "a3614fab5aee42285facd7a888eba0d5871b14d935b9d00be98cb54ec736e317",
+  "cases": [
+    {
+      "name": "check",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A07/.tmp/memory-closeout/A07/zig-cache/o/ee2cac1ef98c14f4fc0db0db56801e98/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/array-writeback/minimal.my",
+        "--experimental-zero-rc",
+        "--no-cache"
+      ],
+      "status": 0
+    },
+    {
+      "name": "raw",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A07/.tmp/memory-closeout/A07/zig-cache/o/ee2cac1ef98c14f4fc0db0db56801e98/mylang",
+        "dump-ir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/array-writeback/minimal.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0
+    },
+    {
+      "name": "facts",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A07/.tmp/memory-closeout/A07/zig-cache/o/ee2cac1ef98c14f4fc0db0db56801e98/mylang",
+        "dump-ir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/array-writeback/minimal.my",
+        "--experimental-zero-rc",
+        "--facts"
+      ],
+      "status": 0
+    }
+  ]
+}

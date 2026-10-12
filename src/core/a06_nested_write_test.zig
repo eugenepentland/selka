@@ -4,6 +4,7 @@ const language = @import("mylang");
 const options = @import("core_test_options");
 const contract = @import("single_owner.zig");
 const zero = @import("zero_rc.zig");
+const support = @import("test_support.zig");
 const report = std.debug.print;
 
 fn legacySymbols(symbols: []const u8) bool {
@@ -19,6 +20,16 @@ test "zero RC linked symbol audit distinguishes direct destruction from counting
     for ([_][]const u8{ "myl_core_retain_slow", "myl_core_release", "myl_core_share", "count_is_unique", "count_retain", "count_release_shared" }) |symbol| {
         try std.testing.expect(legacySymbols(symbol));
     }
+}
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC a noalloc borrowed text extremum cannot become an independent return" {
+    try refuses(std.testing.allocator,
+        \\func least(words: str[]) -> str noalloc:
+        \\    return min(words)
+        \\func main() -> int:
+        \\    return 0
+    , "E_SINGLE_OWNER_BORROW");
 }
 
 const records =
@@ -162,6 +173,77 @@ const slot_records =
     \\    cells: FixedArray[Cell, 2]
     \\
 ;
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC fixed array writeback captures a dynamic signed index once" {
+    try counted(std.testing.allocator, slot_records ++
+        \\func select_last(mut calls: int) -> int:
+        \\    calls += 1
+        \\    return -1
+        \\func change(mut cells: FixedArray[Cell, 2], index: int):
+        \\    cells[index].value = 9
+        \\func main(out: Stream) -> int:
+        \\    mut calls = 0
+        \\    mut cells = FixedArray[Cell, 2]([Cell(value=1, text="left-" + str(1)), Cell(value=2, text="right-" + str(2))])
+        \\    const saved = cells.copy()
+        \\    cells[select_last(mut calls)].value = 7
+        \\    change(mut cells, -2)
+        \\    out.print(calls, cells[0].value, cells[1].value, saved[0].value, saved[1].value, saved[1].text)
+        \\    return 0
+    , "1 9 7 1 2 right-2\n");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC array transfer analysis preserves unknown index and conditional live borrows" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    // These value-semantic IR controls deliberately bypass source ownership
+    // admission. A retained live alias must prevent selecting a direct transfer.
+    const unknown = try support.ownedText(arena.allocator(),
+        \\func overlap(mut cells: FixedArray[int[], 2], read_index: int, write_index: int) -> int:
+        \\    const held = cells[read_index]
+        \\    cells[write_index].append(9)
+        \\    return len(held)
+    );
+    try std.testing.expect(std.mem.indexOf(u8, unknown, "retain") != null);
+    const conditional = try support.ownedText(arena.allocator(),
+        \\func conditional(mut cells: FixedArray[int[], 2], replace: bool) -> int:
+        \\    mut held = cells[0]
+        \\    held.append(9)
+        \\    if replace:
+        \\        cells[0] = held
+        \\    return len(cells[0])
+    );
+    try std.testing.expect(std.mem.indexOf(u8, conditional, "retain") != null);
+}
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC historical duplicated tree and overlapping captured mutation refuse" {
+    try refuses(std.testing.allocator,
+        \\enum Tree:
+        \\    leaf(value: float)
+        \\    branch(left: Tree, right: Tree)
+        \\func main() -> int:
+        \\    mut tree = Tree.leaf(value=0.0)
+        \\    for _ in range(40):
+        \\        tree = Tree.branch(left=tree, right=tree)
+        \\    return 0
+    , "E_SINGLE_OWNER_MOVED");
+    try refuses(std.testing.allocator,
+        \\record Cursor:
+        \\    rows: int[][]
+        \\    ticks: int
+        \\func tick(mut cursor: Cursor) -> int:
+        \\    cursor.ticks += 1
+        \\    return 0
+        \\func add(mut row: int[], ignored: int):
+        \\    row.append(9)
+        \\func main() -> int:
+        \\    mut cursor = Cursor(rows=[[1], [2]], ticks=0)
+        \\    add(mut cursor.rows[-1], tick(mut cursor))
+        \\    return cursor.ticks
+    , "E_SINGLE_OWNER_OVERLAP");
+}
 
 // spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
 test "zero RC list slot nested writeback preserves exact owner and index" {
