@@ -396,8 +396,9 @@ fn unitObjects(native: Native, places: Places, settings: unit_cache.Settings, re
         try pending.append(a, .{ .unit = unit, .key = key, .object = object, .slot = objects.items.len - 1, .served = served });
         try jobs.append(a, .{ .argv = try compileArguments(native, request.mode.level(), object, source), .weight = unit.llvm.len });
     }
-    // Partials of a failed build are removed; published ones already moved away.
-    defer for (pending.items) |item| removeFile(native.io, item.object);
+    // Cached partials are removed after publication or failure. Uncached
+    // objects remain in staging until the caller links and removes that tree.
+    defer discardCachedPartials(native, places.cacheable, pending.items);
     try unit_cache.compileAll(native.resources(), jobs.items, unit_cache.width(native.environment, jobs.items.len));
     native.counts.processes += @intCast(jobs.items.len);
     for (jobs.items) |job| try native.log.appendSlice(a, job.log.items);
@@ -412,6 +413,11 @@ fn unitObjects(native: Native, places: Places, settings: unit_cache.Settings, re
         const stored = if (places.cacheable) try store.publish(a, native.io, item.key, ".o", item.object) else try unit_cache.found(a, native.io, item.object);
         objects.items[item.slot] = .{ .path = stored.path, .digest = stored.digest };
     }
+}
+
+fn discardCachedPartials(native: Native, cacheable: bool, pending: []const Pending) void {
+    if (!cacheable) return;
+    for (pending) |item| removeFile(native.io, item.object);
 }
 
 /// `--verify-cache`: a served object must equal a fresh compile of its text.
