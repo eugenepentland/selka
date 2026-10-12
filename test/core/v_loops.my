@@ -34,8 +34,8 @@ func skip_odd(n: int) -> int:
 
 func rebinding(values: int[]) -> int:
     mut total = 0
-    mut names = values
-    for x in names:
+    mut names = values.copy()
+    for x in names.copy():
         names = [7]
         total += x
     return total * 10 + len(names)

@@ -15,7 +15,7 @@ func mark(mut log: int[], value: int) -> int:
 # spec: NEW-CORE-LIST-S3-2
 public func test_bounds_first_occurrence_and_scalar_snapshots() -> bool:
     mut values = [3, 1, 2, 1]
-    mut before = values
+    mut before = values.copy()
     if values.index(1) != 1:
         return False
     values.insert(-99, 8)
@@ -32,9 +32,9 @@ public func test_bounds_first_occurrence_and_scalar_snapshots() -> bool:
 # spec-case: NEW-CORE-LIST-S3-2
 public func test_managed_removed_values_and_none_placeholders_survive_clear() -> bool:
     mut values = [[1], [2], [1]]
-    mut before = values
+    mut before = values.copy()
     mut removed = values.pop(-2)
-    values.insert(0, removed)
+    values.insert(0, removed.copy())
     values.remove([1])
     values[0].append(9)
     values.clear()
@@ -48,9 +48,13 @@ public func test_managed_removed_values_and_none_placeholders_survive_clear() ->
 # spec-case: NEW-CORE-LIST-S3-2
 public func test_readonly_index_captures_receiver_before_needle_mutation() -> bool:
     mut values = [1, 2, 3]
-    mut index = values.index(clear_needle(mut values))
+    const captured_values = values.copy()
+    const needle = clear_needle(mut values)
+    mut index = captured_values.index(needle)
     mut holder = Holder(items=[1, 2, 3])
-    mut nested = holder.items.index(clear_needle(mut holder.items))
+    const captured_items = holder.items.copy()
+    const nested_needle = clear_needle(mut holder.items)
+    mut nested = captured_items.index(nested_needle)
     return index == 2 and nested == 2 and len(values) == 0 and len(holder.items) == 0
 
 

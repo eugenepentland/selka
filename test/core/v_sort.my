@@ -53,7 +53,7 @@ func main(out: Stream) -> int:
                 ok = False
         out.print(n, ok, digest(xs), digest(ys), digest(sorted(ys)))
     mut values = [5, -3, 9, 0, -3, 12, 7]
-    mut snapshot = values
+    mut snapshot = values.copy()
     values.sort()
     out.print(digest(values), digest(snapshot), values[0], values[6])
     mut words = ["pear", "fig", "apple", "fig", "éclair", "zebra", "Apple", ""]

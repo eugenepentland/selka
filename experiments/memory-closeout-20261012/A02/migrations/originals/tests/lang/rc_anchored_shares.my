@@ -1,0 +1,51 @@
+# A receiver captured before a `mut` call that only updates count-free fields
+# of its root is read in place (RC-INTERVAL-ANCHOR-1); its copy transfer needs
+# no owner of its own, and publishing one would strand it in the operand
+# journal (RC-ANCHORED-SHARE-1). Answers match the collector; RC counting
+# builds balance.
+record Frame:
+    items: int[]
+    name: str
+    n: int
+
+
+func touch(mut frame: Frame, v: int) -> int:
+    frame.n = frame.n + v
+    return 0
+
+
+func grow(mut frame: Frame, v: int) -> int:
+    frame.items.append(v)
+    return 1
+
+
+func read_touched(mut frame: Frame) -> int:
+    return frame.items[touch(mut frame, 7) % len(frame.items)]
+
+
+func read_both(mut frame: Frame) -> int:
+    mut total = 0
+    if len(frame.items) > 0:
+        total = total + frame.items[touch(mut frame, 7) % len(frame.items)]
+    if len(frame.items) > 0:
+        total = total + frame.items[grow(mut frame, frame.n) % len(frame.items)]
+    return total
+
+
+public func test_a_receiver_read_across_a_count_free_update_is_read_in_place() -> bool:
+    mut frame = Frame(items=[1, 2], name="nm" + "x", n=1)
+    mut first = read_touched(mut frame)
+    return first == 1 and frame.items == [1, 2] and frame.n == 8
+
+
+public func test_count_free_and_growing_index_calls_mix_in_one_frame() -> bool:
+    mut frame = Frame(items=[1, 2], name="nm" + "x", n=1)
+    mut first = read_both(mut frame)
+    mut second = read_both(mut frame)
+    return first == 3 and second == 3 and frame.items == [1, 2, 8, 15] and frame.n == 15
+
+
+func main(out: Stream) -> int:
+    out.print(test_a_receiver_read_across_a_count_free_update_is_read_in_place())
+    out.print(test_count_free_and_growing_index_calls_mix_in_one_frame())
+    return 0

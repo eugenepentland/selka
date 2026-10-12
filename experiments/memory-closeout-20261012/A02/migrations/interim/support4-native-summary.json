@@ -1,0 +1,220 @@
+{
+  "compiler_source": "66890fbc5135a771e6a423724d13c30018ab717f",
+  "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+  "status": "partial; remaining native batches running",
+  "files": {
+    "tests/value_semantics/calls.my": {
+      "evidence": "migrations/interim/support4-native-batch-0.json",
+      "source_sha256": "c3b643395ff12d933c0052d2c2942adec07e00f17bce227a04df51300f82799e",
+      "test_count": 3,
+      "modes": {
+        "ordinary": {
+          "status": 0,
+          "tests_passed": true,
+          "leak_free": true,
+          "binary_sha256": "75f5cd9f8c547ccf062b2301fbb15f4dc683a9e869b8b1d1378e80891197ed77",
+          "llvm_sha256": "434a6366d35659d950e72179fc8e378c91f51156ae8a3298afc0ff57eac28f55",
+          "rc_events": 9,
+          "live_bytes_at_exit": 0
+        },
+        "zero": {
+          "status": 0,
+          "tests_passed": true,
+          "leak_free": true,
+          "symbols_clean": true,
+          "binary_sha256": "05e833b38f2cd1bcb730b4cfd3162c05ede335c8d036e08bf1205e3b221d77db",
+          "llvm_sha256": "a0bf8d3963fc8ec572e6276477278a0ae7b164583e09b3f892264e192532e394",
+          "rc_events": 9,
+          "live_bytes_at_exit": 0
+        }
+      }
+    },
+    "tests/value_semantics/collections.my": {
+      "evidence": "migrations/interim/support4-native-batch-0.json",
+      "source_sha256": "56a45f3beae20041690bed02017eaf7fd65d36c62803e4ac113b9bc1ae31fce7",
+      "test_count": 7,
+      "modes": {
+        "ordinary": {
+          "status": 0,
+          "tests_passed": true,
+          "leak_free": true,
+          "binary_sha256": "04fd3f3c87073b80782008e1e81071b63fe981a6848240ce105293960070d1a1",
+          "llvm_sha256": "ee95f78d8cb128eb684abcb0d9bc6c2d736b0db2992acd3fcf90abdb50832f6c",
+          "rc_events": 49,
+          "live_bytes_at_exit": 0
+        },
+        "zero": {
+          "status": -6
+        }
+      }
+    },
+    "tests/value_semantics/copy_roots.my": {
+      "evidence": "migrations/interim/support4-native-batch-0.json",
+      "source_sha256": "1d2e7bb045d89f59032d6c2a158fe4f6a6a2dbbbf5d9dd9642c15f79c18b5dea",
+      "test_count": 2,
+      "modes": {
+        "ordinary": {
+          "status": 0,
+          "tests_passed": true,
+          "leak_free": true,
+          "binary_sha256": "645f0919c1911371be6e3d52ff8e902480816fe19f0696c261a6dd24f1a06c5f",
+          "llvm_sha256": "2fc24edbed2b4e4f888b47a52ad85f5b0d8b026bfa5108fa9227a114c6aed2a3",
+          "rc_events": 6,
+          "live_bytes_at_exit": 0
+        },
+        "zero": {
+          "status": 0,
+          "tests_passed": true,
+          "leak_free": true,
+          "symbols_clean": true,
+          "binary_sha256": "d7d8c565c020d7e9e4d9ad29500efb7b0604387d41f24236d028626b88021b8f",
+          "llvm_sha256": "c762a28d7ac79eb0fd7e9414dc8c310026c11fefde4228fdb14da96062d2295a",
+          "rc_events": 4,
+          "live_bytes_at_exit": 0
+        }
+      }
+    },
+    "tests/value_semantics/copy_scratch.my": {
+      "evidence": "migrations/interim/support4-native-batch-1.json",
+      "source_sha256": "d8026055fc4002e22ba91ad17fae98533ef4d7d132ef4d86909896e4f8fe7c41",
+      "test_count": 2,
+      "modes": {
+        "ordinary": {
+          "status": 0,
+          "tests_passed": true,
+          "leak_free": true,
+          "binary_sha256": "4b644a1bca3bc3cd2deb92be040f6f759c54c124a1124b56b36c9ccf7344d4e8",
+          "llvm_sha256": "c6e4bd221a9e233b6dc6fbfcd926ec62ce84b0bfa5183147bec1c483f420773e",
+          "rc_events": 21,
+          "live_bytes_at_exit": 0
+        },
+        "zero": {
+          "status": 0,
+          "tests_passed": true,
+          "leak_free": true,
+          "symbols_clean": true,
+          "binary_sha256": "58ba09e717c8a05370779614f6c55a4a7549264ba5e0480415143a3dce0af5d8",
+          "llvm_sha256": "3043464896b27ebde54d9662d17ce9a05bafe71bcac91899044593bdca7aa4f8",
+          "rc_events": 8,
+          "live_bytes_at_exit": 0
+        }
+      }
+    },
+    "tests/value_semantics/field_return.my": {
+      "evidence": "migrations/interim/support4-native-batch-1.json",
+      "source_sha256": "e1c9e80ec8c73835ea98de1fc36a383a8cee264a7fe003540864bbefa4dcf582",
+      "test_count": 11,
+      "modes": {
+        "ordinary": {
+          "status": 0,
+          "tests_passed": true,
+          "leak_free": true,
+          "binary_sha256": "16c4f2a9aefdd03eb2a71287ee4483163f478598d26c57c493375ca39dc7a313",
+          "llvm_sha256": "ed6b272932b3d61c298f33753a5f30d01f4d338542838fad75d525fe536ebbab",
+          "rc_events": 104,
+          "live_bytes_at_exit": 0
+        },
+        "zero": {
+          "status": 0,
+          "tests_passed": true,
+          "leak_free": true,
+          "symbols_clean": true,
+          "binary_sha256": "ec7ef38c6cb7f8da0ff5a379e16e13d484884b99980dcfa493fc62bc76e59211",
+          "llvm_sha256": "83166080563d55d66f12d43942d04c63740864d836356bac3e01b31f310b0df7",
+          "rc_events": 52,
+          "live_bytes_at_exit": 0
+        }
+      }
+    },
+    "tests/value_semantics/index_return.my": {
+      "evidence": "migrations/interim/support4-native-batch-1.json",
+      "source_sha256": "ffd24ebec47c2d636a47d8da687e5e2eb0ba2bbf5833d3dad5b7013cfa98a200",
+      "test_count": 20,
+      "modes": {
+        "ordinary": {
+          "status": 0,
+          "tests_passed": true,
+          "leak_free": true,
+          "binary_sha256": "d7f2be290e9cd694789d6e9c2d14fef003ae7cea905ac3629a07f75af057a86b",
+          "llvm_sha256": "69f385eb3fff0ace2ac86de58e0e5ee9fc1c98b7ca580584f3221a92554831dd",
+          "rc_events": 245,
+          "live_bytes_at_exit": 0
+        },
+        "zero": {
+          "status": 0,
+          "tests_passed": true,
+          "leak_free": true,
+          "symbols_clean": true,
+          "binary_sha256": "9d45d699bfd0b6c7dd8eead2cb42478f72df9d6c56e3c8016dcd81f6aaccc8e8",
+          "llvm_sha256": "112d686eb8d1677239af50ed1d4995c663fab3fcc3a97f1f24c731e2deedd443",
+          "rc_events": 109,
+          "live_bytes_at_exit": 0
+        }
+      }
+    },
+    "tests/value_semantics/interactions.my": {
+      "evidence": "migrations/interim/support4-native-batch-2.json",
+      "source_sha256": "d1fd631c5edaac997e7a1ec5ccc6abd8d8f0431e91159406f80f2a0f0811cbe6",
+      "test_count": 3,
+      "modes": {
+        "ordinary": {
+          "status": 0,
+          "tests_passed": true,
+          "leak_free": true,
+          "binary_sha256": "662c97c6227dcede119c79c3836295e5803428a688b210fcfc03d2755a2d58c4",
+          "llvm_sha256": "468917e908a9af2c9e3f525f588491a8fec92c1c052e6e375c7fd0267b8687ba",
+          "rc_events": 25,
+          "live_bytes_at_exit": 0
+        },
+        "zero": {
+          "status": 0,
+          "tests_passed": true,
+          "leak_free": true,
+          "symbols_clean": true,
+          "binary_sha256": "fca06a338502802bd42df1d1b7cec5f2dd904e91d45b12bc2add150200d9091d",
+          "llvm_sha256": "c8190329169f93ac5f442ebcc30a00ab4ff55772d75464ac537c7167d615bf0a",
+          "rc_events": 11,
+          "live_bytes_at_exit": 0
+        }
+      }
+    },
+    "tests/value_semantics/nested_array_callbacks.my": {
+      "evidence": "migrations/interim/support4-native-batch-2.json",
+      "source_sha256": "afd92a351bf2e15618cacc2f5c1696f92b310bf28f3cd1f9f2c9f9aa36bd995b",
+      "test_count": 18,
+      "modes": {
+        "ordinary": {
+          "status": 0,
+          "tests_passed": true,
+          "leak_free": true,
+          "binary_sha256": "3fd97cf3f931c61d73840d58293e4ef5169db5ad7dc2b07f17098375ccf469e8",
+          "llvm_sha256": "344c842439a1098160a85c32a02fa4ae0d3df11c4f56d570e3ff6faefd851284",
+          "rc_events": 2611,
+          "live_bytes_at_exit": 0
+        },
+        "zero": {
+          "status": 1
+        }
+      }
+    },
+    "tests/value_semantics/nested_arrays.my": {
+      "evidence": "migrations/interim/support4-native-batch-2.json",
+      "source_sha256": "6bc59f43bf3945e2aff1a482cd360dd984d413a966d3e1c9700bcb85efd7dc0b",
+      "test_count": 17,
+      "modes": {
+        "ordinary": {
+          "status": 0,
+          "tests_passed": true,
+          "leak_free": true,
+          "binary_sha256": "8b689c43e61389c512108e3dfbe85a70fa212a0869fd203cec431254b4d38465",
+          "llvm_sha256": "32cf446751bb73d77db2230c6324c89dbfae26b13ea984344faf96731f11467f",
+          "rc_events": 324,
+          "live_bytes_at_exit": 0
+        },
+        "zero": {
+          "status": 1
+        }
+      }
+    }
+  }
+}

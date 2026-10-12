@@ -9,10 +9,10 @@ enum Item:
 
 
 func change(mut items: Item[], index: int, value: int):
-    match items[index]:
+    match items[index].copy():
         case Item.payload(value=old):
             mut number = old.number
-            mut fields = old.items
+            mut fields = old.items.copy()
             fields.append(value)
             items[index] = Item.payload(value=Payload(number=number, items=fields))
         case Item.empty:
@@ -22,23 +22,23 @@ func change(mut items: Item[], index: int, value: int):
 func contents(items: Item[], index: int) -> int[]:
     match items[index]:
         case Item.payload(value=old):
-            return old.items
+            return old.items.copy()
         case Item.empty:
             return []
 
 
 public func test_mut_list_caller_detaches_shared_outer_before_projection() -> bool:
     mut items = [Item.payload(value=Payload(number=0, items=[1]))]
-    mut saved = items
+    mut saved = items.copy()
     change(mut items, -1, 2)
     return contents(items, 0) == [1, 2] and contents(saved, 0) == [1]
 
 
 func observe(mut items: Item[], index: int) -> int:
     mut seen = -1
-    match items[index]:
+    match items[index].copy():
         case Item.payload(value=old):
-            mut fields = old.items
+            mut fields = old.items.copy()
             fields.append(2)
             seen = len(contents(items, index))
             items[index] = Item.payload(value=Payload(number=0, items=fields))
@@ -54,9 +54,9 @@ public func test_parent_observation_keeps_snapshot() -> bool:
 
 func observe_payload(mut items: Item[], index: int) -> int:
     mut seen = -1
-    match items[index]:
+    match items[index].copy():
         case Item.payload(value=old):
-            mut fields = old.items
+            mut fields = old.items.copy()
             fields.append(2)
             seen = len(old.items)
             items[index] = Item.payload(value=Payload(number=0, items=fields))
@@ -71,9 +71,9 @@ public func test_payload_observation_keeps_snapshot() -> bool:
 
 
 func leave_early(mut items: Item[], index: int, stop: bool):
-    match items[index]:
+    match items[index].copy():
         case Item.payload(value=old):
-            mut fields = old.items
+            mut fields = old.items.copy()
             fields.append(2)
             if stop:
                 return
@@ -90,9 +90,9 @@ public func test_early_return_keeps_original_element() -> bool:
 
 func change_index(mut items: Item[], initial: int):
     mut index = initial
-    match items[index]:
+    match items[index].copy():
         case Item.payload(value=old):
-            mut fields = old.items
+            mut fields = old.items.copy()
             fields.append(2)
             index = 1
             items[index] = Item.payload(value=Payload(number=0, items=fields))
@@ -108,10 +108,10 @@ public func test_changed_index_keeps_original_element() -> bool:
 
 func capture_index(mut items: Item[], initial: int):
     mut index = initial
-    match items[index]:
+    match items[index].copy():
         case Item.payload(value=old):
             index = old.number
-            mut fields = old.items
+            mut fields = old.items.copy()
             fields.append(2)
             items[index] = Item.payload(value=Payload(number=0, items=fields))
         case Item.empty:
@@ -126,11 +126,11 @@ public func test_index_changed_before_extraction_keeps_original() -> bool:
 
 func survive(mut items: Item[], index: int) -> int[]:
     mut fields: int[] = []
-    match items[index]:
+    match items[index].copy():
         case Item.payload(value=old):
-            fields = old.items
+            fields = old.items.copy()
             fields.append(2)
-            items[index] = Item.payload(value=Payload(number=0, items=fields))
+            items[index] = Item.payload(value=Payload(number=0, items=fields.copy()))
             fields.append(3)
         case Item.empty:
             pass
@@ -145,9 +145,9 @@ public func test_surviving_temporary_keeps_independent_post_store_value() -> boo
 
 func alias_parameter(mut items: Item[], mut other: Item[], index: int) -> int:
     mut seen = -1
-    match items[index]:
+    match items[index].copy():
         case Item.payload(value=old):
-            mut fields = old.items
+            mut fields = old.items.copy()
             fields.append(2)
             seen = len(contents(other, index))
             other.append(Item.empty)
@@ -161,15 +161,15 @@ func alias_parameter(mut items: Item[], mut other: Item[], index: int) -> int:
 # (MUT-EXCLUSIVE-1); a copy sharing the element must not see the early write.
 public func test_other_mut_parameter_cannot_observe_early_mutation() -> bool:
     mut items = [Item.payload(value=Payload(number=0, items=[1]))]
-    mut other = items
+    mut other = items.copy()
     mut seen = alias_parameter(mut items, mut other, 0)
     return seen == 1 and contents(items, 0) == [1, 2] and len(items) == 1 and contents(other, 0) == [1] and len(other) == 2
 
 
 func grow_parent(mut items: Item[], index: int):
-    match items[index]:
+    match items[index].copy():
         case Item.payload(value=old):
-            mut fields = old.items
+            mut fields = old.items.copy()
             fields.append(2)
             items.append(Item.empty)
             items[index] = Item.payload(value=Payload(number=0, items=fields))
@@ -184,10 +184,10 @@ public func test_parent_growth_keeps_checked_original_index() -> bool:
 
 
 func local_parent(items: Item[], index: int) -> Item[]:
-    mut changed = items
-    match changed[index]:
+    mut changed = items.copy()
+    match changed[index].copy():
         case Item.payload(value=old):
-            mut fields = old.items
+            mut fields = old.items.copy()
             fields.append(2)
             changed[index] = Item.payload(value=Payload(number=0, items=fields))
         case Item.empty:
@@ -202,9 +202,9 @@ public func test_local_parent_retains_outer_snapshot() -> bool:
 
 
 func loop_commit(mut items: Item[], index: int):
-    match items[index]:
+    match items[index].copy():
         case Item.payload(value=old):
-            mut fields = old.items
+            mut fields = old.items.copy()
             for i in range(80):
                 fields.append(i)
             items[index] = Item.payload(value=Payload(number=0, items=fields))
@@ -214,7 +214,7 @@ func loop_commit(mut items: Item[], index: int):
 
 public func test_closed_loop_commits_and_preserves_a_caller_snapshot() -> bool:
     mut items = [Item.payload(value=Payload(number=0, items=[1]))]
-    mut saved = items
+    mut saved = items.copy()
     loop_commit(mut items, 0)
     return len(contents(items, 0)) == 81 and contents(saved, 0) == [1]
 
@@ -223,9 +223,9 @@ func leave_loop(mut items: Item[], index: int, breaking: bool):
     mut i = 0
     while i < 1:
         i += 1
-        match items[index]:
+        match items[index].copy():
             case Item.payload(value=old):
-                mut fields = old.items
+                mut fields = old.items.copy()
                 fields.append(2)
                 if breaking:
                     break
@@ -245,11 +245,11 @@ public func test_break_and_continue_cannot_skip_commit() -> bool:
 
 
 func earlier_match(mut items: Item[], index: int) -> int:
-    match items[index]:
+    match items[index].copy():
         case Item.payload(value=before):
-            match items[index]:
+            match items[index].copy():
                 case Item.payload(value=old):
-                    mut fields = old.items
+                    mut fields = old.items.copy()
                     fields.append(2)
                     mut seen = len(before.items)
                     items[index] = Item.payload(value=Payload(number=0, items=fields))
@@ -267,10 +267,10 @@ public func test_earlier_match_binding_stays_independent() -> bool:
 
 
 func earlier_local(mut items: Item[], index: int) -> int:
-    mut before = items[index]
-    match items[index]:
+    mut before = items[index].copy()
+    match items[index].copy():
         case Item.payload(value=old):
-            mut fields = old.items
+            mut fields = old.items.copy()
             fields.append(2)
             mut seen = 0
             match before:
@@ -291,10 +291,10 @@ public func test_earlier_element_local_stays_independent() -> bool:
 
 
 func earlier_parent(mut items: Item[], index: int) -> int:
-    mut before = items
-    match items[index]:
+    mut before = items.copy()
+    match items[index].copy():
         case Item.payload(value=old):
-            mut fields = old.items
+            mut fields = old.items.copy()
             fields.append(2)
             mut seen = len(contents(before, index))
             items[index] = Item.payload(value=Payload(number=0, items=fields))
@@ -310,9 +310,9 @@ public func test_earlier_parent_snapshot_stays_independent() -> bool:
 
 
 func readonly_alias(mut items: Item[], before: Item[], index: int) -> int:
-    match items[index]:
+    match items[index].copy():
         case Item.payload(value=old):
-            mut fields = old.items
+            mut fields = old.items.copy()
             fields.append(2)
             mut seen = len(contents(before, index))
             items[index] = Item.payload(value=Payload(number=0, items=fields))
@@ -324,14 +324,15 @@ func readonly_alias(mut items: Item[], before: Item[], index: int) -> int:
 
 public func test_readonly_parameter_alias_is_a_snapshot() -> bool:
     mut items = [Item.payload(value=Payload(number=0, items=[1]))]
-    return readonly_alias(mut items, items, 0) == 1 and contents(items, 0) == [1, 2]
+    const before_call = items.copy()
+    return readonly_alias(mut items, before_call, 0) == 1 and contents(items, 0) == [1, 2]
 
 
 func iterator_alias(mut items: Item[], index: int) -> int:
-    for before in items:
-        match items[index]:
+    for before in items.copy():
+        match items[index].copy():
             case Item.payload(value=old):
-                mut fields = old.items
+                mut fields = old.items.copy()
                 fields.append(2)
                 mut seen = 0
                 match before:
@@ -353,16 +354,16 @@ public func test_iteration_binding_stays_independent() -> bool:
 
 public func test_earlier_match_with_caller_snapshot_stays_independent() -> bool:
     mut items = [Item.payload(value=Payload(number=0, items=[1]))]
-    mut saved = items
+    mut saved = items.copy()
     return earlier_match(mut items, -1) == 1 and contents(items, 0) == [1, 2] and contents(saved, 0) == [1]
 
 
 func earlier_match_after(mut items: Item[], index: int) -> int:
-    match items[index]:
+    match items[index].copy():
         case Item.payload(value=before):
-            match items[index]:
+            match items[index].copy():
                 case Item.payload(value=old):
-                    mut fields = old.items
+                    mut fields = old.items.copy()
                     fields.append(2)
                     items[index] = Item.payload(value=Payload(number=0, items=fields))
                     mut seen = len(before.items)
@@ -380,12 +381,12 @@ public func test_earlier_match_observed_after_store() -> bool:
 
 
 func earlier_child(mut items: Item[], index: int) -> int:
-    match items[index]:
+    match items[index].copy():
         case Item.payload(value=before):
-            mut saved = before.items
-            match items[index]:
+            mut saved = before.items.copy()
+            match items[index].copy():
                 case Item.payload(value=old):
-                    mut fields = old.items
+                    mut fields = old.items.copy()
                     fields.append(2)
                     mut seen = len(saved)
                     items[index] = Item.payload(value=Payload(number=0, items=fields))

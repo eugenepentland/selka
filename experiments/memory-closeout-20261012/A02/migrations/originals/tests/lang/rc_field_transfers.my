@@ -1,0 +1,142 @@
+record Holder:
+    items: int[]
+    marker: int
+
+
+record Nested:
+    inner: Holder
+
+
+func push(mut items: int[], value: int):
+    items.append(value)
+
+
+func change(mut holder: Holder, value: int):
+    mut work = holder.items
+    push(mut work, value)
+    holder.items = work
+
+
+func twice(mut holder: Holder):
+    mut first = holder.items
+    push(mut first, 2)
+    holder.items = first
+    mut second = holder.items
+    push(mut second, 3)
+    holder.items = second
+
+
+func observe(mut holder: Holder):
+    mut work = holder.items
+    push(mut work, 2)
+    assert holder.items == [1]
+    holder.items = work
+
+
+func optional(mut holder: Holder, stop: bool):
+    mut work = holder.items
+    push(mut work, 2)
+    if stop:
+        return
+    holder.items = work
+
+
+func alias_argument(mut holder: Holder, other: Holder):
+    mut work = holder.items
+    push(mut work, 2)
+    assert other.items == [1]
+    holder.items = work
+
+
+func nested(mut holder: Nested):
+    mut work = holder.inner.items
+    push(mut work, 2)
+    holder.inner.items = work
+
+
+public func test_closed_field_restores_empty_and_nonempty_source() -> bool:
+    mut empty = Holder(items=[], marker=7)
+    change(mut empty, 4)
+    mut full = Holder(items=[1], marker=9)
+    change(mut full, 2)
+    return empty.items == [4] and empty.marker == 7 and full.items == [1, 2] and full.marker == 9
+
+
+public func test_closed_field_repeated_extractions_return_each_owner() -> bool:
+    mut holder = Holder(items=[1], marker=7)
+    twice(mut holder)
+    change(mut holder, 4)
+    return holder.items == [1, 2, 3, 4] and holder.marker == 7
+
+
+public func test_closed_field_preserves_caller_snapshot() -> bool:
+    mut holder = Holder(items=[1], marker=7)
+    mut saved = holder
+    twice(mut holder)
+    saved.items.append(9)
+    return holder.items == [1, 2, 3] and saved.items == [1, 9]
+
+
+public func test_observed_field_keeps_an_independent_local_value() -> bool:
+    mut holder = Holder(items=[1], marker=7)
+    observe(mut holder)
+    return holder.items == [1, 2]
+
+
+public func test_closed_field_refuses_early_exit_and_alias_argument() -> bool:
+    mut holder = Holder(items=[1], marker=7)
+    optional(mut holder, True)
+    assert holder.items == [1]
+    alias_argument(mut holder, holder)
+    return holder.items == [1, 2]
+
+
+public func test_nested_field_uses_existing_path_behavior() -> bool:
+    mut holder = Nested(inner=Holder(items=[1], marker=7))
+    mut saved = holder
+    nested(mut holder)
+    return holder.inner.items == [1, 2] and saved.inner.items == [1]
+
+
+func initialized(mut holder: Holder):
+    mut work = [8, 9]
+    work = holder.items
+    push(mut work, 2)
+    holder.items = work
+
+
+public func test_closed_field_releases_the_previous_target_once() -> bool:
+    mut holder = Holder(items=[1], marker=7)
+    initialized(mut holder)
+    return holder.items == [1, 2]
+
+
+record ObservedHolder:
+    items: int[]
+    view: int[]
+
+
+func observed_root(mut holder: ObservedHolder):
+    mut work = holder.items
+    push(mut work, 2)
+    holder.items = work
+
+
+public func test_snapshot_root_keeps_existing_transfer_rules() -> bool:
+    mut mapping = {0: 7}
+    mut holder = ObservedHolder(items=[1], view=list(mapping.values()))
+    observed_root(mut holder)
+    mapping[0] = 9
+    return holder.items == [1, 2] and list(holder.view) == [7]
+
+
+func main(out: Stream) -> int:
+    out.print(test_closed_field_restores_empty_and_nonempty_source())
+    out.print(test_closed_field_repeated_extractions_return_each_owner())
+    out.print(test_closed_field_preserves_caller_snapshot())
+    out.print(test_observed_field_keeps_an_independent_local_value())
+    out.print(test_closed_field_refuses_early_exit_and_alias_argument())
+    out.print(test_nested_field_uses_existing_path_behavior())
+    out.print(test_closed_field_releases_the_previous_target_once())
+    out.print(test_snapshot_root_keeps_existing_transfer_rules())
+    return 0

@@ -7,7 +7,7 @@ func build(count: int) -> int[]:
 
 public func test_fresh_growth_and_post_loop_publication_keep_real_owners() -> bool:
     mut items = build(257)
-    mut before = items
+    mut before = items.copy()
     items[-1] = 999
     return len(items) == 257 and items[256] == 999 and before[256] == 256
 
@@ -24,7 +24,7 @@ public func test_comprehension_handoff_and_plain_terminal_return() -> bool:
 
 public func test_preexisting_snapshot_refuses_fresh_loop_assumption() -> bool:
     mut items = [1]
-    mut before = items
+    mut before = items.copy()
     for at in range(5):
         items.append(at)
     return before == [1] and items == [1, 0, 1, 2, 3, 4]
@@ -34,7 +34,7 @@ public func test_snapshot_created_inside_loop_stays_independent() -> bool:
     mut items = [1]
     mut before: int[] = []
     for at in range(5):
-        before = items
+        before = items.copy()
         items.append(at)
     return before == [1, 0, 1, 2, 3] and items == [1, 0, 1, 2, 3, 4]
 
@@ -45,7 +45,7 @@ public func test_prior_enclosing_iteration_publication_refuses_freshness() -> bo
     for outer in range(3):
         for at in range(2):
             items.append(at)
-        saved.append(items)
+        saved.append(items.copy())
     return saved == [[1, 0, 1], [1, 0, 1, 0, 1], [1, 0, 1, 0, 1, 0, 1]]
 
 
@@ -64,7 +64,7 @@ public func test_callback_retains_pending_receiver_protocol() -> bool:
 
 public func test_zero_iterations_preserve_shared_receiver_and_order() -> bool:
     mut items = [7]
-    mut before = items
+    mut before = items.copy()
     for at in range(0):
         items[100] = 9
     return items == [7] and before == [7]
@@ -72,7 +72,7 @@ public func test_zero_iterations_preserve_shared_receiver_and_order() -> bool:
 
 public func test_sorted_hidden_parent_and_named_alias_survive_handoff() -> bool:
     mut items = sorted([3, 1, 2])
-    mut before = items
+    mut before = items.copy()
     for at in range(3):
         items[at] = at + 10
     return before == [1, 2, 3] and items == [10, 11, 12]

@@ -38,10 +38,10 @@ func put(mut t: Table, value: int):
 
 
 func returned(mut objects: Obj[], ref: int, value: int):
-    match objects[ref]:
+    match objects[ref].copy():
         case Obj.instance(value=instance):
             mut klass = instance.klass
-            mut fields = instance.fields
+            mut fields = instance.fields.copy()
             put(mut fields, value)
             objects[ref] = Obj.instance(value=Instance(klass=klass, fields=fields))
         case _:
@@ -49,10 +49,10 @@ func returned(mut objects: Obj[], ref: int, value: int):
 
 
 func observed(mut objects: Obj[], ref: int, value: int):
-    match objects[ref]:
+    match objects[ref].copy():
         case Obj.instance(value=instance):
             mut klass = instance.klass
-            mut fields = instance.fields
+            mut fields = instance.fields.copy()
             put(mut fields, value + len(objects))
             objects[ref] = Obj.instance(value=Instance(klass=klass, fields=fields))
         case _:
@@ -60,10 +60,10 @@ func observed(mut objects: Obj[], ref: int, value: int):
 
 
 func elsewhere(mut objects: Obj[], ref: int, value: int):
-    match objects[ref]:
+    match objects[ref].copy():
         case Obj.instance(value=instance):
             mut klass = instance.klass
-            mut fields = instance.fields
+            mut fields = instance.fields.copy()
             put(mut fields, value)
             objects[0] = Obj.instance(value=Instance(klass=klass, fields=fields))
         case _:
@@ -71,10 +71,10 @@ func elsewhere(mut objects: Obj[], ref: int, value: int):
 
 
 func early(mut objects: Obj[], ref: int, value: int):
-    match objects[ref]:
+    match objects[ref].copy():
         case Obj.instance(value=instance):
             mut klass = instance.klass
-            mut fields = instance.fields
+            mut fields = instance.fields.copy()
             put(mut fields, value)
             if value < 0:
                 return
@@ -84,13 +84,13 @@ func early(mut objects: Obj[], ref: int, value: int):
 
 
 func make_instance(klass: int, entries: int[]) -> Obj:
-    return Obj.instance(value=Instance(klass=klass, fields=Table(entries=entries, count=len(entries))))
+    return Obj.instance(value=Instance(klass=klass, fields=Table(entries=entries.copy(), count=len(entries))))
 
 
 func entries_of(obj: Obj) -> int[]:
     match obj:
         case Obj.instance(value=found):
-            return found.fields.entries
+            return found.fields.entries.copy()
         case _:
             return []
 
@@ -105,7 +105,7 @@ func klass_of(obj: Obj) -> int:
 
 public func test_field_moved_out_of_a_dead_local_changes_in_place() -> bool:
     mut box = fresh(4)
-    mut items = box.items
+    mut items = box.items.copy()
     items[0] = 7
     items.append(8)
     return items == [7, 0, 0, 8]
@@ -113,8 +113,8 @@ public func test_field_moved_out_of_a_dead_local_changes_in_place() -> bool:
 
 public func test_snapshot_taken_before_the_move_keeps_its_values() -> bool:
     mut box = fresh(4)
-    mut saved = box.items
-    mut items = box.items
+    mut saved = box.items.copy()
+    mut items = box.items.copy()
     items[0] = 9
     return saved == [0, 0, 0] and items == [9, 0, 0]
 
@@ -125,7 +125,7 @@ public func test_match_binding_field_move() -> bool:
     match slot:
         case Slot.full(value=box):
             mut tag = box.tag
-            mut items = box.items
+            mut items = box.items.copy()
             items[1] = 5
             total = items[1] + tag
         case _:
@@ -141,7 +141,7 @@ public func test_match_binding_field_move() -> bool:
 
 public func test_source_read_after_the_extraction_keeps_its_field() -> bool:
     mut box = fresh(2)
-    mut items = box.items
+    mut items = box.items.copy()
     items[0] = 6
     return box.items == [0, 0, 0] and items == [6, 0, 0]
 
@@ -151,7 +151,7 @@ public func test_source_reused_in_a_loop_keeps_its_field() -> bool:
     mut total = 0
     mut i = 0
     while i < 3:
-        mut items = box.items
+        mut items = box.items.copy()
         items[0] = i + 1
         total += items[0] + box.items[0]
         i += 1
@@ -165,7 +165,7 @@ func rename(mut box: Box, tag: int):
 public func test_source_passed_mut_keeps_its_field() -> bool:
     mut box = fresh(2)
     rename(mut box, 5)
-    mut items = box.items
+    mut items = box.items.copy()
     items[2] = 1
     return box.tag == 5 and items == [0, 0, 1]
 
@@ -183,21 +183,21 @@ public func test_same_slot_return_updates_the_element() -> bool:
 
 public func test_list_snapshot_before_the_return_keeps_the_old_payload() -> bool:
     mut objects = [make_instance(1, [1, 2])]
-    mut before = objects
+    mut before = objects.copy()
     returned(mut objects, 0, 3)
     return entries_of(before[0]) == [1, 2] and entries_of(objects[0]) == [1, 2, 3]
 
 
 public func test_element_snapshot_before_the_return_keeps_the_old_payload() -> bool:
     mut objects = [make_instance(1, [1])]
-    mut held = objects[0]
+    mut held = objects[0].copy()
     returned(mut objects, 0, 4)
     return entries_of(held) == [1] and entries_of(objects[0]) == [1, 4]
 
 
 public func test_elements_sharing_one_table_stay_independent() -> bool:
     mut shared = Table(entries=[7], count=1)
-    mut objects = [Obj.instance(value=Instance(klass=1, fields=shared)), Obj.instance(value=Instance(klass=2, fields=shared))]
+    mut objects = [Obj.instance(value=Instance(klass=1, fields=shared.copy())), Obj.instance(value=Instance(klass=2, fields=shared.copy()))]
     returned(mut objects, 0, 8)
     return entries_of(objects[0]) == [7, 8] and entries_of(objects[1]) == [7] and shared.entries == [7]
 
@@ -239,7 +239,7 @@ public func test_field_store_of_a_dead_local_hands_the_value_over() -> bool:
 public func test_field_store_then_a_local_read_keeps_a_copy() -> bool:
     mut h = Holder(items=[], count=0)
     mut items = [1]
-    h.items = items
+    h.items = items.copy()
     items.append(2)
     return h.items == [1] and items == [1, 2]
 
@@ -248,6 +248,6 @@ public func test_field_store_in_a_loop_copies_each_time() -> bool:
     mut h = Holder(items=[], count=0)
     mut items = [0]
     for i in range(3):
-        h.items = items
+        h.items = items.copy()
         items.append(i)
     return h.items == [0, 0, 1] and items == [0, 0, 1, 2]

@@ -1,0 +1,4 @@
+func main() -> int:
+    const mapping = {1: [7]}
+    const saved = list(mapping.items())
+    return saved[0].key

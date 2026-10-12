@@ -1,0 +1,121 @@
+record Cursor:
+    code: int[]
+    index: int
+
+
+func advance(mut cursor: Cursor) -> int:
+    mut item = cursor.code[cursor.index]
+    cursor.index = cursor.index + 1
+    return item
+
+
+func read_only_inout(mut cursor: Cursor) -> int:
+    cursor.index = 0
+    mut item = cursor.code[cursor.index]
+    return item
+
+
+func forward(mut cursor: Cursor) -> int:
+    return advance(mut cursor)
+
+
+func replace_after(mut cursor: Cursor) -> int:
+    mut item = cursor.code[cursor.index]
+    cursor.code = [29]
+    cursor.index = 0
+    return item
+
+
+func cross(mut left: Cursor, mut right: Cursor) -> int:
+    mut item = left.code[left.index]
+    left.index = 0
+    right.code = [31]
+    right.index = 0
+    return item
+
+
+func change(mut cursor: Cursor) -> int:
+    cursor.code = [41]
+    return 0
+
+
+func callback(mut cursor: Cursor) -> int:
+    mut item = cursor.code[change(mut cursor)]
+    return item
+
+
+func readonly(cursor: Cursor) -> int:
+    mut item = cursor.code[cursor.index]
+    return item
+
+
+func overflow_after(mut cursor: Cursor, addend: int) -> int:
+    mut item = cursor.code[cursor.index]
+    cursor.index = cursor.index + 1
+    return item + addend
+
+
+func heap_frame(mut cursor: Cursor, values: FixedArray[int, 4096]) -> int:
+    mut padding = replace(values, 0, 3)
+    mut item = cursor.code[cursor.index]
+    cursor.index = cursor.index + 1
+    return item + padding[0]
+
+
+public func test_direct_and_forwarded_references_keep_callers_value() -> bool:
+    mut cursor = Cursor(code=[7, 11, 13], index=0)
+    mut first = advance(mut cursor)
+    mut second = forward(mut cursor)
+    return first == 7 and second == 11 and cursor.index == 2 and cursor.code == [7, 11, 13]
+
+
+public func test_negative_index_and_later_replacement_keep_scalar_snapshot() -> bool:
+    mut cursor = Cursor(code=[7, 11, 13], index=-1)
+    mut snapshot = cursor
+    mut item = replace_after(mut cursor)
+    return item == 13 and cursor.code == [29] and snapshot.code == [7, 11, 13]
+
+
+public func test_repeated_entry_and_rebinding_keep_anchor_current() -> bool:
+    mut cursor = Cursor(code=[7], index=0)
+    mut total = 0
+    mut count = 0
+    while count < 4:
+        total += advance(mut cursor)
+        cursor = Cursor(code=[11], index=0)
+        count += 1
+    return total == 40 and cursor.index == 0
+
+
+# `cross(mut cursor, mut cursor)` is E_MUTATION_OVERLAP (MUT-EXCLUSIVE-1), so
+# the two inout homes are always distinct; swapping them keeps both readers.
+public func test_distinct_inout_homes_in_both_orders() -> bool:
+    mut cursor = Cursor(code=[7], index=0)
+    mut second = Cursor(code=[11], index=0)
+    mut first = cross(mut cursor, mut second)
+    mut again = cross(mut second, mut cursor)
+    return first == 7 and again == 31 and second.code == [31] and cursor.code == [31]
+
+
+public func test_callback_capture_retains_original_field_value() -> bool:
+    mut cursor = Cursor(code=[7], index=0)
+    mut item = callback(mut cursor)
+    return item == 7 and cursor.code == [41]
+
+
+public func test_readonly_parameter_retains_its_separate_convention() -> bool:
+    mut cursor = Cursor(code=[7, 11], index=1)
+    return readonly(cursor) == 11 and cursor.index == 1
+
+
+public func test_live_leaf_reached_through_parent_field() -> bool:
+    mut rows = [Cursor(code=[7, 11], index=0)]
+    mut snapshot = rows
+    mut local = rows[0]
+    mut first = advance(mut local)
+    rows[0] = local
+    return first == 7 and rows[0].index == 1 and snapshot[0].index == 0
+
+
+func main() -> int:
+    return 0

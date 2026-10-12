@@ -1,0 +1,5 @@
+func main() -> int:
+    mut mapping = {1: 7}
+    mut saved = list(mapping.values())
+    mapping[1] = 9
+    return saved[0]

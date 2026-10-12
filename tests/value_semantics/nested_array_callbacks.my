@@ -1,5 +1,5 @@
 func replace_alias(mut value: dict[str, FixedArray[int[], 1]]) -> int:
-    mut copied = value["k"]
+    mut copied = value["k"].copy()
     value["k"] = copied
     return 0
 
@@ -10,7 +10,7 @@ func replace_fresh(mut value: dict[str, FixedArray[int[], 1]]) -> int:
 
 
 func replace_self(mut value: dict[str, FixedArray[int[], 1]]) -> int:
-    value["k"] = value["k"]
+    value["k"] = value["k"].copy()
     return 0
 
 
@@ -31,19 +31,19 @@ func grow_leaf(mut value: dict[str, FixedArray[int[], 1]]) -> int:
 
 
 func capture_parent(mut value: dict[str, FixedArray[int[], 1]], mut saved: dict[str, FixedArray[int[], 1]][]) -> int:
-    saved.append(value)
+    saved.append(value.copy())
     value["other"] = FixedArray[int[], 1]([[8]])
     return 0
 
 
 func capture_outer(mut value: dict[str, FixedArray[int[], 1]][], mut saved: dict[str, FixedArray[int[], 1]][][]) -> int:
-    saved.append(value)
+    saved.append(value.copy())
     value[0]["other"] = FixedArray[int[], 1]([[8]])
     return 0
 
 
 func replace_row_alias(mut value: FixedArray[int[], 1][]) -> int:
-    mut copied = value[0]
+    mut copied = value[0].copy()
     value[0] = copied
     return 0
 
@@ -69,7 +69,7 @@ func absent_index() -> int?:
 
 
 func stop_early(mut value: dict[str, FixedArray[int[], 1]]) -> int?:
-    const captured_array = value["k"]
+    const captured_array = value["k"].copy()
     const index = try absent_index()
     value["k"][index].append(2)
     return Some(1)
@@ -77,8 +77,8 @@ func stop_early(mut value: dict[str, FixedArray[int[], 1]]) -> int?:
 
 public func test_equal_replacements_before_update_have_equal_results() -> bool:
     mut original: dict[str, FixedArray[int[], 1]] = {"k": FixedArray[int[], 1]([[1]])}
-    mut first = original
-    mut second = original
+    mut first = original.copy()
+    mut second = original.copy()
     mut selected = replace_alias(mut first)
     first["k"][selected].append(2)
     selected = replace_fresh(mut second)
@@ -88,7 +88,7 @@ public func test_equal_replacements_before_update_have_equal_results() -> bool:
 
 public func test_reinserted_equal_entry_is_updated_after_the_call() -> bool:
     mut original: dict[str, FixedArray[int[], 1]] = {"k": FixedArray[int[], 1]([[1]])}
-    mut changed = original
+    mut changed = original.copy()
     mut selected = replace_self(mut changed)
     changed["k"][selected].append(2)
     return original["k"][0] == [1] and changed["k"][0] == [1, 2]
@@ -96,7 +96,7 @@ public func test_reinserted_equal_entry_is_updated_after_the_call() -> bool:
 
 public func test_deleted_and_reinserted_entry_is_updated_after_the_call() -> bool:
     mut original: dict[str, FixedArray[int[], 1]] = {"k": FixedArray[int[], 1]([[1]])}
-    mut changed = original
+    mut changed = original.copy()
     mut selected = remove_and_reinsert(mut changed)
     changed["k"][selected].append(2)
     return original["k"][0] == [1] and changed["k"][0] == [1, 2]
@@ -104,7 +104,7 @@ public func test_deleted_and_reinserted_entry_is_updated_after_the_call() -> boo
 
 public func test_other_entry_write_finishes_before_the_current_update() -> bool:
     mut original: dict[str, FixedArray[int[], 1]] = {"k": FixedArray[int[], 1]([[1]]), "other": FixedArray[int[], 1]([[0]])}
-    mut changed = original
+    mut changed = original.copy()
     mut selected = write_other(mut changed)
     changed["k"][selected].append(2)
     return original["k"][0] == [1] and original["other"][0] == [0] and changed["k"][0] == [1, 2] and changed["other"][0] == [8]
@@ -112,7 +112,7 @@ public func test_other_entry_write_finishes_before_the_current_update() -> bool:
 
 public func test_leaf_call_and_later_update_keep_both_writes() -> bool:
     mut original: dict[str, FixedArray[int[], 1]] = {"k": FixedArray[int[], 1]([[1]])}
-    mut changed = original
+    mut changed = original.copy()
     mut selected = grow_leaf(mut changed)
     changed["k"][selected].append(2)
     return original["k"][0] == [1] and changed["k"][0] == [1, 7, 2]
@@ -120,7 +120,7 @@ public func test_leaf_call_and_later_update_keep_both_writes() -> bool:
 
 public func test_a_callback_can_snapshot_the_whole_parent() -> bool:
     mut original: dict[str, FixedArray[int[], 1]] = {"k": FixedArray[int[], 1]([[1]])}
-    mut changed = original
+    mut changed = original.copy()
     mut saved: dict[str, FixedArray[int[], 1]][] = []
     mut selected = capture_parent(mut changed, mut saved)
     changed["k"][selected].append(2)
@@ -129,7 +129,7 @@ public func test_a_callback_can_snapshot_the_whole_parent() -> bool:
 
 public func test_a_callback_can_snapshot_an_outer_ancestor() -> bool:
     mut original: dict[str, FixedArray[int[], 1]][] = [{"k": FixedArray[int[], 1]([[1]])}]
-    mut changed = original
+    mut changed = original.copy()
     mut saved: dict[str, FixedArray[int[], 1]][][] = []
     mut selected = capture_outer(mut changed, mut saved)
     changed[0]["k"][selected].append(2)
@@ -138,7 +138,7 @@ public func test_a_callback_can_snapshot_an_outer_ancestor() -> bool:
 
 public func test_equal_list_element_replacement_is_updated_after_the_call() -> bool:
     mut original: FixedArray[int[], 1][] = [FixedArray[int[], 1]([[1]])]
-    mut changed = original
+    mut changed = original.copy()
     mut selected = replace_row_alias(mut changed)
     changed[0][selected].append(2)
     return original[0][0] == [1] and changed[0][0] == [1, 2]
@@ -146,7 +146,7 @@ public func test_equal_list_element_replacement_is_updated_after_the_call() -> b
 
 public func test_reordering_finishes_before_selecting_the_current_receiver() -> bool:
     mut original: FixedArray[int[], 1][] = [FixedArray[int[], 1]([[1]]), FixedArray[int[], 1]([[8]])]
-    mut changed = original
+    mut changed = original.copy()
     mut selected = reverse_rows(mut changed)
     changed[0][selected].append(2)
     return original[0][0] == [1] and changed[0][0] == [8, 2] and changed[1][0] == [1]
@@ -154,7 +154,7 @@ public func test_reordering_finishes_before_selecting_the_current_receiver() -> 
 
 public func test_removing_an_element_finishes_before_selecting_the_shifted_receiver() -> bool:
     mut original: FixedArray[int[], 1][] = [FixedArray[int[], 1]([[8]]), FixedArray[int[], 1]([[1]])]
-    mut changed = original
+    mut changed = original.copy()
     mut selected = remove_first(mut changed)
     changed[0][selected].append(2)
     return original[1][0] == [1] and changed[0][0] == [1, 2] and len(changed) == 1
@@ -162,19 +162,19 @@ public func test_removing_an_element_finishes_before_selecting_the_shifted_recei
 
 public func test_nested_calls_finish_before_each_receiver_is_selected() -> bool:
     mut original: dict[str, FixedArray[int[], 1]] = {"k": FixedArray[int[], 1]([[1]])}
-    mut changed = original
+    mut changed = original.copy()
     mut selected = nested_index(mut changed)
     changed["k"][selected].append(2)
-    mut copied = changed
+    mut copied = changed.copy()
     changed["k"][0].append(3)
     return original["k"][0] == [1] and copied["k"][0] == [1, 7, 2] and changed["k"][0] == [1, 7, 2, 3]
 
 
 public func test_option_propagation_releases_a_pending_receiver() -> bool:
     mut original: dict[str, FixedArray[int[], 1]] = {"k": FixedArray[int[], 1]([[1]])}
-    mut changed = original
+    mut changed = original.copy()
     mut result = stop_early(mut changed)
-    mut copied = changed
+    mut copied = changed.copy()
     changed["k"][0].append(3)
     return result == None and original["k"][0] == [1] and copied["k"][0] == [1] and changed["k"][0] == [1, 3]
 
@@ -187,7 +187,7 @@ func overwrite_collision(mut value: dict[int, FixedArray[int[], 1]]) -> int:
 
 public func test_colliding_keys_do_not_invalidate_the_other_receiver() -> bool:
     mut original: dict[int, FixedArray[int[], 1]] = {73358: FixedArray[int[], 1]([[1]]), 137867: FixedArray[int[], 1]([[0]])}
-    mut changed = original
+    mut changed = original.copy()
     mut selected = overwrite_collision(mut changed)
     changed[73358][selected].append(2)
     return original[73358][0] == [1] and changed[73358][0] == [1, 2] and changed[137867][0] == [8]
@@ -203,13 +203,13 @@ record B:
 
 
 func capture_box(value: FixedArray[A, 1], mut saved: FixedArray[A, 1][]) -> int:
-    saved.append(value)
+    saved.append(value.copy())
     return 0
 
 
 public func test_a_callback_can_snapshot_a_box_on_the_pending_path() -> bool:
     mut original: FixedArray[A, 1] = FixedArray[A, 1]([A(child=B(items=FixedArray[int[], 1]([[1]]), tail=FixedArray[A, 0]([])))])
-    mut changed = original
+    mut changed = original.copy()
     mut saved: FixedArray[A, 1][] = []
     changed[0].child.items[capture_box(changed, mut saved)].append(2)
     return original[0].child.items[0] == [1] and changed[0].child.items[0] == [1, 2] and saved[0][0].child.items[0] == [1]
@@ -221,7 +221,7 @@ record Branch:
 
 
 func capture_branch(value: FixedArray[Branch, 1], mut saved: FixedArray[Branch, 1][]) -> int:
-    saved.append(value)
+    saved.append(value.copy())
     return 0
 
 
@@ -230,7 +230,7 @@ public func test_deep_recursive_siblings_are_outside_the_pending_path() -> bool:
     for i in range(1200):
         branch = Branch(items=[1], next=Some(branch))
     mut original: FixedArray[Branch, 1] = FixedArray[Branch, 1]([branch])
-    mut changed = original
+    mut changed = original.copy()
     mut saved: FixedArray[Branch, 1][] = []
     changed[capture_branch(changed, mut saved)].items.append(2)
     return original[0].items == [1] and changed[0].items == [1, 2] and saved[0][0].items == [1]
@@ -246,26 +246,26 @@ record OuterB:
 
 
 func capture_outer_box(value: FixedArray[OuterA, 1], mut saved: FixedArray[OuterA, 1][]) -> int:
-    saved.append(value)
+    saved.append(value.copy())
     return 0
 
 
 public func test_a_callback_can_snapshot_a_box_above_the_dictionary_owner() -> bool:
     mut original: FixedArray[OuterA, 1] = FixedArray[OuterA, 1]([OuterA(child=OuterB(entries={"k": FixedArray[int[], 1]([[1]])}, tail=FixedArray[OuterA, 0]([])))])
-    mut changed = original
+    mut changed = original.copy()
     mut saved: FixedArray[OuterA, 1][] = []
     changed[0].child.entries["k"][capture_outer_box(changed, mut saved)].append(2)
     return original[0].child.entries["k"][0] == [1] and changed[0].child.entries["k"][0] == [1, 2] and saved[0][0].child.entries["k"][0] == [1]
 
 
 func capture_rows(value: FixedArray[int[], 1][], mut saved: FixedArray[int[], 1][][]) -> int:
-    saved.append(value)
+    saved.append(value.copy())
     return 0
 
 
 public func test_a_negative_list_index_retains_its_pending_array() -> bool:
     mut original: FixedArray[int[], 1][] = [FixedArray[int[], 1]([[1]])]
-    mut changed = original
+    mut changed = original.copy()
     mut saved: FixedArray[int[], 1][][] = []
     changed[-1][capture_rows(changed, mut saved)].append(2)
     return original[0][0] == [1] and changed[0][0] == [1, 2] and saved[0][0][0] == [1]
@@ -283,9 +283,9 @@ func discard_keys(mut keys: LookupKey[]) -> int:
 
 public func test_a_last_use_key_borrow_survives_its_list_being_cleared() -> bool:
     mut key = LookupKey(label="target", number=1)
-    mut original: dict[LookupKey, FixedArray[int[], 1]] = {key: FixedArray[int[], 1]([[1]])}
-    mut changed = original
-    mut keys = [key]
-    mut selected = keys[0]
+    mut original: dict[LookupKey, FixedArray[int[], 1]] = {key.copy(): FixedArray[int[], 1]([[1]])}
+    mut changed = original.copy()
+    mut keys = [key.copy()]
+    mut selected = keys[0].copy()
     changed[selected][discard_keys(mut keys)].append(2)
     return original[key][0] == [1] and changed[key][0] == [1, 2] and len(keys) == 0

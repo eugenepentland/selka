@@ -1,0 +1,86 @@
+# Pending receiver snapshots across later argument callbacks.
+func save_pending_rows(rows: int[][], mut saved: int[][][]) -> int:
+    saved.append(rows)
+    return 2
+
+
+public func test_callback_snapshot_keeps_captured_receiver_independent() -> bool:
+    mut rows = [[1]]
+    mut saved: int[][][] = []
+    rows[0].append(save_pending_rows(rows, mut saved))
+    return rows[0] == [1, 2] and saved[0][0] == [1]
+
+
+func main() -> int:
+    if test_callback_snapshot_keeps_captured_receiver_independent():
+        return 0
+    return 1
+
+
+public func test_loop_receiver_scopes_restore_the_previous_pin_state() -> bool:
+    mut rows = [[1]]
+    mut saved: int[][][] = []
+    for i in range(3):
+        rows[0].append(save_pending_rows(rows, mut saved))
+    return rows[0] == [1, 2, 2, 2] and saved[0][0] == [1] and saved[1][0] == [1, 2] and saved[2][0] == [1, 2, 2]
+
+
+func nested_argument(mut rows: int[][], mut saved: int[][][]) -> int:
+    rows[1].append(save_pending_rows(rows, mut saved))
+    return 3
+
+
+public func test_nested_mut_call_finishes_before_the_outer_receiver_update() -> bool:
+    mut rows = [[1], [8]]
+    mut saved: int[][][] = []
+    mut selected = nested_argument(mut rows, mut saved)
+    rows[0].append(selected)
+    return rows[0] == [1, 3] and rows[1] == [8, 2] and saved[0][0] == [1] and saved[0][1] == [8]
+
+
+func unavailable() -> int?:
+    return None
+
+
+func abandoned(mut rows: int[][]) -> int?:
+    const captured_row = rows[0]
+    const argument = try unavailable()
+    rows[0].append(argument)
+    return Some(1)
+
+
+public func test_argument_propagation_releases_the_receiver_scope() -> bool:
+    mut rows = [[1]]
+    mut result = abandoned(mut rows)
+    mut before = rows
+    rows[0].append(3)
+    return result == None and before[0] == [1] and rows[0] == [1, 3]
+
+
+func save_entries(entries: dict[str, int[]], mut saved: dict[str, int[]][]) -> int:
+    saved.append(entries)
+    return 2
+
+
+public func test_dictionary_receiver_survives_argument_snapshot() -> bool:
+    mut entries = {"k": [1]}
+    mut saved: dict[str, int[]][] = []
+    entries["k"].append(save_entries(entries, mut saved))
+    return entries["k"] == [1, 2] and saved[0]["k"] == [1]
+
+
+record Node:
+    items: int[]
+    next: Node?
+
+
+func save_nodes(nodes: Node[], mut saved: Node[][]) -> int:
+    saved.append(nodes)
+    return 2
+
+
+public func test_recursive_box_receiver_survives_argument_snapshot() -> bool:
+    mut nodes = [Node(items=[1], next=None)]
+    mut saved: Node[][] = []
+    nodes[0].items.append(save_nodes(nodes, mut saved))
+    return nodes[0].items == [1, 2] and saved[0][0].items == [1]

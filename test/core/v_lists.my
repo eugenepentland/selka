@@ -15,13 +15,13 @@ enum Value:
 
 
 func push_one(xs0: int[], v: int) -> int:
-    mut xs = xs0
+    mut xs = xs0.copy()
     xs.append(v)
     return len(xs) + xs0[0]
 
 
 func write_cells(cells0: Cell[], v: int) -> int:
-    mut cells = cells0
+    mut cells = cells0.copy()
     cells[0].code = v
     cells[1].flag = not cells[1].flag
     cells[2] = Cell(code=v + 1, weight=v + 2, flag=True)
@@ -73,7 +73,7 @@ func field_reads(cells: Cell[], i: int) -> int:
 
 
 func drain(xs: int[]) -> int:
-    mut copy = xs
+    mut copy = xs.copy()
     mut total = 0
     while len(copy) > 0:
         total = total * 3 + copy.pop()

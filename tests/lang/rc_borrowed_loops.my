@@ -15,7 +15,7 @@ func empty() -> Node:
 func find(nodes: Node[], key: int) -> Node:
     mut i = 0
     while i < len(nodes):
-        mut node = nodes[i]
+        mut node = nodes[i].copy()
         if node.id == key:
             return node
         i += 1
@@ -23,14 +23,14 @@ func find(nodes: Node[], key: int) -> Node:
 
 
 func late(first: bytes, second: bytes) -> bytes:
-    mut answer = first
+    mut answer = first.copy()
     mut i = 0
     while i < 2:
         if i > 0:
             return answer
-        answer = second
+        answer = second.copy()
         i += 1
-    return first
+    return first.copy()
 
 
 public func test_search_first_late_missing_and_empty() -> bool:
@@ -45,7 +45,7 @@ public func test_search_first_late_missing_and_empty() -> bool:
 
 public func test_callers_snapshots_keep_ordinary_ownership() -> bool:
     mut nodes = [Node(span=Span(text=bytes([65]), start=3), id=1)]
-    mut snapshot = nodes
+    mut snapshot = nodes.copy()
     mut result = find(nodes, 1)
     nodes[0] = Node(span=Span(text=bytes([66]), start=4), id=2)
     return snapshot[0].span.text == b"A" and result.span.text == b"A" and nodes[0].span.text == b"B"

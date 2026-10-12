@@ -1,0 +1,36 @@
+record Node:
+    mapping: dict[int, int]
+    child: Node?
+
+
+func through(value: Node?) -> Node?:
+    return value
+
+
+public func test_heap_option_mapping_write_updates_the_owner_after_a_snapshot() -> bool:
+    mut original: Node? = Some(Node(mapping={1: 7}, child=None))
+    mut saved = through(original)
+    if original is None or saved is None:
+        return False
+    original.mapping[1] = 13
+    return original.mapping[1] == 13 and saved.mapping[1] == 7
+
+
+public func test_option_write_still_publishes_when_a_view_keeps_the_old_mapping_alive() -> bool:
+    mut original: Node? = Some(Node(mapping={1: 7}, child=None))
+    mut saved = through(original)
+    if original is None or saved is None:
+        return False
+    mut live = list(original.mapping.values())
+    original.mapping[1] = 13
+    return original.mapping[1] == 13 and saved.mapping[1] == 7 and len(list(live)) == 1
+
+
+public func test_repeated_option_writes_replace_the_latest_owner() -> bool:
+    mut original: Node? = Some(Node(mapping={1: 7}, child=None))
+    mut saved = through(original)
+    if original is None or saved is None:
+        return False
+    original.mapping[1] = 13
+    original.mapping[1] = 17
+    return original.mapping[1] == 17 and saved.mapping[1] == 7

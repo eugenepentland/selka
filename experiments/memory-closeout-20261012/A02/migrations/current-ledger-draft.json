@@ -1,0 +1,1147 @@
+{
+  "status": "reviewable source migration; integrated qualification incomplete",
+  "source_files": 72,
+  "original_test_functions": 358,
+  "files": {
+    "tests/value_semantics/bindings.my": {
+      "original_sha256": "82bbb6ff5eccf3e6f9860b8e1e23fd591a07f73b1f45f9ebc69350d6fdbe0a89",
+      "migrated_sha256": "75dbe0b75d2cb4e6838627622668862ae028aab16524f811e60d9734eeaf709e",
+      "test_functions": [
+        "test_a_loop_variable_copy_can_be_changed_as_a_local",
+        "test_changes_through_the_place_reach_the_collection",
+        "test_dictionary_views_and_enumerate_read_the_values",
+        "test_a_match_binding_is_a_copy_of_the_payload"
+      ],
+      "group": "migrations",
+      "added_lines": 2,
+      "removed_lines": 2,
+      "explicit_copies_added": 2,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/value_semantics/calls.my": {
+      "original_sha256": "cfc750ccf08fa7ea2b7b473f6f1eafac10b394910d2bd9c16df20237dfc6d04a",
+      "migrated_sha256": "c3b643395ff12d933c0052d2c2942adec07e00f17bce227a04df51300f82799e",
+      "test_functions": [
+        "test_a_mut_argument_before_or_after_its_snapshot",
+        "test_two_mut_operands_and_a_snapshot_of_one_of_them",
+        "test_a_mut_record_field_is_redirected_after_a_later_snapshot"
+      ],
+      "group": "migrations",
+      "added_lines": 8,
+      "removed_lines": 4,
+      "explicit_copies_added": 4,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/value_semantics/collections.my": {
+      "original_sha256": "0286d93be9360363aabcf84e1bbe1b05d525304c77d2a1c5bc9c194757893b55",
+      "migrated_sha256": "56a45f3beae20041690bed02017eaf7fd65d36c62803e4ac113b9bc1ae31fce7",
+      "test_functions": [
+        "test_a_list_assignment_is_a_copy",
+        "test_a_dict_assignment_is_a_copy",
+        "test_a_set_assignment_is_a_copy",
+        "test_a_byte_buffer_assignment_is_a_copy",
+        "test_a_returned_copy_of_each_collection_leaves_the_argument_alone",
+        "test_a_read_only_argument_is_read_in_place",
+        "test_nested_collections_copy_all_the_way_down"
+      ],
+      "group": "migrations",
+      "added_lines": 11,
+      "removed_lines": 11,
+      "explicit_copies_added": 11,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/value_semantics/copy_roots.my": {
+      "original_sha256": "3200c8d629387db51927426d8f4694caad704d5e34124c938ac81d407e0732d1",
+      "migrated_sha256": "1d2e7bb045d89f59032d6c2a158fe4f6a6a2dbbbf5d9dd9642c15f79c18b5dea",
+      "test_functions": [
+        "test_pinned_transfer_keeps_original_and_other_live_values",
+        "test_fast_transfer_keeps_independent_snapshots"
+      ],
+      "group": "migrations",
+      "added_lines": 1,
+      "removed_lines": 1,
+      "explicit_copies_added": 1,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/value_semantics/copy_scratch.my": {
+      "original_sha256": "8c9bdc35055bf21b7129e0ebc72e663916071d18273fa199dc174eb16fd8dea0",
+      "migrated_sha256": "d8026055fc4002e22ba91ad17fae98533ef4d7d132ef4d86909896e4f8fe7c41",
+      "test_functions": [
+        "test_returned_payload_is_independent_on_both_sides",
+        "test_payload_return_remains_a_snapshot_after_parent_replacement"
+      ],
+      "group": "migrations",
+      "added_lines": 2,
+      "removed_lines": 2,
+      "explicit_copies_added": 2,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/value_semantics/field_return.my": {
+      "original_sha256": "0b714eb332816eef125ad16f132fb1cd18e8fc886ad37c404669f4001d3357b5",
+      "migrated_sha256": "e1c9e80ec8c73835ea98de1fc36a383a8cee264a7fe003540864bbefa4dcf582",
+      "test_functions": [
+        "test_field_return_preserves_existing_copies_and_sibling_values",
+        "test_observation_before_store_back_sees_original_value",
+        "test_early_return_does_not_write_the_original_field",
+        "test_retained_temporary_and_other_destination_stay_independent",
+        "test_a_second_mut_parameter_observes_its_own_original_field",
+        "test_a_sibling_scalar_field_stays_readable_during_mutation",
+        "test_sibling_index_normalization_keeps_shared_snapshots_independent",
+        "test_closed_loop_and_match_store_back_preserve_copies",
+        "test_loop_exit_does_not_commit_a_partial_field_update",
+        "test_loop_observations_read_the_original_field_until_store_back",
+        "test_external_join_preserves_preexisting_values"
+      ],
+      "group": "migrations",
+      "added_lines": 20,
+      "removed_lines": 20,
+      "explicit_copies_added": 24,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/value_semantics/index_return.my": {
+      "original_sha256": "1b94330dfa730c623930b08806bc7b33336e54ae83e4e97f5bb848988d682529",
+      "migrated_sha256": "ffd24ebec47c2d636a47d8da687e5e2eb0ba2bbf5833d3dad5b7013cfa98a200",
+      "test_functions": [
+        "test_mut_list_caller_detaches_shared_outer_before_projection",
+        "test_parent_observation_keeps_snapshot",
+        "test_payload_observation_keeps_snapshot",
+        "test_early_return_keeps_original_element",
+        "test_changed_index_keeps_original_element",
+        "test_index_changed_before_extraction_keeps_original",
+        "test_surviving_temporary_keeps_independent_post_store_value",
+        "test_other_mut_parameter_cannot_observe_early_mutation",
+        "test_parent_growth_keeps_checked_original_index",
+        "test_local_parent_retains_outer_snapshot",
+        "test_closed_loop_commits_and_preserves_a_caller_snapshot",
+        "test_break_and_continue_cannot_skip_commit",
+        "test_earlier_match_binding_stays_independent",
+        "test_earlier_element_local_stays_independent",
+        "test_earlier_parent_snapshot_stays_independent",
+        "test_readonly_parameter_alias_is_a_snapshot",
+        "test_iteration_binding_stays_independent",
+        "test_earlier_match_with_caller_snapshot_stays_independent",
+        "test_earlier_match_observed_after_store",
+        "test_earlier_borrowed_child_survives_dead_match_binding"
+      ],
+      "group": "migrations",
+      "added_lines": 54,
+      "removed_lines": 53,
+      "explicit_copies_added": 53,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/value_semantics/interactions.my": {
+      "original_sha256": "29094dbc93692b8e5221543af05287d4a708cb82db8b2710d9759731b96d7b0c",
+      "migrated_sha256": "d1fd631c5edaac997e7a1ec5ccc6abd8d8f0431e91159406f80f2a0f0811cbe6",
+      "test_functions": [
+        "test_a_record_has_independent_nested_values",
+        "test_a_list_read_out_of_a_record_is_a_copy",
+        "test_old_captures_a_collection_by_value"
+      ],
+      "group": "migrations",
+      "added_lines": 4,
+      "removed_lines": 4,
+      "explicit_copies_added": 4,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/value_semantics/nested_array_callbacks.my": {
+      "original_sha256": "e1139fcef4031adfe35849e40678beb5afb7985abb76a08e6c6d15f66d5f7a35",
+      "migrated_sha256": "afd92a351bf2e15618cacc2f5c1696f92b310bf28f3cd1f9f2c9f9aa36bd995b",
+      "test_functions": [
+        "test_equal_replacements_before_update_have_equal_results",
+        "test_reinserted_equal_entry_is_updated_after_the_call",
+        "test_deleted_and_reinserted_entry_is_updated_after_the_call",
+        "test_other_entry_write_finishes_before_the_current_update",
+        "test_leaf_call_and_later_update_keep_both_writes",
+        "test_a_callback_can_snapshot_the_whole_parent",
+        "test_a_callback_can_snapshot_an_outer_ancestor",
+        "test_equal_list_element_replacement_is_updated_after_the_call",
+        "test_reordering_finishes_before_selecting_the_current_receiver",
+        "test_removing_an_element_finishes_before_selecting_the_shifted_receiver",
+        "test_nested_calls_finish_before_each_receiver_is_selected",
+        "test_option_propagation_releases_a_pending_receiver",
+        "test_colliding_keys_do_not_invalidate_the_other_receiver",
+        "test_a_callback_can_snapshot_a_box_on_the_pending_path",
+        "test_deep_recursive_siblings_are_outside_the_pending_path",
+        "test_a_callback_can_snapshot_a_box_above_the_dictionary_owner",
+        "test_a_negative_list_index_retains_its_pending_array",
+        "test_a_last_use_key_borrow_survives_its_list_being_cleared"
+      ],
+      "group": "migrations",
+      "added_lines": 34,
+      "removed_lines": 34,
+      "explicit_copies_added": 34,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/value_semantics/nested_arrays.my": {
+      "original_sha256": "a8d09a5b244ed91ca0b1e12c50580799c2f0c0dd3682e881c3db276bcffc564d",
+      "migrated_sha256": "6bc59f43bf3945e2aff1a482cd360dd984d413a966d3e1c9700bcb85efd7dc0b",
+      "test_functions": [
+        "test_fixed_array_list",
+        "test_fixed_array_dictionary",
+        "test_repeated_fixed_array_wrappers",
+        "test_fixed_array_list_dictionary",
+        "test_list_fixed_array_dictionary",
+        "test_dictionary_fixed_array_list",
+        "test_dictionary_fixed_array_field_dictionary",
+        "test_list_record_fixed_array_field",
+        "test_dynamic_negative_fixed_array_index",
+        "test_enum_table_collection_element",
+        "test_list_array_path_inside_a_loop",
+        "test_replacement_call_finishes_before_dictionary_receiver_selection",
+        "test_removed_entry_can_be_reinserted_before_receiver_selection",
+        "test_rehash_call_finishes_before_dictionary_receiver_selection",
+        "test_cleared_outer_list_can_be_repopulated_before_receiver_selection",
+        "test_later_index_changes_the_original_key_variable",
+        "test_dictionary_array_sliced_key_is_retained"
+      ],
+      "group": "migrations",
+      "added_lines": 17,
+      "removed_lines": 17,
+      "explicit_copies_added": 17,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/value_semantics/nested_collections.my": {
+      "original_sha256": "e2cdb93813a5ef9310deac768f42b8297557e012b3d77c41a0d34e2d1328f260",
+      "migrated_sha256": "a7a3f60fb39e7600cd2f0766e165c707d8748d5c9f7c28d6124571fc1f7bcf54",
+      "test_functions": [
+        "test_list_dictionary_list_path",
+        "test_dictionary_list_dictionary_path",
+        "test_repeated_dictionary_wrappers",
+        "test_repeated_list_dictionary_wrappers",
+        "test_dictionary_field_in_list",
+        "test_list_field_in_dictionary",
+        "test_named_alias_of_nested_dictionary",
+        "test_both_aliases_can_change_different_nested_values",
+        "test_nested_writes_inside_a_loop",
+        "test_receivers_and_keys_evaluate_once_in_source_order",
+        "test_nested_integer_keys",
+        "test_nested_sliced_string_keys",
+        "test_nested_set_leaf",
+        "test_nested_byte_buffer_leaf",
+        "test_key_mutates_original",
+        "test_key_replacement_finishes_before_receiver_selection",
+        "test_key_growth_finishes_before_receiver_selection"
+      ],
+      "group": "migrations",
+      "added_lines": 17,
+      "removed_lines": 17,
+      "explicit_copies_added": 17,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/value_semantics/packed_calls.my": {
+      "original_sha256": "2a9dc66704d73cc3073324bc594d27ccd54051b14ccf9be7e5424b86fc78e912",
+      "migrated_sha256": "1793edcc076ffbc599f04f2cfcf48a66da185bbfa1386ef857cc72b4e0d8b72a",
+      "test_functions": [
+        "test_packed_mut_argument_receives_the_redirected_value"
+      ],
+      "group": "migrations",
+      "added_lines": 2,
+      "removed_lines": 1,
+      "explicit_copies_added": 1,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/value_semantics/pending_receiver_arguments.my": {
+      "original_sha256": "a87f029af1115abe31ca4323747f8c43f53975c64d3c1f4b5651069f320208b8",
+      "migrated_sha256": "3b6e3b55ce27ce0b7c6509f955101ecfc92dee78ef23d110b6491bdfb0f52854",
+      "test_functions": [
+        "test_callback_snapshot_keeps_captured_receiver_independent",
+        "test_loop_receiver_scopes_restore_the_previous_pin_state",
+        "test_nested_mut_call_finishes_before_the_outer_receiver_update",
+        "test_argument_propagation_releases_the_receiver_scope",
+        "test_dictionary_receiver_survives_argument_snapshot",
+        "test_recursive_box_receiver_survives_argument_snapshot"
+      ],
+      "group": "migrations",
+      "added_lines": 5,
+      "removed_lines": 5,
+      "explicit_copies_added": 5,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/value_semantics/pure_box.my": {
+      "original_sha256": "a3d34f0ae4b2fac32b3effb3ee654b25035fc2c08de1735e965089c412a4af3f",
+      "migrated_sha256": "059bf297c0187e705ae5c1775028e265855ca67d1ff42fbc9815fd8d971efb8b",
+      "test_functions": [
+        "test_pure_box_projection_retains_private_value_updates",
+        "test_pure_box_read_remains_live_across_other_allocations"
+      ],
+      "group": "migrations",
+      "added_lines": 5,
+      "removed_lines": 5,
+      "explicit_copies_added": 5,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/value_semantics/recursive.my": {
+      "original_sha256": "6b2b5c381514c54205f7f6bae9fe81ce2cc1d1aff68fcee81ac05f061c038c6c",
+      "migrated_sha256": "051315c66c265e2135e5e7d9ff357a09f6f7f988ce4b83f705a7a546b89b8e42",
+      "test_functions": [
+        "test_a_copied_recursive_box_shares_and_separates_nested_lists",
+        "test_repeated_write_through_a_boxed_child",
+        "test_a_projected_child_is_protected_before_a_later_box_copy",
+        "test_a_box_projection_copies_a_pinned_child"
+      ],
+      "group": "migrations",
+      "added_lines": 12,
+      "removed_lines": 11,
+      "explicit_copies_added": 11,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/value_semantics/stores.my": {
+      "original_sha256": "e92b14f8c823d1a2b4904c423613c9f2d9738f7b81ef91cef4d81b5cb243e249",
+      "migrated_sha256": "f941ca29de5998cc87c050d0c0432938fd1cf5b3fef4301b3333f73860f8e1d1",
+      "test_functions": [
+        "test_a_record_field_holds_its_own_list",
+        "test_a_nested_record_copy_is_independent",
+        "test_element_and_dictionary_value_stores_copy",
+        "test_tuple_and_payload_stores_copy",
+        "test_copy_slice_and_list_copy_their_elements",
+        "test_extend_and_sorted_copy_the_elements_they_take",
+        "test_update_copies_the_dictionary_values_it_takes",
+        "test_setdefault_and_get_hand_back_copies"
+      ],
+      "group": "migrations",
+      "added_lines": 11,
+      "removed_lines": 11,
+      "explicit_copies_added": 11,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/value_semantics/value_rules.my": {
+      "original_sha256": "71f3a3c30cd9aff2ffaf9e21fc2f9d21e1c9693aa28d13e8f029dc6354ab98e5",
+      "migrated_sha256": "643757becb1381b136843da48c70d1c40b65f9199a88910ca80c6040a15305bf",
+      "test_functions": [
+        "test_a_copy_of_a_parameter_is_writable_without_mut",
+        "test_nested_writes_after_copy_stay_in_the_copy",
+        "test_a_returned_parameter_does_not_alias_the_argument",
+        "test_mut_record_parameter_is_inout",
+        "test_nested_writes_through_a_mut_record",
+        "test_rebinding_a_mut_record_replaces_the_callers_value",
+        "test_a_read_only_argument_is_a_snapshot_of_a_mut_one",
+        "test_assignment_and_storage_copy",
+        "test_loop_changes_go_through_the_place"
+      ],
+      "group": "migrations",
+      "added_lines": 10,
+      "removed_lines": 8,
+      "explicit_copies_added": 8,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/value_semantics/variant_element.my": {
+      "original_sha256": "5e822635e4595e2f06861a0ee1809a79a90e4afb259493023ab0d1f4d136cb8d",
+      "migrated_sha256": "a338168291254a0e5391554f2216ff7aaa4d508784824752ca7a5b3518684d73",
+      "test_functions": [
+        "test_payload_survives_parent_replacement_growth_and_collection",
+        "test_nonadjacent_dispatch_keeps_its_original_snapshot",
+        "test_empty_arm_copies_no_payload"
+      ],
+      "group": "migrations",
+      "added_lines": 3,
+      "removed_lines": 3,
+      "explicit_copies_added": 3,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/option_niche.my": {
+      "original_sha256": "6e389545e814ae38a6df16c488212b9cb203341c44a1926ea87b957883bab8cd",
+      "migrated_sha256": "33484c39beb6001514fb213a416a470238f33550a4b2236534a8a0d50d5ddf76",
+      "test_functions": [
+        "test_construct_test_and_match_a_niche_optional",
+        "test_a_tree_of_optional_children_survives_collection",
+        "test_question_mark_propagates_none_and_unwraps_some",
+        "test_methods_on_niche_optionals",
+        "test_equality_of_niche_optionals",
+        "test_niche_optionals_render_like_tagged_ones",
+        "test_niche_optionals_in_lists_dicts_records_and_arrays",
+        "test_niche_optionals_cross_callbacks",
+        "test_an_optional_optional_keeps_some_none_apart_from_none",
+        "test_a_user_union_of_the_same_shape_matches_like_an_option",
+        "test_an_escaped_graph_keeps_its_optional_links",
+        "test_optional_text_and_lists_survive_collection"
+      ],
+      "group": "migrations",
+      "added_lines": 14,
+      "removed_lines": 14,
+      "explicit_copies_added": 14,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/option_propagation.my": {
+      "original_sha256": "68bbc52689eff22f078f2564ce5049f92ec6077285c7c866799c8ea25d405267",
+      "migrated_sha256": "8a6428ccad34539b01debffe74f81b5e52deba9f41bca9dd50022d8a1bf57d2b",
+      "test_functions": [
+        "test_option_propagation_unwraps_a_class_payload_in_a_function_returning_option_int",
+        "test_option_propagation_into_a_different_class_option_forwards_none",
+        "test_option_propagation_converts_between_scalar_and_managed_elements",
+        "test_generic_option_propagation_accepts_a_different_enclosing_element"
+      ],
+      "group": "migrations",
+      "added_lines": 8,
+      "removed_lines": 8,
+      "explicit_copies_added": 8,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/positive_list_index.my": {
+      "original_sha256": "ba1fe40be1eec5449396f57b2c05e7fe1bd71605147ad0b715a1a1774a9c125a",
+      "migrated_sha256": "7cc8d71c5b9500006ca8cbc5f3ce72d1dab7a9592056bf2cd193c6fd79b4fc05",
+      "test_functions": [
+        "test_positive_and_negative_reads_keep_scalar_updates_and_snapshots",
+        "test_index_callback_keeps_the_receiver_selected_before_replacement"
+      ],
+      "group": "migrations",
+      "added_lines": 4,
+      "removed_lines": 2,
+      "explicit_copies_added": 2,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/python_collections.my": {
+      "original_sha256": "f0b768a8195e8f25c09103b24e82ab304fb544fabe4d32e87405b1fdc742b0e8",
+      "migrated_sha256": "6ec3fc70898c7860cb59334b2f9a82eb3aab068f6af9d5c9c8d70258f5d2ee30",
+      "test_functions": [
+        "test_inferred_literal_indexing_negative_indices_and_append",
+        "test_contextual_nested_lists_and_receiver_fields",
+        "test_slice_copies_clamps_and_length_uses_signed_index_type",
+        "test_foreach_enumerate_range_and_continue",
+        "test_record_fields_update_values_and_list_slots_without_changing_prior_copies",
+        "test_field_receiver_index_and_right_side_run_once_in_order_under_collection_stress",
+        "test_generic_record_slot_updates_and_list_aliases_remain_copyable",
+        "test_slice_negative_clamp_empty_and_copy_alias_semantics",
+        "test_slice_step_selects_every_nth_element_of_a_list_and_of_text_in_both_directions",
+        "test_augmented_assignment_applies_each_binding_types_own_operator_rules",
+        "test_augmented_assignment_writes_a_list_slot_and_a_dictionary_entry_in_place",
+        "test_list_methods_mutate_in_place_with_python_shaped_bounds",
+        "test_list_index_and_copy_are_read_forms_with_first_occurrence_order",
+        "test_dictionary_pop_update_and_setdefault_keep_insertion_order",
+        "test_list_extends_in_place_and_items_binds_key_then_value_in_insertion_order",
+        "test_generic_bodies_bind_items_key_then_value_in_insertion_order",
+        "test_outer_annotated_postfix_expressions_do_not_contaminate_literal_element_inference",
+        "test_range_end_syntax_agrees_in_constant_and_runtime_evaluation",
+        "test_field_writeback_preserves_sibling_changes_made_by_its_right_hand_side",
+        "test_generic_lists_preserve_literal_foreach_slice_and_write_element_types",
+        "test_scalar_element_reads_load_every_width_from_backing_storage",
+        "test_append_past_the_segment_threshold_keeps_every_element"
+      ],
+      "group": "migrations",
+      "added_lines": 10,
+      "removed_lines": 10,
+      "explicit_copies_added": 10,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/python_values.my": {
+      "original_sha256": "77235097eeff0f0d4b56de515c80862a8ad3d1bc49e012f08a519356ae8079f2",
+      "migrated_sha256": "77235097eeff0f0d4b56de515c80862a8ad3d1bc49e012f08a519356ae8079f2",
+      "test_functions": [
+        "test_python_values_unicode_literals_chained_methods_indexing_and_membership",
+        "test_python_values_dictionary_snapshot_and_arbitrary_method_receivers",
+        "test_python_values_dictionary_and_unicode_text_iteration_preserve_order",
+        "test_python_values_unicode_slicing_clamps_endpoints_and_returns_independent_text",
+        "test_python_values_generic_dictionary_preserves_symbolic_value_types",
+        "test_python_values_generic_str_conversion_and_unicode_escapes",
+        "test_python_values_collection_float_equality_and_membership_preserve_numeric_semantics",
+        "test_ascii_scalar_indexing_survives_frame_restores_and_collections"
+      ],
+      "group": "migrations",
+      "added_lines": 0,
+      "removed_lines": 0,
+      "explicit_copies_added": 0,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/python_variants.my": {
+      "original_sha256": "148d04c56d2978b861002b0437860ab6cebfd53e96760db843216d88094160a1",
+      "migrated_sha256": "a4c9887b76a0541c21121aff262a9657102ec74e5271ff828d0ea498ead39bf8",
+      "test_functions": [
+        "test_python_payload_variant_construction_names_the_union_case_like_a_call",
+        "test_python_payload_variants_nest_flow_through_locals_and_reach_record_fields",
+        "test_a_generic_variant_infers_its_type_arguments_from_the_expected_type",
+        "test_a_parenthesized_case_constructs_positionally_by_name_and_with_defaults",
+        "test_a_named_field_pattern_binds_one_name_per_field_and_discards_with_underscore",
+        "test_a_generic_parenthesized_case_specializes_with_the_union_arguments"
+      ],
+      "group": "migrations",
+      "added_lines": 2,
+      "removed_lines": 2,
+      "explicit_copies_added": 3,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_aggregate_values.my": {
+      "original_sha256": "63435eb07bf875582904ec3c85303a66b926be8dddf8331c39338122fad4216e",
+      "migrated_sha256": "bf29c5e955a9ea5e72ecfa377856dbe00604fe0ec5e49925e92a97596eeab8f6",
+      "test_functions": [
+        "test_record_fields_survive_original_and_sibling_replacement",
+        "test_record_update_preserves_prior_aggregate_snapshot",
+        "test_variant_payload_binding_owns_values_after_scrutinee_replacement",
+        "test_repeated_variants_replace_prior_payload_owners",
+        "test_fixed_array_constructor_owns_its_managed_elements",
+        "test_fixed_array_replace_retires_only_the_replaced_snapshot",
+        "test_option_propagation_owns_success_and_releases_none",
+        "test_result_propagation_owns_success_and_error_payloads",
+        "test_propagation_wraps_an_owned_error_in_the_enclosing_union",
+        "test_boxed_record_update_preserves_an_earlier_snapshot",
+        "test_propagating_error_releases_preceding_constructor_operands",
+        "test_propagating_none_releases_preceding_constructor_operands",
+        "test_reordered_constructor_fields_preserve_aliased_input_snapshots",
+        "test_constructor_publishes_nested_holds_and_converts_held_mapping_inputs"
+      ],
+      "group": "migrations",
+      "added_lines": 12,
+      "removed_lines": 12,
+      "explicit_copies_added": 15,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_anchored_shares.my": {
+      "original_sha256": "507adf11eaf4c229c066e86c7db943071af3a5cfb493c6b1ca9e7a787d968fa1",
+      "migrated_sha256": "f80e6ef52c0f81861b570556a05f5f6dfd585cdf1183c2db0319bc36d57a35b4",
+      "test_functions": [
+        "test_a_receiver_read_across_a_count_free_update_is_read_in_place",
+        "test_count_free_and_growing_index_calls_mix_in_one_frame"
+      ],
+      "group": "migrations",
+      "added_lines": 10,
+      "removed_lines": 3,
+      "explicit_copies_added": 3,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_append_loops.my": {
+      "original_sha256": "b487d0123569b473d5339a8191d6082381cc665470354c520153b0bd4713d7bb",
+      "migrated_sha256": "02e7db4c3a9250bcadbf6307d7fc52d4145397859f7fe20c8badc285df91a874",
+      "test_functions": [
+        "test_empty_and_repeated_dynamic_loop_lifetimes",
+        "test_aliasing_scalar_reads_and_writes_survive_growth",
+        "test_scalar_widths_boolean_comprehension_and_floating_bits",
+        "test_callback_loop_retains_operation_admission",
+        "test_snapshot_and_managed_children_keep_full_transfer"
+      ],
+      "group": "migrations",
+      "added_lines": 1,
+      "removed_lines": 1,
+      "explicit_copies_added": 1,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_borrowed_calls.my": {
+      "original_sha256": "0d72aff243b087096a35c0f3e6e9f9aa09f7c2a835439cc4d29ae7fc863bbf19",
+      "migrated_sha256": "84fa5f56dbdbf1fd9f4ec0e9d1a6e8563c5271b81ee299fac73bf04373883d74",
+      "test_functions": [
+        "test_nested_calls_preserve_results_after_parent_replacement",
+        "test_reordered_arguments_map_to_the_actual_parent",
+        "test_indirect_composed_entry_returns_owned_bits",
+        "test_backedge_callee_mapping_remains_owned"
+      ],
+      "group": "migrations",
+      "added_lines": 5,
+      "removed_lines": 5,
+      "explicit_copies_added": 5,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_borrowed_loops.my": {
+      "original_sha256": "338b5ba31c5d07c77dfdedfb0013cff815245fca35be432d0b08b5f5d67b0727",
+      "migrated_sha256": "c0f85220e379331393584679b94bf697602371439036e08b0729ffda8a9a67af",
+      "test_functions": [
+        "test_search_first_late_missing_and_empty",
+        "test_callers_snapshots_keep_ordinary_ownership",
+        "test_indirect_entry_stays_owned",
+        "test_loop_backedge_returns_the_second_live_argument"
+      ],
+      "group": "migrations",
+      "added_lines": 5,
+      "removed_lines": 5,
+      "explicit_copies_added": 5,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_borrowed_readonly_entries.my": {
+      "original_sha256": "dea566b0f4ea47e362dc1238c24033a1c76cead8a31c99543990dbbdbe820f3f",
+      "migrated_sha256": "956eb3fc16aac32c8a524573e5affbea27f52e876131d5893ebe980e9f5a050f",
+      "test_functions": [
+        "test_saved_borrowed_and_immortal_results_survive_repeated_calls",
+        "test_canonical_function_value_keeps_ordinary_owned_result"
+      ],
+      "group": "migrations",
+      "added_lines": 2,
+      "removed_lines": 2,
+      "explicit_copies_added": 2,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_borrowed_results.my": {
+      "original_sha256": "1d207688907bdd8a6125a3a02cc646d691fa713e003ae368779b129b7603c23b",
+      "migrated_sha256": "af807d66c129f48448d8ad1b8b5e2cf93ee7e41fbc4b5e1826d37d7185e90923",
+      "test_functions": [
+        "test_borrowed_projection_survives_anchor_clear",
+        "test_immortal_fallback_copies_inline_result_bits",
+        "test_indirect_accessor_keeps_canonical_owned_result",
+        "test_repeated_borrowed_projection_keeps_source_live"
+      ],
+      "group": "migrations",
+      "added_lines": 2,
+      "removed_lines": 2,
+      "explicit_copies_added": 2,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_box_writeback.my": {
+      "original_sha256": "0cf0ed2142b5df047b0ce48225796a6edc7e4530c8fa3117e53ffa26c29da62b",
+      "migrated_sha256": "43e0fb35b366ce77bdf3c15b43b24f630d73f6793daebed1a8a828e0a897491c",
+      "test_functions": [
+        "test_heap_option_mapping_write_updates_the_owner_after_a_snapshot",
+        "test_option_write_still_publishes_when_a_view_keeps_the_old_mapping_alive",
+        "test_repeated_option_writes_replace_the_latest_owner"
+      ],
+      "group": "migrations",
+      "added_lines": 1,
+      "removed_lines": 1,
+      "explicit_copies_added": 1,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_buffer_loops.my": {
+      "original_sha256": "50a8fca9f92acd0d0e5285729de06b003cefc9884ab2d388f7e1a58bece8bd91",
+      "migrated_sha256": "e9456ad4b830a2516ad105e724db368c292438d6e16ae6d8f320ed4a36a24311",
+      "test_functions": [
+        "test_zero_and_many_iterations_append_the_same_octets",
+        "test_a_snapshot_taken_before_the_loop_keeps_its_octets",
+        "test_text_and_number_appends_share_one_entry_check",
+        "test_a_callback_or_snapshot_inside_the_loop_keeps_every_check",
+        "test_refused_appends_inside_the_loop_write_nothing"
+      ],
+      "group": "migrations",
+      "added_lines": 1,
+      "removed_lines": 1,
+      "explicit_copies_added": 1,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_caller_field_reads.my": {
+      "original_sha256": "e5eb10546c0f8947b6ada8c5b32226ded8abc6c9058d60b4683f34d13a55dee5",
+      "migrated_sha256": "ed43c4b50434f0ecb74d5acf398e94129dd0741f28b35498397831a15c75c311",
+      "test_functions": [
+        "test_direct_and_forwarded_references_keep_callers_value",
+        "test_negative_index_and_later_replacement_keep_scalar_snapshot",
+        "test_repeated_entry_and_rebinding_keep_anchor_current",
+        "test_distinct_inout_homes_in_both_orders",
+        "test_callback_capture_retains_original_field_value",
+        "test_readonly_parameter_retains_its_separate_convention",
+        "test_live_leaf_reached_through_parent_field"
+      ],
+      "group": "migrations",
+      "added_lines": 6,
+      "removed_lines": 4,
+      "explicit_copies_added": 4,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_collection_builtins.my": {
+      "original_sha256": "59ad24d576d50d2145621bd9261cb13352959a19023bbd45847752f54752a97c",
+      "migrated_sha256": "2789f093d67f282ece09425ced54088ed62c579f481a6f4de614cb2d2cb96941",
+      "test_functions": [
+        "test_nested_list_mutators_publish_owned_results",
+        "test_dictionary_results_survive_receiver_clear",
+        "test_keyed_sort_owns_its_managed_elements",
+        "test_set_pop_owns_the_removed_key",
+        "test_identity_text_conversion_retains_its_input",
+        "test_detached_views_keep_their_canonical_storage"
+      ],
+      "group": "migrations",
+      "added_lines": 4,
+      "removed_lines": 4,
+      "explicit_copies_added": 4,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_compact_journal.my": {
+      "original_sha256": "b1786c658e76a9e7ae67a1c4a279e7e6834536682445c2be549019e6322d64fe",
+      "migrated_sha256": "a8633f4c1ff05c196b080f7ec061db14ac0d9f3ad4e141d65a90e313d67fa14e",
+      "test_functions": [
+        "test_plain_updates_stage_bits_inside_a_managed_frame",
+        "test_reused_operands_retain_ordinary_and_held_cleanup_roles"
+      ],
+      "group": "migrations",
+      "added_lines": 1,
+      "removed_lines": 1,
+      "explicit_copies_added": 1,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_counted_receivers.my": {
+      "original_sha256": "dad63f02811dd6fcb8c55be5094e087dce7b52954039a3e0d939bda48b7c17ee",
+      "migrated_sha256": "e4a472bc97f6326c67528474e4a08e3218d782320413d9cc215d9569a85b3e7c",
+      "test_functions": [
+        "test_stored_row_is_an_independent_value",
+        "test_appended_rows_and_negative_indices",
+        "test_row_read_before_the_store_keeps_its_value",
+        "test_row_copied_within_the_same_list_stays_independent",
+        "test_string_elements_replace_in_place",
+        "test_recursive_elements_keep_the_scoped_store"
+      ],
+      "group": "migrations",
+      "added_lines": 6,
+      "removed_lines": 6,
+      "explicit_copies_added": 6,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_dictionary_keys.my": {
+      "original_sha256": "d68275ffafab59588c89e3cc8caf988f67967b0b863dd5982b5ba4d9a7142e76",
+      "migrated_sha256": "ab91ca04b174edeea0b1a5ad8e5644f4a7612c42b7a09da1d2d04f2a7c218817",
+      "test_functions": [
+        "test_repeated_negative_index_keys_and_real_iterator",
+        "test_view_backed_keys_survive_dictionary_growth",
+        "test_preexisting_list_and_dictionary_snapshots",
+        "test_rhs_callback_keeps_original_named_key",
+        "test_later_key_use_keeps_ordinary_publication",
+        "test_string_iterator_role_is_not_elided",
+        "test_parameter_keeps_ordinary_capture",
+        "test_user_loop_binding_is_not_an_ordinary_home_proof",
+        "test_rebound_source_and_empty_loop_keep_fallback",
+        "test_preowned_key_reassigned_on_loop_backedges"
+      ],
+      "group": "migrations",
+      "added_lines": 24,
+      "removed_lines": 24,
+      "explicit_copies_added": 24,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_dictionary_loops.my": {
+      "original_sha256": "d49ab3041227cce21f00a640b06eaa81ccc2f157909b449909dc6fdabd4f34e5",
+      "migrated_sha256": "4988b595163dcf5030ce295e436908f0b10211ff86fa1a579e5c0f070a0d529a",
+      "test_functions": [
+        "test_fresh_root_and_zero_iterations",
+        "test_shared_empty_root_refuses_even_zero_iterations",
+        "test_publication_during_loop_refuses",
+        "test_callback_and_reference_keep_fallback",
+        "test_rebound_root_keeps_fallback",
+        "test_enclosing_loop_publication_cannot_feed_fresh_entry"
+      ],
+      "group": "migrations",
+      "added_lines": 9,
+      "removed_lines": 9,
+      "explicit_copies_added": 9,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_dictionary_tails.my": {
+      "original_sha256": "b9703a8cee8e42bc1fa9535f31fced628384c21cf8dd01e816bdfda284499cad",
+      "migrated_sha256": "47c21730a185c8d6e4e6beed9845cdd0aff226e11fae29b0ad68a79f81003295",
+      "test_functions": [
+        "test_repeated_string_key_insert_and_overwrite",
+        "test_preexisting_snapshot_keeps_first_uniqueness",
+        "test_completed_key_and_rhs_callbacks_keep_order",
+        "test_call_completes_before_dictionary_key_selection",
+        "test_live_view_and_managed_value_keep_general_paths",
+        "test_function_wide_string_iteration_keeps_key_load_roles"
+      ],
+      "group": "migrations",
+      "added_lines": 7,
+      "removed_lines": 7,
+      "explicit_copies_added": 7,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_dictionary_views.my": {
+      "original_sha256": "9c09d89581d3b0e04ed79780852d9a8e5d4bb512340ecf76ce7cfe7252024cfe",
+      "migrated_sha256": "9c09d89581d3b0e04ed79780852d9a8e5d4bb512340ecf76ce7cfe7252024cfe",
+      "test_functions": [
+        "test_explicit_snapshot_preserves_prior_values",
+        "test_returned_nested_snapshots_keep_managed_values"
+      ],
+      "group": "migrations",
+      "added_lines": 0,
+      "removed_lines": 0,
+      "explicit_copies_added": 0,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_element_moves.my": {
+      "original_sha256": "1e73df01f07cf209ee3703914073f8ba6e05c167e938cf90811c84d3bf6fc1db",
+      "migrated_sha256": "d3d5428684ab8d9d586a7afa09a7dc1d14547f7fb1faea323bd6700caaa95d2e",
+      "test_functions": [
+        "test_field_moved_out_of_a_dead_local_changes_in_place",
+        "test_snapshot_taken_before_the_move_keeps_its_values",
+        "test_match_binding_field_move",
+        "test_source_read_after_the_extraction_keeps_its_field",
+        "test_source_reused_in_a_loop_keeps_its_field",
+        "test_source_passed_mut_keeps_its_field",
+        "test_same_slot_return_updates_the_element",
+        "test_list_snapshot_before_the_return_keeps_the_old_payload",
+        "test_element_snapshot_before_the_return_keeps_the_old_payload",
+        "test_elements_sharing_one_table_stay_independent",
+        "test_negative_index_returns_to_the_same_element",
+        "test_near_miss_arms_keep_value_semantics",
+        "test_field_store_of_a_dead_local_hands_the_value_over",
+        "test_field_store_then_a_local_read_keeps_a_copy",
+        "test_field_store_in_a_loop_copies_each_time"
+      ],
+      "group": "migrations",
+      "added_lines": 22,
+      "removed_lines": 22,
+      "explicit_copies_added": 23,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_empty_frames.my": {
+      "original_sha256": "8e9e994aecd2c724516ae980067861d663317df2f32f9149f32088de02f98e0f",
+      "migrated_sha256": "e1b68d4ed4d3170aa4d4bc12f899f2381e5f564cdc387cecdff505525dd1ad0e",
+      "test_functions": [
+        "test_caller_snapshot_and_negative_index_survive_unlinked_callee",
+        "test_completed_callback_keeps_caller_and_snapshot_independent"
+      ],
+      "group": "migrations",
+      "added_lines": 2,
+      "removed_lines": 2,
+      "explicit_copies_added": 2,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_field_transfers.my": {
+      "original_sha256": "e664726b28f6c57bf4501c5abe877f18787e100ea3ce1ba88c59cb68fd7347e7",
+      "migrated_sha256": "59e8827a1dc4d3f13ae2e85d388d6fd741c9ece9779fcc09f5880da11d541626",
+      "test_functions": [
+        "test_closed_field_restores_empty_and_nonempty_source",
+        "test_closed_field_repeated_extractions_return_each_owner",
+        "test_closed_field_preserves_caller_snapshot",
+        "test_observed_field_keeps_an_independent_local_value",
+        "test_closed_field_refuses_early_exit_and_alias_argument",
+        "test_nested_field_uses_existing_path_behavior",
+        "test_closed_field_releases_the_previous_target_once",
+        "test_snapshot_root_keeps_existing_transfer_rules"
+      ],
+      "group": "migrations",
+      "added_lines": 13,
+      "removed_lines": 12,
+      "explicit_copies_added": 12,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_fresh_constructors.my": {
+      "original_sha256": "e90501eb1129e941d553fd370c64c37f7ed8201f110d07b749b1ef5251859280",
+      "migrated_sha256": "c8df0b51870045e6de4a502ec5444ad9210a4f40c3e9a959b05b358230b30b8e",
+      "test_functions": [
+        "test_recursive_fresh_record_children_have_independent_owners",
+        "test_named_constructor_order_preserves_the_result",
+        "test_recursive_variant_payloads_retain_every_child",
+        "test_aliased_immutable_boxes_keep_the_generic_transfer_path"
+      ],
+      "group": "migrations",
+      "added_lines": 2,
+      "removed_lines": 2,
+      "explicit_copies_added": 2,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_fresh_loop_roots.my": {
+      "original_sha256": "620b4b1f95b43fb30d60a39c097a2746005d4692f19a3c37be95c070f9360801",
+      "migrated_sha256": "e11f3d7905cd562805667a979fdf4ef94a7f9c3a5bd66a984bea84a6ae66e400",
+      "test_functions": [
+        "test_fresh_growth_and_post_loop_publication_keep_real_owners",
+        "test_comprehension_handoff_and_plain_terminal_return",
+        "test_preexisting_snapshot_refuses_fresh_loop_assumption",
+        "test_snapshot_created_inside_loop_stays_independent",
+        "test_prior_enclosing_iteration_publication_refuses_freshness",
+        "test_callback_retains_pending_receiver_protocol",
+        "test_zero_iterations_preserve_shared_receiver_and_order",
+        "test_sorted_hidden_parent_and_named_alias_survive_handoff"
+      ],
+      "group": "migrations",
+      "added_lines": 6,
+      "removed_lines": 6,
+      "explicit_copies_added": 6,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_fresh_spans.my": {
+      "original_sha256": "082bfc8a04f7bbaf9fd0a938808c1973428f01ed101c40a453c639fa544d009b",
+      "migrated_sha256": "f32566a7863d60f139ab627ebff32802ff48fc1aa6138def0306505e1c57dfb6",
+      "test_functions": [
+        "test_nullable_literal_and_reordered_fields_publish_the_complete_value",
+        "test_uncertified_aliases_keep_their_generic_ownership",
+        "test_inactive_counted_variant_fields_keep_literal_payload_bits"
+      ],
+      "group": "migrations",
+      "added_lines": 2,
+      "removed_lines": 2,
+      "explicit_copies_added": 2,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_glue_values.my": {
+      "original_sha256": "5f757845613e7e80baaf60a4ec2a4b878b79267ccf6fc92b230a0bb07af1f68b",
+      "migrated_sha256": "d2ff2fde0de61a4c23a627d92884fc6d38141c825fb416965e4168cd096e8ccc",
+      "test_functions": [
+        "test_wide_records_copy_and_release_every_edge",
+        "test_fixed_arrays_of_lists_keep_independent_rows",
+        "test_variant_arms_move_through_lists",
+        "test_list_appends_of_own_elements_and_plain_records",
+        "test_list_element_replacement_releases_the_old_value",
+        "test_repeated_variant_edges_retain_an_independent_snapshot"
+      ],
+      "group": "migrations",
+      "added_lines": 9,
+      "removed_lines": 9,
+      "explicit_copies_added": 10,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_inert_receivers.my": {
+      "original_sha256": "6b43420fdb3c75557c3846f1a5045498175c20d8b8eccd572be7019241980303",
+      "migrated_sha256": "76f891e98c86eaf9f627d878a1637f45bb265997e8906aced5fe62249aabe58c",
+      "test_functions": [
+        "test_nested_scalar_writes_keep_the_original_snapshot",
+        "test_callback_publication_keeps_full_pending_receiver_pins",
+        "test_managed_publication_still_establishes_independent_values",
+        "test_conditional_indices_and_zero_iterations_preserve_owners",
+        "test_three_level_shared_projection_keeps_named_row_and_outer_snapshot",
+        "test_plain_record_writes_keep_snapshot_and_negative_index",
+        "test_plain_record_call_finishes_before_selection_and_keeps_snapshot"
+      ],
+      "group": "migrations",
+      "added_lines": 11,
+      "removed_lines": 11,
+      "explicit_copies_added": 12,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_inline_glue.my": {
+      "original_sha256": "f8b5e0dc3971fd994e044665f3cedde1909eeb0587ac368f88c3aaaec874ec6f",
+      "migrated_sha256": "3cb0db26010bb5973f5e78b689a4af2887fa0edf2a05f6f68ec7267f24f73594",
+      "test_functions": [
+        "test_published_lists_are_independent_values",
+        "test_replaced_frames_release_their_lists",
+        "test_frames_sharing_lists_keep_them_alive",
+        "test_wide_records_keep_their_glue_drop"
+      ],
+      "group": "migrations",
+      "added_lines": 4,
+      "removed_lines": 4,
+      "explicit_copies_added": 7,
+      "qualification": "integrated final candidate required"
+    },
+    "tests/lang/rc_interval_anchors.my": {
+      "original_sha256": "f9351cbb6f4821449cbbb48326723bcf86c6176d03f2ce6ddff9bfa781b22935",
+      "migrated_sha256": "316c3ed795f6a6b00de2ab56071663b9ac1e4fae5423accae03d4c1434f96da0",
+      "test_functions": [
+        "test_a_mut_list_is_read_in_place_between_its_writes",
+        "test_a_local_list_is_read_in_place_between_appends",
+        "test_a_list_handed_to_a_new_owner_keeps_earlier_reads",
+        "test_values_live_across_a_write_keep_their_copy",
+        "test_local_lists_written_or_returned_keep_owners"
+      ],
+      "group": "migrations",
+      "added_lines": 8,
+      "removed_lines": 8,
+      "explicit_copies_added": 8,
+      "qualification": "integrated final candidate required"
+    },
+    "test/core/b_buffer_values.my": {
+      "original_sha256": "4bc9302b966705c8c62e9583ab21afd5f12bc50df713df1963a7bf58f3e71ace",
+      "migrated_sha256": "646f6ab0fb6377a23232ee8759559c1f0271700c7715499bd21d5170034c9dc8",
+      "test_functions": [
+        "test_byte_buffer_snapshots_copies_and_places",
+        "test_buffer_append_range_utf8_and_float_preserve_inputs"
+      ],
+      "group": "additional",
+      "added_lines": 2,
+      "removed_lines": 2,
+      "explicit_copies_added": 2,
+      "qualification": "integrated final candidate required"
+    },
+    "test/core/c_runner_byte_buffer.my": {
+      "original_sha256": "0d7f50f4a91975cac741a3437f3dd0abd8f3fd89d997074b6c75d69f5a613167",
+      "migrated_sha256": "a39f6e78c12f2caddaa31f744e31692caf53a5da34969dd49c1d7812776d4e87",
+      "test_functions": [
+        "test_buffer_copy_appends_alone",
+        "test_buffers_inside_records_lists_and_options",
+        "test_short_buffer",
+        "test_buffer_error_result"
+      ],
+      "group": "additional",
+      "added_lines": 2,
+      "removed_lines": 2,
+      "explicit_copies_added": 2,
+      "qualification": "integrated final candidate required"
+    },
+    "test/core/ce_appends.my": {
+      "original_sha256": "9b3d4291265e08c81430bc2979346eb80d0c601b82c832fb05ac04550b537e52",
+      "migrated_sha256": "797837b9d0dba06c76c113217b13c270ebad4590be1b42c2e54dc760a4b0c970",
+      "test_functions": [],
+      "group": "additional",
+      "added_lines": 7,
+      "removed_lines": 5,
+      "explicit_copies_added": 1,
+      "qualification": "integrated final candidate required"
+    },
+    "test/core/f2_index.my": {
+      "original_sha256": "73d7f7e1abc917d9e8186af01998c14beadef72a4cf333e6990427f731826c70",
+      "migrated_sha256": "4003f55a46151209aeeec7fdc84b6eb8776cbf122edcc0c7ecbea0f9a724963d",
+      "test_functions": [],
+      "group": "additional",
+      "added_lines": 3,
+      "removed_lines": 2,
+      "explicit_copies_added": 1,
+      "qualification": "integrated final candidate required"
+    },
+    "test/core/list_alias.my": {
+      "original_sha256": "bd3f40772f562ffe788eb164ecb16522ce6dcb404e359f19e73f06473a216f9d",
+      "migrated_sha256": "6382873b92f3b9d41b2e2b7341920c105393d841437ef99af1301d1ed38de703",
+      "test_functions": [],
+      "group": "additional",
+      "added_lines": 2,
+      "removed_lines": 2,
+      "explicit_copies_added": 2,
+      "qualification": "integrated final candidate required"
+    },
+    "test/core/m_list_methods.my": {
+      "original_sha256": "0796bcc93b1765c6bf507b72cc9ee851ba11e96fe091cd9e4be2126ab38bb258",
+      "migrated_sha256": "9a14085c332a4b265873fd48e09ffe436c6376e87a896ac36e3d9905d91ba529",
+      "test_functions": [
+        "test_bounds_first_occurrence_and_scalar_snapshots",
+        "test_managed_removed_values_and_none_placeholders_survive_clear",
+        "test_readonly_index_captures_receiver_before_needle_mutation",
+        "test_stepped_slice_clamps_endpoints_preserves_elements_and_evaluates_once",
+        "test_missing_index_traps",
+        "test_missing_remove_traps",
+        "test_indexed_pop_reports_original_negative_index",
+        "test_zero_step_traps"
+      ],
+      "group": "additional",
+      "added_lines": 9,
+      "removed_lines": 5,
+      "explicit_copies_added": 5,
+      "qualification": "integrated final candidate required"
+    },
+    "test/core/rc_lists.my": {
+      "original_sha256": "50a0c3423c131ac88c8b6397cf62de85419295a1ca65dbae98408d5661ff53cd",
+      "migrated_sha256": "0cec324f2b85dd93788f76fa30ca1a9aae7c26d4aebb91dc47192723178a30bc",
+      "test_functions": [],
+      "group": "additional",
+      "added_lines": 6,
+      "removed_lines": 6,
+      "explicit_copies_added": 6,
+      "qualification": "integrated final candidate required"
+    },
+    "test/core/rc_mut.my": {
+      "original_sha256": "e62557cd2f309793913581736715d7dd739d63e8e7aa898ac98227656c88672e",
+      "migrated_sha256": "583188c178343458fffda61688bbebf01d71484451abe850b725a228a854fb0d",
+      "test_functions": [],
+      "group": "additional",
+      "added_lines": 2,
+      "removed_lines": 2,
+      "explicit_copies_added": 2,
+      "qualification": "integrated final candidate required"
+    },
+    "test/core/rc_promote_order.my": {
+      "original_sha256": "4532c278888bc3409173dc6f21a0ba4f4ca824520607b42761716e15519f4aa6",
+      "migrated_sha256": "6147d9953e30f7ae89c22463ed21fbef33070063d2d3df391d294f8c172d3af6",
+      "test_functions": [],
+      "group": "additional",
+      "added_lines": 6,
+      "removed_lines": 6,
+      "explicit_copies_added": 6,
+      "qualification": "integrated final candidate required"
+    },
+    "test/core/rc_shared_loops.my": {
+      "original_sha256": "0ebf0412311e8ee8f39998916749039f8cd20f433ee3b9f0837a7f4f7289da04",
+      "migrated_sha256": "ee102ff5e102d5d9597871933c09764e821698ba14c66f6e8fc97f1893ca058e",
+      "test_functions": [],
+      "group": "additional",
+      "added_lines": 2,
+      "removed_lines": 2,
+      "explicit_copies_added": 2,
+      "qualification": "integrated final candidate required"
+    },
+    "test/core/u1_growth.my": {
+      "original_sha256": "db3a32e8c7903db94113b18045ff6aebbf05537a4669151ae730a3fbb2687262",
+      "migrated_sha256": "9ea653c024aa77fc4e8f1b35ff7dd076ef1937206eacff19e5215b98c579b278",
+      "test_functions": [],
+      "group": "additional",
+      "added_lines": 2,
+      "removed_lines": 2,
+      "explicit_copies_added": 2,
+      "qualification": "integrated final candidate required"
+    },
+    "test/core/u1_hoist.my": {
+      "original_sha256": "087a5a54dd751c673bf969b3b9d1a66fa77f7b75918f024f4e906c37593bd816",
+      "migrated_sha256": "8693036268529f2cdaff10500188b7de2ecba80fdafd7a9638e40cf90c6552de",
+      "test_functions": [],
+      "group": "additional",
+      "added_lines": 17,
+      "removed_lines": 17,
+      "explicit_copies_added": 17,
+      "qualification": "integrated final candidate required"
+    },
+    "test/core/v_dynamic_repeat.my": {
+      "original_sha256": "308d0a775bdb7a7ecbac44aac8b237ed1b056d31013464ea2c2341c787a6db24",
+      "migrated_sha256": "bc649543ed366581763f8172be19e5cb795747700eb8d2031c0d8bf253373336",
+      "test_functions": [
+        "test_dynamic_repeat_list_context_and_cow"
+      ],
+      "group": "additional",
+      "added_lines": 2,
+      "removed_lines": 2,
+      "explicit_copies_added": 2,
+      "qualification": "integrated final candidate required"
+    },
+    "test/core/v_lists.my": {
+      "original_sha256": "c58a859115792ea7baf822380d054fe2a2a78692a67608d7837a69b336716d83",
+      "migrated_sha256": "854c9b294e392ccf9e841fe6866f84064d431c974ae9893e942c92833f0695b2",
+      "test_functions": [],
+      "group": "additional",
+      "added_lines": 3,
+      "removed_lines": 3,
+      "explicit_copies_added": 3,
+      "qualification": "integrated final candidate required"
+    },
+    "test/core/v_loops.my": {
+      "original_sha256": "fca2e3160e5d2d113898e450cd4533d3e08198d2c8feedde3f0bfaf741bac1a3",
+      "migrated_sha256": "d9467fd1fcba9ec1e3312b3df9148ef6f05d53b14e5610f066066be52fe3c87a",
+      "test_functions": [],
+      "group": "additional",
+      "added_lines": 2,
+      "removed_lines": 2,
+      "explicit_copies_added": 2,
+      "qualification": "integrated final candidate required"
+    },
+    "test/core/v_methods.my": {
+      "original_sha256": "78a07384e1301fa07bcc76e510554e8934f20eaf9379f650292b8576fd1ce59d",
+      "migrated_sha256": "c5f8bacd4b83d79aaf979268e36ebc5a24fce8512605344165b18080466dc77f",
+      "test_functions": [],
+      "group": "additional",
+      "added_lines": 3,
+      "removed_lines": 2,
+      "explicit_copies_added": 1,
+      "qualification": "integrated final candidate required"
+    },
+    "test/core/v_mut_rebind.my": {
+      "original_sha256": "20761f7d4a8570a6f8e62780be5562ca10d0b4c42d2ac69059a01281cb653fc5",
+      "migrated_sha256": "ff6c523d05b8d52073308f4fead65ff691fb3ee778a766927c164a7a63536f87",
+      "test_functions": [],
+      "group": "additional",
+      "added_lines": 9,
+      "removed_lines": 9,
+      "explicit_copies_added": 10,
+      "qualification": "integrated final candidate required"
+    },
+    "test/core/v_nested_lengths.my": {
+      "original_sha256": "e6ca1a8a792de3f089aad3d00830534be316175f1b5ef3d21f34d92f2002406e",
+      "migrated_sha256": "5b3511bcd8e3cdbcbf5660f7a30c0c636d75a5cb496b5ada95e28683c9b03130",
+      "test_functions": [
+        "test_uniform_child_lengths_follow_each_list_value"
+      ],
+      "group": "additional",
+      "added_lines": 4,
+      "removed_lines": 4,
+      "explicit_copies_added": 4,
+      "qualification": "integrated final candidate required"
+    },
+    "test/core/v_nested_places.my": {
+      "original_sha256": "6d19d13aa76d47936ca706795d8845cbc7552780637e6e75f48b97a5085cb165",
+      "migrated_sha256": "7774a80719af5f5cc35a34b69dd7d4809d22934619a6d4e9cf3d361ca97bcaeb",
+      "test_functions": [
+        "test_nested_unique_and_shared_paths"
+      ],
+      "group": "additional",
+      "added_lines": 5,
+      "removed_lines": 5,
+      "explicit_copies_added": 6,
+      "qualification": "integrated final candidate required"
+    },
+    "test/core/v_sort.my": {
+      "original_sha256": "c80835365551fcb68bd7fc035349d931ada8b744bc2b1ba7969d201347e208aa",
+      "migrated_sha256": "81be0e707cff4a73c6d00c9428110131593069ac351408308e22e91d6fd8133d",
+      "test_functions": [],
+      "group": "additional",
+      "added_lines": 1,
+      "removed_lines": 1,
+      "explicit_copies_added": 1,
+      "qualification": "integrated final candidate required"
+    },
+    "test/core/v_units.my": {
+      "original_sha256": "8fda0ae568eca67885c1a1a98e3778695ac20ff83d96e9383390d27402893bc0",
+      "migrated_sha256": "df07c1af4d9b391a1d90db69148e8323a35a12d4b86f280673886ebb3351c57f",
+      "test_functions": [],
+      "group": "additional",
+      "added_lines": 1,
+      "removed_lines": 1,
+      "explicit_copies_added": 1,
+      "qualification": "integrated final candidate required"
+    }
+  },
+  "totals": {
+    "added_lines": 521,
+    "removed_lines": 492,
+    "explicit_copies_added": 502
+  }
+}

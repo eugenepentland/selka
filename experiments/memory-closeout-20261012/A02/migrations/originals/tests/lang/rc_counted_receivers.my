@@ -1,0 +1,95 @@
+# Storing or appending a counted element through a list held by a stable
+# owner needs no receiver scope under RC when the element type cannot reach
+# the list's own type (RC-INERT-COUNTED-RECEIVER-1). Every test also runs
+# under GC and `--gc-stress`; the values must be plain value semantics.
+enum Tree:
+    leaf
+    node(value: Tree[])
+
+
+record Table:
+    rows: int[][]
+    names: str[]
+    trees: Tree[]
+    count: int
+
+
+func fresh_table() -> Table:
+    return Table(rows=[[1], [2, 3]], names=["a"], trees=[Tree.leaf], count=0)
+
+
+func store(mut table: Table, index: int, row: int[]):
+    table.rows[index] = row
+
+
+func add(mut table: Table, row: int[]):
+    table.rows.append(row)
+
+
+func rename(mut table: Table, name: str):
+    table.names[0] = name
+
+
+func copy_row(mut table: Table, to: int, from: int):
+    table.rows[to] = table.rows[from]
+
+
+func plant(mut table: Table, tree: Tree):
+    table.trees[0] = tree
+
+
+func size(tree: Tree) -> int:
+    match tree:
+        case Tree.leaf:
+            return 1
+        case Tree.node(value=children):
+            mut total = 1
+            for child in children:
+                total += size(child)
+            return total
+
+
+public func test_stored_row_is_an_independent_value() -> bool:
+    mut table = fresh_table()
+    mut row = [7, 8]
+    store(mut table, 0, row)
+    row.append(9)
+    table.rows[0].append(10)
+    return row == [7, 8, 9] and table.rows[0] == [7, 8, 10] and table.rows[1] == [2, 3]
+
+
+public func test_appended_rows_and_negative_indices() -> bool:
+    mut table = fresh_table()
+    mut i = 0
+    while i < 20:
+        add(mut table, [i])
+        i += 1
+    store(mut table, -1, [99])
+    return len(table.rows) == 22 and table.rows[21] == [99] and table.rows[20] == [18]
+
+
+public func test_row_read_before_the_store_keeps_its_value() -> bool:
+    mut table = fresh_table()
+    mut before = table.rows[1]
+    store(mut table, 1, [4])
+    return before == [2, 3] and table.rows == [[1], [4]]
+
+
+public func test_row_copied_within_the_same_list_stays_independent() -> bool:
+    mut table = fresh_table()
+    copy_row(mut table, 0, 1)
+    table.rows[0].append(4)
+    return table.rows[0] == [2, 3, 4] and table.rows[1] == [2, 3]
+
+
+public func test_string_elements_replace_in_place() -> bool:
+    mut table = fresh_table()
+    rename(mut table, "b")
+    rename(mut table, "c")
+    return table.names == ["c"]
+
+
+public func test_recursive_elements_keep_the_scoped_store() -> bool:
+    mut table = fresh_table()
+    plant(mut table, Tree.node(value=[Tree.leaf, Tree.node(value=[Tree.leaf])]))
+    return size(table.trees[0]) == 4

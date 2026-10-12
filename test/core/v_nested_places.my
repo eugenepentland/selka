@@ -6,18 +6,18 @@ record Rows:
 public func test_nested_unique_and_shared_paths() -> bool:
     mut a = [[1, 2], [3, 4]]
     a[0][1] = 8
-    mut saved = a
+    mut saved = a.copy()
     a[1][0] = 9
     mut row = [0, 0]
-    mut repeated = [row, row]
+    mut repeated = [row.copy(), row.copy()]
     repeated[0][1] = 7
     mut deep = [[[0, 1]]]
-    mut old_deep = deep
+    mut old_deep = deep.copy()
     deep[0][0][0] = 6
-    mut record = Rows(rows=a)
+    mut record = Rows(rows=a.copy())
     record.rows[0][0] = 5
     mut mapping = {"x": [[0, 1]]}
-    mut old_mapping = mapping
+    mut old_mapping = mapping.copy()
     mapping["x"][0][1] = 4
     return a == [[1, 8], [9, 4]] and saved == [[1, 8], [3, 4]] and repeated == [[0, 7], [0, 0]] and row == [0, 0] and deep == [[[6, 1]]] and old_deep == [[[0, 1]]] and record.rows[0][0] == 5 and a[0][0] == 1 and mapping["x"][0][1] == 4 and old_mapping["x"][0][1] == 1
 

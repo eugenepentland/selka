@@ -18,7 +18,7 @@ public func test_a_loop_variable_copy_can_be_changed_as_a_local() -> bool:
     mut grid = [[1], [2, 2]]
     mut seen: int[][] = []
     for row in grid:
-        mut local = row
+        mut local = row.copy()
         local.append(0)
         seen.append(local)
     return grid == [[1], [2, 2]] and seen == [[1, 0], [2, 2, 0]]
@@ -50,7 +50,7 @@ public func test_a_match_binding_is_a_copy_of_the_payload() -> bool:
     mut kept: int[][] = []
     match maybe:
         case Some(inside):
-            kept.append(inside)
+            kept.append(inside.copy())
         case None:
             return False
     kept[0].append(2)

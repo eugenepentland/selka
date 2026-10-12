@@ -71,7 +71,7 @@ public func test_wide_records_copy_and_release_every_edge() -> bool:
     mut index = 0
     while index < 200:
         mut value = wide(index)
-        mut copy = value
+        mut copy = value.copy()
         value.a = [99]
         if index == 7:
             kept = copy
@@ -81,7 +81,7 @@ public func test_wide_records_copy_and_release_every_edge() -> bool:
 
 public func test_fixed_arrays_of_lists_keep_independent_rows() -> bool:
     mut first = grid(1)
-    mut second = first
+    mut second = first.copy()
     second.rows[1] = [5]
     mut index = 0
     mut sum = 0
@@ -103,7 +103,7 @@ public func test_variant_arms_move_through_lists() -> bool:
             pieces.append(Piece.pair(value=wide(1)))
         index += 1
     pieces[1] = Piece.none
-    pieces[2] = pieces[2]
+    pieces[2] = pieces[2].copy()
     mut sum = 0
     for piece in pieces:
         sum += piece_size(piece)
@@ -114,7 +114,7 @@ public func test_list_appends_of_own_elements_and_plain_records() -> bool:
     mut rows: int[][] = [[1], [2]]
     mut index = 0
     while index < 40:
-        rows.append(rows[index])
+        rows.append(rows[index].copy())
         index += 1
     mut points: Point[] = []
     mut step = 0
@@ -127,7 +127,7 @@ public func test_list_appends_of_own_elements_and_plain_records() -> bool:
 
 public func test_list_element_replacement_releases_the_old_value() -> bool:
     mut values: Wide[] = [wide(0), wide(1)]
-    mut saved = values[0]
+    mut saved = values[0].copy()
     mut index = 0
     while index < 50:
         values[index % 2] = wide(index)
@@ -137,13 +137,13 @@ public func test_list_element_replacement_releases_the_old_value() -> bool:
 
 public func test_repeated_variant_edges_retain_an_independent_snapshot() -> bool:
     mut row = [17]
-    mut pair = Aliased(left=row, right=row)
-    mut variants = [AliasChoice.both(value=pair)]
+    mut pair = Aliased(left=row.copy(), right=row.copy())
+    mut variants = [AliasChoice.both(value=pair.copy())]
     mut index = 0
     while index < 40:
-        variants.append(variants[index])
+        variants.append(variants[index].copy())
         index += 1
-    mut snapshot = variants[20]
+    mut snapshot = variants[20].copy()
     pair.left.append(29)
     row.append(31)
     match snapshot:

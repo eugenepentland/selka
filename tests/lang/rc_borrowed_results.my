@@ -15,11 +15,11 @@ func empty() -> Span:
 func at(nodes: Node[], index: int) -> Node:
     if index < 0 or index >= len(nodes):
         return Node(span=empty(), next=len(nodes))
-    return nodes[index]
+    return nodes[index].copy()
 
 
 func octets(node: Node) -> bytes:
-    return node.span.source
+    return node.span.source.copy()
 
 
 func invoke(reader: func(Node[], int) -> Node, nodes: Node[], index: int) -> Node:

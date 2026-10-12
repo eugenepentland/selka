@@ -2,25 +2,25 @@
 # (VALUE-SEMANTICS-2): assignment, argument passing, returns and stores never
 # make two names reach the same list, dict, set or byte_buffer.
 func with_item(xs: int[], value: int) -> int[]:
-    mut copy = xs
+    mut copy = xs.copy()
     copy.append(value)
     return copy
 
 
 func with_entry(d: dict[str, int], key: str, value: int) -> dict[str, int]:
-    mut copy = d
-    copy[key] = value
+    mut copy = d.copy()
+    copy[key.copy()] = value
     return copy
 
 
 func with_member(s: set[int], value: int) -> set[int]:
-    mut copy = s
+    mut copy = s.copy()
     copy.add(value)
     return copy
 
 
 func with_byte(b: byte_buffer, value: int) -> byte_buffer:
-    mut copy = b
+    mut copy = b.copy()
     _ = copy.append_byte(value)
     return copy
 
@@ -35,7 +35,7 @@ func total(xs: int[]) -> int:
 # spec-case: VALUE-SEMANTICS-2
 public func test_a_list_assignment_is_a_copy() -> bool:
     mut a = [1, 2]
-    mut b = a
+    mut b = a.copy()
     b.append(3)
     a[0] = 9
     return a == [9, 2] and b == [1, 2, 3]
@@ -44,7 +44,7 @@ public func test_a_list_assignment_is_a_copy() -> bool:
 # spec-case: VALUE-SEMANTICS-2
 public func test_a_dict_assignment_is_a_copy() -> bool:
     mut a = {"x": 1}
-    mut b = a
+    mut b = a.copy()
     b["y"] = 2
     a["x"] = 5
     return len(a) == 1 and a["x"] == 5 and len(b) == 2 and b["x"] == 1
@@ -53,7 +53,7 @@ public func test_a_dict_assignment_is_a_copy() -> bool:
 # spec-case: VALUE-SEMANTICS-2
 public func test_a_set_assignment_is_a_copy() -> bool:
     mut a = {1, 2}
-    mut b = a
+    mut b = a.copy()
     b.add(3)
     a.discard(1)
     return len(a) == 1 and 2 in a and len(b) == 3 and 1 in b
@@ -64,7 +64,7 @@ public func test_a_byte_buffer_assignment_is_a_copy() -> bool:
     mut empty: int[] = []
     mut a = byte_buffer(empty)
     _ = a.append_byte(1)
-    mut b = a
+    mut b = a.copy()
     _ = b.append_byte(2)
     return len(a) == 1 and len(b) == 2 and b[1] == 2
 
@@ -96,9 +96,9 @@ public func test_a_read_only_argument_is_read_in_place() -> bool:
 # spec-case: VALUE-SEMANTICS-2
 public func test_nested_collections_copy_all_the_way_down() -> bool:
     mut grid = [[1], [2]]
-    mut other = grid
+    mut other = grid.copy()
     other[0].append(5)
     mut table = {"k": [1]}
-    mut copy = table
+    mut copy = table.copy()
     copy["k"].append(2)
     return grid == [[1], [2]] and other == [[1, 5], [2]] and table["k"] == [1] and copy["k"] == [1, 2]

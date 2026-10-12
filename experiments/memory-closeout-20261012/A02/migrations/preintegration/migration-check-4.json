@@ -1,0 +1,179 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support-install/bin/mylang",
+  "compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+  "harness_sha256": "18f15e31b1113e7c28847fe7bac9b35a8b2a4747a84a5a67d3661367f1bce189",
+  "phase": "check",
+  "cases": {
+    "tests/value_semantics/bindings.my": {
+      "original_sha256": "82bbb6ff5eccf3e6f9860b8e1e23fd591a07f73b1f45f9ebc69350d6fdbe0a89",
+      "source_sha256": "dea359bd8acb80b5dfbb06defa7294d7d90c778662dfa9e2812718ab69eb0fba",
+      "wrapper_sha256": "ba8e41589c65b8af0b78acf76d418c3d274a870ca28622fd3e0bbef87588e511",
+      "public_tests": 4,
+      "modes": {
+        "zero": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support-install/bin/mylang",
+            "check",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/migration-check-4/tests/value_semantics/bindings/bindings.my",
+            "--experimental-zero-rc"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "bindings.my:11:5: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      for pair in values.items():\n      ^\n"
+        }
+      }
+    },
+    "tests/lang/option_propagation.my": {
+      "original_sha256": "68bbc52689eff22f078f2564ce5049f92ec6077285c7c866799c8ea25d405267",
+      "source_sha256": "8a6428ccad34539b01debffe74f81b5e52deba9f41bca9dd50022d8a1bf57d2b",
+      "wrapper_sha256": "e80fa4548e88c43df4df273fcb18c368c3e34ecd5c0b39b9d2b5bd3f25117fec",
+      "public_tests": 4,
+      "modes": {
+        "zero": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support-install/bin/mylang",
+            "check",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/migration-check-4/tests/lang/option_propagation/option_propagation.my",
+            "--experimental-zero-rc"
+          ],
+          "status": 0,
+          "stdout": "",
+          "stderr": ""
+        }
+      }
+    },
+    "tests/lang/python_collections.my": {
+      "original_sha256": "f0b768a8195e8f25c09103b24e82ab304fb544fabe4d32e87405b1fdc742b0e8",
+      "source_sha256": "6ec3fc70898c7860cb59334b2f9a82eb3aab068f6af9d5c9c8d70258f5d2ee30",
+      "wrapper_sha256": "6ec3fc70898c7860cb59334b2f9a82eb3aab068f6af9d5c9c8d70258f5d2ee30",
+      "public_tests": 22,
+      "modes": {
+        "zero": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support-install/bin/mylang",
+            "check",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/migration-check-4/tests/lang/python_collections/python_collections.my",
+            "--experimental-zero-rc"
+          ],
+          "status": 0,
+          "stdout": "",
+          "stderr": ""
+        }
+      }
+    },
+    "tests/lang/python_variants.my": {
+      "original_sha256": "148d04c56d2978b861002b0437860ab6cebfd53e96760db843216d88094160a1",
+      "source_sha256": "a4c9887b76a0541c21121aff262a9657102ec74e5271ff828d0ea498ead39bf8",
+      "wrapper_sha256": "a4c9887b76a0541c21121aff262a9657102ec74e5271ff828d0ea498ead39bf8",
+      "public_tests": 6,
+      "modes": {
+        "zero": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support-install/bin/mylang",
+            "check",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/migration-check-4/tests/lang/python_variants/python_variants.my",
+            "--experimental-zero-rc"
+          ],
+          "status": 0,
+          "stdout": "",
+          "stderr": "python_variants.my:102:27: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n                  case Some(_found):\n                            ^\n"
+        }
+      }
+    },
+    "tests/lang/rc_compact_journal.my": {
+      "original_sha256": "b1786c658e76a9e7ae67a1c4a279e7e6834536682445c2be549019e6322d64fe",
+      "source_sha256": "a8633f4c1ff05c196b080f7ec061db14ac0d9f3ad4e141d65a90e313d67fa14e",
+      "wrapper_sha256": "cde38049ee8f18eb7e9b3f9088862353f8060117be7c8e6228139ad94af03457",
+      "public_tests": 2,
+      "modes": {
+        "zero": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support-install/bin/mylang",
+            "check",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/migration-check-4/tests/lang/rc_compact_journal/rc_compact_journal.my",
+            "--experimental-zero-rc"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "rc_compact_journal.my:39:24: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut materialized = list(live)\n                         ^\n"
+        }
+      }
+    },
+    "tests/lang/rc_counted_receivers.my": {
+      "original_sha256": "dad63f02811dd6fcb8c55be5094e087dce7b52954039a3e0d939bda48b7c17ee",
+      "source_sha256": "e4a472bc97f6326c67528474e4a08e3218d782320413d9cc215d9569a85b3e7c",
+      "wrapper_sha256": "882944d8d28b7730b3cac6cef41adf25d47e81eb3c4da8ebb9ae9d7630aca5db",
+      "public_tests": 6,
+      "modes": {
+        "zero": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support-install/bin/mylang",
+            "check",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/migration-check-4/tests/lang/rc_counted_receivers/rc_counted_receivers.my",
+            "--experimental-zero-rc"
+          ],
+          "status": 0,
+          "stdout": "",
+          "stderr": ""
+        }
+      }
+    },
+    "tests/lang/rc_dictionary_tails.my": {
+      "original_sha256": "b9703a8cee8e42bc1fa9535f31fced628384c21cf8dd01e816bdfda284499cad",
+      "source_sha256": "47c21730a185c8d6e4e6beed9845cdd0aff226e11fae29b0ad68a79f81003295",
+      "wrapper_sha256": "c08fa5f71c3476ff55fe05b0f6fea7e67df9e0fa1f1303e8e29d37b71d5d5c28",
+      "public_tests": 6,
+      "modes": {
+        "zero": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support-install/bin/mylang",
+            "check",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/migration-check-4/tests/lang/rc_dictionary_tails/rc_dictionary_tails.my",
+            "--experimental-zero-rc"
+          ],
+          "status": 0,
+          "stdout": "",
+          "stderr": ""
+        }
+      }
+    },
+    "tests/lang/rc_element_moves.my": {
+      "original_sha256": "1e73df01f07cf209ee3703914073f8ba6e05c167e938cf90811c84d3bf6fc1db",
+      "source_sha256": "ef374a70a0f59ac58d036c088d9b434392b21d51853333af8a86ca80eee96ed3",
+      "wrapper_sha256": "d68b71e0a0c639a1a44d566f129fc5821e9c02c988505c8df8b9da0fa44f2c97",
+      "public_tests": 15,
+      "modes": {
+        "zero": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support-install/bin/mylang",
+            "check",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/migration-check-4/tests/lang/rc_element_moves/rc_element_moves.my",
+            "--experimental-zero-rc"
+          ],
+          "status": 1,
+          "stdout": "",
+          "stderr": "rc_element_moves.my:193:16: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut held = objects[0]\n                 ^\n"
+        }
+      }
+    },
+    "tests/lang/rc_inert_receivers.my": {
+      "original_sha256": "6b43420fdb3c75557c3846f1a5045498175c20d8b8eccd572be7019241980303",
+      "source_sha256": "76f891e98c86eaf9f627d878a1637f45bb265997e8906aced5fe62249aabe58c",
+      "wrapper_sha256": "76f891e98c86eaf9f627d878a1637f45bb265997e8906aced5fe62249aabe58c",
+      "public_tests": 7,
+      "modes": {
+        "zero": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support-install/bin/mylang",
+            "check",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/migration-check-4/tests/lang/rc_inert_receivers/rc_inert_receivers.my",
+            "--experimental-zero-rc"
+          ],
+          "status": 0,
+          "stdout": "",
+          "stderr": ""
+        }
+      }
+    }
+  }
+}

@@ -1,5 +1,5 @@
 func shared_tail(xs: int[], extra: int) -> int[]:
-    mut ys = xs
+    mut ys = xs.copy()
     ys.append(extra)
     return ys
 
@@ -33,7 +33,7 @@ func nested(n: int) -> int:
     mut rows: int[][] = []
     for i in range(n):
         mut row = build(i)
-        rows.append(row)
+        rows.append(row.copy())
         rows.append(row)
     mut total = 0
     for r in rows:
@@ -43,7 +43,7 @@ func nested(n: int) -> int:
 
 func alias_phi(n: int) -> int:
     mut a = build(3)
-    mut b = a
+    mut b = a.copy()
     if n > 2:
         b = build(n)
     b.append(7)
@@ -51,7 +51,7 @@ func alias_phi(n: int) -> int:
 
 
 func keep_first(rows: int[][]) -> int[]:
-    mut first = rows[0]
+    mut first = rows[0].copy()
     return first
 
 
@@ -63,11 +63,11 @@ func main(args: str[], out: Stream) -> int:
     mut words = names(5)
     out.print(len(words), words[0], words[1], len(args))
     out.print(nested(6), alias_phi(1), alias_phi(5))
-    mut copy = words
+    mut copy = words.copy()
     copy.append("x")
     out.print(len(words), len(copy), copy[5])
     mut grid: int[][] = []
-    grid.append(base)
+    grid.append(base.copy())
     grid.append(grown)
     mut kept = keep_first(grid)
     kept.append(1)

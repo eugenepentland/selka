@@ -1,0 +1,82 @@
+# A complete fresh constructor span has no callback after allocation succeeds.
+record Branch:
+    depth: int
+    enabled: bool
+    left: Branch?
+    right: Branch?
+
+
+func branch(depth: int) -> Branch:
+    if depth == 0:
+        return Branch(depth=0, enabled=False, left=None, right=None)
+    return Branch(right=Some(branch(depth - 1)), enabled=True, depth=depth, left=Some(branch(depth - 1)))
+
+
+func total(value: Branch) -> int:
+    mut result = value.depth
+    match value.left:
+        case Some(child):
+            result += total(child)
+        case None:
+            pass
+    match value.right:
+        case Some(child):
+            result += total(child)
+        case None:
+            pass
+    return result
+
+
+public func test_nullable_literal_and_reordered_fields_publish_the_complete_value() -> bool:
+    mut value = branch(5)
+    return total(value) == 57 and value.enabled and not branch(0).enabled
+
+
+func nested() -> Branch:
+    mut parent_value = Branch(depth=0, enabled=False, left=None, right=None)
+    mut value = branch(5)
+    parent_value = value
+    assert total(parent_value) == 57
+    return parent_value
+
+
+func callback(depth: int) -> Branch:
+    mut child: Branch? = Some(branch(depth))
+    return Branch(depth=0, enabled=True, left=child, right=child)
+
+
+public func test_uncertified_aliases_keep_their_generic_ownership() -> bool:
+    mut value = callback(4)
+    mut snapshot = value
+    value.left = None
+    return total(snapshot) == 52 and total(value) == 26
+
+
+enum LiteralChain:
+    number(value: int)
+    next(rest: LiteralChain)
+
+
+func literal_chain(depth: int) -> LiteralChain:
+    if depth == 0:
+        return LiteralChain.number(value=17)
+    return LiteralChain.next(rest=literal_chain(depth - 1))
+
+
+func last(value: LiteralChain) -> int:
+    match value:
+        case LiteralChain.number(value=number):
+            return number
+        case LiteralChain.next(rest=rest):
+            return last(rest)
+
+
+public func test_inactive_counted_variant_fields_keep_literal_payload_bits() -> bool:
+    return last(literal_chain(12)) == 17
+
+
+func main() -> int:
+    assert test_nullable_literal_and_reordered_fields_publish_the_complete_value()
+    assert test_uncertified_aliases_keep_their_generic_ownership()
+    assert test_inactive_counted_variant_fields_keep_literal_payload_bits()
+    return 0

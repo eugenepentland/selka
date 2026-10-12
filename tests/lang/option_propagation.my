@@ -8,13 +8,13 @@ record Node:
 
 
 func left_value(node: Node) -> int?:
-    mut child = try node.left
+    mut child = try node.left.copy()
     return Some(child.value)
 
 
 func grandchild(node: Node) -> Node?:
-    mut child = try node.left
-    return child.left
+    mut child = try node.left.copy()
+    return child.left.copy()
 
 
 func label(value: int?) -> str?:
@@ -23,7 +23,7 @@ func label(value: int?) -> str?:
 
 
 func first_value[T](items: T[]?) -> int?:
-    mut present = try items
+    mut present = try items.copy()
     return Some(len(present))
 
 
@@ -38,15 +38,15 @@ func or_minus_one(value: int?) -> int:
 # spec: OPTION-TRY-3
 public func test_option_propagation_unwraps_a_class_payload_in_a_function_returning_option_int() -> bool:
     mut leaf = Node(value=4, left=None)
-    mut root = Node(value=1, left=Some(leaf))
+    mut root = Node(value=1, left=Some(leaf.copy()))
     return or_minus_one(left_value(root)) == 4 and or_minus_one(left_value(leaf)) == 0 - 1
 
 
 # spec-case: OPTION-TRY-3
 public func test_option_propagation_into_a_different_class_option_forwards_none() -> bool:
     mut leaf = Node(value=4, left=None)
-    mut middle = Node(value=2, left=Some(leaf))
-    mut root = Node(value=1, left=Some(middle))
+    mut middle = Node(value=2, left=Some(leaf.copy()))
+    mut root = Node(value=1, left=Some(middle.copy()))
     mut found = 0
     match grandchild(root):
         case Some(node):
@@ -61,7 +61,7 @@ public func test_option_propagation_converts_between_scalar_and_managed_elements
     mut text = ""
     match label(Some(7)):
         case Some(value):
-            text = value
+            text = value.copy()
         case None:
             pass
     return text == "n=7" and label(None) is None

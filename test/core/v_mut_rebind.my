@@ -1,23 +1,23 @@
 func replace_list(mut items: int[], other: int[]) -> int[]:
     items.append(5)
-    items = other
+    items = other.copy()
     items.append(7)
     items[0] = 9
-    return items
+    return items.copy()
 
 
 func replace_rows(mut items: int[][], other: int[][]) -> int[][]:
-    items = other
+    items = other.copy()
     for index in range(6):
         items[index % 2][0] = index
-    return items
+    return items.copy()
 
 
 func rebound_twice(mut items: int[], first: int[], second: int[]) -> int:
     items.append(1)
-    items = first
+    items = first.copy()
     items.append(2)
-    items = second
+    items = second.copy()
     items[0] = 3
     return len(items)
 
@@ -25,7 +25,7 @@ func rebound_twice(mut items: int[], first: int[], second: int[]) -> int:
 func early(mut items: int[], other: int[], leave: bool) -> int:
     items.append(4)
     if leave:
-        items = other
+        items = other.copy()
         items.append(6)
         return len(items)
     items.append(8)
@@ -40,7 +40,7 @@ record Box:
 func reset_box(mut b: Box, other: Box) -> int:
     b.n = 5
     b.items.append(1)
-    b = other
+    b = other.copy()
     b.n = b.n + 100
     b.items.append(2)
     return len(b.items)
@@ -67,7 +67,7 @@ func main(out: Stream) -> int:
     out.print(digest(changed), digest(source), digest(items))
     mut rows = [[1]]
     mut row = [2]
-    mut shared = [row, row]
+    mut shared = [row.copy(), row.copy()]
     mut moved = replace_rows(mut rows, shared)
     out.print(digest_rows(moved), digest_rows(shared), digest(row), digest_rows(rows))
     mut held = [0]

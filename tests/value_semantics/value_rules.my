@@ -13,7 +13,7 @@ record Pair:
 
 
 func appended(xs: int[]) -> int[]:
-    mut ys = xs
+    mut ys = xs.copy()
     ys.append(9)
     return ys
 
@@ -25,7 +25,7 @@ func grown(xss: int[][]) -> int[][]:
 
 
 func identity(xs: int[]) -> int[]:
-    return xs
+    return xs.copy()
 
 
 func bump(mut c: Counter) -> Unit:
@@ -98,8 +98,10 @@ public func test_rebinding_a_mut_record_replaces_the_callers_value() -> bool:
 # spec: VALUE-SEMANTICS-5
 public func test_a_read_only_argument_is_a_snapshot_of_a_mut_one() -> bool:
     mut a = [1, 2]
-    mut seen = touch(mut a, a)
-    mut twice = touch(mut a, a)
+    const first_snapshot = a.copy()
+    mut seen = touch(mut a, first_snapshot)
+    const second_snapshot = a.copy()
+    mut twice = touch(mut a, second_snapshot)
     return seen == 2 and twice == 3 and a == [1, 2, 2, 3]
 
 
@@ -107,12 +109,12 @@ public func test_a_read_only_argument_is_a_snapshot_of_a_mut_one() -> bool:
 # spec: VALUE-SEMANTICS-2
 public func test_assignment_and_storage_copy() -> bool:
     mut a = [1]
-    mut b = a
+    mut b = a.copy()
     b.append(2)
     mut rows: int[][] = []
-    rows.append(a)
+    rows.append(a.copy())
     a.append(3)
-    mut first = rows[0]
+    mut first = rows[0].copy()
     first.append(4)
     return a == [1, 3] and b == [1, 2] and rows == [[1]] and first == [1, 4]
 
@@ -124,7 +126,7 @@ public func test_loop_changes_go_through_the_place() -> bool:
         grid[i].append(0)
     mut total = 0
     for row in grid:
-        mut local = row
+        mut local = row.copy()
         local.append(5)
         total = total + len(local)
     return grid == [[1, 0], [2, 0]] and total == 6

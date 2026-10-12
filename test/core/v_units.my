@@ -8,7 +8,7 @@ func counts(value: Unit, n: int) -> int:
         seen += 1
     mut first = values[0]
     mut last = values.pop()
-    mut copy = values
+    mut copy = values.copy()
     copy.append(value)
     return len(values) * 100 + len(copy) * 10 + seen + (if (values == copy) then (1) else (0))
 

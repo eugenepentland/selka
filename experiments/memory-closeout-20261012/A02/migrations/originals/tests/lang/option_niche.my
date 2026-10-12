@@ -1,0 +1,241 @@
+# An `Option` of a managed reference is stored as the reference word alone:
+# null is `None`. Nothing a program can observe changes, so these cases walk
+# every operation over such an optional — construction, `is None`, `match`,
+# `?`, the methods, equality, rendering, every container, calls, callbacks, an
+# arena escape — and an optional optional, which keeps its tag. Under
+# `--gc-stress` every allocation collects, so a `Some` whose reference the
+# collector failed to trace, or a `None` it tried to follow, fails here.
+record Node:
+    value: int
+    left: Node?
+    right: Node?
+
+
+record Holder:
+    label: str
+    node: Node?
+    count: int
+
+
+enum Slot:
+    none
+    some(value: Node)
+
+
+func leaf(value: int) -> Node:
+    return Node(value=value, left=None, right=None)
+
+
+func tree(depth: int) -> Node:
+    if depth == 0:
+        return leaf(1)
+    return Node(value=depth, left=Some(tree(depth - 1)), right=Some(tree(depth - 1)))
+
+
+func count(node: Node) -> int:
+    mut left = node.left
+    mut right = node.right
+    if left is None or right is None:
+        return 1
+    return 1 + count(left) + count(right)
+
+
+func churn(rounds: int) -> int:
+    mut total = 0
+    for i in range(rounds):
+        total += count(tree(2)) + i - i
+    return total
+
+
+func value_of(candidate: Node?) -> int:
+    match candidate:
+        case Some(found):
+            return found.value
+        case None:
+            return -1
+
+
+func pick(flag: bool, node: Node) -> Node?:
+    if flag:
+        return Some(node)
+    return None
+
+
+func left_child(node: Node) -> Node?:
+    mut child = try node.left
+    return Some(child)
+
+
+func grandchild(node: Node) -> Node?:
+    mut child = try node.left
+    return child.left
+
+
+func first_word(words: str[]) -> str?:
+    if len(words) == 0:
+        return None
+    return Some(words[0])
+
+
+func apply(f: func(Node?) -> Node? effects(), candidate: Node?) -> Node?:
+    return f(candidate)
+
+
+func through(candidate: Node?) -> Node? effects():
+    return candidate
+
+
+func forget(candidate: Node?) -> Node? effects():
+    _ = candidate
+    return None
+
+
+public func test_construct_test_and_match_a_niche_optional() -> bool:
+    mut present: Node? = Some(leaf(7))
+    mut absent: Node? = None
+    _ = churn(20)
+    return present is not None and absent is None and value_of(present) == 7 and value_of(absent) == -1
+
+
+public func test_a_tree_of_optional_children_survives_collection() -> bool:
+    mut kept = tree(6)
+    mut total = churn(30)
+    return count(kept) == 127 and total == 30 * 7
+
+
+public func test_question_mark_propagates_none_and_unwraps_some() -> bool:
+    mut parent = Node(value=1, left=Some(leaf(5)), right=None)
+    mut lone = leaf(2)
+    mut deep = grandchild(tree(2))
+    _ = churn(10)
+    return value_of(left_child(parent)) == 5 and left_child(lone) is None and grandchild(lone) is None and value_of(deep) == 1
+
+
+public func test_methods_on_niche_optionals() -> bool:
+    mut node = leaf(3)
+    mut present = pick(True, node)
+    mut absent = pick(False, node)
+    mut fallback = leaf(9)
+    return present.is_some() and absent.is_none() and present.unwrap_or(fallback).value == 3 and absent.unwrap_or(fallback).value == 9
+
+
+public func test_equality_of_niche_optionals() -> bool:
+    mut node = leaf(1)
+    mut other = leaf(1)
+    mut same: Node? = Some(node)
+    mut again: Node? = Some(node)
+    mut none_a: Node? = None
+    mut none_b: Node? = None
+    mut text_a = first_word(["alpha", "beta"])
+    mut text_b = first_word(["al" + "pha"])
+    mut empty: str[] = []
+    return same == again and none_a == none_b and same != none_a and none_b != again and text_a == text_b and text_a != first_word(empty) and (Some(other) == same) == (other == node)
+
+
+public func test_niche_optionals_render_like_tagged_ones() -> bool:
+    mut word = first_word(["hi"])
+    mut empty: str[] = []
+    mut missing = first_word(empty)
+    mut numbers: int[]? = Some([1, 2])
+    mut nothing: int[]? = None
+    return f"{word}" == "Some('hi')" and f"{missing}" == "None" and f"{numbers}" == "Some([1, 2])" and f"{nothing}" == "None"
+
+
+public func test_niche_optionals_in_lists_dicts_records_and_arrays() -> bool:
+    mut items: Node?[] = []
+    for i in range(12):
+        items.append(pick(i % 3 == 0, leaf(i)))
+    mut table: dict[str, Node?] = {"a": Some(leaf(4)), "b": None}
+    mut holder = Holder(label="h", node=Some(leaf(8)), count=2)
+    mut fixed: FixedArray[Node?, 3] = FixedArray[Node?, 3]([None, Some(leaf(5)), None])
+    _ = churn(20)
+    mut present = 0
+    for item in items:
+        if item is not None:
+            present += item.value
+    return present == 0 + 3 + 6 + 9 and value_of(table["a"]) == 4 and value_of(table["b"]) == -1 and value_of(holder.node) == 8 and value_of(fixed[1]) == 5 and fixed[2] is None
+
+
+public func test_niche_optionals_cross_callbacks() -> bool:
+    mut node = leaf(6)
+    mut kept = apply(through, Some(node))
+    mut dropped = apply(forget, Some(node))
+    _ = churn(10)
+    return value_of(kept) == 6 and dropped is None and apply(through, None) is None
+
+
+public func test_an_optional_optional_keeps_some_none_apart_from_none() -> bool:
+    mut inner_none: Node?? = Some(None)
+    mut outer_none: Node?? = None
+    mut full: Node?? = Some(Some(leaf(2)))
+    _ = churn(10)
+    mut inner_ok = False
+    match inner_none:
+        case Some(inner):
+            inner_ok = inner is None
+        case None:
+            inner_ok = False
+    mut full_value = 0
+    match full:
+        case Some(inner):
+            full_value = value_of(inner)
+        case None:
+            full_value = -5
+    return inner_ok and outer_none is None and full_value == 2 and inner_none != outer_none
+
+
+public func test_a_user_union_of_the_same_shape_matches_like_an_option() -> bool:
+    mut filled = Slot.some(value=leaf(4))
+    mut empty = Slot.none
+    _ = churn(5)
+    mut got = 0
+    match filled:
+        case Slot.some(value=node):
+            got = node.value
+        case Slot.none:
+            got = -1
+    mut missing = 0
+    match empty:
+        case Slot.some(value=node):
+            missing = node.value
+        case Slot.none:
+            missing = -1
+    return got == 4 and missing == -1
+
+
+public func test_an_escaped_graph_keeps_its_optional_links() -> bool:
+    mut kept: int[]?[] = []
+    mut shared: int[] = [3, 4]
+    mut working: int[]?[] = [Some(shared.copy()), None, Some(shared.copy())]
+    kept = working
+    _ = churn(10)
+    match kept[0]:
+        case Some(first):
+            mut changed = first
+            changed.append(5)
+            kept[0] = Some(changed)
+            match kept[2]:
+                case Some(last):
+                    return len(kept) == 3 and kept[1] is None and len(changed) == 3 and len(last) == 2 and last[0] == 3
+                case None:
+                    return False
+        case None:
+            return False
+
+
+public func test_optional_text_and_lists_survive_collection() -> bool:
+    mut words: str?[] = []
+    for i in range(10):
+        mut entry: str? = None
+        if i % 2 == 0:
+            entry = Some(f"w{i}")
+        words.append(entry)
+    _ = churn(20)
+    mut joined = ""
+    for word in words:
+        joined = joined + word.unwrap_or(".")
+    return joined == "w0.w2.w4.w6.w8."
+
+
+func main() -> int:
+    return 0

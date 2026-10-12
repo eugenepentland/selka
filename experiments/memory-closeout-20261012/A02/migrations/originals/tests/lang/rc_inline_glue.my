@@ -1,0 +1,62 @@
+# Inline list publication (RC-PUBLISH-FAST-1) and inline drops of flat
+# records of list fields (RC-FLAT-DROP-1) keep value semantics and counts.
+# Every test also runs under GC and `--gc-stress`.
+record Frame:
+    constants: int[]
+    code: int[]
+    names: str[]
+    ip: int
+
+
+record Holder:
+    frame: Frame
+    items: int[]
+
+
+record Wide:
+    a: int[]
+    b: int[]
+    c: int[]
+    d: int[]
+    e: int[]
+
+
+func load(holder: Holder) -> Frame:
+    return Frame(constants=holder.frame.constants, code=holder.items, names=holder.frame.names, ip=holder.frame.ip + 1)
+
+
+public func test_published_lists_are_independent_values() -> bool:
+    mut holder = Holder(frame=Frame(constants=[1], code=[2], names=["a"], ip=0), items=[3])
+    mut frame = load(holder)
+    frame.constants.append(4)
+    frame.code.append(5)
+    return holder.frame.constants == [1] and holder.items == [3] and frame.constants == [1, 4] and frame.code == [3, 5]
+
+
+public func test_replaced_frames_release_their_lists() -> bool:
+    mut holder = Holder(frame=Frame(constants=[1], code=[2], names=["a"], ip=0), items=[3])
+    mut frame = load(holder)
+    mut total = 0
+    mut i = 0
+    while i < 50:
+        frame = load(holder)
+        total += frame.ip + len(frame.code)
+        i += 1
+    return total == 100 and holder.frame.ip == 0
+
+
+public func test_frames_sharing_lists_keep_them_alive() -> bool:
+    mut shared = [7, 8]
+    mut first = Frame(constants=shared, code=shared, names=["x"], ip=0)
+    mut second = first
+    first = Frame(constants=[], code=[], names=[], ip=1)
+    second.code.append(9)
+    return second.constants == [7, 8] and second.code == [7, 8, 9] and shared == [7, 8] and first.ip == 1
+
+
+public func test_wide_records_keep_their_glue_drop() -> bool:
+    mut wide = Wide(a=[1], b=[2], c=[3], d=[4], e=[5])
+    mut other = wide
+    wide = Wide(a=[], b=[], c=[], d=[], e=[6])
+    other.e.append(7)
+    return other.e == [5, 7] and wide.e == [6] and other.a == [1]

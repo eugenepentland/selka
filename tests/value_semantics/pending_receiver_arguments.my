@@ -1,6 +1,6 @@
 # Pending receiver snapshots across later argument callbacks.
 func save_pending_rows(rows: int[][], mut saved: int[][][]) -> int:
-    saved.append(rows)
+    saved.append(rows.copy())
     return 2
 
 
@@ -43,7 +43,7 @@ func unavailable() -> int?:
 
 
 func abandoned(mut rows: int[][]) -> int?:
-    const captured_row = rows[0]
+    const captured_row = rows[0].copy()
     const argument = try unavailable()
     rows[0].append(argument)
     return Some(1)
@@ -52,13 +52,13 @@ func abandoned(mut rows: int[][]) -> int?:
 public func test_argument_propagation_releases_the_receiver_scope() -> bool:
     mut rows = [[1]]
     mut result = abandoned(mut rows)
-    mut before = rows
+    mut before = rows.copy()
     rows[0].append(3)
     return result == None and before[0] == [1] and rows[0] == [1, 3]
 
 
 func save_entries(entries: dict[str, int[]], mut saved: dict[str, int[]][]) -> int:
-    saved.append(entries)
+    saved.append(entries.copy())
     return 2
 
 
@@ -75,7 +75,7 @@ record Node:
 
 
 func save_nodes(nodes: Node[], mut saved: Node[][]) -> int:
-    saved.append(nodes)
+    saved.append(nodes.copy())
     return 2
 
 

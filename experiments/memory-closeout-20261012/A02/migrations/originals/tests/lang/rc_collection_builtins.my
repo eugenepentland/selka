@@ -1,0 +1,95 @@
+public func test_nested_list_mutators_publish_owned_results() -> bool:
+    mut values = [[1], [2]]
+    mut first = values.pop(0)
+    values.insert(0, [3])
+    values.append(first)
+    values[1] = [4]
+    if values != [[3], [4], [1]] or first != [1]:
+        return False
+    values.clear()
+    return len(values) == 0 and first == [1]
+
+
+public func test_dictionary_results_survive_receiver_clear() -> bool:
+    mut mapping = {"a": [10], "b": [20]}
+    mut existing = mapping.setdefault("a", [99])
+    mut inserted = mapping.setdefault("c", [30])
+    mut removed = mapping.pop("b")
+    mut fallback = mapping.pop("missing", [42])
+    if existing != [10] or inserted != [30] or removed != [20] or fallback != [42]:
+        return False
+    mut copied = mapping.copy()
+    copied.update({"d": [40]})
+    mut values = list(mapping.values())
+    mut keys = list(mapping.keys())
+    mapping.clear()
+    return values == [[10], [30]] and keys == ["a", "c"] and len(copied) == 3
+
+
+func word_length(word: str) -> int:
+    return len(word)
+
+
+func word_fold(word: str) -> str:
+    return word.lower()
+
+
+public func test_keyed_sort_owns_its_managed_elements() -> bool:
+    mut words = ["pear", "apple", "fig"]
+    mut ordered = sorted(words, key=word_length)
+    if ordered != ["fig", "pear", "apple"] or words != ["pear", "apple", "fig"]:
+        return False
+    mut folded = sorted(["ZED", "alpha", "BEE"], key=word_fold)
+    return folded == ["alpha", "BEE", "ZED"]
+
+
+public func test_set_pop_owns_the_removed_key() -> bool:
+    mut selected = {"first", "second"}
+    mut last = selected.pop()
+    selected.clear()
+    return last == "second" and len(selected) == 0
+
+
+public func test_identity_text_conversion_retains_its_input() -> bool:
+    mut parts = ("head" + "-tail").split("-")
+    mut converted = str(parts[0])
+    parts.clear()
+    return converted == "head"
+
+
+func detached_octets() -> bytes:
+    mut source = b"alpha" + b"-bravo-tail"
+    return source.view(0, 11).view(6, 11)
+
+
+func detached_text() -> str:
+    mut source = "0123456789"
+    for index in range(6):
+        source = source + source
+    return source[100:500][10:310]
+
+
+public func test_detached_views_keep_their_canonical_storage() -> bool:
+    mut octets = detached_octets()
+    mut text = detached_text()
+    mut total = 0
+    for index in range(100):
+        mut scratch = f"churn {index}"
+        total += len(scratch)
+    return total > 0 and octets == b"bravo" and len(text) == 300 and text[:10] == "0123456789" and text[-10:] == "0123456789"
+
+
+func main() -> int:
+    if not test_nested_list_mutators_publish_owned_results():
+        return 1
+    if not test_dictionary_results_survive_receiver_clear():
+        return 2
+    if not test_keyed_sort_owns_its_managed_elements():
+        return 3
+    if not test_set_pop_owns_the_removed_key():
+        return 4
+    if not test_identity_text_conversion_retains_its_input():
+        return 5
+    if not test_detached_views_keep_their_canonical_storage():
+        return 6
+    return 0

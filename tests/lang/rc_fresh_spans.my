@@ -42,12 +42,12 @@ func nested() -> Branch:
 
 func callback(depth: int) -> Branch:
     mut child: Branch? = Some(branch(depth))
-    return Branch(depth=0, enabled=True, left=child, right=child)
+    return Branch(depth=0, enabled=True, left=child.copy(), right=child)
 
 
 public func test_uncertified_aliases_keep_their_generic_ownership() -> bool:
     mut value = callback(4)
-    mut snapshot = value
+    mut snapshot = value.copy()
     value.left = None
     return total(snapshot) == 52 and total(value) == 26
 

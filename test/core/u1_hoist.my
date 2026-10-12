@@ -16,7 +16,7 @@ func total(xs: int[]) -> int:
 
 
 func boxed(xs: int[]) -> int[][]:
-    return [xs]
+    return [xs.copy()]
 
 
 # The caller keeps `before`; the loop appends to the parameter it shares.
@@ -30,7 +30,7 @@ func copy_inside(n: int) -> int:
     mut xs: int[] = []
     mut kept: int[] = []
     for i in range(n):
-        kept = xs
+        kept = xs.copy()
         xs.append(i)
     return total(xs) * 1000 + total(kept) + len(kept)
 
@@ -38,7 +38,7 @@ func copy_inside(n: int) -> int:
 # An alias made before the loop and dropped inside it.
 func dropped_alias(n: int) -> int:
     mut xs = [1, 2, 3]
-    mut snap = xs
+    mut snap = xs.copy()
     for i in range(n):
         if i == 2:
             snap = [9]
@@ -51,7 +51,7 @@ func appended_to_other(n: int) -> int:
     mut xs = [5]
     mut outer: int[][] = []
     for i in range(n):
-        outer.append(xs)
+        outer.append(xs.copy())
         xs.append(i)
     mut t = 0
     for row in outer:
@@ -64,7 +64,7 @@ func stored_in_record(n: int) -> int:
     mut xs = [7]
     mut h = Holder(name="h", items=[])
     for i in range(n):
-        h.items = xs
+        h.items = xs.copy()
         xs.append(i)
     return total(xs) * 1000 + total(h.items)
 
@@ -82,7 +82,7 @@ func kept_by_call(n: int) -> int:
 # The list rebound inside the loop.
 func rebound(n: int) -> int:
     mut xs = [1]
-    mut keep = xs
+    mut keep = xs.copy()
     for i in range(n):
         if i % 3 == 0:
             xs = [i, i]
@@ -93,7 +93,7 @@ func rebound(n: int) -> int:
 # A row read out and kept while its list of rows is updated in the loop.
 func rows(n: int) -> int:
     mut b = [[1, 2], [3, 4], [5]]
-    mut kb = b[1]
+    mut kb = b[1].copy()
     for i in range(n):
         b[i % 3].append(i)
         b[0][0] = i
@@ -103,7 +103,7 @@ func rows(n: int) -> int:
 # Zero trips, a break, a continue and an early return around a shared list's updates.
 func control(n: int, stop: int) -> int:
     mut xs = [4, 4]
-    mut keep = xs
+    mut keep = xs.copy()
     for i in range(n):
         if i == stop:
             break
@@ -122,7 +122,7 @@ func step(mut xs: int[], v: int) -> Unit:
 # The update made by a callee with `mut`, and by a function value.
 func through_calls(n: int) -> int:
     mut xs = [2]
-    mut keep = xs
+    mut keep = xs.copy()
     for i in range(n):
         step(mut xs, i)
     mut f = total
@@ -133,7 +133,7 @@ func through_calls(n: int) -> int:
 func recurse(xs: int[], depth: int) -> int:
     if depth == 0:
         return total(xs)
-    mut ys = xs
+    mut ys = xs.copy()
     for i in range(depth):
         ys.append(depth * 10 + i)
     return recurse(ys, depth - 1) * 3 % 1000003 + total(xs)
@@ -142,17 +142,17 @@ func recurse(xs: int[], depth: int) -> int:
 # Text, a dictionary and a byte buffer shared when their loops start.
 func others(n: int) -> int:
     mut s = "ab"
-    mut s_keep = s
+    mut s_keep = s.copy()
     for i in range(n):
         s += str(i % 10)
     mut d = {1: 1}
-    mut d_keep = d
+    mut d_keep = d.copy()
     for i in range(n):
         d[i] = i * 2
     mut empty: int[] = []
     mut buffer = byte_buffer(empty)
     _ = buffer.append_byte(1)
-    mut b_keep = buffer
+    mut b_keep = buffer.copy()
     for i in range(n):
         _ = buffer.append_byte(i % 256)
     return len(s) * 1000 + len(s_keep) * 100 + len(d) * 10 + len(d_keep) + len(buffer) * 7 + len(b_keep)
@@ -161,7 +161,7 @@ func others(n: int) -> int:
 # Nested loops: the outer loop's entry is the hoisting point.
 func nested(n: int) -> int:
     mut xs = [0]
-    mut keep = xs
+    mut keep = xs.copy()
     for i in range(n):
         for j in range(i):
             xs[0] = xs[0] + j
@@ -207,7 +207,7 @@ func from_call(n: int) -> int:
 func main(args: str[], out: Stream) -> int:
     mut n = 20 + len(args) * 40
     mut before = [1, 2]
-    mut alias = before
+    mut alias = before.copy()
     grow(mut before, n)
     out.print(total(before), total(alias), len(alias))
     out.print(copy_inside(n), dropped_alias(n), appended_to_other(n))
@@ -215,9 +215,9 @@ func main(args: str[], out: Stream) -> int:
     out.print(control(n, 7), control(n, 100), control(0, 3))
     out.print(through_calls(n), recurse([1, 2, 3], 4), others(n), nested(n // 4))
     mut shared = [1, 1]
-    mut other = shared
+    mut other = shared.copy()
     out.print(nested_mut(mut shared, n // 4), total(other), from_call(n), total(shared))
     mut again = [3]
-    mut kept = again
+    mut kept = again.copy()
     out.print(two_loops(mut again, n), total(kept), len(again))
     return 0

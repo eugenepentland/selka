@@ -10,7 +10,7 @@ func empty() -> Item:
 func pick(items: Item[], index: int) -> Item:
     if index < 0:
         return empty()
-    return items[index]
+    return items[index].copy()
 
 
 func fold(items: Item[], count: int) -> int:
@@ -30,7 +30,7 @@ func indirect(callback: func() -> Item) -> Item:
 
 public func test_saved_borrowed_and_immortal_results_survive_repeated_calls() -> bool:
     mut items = [Item(text=b"left", number=3), Item(text=b"right", number=7)]
-    mut saved = items
+    mut saved = items.copy()
     return fold(items, 4) == 448 and saved[1].text == b"right"
 
 

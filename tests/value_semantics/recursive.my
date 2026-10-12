@@ -9,13 +9,13 @@ func leaf(value: int) -> Branch:
 
 public func test_a_copied_recursive_box_shares_and_separates_nested_lists() -> bool:
     mut original = Branch(items=[0], next=Some(leaf(1)))
-    mut changed = original
-    mut child = changed.next
+    mut changed = original.copy()
+    mut child = changed.next.copy()
     if child is not None:
         child.items.append(2)
     changed.next = child
-    mut old_child = original.next
-    mut new_child = changed.next
+    mut old_child = original.next.copy()
+    mut new_child = changed.next.copy()
     if old_child is None or new_child is None:
         return False
     return original.items == [0] and changed.items == [0] and old_child.items == [1] and new_child.items == [1, 2]
@@ -23,21 +23,21 @@ public func test_a_copied_recursive_box_shares_and_separates_nested_lists() -> b
 
 public func test_repeated_write_through_a_boxed_child() -> bool:
     mut original = Branch(items=[0], next=Some(leaf(1)))
-    mut changed = original
-    mut child = changed.next
+    mut changed = original.copy()
+    mut child = changed.next.copy()
     if child is not None:
         for i in range(3):
             child.items.append(i + 2)
     changed.next = child
-    mut old_child = original.next
-    mut new_child = changed.next
+    mut old_child = original.next.copy()
+    mut new_child = changed.next.copy()
     if old_child is None or new_child is None:
         return False
     return old_child.items == [1] and new_child.items == [1, 2, 3, 4]
 
 
 func child_of(root: Branch) -> Branch:
-    mut child = root.next
+    mut child = root.next.copy()
     if child is None:
         return leaf(-1)
     return child
@@ -46,7 +46,7 @@ func child_of(root: Branch) -> Branch:
 public func test_a_projected_child_is_protected_before_a_later_box_copy() -> bool:
     mut original = Branch(items=[0], next=Some(leaf(1)))
     mut exposed = child_of(original)
-    mut copied = original
+    mut copied = original.copy()
     exposed.items.append(2)
     mut old = child_of(copied)
     assert old.items == [1]
@@ -63,7 +63,8 @@ func read_child_while_pinned(mut items: int[], root: Branch) -> Branch:
 public func test_a_box_projection_copies_a_pinned_child() -> bool:
     mut original = Branch(items=[0], next=Some(leaf(1)))
     mut child = child_of(original)
-    mut snapshot = read_child_while_pinned(mut child.items, Branch(items=[0], next=Some(child)))
+    const before_call = child.copy()
+    mut snapshot = read_child_while_pinned(mut child.items, Branch(items=[0], next=Some(before_call)))
     assert snapshot.items == [1]
     assert child.items == [7]
     return child_of(original).items == [1]

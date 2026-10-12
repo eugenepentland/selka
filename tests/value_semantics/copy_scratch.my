@@ -11,14 +11,14 @@ enum Item:
 func take(items: Item[]) -> Box:
     match items[0]:
         case Item.box(value=payload):
-            return payload
+            return payload.copy()
         case Item.empty:
             return Box(items=[], number=0)
 
 
 public func test_returned_payload_is_independent_on_both_sides() -> bool:
     mut original = Box(items=[1], number=7)
-    mut items = [Item.box(value=original)]
+    mut items = [Item.box(value=original.copy())]
     mut copied = take(items)
     copied.items.append(2)
     original.items.append(3)

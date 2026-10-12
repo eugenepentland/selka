@@ -1,0 +1,132 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+  "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+  "cases": {
+    "test/core/b_buffer_values.my": {
+      "source_sha256": "646f6ab0fb6377a23232ee8759559c1f0271700c7715499bd21d5170034c9dc8",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test/core/c_runner_byte_buffer.my": {
+      "source_sha256": "a39f6e78c12f2caddaa31f744e31692caf53a5da34969dd49c1d7812776d4e87",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test/core/ce_appends.my": {
+      "source_sha256": "797837b9d0dba06c76c113217b13c270ebad4590be1b42c2e54dc760a4b0c970",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test/core/f2_index.my": {
+      "source_sha256": "ea560ebd4d3aac23f8095db3bdc3ba7d09bbd27f96faa663832ee89ab0525a05",
+      "status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/additional-check1/f2_index.my:190:44: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n          out.print(partition(mut ys, 0, len(ys) - 1), ys[0], ys[8])\n                                             ^\n"
+    },
+    "test/core/list_alias.my": {
+      "source_sha256": "6382873b92f3b9d41b2e2b7341920c105393d841437ef99af1301d1ed38de703",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test/core/m_list_methods.my": {
+      "source_sha256": "9a14085c332a4b265873fd48e09ffe436c6376e87a896ac36e3d9905d91ba529",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test/core/rc_lists.my": {
+      "source_sha256": "0cec324f2b85dd93788f76fa30ca1a9aae7c26d4aebb91dc47192723178a30bc",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test/core/rc_mut.my": {
+      "source_sha256": "583188c178343458fffda61688bbebf01d71484451abe850b725a228a854fb0d",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test/core/rc_promote_order.my": {
+      "source_sha256": "6147d9953e30f7ae89c22463ed21fbef33070063d2d3df391d294f8c172d3af6",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test/core/rc_shared_loops.my": {
+      "source_sha256": "ee102ff5e102d5d9597871933c09764e821698ba14c66f6e8fc97f1893ca058e",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test/core/u1_growth.my": {
+      "source_sha256": "9ea653c024aa77fc4e8f1b35ff7dd076ef1937206eacff19e5215b98c579b278",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test/core/u1_hoist.my": {
+      "source_sha256": "8693036268529f2cdaff10500188b7de2ecba80fdafd7a9638e40cf90c6552de",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test/core/v_dynamic_repeat.my": {
+      "source_sha256": "bc649543ed366581763f8172be19e5cb795747700eb8d2031c0d8bf253373336",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test/core/v_lists.my": {
+      "source_sha256": "854c9b294e392ccf9e841fe6866f84064d431c974ae9893e942c92833f0695b2",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test/core/v_loops.my": {
+      "source_sha256": "d9467fd1fcba9ec1e3312b3df9148ef6f05d53b14e5610f066066be52fe3c87a",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test/core/v_methods.my": {
+      "source_sha256": "c5f8bacd4b83d79aaf979268e36ebc5a24fce8512605344165b18080466dc77f",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test/core/v_mut_rebind.my": {
+      "source_sha256": "ff6c523d05b8d52073308f4fead65ff691fb3ee778a766927c164a7a63536f87",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test/core/v_nested_lengths.my": {
+      "source_sha256": "5b3511bcd8e3cdbcbf5660f7a30c0c636d75a5cb496b5ada95e28683c9b03130",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test/core/v_nested_places.my": {
+      "source_sha256": "7774a80719af5f5cc35a34b69dd7d4809d22934619a6d4e9cf3d361ca97bcaeb",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test/core/v_sort.my": {
+      "source_sha256": "81be0e707cff4a73c6d00c9428110131593069ac351408308e22e91d6fd8133d",
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "test/core/v_units.my": {
+      "source_sha256": "df07c1af4d9b391a1d90db69148e8323a35a12d4b86f280673886ebb3351c57f",
+      "status": 0,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/additional-check1/v_units.my:9:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n      mut first = values[0]\n          ^\n/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/additional-check1/v_units.my:10:9: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed\n      mut last = values.pop()\n          ^\n"
+    }
+  }
+}

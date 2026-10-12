@@ -9,14 +9,14 @@ enum Item:
 
 
 func replace_after_match(mut items: Item[], index: int) -> int[]:
-    match items[index]:
+    match items[index].copy():
         case Item.payload(value=old):
             items[index] = Item.empty
             mut i = 0
             while i < 80:
                 items.append(Item.payload(value=Payload(items=[i], number=i)))
                 i += 1
-            mut saved = old.items
+            mut saved = old.items.copy()
             saved.append(old.number)
             return saved
         case Item.empty:
@@ -30,7 +30,7 @@ public func test_payload_survives_parent_replacement_growth_and_collection() -> 
 
 
 func read_saved_after_replacement(mut items: Item[]) -> int:
-    mut saved = items[0]
+    mut saved = items[0].copy()
     items[0] = Item.empty
     match saved:
         case Item.payload(value=old):

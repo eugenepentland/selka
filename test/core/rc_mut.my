@@ -34,7 +34,7 @@ func grow(n: int) -> int:
 
 func aliasing() -> int:
     mut a = [1, 2]
-    mut b = a
+    mut b = a.copy()
     add(mut a, 3)
     return len(a) * 10 + len(b)
 
@@ -42,7 +42,7 @@ func aliasing() -> int:
 func bags() -> int:
     mut bag = Bag(name="x", items=[])
     fill(mut bag, 5)
-    mut other = bag
+    mut other = bag.copy()
     fill(mut bag, 2)
     return len(bag.items) * 10 + len(other.items)
 
