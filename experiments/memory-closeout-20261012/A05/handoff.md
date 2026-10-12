@@ -484,3 +484,9 @@ two-positive/ten-negative shared-admission batches. No Support7 build or native
 execution starts until the coordinator publishes its completed installation.
 The held C3 borrowed-provider utility patch removes exactly two legacy mode
 guards and remains coupled to A07's mandatory owned ABI provenance.
+
+The combined Support7 retirement native preview now additionally passes without
+any `MYL_ZERO_RC` selector or define. Exact runtime ca2ded335 and binary0a63da3d
+are recorded with all source hashes/commands in `retirement-combined-support7/`.
+This newly executed native proof remains a scratch candidate, not production
+retirement or installed-package qualification.

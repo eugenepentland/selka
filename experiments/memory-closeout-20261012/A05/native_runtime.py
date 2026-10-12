@@ -23,21 +23,26 @@ def main():
     p.add_argument('--source-root',type=Path,default=ROOT,help='Pinned compiler source checkout read without mutation')
     p.add_argument('--output',type=Path,required=True)
     p.add_argument('--runtime-overlay',type=Path,help='Explicitly labelled scratch runtime preview; never edits production')
+    p.add_argument('--unconditional-owned-runtime',action='store_true',help='Require a selector-free complete runtime candidate and omit the retired define')
     a=p.parse_args(); a.zig=a.zig.resolve(); a.output=a.output.resolve(); a.output.mkdir(parents=True,exist_ok=True)
     source_root=a.source_root.resolve()
     driver=(source_root/'src/core/driver.zig').read_text(); declaration=driver.split('pub const runtime_source =',1)[1].split('/// One build:',1)[0]
     paths=[source_root/'src/core'/name for name in re.findall(r'@embedFile\("([^\"]+)"\)',declaration)]
     inputs={str(path.relative_to(source_root)):(a.runtime_overlay/path.name if a.runtime_overlay and (a.runtime_overlay/path.name).exists() else path).read_bytes() for path in paths}
     runtime=b'\n'.join(inputs.values())
+    if a.unconditional_owned_runtime and b'MYL_ZERO_RC' in runtime:
+        p.error('the complete candidate still contains the retired runtime selector')
     (a.output/'core_rt.c').write_bytes(runtime)
     original=(source_root/'src/core/durable_fixture.c').read_text()
     fixture=original.replace('if (owner) core_io_retain(owner);','if (owner) (void)myl_core_result_take_pointer(result, 1);')
     fixture=fixture.replace('myl_core_release(provider);','(void)provider;' if a.runtime_overlay else 'core_io_root_transferred(provider);')
     fixture=fixture.replace('myl_core_release(', 'myl_core_drop_owned(')
     (a.output/'fixture.c').write_text(fixture)
-    command=[str(ROOT/'scripts/build-slot.sh'),'build',str(a.zig),'cc','-O2','-std=c11','-pthread','-DMYL_ZERO_RC',str(a.output/'fixture.c'),'-o',str(a.output/'fixture')]
+    command=[str(ROOT/'scripts/build-slot.sh'),'build',str(a.zig),'cc','-O2','-std=c11','-pthread']
+    if not a.unconditional_owned_runtime:command.append('-DMYL_ZERO_RC')
+    command += [str(a.output/'fixture.c'),'-o',str(a.output/'fixture')]
     built=subprocess.run(command,cwd=source_root,capture_output=True,text=True,timeout=1800)
-    result={'scope':'Native owned-runtime fixture only; source resource lifetimes are not qualified by this result.','runtime_overlay':str(a.runtime_overlay) if a.runtime_overlay else None,'zig_sha256':digest(a.zig.read_bytes()),'zig_version':subprocess.check_output([str(a.zig),'version'],text=True).strip(),'source_root':str(source_root),'source_revision':subprocess.check_output(['git','rev-parse','HEAD'],cwd=source_root,text=True).strip(),'runtime_sources':{name:digest(data) for name,data in inputs.items()},'runtime_sha256':digest(runtime),'original_fixture_sha256':digest(original.encode()),'owned_fixture_sha256':digest(fixture.encode()),'argv':command,'build_status':built.returncode,'build_stdout':built.stdout,'build_stderr':built.stderr,'passed':False}
+    result={'scope':'Native owned-runtime fixture only; source resource lifetimes are not qualified by this result.','runtime_overlay':str(a.runtime_overlay) if a.runtime_overlay else None,'unconditional_owned_runtime':a.unconditional_owned_runtime,'zig_sha256':digest(a.zig.read_bytes()),'zig_version':subprocess.check_output([str(a.zig),'version'],text=True).strip(),'source_root':str(source_root),'source_revision':subprocess.check_output(['git','rev-parse','HEAD'],cwd=source_root,text=True).strip(),'runtime_sources':{name:digest(data) for name,data in inputs.items()},'runtime_sha256':digest(runtime),'original_fixture_sha256':digest(original.encode()),'owned_fixture_sha256':digest(fixture.encode()),'argv':command,'build_status':built.returncode,'build_stdout':built.stdout,'build_stderr':built.stderr,'passed':False}
     if built.returncode==0:
         symbols=subprocess.check_output(['nm',str(a.output/'fixture')],text=True)
         result['legacy_symbols']=[name for name in ('myl_core_retain','myl_core_release','myl_core_share') if name in symbols]
