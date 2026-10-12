@@ -1,0 +1,68 @@
+{
+  "mylang-migrated-rc": {
+    "arm": "mylang-migrated-rc",
+    "iterations": 1,
+    "status": "ok",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/dict_count-migrated-rc-count"
+    ],
+    "exit_status": 0,
+    "stdout": "779967\n",
+    "stderr": "",
+    "process_wall_ns": 11703277,
+    "counter_path": "experiments/micro-ownership-20261012/results/parity/dict_count.mylang-migrated-rc.counters.json",
+    "counter_sha256": "0a09c5a537e6e54c141cea0d65720f3c2a7bd378397a9f73f2e6f81fada2f3b7",
+    "metrics": {
+      "allocs": 3014,
+      "reallocs": 3,
+      "alloc_bytes": 227120,
+      "realloc_added_bytes": 7168,
+      "peak_live_bytes": 96888,
+      "live_bytes_at_exit": 0,
+      "runtime_retains": 0,
+      "runtime_releases": 2000,
+      "shared_retains": 0,
+      "shared_releases": 0,
+      "cumulative_allocated_bytes": 234288,
+      "retain": 1000,
+      "release": 1000,
+      "unique_test": 0,
+      "release_unique": 2,
+      "rc_events": 4000,
+      "direct_destructions": 2
+    }
+  },
+  "mylang-zero-rc": {
+    "arm": "mylang-zero-rc",
+    "iterations": 1,
+    "status": "ok",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-micro-parity-20261012/.tmp/micro-ownership/parity/bin/dict_count-zero-rc-count"
+    ],
+    "exit_status": 0,
+    "stdout": "779967\n",
+    "stderr": "",
+    "process_wall_ns": 77896787,
+    "counter_path": "experiments/micro-ownership-20261012/results/parity/dict_count.mylang-zero-rc.counters.json",
+    "counter_sha256": "56e5ba26513027dc9b6ebe3e6fc1937a8fa0bab1a7824077e81bb51c8261bbb2",
+    "metrics": {
+      "allocs": 2003014,
+      "reallocs": 3,
+      "alloc_bytes": 128227120,
+      "realloc_added_bytes": 7168,
+      "peak_live_bytes": 152720,
+      "live_bytes_at_exit": 0,
+      "runtime_retains": 0,
+      "runtime_releases": 0,
+      "shared_retains": 0,
+      "shared_releases": 0,
+      "cumulative_allocated_bytes": 128234288,
+      "retain": 0,
+      "release": 0,
+      "unique_test": 0,
+      "release_unique": 2000002,
+      "rc_events": 0,
+      "direct_destructions": 2000002
+    }
+  }
+}
