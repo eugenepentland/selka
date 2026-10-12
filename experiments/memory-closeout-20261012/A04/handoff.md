@@ -162,3 +162,11 @@ support4 checked source compilation refuse a list containing a record that owns
 a generic resource with `E_LIST_ELEMENT`, before repetition could duplicate its
 owner. A07 is adding registered negative coverage; future repetition harness runs
 include this fourth negative separately from the completed three-negative report.
+
+The support5 renderer rerun (`rendering/support5-01/`) now passes six native lanes
+and both release/debug receipt/replay checks on source
+`a1f19edf255c8c0886731d8d7cce450d5f657720`. The five counted ownership modes have
+zero RC/leaks and clean structural audits. A08 separately verifies the transition
+from preserved C0 partial rendering stages; C0's old failed native link remains an
+explicit limitation. This does not qualify support5's historical installed RC
+components or claim C1/default/retirement completion.

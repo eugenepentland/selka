@@ -56,3 +56,14 @@ missing-object failures before the approved driver repair.
 Managed counters omit the renderer's native scratch buffer and are not RSS.
 No runtime, allocation or peak-memory saving is claimed before paired evidence.
 The integrated compiler must rerun all affected cases and the registered full gate.
+
+The integrated support5 rerun (`support5-01/`) passes all six native lanes: five
+checked-ownership modes plus ordinary release. Release and debug both pass their
+receipt/replay checks on compiler SHA256
+`8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789`, source
+`a1f19edf255c8c0886731d8d7cce450d5f657720`. All counted ownership lanes retain
+zero RC events, zero managed exit bytes and clean LLVM/symbol audits. The old
+prototype replay/native-control failures remain preserved as historical evidence.
+Support5 is an interim integrated compiler, not the final C1/default/retired
+artifact. Its staged installed components still have the coordinator's reported
+historical RC boundary; no package-wide RC retirement is claimed here.
