@@ -270,7 +270,7 @@ func at_end(scanner: Scanner) -> bool:
 
 # The byte under the cursor, or -1 at the end of the document.
 func peek(scanner: Scanner) -> int:
-    if at_end(scanner):
+    if scanner.position < 0 or at_end(scanner):
         return 0 - 1
     return scanner.data[scanner.position]
 
