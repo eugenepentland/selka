@@ -1,6 +1,6 @@
 {
   "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
-  "semantics": "Preserve assertions and independent snapshots through explicit copies; bind mutation inputs before loans; scoped derived capabilities; borrowed simulated-clock helper preserves shared reading. Unchanged capability aggregates/resource results remain blockers.",
+  "semantics": "Preserve assertions and independent snapshots through explicit copies; bind mutation inputs before loans; scope derived capabilities; ordinary borrowed helpers preserve shared clock/filesystem observations. Capability-field migration awaits bounded aggregate-root implementation; original returned-file fixture now passes on support4.",
   "fixtures": [
     {
       "path": "src/stdlib/fixtures/pool.my",
@@ -50,12 +50,12 @@
     {
       "path": "tests/lang/capability_fields.my",
       "original_sha256": "fcc03d5095e7fa4068abb5557d295d174cf2e6186d4bf041888819848a1f9807",
-      "migrated_sha256": "fcc03d5095e7fa4068abb5557d295d174cf2e6186d4bf041888819848a1f9807",
-      "changed": false,
-      "inserted_lines": 0,
-      "deleted_lines": 0,
+      "migrated_sha256": "68bb3d79776a5bdbd3c10359d06b5119afdceb03f6755eefbc1c1c37b9ad5efd",
+      "changed": true,
+      "inserted_lines": 26,
+      "deleted_lines": 20,
       "explicit_copy_count_original": 0,
-      "explicit_copy_count_migrated": 0,
+      "explicit_copy_count_migrated": 3,
       "original_source_command": [
         "git",
         "show",
@@ -112,8 +112,8 @@
       "original_sha256": "104b56f7a7040f66bdcf46a5265bc17ba8f633484f3310d2046b7e979367f9ea",
       "migrated_sha256": "2a9cc33b7b141e8540afcfdc092883c33604c0ae3f29700bddd2f5e298bab3bc",
       "changed": true,
-      "inserted_lines": 33,
-      "deleted_lines": 27,
+      "inserted_lines": 34,
+      "deleted_lines": 28,
       "explicit_copy_count_original": 0,
       "explicit_copy_count_migrated": 4,
       "original_source_command": [
