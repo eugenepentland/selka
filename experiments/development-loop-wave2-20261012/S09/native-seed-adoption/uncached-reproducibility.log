@@ -1,0 +1,27 @@
+build-slot: FIFO ticket 644, position 4; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 3, FIFO ticket 644 after 30s
+d3a1e456091c068c57590200c93339c81f7dd7b51c916359d7fd0fba1cbbf37a
+f3478f0f0ae39b5a6e7f977e1037f73f8ca069c5da570d91ff22b578710b60eb
+	Command being timed: ".tmp/S09-qualified-component-builder --root .tmp/S09-native-component-fixture --zig /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig --cache-dir .tmp/S09-native-component-cache --install-dir .tmp/S09-native-component-install --seed-source .tmp/S09-native-seed-candidate.tar --uncached"
+	User time (seconds): 13.17
+	System time (seconds): 1.80
+	Percent of CPU this job got: 124%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:12.05
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 283944
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 51
+	Minor (reclaiming a frame) page faults: 498345
+	Voluntary context switches: 10129
+	Involuntary context switches: 417
+	Swaps: 0
+	File system inputs: 107800
+	File system outputs: 208552
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

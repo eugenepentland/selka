@@ -1,0 +1,94 @@
+{
+  "scope": "private negative copies; genuine qualified source/seed untouched",
+  "genuine_seed_sha256": "bd55fd21824ef40ed557e902d3f6b63d15185a3eeb625e443dc87a64f45c2b8d",
+  "results": [
+    {
+      "case": "corrupt-binary",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S09/.tmp/S09-qualified-component-builder",
+        "--root",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S09/.tmp/S09-native-component-fixture",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S09/.tmp/work/s09-seed-rejection-e7hmapdq/cache",
+        "--seed-only"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "components: qualified seed digest mismatch; remove corrupt seed cache and rebuild\n",
+      "rejected": true
+    },
+    {
+      "case": "missing-binary",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S09/.tmp/S09-qualified-component-builder",
+        "--root",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S09/.tmp/S09-native-component-fixture",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S09/.tmp/work/s09-seed-rejection-kuyyu7ko/cache",
+        "--seed-only"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "components: qualified seed digest mismatch; remove corrupt seed cache and rebuild\n",
+      "rejected": true
+    },
+    {
+      "case": "malformed-receipt",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S09/.tmp/S09-qualified-component-builder",
+        "--root",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S09/.tmp/S09-native-component-fixture",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S09/.tmp/work/s09-seed-rejection-nznqcg26/cache",
+        "--seed-only"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "components: malformed or unreadable receipt/manifest\n",
+      "rejected": true
+    },
+    {
+      "case": "changed-recipe",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S09/.tmp/S09-qualified-component-builder",
+        "--root",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S09/.tmp/S09-native-component-fixture",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S09/.tmp/work/s09-seed-rejection-_6sefqm3/cache",
+        "--seed-only"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "components: qualified seed digest mismatch; remove corrupt seed cache and rebuild\n",
+      "rejected": true
+    },
+    {
+      "case": "wrong-archive",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S09/.tmp/S09-qualified-component-builder",
+        "--root",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S09/.tmp/S09-native-component-fixture",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S09/.tmp/work/s09-seed-rejection-si6kkprx/cache",
+        "--seed-only",
+        "--seed-source",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S09/.tmp/work/s09-seed-rejection-si6kkprx/wrong.tar"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "components: seed archive digest differs from immutable pin\n",
+      "rejected": true
+    }
+  ],
+  "passed": true
+}
