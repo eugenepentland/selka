@@ -1,5 +1,6 @@
 //! Source ownership, direct cleanup, and rejection boundaries for zero-RC stage 1.
 const std = @import("std");
+
 const language = @import("mylang");
 const contract = @import("single_owner.zig");
 const build = @import("build.zig");
@@ -2403,4 +2404,36 @@ test "zero RC aggregate provider markers reject malformed calls before ownership
 // spec-case: NEW-CORE-ZERO-RC-DEFAULT-BORROWS-1
 test "zero RC live file scopes and fresh selections clean up across loop exits" {
     try executes(std.testing.allocator, @embedFile("a07_lifecycle_fixture.my"), "43 18\nscope-47 36\npayload\nFalse\n");
+}
+
+// spec-case: CAPABILITY-FIELD-METHOD-1
+test "zero RC context-only markers reject malformed block references before verification" {
+    const ir = @import("ir.zig");
+    const contexts = @import("borrowed_provider.zig");
+    const markers = @import("marker_validation.zig");
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var module: ir.Module = .{ .zero_rc = true };
+    const ty = try module.intern(a, .{ .record = &.{ .capability, .i64 } });
+    const marker = try contexts.declare(a, &module, ty);
+    var hand = try support.Hand.init(a, &module, "context", .{ .params = &.{.capability}, .ret = .i64 });
+    const value = try hand.emit(.{ .op = .call, .ty = ty, .a = @fromBackingInt(marker), .data = try hand.extra(&.{ try hand.param(0), try hand.int(.i64, 7) }) });
+    const scalar = try hand.emit(.{ .op = .record_get, .ty = .i64, .a = value, .data = 1 });
+    _ = try hand.emit(.{ .op = .ret, .ty = .void, .a = scalar });
+    const index = try hand.finish();
+    const function = &module.functions.items[index];
+    try markers.validate(std.testing.allocator, &module, function);
+    const block = &function.blocks.items[0];
+    const last = block.insts.items.len - 1;
+    const original = block.insts.items[last];
+    for ([_]ir.Ref{ .none, @fromBackingInt(@as(u32, @intCast(function.insts.items.len))) }) |invalid| {
+        block.insts.items[last] = invalid;
+        // The provider contract is valid; the shared boundary must reject the
+        // unrelated malformed CFG before the general verifier follows it.
+        try contexts.validate(std.testing.allocator, &module, function);
+        try std.testing.expectError(error.UnsupportedInstruction, markers.validate(std.testing.allocator, &module, function));
+    }
+    block.insts.items[last] = original;
+    try markers.validate(std.testing.allocator, &module, function);
 }

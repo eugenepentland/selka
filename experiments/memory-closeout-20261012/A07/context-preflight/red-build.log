@@ -1,0 +1,4 @@
+build-slot: FIFO ticket 1065, position 15; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 1065, position 8; earlier build tickets must run first; waiting (61s so far)
+build-slot: FIFO ticket 1065, position 1; waiting for measurement or memory-accounting settle delay; waiting (121s so far)
+build-slot: build slot 1, FIFO ticket 1065 after 126s

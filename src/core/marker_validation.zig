@@ -22,8 +22,10 @@ fn present(module: *const ir.Module, function: *const ir.Function) Error!bool {
 /// checks run first so malformed operand tables cannot reach the general verifier.
 pub fn validate(a: std.mem.Allocator, module: *const ir.Module, function: *const ir.Function) Error!void {
     if (!try present(module, function) and !contexts.contains(module, function)) return;
+    // Its preflight checks generic block, type and operand bounds for every
+    // marker family before a local proof or the verifier follows those tables.
+    try providers.validate(module, function);
     try contexts.validate(a, module, function);
-    if (providers.hasMarker(module, function)) try providers.validate(module, function);
     try selection.validate(a, module, function);
     // The general verifier owns scratch tables for one invocation, not the
     // caller's lifetime. Some ownership/cache callers pass a backing allocator.

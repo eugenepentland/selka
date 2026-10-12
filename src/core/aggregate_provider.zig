@@ -141,15 +141,6 @@ pub fn call(module: *const ir.Module, function: *const ir.Function, inst: ir.Ins
     return true;
 }
 
-/// Cheap discovery; the shared wrapper validates callee indices before this query.
-pub fn hasMarker(module: *const ir.Module, function: *const ir.Function) bool {
-    for (function.insts.items) |inst| {
-        if (inst.op != .call or inst.a == .none or inst.a.index() >= module.functions.items.len) continue;
-        if (std.mem.startsWith(u8, module.functions.items[inst.a.index()].name, prefix)) return true;
-    }
-    return false;
-}
-
 /// Check exact call tables before the shared CFG/type/dominance verifier runs.
 pub fn validate(module: *const ir.Module, function: *const ir.Function) Error!void {
     for (function.blocks.items) |block| for (block.insts.items) |ref| {
