@@ -1,0 +1,62 @@
+{
+  "note": "Static source call sites, not allocation counters. P5 textbox excluded. Two retained calls return owned loader children across AST destruction.",
+  "rows": [
+    {
+      "module": "design_model.my",
+      "baseline_as_list_sites": 3,
+      "candidate_as_list_sites": 0
+    },
+    {
+      "module": "eval_electrical.my",
+      "baseline_as_list_sites": 2,
+      "candidate_as_list_sites": 0
+    },
+    {
+      "module": "eval_env.my",
+      "baseline_as_list_sites": 2,
+      "candidate_as_list_sites": 0
+    },
+    {
+      "module": "export_kicad_footprint.my",
+      "baseline_as_list_sites": 20,
+      "candidate_as_list_sites": 0
+    },
+    {
+      "module": "export_kicad_netlist.my",
+      "baseline_as_list_sites": 3,
+      "candidate_as_list_sites": 0
+    },
+    {
+      "module": "footprint_paste.my",
+      "baseline_as_list_sites": 3,
+      "candidate_as_list_sites": 0
+    },
+    {
+      "module": "kicad_sch_shape.my",
+      "baseline_as_list_sites": 3,
+      "candidate_as_list_sites": 1
+    },
+    {
+      "module": "kicad_sch_verify.my",
+      "baseline_as_list_sites": 20,
+      "candidate_as_list_sites": 0
+    },
+    {
+      "module": "kicad_sym_reader.my",
+      "baseline_as_list_sites": 9,
+      "candidate_as_list_sites": 0
+    },
+    {
+      "module": "placement_geometry.my",
+      "baseline_as_list_sites": 19,
+      "candidate_as_list_sites": 0
+    },
+    {
+      "module": "placement_pin_roles.my",
+      "baseline_as_list_sites": 9,
+      "candidate_as_list_sites": 1
+    }
+  ],
+  "baseline_as_list_sites": 93,
+  "candidate_as_list_sites": 2
+}

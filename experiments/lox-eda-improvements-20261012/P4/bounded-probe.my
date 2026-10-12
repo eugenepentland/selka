@@ -1,0 +1,56 @@
+import sexpr_ast as ast
+import sexpr_parser as parser
+import kicad_sym_reader as symbols
+import byte_builder
+
+
+func count_nodes(node: ast.Node) -> int:
+    match node.tag:
+        case ast.Tag.list(value=children):
+            mut count = 1
+            for child in children:
+                count += count_nodes(child)
+            return count
+        case _:
+            return 1
+
+
+func main(args: str[], out: Stream) -> int:
+    if len(args) != 2:
+        return 2
+    mut n = args[1].parse_int().unwrap_or(0)
+    if n < 1 or n > 128:
+        return 2
+    mut source = byte_builder.create()
+    if args[0] == "depth":
+        for _ in range(n):
+            byte_builder.append(mut source, b"(")
+        byte_builder.append(mut source, b"leaf")
+        for _ in range(n):
+            byte_builder.append(mut source, b")")
+    elif args[0] == "width":
+        byte_builder.append(mut source, b"(")
+        for _ in range(n):
+            byte_builder.append(mut source, b" (leaf 1)")
+        byte_builder.append(mut source, b")")
+    elif args[0] == "symbols":
+        byte_builder.append(mut source, b"(kicad_symbol_lib (symbol \"sample\" (symbol \"sample_1_1\"")
+        for _ in range(n):
+            byte_builder.append(mut source, b" (pin passive line (at 0 0 0) (length 1) (name \"signal\") (number \"1\"))")
+        byte_builder.append(mut source, b")))")
+    else:
+        return 2
+    mut text = byte_builder.finish(source)
+    if args[0] == "symbols":
+        match symbols.parse_library(text):
+            case Ok(items):
+                out.print(len(items[0].units[0].pins))
+                return 0
+            case Err(_):
+                return 1
+    match parser.parse(text):
+        case Ok(nodes):
+            out.print(count_nodes(nodes[0]))
+            return 0
+        case Err(_):
+            return 1

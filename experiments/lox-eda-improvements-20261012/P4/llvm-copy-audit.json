@@ -1,0 +1,83 @@
+{
+  "baseline": {
+    "sexpr_ast::node_list": {
+      "emitted": true,
+      "owned_copy_calls": 1,
+      "node_list_calls": 0
+    },
+    "sexpr_ast::as_list": {
+      "emitted": true,
+      "owned_copy_calls": 1,
+      "node_list_calls": 0
+    },
+    "sexpr_parser::parse_list": {
+      "emitted": true,
+      "owned_copy_calls": 0,
+      "node_list_calls": 1
+    },
+    "kicad_sym_reader::find_form": {
+      "emitted": true,
+      "owned_copy_calls": 2,
+      "node_list_calls": 0
+    },
+    "kicad_sym_reader::find_form_index": {
+      "emitted": false,
+      "owned_copy_calls": 0,
+      "node_list_calls": 0
+    }
+  },
+  "traversal-only": {
+    "sexpr_ast::node_list": {
+      "emitted": true,
+      "owned_copy_calls": 1,
+      "node_list_calls": 0
+    },
+    "sexpr_ast::as_list": {
+      "emitted": false,
+      "owned_copy_calls": 0,
+      "node_list_calls": 0
+    },
+    "sexpr_parser::parse_list": {
+      "emitted": true,
+      "owned_copy_calls": 0,
+      "node_list_calls": 1
+    },
+    "kicad_sym_reader::find_form": {
+      "emitted": false,
+      "owned_copy_calls": 0,
+      "node_list_calls": 0
+    },
+    "kicad_sym_reader::find_form_index": {
+      "emitted": true,
+      "owned_copy_calls": 0,
+      "node_list_calls": 0
+    }
+  },
+  "full": {
+    "sexpr_ast::node_list": {
+      "emitted": false,
+      "owned_copy_calls": 0,
+      "node_list_calls": 0
+    },
+    "sexpr_ast::as_list": {
+      "emitted": false,
+      "owned_copy_calls": 0,
+      "node_list_calls": 0
+    },
+    "sexpr_parser::parse_list": {
+      "emitted": true,
+      "owned_copy_calls": 0,
+      "node_list_calls": 0
+    },
+    "kicad_sym_reader::find_form": {
+      "emitted": false,
+      "owned_copy_calls": 0,
+      "node_list_calls": 0
+    },
+    "kicad_sym_reader::find_form_index": {
+      "emitted": true,
+      "owned_copy_calls": 0,
+      "node_list_calls": 0
+    }
+  }
+}

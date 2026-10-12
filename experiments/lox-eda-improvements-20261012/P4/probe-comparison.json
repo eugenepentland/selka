@@ -1,0 +1,125 @@
+{
+  "label": "tiny bounded allocation probes only; no runtime/RSS estimate",
+  "rows": [
+    {
+      "mode": "width",
+      "n": 16,
+      "allocated_bytes": {
+        "baseline": 24480,
+        "traversal-only": 24480,
+        "full": 17536
+      },
+      "list_copies": {
+        "baseline": 33,
+        "traversal-only": 33,
+        "full": 0
+      },
+      "managed_peak_bytes": {
+        "baseline": 8416,
+        "traversal-only": 8416,
+        "full": 9504
+      },
+      "full_traffic_reduction_percent": 28.366013071895424
+    },
+    {
+      "mode": "width",
+      "n": 64,
+      "allocated_bytes": {
+        "baseline": 93848,
+        "traversal-only": 93848,
+        "full": 66160
+      },
+      "list_copies": {
+        "baseline": 129,
+        "traversal-only": 129,
+        "full": 0
+      },
+      "managed_peak_bytes": {
+        "baseline": 32368,
+        "traversal-only": 32368,
+        "full": 35752
+      },
+      "full_traffic_reduction_percent": 29.503026169976987
+    },
+    {
+      "mode": "depth",
+      "n": 8,
+      "allocated_bytes": {
+        "baseline": 9728,
+        "traversal-only": 9728,
+        "full": 5760
+      },
+      "list_copies": {
+        "baseline": 36,
+        "traversal-only": 36,
+        "full": 0
+      },
+      "managed_peak_bytes": {
+        "baseline": 2400,
+        "traversal-only": 2400,
+        "full": 4160
+      },
+      "full_traffic_reduction_percent": 40.789473684210535
+    },
+    {
+      "mode": "depth",
+      "n": 24,
+      "allocated_bytes": {
+        "baseline": 45472,
+        "traversal-only": 45472,
+        "full": 15136
+      },
+      "list_copies": {
+        "baseline": 300,
+        "traversal-only": 300,
+        "full": 0
+      },
+      "managed_peak_bytes": {
+        "baseline": 5536,
+        "traversal-only": 5536,
+        "full": 10880
+      },
+      "full_traffic_reduction_percent": 66.71358198451794
+    },
+    {
+      "mode": "symbols",
+      "n": 4,
+      "allocated_bytes": {
+        "baseline": 121952,
+        "traversal-only": 60768,
+        "full": 29536
+      },
+      "list_copies": {
+        "baseline": 296,
+        "traversal-only": 107,
+        "full": 5
+      },
+      "managed_peak_bytes": {
+        "baseline": 28896,
+        "traversal-only": 15904,
+        "full": 15584
+      },
+      "full_traffic_reduction_percent": 75.78063500393597
+    },
+    {
+      "mode": "symbols",
+      "n": 16,
+      "allocated_bytes": {
+        "baseline": 459104,
+        "traversal-only": 224896,
+        "full": 104768
+      },
+      "list_copies": {
+        "baseline": 1124,
+        "traversal-only": 395,
+        "full": 5
+      },
+      "managed_peak_bytes": {
+        "baseline": 107112,
+        "traversal-only": 56792,
+        "full": 53648
+      },
+      "full_traffic_reduction_percent": 77.17989823656514
+    }
+  ]
+}

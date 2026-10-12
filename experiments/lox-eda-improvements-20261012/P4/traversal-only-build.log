@@ -1,0 +1,2 @@
+build-slot: FIFO ticket 2523, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 3, FIFO ticket 2523 after 15s
