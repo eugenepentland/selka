@@ -127,14 +127,29 @@ and A09; A06 edits only its reserved guest fixtures and unique regression module
 Support4 exploratory application validation uses source
 `66890fbc5135a771e6a423724d13c30018ab717f`, compiler SHA256
 `4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375`.
-Word count passes all five modes and both inputs, and nested JSON passes debug
-and verified release on both inputs: all 14 counted executions preserve checksums,
-have zero RC events and zero exit-live managed bytes, and pass structural audits.
-Their complete evidence is in `evidence/support4-word-*` and
-`evidence/support4-json-debug-verify`. Remaining modes/applications are in progress
-under shared admission; these results are not final C1/C2/C3 qualification.
+All four shapes pass all five modes, both inputs and the parallel 1/2/8-worker
+matrix: 20 binaries and 60 counted executions preserve checksums, have zero RC
+events and zero exit-live managed bytes, and pass the harness's ABI-marker and
+linked-helper checks. `evidence/support4-applications.json` combines exact hashes,
+managed totals and links to every raw report. The complete structural ABI audit
+remains A07/A10's responsibility. These results are not final C1/C2/C3 qualification.
 Completed evidence is preserved before every checkpoint, and resumed mode batches
 use distinct output directories. The initial 64-source ledger currently admits
 52 sources on exploratory compilers and retains all 12 pending lanes. The
 additional 23-source ledger admits 18 and retains five nested-slot failures.
-Native qualification is still required for every migrated registered fixture.
+
+`migration-native.py` extracts immutable C0 registered output constants, identified
+by the original Zig test file hash, to exercise sensitive source migrations.
+`v_snapshot`, `v_mut_window` and `u1_state` pass counted Support4 release with exact
+original outputs, zero RC events and no managed leaks. `ce2_effects` builds and
+passes the linked-helper audit but aborts with `free(): invalid size` (status -6),
+before stdout/counters flush. This is a correctness blocker owned by A07, not a
+tradeoff or a qualified run. Raw results are in `evidence/support4-native-*`.
+Support5 requalification of the same source is pending; the Support4 failure is
+preserved. Native qualification remains required for all migrated fixtures.
+
+Regression followups `928172f79` and `65026bad3` make the conservative array IR
+controls executable roots, call them with runtime input and restrict retain
+assertions to the intended function. Both passed Guardian 88/88; A07 owns running
+them against the production array-transfer patch. No unexecuted control is counted
+as passing.

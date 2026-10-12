@@ -24,7 +24,7 @@ def main():
     files = {}
     for path in sorted(source.glob("*/*/*.json")):
         relative = path.relative_to(source)
-        if not (path.name.startswith(("counts-", "run-")) or path.name == "build.json"):
+        if not (path.name.startswith(("counts-", "run-")) or path.name in ("build.json", "counts.json", "run.json")):
             continue
         data = path.read_bytes()
         compressed = gzip.compress(data, mtime=0)
