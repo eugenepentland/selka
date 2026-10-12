@@ -1482,8 +1482,13 @@ def row13_tests_plan(ctx: Context) -> list:
 
 
 def row13_namespaces(run: Run) -> dict:
+    # Receipt namespaces live under `<cache>/tests/` (`receipts-v3`,
+    # `manifests-v3`); list both levels.
     cache = run.ctx.row_work("13-namespace-bump", "test-receipts") / "cache"
-    return {"entries": sorted(path.name for path in cache.iterdir()) if cache.exists() else []}
+    entries = sorted(path.name for path in cache.iterdir()) if cache.exists() else []
+    tests = cache / "tests"
+    entries += sorted("tests/" + path.name for path in tests.iterdir()) if tests.exists() else []
+    return {"entries": entries}
 
 
 def row13_tests_judge(run: Run) -> list[dict]:
@@ -1494,8 +1499,9 @@ def row13_tests_judge(run: Run) -> list[dict]:
     checks += judge_none_hit("new-1 (v2 receipts ignored)", run.tests("new-1"), feature="test_v3_namespaces", features=f)
     checks += judge_all_hit("new-2 (second v3 run hits)", run.tests("new-2"))
     checks += judge_all_hit("old-3 (v2 receipts untouched)", run.tests("old-3"))
-    checks.append(gated("a v3 namespace exists beside v2", "*-v3 entry", entries,
-                        any(name.endswith("-v3") for name in entries), "test_v3_namespaces", f))
+    checks.append(gated("v3 receipt namespaces exist beside the v2 ones", "tests/receipts-v3 and tests/receipts-v2", entries,
+                        "tests/receipts-v3" in entries and any(name.startswith("tests/receipts-v2") for name in entries),
+                        "test_v3_namespaces", f))
     return checks
 
 
