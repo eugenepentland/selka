@@ -43,3 +43,30 @@ The A08 frontend metadata fix uses the existing `LocalOrigin.iteration` enum val
 so it needs no wire-format change. Production `sema_collections.zig` participates
 in compiler identity, isolating old cached semantic/lowered artifacts. Final ABI
 qualification must still run against the changed integrated compiler.
+
+## Aggregate provider pin review
+
+The planned compiler-only `myl_core_provider_pin_<physical ir.Type ID>` helper
+uses a physical type ordinal, not a private metadata string slot. The lowering
+catalog hashes the ordered typed declaration graph, and `Session.advance` hashes
+all new physical compounds, function names/signatures and checked-to-physical
+bindings. Restore appends the guarded discovery delta at the same indices.
+Optimization snapshots independently hash the entire compound/function layout.
+The helper name therefore stays exact; renderer string-slot relocation must not
+be applied to this suffix. A changed preceding physical discovery changes the
+catalog/guard, causing fresh lowering rather than changing a restored suffix.
+
+`a08_provider_cache_test.zig` prepares cold/warm and earlier-record discovery
+coverage, full cached/fresh IR comparison, native cleanup and wrong/stale marker
+signature refusals. It awaits the coordinator's aggregate-provider implementation
+and registration; this draft is not passing evidence. Marker validation must reject
+wrong parameter types, ownership bits and use outside the selected zero-RC ABI.
+
+
+Support5 (`a1f19edf255c8c0886731d8d7cce450d5f657720`) passes forty CLI cache
+correctness cases across fresh modes, retained C0 generic/map artifacts, Result
+obligations and partial rendering artifacts. See `support5-cache-transition-summary.json`.
+The mode audit records fresh RC/zero-RC lowering separately and confirms matching
+mode reuse. Whole-module LLVM emission rows have zero unit-emission counters and
+must not be reported as direct unit-cache qualification. Final compiler/default/
+retirement reruns and registered stage-cache gates remain required.

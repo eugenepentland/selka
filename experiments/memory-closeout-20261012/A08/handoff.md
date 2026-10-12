@@ -232,6 +232,80 @@ requires A07's separate ownership-pass invocation before it fixes production
 lowering; the helper commit alone is not completion of that defect.
 
 Final C1/C2/C3 cache ABI, application, component and performance qualification
-remain pending. `qualify.py` now prepares old-receipt source rejection, Result-list
-and rendering ABI transitions with explicit outcomes, but these new candidate
-cases have not yet run and are not reported as passing evidence.
+remain pending. The support5 results below supersede the earlier unexecuted
+cache-transition status, without qualifying the final candidate.
+
+
+## Support5 cache and component checkpoint
+
+Compiler source `a1f19edf255c8c0886731d8d7cce450d5f657720`, executable SHA-256
+`8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789`, is an interim
+integration compiler, not C1. Its `bin/mylang` lives under the coordinator's
+`.tmp/memory-closeout/coordinator/support5-install/`. Its staged `libexec/` still
+contains the explicitly labeled older support4 components; this checkpoint does
+not qualify the installed package.
+
+The following correctness runs pass, with exact arguments, source/compiler hashes,
+stdout, reports and refusals in each `results.json`:
+
+| Evidence directory | Cases | Result |
+| --- | ---: | --- |
+| `support5-fresh-cache` | 21 | RC/zero-RC/single-owner alternation, invalid edit, dependency change, relocation, generic/map replay pass |
+| `support5-retained-cache` | 9 | Existing successful C0 generic/map caches invalidate; old RC-admitted invalid source refuses cold/warm; new receipts replay |
+| `support5-result-cache` | 7 | C0 Result-list refusal retained; new nested Result program and replay pass; unhandled edits refuse cold/warm |
+| `support5-render-cache` | 3 | Copied C0 partial-stage rendering cache invalidates; new checked native fixture and replay pass |
+
+`support5-fresh-cache/mode-audit.json` separately verifies fresh lowering on each
+first RC/zero-RC access, mode-specific reuse, distinct LLVM and absence of retain/
+release names in zero-RC LLVM. The single-owner compatibility path still emits RC
+and has separate zero-valued lowering-session counters; it is not zero-RC.
+`--emit-llvm` exercises whole-module emission, so these rows do not claim unit-
+emission-cache counter coverage. Registered direct stage-cache tests remain a
+separate gate requirement.
+
+The retained C0 run snapshots the complete disposable baseline tree before using
+its original paths; its source files are restored after the invalid edit. Old
+artifact payloads stay unchanged; only locks, retention timestamps and stage
+sequence bookkeeping change. `support5-cache-transition-summary.json` and the
+per-run provenance record these differences. Rendering baseline source/LLVM and
+its original failed-build report are archived under `baseline-partial/`. C0
+rendering had failed native linking after the host closure changed, so this is
+lowering/LLVM transition evidence, not an old native executable/receipt test. The
+copied A04 cache also contains earlier prototype entries, explicitly recorded in
+its provenance. Peer source and cache files were not changed.
+
+Run reproduction uses `qualify.py --compiler SUPPORT5 --source-revision SHA
+--zig "$ZIG" --work NEW_WORK --output NEW_OUTPUT --admission held --timeout 120`
+inside one bounded `scripts/build-slot.sh build` lease. The default invocation is
+the fresh matrix; `--result-only` supplies the A01 Result fixture pair and oracle,
+and `--render-only --retained-render-root ROOT` copies the preserved rendering
+baseline. `retained_cache.py` uses `--baseline-work` and `--baseline-report` for
+retained generic/map artifacts. All outputs must be fresh paths. These Debug
+compiler executions were correctness runs; their elapsed/RSS telemetry does not
+constitute an exclusive performance comparison.
+
+`components-support5-test_index.json` repeats all 128 real protocol runs using a
+freshly counted zero-RC component: binary SHA-256
+`77d7aa713eec891a9d59935b05a3a4476a34c2d2eb12f7ccba87ad14e3e3650f`.
+All 106 successful runs and 21 handled error returns pass, with zero observed RC,
+zero managed exit-live bytes and no handle-leak diagnostic. The one expected
+output-failure trap remains separately classified. LLVM and linked symbols are
+RC-clean; compressed counters/statuses are retained. This component/compiler pair
+is qualified; final packaging and final compiler requalification are pending.
+
+`components-support5-cache_plan.json` still refuses native lowering with
+`E_ZERO_RC_LOWERING` at `incremental.my:241`, despite source checking succeeding.
+Support5 includes the phi SCC cleanup invocation; that fix does not resolve this
+nested parent mutation. A07 owns the pending prepared-parent/writeback fix.
+`cache-plan-support5-facts-v2.ir` and its `close_group` extract show a retain on
+`%45` feeding a real loop-carried mutation phi, not an identity SCC. No broader
+phi rewrite is justified. `dump-ir --facts` succeeds as diagnostic Core generation;
+that does not establish guest/runtime admission. The first attempted dump used a
+typo path and was cancelled before admission; its empty output is excluded from
+compiler evidence, and the corrected `v2` files are authoritative.
+
+The aggregate-provider pin cache regression was contributed to the coordinator
+for atomic integration with that feature. Its archived draft SHA-256 is
+`24fb4db15c2997c8838a99e1e3f08e7090f76801dd3fd01fc985541056e9afda`.
+No duplicate test-only commit is needed from A08. The physical-type identity audit
+is in `cache-audit.md`; executable results await that integration.

@@ -1,0 +1,4 @@
+/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/support5-result-cache/result-cache/main.my:3:5: error[E_RESULT_UNHANDLED]: result-bearing value leaves scope without being handled, returned, transferred, or explicitly discarded
+      return len(results)
+      ^
+  note: /home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/support5-result-cache/result-cache/main.my:2:11: unhandled result-bearing binding

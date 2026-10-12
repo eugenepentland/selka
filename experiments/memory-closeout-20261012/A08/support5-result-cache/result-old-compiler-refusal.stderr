@@ -1,0 +1,4 @@
+main.my:15:35: error[E_GENERIC_REQUIREMENT]: type argument does not guarantee the nominal template's required operations
+  func nested(value: int) -> Result[Result[str, str], str]:
+                                    ^
+  note: main.my:1:1: type parameter requirements are declared here

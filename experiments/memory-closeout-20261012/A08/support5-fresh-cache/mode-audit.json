@@ -1,0 +1,113 @@
+{
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "source_revision": "a1f19edf255c8c0886731d8d7cce450d5f657720",
+  "scope": "post-run structural mode audit, interim support5 only",
+  "modes": [
+    {
+      "name": "mode-0-rc",
+      "mode": "rc",
+      "llvm_sha256": "01a3b51153b6a66042e18888e1257f114c384fd4202675416070cdcc8d0b6c30",
+      "retain_mentions": 1,
+      "release_mentions": 3,
+      "drop_mentions": 0,
+      "lowering": {
+        "reused": 0,
+        "lowered": 2,
+        "deferred": 0,
+        "fallbacks": 0,
+        "materialized": 2,
+        "unloaded": 0
+      }
+    },
+    {
+      "name": "mode-1-zero",
+      "mode": "zero",
+      "llvm_sha256": "35e6546c1128300cd899d9879fc917baf10958bbd6066248275ef6e217276658",
+      "retain_mentions": 0,
+      "release_mentions": 0,
+      "drop_mentions": 3,
+      "lowering": {
+        "reused": 0,
+        "lowered": 2,
+        "deferred": 0,
+        "fallbacks": 0,
+        "materialized": 2,
+        "unloaded": 0
+      }
+    },
+    {
+      "name": "mode-2-single",
+      "mode": "single",
+      "llvm_sha256": "594c3222f8b99ec13cb29ae71c121a60a8b48fca4c106f808857a4f5781ffd0b",
+      "retain_mentions": 1,
+      "release_mentions": 3,
+      "drop_mentions": 0,
+      "lowering": {
+        "reused": 0,
+        "lowered": 0,
+        "deferred": 0,
+        "fallbacks": 0,
+        "materialized": 0,
+        "unloaded": 0
+      }
+    },
+    {
+      "name": "mode-3-zero",
+      "mode": "zero",
+      "llvm_sha256": "35e6546c1128300cd899d9879fc917baf10958bbd6066248275ef6e217276658",
+      "retain_mentions": 0,
+      "release_mentions": 0,
+      "drop_mentions": 3,
+      "lowering": {
+        "reused": 2,
+        "lowered": 0,
+        "deferred": 0,
+        "fallbacks": 0,
+        "materialized": 2,
+        "unloaded": 0
+      }
+    },
+    {
+      "name": "mode-4-rc",
+      "mode": "rc",
+      "llvm_sha256": "01a3b51153b6a66042e18888e1257f114c384fd4202675416070cdcc8d0b6c30",
+      "retain_mentions": 1,
+      "release_mentions": 3,
+      "drop_mentions": 0,
+      "lowering": {
+        "reused": 2,
+        "lowered": 0,
+        "deferred": 1,
+        "fallbacks": 0,
+        "materialized": 2,
+        "unloaded": 0
+      }
+    },
+    {
+      "name": "mode-5-single",
+      "mode": "single",
+      "llvm_sha256": "594c3222f8b99ec13cb29ae71c121a60a8b48fca4c106f808857a4f5781ffd0b",
+      "retain_mentions": 1,
+      "release_mentions": 3,
+      "drop_mentions": 0,
+      "lowering": {
+        "reused": 0,
+        "lowered": 0,
+        "deferred": 0,
+        "fallbacks": 0,
+        "materialized": 0,
+        "unloaded": 0
+      }
+    }
+  ],
+  "checks": {
+    "first_rc_fresh": true,
+    "first_zero_fresh": true,
+    "zero_restored": true,
+    "rc_restored": true,
+    "rc_zero_llvm_distinct": true,
+    "zero_no_retain_release": true
+  },
+  "all_passed": true,
+  "single_owner_note": "single-owner uses a separate lowering path with zero Session counters; executable/LLVM identities are recorded without claiming Session reuse."
+}

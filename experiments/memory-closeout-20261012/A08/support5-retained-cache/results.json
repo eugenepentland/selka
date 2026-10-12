@@ -1,0 +1,1413 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "harness_sha256": "acaf73543531bd65ce3939adc7c38af5d2b5cb35c9d652bcad623fa30f7b2c8b",
+  "source_revision": "a1f19edf255c8c0886731d8d7cce450d5f657720",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "admission": "held",
+  "rss_scope": "GNU time maximum child process RSS, not summed process-tree peak",
+  "stage_times": "report.stages.nanoseconds; frontend_phases may be inclusive",
+  "cases": [
+    {
+      "name": "old-mixed-first",
+      "mode": "zero",
+      "arguments": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/c0-cache-v2/cache-project/main.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/support5-retained-cache/bin/old-mixed-first",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/c0-cache-v2/cache-project/cache",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--report",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/support5-retained-cache/bin/old-mixed-first.ll",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "expected_refusal": false,
+      "passed": true,
+      "report": {
+        "version": "cache-report-v1",
+        "program": "linked",
+        "units": 1,
+        "reused": 0,
+        "compiled": 1,
+        "verified": 0,
+        "processes": 3,
+        "stages": {
+          "version": "stage-report-v3",
+          "nanoseconds": {
+            "frontend": 5481275,
+            "lowering": 1081985,
+            "optimizer": 4303264,
+            "emission": 4295020,
+            "native": 2771532787,
+            "linker": 15858892,
+            "frontend_phases": [
+              {
+                "name": "load",
+                "nanoseconds": 612077,
+                "inclusive": false
+              },
+              {
+                "name": "syntax_parse",
+                "nanoseconds": 1175793,
+                "inclusive": false
+              },
+              {
+                "name": "declarations_interfaces",
+                "nanoseconds": 29351,
+                "inclusive": false
+              },
+              {
+                "name": "merge",
+                "nanoseconds": 49867,
+                "inclusive": false
+              },
+              {
+                "name": "dependency_key_preparation",
+                "nanoseconds": 244723,
+                "inclusive": false
+              },
+              {
+                "name": "retention_store_io",
+                "nanoseconds": 1207557,
+                "inclusive": false
+              },
+              {
+                "name": "symbolic_templates",
+                "nanoseconds": 3583,
+                "inclusive": false
+              },
+              {
+                "name": "stand_in_planning",
+                "nanoseconds": 9015,
+                "inclusive": false
+              },
+              {
+                "name": "ordinary_body_replay",
+                "nanoseconds": 109663,
+                "inclusive": false
+              },
+              {
+                "name": "fresh_body_check",
+                "nanoseconds": 488506,
+                "inclusive": false
+              },
+              {
+                "name": "entry_adaptation",
+                "nanoseconds": 1870,
+                "inclusive": false
+              },
+              {
+                "name": "effect_origin_passes",
+                "nanoseconds": 190818,
+                "inclusive": false
+              },
+              {
+                "name": "domain_codec_validation",
+                "nanoseconds": 653,
+                "inclusive": false
+              },
+              {
+                "name": "warning_derivation",
+                "nanoseconds": 200884,
+                "inclusive": false
+              },
+              {
+                "name": "check_summaries",
+                "nanoseconds": 116076,
+                "inclusive": false
+              },
+              {
+                "name": "check",
+                "nanoseconds": 3061497,
+                "inclusive": true
+              }
+            ]
+          },
+          "frontend": {
+            "checked": 2,
+            "reused": 0,
+            "summaries": 0,
+            "syntax_hits": 0,
+            "syntax_misses": 2,
+            "stored": 2,
+            "damaged": 0
+          },
+          "lowering": {
+            "reused": 0,
+            "lowered": 2,
+            "deferred": 0,
+            "fallbacks": 0,
+            "materialized": 2,
+            "unloaded": 0
+          },
+          "optimizer": {
+            "hits": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "misses": [
+              2,
+              2,
+              2,
+              2,
+              2,
+              2,
+              0
+            ],
+            "bypassed": 0,
+            "active_functions": 2,
+            "fresh_work": 2,
+            "restores": {
+              "final": 0,
+              "checkpoints": 0,
+              "fusions": 0
+            },
+            "final_loaded": 2
+          },
+          "emission": {
+            "units": 0,
+            "reused": 0,
+            "rendered": 0,
+            "seeds_reused": 0,
+            "seeds_rendered": 0,
+            "workers": 0,
+            "work": {
+              "receipts_checked": 0,
+              "keys_built": 0,
+              "llvm_loaded_bytes": 0,
+              "native_handles": 0
+            }
+          },
+          "frontend_misses": {
+            "total": [
+              0,
+              0,
+              2,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "lookup": [
+              0,
+              0,
+              2,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "retention": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "relocation": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "storage": {
+          "flush_nanoseconds": 1470077,
+          "flush_succeeded": true,
+          "compression": "zlib",
+          "reads": {
+            "packed_bytes_read": 0,
+            "decoded_bytes": 0,
+            "blocks_decoded": 0,
+            "payload_bytes_returned": 0,
+            "block_cache_hits": 0,
+            "publication": {
+              "filename_lookups": 14,
+              "refreshes": 1,
+              "packs_prepared": 1,
+              "pack_bytes_prepared": 6073,
+              "save_bytes_prepared": 9641,
+              "sequence_locks": 22
+            }
+          }
+        },
+        "program_shared": false
+      },
+      "execution": {
+        "status": 0,
+        "stdout": "3 8\n",
+        "stderr": "",
+        "expected": "3 8\n"
+      },
+      "llvm_rc_clean": true,
+      "elapsed_ns": 2808460694,
+      "elapsed_includes_admission_wait": false,
+      "max_rss_kib": "168336",
+      "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+      "compiler_source_revision": "a1f19edf255c8c0886731d8d7cce450d5f657720",
+      "sources": {
+        "main.my": "402df521dfac77100c90129c09a02cc5d7e1b2d807f10c66944fa6cee23ca77a",
+        "dep.my": "a6212e2edba1d5b1c03ccdbff323cf59230401360cc9050ad5f5f59d6bde72c1"
+      },
+      "binary_sha256": "9be807dc70cc6cf848dd2e43f19412c34fc7383cd8045b5acc6144ee190bc3d2",
+      "llvm_sha256": "35e6546c1128300cd899d9879fc917baf10958bbd6066248275ef6e217276658",
+      "expected_refusal_code": null,
+      "outcome": "completed",
+      "memory_instrumented": false
+    },
+    {
+      "name": "old-mixed-receipt",
+      "mode": "zero",
+      "arguments": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/c0-cache-v2/cache-project/main.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/support5-retained-cache/bin/old-mixed-receipt",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/c0-cache-v2/cache-project/cache",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--report",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "expected_refusal": false,
+      "passed": true,
+      "report": {
+        "version": "cache-report-v1",
+        "program": "reused",
+        "units": 1,
+        "reused": 1,
+        "compiled": 0,
+        "verified": 0,
+        "processes": 0,
+        "stages": {
+          "version": "stage-report-v3",
+          "nanoseconds": {
+            "frontend": 3236941,
+            "lowering": 413524,
+            "optimizer": 1109742,
+            "emission": 3384129,
+            "native": 26322434,
+            "linker": 0,
+            "frontend_phases": [
+              {
+                "name": "load",
+                "nanoseconds": 421713,
+                "inclusive": false
+              },
+              {
+                "name": "syntax_replay",
+                "nanoseconds": 283923,
+                "inclusive": false
+              },
+              {
+                "name": "declarations_interfaces",
+                "nanoseconds": 21276,
+                "inclusive": false
+              },
+              {
+                "name": "merge",
+                "nanoseconds": 46753,
+                "inclusive": false
+              },
+              {
+                "name": "dependency_key_preparation",
+                "nanoseconds": 211074,
+                "inclusive": false
+              },
+              {
+                "name": "retention_store_io",
+                "nanoseconds": 298509,
+                "inclusive": false
+              },
+              {
+                "name": "symbolic_templates",
+                "nanoseconds": 2803,
+                "inclusive": false
+              },
+              {
+                "name": "stand_in_planning",
+                "nanoseconds": 54540,
+                "inclusive": false
+              },
+              {
+                "name": "ordinary_body_replay",
+                "nanoseconds": 74534,
+                "inclusive": false
+              },
+              {
+                "name": "entry_adaptation",
+                "nanoseconds": 1423,
+                "inclusive": false
+              },
+              {
+                "name": "effect_origin_passes",
+                "nanoseconds": 127156,
+                "inclusive": false
+              },
+              {
+                "name": "domain_codec_validation",
+                "nanoseconds": 268,
+                "inclusive": false
+              },
+              {
+                "name": "warning_derivation",
+                "nanoseconds": 163426,
+                "inclusive": false
+              },
+              {
+                "name": "check_summaries",
+                "nanoseconds": 8327,
+                "inclusive": false
+              },
+              {
+                "name": "check",
+                "nanoseconds": 1259612,
+                "inclusive": true
+              }
+            ]
+          },
+          "frontend": {
+            "checked": 0,
+            "reused": 2,
+            "summaries": 1,
+            "syntax_hits": 2,
+            "syntax_misses": 0,
+            "stored": 0,
+            "damaged": 0
+          },
+          "lowering": {
+            "reused": 2,
+            "lowered": 0,
+            "deferred": 0,
+            "fallbacks": 0,
+            "materialized": 2,
+            "unloaded": 0
+          },
+          "optimizer": {
+            "hits": [
+              1,
+              1,
+              1,
+              1,
+              1,
+              2,
+              0
+            ],
+            "misses": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "bypassed": 1,
+            "active_functions": 2,
+            "fresh_work": 0,
+            "restores": {
+              "final": 2,
+              "checkpoints": 0,
+              "fusions": 0
+            },
+            "final_loaded": 2
+          },
+          "emission": {
+            "units": 0,
+            "reused": 0,
+            "rendered": 0,
+            "seeds_reused": 0,
+            "seeds_rendered": 0,
+            "workers": 0,
+            "work": {
+              "receipts_checked": 0,
+              "keys_built": 0,
+              "llvm_loaded_bytes": 0,
+              "native_handles": 0
+            }
+          },
+          "frontend_misses": {
+            "total": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "lookup": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "retention": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "relocation": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "storage": {
+          "flush_nanoseconds": 541716,
+          "flush_succeeded": true,
+          "compression": "zlib",
+          "reads": {
+            "packed_bytes_read": 4160,
+            "decoded_bytes": 11881,
+            "blocks_decoded": 1,
+            "payload_bytes_returned": 8899,
+            "block_cache_hits": 12,
+            "publication": {
+              "filename_lookups": 15,
+              "refreshes": 1,
+              "packs_prepared": 1,
+              "pack_bytes_prepared": 1198,
+              "save_bytes_prepared": 1127,
+              "sequence_locks": 4
+            }
+          }
+        },
+        "program_shared": false
+      },
+      "execution": {
+        "status": 0,
+        "stdout": "3 8\n",
+        "stderr": "",
+        "expected": "3 8\n"
+      },
+      "llvm_rc_clean": null,
+      "elapsed_ns": 104400999,
+      "elapsed_includes_admission_wait": false,
+      "max_rss_kib": "27132",
+      "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+      "compiler_source_revision": "a1f19edf255c8c0886731d8d7cce450d5f657720",
+      "sources": {
+        "main.my": "402df521dfac77100c90129c09a02cc5d7e1b2d807f10c66944fa6cee23ca77a",
+        "dep.my": "a6212e2edba1d5b1c03ccdbff323cf59230401360cc9050ad5f5f59d6bde72c1"
+      },
+      "binary_sha256": "9be807dc70cc6cf848dd2e43f19412c34fc7383cd8045b5acc6144ee190bc3d2",
+      "llvm_sha256": null,
+      "expected_refusal_code": null,
+      "outcome": "completed",
+      "memory_instrumented": false
+    },
+    {
+      "name": "old-mixed-replay",
+      "mode": "zero",
+      "arguments": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/c0-cache-v2/cache-project/main.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/support5-retained-cache/bin/old-mixed-replay",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/c0-cache-v2/cache-project/cache",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--report",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "expected_refusal": false,
+      "passed": true,
+      "report": {
+        "version": "cache-report-v1",
+        "program": "replayed",
+        "units": 0,
+        "reused": 0,
+        "compiled": 0,
+        "verified": 0,
+        "processes": 0,
+        "stages": null,
+        "storage": null,
+        "program_shared": false
+      },
+      "execution": {
+        "status": 0,
+        "stdout": "3 8\n",
+        "stderr": "",
+        "expected": "3 8\n"
+      },
+      "llvm_rc_clean": null,
+      "elapsed_ns": 104272254,
+      "elapsed_includes_admission_wait": false,
+      "max_rss_kib": "9580",
+      "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+      "compiler_source_revision": "a1f19edf255c8c0886731d8d7cce450d5f657720",
+      "sources": {
+        "main.my": "402df521dfac77100c90129c09a02cc5d7e1b2d807f10c66944fa6cee23ca77a",
+        "dep.my": "a6212e2edba1d5b1c03ccdbff323cf59230401360cc9050ad5f5f59d6bde72c1"
+      },
+      "binary_sha256": "9be807dc70cc6cf848dd2e43f19412c34fc7383cd8045b5acc6144ee190bc3d2",
+      "llvm_sha256": null,
+      "expected_refusal_code": null,
+      "outcome": "completed",
+      "memory_instrumented": false
+    },
+    {
+      "name": "old-map-abi-first",
+      "mode": "zero",
+      "arguments": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/c0-cache-v2/map-abi/main.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/support5-retained-cache/bin/old-map-abi-first",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/c0-cache-v2/map-abi/cache",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--report",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/support5-retained-cache/bin/old-map-abi-first.ll",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "expected_refusal": false,
+      "passed": true,
+      "report": {
+        "version": "cache-report-v1",
+        "program": "linked",
+        "units": 1,
+        "reused": 0,
+        "compiled": 1,
+        "verified": 0,
+        "processes": 2,
+        "stages": {
+          "version": "stage-report-v3",
+          "nanoseconds": {
+            "frontend": 6536377,
+            "lowering": 966564,
+            "optimizer": 3917023,
+            "emission": 4275385,
+            "native": 81045891,
+            "linker": 16003992,
+            "frontend_phases": [
+              {
+                "name": "load",
+                "nanoseconds": 616253,
+                "inclusive": false
+              },
+              {
+                "name": "syntax_parse",
+                "nanoseconds": 1167841,
+                "inclusive": false
+              },
+              {
+                "name": "declarations_interfaces",
+                "nanoseconds": 35256,
+                "inclusive": false
+              },
+              {
+                "name": "merge",
+                "nanoseconds": 65656,
+                "inclusive": false
+              },
+              {
+                "name": "dependency_key_preparation",
+                "nanoseconds": 374236,
+                "inclusive": false
+              },
+              {
+                "name": "retention_store_io",
+                "nanoseconds": 1456719,
+                "inclusive": false
+              },
+              {
+                "name": "symbolic_templates",
+                "nanoseconds": 544876,
+                "inclusive": false
+              },
+              {
+                "name": "stand_in_planning",
+                "nanoseconds": 4711,
+                "inclusive": false
+              },
+              {
+                "name": "ordinary_body_replay",
+                "nanoseconds": 109981,
+                "inclusive": false
+              },
+              {
+                "name": "fresh_body_check",
+                "nanoseconds": 683988,
+                "inclusive": false
+              },
+              {
+                "name": "specialization_body_replay",
+                "nanoseconds": 30866,
+                "inclusive": false
+              },
+              {
+                "name": "entry_adaptation",
+                "nanoseconds": 2061,
+                "inclusive": false
+              },
+              {
+                "name": "effect_origin_passes",
+                "nanoseconds": 313128,
+                "inclusive": false
+              },
+              {
+                "name": "domain_codec_validation",
+                "nanoseconds": 577,
+                "inclusive": false
+              },
+              {
+                "name": "warning_derivation",
+                "nanoseconds": 153599,
+                "inclusive": false
+              },
+              {
+                "name": "check_summaries",
+                "nanoseconds": 106035,
+                "inclusive": false
+              },
+              {
+                "name": "check",
+                "nanoseconds": 4217103,
+                "inclusive": true
+              }
+            ]
+          },
+          "frontend": {
+            "checked": 3,
+            "reused": 0,
+            "summaries": 0,
+            "syntax_hits": 0,
+            "syntax_misses": 2,
+            "stored": 4,
+            "damaged": 0
+          },
+          "lowering": {
+            "reused": 0,
+            "lowered": 3,
+            "deferred": 0,
+            "fallbacks": 0,
+            "materialized": 3,
+            "unloaded": 0
+          },
+          "optimizer": {
+            "hits": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "misses": [
+              4,
+              4,
+              4,
+              0,
+              4,
+              4,
+              0
+            ],
+            "bypassed": 0,
+            "active_functions": 4,
+            "fresh_work": 4,
+            "restores": {
+              "final": 0,
+              "checkpoints": 0,
+              "fusions": 0
+            },
+            "final_loaded": 4
+          },
+          "emission": {
+            "units": 0,
+            "reused": 0,
+            "rendered": 0,
+            "seeds_reused": 0,
+            "seeds_rendered": 0,
+            "workers": 0,
+            "work": {
+              "receipts_checked": 0,
+              "keys_built": 0,
+              "llvm_loaded_bytes": 0,
+              "native_handles": 0
+            }
+          },
+          "frontend_misses": {
+            "total": [
+              0,
+              1,
+              2,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "lookup": [
+              0,
+              1,
+              2,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "retention": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "relocation": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "storage": {
+          "flush_nanoseconds": 2242882,
+          "flush_succeeded": true,
+          "compression": "zlib",
+          "reads": {
+            "packed_bytes_read": 0,
+            "decoded_bytes": 0,
+            "blocks_decoded": 0,
+            "payload_bytes_returned": 0,
+            "block_cache_hits": 0,
+            "publication": {
+              "filename_lookups": 4,
+              "refreshes": 1,
+              "packs_prepared": 1,
+              "pack_bytes_prepared": 9646,
+              "save_bytes_prepared": 17722,
+              "sequence_locks": 34
+            }
+          }
+        },
+        "program_shared": false
+      },
+      "execution": {
+        "status": 0,
+        "stdout": "1 3\n",
+        "stderr": "",
+        "expected": "1 3\n"
+      },
+      "llvm_rc_clean": true,
+      "elapsed_ns": 205700703,
+      "elapsed_includes_admission_wait": false,
+      "max_rss_kib": "60216",
+      "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+      "compiler_source_revision": "a1f19edf255c8c0886731d8d7cce450d5f657720",
+      "sources": {
+        "main.my": "6ca2a4bfe4c26f99e0597358d0ccc5fdbedb67c50c717a9c60c0cc506ccef88e"
+      },
+      "binary_sha256": "ede07bc14e8efb4af449cfd9d7e1d766c92ab0c411187a6beceffe6a4e2cb90c",
+      "llvm_sha256": "e0b1259732b65ee3abf768f12d4341cfcdb37f50aa7d7c2a11368cc3b790da12",
+      "expected_refusal_code": null,
+      "outcome": "completed",
+      "memory_instrumented": false
+    },
+    {
+      "name": "old-map-abi-receipt",
+      "mode": "zero",
+      "arguments": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/c0-cache-v2/map-abi/main.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/support5-retained-cache/bin/old-map-abi-receipt",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/c0-cache-v2/map-abi/cache",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--report",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "expected_refusal": false,
+      "passed": true,
+      "report": {
+        "version": "cache-report-v1",
+        "program": "reused",
+        "units": 1,
+        "reused": 1,
+        "compiled": 0,
+        "verified": 0,
+        "processes": 0,
+        "stages": {
+          "version": "stage-report-v3",
+          "nanoseconds": {
+            "frontend": 7145362,
+            "lowering": 1223582,
+            "optimizer": 2342697,
+            "emission": 4841874,
+            "native": 25691406,
+            "linker": 0,
+            "frontend_phases": [
+              {
+                "name": "load",
+                "nanoseconds": 610997,
+                "inclusive": false
+              },
+              {
+                "name": "syntax_replay",
+                "nanoseconds": 286594,
+                "inclusive": false
+              },
+              {
+                "name": "declarations_interfaces",
+                "nanoseconds": 32762,
+                "inclusive": false
+              },
+              {
+                "name": "merge",
+                "nanoseconds": 85165,
+                "inclusive": false
+              },
+              {
+                "name": "dependency_key_preparation",
+                "nanoseconds": 313224,
+                "inclusive": false
+              },
+              {
+                "name": "retention_store_io",
+                "nanoseconds": 1301842,
+                "inclusive": false
+              },
+              {
+                "name": "symbolic_templates",
+                "nanoseconds": 150048,
+                "inclusive": false
+              },
+              {
+                "name": "stand_in_planning",
+                "nanoseconds": 51471,
+                "inclusive": false
+              },
+              {
+                "name": "ordinary_body_replay",
+                "nanoseconds": 430765,
+                "inclusive": false
+              },
+              {
+                "name": "fresh_body_check",
+                "nanoseconds": 477416,
+                "inclusive": false
+              },
+              {
+                "name": "specialization_body_replay",
+                "nanoseconds": 128426,
+                "inclusive": false
+              },
+              {
+                "name": "entry_adaptation",
+                "nanoseconds": 2026,
+                "inclusive": false
+              },
+              {
+                "name": "effect_origin_passes",
+                "nanoseconds": 320387,
+                "inclusive": false
+              },
+              {
+                "name": "domain_codec_validation",
+                "nanoseconds": 427,
+                "inclusive": false
+              },
+              {
+                "name": "warning_derivation",
+                "nanoseconds": 207835,
+                "inclusive": false
+              },
+              {
+                "name": "check_summaries",
+                "nanoseconds": 10697,
+                "inclusive": false
+              },
+              {
+                "name": "check",
+                "nanoseconds": 3834180,
+                "inclusive": true
+              }
+            ]
+          },
+          "frontend": {
+            "checked": 1,
+            "reused": 2,
+            "summaries": 1,
+            "syntax_hits": 2,
+            "syntax_misses": 0,
+            "stored": 1,
+            "damaged": 0
+          },
+          "lowering": {
+            "reused": 3,
+            "lowered": 0,
+            "deferred": 0,
+            "fallbacks": 0,
+            "materialized": 3,
+            "unloaded": 0
+          },
+          "optimizer": {
+            "hits": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              4,
+              0
+            ],
+            "misses": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "bypassed": 4,
+            "active_functions": 4,
+            "fresh_work": 0,
+            "restores": {
+              "final": 4,
+              "checkpoints": 0,
+              "fusions": 0
+            },
+            "final_loaded": 4
+          },
+          "emission": {
+            "units": 0,
+            "reused": 0,
+            "rendered": 0,
+            "seeds_reused": 0,
+            "seeds_rendered": 0,
+            "workers": 0,
+            "work": {
+              "receipts_checked": 0,
+              "keys_built": 0,
+              "llvm_loaded_bytes": 0,
+              "native_handles": 0
+            }
+          },
+          "frontend_misses": {
+            "total": [
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "lookup": [
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "retention": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "relocation": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        "storage": {
+          "flush_nanoseconds": 862279,
+          "flush_succeeded": true,
+          "compression": "zlib",
+          "reads": {
+            "packed_bytes_read": 6677,
+            "decoded_bytes": 21306,
+            "blocks_decoded": 1,
+            "payload_bytes_returned": 14513,
+            "block_cache_hits": 12,
+            "publication": {
+              "filename_lookups": 5,
+              "refreshes": 1,
+              "packs_prepared": 1,
+              "pack_bytes_prepared": 2126,
+              "save_bytes_prepared": 4496,
+              "sequence_locks": 4
+            }
+          }
+        },
+        "program_shared": false
+      },
+      "execution": {
+        "status": 0,
+        "stdout": "1 3\n",
+        "stderr": "",
+        "expected": "1 3\n"
+      },
+      "llvm_rc_clean": null,
+      "elapsed_ns": 103070328,
+      "elapsed_includes_admission_wait": false,
+      "max_rss_kib": "30252",
+      "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+      "compiler_source_revision": "a1f19edf255c8c0886731d8d7cce450d5f657720",
+      "sources": {
+        "main.my": "6ca2a4bfe4c26f99e0597358d0ccc5fdbedb67c50c717a9c60c0cc506ccef88e"
+      },
+      "binary_sha256": "ede07bc14e8efb4af449cfd9d7e1d766c92ab0c411187a6beceffe6a4e2cb90c",
+      "llvm_sha256": null,
+      "expected_refusal_code": null,
+      "outcome": "completed",
+      "memory_instrumented": false
+    },
+    {
+      "name": "old-map-abi-replay",
+      "mode": "zero",
+      "arguments": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/c0-cache-v2/map-abi/main.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/support5-retained-cache/bin/old-map-abi-replay",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/c0-cache-v2/map-abi/cache",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--report",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "expected_refusal": false,
+      "passed": true,
+      "report": {
+        "version": "cache-report-v1",
+        "program": "replayed",
+        "units": 0,
+        "reused": 0,
+        "compiled": 0,
+        "verified": 0,
+        "processes": 0,
+        "stages": null,
+        "storage": null,
+        "program_shared": false
+      },
+      "execution": {
+        "status": 0,
+        "stdout": "1 3\n",
+        "stderr": "",
+        "expected": "1 3\n"
+      },
+      "llvm_rc_clean": null,
+      "elapsed_ns": 104114609,
+      "elapsed_includes_admission_wait": false,
+      "max_rss_kib": "9516",
+      "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+      "compiler_source_revision": "a1f19edf255c8c0886731d8d7cce450d5f657720",
+      "sources": {
+        "main.my": "6ca2a4bfe4c26f99e0597358d0ccc5fdbedb67c50c717a9c60c0cc506ccef88e"
+      },
+      "binary_sha256": "ede07bc14e8efb4af449cfd9d7e1d766c92ab0c411187a6beceffe6a4e2cb90c",
+      "llvm_sha256": null,
+      "expected_refusal_code": null,
+      "outcome": "completed",
+      "memory_instrumented": false
+    },
+    {
+      "name": "old-rc-admitted-source-refused",
+      "mode": "zero",
+      "arguments": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/c0-cache-v2/cache-project/main.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/support5-retained-cache/bin/old-rc-admitted-source-refused",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/c0-cache-v2/cache-project/cache",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--report",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "expected_refusal": true,
+      "passed": true,
+      "report": null,
+      "execution": null,
+      "llvm_rc_clean": null,
+      "elapsed_ns": 104095665,
+      "elapsed_includes_admission_wait": false,
+      "max_rss_kib": "23784",
+      "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+      "compiler_source_revision": "a1f19edf255c8c0886731d8d7cce450d5f657720",
+      "sources": {
+        "main.my": "ccdbe642716f872b51bcb67093dd3e38dbca33ee4e5418befc08a95767071a73",
+        "dep.my": "a6212e2edba1d5b1c03ccdbff323cf59230401360cc9050ad5f5f59d6bde72c1"
+      },
+      "binary_sha256": null,
+      "llvm_sha256": null,
+      "expected_refusal_code": "E_SINGLE_OWNER_MOVED",
+      "outcome": "source_refusal",
+      "memory_instrumented": false
+    },
+    {
+      "name": "old-rc-admitted-source-refused-warm",
+      "mode": "zero",
+      "arguments": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/c0-cache-v2/cache-project/main.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/support5-retained-cache/bin/old-rc-admitted-source-refused-warm",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/c0-cache-v2/cache-project/cache",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--report",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "expected_refusal": true,
+      "passed": true,
+      "report": null,
+      "execution": null,
+      "llvm_rc_clean": null,
+      "elapsed_ns": 105078381,
+      "elapsed_includes_admission_wait": false,
+      "max_rss_kib": "20144",
+      "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+      "compiler_source_revision": "a1f19edf255c8c0886731d8d7cce450d5f657720",
+      "sources": {
+        "main.my": "ccdbe642716f872b51bcb67093dd3e38dbca33ee4e5418befc08a95767071a73",
+        "dep.my": "a6212e2edba1d5b1c03ccdbff323cf59230401360cc9050ad5f5f59d6bde72c1"
+      },
+      "binary_sha256": null,
+      "llvm_sha256": null,
+      "expected_refusal_code": "E_SINGLE_OWNER_MOVED",
+      "outcome": "source_refusal",
+      "memory_instrumented": false
+    },
+    {
+      "name": "old-source-restored",
+      "mode": "zero",
+      "arguments": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/c0-cache-v2/cache-project/main.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/support5-retained-cache/bin/old-source-restored",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/memory-closeout/A08/c0-cache-v2/cache-project/cache",
+        "--release",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--report",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "expected_refusal": false,
+      "passed": true,
+      "report": {
+        "version": "cache-report-v1",
+        "program": "replayed",
+        "units": 0,
+        "reused": 0,
+        "compiled": 0,
+        "verified": 0,
+        "processes": 0,
+        "stages": null,
+        "storage": null,
+        "program_shared": false
+      },
+      "execution": {
+        "status": 0,
+        "stdout": "3 8\n",
+        "stderr": "",
+        "expected": "3 8\n"
+      },
+      "llvm_rc_clean": null,
+      "elapsed_ns": 103443501,
+      "elapsed_includes_admission_wait": false,
+      "max_rss_kib": "9676",
+      "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+      "compiler_source_revision": "a1f19edf255c8c0886731d8d7cce450d5f657720",
+      "sources": {
+        "main.my": "402df521dfac77100c90129c09a02cc5d7e1b2d807f10c66944fa6cee23ca77a",
+        "dep.my": "a6212e2edba1d5b1c03ccdbff323cf59230401360cc9050ad5f5f59d6bde72c1"
+      },
+      "binary_sha256": "9be807dc70cc6cf848dd2e43f19412c34fc7383cd8045b5acc6144ee190bc3d2",
+      "llvm_sha256": null,
+      "expected_refusal_code": null,
+      "outcome": "completed",
+      "memory_instrumented": false
+    }
+  ],
+  "all_passed": true
+}

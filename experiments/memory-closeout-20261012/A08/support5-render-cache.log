@@ -1,0 +1,7 @@
+build-slot: FIFO ticket 581, position 19; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 581, position 15; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 581, position 7; earlier build tickets must run first; waiting (121s so far)
+build-slot: build slot 2, FIFO ticket 581 after 171s
+{"name": "retained-render-first", "status": 0, "passed": true, "elapsed_ns": 3007018320, "max_rss_kib": "162312"}
+{"name": "retained-render-receipt", "status": 0, "passed": true, "elapsed_ns": 203489940, "max_rss_kib": "32224"}
+{"name": "retained-render-replay", "status": 0, "passed": true, "elapsed_ns": 103533118, "max_rss_kib": "9676"}

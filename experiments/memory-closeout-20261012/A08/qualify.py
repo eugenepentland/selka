@@ -11,6 +11,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import time
 
@@ -64,13 +65,13 @@ class Run:
             self.env.pop(name, None)
         self.env.update(MYLANG_COMPILER_SHARED_CACHE=str(self.work / 'shared'), MYLANG_CORE_RUNTIME_CACHE=str(self.work / 'objects'))
 
-    def build(self, name, project, mode="zero", expected="3 8\n", refuse=False, extra=(), compiler=None, emit=True, retired_flag=None):
+    def build(self, name, project, mode="zero", expected="3 8\n", refuse=False, extra=(), compiler=None, emit=True, retired_flag=None, cache_directory=None):
         target = self.work / 'bin' / name
         target.parent.mkdir(exist_ok=True)
         llvm = target.with_suffix('.ll')
         rss = target.with_suffix('.rss')
         mode_flags = [] if mode == 'zero' and (self.args.default_zero or (compiler is not None and self.args.candidate_default_zero)) else MODES[mode]
-        arguments = [str(compiler or self.args.compiler), 'build', str(project / 'main.my'), '-o', str(target), '--cache-dir', str(project / 'cache'), '--release', '--zig', str(self.args.zig), '--report', *(['--emit-llvm', str(llvm)] if emit else []), *mode_flags, *extra]
+        arguments = [str(compiler or self.args.compiler), 'build', str(project / 'main.my'), '-o', str(target), '--cache-dir', str(cache_directory or project / 'cache'), '--release', '--zig', str(self.args.zig), '--report', *(['--emit-llvm', str(llvm)] if emit else []), *mode_flags, *extra]
         tree_rss = target.with_suffix('.tree-rss.json')
         measured = ['/usr/bin/time', '-f', '%M', '-o', str(rss), *arguments]
         if self.args.memory_wrapper:
@@ -103,6 +104,8 @@ class Run:
         row = dict(name=name, mode=mode, arguments=arguments, status=status, expected_refusal=bool(refuse or retired_flag), passed=ok, report=report, execution=execution, llvm_rc_clean=clean, elapsed_ns=elapsed, elapsed_includes_admission_wait=self.args.admission != 'held', max_rss_kib=rss.read_text().strip().splitlines()[-1] if rss.exists() else None, compiler_sha256=digest(compiler or self.args.compiler), compiler_source_revision=self.args.candidate_revision if compiler else self.args.source_revision, sources={str(p.relative_to(project)):digest(p) for p in project.rglob('*.my')}, binary_sha256=digest(target) if status == 0 else None, llvm_sha256=digest(llvm) if status == 0 and emit else None)
         row['expected_refusal_code'] = refusal_code
         row['outcome'] = ('completed' if execution and execution['status'] == 0 else 'guest_failure') if status == 0 else 'compile_timeout' if status == 124 else 'source_refusal' if 'error[E_' in stderr else 'compiler_failure'
+        if retired_flag and ok:
+            row['outcome'] = 'retired_selector_refusal'
         if status == 0 and (name.endswith('-replay') or name == 'whole-build-replay'):
             row['passed'] &= report is not None and report['program'] == 'replayed'
         row['memory_instrumented'] = self.args.memory_wrapper is not None
@@ -196,6 +199,8 @@ class Run:
                 self.build(f'{family}-{size}-edit', project, expected=str(int(expected.strip())+1)+'\n', emit=False)
 
     def render_abi(self):
+        if self.args.retained_render_root:
+            return self.retained_render()
         project = self.work / 'render-abi'
         source = '''record RenderLabel:
     number: int
@@ -208,9 +213,17 @@ func main(out: Stream) -> int:
         expected = "RenderLabel(number=7, word='word-7')\n"
         write(project / 'main.my', source)
         mode = 'zero' if self.args.default_zero else 'rc'
-        self.build('render-abi-baseline', project, mode=mode, expected=expected)
-        self.build('render-abi-receipt', project, mode=mode, expected=expected, emit=False)
-        self.build('render-abi-replay', project, mode=mode, expected=expected, emit=False)
+        baseline = self.build('render-abi-baseline', project, mode=mode, expected=expected)
+        if self.args.render_partial_baseline:
+            llvm = self.work / 'bin/render-abi-baseline.ll'
+            baseline['partial_stage_evidence'] = {
+                'llvm_sha256': digest(llvm) if llvm.exists() else None,
+                'legacy_show_helper_present': '@myl_core_show_' in llvm.read_text() if llvm.exists() else False,
+                'limitation': 'Old native build failure is retained; emitted LLVM is partial-stage evidence, not a successful binary or receipt.'}
+            self.save()
+        else:
+            self.build('render-abi-receipt', project, mode=mode, expected=expected, emit=False)
+            self.build('render-abi-replay', project, mode=mode, expected=expected, emit=False)
         if self.args.candidate:
             row = self.build('render-abi-candidate-old-artifacts', project, expected=expected, compiler=self.args.candidate)
             if row['status'] == 0 and digest(self.args.compiler) != digest(self.args.candidate):
@@ -218,6 +231,35 @@ func main(out: Stream) -> int:
                 self.save()
             self.build('render-abi-candidate-receipt', project, expected=expected, compiler=self.args.candidate, emit=False)
             self.build('render-abi-candidate-replay', project, expected=expected, compiler=self.args.candidate, emit=False)
+
+    def retained_render(self):
+        """Consume a read-only C0 source and private copy of partial stage artifacts."""
+        root = self.args.retained_render_root.resolve()
+        project = root / 'C0-ordinary/release'
+        baseline = json.loads((project / 'build.json').read_text())
+        if Path(baseline['argv'][2]).resolve() != project / 'main.my':
+            raise ValueError('Retained rendering source differs from its build command')
+        llvm = project / 'program.ll'
+        if baseline['status'] != 2 or '@myl_core_show_' not in llvm.read_text():
+            raise ValueError('Expected retained C0 partial rendering artifact was not found')
+        cache = self.work / 'retained-render-cache'
+        shutil.copytree(root / 'cache', cache)
+        archive = self.out / 'baseline-partial'
+        archive.mkdir()
+        for name in ('main.my', 'program.ll', 'build.json', 'build.stderr'):
+            shutil.copyfile(project / name, archive / name)
+        provenance = dict(source_revision=BASE, compiler_sha256=digest(baseline['argv'][0]),
+                          source_sha256=digest(project / 'main.my'), llvm_sha256=digest(llvm),
+                          build=baseline, cache_source=str(root / 'cache'), cache_copy=str(cache),
+                          cache_files={str(path.relative_to(cache)):digest(path) for path in cache.rglob('*') if path.is_file()},
+                          limitation='Old build failed native linking: only emitted LLVM and stage artifacts exist. Cache also contains renderer-prototype artifacts; no old native binary or replay receipt is claimed. Peer source/cache are read-only.')
+        write(archive / 'provenance.json', json.dumps(provenance, indent=2) + '\n')
+        for phase in ('first', 'receipt', 'replay'):
+            row = self.build('retained-render-' + phase, project, expected='', emit=phase == 'first',
+                             cache_directory=cache, extra=('--counters',))
+            if phase == 'first' and row['passed']:
+                row['passed'] &= row['report']['stages']['lowering']['reused'] == 0
+                self.save()
 
     def result_cache(self):
         """Keep old source refusals and new Result obligations in the same cache."""
@@ -286,6 +328,8 @@ def main():
     parser.add_argument('--abi-only', action='store_true')
     parser.add_argument('--result-only', action='store_true')
     parser.add_argument('--render-only', action='store_true')
+    parser.add_argument('--render-partial-baseline', action='store_true')
+    parser.add_argument('--retained-render-root', type=Path)
     parser.add_argument('--result-source', type=Path)
     parser.add_argument('--result-negative', type=Path)
     parser.add_argument('--result-output', type=Path)
@@ -310,6 +354,8 @@ def main():
         parser.error('--retired-flags requires default checked ownership for the selected final compiler')
     if args.result_only and not args.result_source:
         parser.error('--result-only requires --result-source')
+    if args.retained_render_root and (not args.render_only or args.candidate):
+        parser.error('--retained-render-root requires --render-only and selects the candidate using --compiler')
     if args.result_source and not (args.candidate and args.result_negative and args.result_output):
         parser.error('--result-source requires --candidate, --result-negative and --result-output')
     run = Run(args)

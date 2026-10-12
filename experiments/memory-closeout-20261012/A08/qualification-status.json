@@ -1,0 +1,513 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "scope": "A08 interim status, not final C1/C2/C3 qualification",
+  "commits": {
+    "comprehension": "78e2eeee9b289efed573bf66a22ada8b82c3e8f5",
+    "managed_sort_copy": "4768e3a7df2bd64f23d368d75c9924cf0eecf067",
+    "phi_cleanup_helper": "5b4245c7d2bc7fa927dfe1101001e25c15908c16",
+    "component_migration_evidence": "432b02eac20dc4a713070de4a7526696d666ca27"
+  },
+  "baseline_scaling": {
+    "counts": {
+      "completed": 45,
+      "source_refusal": 5,
+      "compiler_failure": 10
+    },
+    "rows": [
+      {
+        "family_run": "c0-rf-fields-128",
+        "case": "fields-128-cold",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-fields-128/results.json"
+      },
+      {
+        "family_run": "c0-rf-fields-128",
+        "case": "fields-128-warm",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-fields-128/results.json"
+      },
+      {
+        "family_run": "c0-rf-fields-128",
+        "case": "fields-128-receipt",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-fields-128/results.json"
+      },
+      {
+        "family_run": "c0-rf-fields-128",
+        "case": "fields-128-replay",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-fields-128/results.json"
+      },
+      {
+        "family_run": "c0-rf-fields-128",
+        "case": "fields-128-edit",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-fields-128/results.json"
+      },
+      {
+        "family_run": "c0-rf-fields-16",
+        "case": "fields-16-cold",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-fields-16/results.json"
+      },
+      {
+        "family_run": "c0-rf-fields-16",
+        "case": "fields-16-warm",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-fields-16/results.json"
+      },
+      {
+        "family_run": "c0-rf-fields-16",
+        "case": "fields-16-receipt",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-fields-16/results.json"
+      },
+      {
+        "family_run": "c0-rf-fields-16",
+        "case": "fields-16-replay",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-fields-16/results.json"
+      },
+      {
+        "family_run": "c0-rf-fields-16",
+        "case": "fields-16-edit",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-fields-16/results.json"
+      },
+      {
+        "family_run": "c0-rf-fields-64",
+        "case": "fields-64-cold",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-fields-64/results.json"
+      },
+      {
+        "family_run": "c0-rf-fields-64",
+        "case": "fields-64-warm",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-fields-64/results.json"
+      },
+      {
+        "family_run": "c0-rf-fields-64",
+        "case": "fields-64-receipt",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-fields-64/results.json"
+      },
+      {
+        "family_run": "c0-rf-fields-64",
+        "case": "fields-64-replay",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-fields-64/results.json"
+      },
+      {
+        "family_run": "c0-rf-fields-64",
+        "case": "fields-64-edit",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-fields-64/results.json"
+      },
+      {
+        "family_run": "c0-rf-matches-128",
+        "case": "matches-128-cold",
+        "status": 1,
+        "outcome": "source_refusal",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-matches-128/results.json"
+      },
+      {
+        "family_run": "c0-rf-matches-128",
+        "case": "matches-128-warm",
+        "status": 1,
+        "outcome": "source_refusal",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-matches-128/results.json"
+      },
+      {
+        "family_run": "c0-rf-matches-128",
+        "case": "matches-128-receipt",
+        "status": 1,
+        "outcome": "source_refusal",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-matches-128/results.json"
+      },
+      {
+        "family_run": "c0-rf-matches-128",
+        "case": "matches-128-replay",
+        "status": 1,
+        "outcome": "source_refusal",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-matches-128/results.json"
+      },
+      {
+        "family_run": "c0-rf-matches-128",
+        "case": "matches-128-edit",
+        "status": 1,
+        "outcome": "source_refusal",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-matches-128/results.json"
+      },
+      {
+        "family_run": "c0-rf-matches-16",
+        "case": "matches-16-cold",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-matches-16/results.json"
+      },
+      {
+        "family_run": "c0-rf-matches-16",
+        "case": "matches-16-warm",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-matches-16/results.json"
+      },
+      {
+        "family_run": "c0-rf-matches-16",
+        "case": "matches-16-receipt",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-matches-16/results.json"
+      },
+      {
+        "family_run": "c0-rf-matches-16",
+        "case": "matches-16-replay",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-matches-16/results.json"
+      },
+      {
+        "family_run": "c0-rf-matches-16",
+        "case": "matches-16-edit",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-matches-16/results.json"
+      },
+      {
+        "family_run": "c0-rf-matches-64",
+        "case": "matches-64-cold",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-matches-64/results.json"
+      },
+      {
+        "family_run": "c0-rf-matches-64",
+        "case": "matches-64-warm",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-matches-64/results.json"
+      },
+      {
+        "family_run": "c0-rf-matches-64",
+        "case": "matches-64-receipt",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-matches-64/results.json"
+      },
+      {
+        "family_run": "c0-rf-matches-64",
+        "case": "matches-64-replay",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-matches-64/results.json"
+      },
+      {
+        "family_run": "c0-rf-matches-64",
+        "case": "matches-64-edit",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-matches-64/results.json"
+      },
+      {
+        "family_run": "c0-rf-matches-96",
+        "case": "matches-96-cold",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-matches-96/results.json"
+      },
+      {
+        "family_run": "c0-rf-matches-96",
+        "case": "matches-96-warm",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-matches-96/results.json"
+      },
+      {
+        "family_run": "c0-rf-matches-96",
+        "case": "matches-96-receipt",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-matches-96/results.json"
+      },
+      {
+        "family_run": "c0-rf-matches-96",
+        "case": "matches-96-replay",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-matches-96/results.json"
+      },
+      {
+        "family_run": "c0-rf-matches-96",
+        "case": "matches-96-edit",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-matches-96/results.json"
+      },
+      {
+        "family_run": "c0-rf-modules-16",
+        "case": "modules-16-cold",
+        "status": 2,
+        "outcome": "compiler_failure",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-modules-16/results.json"
+      },
+      {
+        "family_run": "c0-rf-modules-16",
+        "case": "modules-16-warm",
+        "status": 2,
+        "outcome": "compiler_failure",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-modules-16/results.json"
+      },
+      {
+        "family_run": "c0-rf-modules-16",
+        "case": "modules-16-receipt",
+        "status": 2,
+        "outcome": "compiler_failure",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-modules-16/results.json"
+      },
+      {
+        "family_run": "c0-rf-modules-16",
+        "case": "modules-16-replay",
+        "status": 2,
+        "outcome": "compiler_failure",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-modules-16/results.json"
+      },
+      {
+        "family_run": "c0-rf-modules-16",
+        "case": "modules-16-edit",
+        "status": 2,
+        "outcome": "compiler_failure",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-modules-16/results.json"
+      },
+      {
+        "family_run": "c0-rf-modules-64",
+        "case": "modules-64-cold",
+        "status": 2,
+        "outcome": "compiler_failure",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-modules-64/results.json"
+      },
+      {
+        "family_run": "c0-rf-modules-64",
+        "case": "modules-64-warm",
+        "status": 2,
+        "outcome": "compiler_failure",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-modules-64/results.json"
+      },
+      {
+        "family_run": "c0-rf-modules-64",
+        "case": "modules-64-receipt",
+        "status": 2,
+        "outcome": "compiler_failure",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-modules-64/results.json"
+      },
+      {
+        "family_run": "c0-rf-modules-64",
+        "case": "modules-64-replay",
+        "status": 2,
+        "outcome": "compiler_failure",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-modules-64/results.json"
+      },
+      {
+        "family_run": "c0-rf-modules-64",
+        "case": "modules-64-edit",
+        "status": 2,
+        "outcome": "compiler_failure",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-modules-64/results.json"
+      },
+      {
+        "family_run": "c0-rf-recursive-128",
+        "case": "recursive-128-cold",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-recursive-128/results.json"
+      },
+      {
+        "family_run": "c0-rf-recursive-128",
+        "case": "recursive-128-warm",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-recursive-128/results.json"
+      },
+      {
+        "family_run": "c0-rf-recursive-128",
+        "case": "recursive-128-receipt",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-recursive-128/results.json"
+      },
+      {
+        "family_run": "c0-rf-recursive-128",
+        "case": "recursive-128-replay",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-recursive-128/results.json"
+      },
+      {
+        "family_run": "c0-rf-recursive-128",
+        "case": "recursive-128-edit",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-recursive-128/results.json"
+      },
+      {
+        "family_run": "c0-rf-recursive-16",
+        "case": "recursive-16-cold",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-recursive-16/results.json"
+      },
+      {
+        "family_run": "c0-rf-recursive-16",
+        "case": "recursive-16-warm",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-recursive-16/results.json"
+      },
+      {
+        "family_run": "c0-rf-recursive-16",
+        "case": "recursive-16-receipt",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-recursive-16/results.json"
+      },
+      {
+        "family_run": "c0-rf-recursive-16",
+        "case": "recursive-16-replay",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-recursive-16/results.json"
+      },
+      {
+        "family_run": "c0-rf-recursive-16",
+        "case": "recursive-16-edit",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-recursive-16/results.json"
+      },
+      {
+        "family_run": "c0-rf-recursive-64",
+        "case": "recursive-64-cold",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-recursive-64/results.json"
+      },
+      {
+        "family_run": "c0-rf-recursive-64",
+        "case": "recursive-64-warm",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-recursive-64/results.json"
+      },
+      {
+        "family_run": "c0-rf-recursive-64",
+        "case": "recursive-64-receipt",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-recursive-64/results.json"
+      },
+      {
+        "family_run": "c0-rf-recursive-64",
+        "case": "recursive-64-replay",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-recursive-64/results.json"
+      },
+      {
+        "family_run": "c0-rf-recursive-64",
+        "case": "recursive-64-edit",
+        "status": 0,
+        "outcome": "completed",
+        "raw": "experiments/memory-closeout-20261012/A08/c0-rf-recursive-64/results.json"
+      }
+    ],
+    "remaining_unmeasured": [
+      "modules128",
+      "generics16",
+      "generics64",
+      "generics128"
+    ],
+    "comparison_status": "awaiting frozen matched ReleaseFast candidate; no before/after claim",
+    "limitation": "C0 native fallback fails after reviewed loader cache changed; do not interpret as language refusal or use failed full builds as throughput controls"
+  },
+  "items": [
+    {
+      "item": "C0 mode isolation, invalid edits, dependency changes, relocation and replay",
+      "status": "baseline_passed",
+      "evidence": "c0-cache-v2/results.json",
+      "candidate_status": "support5 retained generic/map9cases pass; fresh full matrix and final C1 pending"
+    },
+    {
+      "item": "comprehension metadata and independent managed sorting",
+      "status": "shipped_to_coordinator",
+      "evidence": [
+        "comprehension-focused-v2.log",
+        "sort-focused.log",
+        "sort-ordinary-v2.log"
+      ]
+    },
+    {
+      "item": "bounded phi identity cleanup",
+      "status": "integrated_support5",
+      "owner": "A07/coordinator",
+      "integration": "helper and ownership-pass invocation included; cache-plan nested mutation is a separate unresolved defect",
+      "evidence": "phi-cleanup-validation.json"
+    },
+    {
+      "item": "test-index real protocol",
+      "status": "interim_support5_passed",
+      "runs": 128,
+      "evidence": "components-support5-test_index.json",
+      "final_status": "rerun_required"
+    },
+    {
+      "item": "cache-plan real protocol",
+      "status": "blocked",
+      "owner": "A07",
+      "reproducer": "component_qualify.py --components cache_plan --counted with support5",
+      "diagnostic": "E_ZERO_RC_LOWERING incremental.my:241",
+      "evidence": "components-support5-cache_plan.json",
+      "ir": "cache-plan-support5-close-group.ir"
+    },
+    {
+      "item": "immutable seed rebuild on current host",
+      "status": "blocked",
+      "owner": "coordinator/A10",
+      "evidence": "component-field-iteration-seed.json",
+      "reason": "native unproved-tool fallback staging deletion in immutable seed; historical seed must remain unchanged"
+    },
+    {
+      "item": "default and retired artifact/selector checks",
+      "status": "awaiting_C2_C3",
+      "owner": "A10/A08",
+      "evidence": "cache-audit.md"
+    }
+  ],
+  "support5_cache": {
+    "compiler_revision": "a1f19edf255c8c0886731d8d7cce450d5f657720",
+    "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+    "cases": 40,
+    "passed": 40,
+    "final_status": "C1/C2/C3 reruns required",
+    "raw": [
+      "support5-fresh-cache/results.json",
+      "support5-retained-cache/results.json",
+      "support5-result-cache/results.json",
+      "support5-render-cache/results.json"
+    ]
+  }
+}
