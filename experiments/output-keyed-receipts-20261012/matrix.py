@@ -1163,10 +1163,15 @@ def row8_ld_judge(run: Run) -> list[dict]:
     repeat = run.tests("repeat")
     checks = judge_no_failures("repeat", repeat, run.status("repeat"))
     reasons = repeat.get("by_reason", {}) if repeat.get("available") else {}
-    checks.append(check("LD_PRELOAD set: no receipts written or read", "0 cached; reason untracked-loader-environment",
+    # The refusal may surface as `untracked-loader-environment` or, earlier in the
+    # admission order, as `uncacheable-toolchain` (the toolchain identity sees the
+    # loader variable). Either is a refusal; `no-success-receipt` would be a miss
+    # that writes a receipt, so it fails the row.
+    refusals = {"untracked-loader-environment", "uncacheable-toolchain", "live-effects", "configured-skip", "unsupported"}
+    checks.append(check("LD_PRELOAD set: no receipts written or read", "0 cached on a repeat; every reason a refusal",
                         {"cached": repeat.get("by_status", {}).get("cached", 0), "by_reason": reasons},
                         repeat.get("available") and repeat.get("by_status", {}).get("cached", 0) == 0
-                        and set(reasons) <= {"untracked-loader-environment", "live-effects", "configured-skip", "unsupported"}))
+                        and bool(reasons) and set(reasons) <= refusals))
     return checks
 
 
@@ -1629,8 +1634,14 @@ def execute(ctx: Context, selected, allow_heavy: bool) -> int:
     for row, subs in selected:
         row_dir = ctx.evidence / row.id
         row_dir.mkdir(parents=True, exist_ok=True)
+        # Sub-cases run in an earlier invocation keep their records; a rerun of
+        # one sub-case replaces only that sub-case (each names its own manifest).
+        try:
+            previous = json.loads((row_dir / "row.json").read_text()).get("subcases", {})
+        except (OSError, json.JSONDecodeError):
+            previous = {}
         row_record = {"row": row.number, "id": row.id, "case": row.case, "expected": row.expected,
-                      "manifest": frozen, "started": now(), "subcases": {}}
+                      "manifest": frozen, "started": now(), "subcases": dict(previous)}
         for sub in subs:
             missing = [need for need in sub.needs if not ctx.features.get(need)]
             if missing:
@@ -1649,12 +1660,14 @@ def execute(ctx: Context, selected, allow_heavy: bool) -> int:
             else:
                 checks = sub.judge(run)
                 decision = decide(checks)
-            record = {"decision": decision, "started": started, "finished": now(), "checks": checks,
+            record = {"decision": decision, "started": started, "finished": now(), "checks": checks, "manifest": frozen,
                       "compilers_sha256": run.compilers, "steps": run.results}
             for result in record["steps"].values():
                 result.pop("parsed", None)
             (run.dir / "result.json").write_text(json.dumps(record, indent=1, sort_keys=True, default=str))
-            row_record["subcases"][sub.name] = {"decision": decision, "evidence": str((run.dir / "result.json").relative_to(ctx.evidence)),
+            row_record["subcases"][sub.name] = {"decision": decision, "harness_sha256": frozen["harness_sha256"],
+                                                "tree_head": ctx.head, "finished": now(),
+                                                "evidence": str((run.dir / "result.json").relative_to(ctx.evidence)),
                                                 "checks": [{k: c[k] for k in ("check", "result")} for c in checks]}
             print("matrix: row %s sub-case %s: %s" % (row.id, sub.name, decision), flush=True)
             for item in checks:
