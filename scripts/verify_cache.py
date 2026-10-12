@@ -679,6 +679,10 @@ def recipe_selector(files: list[dict], root: Path):
     return select
 
 
+# Providers whose files are several distinct outputs of one producer.
+MULTI_OUTPUT_PROVIDERS = frozenset({"components"})
+
+
 def artifact_identities(record: dict | None, providers: dict[str, list[dict]],
                         sources: list[dict], root: Path) -> tuple[dict, dict]:
     """Identify every prepared provider, by producer where declared, else by bytes.
@@ -693,7 +697,11 @@ def artifact_identities(record: dict | None, providers: dict[str, list[dict]],
     identities, report = {}, {}
     for label in sorted(providers):
         producer, reason = verification_producers.native_producer(record, label)
-        if producer is not None and len({item["sha256"] for item in providers[label]}) != 1:
+        # A provider is copies of one artifact (zig-out/bin/mylang beside the
+        # produced binary), which must agree, except `components`: its two
+        # manifests and the two executables they name are distinct outputs.
+        if (producer is not None and label not in MULTI_OUTPUT_PROVIDERS
+                and len({item["sha256"] for item in providers[label]}) != 1):
             producer, reason = None, "installed copy differs from the produced artifact"
         if producer is None:
             identities[label] = {"identity": "bytes", "artifacts": providers[label]}
