@@ -4,8 +4,11 @@ const builtin = @import("builtin");
 const grammar = @import("core_number_parse.zig");
 const formatting = @import("core_number_format.zig");
 
-const Block = extern struct { count: u32, kind: u32, len: i64, cap: i64, reserved: u64 };
+// The first word belongs to the selected C runtime: kind plus padding in the
+// owned ABI, or count plus kind in the historical ABI. Never inspect it here.
+const Block = extern struct { header_prefix: [8]u8, len: i64, cap: i64, reserved: u64 };
 extern fn myl_core_number_text_new(length: usize) *Block;
+extern fn myl_core_number_text_clear_ascii(text: *Block) void;
 extern fn myl_core_buffer_append_spelled(buffer: *Block, bytes: [*]const u8, length: usize) *Block;
 extern fn myl_core_number_text_invalid() noreturn;
 
@@ -60,7 +63,7 @@ fn rendered(spec: formatting.Spec, input: formatting.Input) *Block {
     var out: formatting.Out = .{ .buffer = output(text)[0..measure.len] };
     formatting.render(&out, spec, input);
     // Numeric and text format fills may be non-ASCII. Publish no false ASCII premise.
-    text.kind &= ~@as(u32, 1 << 8);
+    myl_core_number_text_clear_ascii(text);
     return text;
 }
 
@@ -108,4 +111,19 @@ fn appendFloat(buffer: *Block, value: f64) callconv(.c) *Block {
     var frame: [1024]u8 = undefined;
     const bytes = spelledFloat(&frame, value) catch return myl_core_number_text_invalid();
     return myl_core_buffer_append_spelled(buffer, bytes.ptr, bytes.len);
+}
+
+// spec-case: NEW-CORE-S3-NUMBER-1
+test "number text adapter leaves selected runtime header fields opaque" {
+    try std.testing.expectEqual(@as(usize, 32), @sizeOf(Block));
+    try std.testing.expectEqual(@as(usize, 8), @offsetOf(Block, "len"));
+    try std.testing.expect(!@hasField(Block, "count"));
+    try std.testing.expect(!@hasField(Block, "kind"));
+}
+
+// spec-case: NEW-CORE-S3-NUMBER-1
+test "number text rejects invalid Unicode format fill" {
+    try std.testing.expect(formatting.parse("\xff^10.2f") == .rejected);
+    try std.testing.expect(formatting.parse("\xed\xa0\x80^10.2f") == .rejected);
+    try std.testing.expect(formatting.parse("é^10.2f") == .ok);
 }

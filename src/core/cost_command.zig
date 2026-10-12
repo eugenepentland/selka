@@ -392,3 +392,28 @@ test "zero RC allocation contracts require validated aggregate provider pin mark
         try std.testing.expectEqual(cost.Allocation.unresolved, cost.allocation(&module, callee, call));
     }
 }
+
+// spec-case: FRONTEND-CORE-NOALLOC-1
+test "zero RC allocation contracts audit scalar rounding" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var compilation = try @import("mylang").Compilation.init(a, "round.my",
+        \\func rounded(value: float, digits: int) -> float noalloc:
+        \\    return round(value, digits)
+    );
+    const program = try compilation.checkLibraryProgram();
+    const failures = try @import("allocation_contract.zig").collectProgramWithOwnership(a, program, compilation.src, .{ .single_owner = true, .zero_rc = true });
+    try std.testing.expectEqual(@as(usize, 0), failures.len);
+    var module: ir.Module = .{ .single_owner = true, .zero_rc = true };
+    try module.functions.append(a, .{ .name = "myl_core_round_float", .signature = .{ .params = &.{ .f64, .i64 }, .ret = .f64, .linkage = .runtime_c } });
+    const call: ir.Inst = .{ .op = .call, .a = @fromBackingInt(0), .ty = .f64 };
+    try std.testing.expectEqual(cost.Allocation.never, cost.allocation(&module, &module.functions.items[0], call));
+    module.functions.items[0].signature.linkage = .extern_c;
+    module.functions.items[0].span = 13;
+    try std.testing.expectEqual(cost.Allocation.unresolved, cost.allocation(&module, &module.functions.items[0], call));
+    module.functions.items[0].signature.linkage = .runtime_c;
+    module.functions.items[0].span = 0;
+    module.functions.items[0].name = "myl_core_round_float_unreviewed";
+    try std.testing.expectEqual(cost.Allocation.may, cost.allocation(&module, &module.functions.items[0], call));
+}

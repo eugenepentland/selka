@@ -1,0 +1,18 @@
+{
+  "command": "scripts/build-slot.sh build \"$ZIG\" build test-core affected-compiler -Dtest-filter=number\\ text -j\"$MYLANG_DEV_JOBS\" --maxrss \"$MYLANG_DEV_MAXRSS\"",
+  "exit_code": 0,
+  "passed": 3,
+  "failed": 0,
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A04/zig-out/focus/mylang",
+  "compiler_sha256": "7c23fcb21a543cec9d9e1813f2b7171e1ccbf5d5ee68d0da343fe1445a90c699",
+  "source_base": "d45e2f33b953fc4c418289904913674031bfdd26",
+  "numeric_objects": [
+    {
+      "object": ".zig-cache/o/38d22d1e4461e413e446fb42adf284b2/core_number_text.o",
+      "sha256": "e47197b42748b1ddee2bbaa1ca9a964c5efdd545c4ef21901b2ec8cc9b1e10c2",
+      "embedded_offset": 10213880,
+      "bytes": 409144
+    }
+  ],
+  "limitation": "Prototype compiler built before slice-lifetime changes; exact production diff is recorded in prototype-01/results.json. Native replay remains blocked by old host closure."
+}
