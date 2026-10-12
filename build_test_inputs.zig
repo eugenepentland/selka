@@ -239,8 +239,12 @@ pub const verification_cache = [_][]const u8{
     "scripts/verification_measurement.py",
     "scripts/verification_measurement_test.py",
     "scripts/verification_code_identity_test.py",
-    // The environment identity contract, its Python reader and golden fixture.
+    // The environment identity contract, its Python reader and golden fixture,
+    // and the `build-env` tool's compile closure the coordinator must bind.
     "src/environment_identity.zon",
+    "build_env.zig",
+    "src/environment_identity.zig",
+    "src/build_env_rules.zig",
     "scripts/verification_environment.py",
     "scripts/verification_environment_test.py",
     "test/fixtures/environment-identity/",

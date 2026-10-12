@@ -74,8 +74,14 @@ INTEGRATION_MISMATCH_STATUS = 5
 NATIVE_SHARED_VARIABLES = ("MYLANG_COMPILER_SHARED_CACHE", "MYLANG_TEST_SHARED_CACHE")
 FACT_LEAK_MEMBER = re.compile(r"mylang test (\S+) --release --verify-facts \(leak check\)")
 MAX_RECORD = 32 * 1024 * 1024
+# The build runner's own compile closure. `build.zig` imports `build_env.zig`,
+# whose `build-env` host tool wraps every cached test step (`withTools`); the
+# build graph registers that tool's compile step as prepared infrastructure,
+# not as an action, so its `src/` imports are bound here, in every action's
+# `build_configuration`, beside `src/environment_identity.zon` below.
 CONFIG_INPUTS = ["./*.zig", "build.zig.zon", ".zigversion", "guardian.toml",
-                 "src/user_docs.zig", "selfhost/*.zig", "../guardian-zig/build.zig",
+                 "src/user_docs.zig", "src/environment_identity.zig", "src/build_env_rules.zig",
+                 "selfhost/*.zig", "../guardian-zig/build.zig",
                  "../guardian-zig/build.zig.zon", "../guardian-zig/src/"]
 PREPARE_INPUTS = ["src/", "test/", "tests/", "selfhost/",
                   "docs/", "README.md", "SPEC.md", "benchmarks/runtime/ports/native_clock.c"]
