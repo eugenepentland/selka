@@ -1,0 +1,7 @@
+{
+  "implementation_commit": "a1627fd59e00ef6c0cca716c7a7adb7b3bb523e7",
+  "guardian": "88 checks passed via normal hook under build admission",
+  "guardian_log_sha256": "aa83f8ad1fc3992de228e4a430a3a3edfc4e6fbd67632aab3aae62ceab2ab73b",
+  "shared_heap_patch_committed": false,
+  "remaining_scope": "Coordinator integration, full conformance/mode matrix, full runtime/RSS measurements"
+}
