@@ -1,0 +1,122 @@
+[
+  {
+    "module": "board_layers.my",
+    "status": 0,
+    "stderr": "",
+    "stdout": ""
+  },
+  {
+    "module": "board_layers_test.my",
+    "status": 0,
+    "stderr": "",
+    "stdout": ""
+  },
+  {
+    "module": "design_model.my",
+    "status": 0,
+    "stderr": "",
+    "stdout": ""
+  },
+  {
+    "module": "design_model_test.my",
+    "status": 0,
+    "stderr": "",
+    "stdout": ""
+  },
+  {
+    "module": "diagram_membership.my",
+    "status": 0,
+    "stderr": "",
+    "stdout": ""
+  },
+  {
+    "module": "diagram_membership_test.my",
+    "status": 0,
+    "stderr": "",
+    "stdout": ""
+  },
+  {
+    "module": "eval_electrical.my",
+    "status": 0,
+    "stderr": "",
+    "stdout": ""
+  },
+  {
+    "module": "eval_electrical_test.my",
+    "status": 0,
+    "stderr": "",
+    "stdout": ""
+  },
+  {
+    "module": "eval_env.my",
+    "status": 0,
+    "stderr": "",
+    "stdout": ""
+  },
+  {
+    "module": "eval_env_test.my",
+    "status": 0,
+    "stderr": "",
+    "stdout": ""
+  },
+  {
+    "module": "eval_net_analysis.my",
+    "status": 0,
+    "stderr": "",
+    "stdout": ""
+  },
+  {
+    "module": "eval_net_analysis_test.my",
+    "status": 0,
+    "stderr": "",
+    "stdout": ""
+  },
+  {
+    "module": "eval_rails.my",
+    "status": 0,
+    "stderr": "",
+    "stdout": ""
+  },
+  {
+    "module": "eval_rails_test.my",
+    "status": 0,
+    "stderr": "",
+    "stdout": ""
+  },
+  {
+    "module": "flat_netlist.my",
+    "status": 0,
+    "stderr": "",
+    "stdout": ""
+  },
+  {
+    "module": "flat_netlist_test.my",
+    "status": 0,
+    "stderr": "",
+    "stdout": ""
+  },
+  {
+    "module": "placement_geometry.my",
+    "status": 0,
+    "stderr": "",
+    "stdout": ""
+  },
+  {
+    "module": "placement_geometry_test.my",
+    "status": 0,
+    "stderr": "",
+    "stdout": ""
+  },
+  {
+    "module": "placement_pin_roles.my",
+    "status": 0,
+    "stderr": "",
+    "stdout": ""
+  },
+  {
+    "module": "placement_pin_roles_test.my",
+    "status": 0,
+    "stderr": "",
+    "stdout": ""
+  }
+]

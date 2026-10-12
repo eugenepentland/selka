@@ -1,0 +1,162 @@
+[
+  {
+    "module": "board_layers.my",
+    "added": 15,
+    "removed": 15,
+    "original_copy_count": 0,
+    "prepared_copy_count": 17,
+    "public_api_unchanged": true
+  },
+  {
+    "module": "board_layers_test.my",
+    "added": 3,
+    "removed": 3,
+    "original_copy_count": 0,
+    "prepared_copy_count": 3,
+    "public_api_unchanged": true
+  },
+  {
+    "module": "design_model.my",
+    "added": 37,
+    "removed": 37,
+    "original_copy_count": 0,
+    "prepared_copy_count": 38,
+    "public_api_unchanged": true
+  },
+  {
+    "module": "design_model_test.my",
+    "added": 6,
+    "removed": 6,
+    "original_copy_count": 0,
+    "prepared_copy_count": 6,
+    "public_api_unchanged": true
+  },
+  {
+    "module": "diagram_membership.my",
+    "added": 8,
+    "removed": 8,
+    "original_copy_count": 0,
+    "prepared_copy_count": 8,
+    "public_api_unchanged": true
+  },
+  {
+    "module": "diagram_membership_test.my",
+    "added": 0,
+    "removed": 0,
+    "original_copy_count": 0,
+    "prepared_copy_count": 0,
+    "public_api_unchanged": true
+  },
+  {
+    "module": "eval_electrical.my",
+    "added": 1,
+    "removed": 1,
+    "original_copy_count": 0,
+    "prepared_copy_count": 1,
+    "public_api_unchanged": true
+  },
+  {
+    "module": "eval_electrical_test.my",
+    "added": 0,
+    "removed": 0,
+    "original_copy_count": 0,
+    "prepared_copy_count": 0,
+    "public_api_unchanged": true
+  },
+  {
+    "module": "eval_env.my",
+    "added": 16,
+    "removed": 17,
+    "original_copy_count": 0,
+    "prepared_copy_count": 17,
+    "public_api_unchanged": true
+  },
+  {
+    "module": "eval_env_test.my",
+    "added": 0,
+    "removed": 0,
+    "original_copy_count": 0,
+    "prepared_copy_count": 0,
+    "public_api_unchanged": true
+  },
+  {
+    "module": "eval_net_analysis.my",
+    "added": 11,
+    "removed": 11,
+    "original_copy_count": 0,
+    "prepared_copy_count": 11,
+    "public_api_unchanged": true
+  },
+  {
+    "module": "eval_net_analysis_test.my",
+    "added": 0,
+    "removed": 0,
+    "original_copy_count": 0,
+    "prepared_copy_count": 0,
+    "public_api_unchanged": true
+  },
+  {
+    "module": "eval_rails.my",
+    "added": 27,
+    "removed": 19,
+    "original_copy_count": 0,
+    "prepared_copy_count": 14,
+    "public_api_unchanged": true
+  },
+  {
+    "module": "eval_rails_test.my",
+    "added": 3,
+    "removed": 3,
+    "original_copy_count": 0,
+    "prepared_copy_count": 3,
+    "public_api_unchanged": true
+  },
+  {
+    "module": "flat_netlist.my",
+    "added": 20,
+    "removed": 20,
+    "original_copy_count": 0,
+    "prepared_copy_count": 35,
+    "public_api_unchanged": true
+  },
+  {
+    "module": "flat_netlist_test.my",
+    "added": 0,
+    "removed": 0,
+    "original_copy_count": 0,
+    "prepared_copy_count": 0,
+    "public_api_unchanged": true
+  },
+  {
+    "module": "placement_geometry.my",
+    "added": 9,
+    "removed": 9,
+    "original_copy_count": 0,
+    "prepared_copy_count": 9,
+    "public_api_unchanged": true
+  },
+  {
+    "module": "placement_geometry_test.my",
+    "added": 4,
+    "removed": 4,
+    "original_copy_count": 0,
+    "prepared_copy_count": 4,
+    "public_api_unchanged": true
+  },
+  {
+    "module": "placement_pin_roles.my",
+    "added": 10,
+    "removed": 10,
+    "original_copy_count": 0,
+    "prepared_copy_count": 11,
+    "public_api_unchanged": true
+  },
+  {
+    "module": "placement_pin_roles_test.my",
+    "added": 3,
+    "removed": 3,
+    "original_copy_count": 0,
+    "prepared_copy_count": 3,
+    "public_api_unchanged": true
+  }
+]

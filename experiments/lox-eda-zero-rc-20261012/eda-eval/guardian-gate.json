@@ -1,0 +1,12 @@
+{
+  "command": "source /home/epentland/.config/mylang/dev-env.sh; scripts/build-slot.sh gate git commit -m \"Migrate EDA evaluation and model modules to checked ownership\"",
+  "status": "initial type-size gate failure resolved by restoring tracked .guardian baseline omitted from sparse checkout",
+  "findings": [
+    "src/interfaces.zig ContractDeclaration8 fields cap7",
+    "src/typed.zig Record8 fields cap7"
+  ],
+  "compiler_source_unchanged": true,
+  "feedback_log_unchanged": true,
+  "commit_created": false,
+  "resolution": "git sparse-checkout add .guardian test; existing tracked type-size ratchet allowances restored without modifications"
+}
