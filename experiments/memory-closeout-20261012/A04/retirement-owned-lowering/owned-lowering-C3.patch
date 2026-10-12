@@ -1,0 +1,97 @@
+--- a/src/core/build_borrow_selection.zig
++++ b/src/core/build_borrow_selection.zig
+@@ -58,7 +58,7 @@
+     try b.seal(join);
+     b.enter(join);
+     const selected = try b.read(result, join);
+-    return if (b.module().zero_rc and b.module().managed(ty)) b.borrowChoice(kind, selected, first, second, span) else selected;
++    return if (b.module().managed(ty)) b.borrowChoice(kind, selected, first, second, span) else selected;
+ }
+ 
+ const InputSelection = struct { condition: ir.Ref, some: ?usize = null };
+--- a/src/core/build_values.zig
++++ b/src/core/build_values.zig
+@@ -50,7 +50,7 @@
+     var value = try b.emit(.{ .op = .list_get, .ty = element, .a = source, .b = index, .check = .exact, .span = span });
+     // Repetition promises independent elements. Copy each borrowed child before
+     // transferring it into the output; ordinary list stores still require moves.
+-    if (independent and b.module().zero_rc) value = try b.copyOwned(value, span);
++    if (independent) value = try b.copyOwned(value, span);
+     const at = b.current.?;
+     const pushed = try b.emit(.{ .op = .list_push, .ty = ty, .a = try b.read(result, at), .b = value, .span = span });
+     try b.write(result, at, pushed);
+--- a/src/core/fuse_slice_key.zig
++++ b/src/core/fuse_slice_key.zig
+@@ -66,7 +66,7 @@
+     for (0..count) |index| {
+         const inst = f.insts.items[index];
+         if (inst.op == .str_from_view and onlyReads(f, module, @fromBackingInt(@intCast(index)))) {
+-            if (module.zero_rc and try updated(arena, f, module, f.resolve(inst.a))) continue;
++            if (try updated(arena, f, module, f.resolve(inst.a))) continue;
+             f.insts.items[index] = .{ .op = .copy, .ty = .str_view, .a = inst.a, .span = inst.span };
+             try rewriteUsesRecording(arena, f, module, f.resolve(inst.a), requests);
+             changed += 1;
+@@ -128,50 +128,14 @@
+     return uses != 0;
+ }
+ 
+-/// Whether `source`, or a phi it flows into, is updated in place anywhere in `f` (a
+-/// consuming update, or a call that takes it over as a `mut` argument). A view keeps its
+-/// source live, so an update while the view is live would copy the whole source instead
+-/// of updating it in place: such a slice stays a copy.
+-pub fn updated(arena: std.mem.Allocator, f: *const ir.Function, module: *const ir.Module, source: ir.Ref) std.mem.Allocator.Error!bool {
+-    if (module.zero_rc) return ownedUpdated(arena, f, module, source);
+-    const aliases = try arena.alloc(bool, f.insts.items.len);
+-    defer arena.free(aliases);
+-    @memset(aliases, false);
+-    aliases[source.index()] = true;
+-    var grew = true;
+-    while (grew) {
+-        grew = false;
+-        for (f.insts.items, 0..) |inst, index| {
+-            if (inst.op != .phi or aliases[index]) continue;
+-            for (f.operands(inst.data)) |operand| {
+-                if (!aliases[f.resolve(operand).index()]) continue;
+-                aliases[index] = true;
+-                grew = true;
+-                break;
+-            }
+-        }
+-    }
+-    for (f.insts.items) |inst| {
+-        if (inst.op.consumesOperand0() and inst.a != .none and aliases[f.resolve(inst.a).index()]) return true;
+-        const owned = switch (inst.op) {
+-            .call => if (inst.a.index() < module.functions.items.len) module.functions.items[inst.a.index()].signature.owned else continue,
+-            .call_indirect => module.compound(f.inst(f.resolve(inst.a)).ty).@"fn".owned,
+-            else => continue,
+-        };
+-        for (f.operands(inst.data), 0..) |argument, at| {
+-            if (at < 64 and owned & (@as(u64, 1) << @intCast(at)) != 0 and aliases[f.resolve(argument).index()]) return true;
+-        }
+-    }
+-    return false;
+-}
+-
+ // A checked owner cannot be retained to keep an optimizer-created view alive.
+ // Follow its borrowed parent chain and phi aliases, and leave the source slice
+ // materialized if any of those owners transfers into storage or an owning call.
+ const AliasEdge = struct { target: ir.Ref, next: u32 };
+ const no_edge = std.math.maxInt(u32);
+ 
+-fn ownedUpdated(arena: std.mem.Allocator, f: *const ir.Function, module: *const ir.Module, source: ir.Ref) std.mem.Allocator.Error!bool {
++/// Preserve a snapshot when its borrowed parent or phi alias can be consumed.
++pub fn updated(arena: std.mem.Allocator, f: *const ir.Function, module: *const ir.Module, source: ir.Ref) std.mem.Allocator.Error!bool {
+     const length = f.insts.items.len;
+     const heads = try arena.alloc(u32, length);
+     defer arena.free(heads);
+--- a/src/core/runtime/core_number_text.zig
++++ b/src/core/runtime/core_number_text.zig
+@@ -5,7 +5,7 @@
+ const formatting = @import("core_number_format.zig");
+ 
+ // The first word belongs to the selected C runtime: kind plus padding in the
+-// owned ABI, or count plus kind in the historical ABI. Never inspect it here.
++// owned ABI. Never inspect it here.
+ const Block = extern struct { header_prefix: [8]u8, len: i64, cap: i64, reserved: u64 };
+ extern fn myl_core_number_text_new(length: usize) *Block;
+ extern fn myl_core_number_text_clear_ascii(text: *Block) void;

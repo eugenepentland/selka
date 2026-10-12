@@ -1,0 +1,38 @@
+{
+  "status": "prepared only; no production retirement applied",
+  "base_commit": "c5ea53047d64e5e4f3c4f9c4174c22b6d6fa9149",
+  "file": "src/core/runtime/core_values.c",
+  "before_sha256": "f14e1aa4dcddbf644925f7d49ffa9310e977c624046565c8a53d1e63ec16f996",
+  "proposed_sha256": "cd48bd48fc5f8e63ee45ba7e5bc6b2178f966b7939c91f0330d4dfc8ae7bde6e",
+  "patch_sha256": "929e7666646991b0cbf0bc429167eb199b451dd4dca0eecd3164c6ebf7ed50d5",
+  "repetition_helpers_unchanged_sha256": "edf696533726dd3730d3db0ab420b0952a2a8d610964165e27ae1a30c4bce103",
+  "patch_check": {
+    "status": 0,
+    "stdout": "",
+    "stderr": "",
+    "scope": "isolated exact committed source copy"
+  },
+  "removed_legacy_mode_selectors": 1,
+  "removed_legacy_release_calls": 1,
+  "preserved": [
+    "myl_core_drop_owned after float-render bytes copied",
+    "fresh independent text/byte repeat storage",
+    "kind_of(source) allocation kind",
+    "INT64_MAX minus1 overflow guard",
+    "zero and signed negative repetition behavior",
+    "equality/hash/render descriptor and native work buffer allocation"
+  ],
+  "preconditions": [
+    "C2 qualified and coordinator C3 activation",
+    "selected count-free runtime header/direct destruction",
+    "numeric embedded formatter object with corrected opaque header ABI"
+  ],
+  "required_tests": [
+    "A04 numeric formatting two-ABI history and final selected-object check",
+    "A04 renderer five-mode fixture including float payload",
+    "A04 repetition five-mode and overflow boundary regressions",
+    "A02 combined selector-free native runtime preview",
+    "A08 object/ABI cache invalidation",
+    "Final C3 full verification/Guardian/generated LLVM/symbol audit"
+  ]
+}

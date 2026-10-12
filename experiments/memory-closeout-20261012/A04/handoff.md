@@ -284,3 +284,14 @@ copy-on-mutation and independent encode results and depends on A02/coordinator
 retaining count-free shared runtime helper contracts. Other files from the older
 multifile retirement draft remain held separately. C3 activation and actual
 native/structural/full verification remain required before any retirement claim.
+
+Additional C3 drafts now cover core_values.c's float-render temporary release
+and the newly added borrowed-selection lowerer plus previously owned repetition,
+slice and numeric-header comment paths. retirement-core-values/ pins c5ea530;
+retirement-owned-lowering/ pins bed11cf3. Both pass private apply-checks against
+exact committed sources. Runtime repetition helpers and overflow/kind guards are
+unchanged. The slice public updated() API retains the existing bounded owned-only
+implementation; the obsolete RC branch disappears. A07 has the exact compiler
+patch and A02 has the exact runtime patch for isolated combined previews. These
+are evidence-only drafts; active production remains unchanged until C2 qualifies
+and coordinator C3 activation supplies mandatory OWN1 ABI/cache invalidation.

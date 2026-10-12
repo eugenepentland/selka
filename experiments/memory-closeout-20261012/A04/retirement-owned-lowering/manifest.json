@@ -1,0 +1,50 @@
+{
+  "status": "prepared only; no active production change",
+  "base_commit": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "patch_sha256": "0efe0bcb1f06253730a4d32cf77ba490d49613c2a8353bed0e10dc992c57f8dc",
+  "files": {
+    "src/core/build_borrow_selection.zig": {
+      "before_sha256": "fdf87b7f46a9263eec87c7e597dcab33357ff9f0ee90db1098875b09fedcc592",
+      "proposed_sha256": "2b83701b5e2e539f19b9b6718f502b030787ca61284cbdc7eec7229473ed8530"
+    },
+    "src/core/build_values.zig": {
+      "before_sha256": "b838ab418005ee3c04a812bdffa402366c8c396d20253630c46a41d34c36189c",
+      "proposed_sha256": "0404f6b6359fdeb587c81debb8296cfafb962cd8ee6544d67d8a06c64953c1ff"
+    },
+    "src/core/fuse_slice_key.zig": {
+      "before_sha256": "db7332213c30e527c344e6b4d7183658c4e907bff5b94e2654600e300e653c3c",
+      "proposed_sha256": "16e73d6c52633fcf6c0a9933482ddf6b95109a94ff57cfe7f91a2f9a197f9a6e"
+    },
+    "src/core/runtime/core_number_text.zig": {
+      "before_sha256": "4604f15557b3b51da16c0de65cc769f2654265fda44ec0cd17a56843eb269933",
+      "proposed_sha256": "47d4ceca7ec9508b387cc38ef2b083138d7cc7ccc032db4ce9fe9fefae3897b8"
+    }
+  },
+  "patch_check": {
+    "status": 0,
+    "stdout": "",
+    "stderr": "",
+    "scope": "isolated exact committed file copies"
+  },
+  "bounded_slice_analysis_and_following_helpers_unchanged_sha256": "76cd605b39e3a0d03ab9953c2478bc56a206e8892468b589ee495757265150f8",
+  "public_api": "updated() remains unchanged; private ownedUpdated body takes that name",
+  "contracts_preserved": [
+    "logical type and affine/Result checks before selection inputs",
+    "eager once-only first/second evaluation and two-parent managed marker",
+    "independent managed repeated children via copyOwned",
+    "bounded O(nodes+edges) borrowed-parent/bidirectional-phi update analysis per query",
+    "opaque number object header; no ABI offset change"
+  ],
+  "dependencies": [
+    "A07 C3 mandatory OWN1 Module/Input ABI",
+    "A08 persisted artifact invalidation",
+    "Coordinator C2 qualification and C3 activation"
+  ],
+  "required_tests": [
+    "A04 selections focused and five-mode native/refusal matrix",
+    "A04 repetition owned-child independence and resource refusal",
+    "A04 slice positive fusion and parent/move invalidation regressions",
+    "A08 final source/cache replay and old-artifact refusal",
+    "Final full verification and Guardian"
+  ]
+}
