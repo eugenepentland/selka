@@ -1,0 +1,24 @@
+{
+  "attempt": 3,
+  "source_revision": "d01f772cd0cfa823a9ec6a8838aaf5c4856710b4",
+  "status": "failed",
+  "log": "verify-attempt-3.log",
+  "includes": "supported input glob, field augmentation and projection fix, context preflight, read-only JSON literal helper; pending optional/writeback/cache issues remain",
+  "exit_code": 1,
+  "selected_actions": 45,
+  "reused_actions": 0,
+  "build_admitted_seconds": 26.023012770107016,
+  "gate_admitted_seconds": 638.0079196600709,
+  "inputs_stable": true,
+  "failures": [
+    "four new fixture format checks",
+    "record writeback LLVM copy bounds",
+    "renderer source-unit dependency assertions",
+    "moving Unicode cursor scan bound",
+    "stale generic concrete-pop refusal",
+    "stale zero-RC rounding refusal",
+    "extrema test wrapper lint",
+    "semantic/specialization corruption fixtures hardcoded old cache version",
+    "empty-PATH component bootstrap omitted selected owned pin and archive"
+  ]
+}

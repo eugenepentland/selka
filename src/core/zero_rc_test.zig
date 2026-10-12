@@ -357,19 +357,15 @@ test "zero RC runtime admission and emitted count operations fail closed" {
     try std.testing.expect(!zero.emittedClean("  call void @myl_core_release(ptr %p)\n"));
     try std.testing.expect(!zero.emittedClean("  call preserve_mostcc void @myl_core_retain_slow(ptr %p)\n"));
     try std.testing.expect(zero.emittedClean("  call void @myl_core_drop_owned(ptr %p)\n"));
-    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
-    defer arena.deinit();
-    const a = arena.allocator();
-    const program = try checked(a,
+    // Rounding is now an audited scalar helper; keep the unknown-symbol
+    // refusals above and exercise the admitted operation through native code.
+    try executes(std.testing.allocator,
         \\func main() -> int:
         \\    const value = round(1.234, 2)
         \\    if value > 1.0:
-        \\        return 1
-        \\    return 0
-    );
-    var refusal: build.Refusal = .{};
-    try std.testing.expectError(error.Unsupported, build.buildExecutable(a, .{ .program = program, .zero_rc = true }, &refusal));
-    try std.testing.expect(std.mem.indexOf(u8, refusal.reason, "unaudited zero-RC runtime helper") != null);
+        \\        return 0
+        \\    return 1
+    , "");
 }
 
 // spec-case: NEW-CORE-ZERO-RC-TASKS-1

@@ -2,9 +2,9 @@
   "C0": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
   "integration_branch": "codex/memory-closeout-20261012",
   "milestones": {
-    "qualified_implementation": "pending",
-    "zero_rc_default": "pending",
-    "legacy_rc_retirement": "pending"
+    "qualified_implementation": "not_claimed; expanded common qualification remains incomplete",
+    "zero_rc_default": "deferred_by_user; zero-RC remains opt-in",
+    "legacy_rc_retirement": "deferred_by_user; active guest RC remains"
   },
   "items": [
     {
@@ -64,6 +64,11 @@
       "change": "Expand Result-list support, including parallel.map returning Results.",
       "owner": "A01",
       "status": "integrated; Support7 five-mode Result-map and TSan/task stress passed; final revision requalification pending"
+    },
+    {
+      "requested_by": "user",
+      "change": "Stop once the complete verification gate is green; record existing performance differences. Further performance work, default promotion and RC retirement deferred.",
+      "status": "active stopping criterion"
     }
   ],
   "interim_compilers": [
@@ -145,7 +150,7 @@
     "latest_attempt": {
       "source_revision": "d01f772cd",
       "path": "coordinator/exploratory-verify-02/attempt-3.json",
-      "status": "running; known formatting failure; no pass claimed"
+      "status": "failed; fixes being integrated"
     }
   },
   "interim_qualification": {
@@ -219,11 +224,20 @@
         "runs": 695,
         "passed": true,
         "original_denominator": 30,
-        "original_allocating": 23,
-        "original_allocation_free": 7,
         "admitted_run_rc_events": 0,
         "admitted_run_exit_live_bytes": 0,
-        "evidence": "A03/Support7-full"
+        "evidence": "A03/Support7-full",
+        "original_by_mode": {
+          "release/verified_release/optimized_debug": {
+            "allocating": 23,
+            "allocation_free": 7
+          },
+          "unoptimized_debug/release_without_facts": {
+            "allocating": 28,
+            "allocation_free": 2
+          }
+        },
+        "whole_program_original_allocating": 30
       },
       "applications": {
         "builds": 20,
@@ -241,9 +255,9 @@
         ]
       },
       "native_guest_survey": {
-        "per_mode_passed": 412,
+        "per_mode_passed": 427,
         "per_mode_failed": 5,
-        "per_mode_unsupported": 3,
+        "per_mode_unsupported": 6,
         "additional_source_blocked_contracts": 16,
         "milestone_qualified": false
       },
@@ -365,37 +379,38 @@
       "item": "Full verification owned component pin options",
       "status": "fixed_integrated; 73 tests pass; full gate now executes with owned pin/archive",
       "reproducer": "scripts/verify_cache.py parse_options refuses -Dcomponent-owned-compiler-pin and -Dcomponent-seed-source; same package inputs must be bound to verification preparation and replay.",
-      "latest_evidence": "c23969d50 plus supported scope glob50ac68c1f; exploratory-verify-02 attempt3 running"
+      "latest_evidence": "attempt3 executed with exact pin/archive and failed independent regression tests; empty-PATH forwarding fix pending"
     },
     {
       "owner": "A01",
       "item": "Recursive Optional scalar-field writeback",
       "reproducer": "recursive_values.my: copied recursive optional child.value assignment",
-      "status": "worker_fix_in_test"
+      "status": "fix_integrated; focused_native_passed; next_full_gate_pending"
     },
     {
       "owner": "A08",
       "item": "Warm generic memo callback cache hydration",
       "reproducer": "memo.create[str[]] raw bracket name passed to module_names.reference; cold passes/warm InternalError",
-      "status": "narrow_recipe_fallback_in_test"
+      "status": "fix_integrated; focused_native_passed; next_full_gate_pending"
     },
     {
       "owner": "A02",
       "item": "Indirect owned aggregate result transfer",
       "reproducer": "rc_pin_elide.my:141 return f(mut xs); three guest tests refuse lowering",
-      "status": "ownedRecord_call_indirect_fix_in_test"
+      "status": "fix_integrated; focused_native_passed; next_full_gate_pending"
     },
     {
       "owner": "A05",
       "item": "Scalar mutable arguments share one parent",
       "reproducer": "frontend_mut.my dynamic disjoint targets gives [1,22]; named interior case refuses at116",
-      "status": "captured_scalar_writeback_fix_in_test"
+      "status": "fix_integrated; focused_native_passed; next_full_gate_pending"
     },
     {
       "owner": "A10",
       "item": "Recursive structural equality lowering",
       "reproducer": "value_equality.my: three native test roots require unaudited myl_core_equal_<type>",
-      "status": "borrowed_equality_adapter_in_progress"
+      "status": "parked_unintegrated; canonical_recursive_shadow_mismatch",
+      "latest_evidence": "A10/equality/handoff.md; patch and native results preserved, no rollout claim"
     },
     {
       "owner": "coordinator",
@@ -421,5 +436,10 @@
       "A07"
     ],
     "handoff": "Coordinator and original workers continue their remaining work; no nested/additional agents launched."
+  },
+  "stopping_criterion": {
+    "required": "complete registered verify_cache.py gate and required Guardian checks pass",
+    "performance": "report existing measured differences with exact artifacts; no new benchmarks",
+    "status": "integrating full-gate fixes"
   }
 }

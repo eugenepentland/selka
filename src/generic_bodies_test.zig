@@ -470,7 +470,7 @@ test "a generic body and its helpers sort concrete lists and reject a symbolic e
         \\func main() -> i64:
         \\    return 0
     , "E_COLLECTION_METHOD");
-    try reject(
+    const concrete_stack =
         \\func last[T: copy + storable](values: T[]) -> int:
         \\    mut stack = [1, 2]
         \\    _ = stack.pop()
@@ -478,8 +478,12 @@ test "a generic body and its helpers sort concrete lists and reject a symbolic e
         \\
         \\
         \\func main() -> i64:
-        \\    return 0
-    , "E_GENERIC_BODY_UNSUPPORTED");
+        \\    return last([3, 4, 5])
+    ;
+    var compilation = try language.Compilation.init(t.allocator, "generic_pop.my", concrete_stack);
+    defer compilation.deinit();
+    try compilation.check();
+    try t.expectEqual(@as(i64, 3), (try @import("native_execute.zig").run(&compilation)).value);
 }
 /// Check `text`, expect exactly one diagnostic, and compare its code and message.
 fn rejectOnly(text: []const u8, code: []const u8, message: []const u8) !void {
