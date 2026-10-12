@@ -76,3 +76,30 @@ root install and full registered qualification remains coordinator work. C2/C3
 need their own ordinary-default compiler/pin qualification; this opt-in compiler
 still contains active legacy guest selection. The immutable historical seed is
 unchanged and no whole-package RC-retirement claim is made.
+
+
+For an explicitly selected C1 development build, source the shared development
+environment, set the qualified independent cache, and pass both root options:
+
+```bash
+source /home/epentland/.config/mylang/dev-env.sh
+export MYLANG_COMPONENT_CACHE=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/component-cache
+scripts/build-slot.sh build "$ZIG" build test-core \
+  -Dcomponent-owned-compiler-pin=/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json \
+  -Dcomponent-seed-source=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar \
+  -j"$MYLANG_DEV_JOBS" --maxrss "$MYLANG_DEV_MAXRSS"
+```
+
+Run from the configured integration checkout after the corrected component builder
+is integrated. Existing test filters and output prefixes may be appended normally.
+The recipe verifies/reuses the exact qualified RF seed. A changed component source
+or builder binary legitimately produces a new component artifact that must be
+qualified; the host Debug/RF compiler choice itself is independent of the component
+seed optimization. Normal root builds supply their own installed component path.
+
+`legacy-preparation-failure-audit.json` records why the historical default seed
+failed on this host: its old native-driver cleanup deletes uncached objects before
+linking when host closure verification disables native reuse. Current fix38dc781a
+is present in the qualified Support6 pin. The audit changed no shared caches or
+historical input. A separate lack of cold same-key provisioning locks was observed
+in source, without evidence that it caused this particular failure.

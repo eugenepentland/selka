@@ -365,3 +365,13 @@ selector-free routing. Updated exact hashes/raw logs are recorded separately in
 `rollout/component-retirement-validation/rebased-validation.json`; the prior27-test
 report remains immutable. Production retirement remains unapplied and actual C3
 compiler/package qualification is still required.
+
+
+Coordinator development-build failure was audited read-only: immutable seed0689d340
+has the pre38dc driver cleanup defect; its old ld.so.cache pin correctly disables
+native reuse on this host, exposing deletion of staging objects before linking.
+Exact root build options now documented in the qualified pin README reuse the
+Support6 RF compiler/cache without altering historical seed bytes. Final Debug/RF
+host packages may share that independent seed, but their actual component manifests
+and binary identities must be verified on each final install. Root owns the final
+registered gate and any decision to change package selection.
