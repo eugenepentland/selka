@@ -77,6 +77,17 @@ public func is_form(n: Node, name: bytes) -> bool:
             return False
 
 
+# A scalar query: no child ownership escapes this scoped match.
+
+
+public func is_list(n: Node) -> bool:
+    match n.tag:
+        case Tag.list(value=_):
+            return True
+        case _:
+            return False
+
+
 # An independently owned copy of list children, or None if not a list.
 public func as_list(n: Node) -> Node[]?:
     match n.tag:
