@@ -1,6 +1,6 @@
 {
   "purpose": "Frozen six-case source manifest for diagnostic-only RF compiler scaling; no samples executed yet",
-  "generator_sha256": "acaf73543531bd65ce3939adc7c38af5d2b5cb35c9d652bcad623fa30f7b2c8b",
+  "generator_sha256": "58ae6e17892ec0afc01009deb80270833dd08df1f94e45a797dbaf2eeb13bac3",
   "cases": [
     {
       "family": "modules",

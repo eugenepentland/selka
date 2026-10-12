@@ -1,0 +1,12 @@
+build-slot: FIFO ticket 1209, position 3; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 1209 after 15s
+src/native_execute.zig:14:24: error: no module named 'memory_budget' available within module 'test'
+const budget = @import("memory_budget");
+                       ^~~~~~~~~~~~~~~
+referenced by:
+    execute: src/native_execute.zig:400:98
+    runWithOptions__anon_44620: src/native_execute.zig:90:19
+    3 reference(s) hidden; use '-freference-trace=5' to see all references
+src/wiring/core_runner.zig:7:25: error: no module named 'native_test_options' available within module 'test'
+const harness = @import("native_test_options");
+                        ^~~~~~~~~~~~~~~~~~~~~

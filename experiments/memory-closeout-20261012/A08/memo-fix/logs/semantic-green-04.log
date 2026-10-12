@@ -1,0 +1,12 @@
+build-slot: FIFO ticket 1197, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 1197 after 15s
+1/9 a08_memo_cache_test.test.A08 persisted memo caller hydration preserves fresh checking...OK
+2/9 semantic_store.test.A08 unpack durable malformed slot contracts are cache misses...OK
+3/9 semantic_store.test.A08 unpack prior semantic wire version refuses even with a valid checksum...OK
+4/9 semantic_store.test.A08 unpack specialization decode and publication enforce the same slot contract...OK
+5/9 semantic_store.test.A08 selection durable operands validate range order and structural types...OK
+6/9 semantic_store.test.A08 selection rejects prior v8 wire with valid checksum...OK
+7/9 semantic_store.test.A08 selection specialization publication and decoded operands fail closed...OK
+8/9 semantic_copy.test.A08 unpack semantic relocation preserves local IDs and independently owns field slots...OK
+9/9 semantic_copy.test.A08 selection semantic copy relocates both ordered operand NodeIds...OK
+All 9 tests passed.

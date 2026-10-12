@@ -101,6 +101,7 @@ test {
     _ = @import("cache_command.zig");
     _ = @import("check_cache_test.zig");
     _ = @import("semantic_cache_test.zig");
+    _ = @import("a08_memo_cache_test.zig");
     _ = @import("check_scale_test.zig");
     _ = @import("module_interface_test.zig");
     _ = @import("semantic_key.zig");

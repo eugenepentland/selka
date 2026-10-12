@@ -78,6 +78,9 @@ fn callable(comptime Checker: type, checker: *Checker, sites: *Sites, site: sour
             const call = node.data.call;
             // Generic/member/named dispatch needs its own substitution recipe.
             if (call.owner != null or call.type_arguments.len != 0 or call.argument_names.len != 0) return null;
+            // Parsed bracket applications stay in the raw name until ordinary
+            // call dispatch splits them. They need the same generic fallback.
+            if (std.mem.endsWith(u8, checker.src.text(call.name), "]")) return null;
             const key = if (checker.catalog.module_names) |names| try names.reference(call.name, .function, null, null, checker.sink) else checker.src.text(call.name);
             const declaration = checker.functions.get(key) orelse return null;
             const function = checker.syntax.functions[@backingInt(declaration)];

@@ -77,7 +77,7 @@ class Run:
         llvm = target.with_suffix('.ll')
         rss = target.with_suffix('.rss')
         mode_flags = [] if mode == 'zero' and (self.args.default_zero or (compiler is not None and self.args.candidate_default_zero)) else MODES[mode]
-        arguments = [str(compiler or self.args.compiler), 'build', str(project / 'main.my'), '-o', str(target), '--cache-dir', str(cache_directory or project / 'cache'), '--release', '--zig', str(self.args.zig), '--report', *(['--emit-llvm', str(llvm)] if emit else []), *mode_flags, *extra]
+        arguments = [str(compiler or self.args.compiler), 'build', str(project / 'main.my'), '-o', str(target), '--cache-dir', str(cache_directory or project / 'cache'), getattr(self.args, 'build_mode', '--release'), '--zig', str(self.args.zig), '--report', *(['--emit-llvm', str(llvm)] if emit else []), *mode_flags, *extra]
         tree_rss = target.with_suffix('.tree-rss.json')
         measured = ['/usr/bin/time', '-f', '%M', '-o', str(rss), *arguments]
         if self.args.memory_wrapper:
