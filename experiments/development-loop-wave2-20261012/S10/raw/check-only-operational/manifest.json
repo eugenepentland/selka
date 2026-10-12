@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "source": "c1857310e0bf623545380c8de24515f1b9970021",
+  "compiler_source": "a9a3208a4f3edbf17170cfc18d57f5f999af49c3",
+  "harness_sha256": "6688f100802f183025f611646f1a04fe7a49825cb287e669d60e4f862ab971ca",
+  "compiler": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+  "compiler_sha256": "e018f4dc02cba5020dcdb9c74a8bdd4354d11b49d2dfaacf5030b0aa82f176f3",
+  "compiler_mode": "Debug",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "slot_directory": "/home/epentland/.cache/mylang/slots",
+  "declared_build_slots": "3",
+  "admission_kind": "build",
+  "workload": "helper-edit",
+  "cache_tier": "first project/runtime cold; Zig global explicitly shared warm; subsequent unique warm edits",
+  "clock": "source edit + validation + real check + output checks/report write",
+  "scope": "guest project edit; does not measure Zig compiler-source rebuilding or whole gate",
+  "first_feedback_scope": "completed type/semantic check; visibly partial before two tests",
+  "selected_test_names": [],
+  "check_only": true,
+  "rows": [
+    {
+      "index": 0,
+      "cache_tier": "cold-project-runtime",
+      "source_sha256": {
+        "helper.my": "f1b4cc538b3e80287ba59d85d043990cf1ec307b899fdd96ae336290467e3bf4",
+        "main.my": "5f1b85600df219eb8a90f93ed1cbc3a3c7153cc129c1d724e16907e807d90d39"
+      },
+      "edit_validation_ns": 567761,
+      "first_feedback_ns": 104716356,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-only-qualification/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-only-qualification/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 103894933,
+        "child_accounted_user_cpu_seconds": 0.078679,
+        "child_accounted_system_cpu_seconds": 0.016900000000000002,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23613440,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "operational",
+      "loop_elapsed_ns": 105176119
+    },
+    {
+      "index": 1,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "2dd04030e5c76033aa121cb94f7e997dae38ab2c1e6e9ae38feaf7e4b242a8f7",
+        "main.my": "a7ee13ec4854f517826bfdc346b3be04519809d6bbb25d94f1da338b1e47098e"
+      },
+      "edit_validation_ns": 2962222,
+      "first_feedback_ns": 104923281,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-only-qualification/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-only-qualification/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 101698145,
+        "child_accounted_user_cpu_seconds": 0.06909299999999999,
+        "child_accounted_system_cpu_seconds": 0.023347999999999997,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23613440,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "operational",
+      "loop_elapsed_ns": 105415851
+    },
+    {
+      "index": 2,
+      "cache_tier": "warm-unique-edit",
+      "source_sha256": {
+        "helper.my": "65d3ec3e951f9add9736e11b864695dc6bfe388c056833e72f24af09688aadb0",
+        "main.my": "aa5ba30a31b1a634636ddd90effe780a4a24ff4bafd1be4b266979e1931d72c0"
+      },
+      "edit_validation_ns": 694993,
+      "first_feedback_ns": 102613361,
+      "check": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-only-qualification/project/main.my",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S10/.tmp/S10/check-only-qualification/frontend-cache"
+        ],
+        "status": 0,
+        "complete": true,
+        "elapsed_ns": 101676990,
+        "child_accounted_user_cpu_seconds": 0.07492000000000001,
+        "child_accounted_system_cpu_seconds": 0.019878,
+        "memory_scope": "cohort cumulative RUSAGE_CHILDREN high-water; concurrent aggregate unknown",
+        "cohort_child_high_water_rss_bytes": 23613440,
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "test": null,
+      "selected_tests": 0,
+      "completed_successful_tests": 0,
+      "passed": true,
+      "measurement_kind": "operational",
+      "loop_elapsed_ns": 103095165
+    }
+  ],
+  "run_id": "695ab0ce7a56e1821a29333f314b960b90d0aa77d1aa99a86afe1237b63b7d07",
+  "measurement_context": "1b8d1063c4a2dd57597b19cc78e197961393bababa444ae9e7018651ab73bd21",
+  "summary": {
+    "repetitions": 2,
+    "median_ns": 104255508.0,
+    "empirical_p95_ns": 105415851,
+    "first_feedback_empirical_p95_ns": 104923281,
+    "targets": {
+      "feedback_5s": true,
+      "completion_empirical_p95_15s": null
+    },
+    "all_completed": true,
+    "scope": "guest project edit; does not measure Zig compiler-source rebuilding or whole gate",
+    "qualification": "empirical cohort only; no stable tail inference or broader compiler-edit claim"
+  }
+}
