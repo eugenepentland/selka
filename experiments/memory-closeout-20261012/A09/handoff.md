@@ -2,7 +2,9 @@
 
 Base: `fbfcaa7a923186a8e773c3760f81c10aa345a432`.
 Owned files: this evidence directory and its measurement harness only.
-No production changes, shared-file requests, or old reports overwritten.
+Initially evidence-only. The coordinator later reserved `src/core/version.zig` and
+`src/core/a09_version_test.zig` for a concrete migration blocker; root registration
+and SPEC changes were supplied by the coordinator. No old reports were overwritten.
 
 Fresh complete C0 Debug installation built successfully at
 `/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0`.
@@ -98,3 +100,22 @@ prototype cheap-map cases need more repetitions. Expensive-map one-shot timings
 are slower in the prototype, but unrestricted hybrid P/E CPU selection is a
 material confound. Final qualification will pin the same comparable CPU topology
 on both arms and use the required alternating pairs before interpreting it.
+
+
+Coordinator-requested correctness fix: ordinary-mode migration of `index_return`
+exposed a loop-duplication graph bug. An inlined early-return join is included in
+`members()` but also has a predecessor outside the cloned region. Copying that
+predecessor creates an edge the outside block does not branch to. `duplicate()`
+now declines regions with any outside entry except preheader to header, before
+allocating cloned blocks. This is an optimizer eligibility restriction; the
+program remains supported with the same semantics.
+
+Before the fix, the focused regression suite passes its positive single-entry
+optimization control and fails the early-return fixture with InvalidIr. After
+the guard, both tests pass, including three leak-checked native runs across
+trusted/verified pipelines and the empty-input path. The first after-run exposed
+only an incorrect lowercase Boolean expectation, now corrected to `True`;
+that failed log remains preserved. `raw/version/results.json` pins source,
+compiler and raw evidence. The source change invalidates compiler cache namespaces
+through build_identity (confirmed by A08). This focused fix still requires the
+coordinator's final full gate and integrated artifact qualification.

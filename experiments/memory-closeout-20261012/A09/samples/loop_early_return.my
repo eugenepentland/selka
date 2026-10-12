@@ -1,0 +1,47 @@
+record Payload:
+    number: int
+    items: int[]
+
+
+enum Item:
+    payload(value: Payload)
+    empty
+
+
+func contents(items: Item[], index: int) -> int[]:
+    match items[index].copy():
+        case Item.payload(value=old):
+            return old.items.copy()
+        case Item.empty:
+            return []
+
+
+func iterator_alias(mut items: Item[], index: int) -> int:
+    for before in items.copy():
+        match items[index].copy():
+            case Item.payload(value=old):
+                mut fields = old.items.copy()
+                fields.append(2)
+                mut seen = 0
+                match before:
+                    case Item.payload(value=saved):
+                        seen = len(saved.items)
+                    case Item.empty:
+                        pass
+                items[index] = Item.payload(value=Payload(number=0, items=fields))
+                return seen
+            case Item.empty:
+                pass
+    return -1
+
+
+public func test_iteration_binding_stays_independent() -> bool:
+    mut items = [Item.payload(value=Payload(number=0, items=[1]))]
+    return iterator_alias(mut items, 0) == 1 and contents(items, 0) == [1, 2]
+
+
+func main(out: Stream) -> int:
+    out.print(test_iteration_binding_stays_independent())
+    mut empty: Item[] = []
+    out.print(iterator_alias(mut empty, 0))
+    return 0

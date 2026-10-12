@@ -1,0 +1,53 @@
+build-slot: FIFO ticket 263, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 263 after 5s
+c5252fad3ec1c7d4164d91bc716032258c003b0f9b8ded07092d902350bde3cc
+f0b5459555ce2f1dd4edeac738aeff7b9affe77733f8104b0f768828a58866ee
+test-core
++- verification action core member 0 1 pass, 1 fail (2 total)
+guardian/test: test wall 0.53s; slowest over 50ms:
+guardian/test:   0.42s  a09_version_test.test.loop duplication preserves an inlined early return join with an outside predecessor
+guardian/test:   0.10s  a09_version_test.test.loop duplication still optimizes a single entry invariant branch
+guardian/test: FAIL — 1 failed of 2
+guardian/test: RESULT {"passed":1,"failed":1,"skipped":0}
+error: 'a09_version_test.test.loop duplication preserves an inlined early return join with an outside predecessor' failed:
+       guardian/test: 2 test(s) selected by filter: "loop duplication"
+       internal error[E_CORE_INVALID_IR]: invalid Core IR in main b19: predecessor b6 does not branch here
+       /home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/verify_ir.zig:168:9: 0x146af9f in fail__anon_44104 (root_test.zig)
+               return error.InvalidIr;
+               ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/verify_ir.zig:271:60: 0x146aa2d in edges (root_test.zig)
+                   if (targets[0] != here and targets[1] != here) return self.fail(b, null, "predecessor b{d} does not branch here", .{pred.index()});
+                                                                  ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/verify_ir.zig:217:13: 0x14605b0 in structure (root_test.zig)
+                   try self.edges(b);
+                   ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/verify_ir.zig:172:9: 0x1475384 in run (root_test.zig)
+               try self.structure();
+               ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/verify_ir.zig:105:5: 0x1474fb0 in verifyFunction (root_test.zig)
+           try v.run();
+           ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/verify_ir.zig:97:9: 0x14747c8 in verifyModule (root_test.zig)
+               try verifyFunction(arena, module, f, failure);
+               ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/verify_ir.zig:55:5: 0x145b4bc in reported (root_test.zig)
+           return err;
+           ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/verify_ir.zig:47:55: 0x1459f7d in check (root_test.zig)
+           verifyModule(arena, module, &failure) catch |err| return reported(arena, err, failure, report);
+                                                             ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/test_support.zig:36:9: 0x1459773 in verified (root_test.zig)
+               return err;
+               ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/test_support.zig:43:5: 0x2767263 in runPasses (root_test.zig)
+           try verified(arena, module, result.plans);
+           ^
+       /home/epentland/ai/canopy/mylang-memory-20261012-A09/src/core/a09_version_test.zig:64:24: 0x28b6438 in test.loop duplication preserves an inlined early return join with an outside predecessor (root_test.zig)
+               const result = try support.runPasses(a, &module, mode);
+                              ^
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-memory-20261012-A09/zig-out/libexec/mylang/components ./.zig-cache/o/b038c1d449d77c2bc55c6febdc3c2554/test "--guardian-filter=loop duplication" --cache-dir=./.zig-cache --seed=0x164e4e4e --listen=-
+
+Build Summary: 10/12 steps succeeded (1 failed); 1/2 tests passed (1 failed)
+test-core transitive failure
++- verification action core member 0 1 pass, 1 fail (2 total)
+

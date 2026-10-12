@@ -163,6 +163,7 @@ const Guard = struct { insts: []const ir.Ref, condition: ir.Ref };
 fn duplicate(arena: std.mem.Allocator, f: *ir.Function, loop: ir.Loop, guard_insts: Guard, provenance: origins.Context, frame: ?u32) Error!?Copies {
     const preheader = preheaderOf(f, loop) orelse return null;
     const inside = try members(arena, f, loop);
+    if (!singleEntry(f, inside, loop.header, preheader)) return null;
     // A body that always returns can leave an unreachable recorded latch.
     // Such a loop has no complete cycle to clone.
     if (!inside[loop.latch.index()]) return null;
@@ -264,6 +265,20 @@ fn duplicate(arena: std.mem.Allocator, f: *ir.Function, loop: ir.Loop, guard_ins
     try mergeExit(arena, f, copies);
     try f.loops.append(arena, .{ .id = loop.id, .header = clone_header, .body = block_map[loop.body.index()].?, .latch = block_map[loop.latch.index()].?, .exit = loop.exit });
     return copies;
+}
+
+/// An inlined early return may reach a join also entered through the loop exit.
+/// Its outside predecessor cannot be copied without retargeting that outside edge.
+fn singleEntry(f: *const ir.Function, inside: []const bool, header: ir.BlockId, preheader: ir.BlockId) bool {
+    for (f.blocks.items, 0..) |block, b| {
+        if (!inside[b]) continue;
+        for (block.preds.items) |pred| {
+            if (inside[pred.index()]) continue;
+            if (b == header.index() and pred == preheader) continue;
+            return false;
+        }
+    }
+    return true;
 }
 
 /// How many loop copies unswitching may add to one function.

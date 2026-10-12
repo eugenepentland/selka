@@ -1,0 +1,13 @@
+build-slot: FIFO ticket 40, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: gate slot 2, FIFO ticket 40 after 5s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10006 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (cognitive-complexity)
+guardian: failures grouped by check (1):
+  cognitive-complexity (1 finding)
+    - src/core/version.zig: fn duplicate cognitive complexity 27 (limit: 25)
+      fix: extract helpers; reduce nested control flow.
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

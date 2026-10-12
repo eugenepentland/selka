@@ -1,0 +1,45 @@
+{
+  "base_commit": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "change": "Skip loop duplication when the region has an outside predecessor other than preheader to header",
+  "original_reproducer": "A02 migration-runs-support1/batch-1/tests/value_semantics/index_return/index_return.my",
+  "original_failure": "test_iteration_binding_stays_independent b37: predecessor b15 does not branch here",
+  "reduced_failure": "main b19: predecessor b6 does not branch here",
+  "original_compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support-install/bin/mylang",
+  "original_compiler_sha256": "ac4ddfad53c1f096c91ba799810ca08b4713c36b62ff957ae326e24cf32407e5",
+  "source_sha256": {
+    "src/core/version.zig": "dd0a24246a43205201c9ae910da8d7e3a00dfc8f29c29957a91122fdf884eaad",
+    "src/core/a09_version_test.zig": "72782f1fa0345b3db01a2b370bf4ab82bed13b33a45bd85a488e29d76ba1c079",
+    "experiments/memory-closeout-20261012/A09/samples/loop_early_return.my": "4bfec40a9c54b94dea3ef50992ee83566682865512ea745b4ad825d6189a6b31"
+  },
+  "before_version_sha256": "873b493538fdf467644d681ba0d588429c3fbd84bdea00e1f00c5ff9cd1ebb3a",
+  "test_command": "scripts/build-slot.sh build \"$ZIG\" build test-core -Dtest-filter='loop duplication' -j4 --maxrss 8589934592",
+  "before": {
+    "exit_code": 1,
+    "tests_passed": 1,
+    "tests_failed": 1,
+    "failure": "InvalidIr; positive optimization control already passed"
+  },
+  "first_after": {
+    "exit_code": 1,
+    "tests_passed": 1,
+    "tests_failed": 1,
+    "failure": "Expected lowercase true; language correctly rendered True; IR verification and guest execution succeeded"
+  },
+  "final_after": {
+    "exit_code": 0,
+    "tests_passed": 2,
+    "tests_failed": 0,
+    "native_executions": 3,
+    "modes": [
+      "trusted",
+      "verified"
+    ],
+    "output": "True\n-1\n for early-return/empty cases;9\n for single-entry control",
+    "leakcheck": true,
+    "log": "after-test-v3.log",
+    "test_binary_sha256": "8f7d10a3a8f8058904dd87639282a1688dfce3adb8dc315f532a9f40d32519b7"
+  },
+  "cache_note": "Version source participates in compiler build_identity; all optimization/emission/native/replay namespaces change (A08 confirmed).",
+  "raw": "experiments/memory-closeout-20261012/A09/raw/version",
+  "guardian_initial": "Rejected cognitive-complexity27; predicate extracted, focused2/2 rerun passes; retry required"
+}
