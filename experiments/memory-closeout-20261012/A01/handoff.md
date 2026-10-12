@@ -150,3 +150,11 @@ RC-free and leak-free; native symbols are RC-free. `owned-scheduler-evidence/`
 records exact fixture/runtime/binary identities and raw counters. This adds direct
 owned-runtime stress without confusing the earlier legacy scheduler control with
 count-free evidence. Retirement edits remain unapplied pending C2 authorization.
+
+The intermediate Support5 installation at source
+`a1f19edf255c8c0886731d8d7cce450d5f657720` passed targeted Result-map release/TSan
+checks at 1/2/8 workers (6/6), three counted runs RC0/live0, both structural
+LLVM/symbol audits and the required unhandled-list refusal. Exact identities,
+commands and raw counters are in `support5-result-map/`. Historical Support4 RC
+libexec components remain in that installation; this does not qualify C1 or the
+installed package.

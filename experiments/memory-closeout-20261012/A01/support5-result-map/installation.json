@@ -1,0 +1,13 @@
+{
+  "source_revision": "a1f19edf255c8c0886731d8d7cce450d5f657720",
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "installation": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install",
+  "components": {
+    "libexec/mylang/components/cache-plan-d69b536c904f109ef2d292ac376ce3ecb811da91db6e051b2a49a176a1c31840": "d69b536c904f109ef2d292ac376ce3ecb811da91db6e051b2a49a176a1c31840",
+    "libexec/mylang/components/cache-plan.json": "f42692f375d51598bd85f8c81dc27764f22a9e2d2792ac74676780130a663c61",
+    "libexec/mylang/components/test-index-dbd9fea31ee72550200d6f21c4a42dcfadf00321e9697eb9d4cc21cdbfa99a27": "dbd9fea31ee72550200d6f21c4a42dcfadf00321e9697eb9d4cc21cdbfa99a27",
+    "libexec/mylang/components/test-index.json": "45db0752a31fc5ba1ce20cf35675bb9a0a8637717ba685b5f3a33fc63d27cb87"
+  },
+  "qualification_scope": "Targeted intermediate generated-guest Result-map check; not C1 or installed-owned-package qualification",
+  "coordinator_component_boundary": "Staged historical Support4 RC components remain in this Support5 installation"
+}
