@@ -61,3 +61,12 @@ without `--lists-only`. It owns bounded build admission, publishes exact source
 and binary identities, and requires ten counted lanes plus three negative cases.
 Compiler/source hashes and raw commands/counters remain in the resulting phase
 directory. Build durations are operational observations, not controlled timings.
+
+The subsequent affine-resource audit adds a fourth negative case to future runs.
+`affine_resource.my` attempts to repeat a list of records owning a generic File
+resource. Both ordinary and support4 zero-RC source checks reject it with
+`E_LIST_ELEMENT` (`affine-resource-support4.json`), before native repetition can
+copy a resource owner. A07 confirmed that the frontend's copyable/storable list
+contract remains in force after its generic-resource support change. The completed
+support4 ten-lane report retains its original three-negative denominator; this
+later negative is separately recorded and does not relabel that run.

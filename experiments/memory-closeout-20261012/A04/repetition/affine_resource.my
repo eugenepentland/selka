@@ -1,0 +1,15 @@
+resource File: filesystem
+
+
+record Owned:
+    file: File
+
+
+func repeat_owner(owner: Owned) -> int effects(filesystem):
+    const owners = [owner]
+    const repeated = owners * 2
+    return len(repeated)
+
+
+func main() -> int:
+    return 0

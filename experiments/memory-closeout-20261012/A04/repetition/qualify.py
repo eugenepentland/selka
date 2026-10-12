@@ -65,7 +65,8 @@ for name, source in sources:
             print(name, mode, row['status'], flush=True)
 if not args.lists_only:
     with admission('build'):
-        for name, command, diagnostic in [('unsupported_place', 'check', 'E_TYPE'), ('overflow_signed', 'run', 'R_MEMORY_BUDGET'), ('overflow_unsigned', 'run', 'R_MEMORY_BUDGET')]:
+        for name, command, diagnostic in [('unsupported_place', 'check', 'E_TYPE'), ('affine_resource', 'check', 'E_LIST_ELEMENT'),
+                                           ('overflow_signed', 'run', 'R_MEMORY_BUDGET'), ('overflow_unsigned', 'run', 'R_MEMORY_BUDGET')]:
             source = HERE / (name + '.my')
             cmd = [str(args.compiler), command, str(source), '--experimental-zero-rc']
             if command == 'run':

@@ -148,3 +148,17 @@ completed sources before admission when resuming, and checks the three negative
 fixtures in one bounded lease. Completed native lanes were preserved across
 queued-only checkpoints when adopting the coordinator's shared build budget.
 No active compilation was interrupted during these support4 checkpoints.
+
+The support4 migrated-guest run is also complete: all 128 admitted ordinary tests
+pass; zero-RC passes 124, retains two native-lowering failures in
+`rc_plain_update_paths.my` and two unsupported `myl_core_format_float` repr tests
+in `python_text_surface.my` (A07 owns both). The separate five tests in source-refused
+`tuples.my` keep the full 133-test / 19-file denominator visible. Raw test receipts,
+forced execution commands and diagnostics are in `migrations/execution-support4.json`.
+The helper file is exercised by its importing formatter fixture.
+
+The resource audit adds `repetition/affine_resource.my`: both ordinary and
+support4 checked source compilation refuse a list containing a record that owns
+a generic resource with `E_LIST_ELEMENT`, before repetition could duplicate its
+owner. A07 is adding registered negative coverage; future repetition harness runs
+include this fourth negative separately from the completed three-negative report.

@@ -56,3 +56,19 @@ assertions. `sources-support4.json` records the resulting source hashes and
 burden separately from the earlier immutable manifest. The sole remaining source
 refusal is the borrowed tuple destructure owned by A07. Native support4 execution
 is recorded independently; source admission is not its pass criterion.
+
+`execution-support4.json` completes the admitted subset: all 128 ordinary guest
+tests pass, and checked ownership passes 124 with two native-lowering failures
+and two unsupported float-formatting helpers.
+The failures are the unchanged nested-element/nested-write tests in
+`rc_plain_update_paths.my` (`E_ZERO_RC_LOWERING`, lines 28 and 53). A07's prepared
+path reconstruction work owns these reproducers. All nineteen assigned files
+remain in the report: seventeen executed, one helper exercised through its
+importer, and `tuples.my` with five tests source-refused. The resulting 133-test
+denominator is preserved. These are support4 results, not final qualification.
+The two `python_text_surface.my` repr tests refuse the unaudited helper
+`myl_core_format_float`; A07 owns its contract audit. The guest runner exits zero
+for an unsupported-only file, so command status alone is insufficient evidence.
+
+The guest-test harness can resume a queued checkpoint while preserving completed
+file/mode results, only with matching compiler identity, survey and source hashes.

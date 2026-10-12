@@ -1,0 +1,20 @@
+{
+  "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+  "source_evidence": "execution-support4.json",
+  "assigned_files": 19,
+  "original_public_tests": 133,
+  "source_refused_tests": 5,
+  "source_refused_file": "tests/lang/tuples.my",
+  "totals": {
+    "ordinary": {
+      "passed": 128,
+      "failed": 0,
+      "unsupported": 0
+    },
+    "zero_rc": {
+      "passed": 124,
+      "failed": 2,
+      "unsupported": 2
+    }
+  }
+}
