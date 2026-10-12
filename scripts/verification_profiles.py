@@ -10,7 +10,7 @@ import marshal
 import re
 import sys
 
-VERSION = "verification-profile-v1"
+VERSION = "verification-profile-v2"
 PROFILES = ("quick", "complete", "long-qualification")
 MAX_ACTIONS = 1024
 _KEY = re.compile(r"[0-9a-f]{64}")
@@ -68,7 +68,7 @@ def schedule(plan, rows, profile="complete", *, quick_actions=3, costs=None):
 
 
 def coverage(plan, rows, selected, profile="complete", *, status, inputs_stable,
-             qualification_required=(), qualification_results=()):
+             qualification_required=(), qualification_results=(), qualification_run=None, qualification_context=None):
     """Account for exact gate coverage; a shared failing gate certifies no selected action.
 
 Reuse rows are already qualified by the caller. Selected work is covered only
@@ -85,13 +85,12 @@ uses separately qualified results; timing telemetry is never such a result.
     if (len(required) > MAX_ACTIONS or any(type(name) is not str or not name for name in required)
             or len(set(required)) != len(required)):
         raise ValueError("invalid qualification inventory")
+    if qualification_results:
+        raise ValueError("serialized qualification success booleans cannot authorize completion")
     qualified = set()
-    for row in qualification_results:
-        if (type(row) is not dict or row.get("id") not in required or row["id"] in qualified
-                or row.get("complete") is not True or row.get("success") is not True
-                or row.get("qualified") is not True):
-            raise ValueError("missing, failed or unqualified long qualification result")
-        qualified.add(row["id"])
+    if qualification_run is not None:
+        from verification_qualification import qualified_names
+        qualified = qualified_names(qualification_run, qualification_context, required)
     reused = [name for name in ids if decisions[name]["state"] == "reused" and inputs_stable
               and decisions[name].get("success") is not False]
     executed = [name for name in selected if decisions[name]["state"] != "skipped"

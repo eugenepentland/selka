@@ -112,13 +112,13 @@ class Profiles(unittest.TestCase):
     def test_long_requires_gate_and_qualified_additional_work(self):
         required = ["fuzz", "wall-clock"]
         partial = self.result("long-qualification", qualification_required=required)
-        passed = self.result("long-qualification", qualification_required=required,
-                             qualification_results=[{"id": name, "complete": True, "success": True, "qualified": True}
-                                                    for name in required])
+        with self.assertRaisesRegex(ValueError, "serialized qualification"):
+            self.result("long-qualification", qualification_required=required,
+                        qualification_results=[{"id": name, "complete": True, "success": True, "qualified": True}
+                                               for name in required])
         self.assertTrue(partial["complete_verification"])
         self.assertFalse(partial["complete_qualification"])
         self.assertEqual(required, partial["qualification_outstanding"])
-        self.assertTrue(passed["complete_qualification"])
         self.assertFalse(self.result("long-qualification")["complete_qualification"])
 
     def test_insufficient_qualification_and_invalid_costs_are_rejected(self):
