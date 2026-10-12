@@ -1,0 +1,154 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "default": false,
+  "total_blocks": 20,
+  "expected_units": 5,
+  "selected_blocks": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/effects.md",
+      "line": 363,
+      "source": "# doc: check\nrecord Context:\n    fs: Filesystem\n    env: Environment\n\nfunc read_note(ctx: Context, path: str) -> int:\n    match ctx.fs.read_text(path):\n        case Ok(text):\n            return len(text)\n        case Err(_):\n            return -1\n\nfunc main(fs: Filesystem, env: Environment) -> int:\n    mut ctx = Context(fs=fs, env=env)\n    return read_note(ctx, \"note.txt\") + len(ctx.env.names())\n",
+      "sha256": "cb4471d34b70ed9fdd4a43a8d8c7f6ff7bcd27258b01587ae4c2cd38011c87b1"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/effects.md",
+      "line": 386,
+      "source": "# doc: expect-error E_IMMUTABLE\nfunc touch(values: int[]) -> Unit:\n    values[0] = 1\n\n\nfunc main() -> int:\n    mut values = [1]\n    touch(values)\n    return 0\n",
+      "sha256": "92efb82c303c675d4acb68febec5fa6819d41b8244085e22ebd9f3deaa5678d1"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/effects.md",
+      "line": 410,
+      "source": "# doc: check\nresource File: filesystem\n\nresult Open:\n    ok: File,\n    err: int\n\nfunc main(fs: Filesystem) -> int:\n    mut scoped = fs.dir(\"data\")\n    mut request: FixedArray[u8, 1] = FixedArray[u8, 1]([42u8])\n    match acquire_resource[Open](scoped, request):\n        case Open.ok(file):\n            _ = file\n            return 0\n        case Open.err(code):\n            return -code\n",
+      "sha256": "2a697b01a5f741220bdcd79f2ab044b0c0af63c1d160c12f8b7731964a9f0d94"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/effects.md",
+      "line": 437,
+      "source": "# doc: check\nresource Socket: network\n\nresult Connected:\n    ok: Socket,\n    err: int\n\nfunc main(net: Network) -> int:\n    # The narrowed capability pins the endpoint; the request below is ignored.\n    mut scoped = net.host(\"127.0.0.1:8000\")\n    mut request: FixedArray[u8, 1] = FixedArray[u8, 1]([0u8])\n    match acquire_resource[Connected](scoped, request):\n        case Connected.ok(socket):\n            _ = socket\n            return 0\n        case Connected.err(code):\n            return code\n",
+      "sha256": "831af7c23c5e10e7f11f5863379a8b1851a39a77e8f39336cb1ca80dd95e10c7"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/effects.md",
+      "line": 479,
+      "source": "# doc: expect 1 True\nimport filesystem\nimport time\n\nfunc uptime(clock: Clock, boot: time.Instant) -> int:\n    match time.now(clock):\n        case Ok(current):\n            match time.elapsed(boot, current):\n                case Ok(span):\n                    return time.to_milliseconds(span) // 1000\n                case Err(_):\n                    return -1\n        case Err(_):\n            return -1\n\nfunc remember(fs: Filesystem, note: str) -> bool:\n    _ = fs.write_text(\"note.txt\", note)\n    return fs.exists(\"note.txt\")\n\nfunc check() -> int:\n    mut boot = time.from_unix_nanoseconds(0)\n    mut clock = time.simulated_clock(boot)\n    _ = time.advance(clock, time.nanoseconds(1000000000))\n    return uptime(clock, boot)\n\nfunc main(out: Stream) -> int:\n    out.print(check(), remember(filesystem.memory(), \"hi\"))\n    return 0\n",
+      "sha256": "1a5a6f96c506bfa7b36d78c0f4a596a045aa69f80693dd4646755ad83bd84f81"
+    }
+  ],
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+    "doctest",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/docs-effects-support5-15",
+    "--jobs",
+    "1",
+    "--report",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/docs-effects-support5-15/report.json",
+    "--experimental-zero-rc"
+  ],
+  "status": 1,
+  "stdout": "  README.md: 1 run, 1 checked, 0 skipped, 0 mis-tagged, 3 failed\nFAILED README.md:1: exit 1: {\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_ZERO_RC_UNSUPPORTED\",\"severity\":\"error\",\"message\":\"store resource owners in named local scopes in the zero-RC prototype\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-9e58b49fb955e6a0/unit000/main.my\",\"start\":{\"line\":5,\"column\":16},\"end\":{\"line\":5,\"column\":19},\"bytes\":{\"start\":72,\"end\":75}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\nFAILED README.md:31: exit 1: {\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_ZERO_RC_UNSUPPORTED\",\"severity\":\"error\",\"message\":\"dependent capabilities require a with scope in zero-RC mode\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-9e58b49fb955e6a0/unit002/main.my\",\"start\":{\"line\":8,\"column\":18},\"end\":{\"line\":8,\"column\":32},\"bytes\":{\"start\":119,\"end\":133}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\nFAILED README.md:50: exit 1: {\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_ZERO_RC_UNSUPPORTED\",\"severity\":\"error\",\"message\":\"dependent capabilities require a with scope in zero-RC mode\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-9e58b49fb955e6a0/unit003/main.my\",\"start\":{\"line\":9,\"column\":18},\"end\":{\"line\":9,\"column\":44},\"bytes\":{\"start\":202,\"end\":228}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\nDoc examples: 1 files scanned, 5 blocks found, 1 run, 1 checked, 0 skipped, 0 mis-tagged, 3 failed\n",
+  "stderr": "",
+  "doctest_report": {
+    "version": "doc-examples-v1",
+    "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+    "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+    "totals": {
+      "run": 1,
+      "checked": 1,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 3
+    },
+    "files": {
+      "README.md": {
+        "blocks": 5,
+        "run": 1,
+        "checked": 1,
+        "skipped": 0,
+        "mistagged": 0,
+        "failed": 3,
+        "skips": []
+      }
+    },
+    "units": [
+      {
+        "label": "README.md:1",
+        "kind": "block",
+        "document": "README.md",
+        "status": "failed",
+        "detail": "exit 1: {\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_ZERO_RC_UNSUPPORTED\",\"severity\":\"error\",\"message\":\"store resource owners in named local scopes in the zero-RC prototype\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-9e58b49fb955e6a0/unit000/main.my\",\"start\":{\"line\":5,\"column\":16},\"end\":{\"line\":5,\"column\":19},\"bytes\":{\"start\":72,\"end\":75}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-9e58b49fb955e6a0/unit000/main.my",
+          "--diagnostics=json",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-9e58b49fb955e6a0/unit000/objects"
+        ]
+      },
+      {
+        "label": "README.md:19",
+        "kind": "block",
+        "document": "README.md",
+        "status": "checked",
+        "detail": "rejected with ['E_IMMUTABLE']",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-9e58b49fb955e6a0/unit001/main.my",
+          "--diagnostics=json",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-9e58b49fb955e6a0/unit001/objects"
+        ]
+      },
+      {
+        "label": "README.md:31",
+        "kind": "block",
+        "document": "README.md",
+        "status": "failed",
+        "detail": "exit 1: {\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_ZERO_RC_UNSUPPORTED\",\"severity\":\"error\",\"message\":\"dependent capabilities require a with scope in zero-RC mode\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-9e58b49fb955e6a0/unit002/main.my\",\"start\":{\"line\":8,\"column\":18},\"end\":{\"line\":8,\"column\":32},\"bytes\":{\"start\":119,\"end\":133}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-9e58b49fb955e6a0/unit002/main.my",
+          "--diagnostics=json",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-9e58b49fb955e6a0/unit002/objects"
+        ]
+      },
+      {
+        "label": "README.md:50",
+        "kind": "block",
+        "document": "README.md",
+        "status": "failed",
+        "detail": "exit 1: {\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_ZERO_RC_UNSUPPORTED\",\"severity\":\"error\",\"message\":\"dependent capabilities require a with scope in zero-RC mode\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-9e58b49fb955e6a0/unit003/main.my\",\"start\":{\"line\":9,\"column\":18},\"end\":{\"line\":9,\"column\":44},\"bytes\":{\"start\":202,\"end\":228}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-9e58b49fb955e6a0/unit003/main.my",
+          "--diagnostics=json",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-9e58b49fb955e6a0/unit003/objects"
+        ]
+      },
+      {
+        "label": "README.md:70",
+        "kind": "block",
+        "document": "README.md",
+        "status": "run",
+        "detail": "stdout '1 True'",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "run",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-9e58b49fb955e6a0/unit004/main.my",
+          "--diagnostics=json",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-9e58b49fb955e6a0/unit004/objects"
+        ]
+      }
+    ],
+    "mistagged": []
+  },
+  "success": false
+}

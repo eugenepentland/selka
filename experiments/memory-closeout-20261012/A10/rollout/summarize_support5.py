@@ -51,7 +51,8 @@ for path in paths:
     assert len(covered) == len(blocks), path
 
 pages = [base / 'ownership-C2.md', base / 'managed-memory-C2.md', base / 'reference-docs/performance.md',
-         base / 'reference-docs/python-syntax.md', base / 'reference-docs/tooling/guest-tests.md']
+         base / 'reference-docs/python-syntax.md', base / 'reference-docs/tooling/guest-tests.md',
+         base / 'reference-docs/module-constants.md', base / 'reference-docs/effects.md']
 blocks = []
 for path in pages:
     source = path.read_text()
@@ -62,11 +63,15 @@ for path in pages:
         row = dict(path=str(path.relative_to(owner)), line=source.count('\n', 0, match.start()) + 1, sha256=digest, **evidence[key])
         row['passed'] = row['status'] in ['run', 'checked']
         blocks.append(row)
-assert len(blocks) == 51
+assert len(blocks) == 71
 failures = [block for block in blocks if not block['passed']]
 for block in failures:
-    block['owner'] = 'A04/A07' if 'round_float' in block['detail'] else 'A01/A07'
-    block['classification'] = 'audited-helper contract pending' if 'round_float' in block['detail'] else 'dictionary tuple binding compiler refusal'
+    if 'round_float' in block['detail']:
+        block.update(owner='A04/A07', classification='audited-helper contract pending')
+    elif 'store resource owners' in block['detail']:
+        block.update(owner='coordinator/A07', classification='provider aggregate contract pending integrated compiler')
+    else:
+        block.update(owner='A01/A07', classification='dictionary tuple binding compiler refusal')
 result = dict(source_revision='a1f19edf255c8c0886731d8d7cce450d5f657720', compiler_sha256=compiler_hash,
               selection='explicit --experimental-zero-rc, default unchanged', command_rows=commands,
               documents=dict(blocks=len(blocks), execution_or_check_units=len(blocks)-1,

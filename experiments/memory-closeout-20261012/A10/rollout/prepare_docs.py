@@ -1,4 +1,4 @@
-"""Make an unapplied eight-page documentation patch against one immutable base."""
+"""Make an unapplied ten-page documentation patch against one immutable base."""
 import argparse
 import difflib
 import hashlib
@@ -15,7 +15,8 @@ root = base.parents[3]
 items = {'docs/managed-memory.md': base / 'managed-memory-C2.md',
          'docs/tooling/ownership.md': base / 'ownership-C2.md'}
 for name in ['current-language.md', 'performance.md', 'python-syntax.md',
-             'tooling/native-build.md', 'tooling/guest-tests.md', 'tooling/cost.md']:
+             'tooling/native-build.md', 'tooling/guest-tests.md', 'tooling/cost.md',
+             'module-constants.md', 'effects.md']:
     items['docs/' + name] = base / 'reference-docs' / name
 patch = ''
 identities = {}

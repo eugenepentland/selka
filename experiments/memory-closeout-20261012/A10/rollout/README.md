@@ -100,21 +100,34 @@ and final source-contract review before publication.
 ## Support5 draft qualification
 
 `support5/` pins refreshed code, documentation and API-inventory drafts to
-`a1f19edf255c8c0886731d8d7cce450d5f657720`. `prepare_docs.py` creates an eight-page
+`a1f19edf255c8c0886731d8d7cce450d5f657720`. `prepare_docs.py` creates a ten-page
 unapplied patch from the exact draft/original hashes. `migrate_reference_docs.py`
 reproduces six newly reserved page migrations; `managed_docs.py` reproduces the
-managed-memory draft. Current production pages are unchanged.
+managed-memory draft. `migrate_effect_docs.py` adds the module-constants and
+effects pages. Current production pages are unchanged.
 
 `qualify_docs.py` tests bounded block selections through the actual doctest
 command and preserves each source hash and raw unit result. Projects count all
 source blocks but share one execution/check unit; splitting a project across
 batches is refused. `summarize_support5.py` joins only evidence matching the
-current draft block hashes. The current result is 47/51 blocks (46/50 units)
-passing. Three tuple bindings and one round helper remain concrete compiler
-blockers. Copies and the current-length index-loop migration preserve their
+current draft block hashes. The current result is 66/71 blocks (65/70 units)
+passing. Three tuple bindings, one round helper and one provider-record example
+remain concrete compiler blockers on Support5. Copies and the current-length index-loop migration preserve their
 original output/assertions. The original foreach mutation remains a checked
 negative, not silently admitted by a relaxed borrow guard.
 
 These results use explicit opt-in Support5. Applying the C2 documentation still
 requires ordinary-command qualification on the actual default compiler, the
 remaining compiler fixes, and the complete documentation/registered gate.
+
+The additional effects examples preserve their outputs with explicit independent
+copies, a snapshot before overlapping mutable/read-only arguments, an allocating
+independent return, and lexical scopes for derived capabilities. They pass19/20
+blocks on Support5; only the provider-record check awaits the integrated aggregate
+provider contract. Initial failing reports are retained beside corrected reports.
+
+`C3-component-retirement.patch` and its generator prepare the package boundary
+separately from CLI retirement. The isolated native draft builder and all27
+fake-tool tests pass; see `component-retirement-validation/README.md`. Production
+selection remains unchanged, and the patch requires a real qualified default-owned
+compiler pin plus coordinator root forwarding before application.

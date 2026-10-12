@@ -7,10 +7,20 @@
       "draft": "experiments/memory-closeout-20261012/A10/rollout/reference-docs/current-language.md",
       "draft_sha256": "d69639bcdb33bf9fa32aeac052cfe1a85f94cf6ff499ed20b517b648c954a761"
     },
+    "docs/effects.md": {
+      "original_sha256": "3fe767b361a952b038e368aaaa403949b10dfb109bcbcc033a79077559369265",
+      "draft": "experiments/memory-closeout-20261012/A10/rollout/reference-docs/effects.md",
+      "draft_sha256": "bcfd455d51fe4835686b8de6a4ff0d0a7c225e8b3909e8625aa970ac045a3566"
+    },
     "docs/managed-memory.md": {
       "original_sha256": "26058ad7d3c3061681445c9eaa3a8323aaa70f457374d800c4fbe57a3c5c2fcb",
       "draft": "experiments/memory-closeout-20261012/A10/rollout/managed-memory-C2.md",
       "draft_sha256": "35f6011bb134a2f1cb7bc037770c1b98324dda130375fa6dbb3a651a46cca00d"
+    },
+    "docs/module-constants.md": {
+      "original_sha256": "2bd469f5fd2c60e1432944d1c8a0286cd5eef87787ecf360ae610d98defebfb6",
+      "draft": "experiments/memory-closeout-20261012/A10/rollout/reference-docs/module-constants.md",
+      "draft_sha256": "c726eae8f117dfb4056fc6292ff64f888800924e96a0e84eb2662167a28aa64d"
     },
     "docs/performance.md": {
       "original_sha256": "44564ebdf830bd7c7392136486a14c1098fbdcc043e1eb1eaa30d691c762cc5d",
@@ -43,5 +53,5 @@
       "draft_sha256": "5a0cc322c3cc1fddf755370d5453539392b164e852819852506f8bc5234a00d1"
     }
   },
-  "patch_sha256": "c126cb15d4a21abe65c2161fbc10b6b83b90f43e407e260c6eef5c12f034205f"
+  "patch_sha256": "b903079d3b6fb2803561d90d1cf6db6b83926d8a2019be606b015bf4393ed413"
 }

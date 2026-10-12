@@ -42,6 +42,210 @@ diff --git a/docs/current-language.md b/docs/current-language.md
  
  Procedures omit their return annotation or use `-> Unit`, bare `return`, and natural fallthrough; ordinary calls may stand alone only when returning unit. See [unit procedures](functions.md#unit-procedures).
  
+diff --git a/docs/effects.md b/docs/effects.md
+--- a/docs/effects.md
++++ b/docs/effects.md
+@@ -157,7 +157,7 @@
+   interface summaries. `check` and `check-project` do no whole-program Core
+   allocation work, including after a bounded body changes.
+ - `build`, `run`, `build --run` and `test` report `W_NOALLOC_ALLOCATES` at the
+-  allocation site, naming the bounded function and callee. Copy-on-write and
++  allocation site, naming the bounded function and callee. Explicit independent copies and
+   runtime scratch count even on cold paths. Unresolved callbacks and foreign
+   calls count conservatively. An unsupported concrete body warns with its reason.
+   Concrete generic instances receive the same check; no annotation is required
+@@ -191,10 +191,11 @@
+ not marked: `values.append(1)` updates its writable binding directly.
+ 
+ The guarantee covers the complete value, including managed descendants of records,
+-arrays, options, unions and collections. Assignment and non-`mut` passing preserve
+-independent values. A `mut` argument marks the caller's place to update; the
+-compiler snapshots any read-only argument that might overlap it. Two overlapping
+-`mut` arguments still violate exclusivity. Definitely-fresh local storage may
++arrays, options, unions and collections. Assignment can move ownership; ordinary
++parameters borrow. A `mut` argument exclusively borrows the caller's place to
++update. An overlapping read-only argument must use an explicit independent copy.
++Multiple mutable child arguments rooted in the same collection are conservatively
++rejected, even for distinct constant indices. Definitely-fresh local storage may
+ always be built and mutated.
+ 
+ ```mylang
+@@ -225,8 +226,8 @@
+ 
+ ### Values and caller mutation
+ 
+-Assignment preserves an independent value. A helper changes its caller's value
+-only through a `mut` parameter and a marked argument:
++Use `.copy()` to preserve an independent value. A helper changes its caller's
++value only through a `mut` parameter and a marked argument:
+ 
+ ```mylang
+ # doc: expect 1
+@@ -237,34 +238,32 @@
+ 
+ func main(out: Stream) -> int effects(managed_allocation, output):
+     mut original = [1, 2]
+-    mut copy = original
++    mut copy = original.copy()
+     set_first(mut copy, 5)
+     out.print(original[0])
+     out.print(copy[0])
+     return 0
+ ```
+ 
+-The same rule applies to nested managed values. A copy of an outer list keeps
+-its inner lists independent when one of them is changed. The implementation may
+-share storage until a write, but that sharing has no observable mutation effect:
++The same rule applies to nested managed values. An explicit copy of an outer
++list recursively copies its managed children, keeping both values independent:
+ 
+ ```mylang
+ # doc: expect 1
+ # doc: expect 9
+ func main(out: Stream) -> int effects(managed_allocation, output):
+     mut original = [[1]]
+-    mut copy = original
++    mut copy = original.copy()
+     copy[0][0] = 9
+     out.print(original[0][0])
+     out.print(copy[0][0])
+     return 0
+ ```
+ 
+-A read-only argument can be the same value as a `mut` argument. The callee reads
+-its snapshot from before the call while the writable parameter changes the
+-caller's value. Two `mut` arguments are different: `E_MUTATION_OVERLAP` rejects
+-two `mut` arguments of one call whose places overlap, such as `f(mut a, mut a)`
+-or `f(mut a, mut a[0])` (see
++A read-only argument cannot borrow a root that the same call mutably borrows.
++Copy before the call when the callee needs the original snapshot while changing
++the caller's value. Multiple mutable arguments must also have exclusive roots;
++`f(mut a, mut a)` and two children rooted in `a` are rejected (see
+ [value semantics](value-semantics.md#the-rules)).
+ 
+ ```mylang
+@@ -276,22 +275,23 @@
+ 
+ func main() -> int:
+     mut a = [1, 2]
+-    mut seen = touch(mut a, a)
++    const snapshot = a.copy()
++    mut seen = touch(mut a, snapshot)
+     return seen * 10 + len(a)
+ ```
+ 
+ ### Return values
+ 
+-Returning a managed value, or wrapping it in another value, does not give the
+-caller write access to the callee's input. The returned value is independent;
+-a caller can update its own copy. A write through a read-only parameter itself
+-remains `E_MUTATION_MARKER`.
++Returning an owned managed value moves it to the caller. A borrowed parameter
++cannot become an independent result without `.copy()`. That copy can allocate
++and the function's effect ceiling must allow `managed_allocation`. A write
++through the borrowed parameter itself remains rejected.
+ 
+ ```mylang
+ # doc: expect 1
+ # doc: expect 9
+-func identity(values: int[]) -> int[] effects():
+-    return values
++func identity(values: int[]) -> int[]:
++    return values.copy()
+ 
+ 
+ func main(out: Stream) -> int effects(managed_allocation, output):
+@@ -303,8 +303,9 @@
+     return 0
+ ```
+ 
+-Private helpers derive a return-origin bound from their bodies for ownership
+-optimization; it does not change the value rule seen by callers.
++The compiler checks each move and borrow before lowering. A returned owner must
++remain valid independently of the caller's later input replacement; no reference
++count or implicit copy is added to repair an invalid return.
+ 
+ ### Fresh local mutation
+ 
+@@ -334,17 +335,18 @@
+ ## Capability method narrowing
+ 
+ `fs.read_only()` derives a read-only `Filesystem` from an existing one by
+-intersecting its permission mask. The derived capability is an ordinary typed
+-value: it can be passed, returned and stored in a record field, but it
+-performs no I/O when it is created and contributes no effect of its own. The old
++intersecting its permission mask. Use the dependent capability in a `with`
++scope, so its provider stays alive through every use. It can be borrowed by
++calls within that scope; storing or returning it beyond the scope is rejected.
++Creating it performs no I/O and contributes no effect of its own. The old
+ bracket spelling `restrict_resource[...]` is removed and reports
+ `E_REMOVED_SPELLING` naming the replacement.
+ 
+ ```mylang
+ # doc: check
+ func main(fs: Filesystem) -> int:
+-    mut read_only = fs.read_only()
+-    return 0
++    with fs.read_only() as read_only:
++        return 0
+ ```
+ 
+ ## Capabilities in record fields
+@@ -379,7 +381,7 @@
+ 
+ ## Declaration-site mutation errors
+ 
+-Ordinary parameters are readonly snapshots. A parameter the body
++Ordinary parameters borrow read-only storage. A parameter the body
+ writes with no `mut` is rejected at the write with `E_IMMUTABLE`:
+ 
+ ```mylang
+@@ -415,14 +417,14 @@
+     err: int
+ 
+ func main(fs: Filesystem) -> int:
+-    mut scoped = fs.dir("data")
+-    mut request: FixedArray[u8, 1] = FixedArray[u8, 1]([42u8])
+-    match acquire_resource[Open](scoped, request):
+-        case Open.ok(file):
+-            _ = file
+-            return 0
+-        case Open.err(code):
+-            return -code
++    with fs.dir("data") as scoped:
++        mut request: FixedArray[u8, 1] = FixedArray[u8, 1]([42u8])
++        match acquire_resource[Open](scoped, request):
++            case Open.ok(file):
++                _ = file
++                return 0
++            case Open.err(code):
++                return -code
+ ```
+ 
+ ## Network host
+@@ -443,14 +445,14 @@
+ 
+ func main(net: Network) -> int:
+     # The narrowed capability pins the endpoint; the request below is ignored.
+-    mut scoped = net.host("127.0.0.1:8000")
+-    mut request: FixedArray[u8, 1] = FixedArray[u8, 1]([0u8])
+-    match acquire_resource[Connected](scoped, request):
+-        case Connected.ok(socket):
+-            _ = socket
+-            return 0
+-        case Connected.err(code):
+-            return code
++    with net.host("127.0.0.1:8000") as scoped:
++        mut request: FixedArray[u8, 1] = FixedArray[u8, 1]([0u8])
++        match acquire_resource[Connected](scoped, request):
++            case Connected.ok(socket):
++                _ = socket
++                return 0
++            case Connected.err(code):
++                return code
+ ```
+ 
+ ## Deterministic stand-ins
 diff --git a/docs/managed-memory.md b/docs/managed-memory.md
 --- a/docs/managed-memory.md
 +++ b/docs/managed-memory.md
@@ -449,6 +653,18 @@ diff --git a/docs/managed-memory.md b/docs/managed-memory.md
 +Unit elements. Heap allocation and scheduling synchronization remain. Output
 +storage and independently owned callback results can grow with input size; a
 +reduction in scheduling overhead is not a claim of allocation-free parallel work.
+diff --git a/docs/module-constants.md b/docs/module-constants.md
+--- a/docs/module-constants.md
++++ b/docs/module-constants.md
+@@ -121,7 +121,7 @@
+ functions. Each getter evaluates its ordinary checked literal, allocating a
+ managed value; reads therefore contribute `managed_allocation` and are rejected
+ in `noalloc` or `effects()` functions. There is no module initialization order
+-or shared mutable storage. Ordinary reference counting and allocation budgets apply.
++or shared mutable storage. Checked ownership, direct destruction and allocation budgets apply.
+ 
+ `check`, `run`, `build --run` and installed programs use the same checked getter.
+ Function-body semantic caching remains disabled for programs with constants;
 diff --git a/docs/performance.md b/docs/performance.md
 --- a/docs/performance.md
 +++ b/docs/performance.md

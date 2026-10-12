@@ -1,0 +1,155 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "default": false,
+  "total_blocks": 20,
+  "expected_units": 5,
+  "selected_blocks": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/effects.md",
+      "line": 251,
+      "source": "# doc: expect 1\n# doc: expect 9\nfunc main(out: Stream) -> int effects(managed_allocation, output):\n    mut original = [[1]]\n    mut copy = original.copy()\n    copy[0][0] = 9\n    out.print(original[0][0])\n    out.print(copy[0][0])\n    return 0\n",
+      "sha256": "3a3b367b6624ff61a59ee37746d577a612a38be84a2542bfd9d7af7097d5ddb1"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/effects.md",
+      "line": 269,
+      "source": "# doc: expect 23\nfunc touch(mut target: int[], source: int[]) -> int effects(mutation, managed_allocation):\n    target.append(len(source))\n    return len(source)\n\n\nfunc main() -> int:\n    mut a = [1, 2]\n    const snapshot = a.copy()\n    mut seen = touch(mut a, snapshot)\n    return seen * 10 + len(a)\n",
+      "sha256": "9dd6b0ea0fd7de0f2da41ce33a4df61d4ed9c272b10709373a882e81c6504e84"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/effects.md",
+      "line": 290,
+      "source": "# doc: expect 1\n# doc: expect 9\nfunc identity(values: int[]) -> int[]:\n    return values.copy()\n\n\nfunc main(out: Stream) -> int effects(managed_allocation, output):\n    mut original = [1]\n    mut picked = identity(original)\n    picked[0] = 9\n    out.print(original[0])\n    out.print(picked[0])\n    return 0\n",
+      "sha256": "c1ba2c9aa35d941e306691724f59fe2ea49f15d2ab86e1e7102c96a642cadf69"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/effects.md",
+      "line": 316,
+      "source": "# doc: expect 1\n# doc: expect 9\nfunc doubled(values: int[]) -> int[] effects(managed_allocation):\n    mut out: int[] = []\n    for value in values:\n        out.append(value * 2)\n    return out\n\n\nfunc main(out: Stream) -> int effects(managed_allocation, output):\n    mut values = [1, 2]\n    mut extra = doubled(values)\n    extra[0] = 9\n    out.print(values[0])\n    out.print(extra[0])\n    return 0\n",
+      "sha256": "da51ba5f8c28d81f927b60ab81a5e1172d155ae7af3efb92ee81dea1e6546e65"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/effects.md",
+      "line": 344,
+      "source": "# doc: check\nfunc main(fs: Filesystem) -> int:\n    mut read_only = fs.read_only()\n    return 0\n",
+      "sha256": "5927d7e56bd80a18dafe7c861a4faa1d56b43af7e1953917599ec7e3d2fde095"
+    }
+  ],
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+    "doctest",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/docs-effects-support5-10",
+    "--jobs",
+    "1",
+    "--report",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/docs-effects-support5-10/report.json",
+    "--experimental-zero-rc"
+  ],
+  "status": 1,
+  "stdout": "  README.md: 4 run, 0 checked, 0 skipped, 0 mis-tagged, 1 failed\nFAILED README.md:62: exit 1: {\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_ZERO_RC_UNSUPPORTED\",\"severity\":\"error\",\"message\":\"dependent capabilities require a with scope in zero-RC mode\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-b629a78fb786b266/unit004/main.my\",\"start\":{\"line\":2,\"column\":21},\"end\":{\"line\":2,\"column\":35},\"bytes\":{\"start\":54,\"end\":68}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\nDoc examples: 1 files scanned, 5 blocks found, 4 run, 0 checked, 0 skipped, 0 mis-tagged, 1 failed\n",
+  "stderr": "",
+  "doctest_report": {
+    "version": "doc-examples-v1",
+    "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+    "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+    "totals": {
+      "run": 4,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 1
+    },
+    "files": {
+      "README.md": {
+        "blocks": 5,
+        "run": 4,
+        "checked": 0,
+        "skipped": 0,
+        "mistagged": 0,
+        "failed": 1,
+        "skips": []
+      }
+    },
+    "units": [
+      {
+        "label": "README.md:1",
+        "kind": "block",
+        "document": "README.md",
+        "status": "run",
+        "detail": "stdout '1\n9'",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "run",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-b629a78fb786b266/unit000/main.my",
+          "--diagnostics=json",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-b629a78fb786b266/unit000/objects"
+        ]
+      },
+      {
+        "label": "README.md:13",
+        "kind": "block",
+        "document": "README.md",
+        "status": "run",
+        "detail": "stdout '23'",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "run",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-b629a78fb786b266/unit001/main.my",
+          "--diagnostics=json",
+          "--print-result",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-b629a78fb786b266/unit001/objects"
+        ]
+      },
+      {
+        "label": "README.md:27",
+        "kind": "block",
+        "document": "README.md",
+        "status": "run",
+        "detail": "stdout '1\n9'",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "run",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-b629a78fb786b266/unit002/main.my",
+          "--diagnostics=json",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-b629a78fb786b266/unit002/objects"
+        ]
+      },
+      {
+        "label": "README.md:43",
+        "kind": "block",
+        "document": "README.md",
+        "status": "run",
+        "detail": "stdout '1\n9'",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "run",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-b629a78fb786b266/unit003/main.my",
+          "--diagnostics=json",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-b629a78fb786b266/unit003/objects"
+        ]
+      },
+      {
+        "label": "README.md:62",
+        "kind": "block",
+        "document": "README.md",
+        "status": "failed",
+        "detail": "exit 1: {\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_ZERO_RC_UNSUPPORTED\",\"severity\":\"error\",\"message\":\"dependent capabilities require a with scope in zero-RC mode\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-b629a78fb786b266/unit004/main.my\",\"start\":{\"line\":2,\"column\":21},\"end\":{\"line\":2,\"column\":35},\"bytes\":{\"start\":54,\"end\":68}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-b629a78fb786b266/unit004/main.my",
+          "--diagnostics=json",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-b629a78fb786b266/unit004/objects"
+        ]
+      }
+    ],
+    "mistagged": []
+  },
+  "success": false
+}

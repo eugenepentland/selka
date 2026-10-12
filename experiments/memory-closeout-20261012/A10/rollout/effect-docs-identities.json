@@ -1,0 +1,12 @@
+{
+  "docs/module-constants.md": {
+    "original_sha256": "2bd469f5fd2c60e1432944d1c8a0286cd5eef87787ecf360ae610d98defebfb6",
+    "draft": "experiments/memory-closeout-20261012/A10/rollout/reference-docs/module-constants.md",
+    "draft_sha256": "c726eae8f117dfb4056fc6292ff64f888800924e96a0e84eb2662167a28aa64d"
+  },
+  "docs/effects.md": {
+    "original_sha256": "3fe767b361a952b038e368aaaa403949b10dfb109bcbcc033a79077559369265",
+    "draft": "experiments/memory-closeout-20261012/A10/rollout/reference-docs/effects.md",
+    "draft_sha256": "bcfd455d51fe4835686b8de6a4ff0d0a7c225e8b3909e8625aa970ac045a3566"
+  }
+}
