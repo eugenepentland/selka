@@ -1,0 +1,50 @@
+--- a/docs/tooling/counters.md
++++ b/docs/tooling/counters.md
+@@ -5,15 +5,15 @@
+ [Juice, the performance proxy](juice.md) for repeatable optimized instruction
+ comparisons; keep semantic counters separate from ordinary executable timings.
+ 
+-On this development revision, checked ownership is selected with
+-`--experimental-zero-rc`. The examples below select it explicitly. Default
+-promotion and retirement of the experimental selectors are separate changes;
+-these examples do not claim either has happened.
++Normal supported commands use checked ownership. `--counters` instruments that
++same ownership mode; it does not enable memory reference counting. During the
++migration, the historical experimental selectors are same-mode aliases. Their
++retirement is a separate change.
+ 
+ ```bash
+-mylang build program.my -o program-counted --release --experimental-zero-rc --counters
++mylang build program.my -o program-counted --release --counters
+ MYLANG_COUNTERS=program-counts.json ./program-counted input.txt
+-mylang run program.my --experimental-zero-rc --counters  # writes mylang-counters.json
++mylang run program.my --counters  # writes mylang-counters.json
+ ```
+ 
+ `--counters` works with `build`, `build --run` and `run`. Counts go to
+@@ -137,9 +137,9 @@
+ Use the same compiler, mode and inputs for the counted and ordinary binaries:
+ 
+ ```bash
+-mylang build program.my -o program --release --experimental-zero-rc
++mylang build program.my -o program --release
+ perf stat -e instructions:u -x, ./program input.txt > /dev/null
+-mylang build program.my -o program-counted --release --experimental-zero-rc --counters
++mylang build program.my -o program-counted --release --counters
+ MYLANG_COUNTERS=counts.json ./program-counted input.txt > /dev/null
+ ```
+ 
+@@ -155,10 +155,10 @@
+ prove that a file came from the current source or compiler.
+ 
+ ```bash
+-mylang build program.my -o program-counted --release --experimental-zero-rc --counters
++mylang build program.my -o program-counted --release --counters
+ MYLANG_COUNTERS=counts.json ./program-counted
+-mylang cost program.my --experimental-zero-rc --counters counts.json
+-mylang cost program.my --experimental-zero-rc --counters counts.json --json
++mylang cost program.my --counters counts.json
++mylang cost program.my --counters counts.json --json
+ ```
+ 
+ The current cost summary combines `release` and `release_unique` into its

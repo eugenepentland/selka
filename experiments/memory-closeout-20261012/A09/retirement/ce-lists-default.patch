@@ -1,0 +1,38 @@
+--- a/src/core/ce_lists_test.zig
++++ b/src/core/ce_lists_test.zig
+@@ -12,7 +12,6 @@
+ const core_print = @import("print.zig");
+ const core_emit = @import("emit_llvm.zig");
+ const zero_rc = @import("zero_rc.zig");
+-const zero_rc_flag = language.zero_rc_flag;
+ const optimize_flag = @import("e2e_test.zig").optimize_flag;
+ const report = std.debug.print;
+ const copy_prefix = @import("emit_values.zig").copy_prefix;
+@@ -141,11 +140,11 @@
+ 
+ /// All affected checked pipelines retain the same outputs, traps and cleanup.
+ const modes = [_][]const []const u8{
+-    &.{ zero_rc_flag, "--unoptimized" },
+-    &.{ zero_rc_flag, optimize_flag },
+-    &.{ zero_rc_flag, optimize_flag, "--verify-facts" },
+-    &.{ zero_rc_flag, "--optimize-debug" },
+-    &.{ zero_rc_flag, optimize_flag, "--no-facts" },
++    &.{ "--unoptimized" },
++    &.{ optimize_flag },
++    &.{ optimize_flag, "--verify-facts" },
++    &.{ "--optimize-debug" },
++    &.{ optimize_flag, "--no-facts" },
+ };
+ 
+ const field_stores =
+@@ -534,8 +533,8 @@
+         try std.testing.expectEqualStrings(expected ++ "100000\n", grown.stdout);
+     }
+     // A growth past the memory budget traps inside the append, at the append.
+-    try expectGrowthTrap(a, root, expected, &.{zero_rc_flag});
+-    try expectGrowthTrap(a, root, expected, &.{ optimize_flag, zero_rc_flag });
++    try expectGrowthTrap(a, root, expected, &.{});
++    try expectGrowthTrap(a, root, expected, &.{optimize_flag});
+ }
+ 
+ /// `mylang run` of `ce_appends grow` under a 1 MiB budget traps in the append, reported there.

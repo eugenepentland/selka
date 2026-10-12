@@ -199,3 +199,12 @@ accepts index2. Full/reduced debug/release LLVM and runs confirm correct orderin
 No compiler diagnostic defect was found. The final selected registered run passes
 6/6. It uses explicitly staged Support5 components and does not claim installed
 package qualification, full verification or final C1 measurements.
+
+The coordinator additionally reserved `docs/tooling/counters.md`. Its audited
+update distinguishes legacy RC events from direct drops, counted traffic from
+managed live storage and uninstrumented RSS, and current cost-summary labels from
+strict raw-counter audits. It documents the recursive-list copy telemetry fix
+without reinterpreting historical measurements. Current examples retain opt-in;
+separate C2/C3 doc patches and the ce_lists default-command patch are unapplied.
+Sequential patch/hash checks and relative documentation links pass. No production
+code changed, and no unqualified default or package claim was introduced.

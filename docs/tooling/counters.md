@@ -1,125 +1,186 @@
 # Run-time counters
 
-For repeatable before/after comparisons with optimized machine instruction
-counts, short workload scenarios and source explanations, use
-[Juice, the performance proxy](juice.md). It keeps these semantic counters
-separate from measurements of the ordinary optimized executable.
+`mylang cost` counts *sites*: what emitted code may do. A build with `--counters`
+records executions of emitted operations and instrumented runtime helpers. Use
+[Juice, the performance proxy](juice.md) for repeatable optimized instruction
+comparisons; keep semantic counters separate from ordinary executable timings.
 
-`mylang cost` counts *sites*: what the emitted code may do. A counting build
-counts what a run actually does. `--counters` on `mylang build`, `build --run`
-or `run` emits a counter at every count update, uniqueness test, copy, list
-push and check (bounds, overflow, division, shift and other conditional traps)
-the core emits, charges every allocation, free, growth and runtime copy to
-the emitted function that was running, and makes the program write the counts
-as JSON when it exits — or when a trap ends it.
+On this development revision, checked ownership is selected with
+`--experimental-zero-rc`. The examples below select it explicitly. Default
+promotion and retirement of the experimental selectors are separate changes;
+these examples do not claim either has happened.
 
 ```bash
-mylang build program.my -o program --release --counters
-MYLANG_COUNTERS=program-counts.json ./program input.txt
-mylang run program.my --counters        # writes mylang-counters.json
+mylang build program.my -o program-counted --release --experimental-zero-rc --counters
+MYLANG_COUNTERS=program-counts.json ./program-counted input.txt
+mylang run program.my --experimental-zero-rc --counters  # writes mylang-counters.json
 ```
 
-The counts go to the path in `MYLANG_COUNTERS`, else to `mylang-counters.json`
-in the program's working directory. The program's own output, exit status and
-trap reports are those of the ordinary build; it writes to its standard streams
-only if the counts file cannot be written. A counting build runs slower and its
-timings mean nothing. Without `--counters`, the emitted LLVM, the runtime object
-and the executable are byte for byte what they were before counting existed.
+`--counters` works with `build`, `build --run` and `run`. Counts go to
+`MYLANG_COUNTERS`, or `mylang-counters.json` in the guest's working directory.
+Normal shutdown and reported traps write the document; forced termination does
+not guarantee one. Guest output, exit status and trap reports retain their usual
+meaning. A failed counts-file write produces a diagnostic on the standard streams.
 
-## The document
+Instrumentation changes execution and optimization. Use a separate build without
+`--counters` for wall time, RSS and hardware performance counters. Without the
+flag, counting hooks and their thread-local tables are not linked; this does not
+promise identical executable bytes across different compiler revisions.
 
-One `mylang-counters-v1` object:
+## Document and attribution
+
+The format is `mylang-counters-v1`:
 
 | Field | Meaning |
 |---|---|
-| `totals` | Program-wide sums of every function counter below, plus `peak_live_bytes` and `live_bytes_at_exit` (bytes in managed blocks, by allocation class) |
-| `kinds` | Per site kind, the sums of `count`, `bytes` and `extra` over every site |
-| `functions` | One row per emitted function (Core name, specializations separate) that did anything; `<outside>` holds what ran outside every emitted function |
-| `sites` | One row per site that executed: `function` (the emitted function), `origin` (the source function, which an inlined body keeps), `path`, `line`, `column`, `kind`, `detail` (the Core operation that emitted it), `count`, `bytes`, `extra` |
+| `totals` | Sums of function counters, plus `peak_live_bytes` and `live_bytes_at_exit` for instrumented managed blocks |
+| `kinds` | Sums of `count`, `bytes` and `extra` over each emitted site kind |
+| `functions` | Emitted functions that did work, with specializations separate; `<outside>` holds runtime work outside an emitted function |
+| `sites` | Executed sites: emitted `function`, source `origin` retained through inlining, `path`, `line`, `column`, `kind`, Core-operation `detail`, `count`, `bytes`, `extra` |
 
-Function counters, charged to the emitted function running when the runtime did
-the work:
+Function counters charge runtime work to the emitted function running when it
+happens. Worker threads accumulate local counters; the report combines them.
+The managed live-byte and peak counters track the combined live blocks.
 
 | Counter | Meaning |
 |---|---|
-| `calls` | Calls of the function |
-| `allocs`, `alloc_bytes`, `frees`, `free_bytes` | Managed blocks, by their allocation class's size (a large block by its usable size) |
-| `list_grows`, `list_grow_bytes` | Small lists moved to the next size class, and the element bytes copied |
-| `reallocs`, `realloc_added_bytes`, `realloc_moves`, `realloc_moved_bytes` | Large lists grown with `realloc`; of those, the ones whose block moved and the bytes in use when it moved (an upper bound: the C library may move pages without copying them) |
-| `list_copies`, `dict_copies`, `buffer_copies`, `text_copies` and their `_bytes` | Copy-on-write and value copies the runtime made: list elements, dictionary entries plus their hashes, buffer bytes, text bytes (`str_from_view`) |
-| `runtime_retains`, `runtime_releases` | Count updates the runtime made itself: a copy's children, a freed block's children, out-of-line releases |
-| `dict_grows`, `buffer_grows`, `text_grows` and their `_bytes` | Growth that copied the old contents |
-| `text_appends`, `text_append_bytes`, `buffer_pushes`, `buffer_appends`, `buffer_append_bytes` | Out-of-line text appends, byte pushes and byte appends (`append_range`, number spellings) |
+| `calls` | Function calls |
+| `allocs`, `alloc_bytes`, `frees`, `free_bytes` | Managed block allocation/free events and allocation-class bytes; large blocks use allocator-reported usable size |
+| `list_grows`, `list_grow_bytes` | Small-list growth into a new block and element bytes copied |
+| `reallocs`, `realloc_added_bytes`, `realloc_moves`, `realloc_moved_bytes` | Large list/buffer growth through `realloc`, positive usable-byte increase, address changes, and occupied bytes when the block moves (including its header) |
+| `list_copies`, `dict_copies`, `buffer_copies`, `text_copies` and their `_bytes` | Instrumented runtime copy events and payload traffic: list elements, dictionary entries plus hashes, buffer/byte payloads and text bytes |
+| `dict_grows`, `buffer_grows`, `text_grows` and their `_bytes` | Growth events that copy old contents, and copied bytes |
+| `text_appends`, `text_append_bytes`, `buffer_pushes`, `buffer_appends`, `buffer_append_bytes` | Instrumented out-of-line text appends, byte pushes and byte appends |
+| `runtime_retains`, `runtime_releases` | Legacy runtime memory-reference-count updates; zero for checked ownership |
+| `shared_retains`, `shared_releases` | Legacy shared memory-reference-count updates; zero for checked ownership |
+| `share_marks`, `share_bytes` | Legacy shared-block publication events and allocated bytes marked; zero for checked ownership |
 
-Site kinds:
+Explicit `.copy()` creates independent storage. Checked ownership has no COW
+sharing: copy counters measure explicit copies and any copies introduced by
+lowering/runtime helpers. Historical RC documents can include COW copies too.
+A copy count alone does not identify an avoidable copy; inspect its source and
+ownership contract. Allocation, growth and copy counters describe different
+operations and can overlap; do not add all their byte columns as a single metric.
+
+## Site kinds and direct destruction
 
 | Kind | `count` | `bytes` | `extra` |
 |---|---|---|---|
-| `retain` | Inline count increments of one block: each makes a second owner of a value that stays live | Data bytes of the shared block (elements times stride, text length, entries times key and value size, a box's value): what a copy would move instead | |
-| `release` | Inline count decrements of one block | | |
-| `release_unique` | Frees of a block ownership proved unique | | |
-| `unique_test` | `is_unique` tests | | Tests that found the block unique |
-| `list_copy`, `dict_copy`, `buffer_copy`, `text_copy` | Copies made for this Core instruction | Bytes copied | |
-| `record_copy` | `memcpy`/`memmove` of a record, union or array over four words | Bytes copied | |
-| `list_push` | Pushes into a list | Element bytes written | Bytes the growths this push caused moved (a small list's copy into the next class, a large list's bytes in use when `realloc` moved it) |
-| `element_load`, `element_store` | Whole aggregates of four words or less read from or written into a list | Element bytes | |
-| `bounds_check` | Executions of a list, text or byte index check, a pop's empty-list or index check, or a substring's bounds check | | |
-| `overflow_check` | Executions of an integer overflow check (arithmetic, negation, `MIN // -1`) | | |
-| `division_check` | Executions of a zero-divisor check | | |
-| `shift_check` | Executions of a shift-amount check | | |
-| `other_check` | Executions of any other conditional trap: casts, float conversions, missing keys, fact verification (`--verify-facts`), … | | |
+| `retain` | Legacy inline memory-count increments | Data bytes of the shared block, not bytes actually copied | |
+| `release` | Legacy inline memory-count decrements | | |
+| `release_unique` | Direct destruction of uniquely owned storage, including a transferred box's empty shell | | |
+| `unique_test` | Legacy `is_unique` tests | | Tests that found the block unique |
+| `list_copy`, `dict_copy`, `buffer_copy`, `text_copy` | Runtime copies attributed to this emitted site | Bytes copied | |
+| `record_copy` | Emitted `memcpy`/`memmove` of a record, union or array over four words | Bytes copied | |
+| `list_push` | List pushes | Element bytes written | Bytes moved by growth attributed to the push |
+| `element_load`, `element_store` | Whole aggregates of four words or less read/written in a list | Element bytes | |
+| `bounds_check` | Emitted list/text/byte index, pop or substring checks | | |
+| `overflow_check` | Emitted integer overflow checks, including negation and `MIN // -1` | | |
+| `division_check` | Emitted zero-divisor checks | | |
+| `shift_check` | Emitted shift-amount checks | | |
+| `other_check` | Other emitted conditional traps: casts, float conversions, missing keys, fact verification and similar checks | | |
 
-A `record_copy`'s detail names the operation: `list_get` (an element copied out),
-`list_set` (a value copied into an element), `list_set.old` (the old element
-copied out to release its fields), `record_set` (a copy made before a field
-store), `ret` (a return through `sret`), `jump`/`branch` (a value moved into a
-phi's slot), and so on.
+`release_unique` is **not an RC event**. It can be positive in a correct zero-RC
+run. Core IR also spells its cleanup operation `release`; with checked ownership
+that operation emits direct `myl_core_drop_owned` cleanup. A textual search for
+`release` cannot distinguish direct destruction from an RC decrement. Task
+pending-work counters and the instrumentation's event counters are not memory
+reference counts either.
 
-The counts are of the core's emitted operations, before LLVM optimizes them: a
-copy LLVM later removes is still counted, and nothing LLVM adds is. Dictionary
-side tables, text scratch and other `malloc`s outside managed blocks are not in
-the memory counters.
+For a checked run, inspect `kinds.retain.count`, `kinds.release.count` and
+`kinds.unique_test.count`, plus `totals.runtime_retains`, `runtime_releases`,
+`shared_retains`, `shared_releases`, `share_marks` and `share_bytes`: all must be
+zero. Preserve the schema fields rather than treating missing data as zero.
+Zero events only describe executed paths; establish the selected ABI separately
+from emitted LLVM, runtime layout/preprocessing and linked symbols. Normal exit
+with `live_bytes_at_exit == 0` is useful cleanup evidence, not a complete ownership
+soundness proof. A fatal trap can retain live blocks because it ends the process.
 
-A check site counts how often the emitted code reached that check. A check the
-core's own passes removed (a fact proved the index in range, say) is never
-emitted and never counted. A check LLVM removes or hoists later is still counted
-at every execution, so the check counts are an upper bound on the checks the
-optimized program runs. The counter's own load and store in a loop also keep
-LLVM from hoisting the check, which is one more reason a counting build's timing
-means nothing. Checks inside runtime functions (a text search, a byte-buffer
-range test in C) are not counted.
+A `record_copy`'s detail identifies the operation: `list_get` (element extraction),
+`list_set` (element storage), `list_set.old` (old storage copied for cleanup),
+`record_set` (copy before a field store), `ret` (return through `sret`), or
+`jump`/`branch` (transfer into a phi's slot), for example. These operations can copy
+unmanaged stack data without allocating a managed block.
 
-### Per instruction retired
+Site counts describe emitted operations before LLVM optimization: a copy LLVM
+removes is still counted, and a copy LLVM introduces is not. Checks removed by
+Core facts are neither emitted nor counted. Instrumentation can prevent LLVM
+from removing or hoisting a check, so the recorded executions are not an exact
+instruction count for the uninstrumented guest. Internal runtime checks such as
+a C byte-buffer range check are not emitted check sites.
 
-The counters are executions of the counting build, and a counting build runs
-more instructions than the ordinary one. To state them per instruction, count
-the ordinary build's instructions with `perf stat` and divide:
+## Traffic, live memory and RSS
+
+`alloc_bytes` is cumulative allocation traffic, not maximum residency. Large
+`realloc` growth is recorded separately in `realloc_added_bytes`; report both,
+or explicitly label a derived sum. `free_bytes` is the accumulated freed block
+size. `peak_live_bytes` is the maximum simultaneous accounted managed storage;
+`live_bytes_at_exit` is the final accounted amount. A difference between two
+peaks is not allocation traffic or cumulative bytes saved.
+
+Managed block sizes include the block header, rounded class/usable size and
+spare capacity. They exclude allocator chunks or free-list storage retained after
+blocks are freed, dictionary side tables, text scratch, provider buffers, task
+stacks, counting tables and other native allocations. Thus lower managed traffic
+or peak does not establish lower process RSS. A `realloc` address change also
+only estimates copying: the allocator or OS can move pages without copying bytes.
+
+Measure uninstrumented guest wall time and process RSS separately with identical
+inputs, worker counts, affinity and compiler/guest modes. Record exact source and
+binary hashes, warmups and all samples. For compilation, distinguish a largest
+child's RSS high-water mark from simultaneous process-tree memory; a sampled tree
+can miss short-lived children, and shared pages may be counted more than once.
+State which metric the measurement tool actually reports.
+
+## Per instruction retired
+
+Use the same compiler, mode and inputs for the counted and ordinary binaries:
 
 ```bash
-mylang build program.my -o program --release
-perf stat -e instructions:u -x, ./program > /dev/null
-mylang build program.my -o program-counted --release --counters
-MYLANG_COUNTERS=counts.json ./program-counted > /dev/null
+mylang build program.my -o program --release --experimental-zero-rc
+perf stat -e instructions:u -x, ./program input.txt > /dev/null
+mylang build program.my -o program-counted --release --experimental-zero-rc --counters
+MYLANG_COUNTERS=counts.json ./program-counted input.txt > /dev/null
 ```
 
-`kinds.bounds_check.count` ÷ instructions is then the bounds checks per
-instruction the program reached, and likewise for `retain`, `release`,
-`unique_test` and the other check kinds.
+For example, `kinds.bounds_check.count` divided by the ordinary build's retired
+instructions is a ratio of semantic check executions to optimized instructions.
+It is not the fraction of machine instructions implementing bounds checks.
 
 ## Counts beside the static cost
 
-`mylang cost ENTRY.my --counters FILE.json` prints the ordinary
-[cost report](cost.md) and then one line per reported function with what the run
-in `FILE.json` did there: calls, inline retains and releases, the runtime's own
-count updates, uniqueness tests and how many found the block shared, copies and
-the bytes they moved, the bytes growth moved, managed allocations, and the checks
-it executed by kind (`checks: bounds N, overflow N, division N, shift N, other
-N`; a `checks` object beside each row's `run` with `--json`). Build the counting
-run from the same source and mode as the report.
+`mylang cost ENTRY.my --counters FILE.json` appends per-function dynamic rows to
+the [static cost report](cost.md). Match source, compiler and ownership/optimization
+mode to the counted run. The reader accepts historical v1 documents; it does not
+prove that a file came from the current source or compiler.
 
 ```bash
-mylang build program.my -o program --release --counters
-MYLANG_COUNTERS=counts.json ./program
-mylang cost program.my --counters counts.json
-mylang cost program.my --counters counts.json --json   # `counters` after the static members
+mylang build program.my -o program-counted --release --experimental-zero-rc --counters
+MYLANG_COUNTERS=counts.json ./program-counted
+mylang cost program.my --experimental-zero-rc --counters counts.json
+mylang cost program.my --experimental-zero-rc --counters counts.json --json
 ```
+
+The current cost summary combines `release` and `release_unique` into its
+`releases` field (`run.rc.releases` in JSON). That historical label therefore
+includes direct drops and **must not be used as an RC-event total**. Its `runtime`
+field combines runtime retains/releases and does not include all shared-event
+fields. Use the raw v1 fields listed above for an RC audit. Summary allocation
+bytes cover `alloc_bytes`, with `realloc` traffic separately available in raw
+counters. The text also lists checks by kind; JSON has a `checks` object beside
+`run`.
+
+## Comparing historical reports
+
+The 12 October 2026 closeout corrected list-copy instrumentation for recursive,
+descriptor-driven owned copies. Those paths bypass the ordinary list-copy helper;
+list payload traffic is now counted without charging recursive box shells as list
+copies or counting the ordinary helper twice. An increased list-copy total across
+that change can be a telemetry correction, even when allocation/free bytes and
+managed peak are unchanged. See the [before/after counter evidence](../../experiments/memory-closeout-20261012/A09/raw/counters/README.md).
+
+Keep original reports tied to their compiler/source hashes and mode. Do not
+reinterpret old RC events as direct drops, relabel old binaries as a new default,
+or infer RSS improvements from their managed-byte columns. The v1 legacy RC
+fields remain useful for reading historical documents and as explicit zero-event
+columns in checked runs.

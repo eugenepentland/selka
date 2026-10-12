@@ -61,3 +61,15 @@ independence test all five ordinary pipelines. It also makes the small uncounted
 `twice` fixture's independent return explicit. Actual default-command execution
 of the patch is still pending C2/Stage4; the current evidence used the opt-in flag.
 The existing negative `.snapshot()` ownership test is retained by its owner.
+
+The audited `docs/tooling/counters.md` keeps the current explicit opt-in selector.
+`counters-doc-c2.patch` changes examples to ordinary commands only after qualified
+default promotion; `counters-doc-c3.patch` subsequently documents actual retired
+selector diagnostics. Both remain unapplied. `counters-doc-rollout.json` pins
+source-contract hashes and sequential patch checks. The current cost summary
+aggregates direct drops into its historical releases field; the documentation
+explicitly directs RC audits to raw v1 kinds and runtime/shared fields instead.
+
+`ce-lists-default.patch` is also unapplied until C2. It removes only CLI selector
+arguments, preserving all five mode variants, source/IR/LLVM ownership checks,
+outputs, leak checks and exact traps. Its manifest records the preimage hash.
