@@ -1,0 +1,572 @@
+
+# clox's stack VM (SPEC §8.5 and §8.6). All live state -- the value stack,
+# the call frames and the open upvalues -- sits in the Runtime's root fields.
+import chunk
+import compiler
+import heap
+import lox_strings
+import natives
+import object
+import output
+import table
+import value
+
+
+public enum InterpretResult:
+    OK
+    COMPILE_ERROR
+    RUNTIME_ERROR
+
+
+func reset_stack(mut rt: heap.Runtime):
+    rt.stack_top = 0
+    rt.frame_count = 0
+    rt.open_upvalues = value.NO_OBJ
+
+
+# Reports a runtime error with one trace line per frame, innermost first,
+# naming the line of the instruction that failed, then resets the stack.
+# Always answers False so callers can `return runtime_error(...)`.
+func runtime_error(mut rt: heap.Runtime, mut o: output.Output, message: bytes) -> bool:
+    output.error_line(mut o, message)
+    mut i = rt.frame_count - 1
+    while i >= 0:
+        mut frame = rt.frames[i].copy()
+        mut empty: int[] = []
+        mut line = byte_buffer(empty)
+        _ = line.append_utf8("[line ")
+        _ = line.append_int(frame.function.code.lines[frame.ip - 1])
+        _ = line.append_utf8("] in ")
+        if frame.function.name == value.NO_OBJ:
+            _ = line.append_utf8("script")
+        else:
+            mut name = heap.string_obj(rt, frame.function.name).chars.copy()
+            _ = line.append_range(name, 0, len(name))
+            _ = line.append_utf8("()")
+        output.error_line(mut o, bytes(line))
+        i -= 1
+    reset_stack(mut rt)
+    return False
+
+
+func as_obj(item: value.Value) -> value.ObjRef:
+    match item:
+        case value.Value.obj(value=ref):
+            return ref
+        case _:
+            assert False, "value is not an object"
+            return value.NO_OBJ
+
+
+func as_number(item: value.Value) -> float:
+    match item:
+        case value.Value.number(value=number):
+            return number
+        case _:
+            assert False, "value is not a number"
+            return 0.0
+
+
+func is_number(item: value.Value) -> bool:
+    match item:
+        case value.Value.number(value=_):
+            return True
+        case _:
+            return False
+
+
+func is_string(rt: heap.Runtime, item: value.Value) -> bool:
+    match item:
+        case value.Value.obj(value=ref):
+            match rt.objects[ref].copy():
+                case object.Obj.string(value=_):
+                    return True
+                case _:
+                    return False
+        case _:
+            return False
+
+
+func is_class(rt: heap.Runtime, item: value.Value) -> bool:
+    match item:
+        case value.Value.obj(value=ref):
+            match rt.objects[ref].copy():
+                case object.Obj.klass(value=_):
+                    return True
+                case _:
+                    return False
+        case _:
+            return False
+
+
+func instance_of(rt: heap.Runtime, item: value.Value) -> object.InstanceObj?:
+    match item:
+        case value.Value.obj(value=ref):
+            match rt.objects[ref].copy():
+                case object.Obj.instance(value=payload):
+                    return Some(payload.copy())
+                case _:
+                    return None
+        case _:
+            return None
+
+
+func name_text(rt: heap.Runtime, name: value.ObjRef) -> bytes:
+    return heap.string_obj(rt, name).chars.copy()
+
+
+func undefined_property(mut rt: heap.Runtime, mut o: output.Output, name: value.ObjRef) -> bool:
+    const __owned_arg_1 = b"Undefined property '" + name_text(rt, name) + b"'."
+    return runtime_error(mut rt, mut o, __owned_arg_1)
+
+
+func arity_error(mut rt: heap.Runtime, mut o: output.Output, arity: int, count: int) -> bool:
+    return runtime_error(mut rt, mut o, f"Expected {arity} arguments but got {count}.".encode())
+
+
+# Pushes a frame for the closure whose callee and arguments are on the stack.
+func call(mut rt: heap.Runtime, mut o: output.Output, closure: value.ObjRef, count: int) -> bool:
+    mut function = heap.function_obj(rt, heap.closure_obj(rt, closure).function)
+    if count != function.arity:
+        return arity_error(mut rt, mut o, function.arity, count)
+    if rt.frame_count == heap.FRAMES_MAX:
+        return runtime_error(mut rt, mut o, b"Stack overflow.")
+    mut frame_index = rt.frame_count
+    rt.frame_count = rt.frame_count + 1
+    rt.frames[frame_index] = heap.CallFrame(
+        closure=closure,
+        function=function.copy(),
+        code=function.code.code.copy(),
+        upvalues=heap.closure_obj(rt, closure).upvalues.copy(),
+        ip=0,
+        base=rt.stack_top - count - 1
+    )
+    return True
+
+
+func call_value(mut rt: heap.Runtime, mut o: output.Output, callee: value.Value, count: int, clock: Clock?) -> bool:
+    match callee:
+        case value.Value.obj(value=ref):
+            match rt.objects[ref].copy():
+                case object.Obj.bound_method(value=bound):
+                    rt.stack[rt.stack_top - count - 1] = bound.receiver
+                    return call(mut rt, mut o, bound.method, count)
+                case object.Obj.klass(value=klass):
+                    mut instance = heap.allocate(mut rt, object.Obj.instance(value=object.InstanceObj(klass=ref, fields=table.new_table())))
+                    rt.stack[rt.stack_top - count - 1] = value.Value.obj(value=instance)
+                    match table.get(klass.methods, rt.init_string, heap.string_hash(rt, rt.init_string)):
+                        case Some(initializer):
+                            return call(mut rt, mut o, as_obj(initializer), count)
+                        case None:
+                            if count != 0:
+                                return arity_error(mut rt, mut o, 0, count)
+                            return True
+                case object.Obj.closure(value=_):
+                    return call(mut rt, mut o, ref, count)
+                case object.Obj.native(value=native):
+                    if count != native.arity:
+                        return arity_error(mut rt, mut o, native.arity, count)
+                    mut result = natives.call_native(rt, native.id, clock)
+                    rt.stack_top = rt.stack_top - count - 1
+                    heap.push(mut rt, result)
+                    return True
+                case _:
+                    pass
+        case _:
+            pass
+    return runtime_error(mut rt, mut o, b"Can only call functions and classes.")
+
+
+func invoke_from_class(mut rt: heap.Runtime, mut o: output.Output, klass: value.ObjRef, name: value.ObjRef, count: int) -> bool:
+    match table.get(heap.class_obj(rt, klass).methods, name, heap.string_hash(rt, name)):
+        case Some(method):
+            return call(mut rt, mut o, as_obj(method), count)
+        case None:
+            return undefined_property(mut rt, mut o, name)
+
+
+func invoke(mut rt: heap.Runtime, mut o: output.Output, name: value.ObjRef, count: int, clock: Clock?) -> bool:
+    match instance_of(rt, heap.peek(rt, count)):
+        case Some(instance):
+            match table.get(instance.fields, name, heap.string_hash(rt, name)):
+                case Some(field):
+                    rt.stack[rt.stack_top - count - 1] = field
+                    return call_value(mut rt, mut o, field, count, clock)
+                case None:
+                    return invoke_from_class(mut rt, mut o, instance.klass, name, count)
+        case None:
+            return runtime_error(mut rt, mut o, b"Only instances have methods.")
+
+
+# Replaces the receiver on top of the stack with a bound method. The
+# receiver stays on the stack across the allocation.
+func bind_method(mut rt: heap.Runtime, mut o: output.Output, klass: value.ObjRef, name: value.ObjRef) -> bool:
+    match table.get(heap.class_obj(rt, klass).methods, name, heap.string_hash(rt, name)):
+        case Some(method):
+            const __owned_arg_2 = object.Obj.bound_method(value=object.BoundMethodObj(receiver=heap.peek(rt, 0), method=as_obj(method)))
+            mut bound = heap.allocate(mut rt, __owned_arg_2)
+            _ = heap.pop(mut rt)
+            heap.push(mut rt, value.Value.obj(value=bound))
+            return True
+        case None:
+            return undefined_property(mut rt, mut o, name)
+
+
+# The open upvalue for stack slot `slot`, created and linked into the list
+# (sorted by descending slot) when none exists.
+func capture_upvalue(mut rt: heap.Runtime, slot: int) -> value.ObjRef:
+    mut previous = value.NO_OBJ
+    mut upvalue = rt.open_upvalues
+    while upvalue != value.NO_OBJ and heap.upvalue_obj(rt, upvalue).slot > slot:
+        previous = upvalue
+        upvalue = heap.upvalue_obj(rt, upvalue).next_open
+    if upvalue != value.NO_OBJ and heap.upvalue_obj(rt, upvalue).slot == slot:
+        return upvalue
+    mut created = heap.allocate(mut rt, object.Obj.upvalue(value=object.UpvalueObj(slot=slot, closed=value.Value.nil, next_open=upvalue)))
+    if previous == value.NO_OBJ:
+        rt.open_upvalues = created
+    else:
+        mut link = heap.upvalue_obj(rt, previous)
+        link.next_open = created
+        rt.objects[previous] = object.Obj.upvalue(value=link)
+    return created
+
+
+# Closes every open upvalue at or above stack slot `last`.
+func close_upvalues(mut rt: heap.Runtime, last: int):
+    while rt.open_upvalues != value.NO_OBJ and heap.upvalue_obj(rt, rt.open_upvalues).slot >= last:
+        mut upvalue = heap.upvalue_obj(rt, rt.open_upvalues)
+        upvalue.closed = rt.stack[upvalue.slot]
+        upvalue.slot = object.NO_SLOT
+        rt.objects[rt.open_upvalues] = object.Obj.upvalue(value=upvalue)
+        rt.open_upvalues = upvalue.next_open
+
+
+func concatenate(mut rt: heap.Runtime):
+    mut b = as_obj(heap.peek(rt, 0))
+    mut a = as_obj(heap.peek(rt, 1))
+    mut result = lox_strings.concat(mut rt, a, b)
+    _ = heap.pop(mut rt)
+    _ = heap.pop(mut rt)
+    heap.push(mut rt, value.Value.obj(value=result))
+
+
+func read_byte(mut frame: heap.CallFrame) -> int:
+    mut byte = frame.code[frame.ip]
+    frame.ip = frame.ip + 1
+    return byte
+
+
+func read_short(mut frame: heap.CallFrame) -> int:
+    frame.ip = frame.ip + 2
+    return frame.code[frame.ip - 2] * 256 + frame.code[frame.ip - 1]
+
+
+func read_constant(mut frame: heap.CallFrame) -> value.Value:
+    const constant_index = read_byte(mut frame)
+    return frame.function.code.constants[constant_index]
+
+
+func read_string(mut frame: heap.CallFrame) -> value.ObjRef:
+    return as_obj(read_constant(mut frame))
+
+
+func get_global(mut rt: heap.Runtime, mut o: output.Output, mut frame: heap.CallFrame) -> bool:
+    mut name = read_string(mut frame)
+    match table.get(rt.globals, name, heap.string_hash(rt, name)):
+        case Some(found):
+            heap.push(mut rt, found)
+            return True
+        case None:
+            const __owned_arg_3 = b"Undefined variable '" + name_text(rt, name) + b"'."
+            return runtime_error(mut rt, mut o, __owned_arg_3)
+
+
+# Assigning an undefined global is an error; the entry the failed `set`
+# just made is deleted again, leaving a tombstone as clox does.
+func set_global(mut rt: heap.Runtime, mut o: output.Output, mut frame: heap.CallFrame) -> bool:
+    mut name = read_string(mut frame)
+    const __owned_arg_4 = heap.peek(rt, 0)
+    if heap.set_global(mut rt, name, __owned_arg_4):
+        const __owned_arg_5 = heap.string_hash(rt, name)
+        _ = table.delete(mut rt.globals, name, __owned_arg_5)
+        const __owned_arg_6 = b"Undefined variable '" + name_text(rt, name) + b"'."
+        return runtime_error(mut rt, mut o, __owned_arg_6)
+    return True
+
+
+func get_upvalue(mut rt: heap.Runtime, mut frame: heap.CallFrame):
+    const upvalue_index = read_byte(mut frame)
+    mut upvalue = heap.upvalue_obj(rt, frame.upvalues[upvalue_index])
+    if upvalue.slot != object.NO_SLOT:
+        const __owned_arg_7 = rt.stack[upvalue.slot]
+        heap.push(mut rt, __owned_arg_7)
+    else:
+        heap.push(mut rt, upvalue.closed)
+
+
+func set_upvalue(mut rt: heap.Runtime, mut frame: heap.CallFrame):
+    const upvalue_index = read_byte(mut frame)
+    mut ref = frame.upvalues[upvalue_index]
+    mut upvalue = heap.upvalue_obj(rt, ref)
+    if upvalue.slot != object.NO_SLOT:
+        rt.stack[upvalue.slot] = heap.peek(rt, 0)
+    else:
+        upvalue.closed = heap.peek(rt, 0)
+        rt.objects[ref] = object.Obj.upvalue(value=upvalue)
+
+
+func get_property(mut rt: heap.Runtime, mut o: output.Output, mut frame: heap.CallFrame) -> bool:
+    match instance_of(rt, heap.peek(rt, 0)):
+        case Some(instance):
+            mut name = read_string(mut frame)
+            match table.get(instance.fields, name, heap.string_hash(rt, name)):
+                case Some(field):
+                    _ = heap.pop(mut rt)
+                    heap.push(mut rt, field)
+                    return True
+                case None:
+                    return bind_method(mut rt, mut o, instance.klass, name)
+        case None:
+            return runtime_error(mut rt, mut o, b"Only instances have properties.")
+
+
+func set_property(mut rt: heap.Runtime, mut o: output.Output, mut frame: heap.CallFrame) -> bool:
+    match instance_of(rt, heap.peek(rt, 1)):
+        case Some(instance):
+            mut name = read_string(mut frame)
+            mut fields = instance.fields.copy()
+            _ = table.set(mut fields, name, heap.string_hash(rt, name), heap.peek(rt, 0))
+            mut instance_ref = as_obj(heap.peek(rt, 1))
+            mut updated_instance = instance
+            updated_instance.fields = fields
+            rt.objects[instance_ref] = object.Obj.instance(value=updated_instance)
+            mut assigned = heap.pop(mut rt)
+            _ = heap.pop(mut rt)
+            heap.push(mut rt, assigned)
+            return True
+        case None:
+            return runtime_error(mut rt, mut o, b"Only instances have fields.")
+
+
+# GREATER, LESS, SUBTRACT, MULTIPLY and DIVIDE: two numbers in, one out.
+func numeric(mut rt: heap.Runtime, mut o: output.Output, instruction: int) -> bool:
+    if not is_number(heap.peek(rt, 0)) or not is_number(heap.peek(rt, 1)):
+        return runtime_error(mut rt, mut o, b"Operands must be numbers.")
+    mut b = as_number(heap.pop(mut rt))
+    mut a = as_number(heap.pop(mut rt))
+    if instruction == chunk.OP_GREATER:
+        heap.push(mut rt, value.Value.boolean(value=a > b))
+    elif instruction == chunk.OP_LESS:
+        heap.push(mut rt, value.Value.boolean(value=a < b))
+    elif instruction == chunk.OP_SUBTRACT:
+        heap.push(mut rt, value.Value.number(value=a - b))
+    elif instruction == chunk.OP_MULTIPLY:
+        heap.push(mut rt, value.Value.number(value=a * b))
+    else:
+        heap.push(mut rt, value.Value.number(value=a / b))
+    return True
+
+
+func add(mut rt: heap.Runtime, mut o: output.Output) -> bool:
+    if is_string(rt, heap.peek(rt, 0)) and is_string(rt, heap.peek(rt, 1)):
+        concatenate(mut rt)
+    elif is_number(heap.peek(rt, 0)) and is_number(heap.peek(rt, 1)):
+        mut b = as_number(heap.pop(mut rt))
+        mut a = as_number(heap.pop(mut rt))
+        heap.push(mut rt, value.Value.number(value=a + b))
+    else:
+        return runtime_error(mut rt, mut o, b"Operands must be two numbers or two strings.")
+    return True
+
+
+func negate(mut rt: heap.Runtime, mut o: output.Output) -> bool:
+    if not is_number(heap.peek(rt, 0)):
+        return runtime_error(mut rt, mut o, b"Operand must be a number.")
+    const __owned_arg_8 = value.Value.number(value=-as_number(heap.pop(mut rt)))
+    heap.push(mut rt, __owned_arg_8)
+    return True
+
+
+# Allocates the closure, pushes it (rooting it while upvalues are
+# captured), then fills its upvalues from the (is_local, index) pairs.
+func make_closure(mut rt: heap.Runtime, mut frame: heap.CallFrame):
+    mut function_ref = read_string(mut frame)
+    mut function = heap.function_obj(rt, function_ref)
+    mut closure = object.new_closure(function_ref, function.upvalue_count)
+    mut closure_ref = heap.allocate(mut rt, object.Obj.closure(value=closure.copy()))
+    heap.push(mut rt, value.Value.obj(value=closure_ref))
+    mut captured = closure.upvalues.copy()
+    mut i = 0
+    while i < function.upvalue_count:
+        mut is_local = read_byte(mut frame)
+        mut index = read_byte(mut frame)
+        if is_local == 1:
+            captured[i] = capture_upvalue(mut rt, frame.base + index)
+        else:
+            captured[i] = frame.upvalues[index]
+        i += 1
+    closure.upvalues = captured
+    rt.objects[closure_ref] = object.Obj.closure(value=closure)
+
+
+func inherit(mut rt: heap.Runtime, mut o: output.Output) -> bool:
+    mut parent = heap.peek(rt, 1)
+    if not is_class(rt, parent):
+        return runtime_error(mut rt, mut o, b"Superclass must be a class.")
+    mut methods = heap.class_obj(rt, as_obj(heap.peek(rt, 0))).methods.copy()
+    const __owned_arg_9 = heap.class_obj(rt, as_obj(parent)).methods.copy()
+    table.add_all( __owned_arg_9, mut methods)
+    mut subclass_ref = as_obj(heap.peek(rt, 0))
+    heap.set_class_methods(mut rt, subclass_ref, methods)
+    _ = heap.pop(mut rt)
+    return True
+
+
+func define_method(mut rt: heap.Runtime, mut frame: heap.CallFrame):
+    mut name = read_string(mut frame)
+    mut methods = heap.class_obj(rt, as_obj(heap.peek(rt, 1))).methods.copy()
+    _ = table.set(mut methods, name, heap.string_hash(rt, name), heap.peek(rt, 0))
+    mut class_ref = as_obj(heap.peek(rt, 1))
+    mut klass = heap.class_obj(rt, class_ref)
+    klass.methods = methods
+    rt.objects[class_ref] = object.Obj.klass(value=klass)
+    _ = heap.pop(mut rt)
+
+
+# The dispatch loop, one opcode per iteration of `frame`, the innermost
+# call frame. Handlers answer False after reporting a runtime error.
+func run(mut rt: heap.Runtime, mut o: output.Output, clock: Clock?) -> InterpretResult:
+    mut frame = rt.frames[rt.frame_count - 1].copy()
+    while True:
+        mut instruction = read_byte(mut frame)
+        rt.frames[rt.frame_count - 1] = frame.copy()
+        mut ok = True
+        if instruction == chunk.OP_CONSTANT:
+            heap.push(mut rt, read_constant(mut frame))
+        elif instruction == chunk.OP_NIL:
+            heap.push(mut rt, value.Value.nil)
+        elif instruction == chunk.OP_TRUE:
+            heap.push(mut rt, value.Value.boolean(value=True))
+        elif instruction == chunk.OP_FALSE:
+            heap.push(mut rt, value.Value.boolean(value=False))
+        elif instruction == chunk.OP_POP:
+            _ = heap.pop(mut rt)
+        elif instruction == chunk.OP_GET_LOCAL:
+            const local_offset = read_byte(mut frame)
+            const __owned_arg_10 = rt.stack[frame.base + local_offset]
+            heap.push(mut rt, __owned_arg_10)
+        elif instruction == chunk.OP_SET_LOCAL:
+            const local_offset = read_byte(mut frame)
+            rt.stack[frame.base + local_offset] = heap.peek(rt, 0)
+        elif instruction == chunk.OP_GET_GLOBAL:
+            ok = get_global(mut rt, mut o, mut frame)
+        elif instruction == chunk.OP_DEFINE_GLOBAL:
+            const __owned_arg_11 = heap.peek(rt, 0)
+            _ = heap.set_global(mut rt, read_string(mut frame), __owned_arg_11)
+            _ = heap.pop(mut rt)
+        elif instruction == chunk.OP_SET_GLOBAL:
+            ok = set_global(mut rt, mut o, mut frame)
+        elif instruction == chunk.OP_GET_UPVALUE:
+            get_upvalue(mut rt, mut frame)
+        elif instruction == chunk.OP_SET_UPVALUE:
+            set_upvalue(mut rt, mut frame)
+        elif instruction == chunk.OP_GET_PROPERTY:
+            ok = get_property(mut rt, mut o, mut frame)
+        elif instruction == chunk.OP_SET_PROPERTY:
+            ok = set_property(mut rt, mut o, mut frame)
+        elif instruction == chunk.OP_GET_SUPER:
+            mut name = read_string(mut frame)
+            const __owned_arg_12 = as_obj(heap.pop(mut rt))
+            ok = bind_method(mut rt, mut o, __owned_arg_12, name)
+        elif instruction == chunk.OP_EQUAL:
+            mut right = heap.pop(mut rt)
+            mut left = heap.pop(mut rt)
+            heap.push(mut rt, value.Value.boolean(value=value.values_equal(left, right)))
+        elif instruction == chunk.OP_GREATER or instruction == chunk.OP_LESS or instruction == chunk.OP_SUBTRACT or instruction == chunk.OP_MULTIPLY or instruction == chunk.OP_DIVIDE:
+            ok = numeric(mut rt, mut o, instruction)
+        elif instruction == chunk.OP_ADD:
+            ok = add(mut rt, mut o)
+        elif instruction == chunk.OP_NOT:
+            const __owned_arg_13 = value.Value.boolean(value=value.is_falsey(heap.pop(mut rt)))
+            heap.push(mut rt, __owned_arg_13)
+        elif instruction == chunk.OP_NEGATE:
+            ok = negate(mut rt, mut o)
+        elif instruction == chunk.OP_PRINT:
+            const printed_value = heap.pop(mut rt)
+            output.print_value(rt, mut o, printed_value)
+        elif instruction == chunk.OP_JUMP:
+            mut offset = read_short(mut frame)
+            frame.ip = frame.ip + offset
+        elif instruction == chunk.OP_JUMP_IF_FALSE:
+            mut offset = read_short(mut frame)
+            if value.is_falsey(heap.peek(rt, 0)):
+                frame.ip = frame.ip + offset
+        elif instruction == chunk.OP_LOOP:
+            mut offset = read_short(mut frame)
+            frame.ip = frame.ip - offset
+        elif instruction == chunk.OP_CALL:
+            mut count = read_byte(mut frame)
+            rt.frames[rt.frame_count - 1] = frame.copy()
+            const __owned_arg_14 = heap.peek(rt, count)
+            ok = call_value(mut rt, mut o, __owned_arg_14, count, clock)
+            if ok:
+                frame = rt.frames[rt.frame_count - 1].copy()
+        elif instruction == chunk.OP_INVOKE:
+            mut method = read_string(mut frame)
+            mut count = read_byte(mut frame)
+            rt.frames[rt.frame_count - 1] = frame.copy()
+            ok = invoke(mut rt, mut o, method, count, clock)
+            if ok:
+                frame = rt.frames[rt.frame_count - 1].copy()
+        elif instruction == chunk.OP_SUPER_INVOKE:
+            mut method = read_string(mut frame)
+            mut count = read_byte(mut frame)
+            rt.frames[rt.frame_count - 1] = frame.copy()
+            const __owned_arg_15 = as_obj(heap.pop(mut rt))
+            ok = invoke_from_class(mut rt, mut o, __owned_arg_15, method, count)
+            if ok:
+                frame = rt.frames[rt.frame_count - 1].copy()
+        elif instruction == chunk.OP_CLOSURE:
+            make_closure(mut rt, mut frame)
+        elif instruction == chunk.OP_CLOSE_UPVALUE:
+            const __owned_arg_16 = rt.stack_top - 1
+            close_upvalues(mut rt, __owned_arg_16)
+            _ = heap.pop(mut rt)
+        elif instruction == chunk.OP_RETURN:
+            mut result = heap.pop(mut rt)
+            close_upvalues(mut rt, frame.base)
+            rt.frame_count = rt.frame_count - 1
+            if rt.frame_count == 0:
+                _ = heap.pop(mut rt)
+                return InterpretResult.OK
+            rt.stack_top = frame.base
+            heap.push(mut rt, result)
+            frame = rt.frames[rt.frame_count - 1].copy()
+        elif instruction == chunk.OP_CLASS:
+            mut name = read_string(mut frame)
+            mut klass = heap.allocate(mut rt, object.Obj.klass(value=object.ClassObj(name=name, methods=table.new_table())))
+            heap.push(mut rt, value.Value.obj(value=klass))
+        elif instruction == chunk.OP_INHERIT:
+            ok = inherit(mut rt, mut o)
+        elif instruction == chunk.OP_METHOD:
+            define_method(mut rt, mut frame)
+        rt.frames[rt.frame_count - 1] = frame.copy()
+        if not ok:
+            return InterpretResult.RUNTIME_ERROR
+
+
+# Runs a script on a fresh runtime (SPEC §8.5): the startup allocations,
+# then compile; push the script function, wrap it in a closure, swap the
+# closure in, call it with no arguments and run.
+public func interpret(mut rt: heap.Runtime, mut o: output.Output, source: bytes, clock: Clock?) -> InterpretResult:
+    natives.start(mut rt)
+    mut function = compiler.compile(mut rt, mut o, source)
+    if function == value.NO_OBJ:
+        return InterpretResult.COMPILE_ERROR
+    heap.push(mut rt, value.Value.obj(value=function))
+    mut closure = heap.allocate(mut rt, object.Obj.closure(value=object.new_closure(function, 0)))
+    _ = heap.pop(mut rt)
+    heap.push(mut rt, value.Value.obj(value=closure))
+    _ = call(mut rt, mut o, closure, 0)
+    return run(mut rt, mut o, clock)

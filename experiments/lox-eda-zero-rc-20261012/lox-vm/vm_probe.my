@@ -1,0 +1,13 @@
+import heap
+import output
+import vm
+
+func main(out: Stream, clock: Clock) -> int:
+    mut rt = heap.new_runtime(True)
+    mut o = output.capture(out)
+    const status = vm.interpret(mut rt, mut o, b"print 1+2; fun outer(){var n=0; fun next(){n=n+1; return n;} return next;} var f=outer(); print f(); print f(); class A { say(){return 10;} } class B < A { say(){return super.say()+1;} } print B().say(); print clock()>0;", Some(clock))
+    _ = out.write(bytes(o.stdout))
+    _ = out.write(bytes(o.stderr))
+    if status != vm.InterpretResult.OK:
+        return 1
+    return 0

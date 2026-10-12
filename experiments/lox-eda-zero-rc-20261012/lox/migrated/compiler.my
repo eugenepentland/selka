@@ -1,0 +1,903 @@
+
+# clox's single-pass Pratt compiler (SPEC §8.1-§8.4): scans on demand and
+# emits bytecode into the Function objects it allocates on the Lox heap.
+import chunk
+import heap
+import lox_strings
+import object
+import output
+import scanner
+import value
+
+
+const PREC_NONE: int = 0
+const PREC_ASSIGNMENT: int = 1
+const PREC_OR: int = 2
+const PREC_AND: int = 3
+const PREC_EQUALITY: int = 4
+const PREC_COMPARISON: int = 5
+const PREC_TERM: int = 6
+const PREC_FACTOR: int = 7
+const PREC_UNARY: int = 8
+const PREC_CALL: int = 9
+
+const UINT8_COUNT: int = 256
+const UINT16_MAX: int = 65535
+
+
+enum FunctionType:
+    FUNCTION
+    INITIALIZER
+    METHOD
+    SCRIPT
+
+
+# A local slot. `depth` is -1 between declaration and initialization.
+record Local:
+    name: bytes
+    depth: int
+    is_captured: bool
+
+
+record UpvalueRef:
+    index: int
+    is_local: bool
+
+
+# The state for one function being compiled; `function` is the heap
+# object whose chunk receives the code.
+record FnCompiler:
+    function: object.FunctionObj
+    function_ref: value.ObjRef
+    kind: FunctionType
+    locals: Local[]
+    upvalues: UpvalueRef[]
+    scope_depth: int
+
+
+record ClassCompiler:
+    has_superclass: bool
+
+
+# The whole compilation: scanner and parser state, the chains of function
+# and class compilers (innermost last), and the runtime and output it
+# allocates into and reports through.
+record Parser:
+    rt: heap.Runtime
+    out: output.Output
+    source: bytes
+    lexer: scanner.Scanner
+    current: scanner.Token
+    previous: scanner.Token
+    had_error: bool
+    panic_mode: bool
+    compilers: FnCompiler[]
+    classes: ClassCompiler[]
+
+
+func current_compiler(p: Parser) -> FnCompiler:
+    return p.compilers[len(p.compilers) - 1].copy()
+
+
+func current_chunk(p: Parser) -> chunk.Chunk:
+    return current_compiler(p).function.code.copy()
+
+
+# A function object has an ObjRef identity, but its payload is a value. Every
+# compiler update writes both the active compiler slot and the object table.
+func store_compiler(mut p: Parser, index: int, updated: FnCompiler):
+    p.compilers[index] = updated.copy()
+    p.rt.objects[updated.function_ref] = object.Obj.function(value=updated.function.copy())
+
+
+func error_at(mut p: Parser, token: scanner.Token, message: bytes):
+    if p.panic_mode:
+        return
+    p.panic_mode = True
+    mut empty: int[] = []
+    mut line = byte_buffer(empty)
+    _ = line.append_utf8("[line ")
+    _ = line.append_int(token.line)
+    _ = line.append_utf8("] Error")
+    if token.kind == scanner.TokenKind.EOF:
+        _ = line.append_utf8(" at end")
+    elif token.kind != scanner.TokenKind.ERROR:
+        _ = line.append_utf8(" at '")
+        _ = line.append_range(p.source, token.start, token.start + token.length)
+        _ = line.append_utf8("'")
+    _ = line.append_utf8(": ")
+    _ = line.append_range(message, 0, len(message))
+    output.error_line(mut p.out, bytes(line))
+    p.had_error = True
+
+
+func error(mut p: Parser, message: bytes):
+    const __owned_arg_1 = p.previous.copy()
+    error_at(mut p, __owned_arg_1, message)
+
+
+func error_at_current(mut p: Parser, message: bytes):
+    const __owned_arg_2 = p.current.copy()
+    error_at(mut p, __owned_arg_2, message)
+
+
+func advance(mut p: Parser):
+    p.previous = p.current.copy()
+    while True:
+        p.current = scanner.scan_token(mut p.lexer)
+        if p.current.kind != scanner.TokenKind.ERROR:
+            return
+        const __owned_arg_3 = p.current.message.copy()
+        error_at_current(mut p, __owned_arg_3)
+
+
+func consume(mut p: Parser, kind: scanner.TokenKind, message: bytes):
+    if p.current.kind == kind:
+        advance(mut p)
+        return
+    error_at_current(mut p, message)
+
+
+func check(p: Parser, kind: scanner.TokenKind) -> bool:
+    return p.current.kind == kind
+
+
+func match_token(mut p: Parser, kind: scanner.TokenKind) -> bool:
+    if p.current.kind != kind:
+        return False
+    advance(mut p)
+    return True
+
+
+func emit_byte(mut p: Parser, byte: int):
+    mut code = current_chunk(p)
+    chunk.write_byte(mut code, byte, p.previous.line)
+    mut current_index = len(p.compilers) - 1
+    mut current = p.compilers[current_index].copy()
+    current.function.code = code
+    store_compiler(mut p, current_index, current)
+
+
+func emit_bytes(mut p: Parser, first: int, second: int):
+    emit_byte(mut p, first)
+    emit_byte(mut p, second)
+
+
+func emit_loop(mut p: Parser, loop_start: int):
+    emit_byte(mut p, chunk.OP_LOOP)
+    mut offset = len(current_chunk(p).code) - loop_start + 2
+    if offset > UINT16_MAX:
+        error(mut p, b"Loop body too large.")
+    emit_byte(mut p, bit_and(shift_right(offset, 8), 255))
+    emit_byte(mut p, bit_and(offset, 255))
+
+
+func emit_jump(mut p: Parser, instruction: int) -> int:
+    emit_byte(mut p, instruction)
+    emit_byte(mut p, 255)
+    emit_byte(mut p, 255)
+    return len(current_chunk(p).code) - 2
+
+
+func emit_return(mut p: Parser):
+    if current_compiler(p).kind == FunctionType.INITIALIZER:
+        emit_bytes(mut p, chunk.OP_GET_LOCAL, 0)
+    else:
+        emit_byte(mut p, chunk.OP_NIL)
+    emit_byte(mut p, chunk.OP_RETURN)
+
+
+func make_constant(mut p: Parser, constant: value.Value) -> int:
+    mut code = current_chunk(p)
+    mut index = chunk.add_constant(mut code, constant)
+    mut current_index = len(p.compilers) - 1
+    mut current = p.compilers[current_index].copy()
+    current.function.code = code
+    store_compiler(mut p, current_index, current)
+    if index >= UINT8_COUNT:
+        error(mut p, b"Too many constants in one chunk.")
+        return 0
+    return index
+
+
+func emit_constant(mut p: Parser, constant: value.Value):
+    const __owned_arg_4 = make_constant(mut p, constant)
+    emit_bytes(mut p, chunk.OP_CONSTANT, __owned_arg_4)
+
+
+func patch_jump(mut p: Parser, offset: int):
+    mut code = current_chunk(p)
+    mut jump = len(code.code) - offset - 2
+    if jump > UINT16_MAX:
+        error(mut p, b"Too much code to jump over.")
+    code.code[offset] = bit_and(shift_right(jump, 8), 255)
+    code.code[offset + 1] = bit_and(jump, 255)
+    mut current_index = len(p.compilers) - 1
+    mut current = p.compilers[current_index].copy()
+    current.function.code = code
+    store_compiler(mut p, current_index, current)
+
+
+# Allocates the function first, roots it, then interns its name (SPEC §8.3).
+func init_compiler(mut p: Parser, kind: FunctionType):
+    mut function = object.new_function()
+    mut ref = heap.allocate(mut p.rt, object.Obj.function(value=function.copy()))
+    p.rt.compiling.append(ref)
+    mut fn_compiler = FnCompiler(function=function.copy(), function_ref=ref, kind=kind, locals=[], upvalues=[], scope_depth=0)
+    p.compilers.append(fn_compiler.copy())
+    if kind != FunctionType.SCRIPT:
+        const __owned_arg_5 = scanner.lexeme(p.source, p.previous)
+        function.name = lox_strings.copy_string(mut p.rt, __owned_arg_5)
+    mut slot_zero = b""
+    if kind != FunctionType.FUNCTION:
+        slot_zero = b"this"
+    fn_compiler.locals.append(Local(name=slot_zero, depth=0, is_captured=False))
+    fn_compiler.function = function
+    const __owned_arg_6 = len(p.compilers) - 1
+    store_compiler(mut p, __owned_arg_6, fn_compiler)
+
+
+# Finishes the innermost function and answers its compiler, which still
+# holds the upvalue descriptors the enclosing OP_CLOSURE needs.
+func end_compiler(mut p: Parser) -> FnCompiler:
+    emit_return(mut p)
+    mut finished = p.compilers.pop()
+    _ = p.rt.compiling.pop()
+    return finished
+
+
+func begin_scope(mut p: Parser):
+    p.compilers[len(p.compilers) - 1].scope_depth += 1
+
+
+func end_scope(mut p: Parser):
+    mut index = len(p.compilers) - 1
+    p.compilers[index].scope_depth -= 1
+    while len(p.compilers[index].locals) > 0 and p.compilers[index].locals[len(p.compilers[index].locals) - 1].depth > p.compilers[index].scope_depth:
+        if p.compilers[index].locals[len(p.compilers[index].locals) - 1].is_captured:
+            emit_byte(mut p, chunk.OP_CLOSE_UPVALUE)
+        else:
+            emit_byte(mut p, chunk.OP_POP)
+        _ = p.compilers[index].locals.pop()
+
+
+func identifier_constant(mut p: Parser, name: bytes) -> int:
+    mut ref = lox_strings.copy_string(mut p.rt, name)
+    return make_constant(mut p, value.Value.obj(value=ref))
+
+
+func resolve_local(mut p: Parser, level: int, name: bytes) -> int:
+    mut locals = p.compilers[level].locals.copy()
+    mut i = len(locals) - 1
+    while i >= 0:
+        mut local = locals[i].copy()
+        if local.name == name:
+            if local.depth == -1:
+                error(mut p, b"Can't read local variable in its own initializer.")
+            return i
+        i -= 1
+    return -1
+
+
+func add_upvalue(mut p: Parser, level: int, index: int, is_local: bool) -> int:
+    mut target = p.compilers[level].copy()
+    mut count = target.function.upvalue_count
+    mut i = 0
+    while i < count:
+        mut upvalue = target.upvalues[i]
+        if upvalue.index == index and upvalue.is_local == is_local:
+            return i
+        i += 1
+    if count == UINT8_COUNT:
+        error(mut p, b"Too many closure variables in function.")
+        return 0
+    target.upvalues.append(UpvalueRef(index=index, is_local=is_local))
+    target.function.upvalue_count = count + 1
+    store_compiler(mut p, level, target)
+    return count
+
+
+func resolve_upvalue(mut p: Parser, level: int, name: bytes) -> int:
+    if level == 0:
+        return -1
+    mut local = resolve_local(mut p, level - 1, name)
+    if local != -1:
+        mut enclosing = p.compilers[level - 1].copy()
+        enclosing.locals[local].is_captured = True
+        p.compilers[level - 1] = enclosing
+        return add_upvalue(mut p, level, local, True)
+    mut upvalue = resolve_upvalue(mut p, level - 1, name)
+    if upvalue != -1:
+        return add_upvalue(mut p, level, upvalue, False)
+    return -1
+
+
+func add_local(mut p: Parser, name: bytes):
+    mut current = current_compiler(p)
+    if len(current.locals) == UINT8_COUNT:
+        error(mut p, b"Too many local variables in function.")
+        return
+    current.locals.append(Local(name=name.copy(), depth=-1, is_captured=False))
+    p.compilers[len(p.compilers) - 1] = current
+
+
+func declare_variable(mut p: Parser):
+    mut current = current_compiler(p)
+    if current.scope_depth == 0:
+        return
+    mut name = scanner.lexeme(p.source, p.previous)
+    mut i = len(current.locals) - 1
+    while i >= 0:
+        mut local = current.locals[i].copy()
+        if local.depth != -1 and local.depth < current.scope_depth:
+            break
+        if local.name == name:
+            error(mut p, b"Already a variable with this name in this scope.")
+        i -= 1
+    add_local(mut p, name)
+
+
+func parse_variable(mut p: Parser, message: bytes) -> int:
+    consume(mut p, scanner.TokenKind.IDENTIFIER, message)
+    declare_variable(mut p)
+    if current_compiler(p).scope_depth > 0:
+        return 0
+    const __owned_arg_7 = scanner.lexeme(p.source, p.previous)
+    return identifier_constant(mut p, __owned_arg_7)
+
+
+func mark_initialized(mut p: Parser):
+    mut current = current_compiler(p)
+    if current.scope_depth == 0:
+        return
+    current.locals[len(current.locals) - 1].depth = current.scope_depth
+    p.compilers[len(p.compilers) - 1] = current
+
+
+func define_variable(mut p: Parser, global_index: int):
+    if current_compiler(p).scope_depth > 0:
+        mark_initialized(mut p)
+        return
+    emit_bytes(mut p, chunk.OP_DEFINE_GLOBAL, global_index)
+
+
+func argument_list(mut p: Parser) -> int:
+    mut count = 0
+    if not check(p, scanner.TokenKind.RIGHT_PAREN):
+        expression(mut p)
+        if count == 255:
+            error(mut p, b"Can't have more than 255 arguments.")
+        count += 1
+        while match_token(mut p, scanner.TokenKind.COMMA):
+            expression(mut p)
+            if count == 255:
+                error(mut p, b"Can't have more than 255 arguments.")
+            count += 1
+    consume(mut p, scanner.TokenKind.RIGHT_PAREN, b"Expect ')' after arguments.")
+    return count
+
+
+func and_(mut p: Parser):
+    mut end_jump = emit_jump(mut p, chunk.OP_JUMP_IF_FALSE)
+    emit_byte(mut p, chunk.OP_POP)
+    parse_precedence(mut p, PREC_AND)
+    patch_jump(mut p, end_jump)
+
+
+func or_(mut p: Parser):
+    mut else_jump = emit_jump(mut p, chunk.OP_JUMP_IF_FALSE)
+    mut end_jump = emit_jump(mut p, chunk.OP_JUMP)
+    patch_jump(mut p, else_jump)
+    emit_byte(mut p, chunk.OP_POP)
+    parse_precedence(mut p, PREC_OR)
+    patch_jump(mut p, end_jump)
+
+
+func binary(mut p: Parser):
+    mut operator = p.previous.kind
+    parse_precedence(mut p, precedence_of(operator) + 1)
+    if operator == scanner.TokenKind.BANG_EQUAL:
+        emit_bytes(mut p, chunk.OP_EQUAL, chunk.OP_NOT)
+    elif operator == scanner.TokenKind.EQUAL_EQUAL:
+        emit_byte(mut p, chunk.OP_EQUAL)
+    elif operator == scanner.TokenKind.GREATER:
+        emit_byte(mut p, chunk.OP_GREATER)
+    elif operator == scanner.TokenKind.GREATER_EQUAL:
+        emit_bytes(mut p, chunk.OP_LESS, chunk.OP_NOT)
+    elif operator == scanner.TokenKind.LESS:
+        emit_byte(mut p, chunk.OP_LESS)
+    elif operator == scanner.TokenKind.LESS_EQUAL:
+        emit_bytes(mut p, chunk.OP_GREATER, chunk.OP_NOT)
+    elif operator == scanner.TokenKind.PLUS:
+        emit_byte(mut p, chunk.OP_ADD)
+    elif operator == scanner.TokenKind.MINUS:
+        emit_byte(mut p, chunk.OP_SUBTRACT)
+    elif operator == scanner.TokenKind.STAR:
+        emit_byte(mut p, chunk.OP_MULTIPLY)
+    elif operator == scanner.TokenKind.SLASH:
+        emit_byte(mut p, chunk.OP_DIVIDE)
+
+
+func call(mut p: Parser):
+    mut count = argument_list(mut p)
+    emit_bytes(mut p, chunk.OP_CALL, count)
+
+
+func dot(mut p: Parser, can_assign: bool):
+    consume(mut p, scanner.TokenKind.IDENTIFIER, b"Expect property name after '.'.")
+    const __owned_arg_8 = scanner.lexeme(p.source, p.previous)
+    mut name = identifier_constant(mut p, __owned_arg_8)
+    if can_assign and match_token(mut p, scanner.TokenKind.EQUAL):
+        expression(mut p)
+        emit_bytes(mut p, chunk.OP_SET_PROPERTY, name)
+    elif match_token(mut p, scanner.TokenKind.LEFT_PAREN):
+        mut count = argument_list(mut p)
+        emit_bytes(mut p, chunk.OP_INVOKE, name)
+        emit_byte(mut p, count)
+    else:
+        emit_bytes(mut p, chunk.OP_GET_PROPERTY, name)
+
+
+func literal(mut p: Parser):
+    mut kind = p.previous.kind
+    if kind == scanner.TokenKind.FALSE:
+        emit_byte(mut p, chunk.OP_FALSE)
+    elif kind == scanner.TokenKind.NIL:
+        emit_byte(mut p, chunk.OP_NIL)
+    elif kind == scanner.TokenKind.TRUE:
+        emit_byte(mut p, chunk.OP_TRUE)
+
+
+func grouping(mut p: Parser):
+    expression(mut p)
+    consume(mut p, scanner.TokenKind.RIGHT_PAREN, b"Expect ')' after expression.")
+
+
+func number(mut p: Parser):
+    mut token = p.previous.copy()
+    mut parsed = 0.0
+    match p.source.parse_float_range(token.start, token.start + token.length):
+        case Some(v):
+            parsed = v
+        case None:
+            parsed = 0.0
+    emit_constant(mut p, value.Value.number(value=parsed))
+
+
+func string(mut p: Parser):
+    mut token = p.previous.copy()
+    mut chars = p.source.borrow(token.start + 1, token.start + token.length - 1).copy()
+    mut ref = lox_strings.copy_string(mut p.rt, chars)
+    emit_constant(mut p, value.Value.obj(value=ref))
+
+
+func named_variable(mut p: Parser, name: bytes, can_assign: bool):
+    mut level = len(p.compilers) - 1
+    mut get_op = chunk.OP_GET_LOCAL
+    mut set_op = chunk.OP_SET_LOCAL
+    mut arg = resolve_local(mut p, level, name)
+    if arg == -1:
+        arg = resolve_upvalue(mut p, level, name)
+        if arg != -1:
+            get_op = chunk.OP_GET_UPVALUE
+            set_op = chunk.OP_SET_UPVALUE
+        else:
+            arg = identifier_constant(mut p, name)
+            get_op = chunk.OP_GET_GLOBAL
+            set_op = chunk.OP_SET_GLOBAL
+    if can_assign and match_token(mut p, scanner.TokenKind.EQUAL):
+        expression(mut p)
+        emit_bytes(mut p, set_op, arg)
+    else:
+        emit_bytes(mut p, get_op, arg)
+
+
+func variable(mut p: Parser, can_assign: bool):
+    const __owned_arg_9 = scanner.lexeme(p.source, p.previous)
+    named_variable(mut p, __owned_arg_9, can_assign)
+
+
+func super_(mut p: Parser):
+    if len(p.classes) == 0:
+        error(mut p, b"Can't use 'super' outside of a class.")
+    elif not p.classes[len(p.classes) - 1].has_superclass:
+        error(mut p, b"Can't use 'super' in a class with no superclass.")
+    consume(mut p, scanner.TokenKind.DOT, b"Expect '.' after 'super'.")
+    consume(mut p, scanner.TokenKind.IDENTIFIER, b"Expect superclass method name.")
+    const __owned_arg_10 = scanner.lexeme(p.source, p.previous)
+    mut name = identifier_constant(mut p, __owned_arg_10)
+    named_variable(mut p, b"this", False)
+    if match_token(mut p, scanner.TokenKind.LEFT_PAREN):
+        mut count = argument_list(mut p)
+        named_variable(mut p, b"super", False)
+        emit_bytes(mut p, chunk.OP_SUPER_INVOKE, name)
+        emit_byte(mut p, count)
+    else:
+        named_variable(mut p, b"super", False)
+        emit_bytes(mut p, chunk.OP_GET_SUPER, name)
+
+
+func this_(mut p: Parser):
+    if len(p.classes) == 0:
+        error(mut p, b"Can't use 'this' outside of a class.")
+        return
+    variable(mut p, False)
+
+
+func unary(mut p: Parser):
+    mut operator = p.previous.kind
+    parse_precedence(mut p, PREC_UNARY)
+    if operator == scanner.TokenKind.BANG:
+        emit_byte(mut p, chunk.OP_NOT)
+    elif operator == scanner.TokenKind.MINUS:
+        emit_byte(mut p, chunk.OP_NEGATE)
+
+
+# The infix precedence column of clox's rule table.
+func precedence_of(kind: scanner.TokenKind) -> int:
+    match kind:
+        case scanner.TokenKind.LEFT_PAREN:
+            return PREC_CALL
+        case scanner.TokenKind.DOT:
+            return PREC_CALL
+        case scanner.TokenKind.MINUS:
+            return PREC_TERM
+        case scanner.TokenKind.PLUS:
+            return PREC_TERM
+        case scanner.TokenKind.SLASH:
+            return PREC_FACTOR
+        case scanner.TokenKind.STAR:
+            return PREC_FACTOR
+        case scanner.TokenKind.BANG_EQUAL:
+            return PREC_EQUALITY
+        case scanner.TokenKind.EQUAL_EQUAL:
+            return PREC_EQUALITY
+        case scanner.TokenKind.GREATER:
+            return PREC_COMPARISON
+        case scanner.TokenKind.GREATER_EQUAL:
+            return PREC_COMPARISON
+        case scanner.TokenKind.LESS:
+            return PREC_COMPARISON
+        case scanner.TokenKind.LESS_EQUAL:
+            return PREC_COMPARISON
+        case scanner.TokenKind.AND:
+            return PREC_AND
+        case scanner.TokenKind.OR:
+            return PREC_OR
+        case _:
+            return PREC_NONE
+
+
+# The prefix column: runs the rule for `kind`, or answers False when the
+# token cannot start an expression.
+func prefix_rule(mut p: Parser, kind: scanner.TokenKind, can_assign: bool) -> bool:
+    match kind:
+        case scanner.TokenKind.LEFT_PAREN:
+            grouping(mut p)
+        case scanner.TokenKind.MINUS:
+            unary(mut p)
+        case scanner.TokenKind.BANG:
+            unary(mut p)
+        case scanner.TokenKind.IDENTIFIER:
+            variable(mut p, can_assign)
+        case scanner.TokenKind.STRING:
+            string(mut p)
+        case scanner.TokenKind.NUMBER:
+            number(mut p)
+        case scanner.TokenKind.FALSE:
+            literal(mut p)
+        case scanner.TokenKind.NIL:
+            literal(mut p)
+        case scanner.TokenKind.TRUE:
+            literal(mut p)
+        case scanner.TokenKind.SUPER:
+            super_(mut p)
+        case scanner.TokenKind.THIS:
+            this_(mut p)
+        case _:
+            return False
+    return True
+
+
+# The infix column, for a token whose precedence is above PREC_NONE.
+func infix_rule(mut p: Parser, kind: scanner.TokenKind, can_assign: bool):
+    match kind:
+        case scanner.TokenKind.LEFT_PAREN:
+            call(mut p)
+        case scanner.TokenKind.DOT:
+            dot(mut p, can_assign)
+        case scanner.TokenKind.AND:
+            and_(mut p)
+        case scanner.TokenKind.OR:
+            or_(mut p)
+        case _:
+            binary(mut p)
+
+
+func parse_precedence(mut p: Parser, precedence: int):
+    advance(mut p)
+    mut can_assign = precedence <= PREC_ASSIGNMENT
+    const __owned_arg_11 = p.previous.kind
+    if not prefix_rule(mut p, __owned_arg_11, can_assign):
+        error(mut p, b"Expect expression.")
+        return
+    while precedence <= precedence_of(p.current.kind):
+        advance(mut p)
+        const __owned_arg_12 = p.previous.kind
+        infix_rule(mut p, __owned_arg_12, can_assign)
+    if can_assign and match_token(mut p, scanner.TokenKind.EQUAL):
+        error(mut p, b"Invalid assignment target.")
+
+
+func expression(mut p: Parser):
+    parse_precedence(mut p, PREC_ASSIGNMENT)
+
+
+func block(mut p: Parser):
+    while not check(p, scanner.TokenKind.RIGHT_BRACE) and not check(p, scanner.TokenKind.EOF):
+        declaration(mut p)
+    consume(mut p, scanner.TokenKind.RIGHT_BRACE, b"Expect '}' after block.")
+
+
+func compile_function(mut p: Parser, kind: FunctionType):
+    init_compiler(mut p, kind)
+    begin_scope(mut p)
+    consume(mut p, scanner.TokenKind.LEFT_PAREN, b"Expect '(' after function name.")
+    if not check(p, scanner.TokenKind.RIGHT_PAREN):
+        parameter(mut p)
+        while match_token(mut p, scanner.TokenKind.COMMA):
+            parameter(mut p)
+    consume(mut p, scanner.TokenKind.RIGHT_PAREN, b"Expect ')' after parameters.")
+    consume(mut p, scanner.TokenKind.LEFT_BRACE, b"Expect '{' before function body.")
+    block(mut p)
+    mut finished = end_compiler(mut p)
+    const __owned_arg_13 = make_constant(mut p, value.Value.obj(value=finished.function_ref))
+    emit_bytes(mut p, chunk.OP_CLOSURE, __owned_arg_13)
+    for upvalue in finished.upvalues:
+        if upvalue.is_local:
+            emit_byte(mut p, 1)
+        else:
+            emit_byte(mut p, 0)
+        emit_byte(mut p, upvalue.index)
+
+
+func parameter(mut p: Parser):
+    mut index = len(p.compilers) - 1
+    mut target = p.compilers[index].copy()
+    target.function.arity += 1
+    store_compiler(mut p, index, target)
+    if target.function.arity > 255:
+        error_at_current(mut p, b"Can't have more than 255 parameters.")
+    mut constant = parse_variable(mut p, b"Expect parameter name.")
+    define_variable(mut p, constant)
+
+
+func method(mut p: Parser):
+    consume(mut p, scanner.TokenKind.IDENTIFIER, b"Expect method name.")
+    const __owned_arg_14 = scanner.lexeme(p.source, p.previous)
+    mut constant = identifier_constant(mut p, __owned_arg_14)
+    mut kind = FunctionType.METHOD
+    if scanner.token_is(p.source, p.previous, b"init"):
+        kind = FunctionType.INITIALIZER
+    compile_function(mut p, kind)
+    emit_bytes(mut p, chunk.OP_METHOD, constant)
+
+
+func class_declaration(mut p: Parser):
+    consume(mut p, scanner.TokenKind.IDENTIFIER, b"Expect class name.")
+    mut class_name = scanner.lexeme(p.source, p.previous)
+    mut name_constant = identifier_constant(mut p, class_name)
+    declare_variable(mut p)
+    emit_bytes(mut p, chunk.OP_CLASS, name_constant)
+    define_variable(mut p, name_constant)
+    p.classes.append(ClassCompiler(has_superclass=False))
+    if match_token(mut p, scanner.TokenKind.LESS):
+        consume(mut p, scanner.TokenKind.IDENTIFIER, b"Expect superclass name.")
+        variable(mut p, False)
+        if class_name == scanner.lexeme(p.source, p.previous):
+            error(mut p, b"A class can't inherit from itself.")
+        begin_scope(mut p)
+        add_local(mut p, b"super")
+        define_variable(mut p, 0)
+        named_variable(mut p, class_name, False)
+        emit_byte(mut p, chunk.OP_INHERIT)
+        p.classes[len(p.classes) - 1].has_superclass = True
+    named_variable(mut p, class_name, False)
+    consume(mut p, scanner.TokenKind.LEFT_BRACE, b"Expect '{' before class body.")
+    while not check(p, scanner.TokenKind.RIGHT_BRACE) and not check(p, scanner.TokenKind.EOF):
+        method(mut p)
+    consume(mut p, scanner.TokenKind.RIGHT_BRACE, b"Expect '}' after class body.")
+    emit_byte(mut p, chunk.OP_POP)
+    if p.classes[len(p.classes) - 1].has_superclass:
+        end_scope(mut p)
+    _ = p.classes.pop()
+
+
+func fun_declaration(mut p: Parser):
+    mut global_index = parse_variable(mut p, b"Expect function name.")
+    mark_initialized(mut p)
+    compile_function(mut p, FunctionType.FUNCTION)
+    define_variable(mut p, global_index)
+
+
+func var_declaration(mut p: Parser):
+    mut global_index = parse_variable(mut p, b"Expect variable name.")
+    if match_token(mut p, scanner.TokenKind.EQUAL):
+        expression(mut p)
+    else:
+        emit_byte(mut p, chunk.OP_NIL)
+    consume(mut p, scanner.TokenKind.SEMICOLON, b"Expect ';' after variable declaration.")
+    define_variable(mut p, global_index)
+
+
+func expression_statement(mut p: Parser):
+    expression(mut p)
+    consume(mut p, scanner.TokenKind.SEMICOLON, b"Expect ';' after expression.")
+    emit_byte(mut p, chunk.OP_POP)
+
+
+func for_statement(mut p: Parser):
+    begin_scope(mut p)
+    consume(mut p, scanner.TokenKind.LEFT_PAREN, b"Expect '(' after 'for'.")
+    if match_token(mut p, scanner.TokenKind.SEMICOLON):
+        pass
+    elif match_token(mut p, scanner.TokenKind.VAR):
+        var_declaration(mut p)
+    else:
+        expression_statement(mut p)
+    mut loop_start = len(current_chunk(p).code)
+    mut exit_jump = -1
+    if not match_token(mut p, scanner.TokenKind.SEMICOLON):
+        expression(mut p)
+        consume(mut p, scanner.TokenKind.SEMICOLON, b"Expect ';' after loop condition.")
+        exit_jump = emit_jump(mut p, chunk.OP_JUMP_IF_FALSE)
+        emit_byte(mut p, chunk.OP_POP)
+    if not match_token(mut p, scanner.TokenKind.RIGHT_PAREN):
+        mut body_jump = emit_jump(mut p, chunk.OP_JUMP)
+        mut increment_start = len(current_chunk(p).code)
+        expression(mut p)
+        emit_byte(mut p, chunk.OP_POP)
+        consume(mut p, scanner.TokenKind.RIGHT_PAREN, b"Expect ')' after for clauses.")
+        emit_loop(mut p, loop_start)
+        loop_start = increment_start
+        patch_jump(mut p, body_jump)
+    statement(mut p)
+    emit_loop(mut p, loop_start)
+    if exit_jump != -1:
+        patch_jump(mut p, exit_jump)
+        emit_byte(mut p, chunk.OP_POP)
+    end_scope(mut p)
+
+
+func if_statement(mut p: Parser):
+    consume(mut p, scanner.TokenKind.LEFT_PAREN, b"Expect '(' after 'if'.")
+    expression(mut p)
+    consume(mut p, scanner.TokenKind.RIGHT_PAREN, b"Expect ')' after condition.")
+    mut then_jump = emit_jump(mut p, chunk.OP_JUMP_IF_FALSE)
+    emit_byte(mut p, chunk.OP_POP)
+    statement(mut p)
+    mut else_jump = emit_jump(mut p, chunk.OP_JUMP)
+    patch_jump(mut p, then_jump)
+    emit_byte(mut p, chunk.OP_POP)
+    if match_token(mut p, scanner.TokenKind.ELSE):
+        statement(mut p)
+    patch_jump(mut p, else_jump)
+
+
+func print_statement(mut p: Parser):
+    expression(mut p)
+    consume(mut p, scanner.TokenKind.SEMICOLON, b"Expect ';' after value.")
+    emit_byte(mut p, chunk.OP_PRINT)
+
+
+func return_statement(mut p: Parser):
+    if current_compiler(p).kind == FunctionType.SCRIPT:
+        error(mut p, b"Can't return from top-level code.")
+    if match_token(mut p, scanner.TokenKind.SEMICOLON):
+        emit_return(mut p)
+    else:
+        if current_compiler(p).kind == FunctionType.INITIALIZER:
+            error(mut p, b"Can't return a value from an initializer.")
+        expression(mut p)
+        consume(mut p, scanner.TokenKind.SEMICOLON, b"Expect ';' after return value.")
+        emit_byte(mut p, chunk.OP_RETURN)
+
+
+func while_statement(mut p: Parser):
+    mut loop_start = len(current_chunk(p).code)
+    consume(mut p, scanner.TokenKind.LEFT_PAREN, b"Expect '(' after 'while'.")
+    expression(mut p)
+    consume(mut p, scanner.TokenKind.RIGHT_PAREN, b"Expect ')' after condition.")
+    mut exit_jump = emit_jump(mut p, chunk.OP_JUMP_IF_FALSE)
+    emit_byte(mut p, chunk.OP_POP)
+    statement(mut p)
+    emit_loop(mut p, loop_start)
+    patch_jump(mut p, exit_jump)
+    emit_byte(mut p, chunk.OP_POP)
+
+
+func synchronize(mut p: Parser):
+    p.panic_mode = False
+    while p.current.kind != scanner.TokenKind.EOF:
+        if p.previous.kind == scanner.TokenKind.SEMICOLON:
+            return
+        match p.current.kind:
+            case scanner.TokenKind.CLASS:
+                return
+            case scanner.TokenKind.FUN:
+                return
+            case scanner.TokenKind.VAR:
+                return
+            case scanner.TokenKind.FOR:
+                return
+            case scanner.TokenKind.IF:
+                return
+            case scanner.TokenKind.WHILE:
+                return
+            case scanner.TokenKind.PRINT:
+                return
+            case scanner.TokenKind.RETURN:
+                return
+            case _:
+                pass
+        advance(mut p)
+
+
+func declaration(mut p: Parser):
+    if match_token(mut p, scanner.TokenKind.CLASS):
+        class_declaration(mut p)
+    elif match_token(mut p, scanner.TokenKind.FUN):
+        fun_declaration(mut p)
+    elif match_token(mut p, scanner.TokenKind.VAR):
+        var_declaration(mut p)
+    else:
+        statement(mut p)
+    if p.panic_mode:
+        synchronize(mut p)
+
+
+func statement(mut p: Parser):
+    if match_token(mut p, scanner.TokenKind.PRINT):
+        print_statement(mut p)
+    elif match_token(mut p, scanner.TokenKind.FOR):
+        for_statement(mut p)
+    elif match_token(mut p, scanner.TokenKind.IF):
+        if_statement(mut p)
+    elif match_token(mut p, scanner.TokenKind.RETURN):
+        return_statement(mut p)
+    elif match_token(mut p, scanner.TokenKind.WHILE):
+        while_statement(mut p)
+    elif match_token(mut p, scanner.TokenKind.LEFT_BRACE):
+        begin_scope(mut p)
+        block(mut p)
+        end_scope(mut p)
+    else:
+        expression_statement(mut p)
+
+
+# Compiles a script. Answers the top-level Function's ref, or NO_OBJ when a
+# compile error was reported (each one already written to stderr).
+public func compile(mut rt: heap.Runtime, mut out: output.Output, source: bytes) -> value.ObjRef:
+    mut start = scanner.Token(kind=scanner.TokenKind.EOF, start=0, length=0, line=1, message=b"")
+    mut p = Parser(
+        rt=rt.copy(),
+        out=out.copy(),
+        source=source.copy(),
+        lexer=scanner.new_scanner(source),
+        current=start.copy(),
+        previous=start.copy(),
+        had_error=False,
+        panic_mode=False,
+        compilers=[],
+        classes=[]
+    )
+    init_compiler(mut p, FunctionType.SCRIPT)
+    advance(mut p)
+    while not match_token(mut p, scanner.TokenKind.EOF):
+        declaration(mut p)
+    mut script = end_compiler(mut p)
+    rt = p.rt.copy()
+    out = p.out.copy()
+    if p.had_error:
+        return value.NO_OBJ
+    return script.function_ref

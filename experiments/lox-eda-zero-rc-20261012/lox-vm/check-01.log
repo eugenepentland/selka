@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 1514, position 3; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 1514 after 20s
+compiler.my:79:12: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value
+      return p.compilers[len(p.compilers) - 1]
+             ^
