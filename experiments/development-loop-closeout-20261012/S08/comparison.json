@@ -1,0 +1,9 @@
+{
+  "cold_metadata_reduction": 12392,
+  "cold_metadata_reduction_fraction": 0.43918344201871273,
+  "edited_metadata_reduction": 1128,
+  "identity_equal": true,
+  "warm_latency_verdict": "not qualified",
+  "warm_metadata_reduction": 0,
+  "warm_work_equal": true
+}

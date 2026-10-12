@@ -59,10 +59,50 @@ _ISDIR = 0x40000000
 _MASK = (_MODIFY | _ATTRIB | _CLOSE_WRITE | _MOVED_FROM | _MOVED_TO |
          _CREATE | _DELETE | _DELETE_SELF | _MOVE_SELF | _UNMOUNT)
 _EVENT = struct.Struct("iIII")
+_MAX_DIRTY_REASONS = 64
+_MAX_REASON_TEXT = 512
+
+
+class _DirtyReasons:
+    """Bound captured causes independently of filesystem authority."""
+
+    def __init__(self):
+        self.records = []
+        self.unknown = False
+        self.truncated = False
+
+    def add(self, facet, name, reason, *, unknown=False):
+        self.unknown |= unknown
+        values = [facet, None if name is None else str(name), str(reason)]
+        for index, value in enumerate(values):
+            if value is not None and len(value) > _MAX_REASON_TEXT:
+                values[index] = value[:_MAX_REASON_TEXT]
+                self.truncated = True
+        row = dict(zip(("facet", "name", "reason"), values))
+        if row in self.records:
+            return
+        if len(self.records) >= _MAX_DIRTY_REASONS:
+            self.truncated = True
+            return
+        self.records.append(row)
+
+    def report(self, role, label):
+        role = str(role)
+        truncated = self.truncated or len(role) > _MAX_REASON_TEXT
+        reasons = []
+        for record in self.records:
+            row = dict(record, role=role[:_MAX_REASON_TEXT])
+            if row["name"] is not None and row["facet"] in ("path", "watch"):
+                row["name"] = label(Path(row["name"]))[:_MAX_REASON_TEXT]
+            reasons.append(row)
+        return {"version": 1, "status": "unknown" if self.unknown else "observed",
+                "reasons": reasons, "unknown": self.unknown, "truncated": truncated}
+
 
 
 @dataclass
 class _Watch:
+    path: Path | None = None
     names: set[bytes] = field(default_factory=set)
     scopes: set[tuple[str, bool]] = field(default_factory=set)
     file: bool = False
@@ -90,7 +130,8 @@ class _Watch:
 
 
 class _Inotify:
-    def __init__(self, include_hidden: bool = False) -> None:
+    def __init__(self, include_hidden: bool = False, reasons=None) -> None:
+        self.reasons = reasons if reasons is not None else _DirtyReasons()
         if sys.platform != "linux":
             raise SnapshotError("verification snapshots require Linux inotify")
         try:
@@ -117,18 +158,20 @@ class _Inotify:
         wd = self.libc.inotify_add_watch(self.fd, os.fsencode(path), mask)
         if wd < 0:
             raise SnapshotError(f"cannot watch {path}: {os.strerror(ctypes.get_errno())}")
-        watch = self.watches.setdefault(wd, _Watch(include_hidden=self.include_hidden))
+        watch = self.watches.setdefault(wd, _Watch(path=path, include_hidden=self.include_hidden))
         self.paths[path] = wd
         watch.file = watch.file or not directory
         return watch
 
     def drain(self) -> bool:
         if self.failure is not None:
+            self.reasons.add("authority", None, self.failure, unknown=True)
             raise SnapshotError(self.failure)
         try:
             return self._drain()
         except SnapshotError as error:
             self.failure = str(error)
+            self.reasons.add("authority", None, self.failure, unknown=True)
             raise
 
     def _drain(self) -> bool:
@@ -162,10 +205,17 @@ class _Inotify:
                     if not self.dirty:
                         raise SnapshotError("inotify watch was unexpectedly removed")
                     continue
-                if mask & (_DELETE_SELF | _MOVE_SELF | _UNMOUNT):
+                if (mask & (_DELETE_SELF | _MOVE_SELF | _UNMOUNT)
+                        or mask & _MASK and watch.relevant(name, mask)):
                     self.dirty = True
-                elif mask & _MASK and watch.relevant(name, mask):
-                    self.dirty = True
+                    path = watch.path / os.fsdecode(name) if name else watch.path
+                    events = [text for bit, text in (
+                        (_MODIFY, "modify"), (_ATTRIB, "attrib"),
+                        (_CLOSE_WRITE, "close-write"), (_MOVED_FROM, "moved-from"),
+                        (_MOVED_TO, "moved-to"), (_CREATE, "create"), (_DELETE, "delete"),
+                        (_DELETE_SELF, "delete-self"), (_MOVE_SELF, "move-self"),
+                        (_UNMOUNT, "unmount")) if mask & bit]
+                    self.reasons.add("watch", path, "inotify:" + ",".join(events))
 
     def close(self) -> None:
         if self.fd >= 0:
@@ -419,7 +469,9 @@ class Snapshot:
         self.recipes = list(recipes)
         self.extra_files = list(extra_files or ())
         self._watcher: _Inotify | None = None
+        self._dirty_reasons = _DirtyReasons()
         self._paths: dict[Path, tuple[bool, tuple[int, ...]]] = {}
+        self._resolved_files: dict[Path, Path] = {}
         self._links: dict[str, str] = {}
         self._identity: dict | None = None
         self._entered = False
@@ -442,6 +494,11 @@ class Snapshot:
         """Actual snapshot work, separate from content identities and cache keys."""
         return dict(self._statistics)
 
+    def stability_diagnostics(self, role="inputs") -> dict:
+        """Return bounded advisory causes without reads or changing authority."""
+        owner = self._lease[1] if self._lease is not None else self
+        return owner._dirty_reasons.report(role, owner._label)
+
     @property
     def identity(self) -> dict:
         if self._lease is not None:
@@ -458,12 +515,17 @@ class Snapshot:
         if session is not None:
             owner, key = session._acquire(self)
             self._lease = (session, owner, key)
+            self._dirty_reasons = owner._dirty_reasons
             self.root = owner.root
             return self
         return self._enter_fresh()
 
     def _enter_fresh(self):
-        self._watcher = _Inotify(self.include_hidden)
+        try:
+            self._watcher = _Inotify(self.include_hidden, self._dirty_reasons)
+        except SnapshotError as error:
+            self._dirty_reasons.add("authority", None, str(error), unknown=True)
+            raise
         try:
             self.root = self._resolve(self._requested_root)
             if not self.root.is_dir():
@@ -483,7 +545,10 @@ class Snapshot:
                 paths.add(path)
             files = []
             for path in sorted(paths, key=lambda item: self._label(item)):
-                actual = self._required_file(path)
+                # Expansion already installed and observed this complete path.
+                # Hashing still checks fresh path/open metadata, and the final
+                # full validation rejects parent/link replacements and ABA.
+                actual = self._resolved_files[path]
                 digest, size = self._hash_file(actual)
                 metadata = actual.lstat()
                 self._observe(actual, metadata)
@@ -493,6 +558,7 @@ class Snapshot:
                 if path != actual:
                     item["resolved"] = self._label(actual)
                 files.append(item)
+            self._resolved_files.clear()
             membership = [self._membership(path) for path in
                           sorted(set(self.directory_membership), key=str)]
             self._identity = {"format": 1, "recipes": self.recipes, "files": files,
@@ -504,10 +570,13 @@ class Snapshot:
             if not self.unchanged():
                 raise SnapshotError("declared inputs changed while constructing the snapshot")
             return self
-        except SnapshotError:
+        except SnapshotError as error:
+            if not self._dirty_reasons.records:
+                self._dirty_reasons.add("authority", None, str(error), unknown=True)
             self._close()
             raise
         except (OSError, ValueError, RuntimeError) as error:
+            self._dirty_reasons.add("authority", getattr(error, "filename", None), str(error), unknown=True)
             self._close()
             raise SnapshotError(f"cannot snapshot declared inputs: {error}") from error
 
@@ -524,7 +593,9 @@ class Snapshot:
             self._close()
 
     def _close(self) -> None:
+        self._resolved_files.clear()
         if self._watcher is not None:
+            self._dirty_reasons.add("authority", None, "snapshot watcher closed", unknown=True)
             self._watcher.close()
             self._watcher = None
 
@@ -544,6 +615,7 @@ class Snapshot:
         identity = _directory_identity(value) if directory else _file_identity(value)
         previous = self._paths.setdefault(path, (directory, identity))
         if previous != (directory, identity):
+            self._dirty_reasons.add("path", path, "metadata changed during construction")
             self._watcher.dirty = True
             raise SnapshotError(f"input changed while watches were installed: {path}")
 
@@ -576,6 +648,7 @@ class Snapshot:
                 target = os.readlink(candidate)
                 self._links[self._label(candidate)] = target
                 if _file_identity(candidate.lstat()) != _file_identity(before):
+                    self._dirty_reasons.add("path", candidate, "symlink changed while resolving input")
                     raise SnapshotError(f"symlink changed while resolving input: {candidate}")
                 destination = Path(target)
                 if not destination.is_absolute():
@@ -617,6 +690,7 @@ class Snapshot:
                 if stat.S_ISLNK(value.st_mode):
                     row["target"] = os.readlink(actual / entry.name)
                     if _file_identity((actual / entry.name).lstat()) != _file_identity(value):
+                        self._dirty_reasons.add("path", actual / entry.name, "membership alias changed during listing")
                         raise SnapshotError(f"membership alias changed during listing: {entry.name}")
                     row["resolved_target"] = self._membership_alias(actual / entry.name)
                 entries.append(row)
@@ -647,6 +721,7 @@ class Snapshot:
             raise SnapshotError(f"declared input is not a regular file: {path}")
         self._watcher.add(actual, directory=False)
         self._observe(actual, actual.lstat())
+        self._resolved_files[path] = actual
         return actual
 
     def _recipe(self, recipe: str) -> tuple[Path, str | None, bool]:
@@ -712,6 +787,7 @@ class Snapshot:
         with os.fdopen(fd, "rb") as handle:
             opened = os.fstat(handle.fileno())
             if not stat.S_ISREG(opened.st_mode) or _file_identity(opened) != _file_identity(before):
+                self._dirty_reasons.add("path", path, "input changed before hashing")
                 raise SnapshotError(f"input changed before hashing: {path}")
             digest = hashlib.sha256()
             self._statistics["files_hashed"] += 1
@@ -723,6 +799,7 @@ class Snapshot:
             after = os.fstat(handle.fileno())
         if (_file_identity(before) != _file_identity(after) or
                 _file_identity(path.lstat()) != _file_identity(before) or size != before.st_size):
+            self._dirty_reasons.add("path", path, "input changed while hashing")
             raise SnapshotError(f"input changed while hashing: {path}")
         self._observe(path, after)
         result = digest.hexdigest(), size
@@ -743,12 +820,19 @@ class Snapshot:
                     self._statistics[key] += value
                 self._lease[0]._record(work)
         if self._watcher is None or self._identity is None:
+            self._dirty_reasons.add("authority", None, "snapshot is not active", unknown=True)
             raise SnapshotError("snapshot is not active")
         if self._pid != os.getpid():
+            self._dirty_reasons.add("authority", None, "watcher belongs to another process", unknown=True)
             self._close()
             raise SnapshotError("snapshot watcher belongs to another process")
         self._statistics["validation_calls"] += 1
         clean = self._watcher.drain()
+        # Once authority is rejected, metadata cannot make it reusable again.
+        if not clean:
+            if not self._dirty_reasons.records:
+                self._dirty_reasons.add("authority", None, "dirty cause unavailable", unknown=True)
+            return False
         for path in self._missing:
             self._statistics["metadata_observations"] += 1
             try:
@@ -757,19 +841,24 @@ class Snapshot:
                 continue
             except OSError as error:
                 self._watcher.dirty = True
+                self._dirty_reasons.add("authority", path, str(error), unknown=True)
                 raise SnapshotError(f"cannot revalidate absent membership {path}: {error}") from error
+            self._dirty_reasons.add("path", path, "missing path appeared")
             self._watcher.dirty = True
         for path, (directory, identity) in self._paths.items():
             self._statistics["metadata_observations"] += 1
             try:
                 current = path.lstat()
             except (FileNotFoundError, NotADirectoryError):
+                self._dirty_reasons.add("path", path, "observed path disappeared")
                 self._watcher.dirty = True
                 continue
             except OSError as error:
                 self._watcher.dirty = True
+                self._dirty_reasons.add("authority", path, str(error), unknown=True)
                 raise SnapshotError(f"cannot revalidate {path}: {error}") from error
             actual = _directory_identity(current) if directory else _file_identity(current)
             if actual != identity:
+                self._dirty_reasons.add("path", path, "metadata identity changed")
                 self._watcher.dirty = True
         return self._watcher.drain() and clean

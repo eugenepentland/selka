@@ -1,0 +1,9 @@
+{
+  "accepted": false,
+  "first_valid": true,
+  "fresh_metadata_second_valid": false,
+  "production_memo_present": false,
+  "reason": "Independent watch drains cannot certify metadata-only host changes.",
+  "scope": "mocked absent watcher events; persistent metadata change",
+  "unsafe_memo_second_valid": true
+}

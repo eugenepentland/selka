@@ -778,5 +778,158 @@ class RetainedSnapshots(unittest.TestCase):
         self.assertRaises(ValueError, RetainedSession, max_entries=-1)
 
 
+class SnapshotValidationWork(unittest.TestCase):
+    setUp = InputSnapshot.setUp
+    file = InputSnapshot.file
+
+    def test_dirty_short_circuit_avoids_metadata_and_never_rebases(self):
+        path = self.file('input')
+        with Snapshot(self.root, ['input']) as snapshot:
+            before = snapshot.statistics
+            path.write_bytes(b'modified')
+            self.assertFalse(snapshot.unchanged())
+            self.assertEqual(snapshot.statistics['metadata_observations'], before['metadata_observations'])
+            path.write_bytes(b'original')
+            self.assertFalse(snapshot.unchanged())
+            self.assertEqual(snapshot.statistics['metadata_observations'], before['metadata_observations'])
+
+    def test_missing_path_and_metadata_fallback_diagnostics(self):
+        with Snapshot(self.root, [], directory_membership=['missing']) as snapshot:
+            self.file('missing')
+            with patch.object(snapshot._watcher, 'drain', side_effect=lambda: not snapshot._watcher.dirty):
+                self.assertFalse(snapshot.unchanged())
+            self.assertTrue(any(row['name'] == 'missing' and row['reason'] == 'missing path appeared'
+                                for row in snapshot.stability_diagnostics()['reasons']))
+
+    def test_diagnostic_bounds_and_detachment_do_not_read_or_clear_dirty(self):
+        from verification_snapshot import _DirtyReasons
+        collector = _DirtyReasons()
+        for index in range(100):
+            collector.add('path', str(self.root / str(index)), 'x' * 700)
+        report = collector.report('r' * 700, lambda path: str(path))
+        self.assertEqual(len(report['reasons']), 64)
+        self.assertTrue(report['truncated'])
+        self.assertTrue(all(len(row['reason']) <= 512 and len(row['role']) <= 512
+                            for row in report['reasons']))
+        self.file('input')
+        with Snapshot(self.root, ['input']) as snapshot:
+            snapshot._dirty_reasons = collector
+            with patch.object(Path, 'lstat', side_effect=AssertionError('diagnostic read')):
+                detached = snapshot.stability_diagnostics()
+            detached['reasons'].clear()
+            self.assertEqual(len(snapshot.stability_diagnostics()['reasons']), 64)
+            self.assertTrue(snapshot.unchanged())
+
+    def test_diagnostics_unknown_after_reset_and_fork(self):
+        self.file('input')
+        with RetainedSession() as session, session.activate():
+            with Snapshot(self.root, ['input']) as borrower:
+                session.reset()
+                self.assertRaises(SnapshotError, borrower.unchanged)
+                self.assertTrue(borrower.stability_diagnostics()['unknown'])
+        with Snapshot(self.root, ['input']) as snapshot:
+            with patch('verification_snapshot.os.getpid', return_value=os.getpid() + 1):
+                self.assertRaises(SnapshotError, snapshot.unchanged)
+            self.assertTrue(snapshot.stability_diagnostics()['unknown'])
+
+    def test_construction_resolves_each_inventory_file_once(self):
+        self.file('scope/one')
+        self.file('scope/two')
+        original = Snapshot._required_file
+        resolved = []
+        def resolve(snapshot, path):
+            resolved.append(path)
+            return original(snapshot, path)
+        with patch.object(Snapshot, '_required_file', resolve):
+            with Snapshot(self.root, ['scope/']) as snapshot:
+                self.assertEqual(len(resolved), 2)
+                self.assertEqual(len(snapshot.identity['files']), 2)
+                self.assertEqual(snapshot._resolved_files, {})
+                self.assertTrue(snapshot.unchanged())
+
+    def test_alias_retarget_between_resolution_and_hashing_rejects(self):
+        target = self.file('one')
+        other = self.file('two')
+        alias = self.root / 'alias'
+        alias.symlink_to(target)
+        original = Snapshot._hash_file
+        def retarget_then_hash(snapshot, path):
+            alias.unlink()
+            alias.symlink_to(other)
+            return original(snapshot, path)
+        snapshot = Snapshot(self.root, ['alias'])
+        with patch.object(Snapshot, '_hash_file', retarget_then_hash):
+            self.assertRaises(SnapshotError, snapshot.__enter__)
+        self.assertEqual(snapshot._resolved_files, {})
+        self.assertTrue(snapshot.stability_diagnostics()['unknown'])
+        self.assertTrue(any(row['name'] == 'alias' for row in snapshot.stability_diagnostics()['reasons']))
+
+    def test_metadata_checks_remain_fresh_without_watch_events(self):
+        path = self.file('input')
+        with Snapshot(self.root, ['input']) as first, Snapshot(self.root, ['input']) as second:
+            self.assertTrue(first.unchanged())
+            path.write_bytes(b'metadata-only replacement')
+            # Emulate a filesystem which changes metadata without local events.
+            with patch.object(second._watcher, 'drain', side_effect=lambda: not second._watcher.dirty):
+                self.assertFalse(second.unchanged())
+            self.assertTrue(any(row['reason'] == 'metadata identity changed'
+                                for row in second.stability_diagnostics()['reasons']))
+
+    def test_borrower_diagnostics_survive_context_cleanup(self):
+        path = self.file('input')
+        with RetainedSession() as session, session.activate():
+            with Snapshot(self.root, ['input']) as borrower:
+                path.write_bytes(b'modified')
+                self.assertFalse(borrower.unchanged())
+                before = borrower.stability_diagnostics('source')
+            self.assertEqual(borrower.stability_diagnostics('source'), before)
+
+    def test_overflow_diagnostic_remains_unknown_after_read_recovers(self):
+        self.file('input')
+        overflow = struct.pack('iIII', -1, 0x4000, 0, 0)
+        with Snapshot(self.root, ['input']) as snapshot:
+            with patch('verification_snapshot.os.read', side_effect=[overflow, BlockingIOError()]):
+                self.assertRaises(SnapshotError, snapshot.unchanged)
+            first = snapshot.stability_diagnostics('tools')
+            self.assertTrue(first['unknown'])
+            self.assertTrue(any('queue overflow' in row['reason'] for row in first['reasons']))
+            self.assertRaises(SnapshotError, snapshot.unchanged)
+            self.assertEqual(snapshot.stability_diagnostics('tools'), first)
+
+    def test_path_membership_and_alias_reasons_name_observed_inputs(self):
+        self.file('tools/one')
+        self.file('target')
+        alias = self.root / 'alias'
+        alias.symlink_to('target')
+        with Snapshot(self.root, ['tools/*.sentinel', 'alias']) as snapshot:
+            self.file('tools/shadowing-executable')
+            alias.unlink()
+            alias.symlink_to('target')
+            self.assertFalse(snapshot.unchanged())
+            reasons = snapshot.stability_diagnostics('tools')['reasons']
+            self.assertTrue(any(row['name'] == 'tools/shadowing-executable' for row in reasons))
+            self.assertTrue(any(row['name'] == 'alias' for row in reasons))
+
+    def test_unattributed_dirty_authority_is_unknown(self):
+        self.file('input')
+        with Snapshot(self.root, ['input']) as snapshot:
+            snapshot._watcher.dirty = True
+            self.assertFalse(snapshot.unchanged())
+            report = snapshot.stability_diagnostics()
+            self.assertTrue(report['unknown'])
+            self.assertEqual(report['reasons'][0]['reason'], 'dirty cause unavailable')
+
+    def test_profile_fixture_preserves_warm_identity_and_rejects_all_aba_consumers(self):
+        from verification_snapshot_profile import profile
+        result = profile(Path(__file__).with_name('verification_snapshot.py'), files=4, snapshots=2)
+        self.assertTrue(result['warm_valid'])
+        self.assertTrue(result['warm_identity_equal'])
+        self.assertEqual(result['warm']['files_hashed'], 0)
+        self.assertEqual(result['warm']['directories_enumerated'], 0)
+        self.assertEqual(result['warm']['snapshot_reuses'], 2)
+        self.assertEqual(result['edited_valid'], [False, False])
+        self.assertEqual(result['edited']['metadata_observations'], 0)
+
+
 if __name__ == '__main__':
     unittest.main()

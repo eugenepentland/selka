@@ -1,0 +1,66 @@
+{
+  "cold": {
+    "bytes_hashed": 15480,
+    "digest_reuses": 0,
+    "directories_enumerated": 16,
+    "files_hashed": 1032,
+    "metadata_observations": 28216,
+    "snapshot_reuses": 0,
+    "validation_calls": 8
+  },
+  "edited": {
+    "bytes_hashed": 0,
+    "digest_reuses": 0,
+    "directories_enumerated": 0,
+    "files_hashed": 0,
+    "metadata_observations": 1128,
+    "snapshot_reuses": 0,
+    "validation_calls": 8
+  },
+  "edited_valid": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false
+  ],
+  "files_per_shared_scope": 128,
+  "fixture_root_components": 9,
+  "inventory_identity_sha256": "0caf5f63dc3b693796dfce183e2654e908b7dfaaca394d5e3a536023bbbc9551",
+  "module_sha256": "9eaa6567c9f582bab3f9467999f5e5750832da8d69039d92822df8ccfd56b4c4",
+  "schema": 1,
+  "snapshots": 8,
+  "timing": "unqualified; deterministic work counts only",
+  "warm": {
+    "bytes_hashed": 0,
+    "digest_reuses": 0,
+    "directories_enumerated": 0,
+    "files_hashed": 0,
+    "metadata_observations": 2256,
+    "snapshot_reuses": 8,
+    "validation_calls": 16
+  },
+  "warm_acquisition": {
+    "bytes_hashed": 0,
+    "digest_reuses": 0,
+    "directories_enumerated": 0,
+    "files_hashed": 0,
+    "metadata_observations": 1128,
+    "snapshot_reuses": 8,
+    "validation_calls": 8
+  },
+  "warm_identity_equal": true,
+  "warm_valid": true,
+  "warm_validation": {
+    "bytes_hashed": 0,
+    "digest_reuses": 0,
+    "directories_enumerated": 0,
+    "files_hashed": 0,
+    "metadata_observations": 1128,
+    "snapshot_reuses": 0,
+    "validation_calls": 8
+  }
+}
