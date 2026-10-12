@@ -1,0 +1,140 @@
+{
+  "production_files_changed": false,
+  "schema": 1,
+  "subprocesses": [
+    {
+      "command": [
+        "/usr/bin/python3",
+        "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S08/experiments/development-loop-closeout-20261012/S08/code-digest-drift.py",
+        "--child"
+      ],
+      "exit_status": 0,
+      "hash_seed": "0",
+      "result": {
+        "after_aliasing_sha256": "351c93186150675e6f90128a6a3aa622823fe1d05f3bd2d0ea5401b25d63ff3b",
+        "after_release_sha256": "7eeaf832ed3527eb2236e2bac7679be55b3b82a6c24ff3d89dcaf61b464c8476",
+        "before_sha256": "7eeaf832ed3527eb2236e2bac7679be55b3b82a6c24ff3d89dcaf61b464c8476",
+        "byte_lengths": [
+          237,
+          237
+        ],
+        "code_equal_after_aliasing": true,
+        "equal_peer_sha256": "7eeaf832ed3527eb2236e2bac7679be55b3b82a6c24ff3d89dcaf61b464c8476",
+        "filename_equal": true,
+        "first_differing_bytes": [
+          {
+            "after": 250,
+            "before": 122,
+            "offset": 44
+          },
+          {
+            "after": 7,
+            "before": 6,
+            "offset": 138
+          },
+          {
+            "after": 7,
+            "before": 6,
+            "offset": 174
+          },
+          {
+            "after": 4,
+            "before": 3,
+            "offset": 179
+          },
+          {
+            "after": 8,
+            "before": 7,
+            "offset": 184
+          },
+          {
+            "after": 6,
+            "before": 5,
+            "offset": 189
+          },
+          {
+            "after": 10,
+            "before": 9,
+            "offset": 204
+          },
+          {
+            "after": 8,
+            "before": 7,
+            "offset": 233
+          }
+        ],
+        "marshal_version": 5,
+        "python_version": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+        "source_sha256": "7bb6395a7a4c77a0a618d52f4fe644a2ca95a3db0c796a5e4a003c2ad3456a22",
+        "stored_hash_stays_fixed": true
+      }
+    },
+    {
+      "command": [
+        "/usr/bin/python3",
+        "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S08/experiments/development-loop-closeout-20261012/S08/code-digest-drift.py",
+        "--child"
+      ],
+      "exit_status": 0,
+      "hash_seed": "1",
+      "result": {
+        "after_aliasing_sha256": "351c93186150675e6f90128a6a3aa622823fe1d05f3bd2d0ea5401b25d63ff3b",
+        "after_release_sha256": "7eeaf832ed3527eb2236e2bac7679be55b3b82a6c24ff3d89dcaf61b464c8476",
+        "before_sha256": "7eeaf832ed3527eb2236e2bac7679be55b3b82a6c24ff3d89dcaf61b464c8476",
+        "byte_lengths": [
+          237,
+          237
+        ],
+        "code_equal_after_aliasing": true,
+        "equal_peer_sha256": "7eeaf832ed3527eb2236e2bac7679be55b3b82a6c24ff3d89dcaf61b464c8476",
+        "filename_equal": true,
+        "first_differing_bytes": [
+          {
+            "after": 250,
+            "before": 122,
+            "offset": 44
+          },
+          {
+            "after": 7,
+            "before": 6,
+            "offset": 138
+          },
+          {
+            "after": 7,
+            "before": 6,
+            "offset": 174
+          },
+          {
+            "after": 4,
+            "before": 3,
+            "offset": 179
+          },
+          {
+            "after": 8,
+            "before": 7,
+            "offset": 184
+          },
+          {
+            "after": 6,
+            "before": 5,
+            "offset": 189
+          },
+          {
+            "after": 10,
+            "before": 9,
+            "offset": 204
+          },
+          {
+            "after": 8,
+            "before": 7,
+            "offset": 233
+          }
+        ],
+        "marshal_version": 5,
+        "python_version": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+        "source_sha256": "7bb6395a7a4c77a0a618d52f4fe644a2ca95a3db0c796a5e4a003c2ad3456a22",
+        "stored_hash_stays_fixed": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "checked_baseline": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "diagnostic_file_sha256": "85c983634b357f28bb11c71f4115444204882b32850936b84b84493ad37c9192",
+  "diagnostic_path": "/home/epentland/ai/canopy/mylang-dl-closeout-20261012-S10/.mylang-cache/verification-v1/diagnostics/core.json",
+  "evidence_limits": "actual retained first request was cancelled; no completed retained report used; lightweight probes do not execute gates",
+  "reported_one_shot_common_implementation": [
+    "a832d0f79b9bb0bb50e7ee59f554358117fa9362c56bbf1874e526c176a76621",
+    "d5dbc83ba16e8ae0c188ec460b1354cdb1377ffb4286af4e482edc48c0cdeaf2",
+    "8bfcd3aea42469948c91fc50da05cb6e74053e1092caaf9119e39b373ba6436a",
+    "be9a7d08f6758834c159ac953e0304cba9ceb321bcf875708634f536f43262a9"
+  ],
+  "source_hashes": {
+    "scripts/cache_session.py": "513fec35a5d04e41fd1fc7e6a298354f1ce1503ace32c209e91af9ed26967baa",
+    "scripts/fuzz_campaign_store.py": "1f995c00b2add163d242e22432f0fcc38141d51b21726425de7a264b91b6d725",
+    "scripts/verification_process.py": "5f8926daf11053a962737d224e8981363ea8889a0dd3dca8bf84700a24ff6125",
+    "scripts/verification_snapshot.py": "9eaa6567c9f582bab3f9467999f5e5750832da8d69039d92822df8ccfd56b4c4",
+    "scripts/verify_cache.py": "ebf15695fe158b685e533620a5a37ad714e13e9e62709def071f6e1711de7818"
+  }
+}
