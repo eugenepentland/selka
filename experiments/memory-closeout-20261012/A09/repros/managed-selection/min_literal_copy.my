@@ -1,0 +1,3 @@
+func main(out: Stream) -> int:
+    out.print(min(["z", "a", "é"]).copy())
+    return 0

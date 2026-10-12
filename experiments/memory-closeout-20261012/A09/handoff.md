@@ -208,3 +208,19 @@ without reinterpreting historical measurements. Current examples retain opt-in;
 separate C2/C3 doc patches and the ce_lists default-command patch are unapplied.
 Sequential patch/hash checks and relative documentation links pass. No production
 code changed, and no unqualified default or package claim was introduced.
+
+## Managed selection diagnosis (Support6)
+
+Read-only diagnosis requested by the coordinator reduced seven current managed
+min/max/unwrap_or refusals, with two admitted scalar controls and nine successful
+ordinary typed dumps. `repros/managed-selection` preserves the exact Support6
+compiler/source hashes, source/typed/Core evidence and an unapplied frontend
+list-extrema patch proposal. List selection loses availability because its hidden
+borrow changes read-site provenance at a same-root loop join; two-value extrema
+and optional defaults also join different potential parents. Clearing joined
+provenance would be unsafe and is not proposed. The list-only alternative carries
+a scalar selected index, preserves the empty-list trap, and reads the selected
+child at the end. Its hand-written lowering reference passes source checks;
+the production patch remains unapplied and unqualified. Coordinator/ownership
+owners retain the implementation and native safety work. No public failure was
+removed from the release inventory, and no source workaround replaced a fixture.

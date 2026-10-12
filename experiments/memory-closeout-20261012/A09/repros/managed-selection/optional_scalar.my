@@ -1,0 +1,6 @@
+func select(value: int?) -> int:
+    return value.unwrap_or(7)
+
+func main(out: Stream) -> int:
+    out.print(select(Some(4)), select(None))
+    return 0

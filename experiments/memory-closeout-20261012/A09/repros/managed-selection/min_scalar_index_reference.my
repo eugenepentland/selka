@@ -1,0 +1,12 @@
+# Diagnostic reference for the proposed compiler lowering, not a source migration.
+func select(words: str[]) -> str:
+    _ = words[0]
+    mut best = 0
+    for i in range(1, len(words)):
+        if words[i] < words[best]:
+            best = i
+    return words[best].copy()
+
+func main(out: Stream) -> int:
+    out.print(select(["z", "a", "é"]))
+    return 0

@@ -1,0 +1,346 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+  "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+  "compiler_source": "5167c588be79dd43d21d5013c36db15110bf239b",
+  "cases": [
+    {
+      "case": "max_borrow_copy",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/max_borrow_copy.my",
+      "source_sha256": "4d7dcd0f66dd64de7511d04f68938e2f5e2834d3a9d0c360a93bf846b856669f",
+      "mode": "checked",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/max_borrow_copy.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "stdout_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/max_borrow_copy-checked.stdout",
+      "stderr_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/max_borrow_copy-checked.stderr"
+    },
+    {
+      "case": "max_borrow_copy",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/max_borrow_copy.my",
+      "source_sha256": "4d7dcd0f66dd64de7511d04f68938e2f5e2834d3a9d0c360a93bf846b856669f",
+      "mode": "ordinary-typed",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/max_borrow_copy.my"
+      ],
+      "status": 0,
+      "stdout_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/max_borrow_copy-ordinary-typed.stdout",
+      "stderr_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/max_borrow_copy-ordinary-typed.stderr"
+    },
+    {
+      "case": "max_two_copy",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/max_two_copy.my",
+      "source_sha256": "b2102475525f52d114c79d66d1a82716623c48e549e31dd9e7989a340124c8b7",
+      "mode": "checked",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/max_two_copy.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "stdout_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/max_two_copy-checked.stdout",
+      "stderr_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/max_two_copy-checked.stderr"
+    },
+    {
+      "case": "max_two_copy",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/max_two_copy.my",
+      "source_sha256": "b2102475525f52d114c79d66d1a82716623c48e549e31dd9e7989a340124c8b7",
+      "mode": "ordinary-typed",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/max_two_copy.my"
+      ],
+      "status": 0,
+      "stdout_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/max_two_copy-ordinary-typed.stdout",
+      "stderr_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/max_two_copy-ordinary-typed.stderr"
+    },
+    {
+      "case": "min_borrow_copy",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/min_borrow_copy.my",
+      "source_sha256": "6695c787a07c158597c146f87969433126643ff4d8ffad042887a0b3dc90475a",
+      "mode": "checked",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/min_borrow_copy.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "stdout_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/min_borrow_copy-checked.stdout",
+      "stderr_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/min_borrow_copy-checked.stderr"
+    },
+    {
+      "case": "min_borrow_copy",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/min_borrow_copy.my",
+      "source_sha256": "6695c787a07c158597c146f87969433126643ff4d8ffad042887a0b3dc90475a",
+      "mode": "ordinary-typed",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/min_borrow_copy.my"
+      ],
+      "status": 0,
+      "stdout_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/min_borrow_copy-ordinary-typed.stdout",
+      "stderr_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/min_borrow_copy-ordinary-typed.stderr"
+    },
+    {
+      "case": "min_literal_copy",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/min_literal_copy.my",
+      "source_sha256": "044917e3de1db06f3da48f24afe2db46ff61d9804f905c2295663210fffe5f98",
+      "mode": "checked",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/min_literal_copy.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "stdout_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/min_literal_copy-checked.stdout",
+      "stderr_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/min_literal_copy-checked.stderr"
+    },
+    {
+      "case": "min_literal_copy",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/min_literal_copy.my",
+      "source_sha256": "044917e3de1db06f3da48f24afe2db46ff61d9804f905c2295663210fffe5f98",
+      "mode": "ordinary-typed",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/min_literal_copy.my"
+      ],
+      "status": 0,
+      "stdout_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/min_literal_copy-ordinary-typed.stdout",
+      "stderr_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/min_literal_copy-ordinary-typed.stderr"
+    },
+    {
+      "case": "min_scalar",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/min_scalar.my",
+      "source_sha256": "a7d8fe9a0382a56564935e16e436f5c4c0b0137b56008e79e88705bd0957f6a5",
+      "mode": "checked",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/min_scalar.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "stdout_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/min_scalar-checked.stdout",
+      "stderr_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/min_scalar-checked.stderr"
+    },
+    {
+      "case": "min_scalar",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/min_scalar.my",
+      "source_sha256": "a7d8fe9a0382a56564935e16e436f5c4c0b0137b56008e79e88705bd0957f6a5",
+      "mode": "ordinary-typed",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/min_scalar.my"
+      ],
+      "status": 0,
+      "stdout_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/min_scalar-ordinary-typed.stdout",
+      "stderr_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/min_scalar-ordinary-typed.stderr"
+    },
+    {
+      "case": "min_two_copy",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/min_two_copy.my",
+      "source_sha256": "d5d267358ff956d15176f931950f99279c9923326c777a3e4275dd88cf1f6ce9",
+      "mode": "checked",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/min_two_copy.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "stdout_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/min_two_copy-checked.stdout",
+      "stderr_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/min_two_copy-checked.stderr"
+    },
+    {
+      "case": "min_two_copy",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/min_two_copy.my",
+      "source_sha256": "d5d267358ff956d15176f931950f99279c9923326c777a3e4275dd88cf1f6ce9",
+      "mode": "ordinary-typed",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/min_two_copy.my"
+      ],
+      "status": 0,
+      "stdout_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/min_two_copy-ordinary-typed.stdout",
+      "stderr_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/min_two_copy-ordinary-typed.stderr"
+    },
+    {
+      "case": "optional_iteration",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/optional_iteration.my",
+      "source_sha256": "cc3541922a3f0d35eff3d994b9a7c2b8cfc4990f47c143e9b755c97b206cc991",
+      "mode": "checked",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/optional_iteration.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "stdout_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/optional_iteration-checked.stdout",
+      "stderr_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/optional_iteration-checked.stderr"
+    },
+    {
+      "case": "optional_iteration",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/optional_iteration.my",
+      "source_sha256": "cc3541922a3f0d35eff3d994b9a7c2b8cfc4990f47c143e9b755c97b206cc991",
+      "mode": "ordinary-typed",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/optional_iteration.my"
+      ],
+      "status": 0,
+      "stdout_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/optional_iteration-ordinary-typed.stdout",
+      "stderr_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/optional_iteration-ordinary-typed.stderr"
+    },
+    {
+      "case": "optional_parameter_copy",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/optional_parameter_copy.my",
+      "source_sha256": "f5ae6259f64394dbfb6c8fdd32e67bcad5a5ca8693049a1afa9ca7e8d646d5c9",
+      "mode": "checked",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/optional_parameter_copy.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "stdout_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/optional_parameter_copy-checked.stdout",
+      "stderr_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/optional_parameter_copy-checked.stderr"
+    },
+    {
+      "case": "optional_parameter_copy",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/optional_parameter_copy.my",
+      "source_sha256": "f5ae6259f64394dbfb6c8fdd32e67bcad5a5ca8693049a1afa9ca7e8d646d5c9",
+      "mode": "ordinary-typed",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/optional_parameter_copy.my"
+      ],
+      "status": 0,
+      "stdout_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/optional_parameter_copy-ordinary-typed.stdout",
+      "stderr_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/optional_parameter_copy-ordinary-typed.stderr"
+    },
+    {
+      "case": "optional_scalar",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/optional_scalar.my",
+      "source_sha256": "5b60f7aa5bef8d6c5cd33b39d4e96104f0e09b7323f9dda40d7a2d7840cdea0c",
+      "mode": "checked",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/optional_scalar.my",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "stdout_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/optional_scalar-checked.stdout",
+      "stderr_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/optional_scalar-checked.stderr"
+    },
+    {
+      "case": "optional_scalar",
+      "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/optional_scalar.my",
+      "source_sha256": "5b60f7aa5bef8d6c5cd33b39d4e96104f0e09b7323f9dda40d7a2d7840cdea0c",
+      "mode": "ordinary-typed",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+        "dump-typed",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/optional_scalar.my"
+      ],
+      "status": 0,
+      "stdout_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/optional_scalar-ordinary-typed.stdout",
+      "stderr_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/managed-selection/optional_scalar-ordinary-typed.stderr"
+    }
+  ],
+  "summary": {
+    "checked_admitted": 2,
+    "checked_refused": 7,
+    "ordinary_typed_admitted": 9,
+    "native_runs": 0,
+    "timed_runs": 0
+  },
+  "production_changes": false,
+  "proposed_patch_applied": false,
+  "raw_archive": {
+    "min-ordinary.core.stderr.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "followup.log.gz": "3e5970c5c7e1649036613ec34a3abfbd930981d527a200c234b8ff4410ef0d2a",
+    "optional-ordinary.core.gz": "b43e527e9899f7183b3ce29153e5001ece5fa3d08c0af428ae5188cfb6ba90d5",
+    "probe.py.gz": "4e17e4e4592653683135fd2780fc933ec4f87c1443f5adc670c33f174bba9f23",
+    "min-ordinary.core.gz": "5e24f161af03e6bdfe69553da8947a927f3fb68c638b23769655bf40fef09f48",
+    "max_two_copy-ordinary-typed.stderr.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "min_two_copy-checked.stderr.gz": "9af72f16df7fa49fd80400732f393143fee3ae5e9be87a162983d1d87313d844",
+    "probe.log.gz": "c955f0eb5eec3b3067318499e4516bbc253cd9ae51806dc3118ad63d04130dfe",
+    "min_literal_copy-ordinary-typed.stderr.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "optional_parameter_copy-checked.stdout.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "optional_parameter_copy-checked.stderr.gz": "9bebda7badf5053771c2a3f5b1798472289b1f888ad92f497afc4137bf52f414",
+    "min_literal_copy-checked.stdout.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "min_two_copy-checked.stdout.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "min_two_copy-ordinary-typed.stderr.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "results.json.gz": "b91ab9b5c34831c653b0c294c50a5e6e2eb451757826ee6ddfd18d030977f7a6",
+    "optional_scalar-ordinary-typed.stdout.gz": "8f67feae7ba28a7e04c42f1d7ce97c17057d31b1e4e4dc8b8326b07c32dbff92",
+    "min_scalar-checked.stderr.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "optional_parameter_copy-ordinary-typed.stderr.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "max_borrow_copy-checked.stderr.gz": "5afaf2ffcca0e3f3713e0ebb5ca936040f64665a0414e4af89071aed1ac0235d",
+    "max_two_copy-checked.stderr.gz": "975a51d21ee77d8188a1b057c25e9e4a8adbd09fdf344f47b95fa14c73adc4da",
+    "optional_iteration-checked.stdout.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "max_borrow_copy-checked.stdout.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "optional_parameter_copy-ordinary-typed.stdout.gz": "87631c2064db0d2989ae639f8a8ba5a6ad7245c3d4ec581e4bbdcb9b284222a8",
+    "min_two_copy-ordinary-typed.stdout.gz": "babefbb78336ce2c1e7e591cc66293e9426bc44c464383074130c583437a8719",
+    "optional_scalar-ordinary-typed.stderr.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "optional_iteration-ordinary-typed.stdout.gz": "cea1f2b620f89b14df7d33a6274bc8ba3d8e2c6646f38884f4840b82f29f9f36",
+    "min_scalar-ordinary-typed.stdout.gz": "ebf6f51b38edbe1cf7ee0a410396cb84feae5470ddcf620d4a2f8c482bb8b232",
+    "max_borrow_copy-ordinary-typed.stderr.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "min_borrow_copy-checked.stdout.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "optional-ordinary.core.stderr.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "optional_scalar-checked.stderr.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "optional_scalar-checked.stdout.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "min_borrow_copy-checked.stderr.gz": "64360e73513a6cd1261aff28210737541b9a9cf02e136c5b7c1dc8cce95e1267",
+    "reference-check.log.gz": "43531752b43d1fe27341abbec55c6b360f2cc2633dc40321be0cccf5ea24af0b",
+    "min_borrow_copy-ordinary-typed.stderr.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "max_borrow_copy-ordinary-typed.stdout.gz": "4186bb65c3807cfbe1d1bf726e8707d1141553d12bd780eec6c799ff22b74f53",
+    "max_two_copy-checked.stdout.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "min_borrow_copy-ordinary-typed.stdout.gz": "79523b2fbd2f51a6b3b48badda6c2bc8e3de84eb0dbee86df66091132b6d5c3a",
+    "reference_check.py.gz": "42a57fa29551bc717e11f5a87f0f3cf771ea4b95791febbeeb7bebb201893370",
+    "optional_iteration-ordinary-typed.stderr.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "min_literal_copy-ordinary-typed.stdout.gz": "e7ea10dfd601299e87c8065e0348c94aec0fe1cfeefc18bd22e9baa5400288b7",
+    "optional_iteration-checked.stderr.gz": "cc0e348e52dd879ccfd4a68a03c4aa8f8572c314905e4f215362a8794f961f7c",
+    "min_literal_copy-checked.stderr.gz": "b8832373f65e6bade94a6afff32e5ea90592e658778c806bfa811db5af1b2a0f",
+    "min_scalar-checked.stdout.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "reference-result.json.gz": "10eaaeb341e3bfb6e48a742a2ff00471e934273baafef0e555d7aa5a4ea9c852",
+    "max_two_copy-ordinary-typed.stdout.gz": "675e3c783620633cc963fac496ed831bee6fbdeaf50236833d415b7738e19664",
+    "min_scalar-ordinary-typed.stderr.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+  },
+  "reference_check": {
+    "command": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/bin/mylang",
+      "check",
+      "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/repros/managed-selection/min_scalar_index_reference.my",
+      "--experimental-zero-rc"
+    ],
+    "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+    "source_sha256": "856cf49c8c22349a6905513cb390c0b99c319f9e50af2c362b48eb76bb54f57f",
+    "status": 0,
+    "stdout": "",
+    "stderr": "",
+    "scope": "Diagnostic source reference only; production proposal unapplied; no native qualification"
+  },
+  "ordinary_core_diagnostics": {
+    "min": "min-ordinary.core.gz",
+    "optional": "optional-ordinary.core.gz",
+    "scope": "Ordinary unchecked Core confirms managed phi shape, not zero-RC native qualification",
+    "batch_queue_wait_seconds": 321
+  }
+}

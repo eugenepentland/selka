@@ -1,0 +1,6 @@
+func select(words: str[]) -> str:
+    return max(words).copy()
+
+func main(out: Stream) -> int:
+    out.print(select(["z", "a", "é"]))
+    return 0
