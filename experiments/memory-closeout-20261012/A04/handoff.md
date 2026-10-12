@@ -274,3 +274,13 @@ is empty; checkedRC0/live0/LLVM/symbol audits pass. Original C0/prior/pending/fi
 sources and the unchanged public oracles are preserved with hashes and burden:
 10 removed/10 added lines and nine explicit copies from C0. A01's integrated
 complete-unpack behavior permits this source; Support7/final reruns remain due.
+
+A fresh isolated C3 core_text.c patch is prepared under retirement-core-text/
+against integration c749ad5a9d2dfef5d5c4d7b9de2a30f03029999f. Exact source and
+proposed hashes, private apply-check success, deleted-selector inventory and
+remaining qualification are recorded. Production core_text.c is unchanged;
+this is a reviewable draft, not legacy retirement. The patch preserves static
+copy-on-mutation and independent encode results and depends on A02/coordinator
+retaining count-free shared runtime helper contracts. Other files from the older
+multifile retirement draft remain held separately. C3 activation and actual
+native/structural/full verification remain required before any retirement claim.
