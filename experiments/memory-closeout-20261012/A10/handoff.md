@@ -87,3 +87,12 @@ selection and native qualification-driver forwarding. See
 `packaging-preparation.md`/`.json`. Fake-tool orchestration tests pass 21/21.
 No production new manifest exists and root builds still select the historical
 route, so this is packaging preparation, not installed RC retirement.
+
+Doctest/session followup: `check-session` accepts the ownership flags and keeps
+eager checks on repeated, cleared and failed requests. `doctest` accepts zero-RC
+and passes it into each check/run invocation. `followup-matrix.json` records all
+six rows passing: module/project checks, positive and negative five-request
+sessions, and repeated doctest runs with positive execution, library checking and
+expected move refusal. Focused `zero RC doctest` unit selection passed 8/8
+(one named regression and seven existing unnamed import blocks). The original
+focus installation was preserved for A04; this candidate uses a private prefix.

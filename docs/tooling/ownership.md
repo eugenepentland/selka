@@ -108,7 +108,9 @@ copies and stack allocations.
 
 `--experimental-zero-rc` selects source moves, explicit copies, checked borrows
 and direct destruction. It applies to `build`, `run`, `run-project`, `check`,
-`dump-ir` and `test`. Tests use the same checked source ownership rules, including
+`check-project`, `check-module`, `check-session`, `dump-ir`, `test` and `doctest`.
+Persistent checks validate each request, including after cached checks. Documentation
+examples pass the selection into both checking and execution. Tests use the same checked source ownership rules, including
 directory workers and property trials. Local, shared and indexed-property test
 receipts distinguish ownership modes; an ordinary RC success cannot satisfy a
 zero-RC request. `check` validates source ownership,

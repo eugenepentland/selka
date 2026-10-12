@@ -18,7 +18,7 @@ const cli_run = @import("cli_run.zig");
 
 /// The flag naming the build cache directory.
 const cache_dir_flag = "--cache-dir";
-const zero_rc_flag = "--experimental-zero-rc";
+const zero_rc_flag = @import("mylang").zero_rc_flag;
 const shared_cache_dir_flag = "--shared-cache-dir";
 
 const usage =

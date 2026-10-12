@@ -10,12 +10,13 @@ This is a source inventory, not passed qualification.
 | run/run-project | core cli_run delegates cli_args/pipeline | arguments, projects, Result entry |
 | check with ownership flag | core cli dispatch -> check_command | typed ownership check, source diagnostics |
 | ordinary check | src/main.zig old front-end/navigation parser | default must validate ownership without losing diagnostic/report/library behavior |
+| check-session | persistent frontend check-project loop | followup admits explicit ownership flags, validates on every cold/warm request |
 | dump-ir | core main.developer | explicit source check and mode-aware lowering |
 | test file | core main.testCommand -> test_runner | C0 rejects flag; mode missing in every lowering and receipt domain |
 | test directory | test_runner_directory/union | in-process roots and spawned children must agree |
 | cached/local/portable/indexed test | receipt settings + test keys | mode isolation and source changes must prevent stale success |
 | affected tests | test_runner_affected reachable lowering | retain unsupported tests in selection |
-| doctest/examples | doctest_command spawns same installed compiler build/run/check | ordinary defaults apply; fence option forwarding already exists |
+| doctest/examples | doctest_command spawns same installed compiler run/check | C0 had no ownership opt-in forwarding; followup adds explicit zero-RC selection; ordinary defaults are inherited |
 | cost/interface cost | cost_command invokes pipeline | defaults must match source checks, not silently use old mode |
 | installed mylang | installed bin plus libexec components and tools | preserve complete layout; compiler alone is incomplete |
 | installed test-index/cache-plan | selfhost/components.zig builds both with separate pinned seed | installed components are guest binaries and need separate zero-RC qualification |

@@ -846,7 +846,7 @@ fn parseArgs(allocator: std.mem.Allocator, args: []const []const u8) ArgError!Pa
         const arg = args[index];
         if (std.mem.eql(u8, arg, "--experimental-single-owner") or std.mem.eql(u8, arg, "--experimental-zero-rc")) {
             switch (command) {
-                .check, .@"check-project", .@"check-module" => {},
+                .check, .@"check-project", .@"check-module", .@"check-session" => {},
                 else => return error.Usage,
             }
             parser.single_owner = true;

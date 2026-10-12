@@ -46,6 +46,7 @@ const timeout_seconds: i64 = 120;
 const legacy_prefix = "docs/legacy/";
 /// `--filter` option prefix, shared by its spaced and `=` spellings.
 const filter_prefix = "--filter=";
+const zero_rc_flag = @import("compiler_root").compiler_language.zero_rc_flag;
 /// `--report` option prefix, shared by its spaced and `=` spellings.
 const report_prefix = "--report=";
 /// `--jobs` option prefix, shared by its spaced and `=` spellings.
@@ -57,7 +58,7 @@ const mistagged_key = "mistagged";
 
 /// Usage and directive summary for `mylang doctest --help` and bad arguments.
 const usage =
-    "usage: mylang doctest [<repo-root>] [--filter GLOB] [--report PATH] [--jobs N] [--verbose]\n" ++
+    "usage: mylang doctest [<repo-root>] [--filter GLOB] [--report PATH] [--jobs N] [--verbose] [--experimental-zero-rc]\n" ++
     "  Runs every fenced ```mylang / ```my example in README.md, SPEC.md and\n" ++
     "  docs/**/*.md (except docs/legacy/) through this compiler. Leading `# doc:`\n" ++
     "  directives pin expected output, expected diagnostic codes, projects, files,\n" ++
@@ -156,6 +157,7 @@ const Options = struct {
     report: ?[]const u8 = null,
     jobs: ?usize = null,
     verbose: bool = false,
+    zero_rc: bool = false,
 };
 
 /// Runtime context one unit needs to be executed. Copied into every worker, so
@@ -167,6 +169,7 @@ const Session = struct {
     compiler: []const u8,
     fixtures: []const u8,
     output: *std.Io.Mutex,
+    zero_rc: bool = false,
 };
 
 /// Parse the subcommand arguments, rejecting unknown options and extra roots.
@@ -178,6 +181,8 @@ fn parseOptions(args: []const []const u8) error{Usage}!Options {
         const arg = args[index];
         if (std.mem.eql(u8, arg, "--verbose")) {
             options.verbose = true;
+        } else if (std.mem.eql(u8, arg, zero_rc_flag)) {
+            options.zero_rc = true;
         } else if (std.mem.eql(u8, arg, "--filter")) {
             if (options.filter != null or index + 1 >= args.len) return error.Usage;
             index += 1;
@@ -270,7 +275,15 @@ fn runCommand(process: std.process.Init, args: []const []const u8) !u8 {
     const workspace = try makeWorkspace(allocator, process.io, workspaceRoot(process.environ_map));
     defer removeTree(process.io, workspace);
     var output: std.Io.Mutex = .init;
-    const session: Session = .{ .allocator = allocator, .io = process.io, .verbose = options.verbose, .compiler = compiler, .fixtures = fixtures, .output = &output };
+    const session: Session = .{
+        .allocator = allocator,
+        .io = process.io,
+        .verbose = options.verbose,
+        .compiler = compiler,
+        .fixtures = fixtures,
+        .output = &output,
+        .zero_rc = options.zero_rc,
+    };
     try runUnits(session, units, workspace, width(process.io, requested, units.len));
     var table: std.StringHashMapUnmanaged(Counts) = .empty;
     try tabulate(allocator, units, suspects, scan.counts, &table);
@@ -848,9 +861,10 @@ fn commandOptions(allocator: std.mem.Allocator, unit: *const Unit, subcommand: [
 
 /// The options a unit's command is run with: value semantics is always on in the
 /// new core, which refuses the retired `--value-semantics` switch (NEW-CORE-S5-DOCTEST-1).
-fn invokedOptions(allocator: std.mem.Allocator, options: []const []const u8) ![]const []const u8 {
+fn invokedOptions(allocator: std.mem.Allocator, options: []const []const u8, zero_rc: bool) ![]const []const u8 {
     var kept: std.ArrayList([]const u8) = .empty;
     for (options) |option| if (!eql(option, "--value-semantics")) try kept.append(allocator, option);
+    if (zero_rc) try kept.append(allocator, zero_rc_flag);
     return kept.toOwnedSlice(allocator);
 }
 
@@ -980,7 +994,7 @@ fn execute(session: Session, unit: *Unit, index: usize, total: usize, unit_dir: 
     const written = try write(session.allocator, session.io, unit, unit_dir);
     const project = unit.members.items.len > 1 or moduleLine(written.entry_source) != null;
     const subcommand = commandFor(decided.action, project);
-    const extra = try invokedOptions(session.allocator, try commandOptions(session.allocator, unit, subcommand, session.fixtures));
+    const extra = try invokedOptions(session.allocator, try commandOptions(session.allocator, unit, subcommand, session.fixtures), session.zero_rc);
     const invocation = invoke(session.allocator, session.io, session.compiler, subcommand, written.entry, extra) catch |err| switch (err) {
         error.Timeout => {
             unit.status = .failed;
@@ -1500,7 +1514,7 @@ test "doctest skips units of retired modes and runs value-semantics units withou
     const units = try group(allocator, try executableBlocks(allocator, try fences(allocator, "docs/modes.md", text)));
     try testing.expectEqual(@as(usize, 3), units.len);
     try testing.expectEqual(Action.run, (try plan(allocator, units[0])).action);
-    const options = try invokedOptions(allocator, try commandOptions(allocator, units[0], "run", "fixtures"));
+    const options = try invokedOptions(allocator, try commandOptions(allocator, units[0], "run", "fixtures"), false);
     for (options) |option| try testing.expect(!eql(option, "--value-semantics"));
     try testing.expectEqual(Action.skip, (try plan(allocator, units[1])).action);
     try testing.expectEqualStrings(retired_mode, (try plan(allocator, units[2])).detail);
@@ -1692,4 +1706,15 @@ test "doctest scratch follows TMPDIR independently of its document root" {
     try std.testing.expectEqualStrings("scratch", workspaceRoot(&environ));
     try environ.put("TMPDIR", "");
     try std.testing.expectEqualStrings("/tmp", workspaceRoot(&environ));
+}
+
+// spec-case: NEW-CORE-ZERO-RC-TEST-1
+test "zero RC doctest preserves ownership selection through command options" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const options = try parseOptions(&.{ zero_rc_flag, "--jobs", "2" });
+    try std.testing.expect(options.zero_rc);
+    const forwarded = try invokedOptions(arena.allocator(), &.{"--value-semantics"}, options.zero_rc);
+    try std.testing.expectEqual(@as(usize, 1), forwarded.len);
+    try std.testing.expectEqualStrings(zero_rc_flag, forwarded[0]);
 }
