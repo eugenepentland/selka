@@ -1,0 +1,5 @@
+func main() -> int:
+    mut source = "é😀-" + str(42)
+    const view = source.borrow(0, len(source))
+    source = "replacement"
+    return len(view)
