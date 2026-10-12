@@ -154,3 +154,13 @@ The approved row-return allocation effect and live index loop are documented
 source-contract changes, not compiler-only performance wins. A reduced native
 reproducer and successful raw/facts IR dumps are included; dump success does
 not qualify the refused native lowering. No census denominator changed.
+
+Support7 common source admission completed on the clean frozen `bed11cf3`
+tree and full ReleaseFast compiler `540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef`:
+85/87 admitted, two exact refusals, zero tool failures and zero unmeasured.
+All 23 additional core sources admit. The list-field augmented write is assigned
+to A02; recursive source migration is assigned to A03. See `Support7-source/`.
+The source sweep retained its original ten-call/60-second lease methodology.
+The coordinator subsequently approved at most 50 actions or 30 seconds per
+shared lease; A03 runners now use that policy with unchanged slot and timing
+budgets. Native census and generated-test qualification remain separate work.

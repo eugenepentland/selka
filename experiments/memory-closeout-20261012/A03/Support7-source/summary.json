@@ -1,0 +1,36 @@
+{
+  "fixture_commit": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "summary": {
+    "admitted": 85,
+    "refused": 2,
+    "compiler_or_tool_failure": 0,
+    "unmeasured": 0
+  },
+  "refusals": [
+    {
+      "source": "tests/lang/rc_semantic_publication.my",
+      "sha256": "39b1f3f52140749b7c3ea2b398b3f5bf58e6a4ac460288d58f718eaecc9516c5",
+      "diagnostic": "rc_semantic_publication.my:42:5: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      receiver.items += [2]\n      ^\n"
+    },
+    {
+      "source": "tests/lang/recursive_values.my",
+      "sha256": "3ba89960ac71da5fa0a55326b1dfd2266998906453b08d93543dd6e98e50a5dd",
+      "diagnostic": "recursive_values.my:127:18: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()\n      mut cursor = chain\n                   ^\n"
+    }
+  ],
+  "source_admission_only": true,
+  "not_final_C1": true,
+  "admission": {
+    "leases": 9,
+    "compiler_calls": 87,
+    "queue_seconds": 572.353567621,
+    "admitted_work_seconds": 0.440407349,
+    "max_actions": 10,
+    "max_seconds": 60,
+    "subsequent_coordinator_approved_policy": {
+      "max_actions": 50,
+      "max_seconds": 30
+    }
+  }
+}

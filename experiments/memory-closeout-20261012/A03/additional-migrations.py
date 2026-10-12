@@ -48,7 +48,7 @@ def main():
     env = dict(os.environ, ZIG=str(args.zig.resolve()), MYLANG_ZIG=str(args.zig.resolve()), MYL_CORE_LEAKCHECK='1')
     for key in ('MYLANG_COUNTERS', 'MYLANG_OPTIONS', 'MYLANG_CORE_SANITIZE'):
         env.pop(key, None)
-    lease = census.AdmissionLease(output, env, 10)
+    lease = census.AdmissionLease(output, env, 50, 30)
     census.LEASE = lease
     audit = census.load_helper('a03_additional_audit', 'experiments/zero-rc-20261011/audit.py')
     result = {'compiler_source_revision': args.source_revision, 'compiler_path': str(args.compiler.resolve()),

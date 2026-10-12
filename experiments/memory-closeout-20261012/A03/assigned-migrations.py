@@ -38,7 +38,7 @@ def main():
         env.pop(key, None)
     audit = census.load_helper('a03_assigned_audit', 'experiments/zero-rc-20261011/audit.py')
     historical = census.load_helper('a03_assigned_counter_summary', 'experiments/rc-census-20261010/census.py')
-    lease = census.AdmissionLease(args.output, env, 10)
+    lease = census.AdmissionLease(args.output, env, 50, 30)
     census.LEASE = lease
     result = {'schema': 'a03-assigned-qualification-v1', 'compiler_commit': args.compiler_commit,
               'compiler_path': str(args.compiler), 'compiler_sha256': census.digest(args.compiler),

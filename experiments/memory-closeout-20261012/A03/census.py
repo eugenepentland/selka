@@ -40,8 +40,9 @@ def save(path, value):
 class AdmissionLease:
     """A cooperating child holds the slot while this parent runs bounded work."""
 
-    def __init__(self, output, env, limit):
+    def __init__(self, output, env, limit, seconds=60):
         self.output, self.env, self.limit = output, env, limit
+        self.duration_ns = int(seconds * 1_000_000_000)
         self.child = None
         self.count = 0
         self.serial = len(list((output / "raw/admission").glob("lease-*.json")))
@@ -59,7 +60,7 @@ class AdmissionLease:
         self.child = None
 
     def command(self):
-        if self.child is not None and (self.count >= self.limit or time.monotonic_ns() - self.admitted_at >= 60_000_000_000):
+        if self.child is not None and (self.count >= self.limit or time.monotonic_ns() - self.admitted_at >= self.duration_ns):
             self.close()
         if self.child is None:
             self.serial += 1
@@ -82,8 +83,8 @@ class AdmissionLease:
                 raise RuntimeError("build admission lease failed: " + ready.decode(errors="replace"))
             self.admitted_at = time.monotonic_ns()
             self.record = {"argv": argv, "queue_wait_ns": self.admitted_at - started,
-                           "limit_compiler_invocations": self.limit, "release_after_ns": 60_000_000_000,
-                           "note": "Release happens at a safe command boundary; an individual compile may exceed 60 seconds."}
+                           "limit_compiler_invocations": self.limit, "release_after_ns": self.duration_ns,
+                           "note": "Release happens at a safe command boundary; an individual compile may exceed the lease time limit."}
             save(self.receipt, self.record)
             self.count = 0
         if self.child.poll() is not None:
@@ -312,10 +313,11 @@ def main():
     parser.add_argument("--family", action="append", default=[])
     parser.add_argument("--modes", nargs="+", choices=MODES, default=list(MODES))
     parser.add_argument("--resume", action="store_true")
-    parser.add_argument("--batch-size", type=int, default=10, help="compiler calls per shared build lease (1..10)")
+    parser.add_argument("--batch-size", type=int, default=50, help="compiler calls per shared build lease (1..50)")
+    parser.add_argument("--batch-seconds", type=int, default=30, help="release lease after this admitted duration at a safe boundary (1..30)")
     args = parser.parse_args()
-    if not 1 <= args.batch_size <= 10:
-        parser.error("batch size must be 1..10")
+    if not 1 <= args.batch_size <= 50 or not 1 <= args.batch_seconds <= 30:
+        parser.error("batch size must be 1..50 and batch seconds must be 1..30")
     if args.write_manifest:
         save(HERE / "manifest.json", manifest())
         return
@@ -334,7 +336,7 @@ def main():
     env = dict(os.environ, ZIG=str(args.zig), MYLANG_ZIG=str(args.zig), MYL_CORE_LEAKCHECK="1")
     for key in ("MYLANG_COUNTERS", "MYLANG_OPTIONS", "MYLANG_CORE_SANITIZE"):
         env.pop(key, None)
-    LEASE = AdmissionLease(args.output, env, args.batch_size)
+    LEASE = AdmissionLease(args.output, env, args.batch_size, args.batch_seconds)
     atexit.register(LEASE.close)
     def request_checkpoint(_signum, _frame):
         global STOP_REQUESTED
