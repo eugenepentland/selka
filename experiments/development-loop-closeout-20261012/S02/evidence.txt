@@ -28,3 +28,5 @@ git diff --check
 Selected/executed/reused/partial: final broad suite 133 selected, 133 executed, 0 reused, 0 partial. Final changed-policy check 11 selected/executed, 0 reused, 0 partial. These counts are focused developer unittest coverage, not a full verification inventory or complete gate.
 Operational durations printed by unittest are not isolated performance comparisons and are not deadline/headroom calibration.
 Cold/warm/edit latency, aggregate RSS, per-process RSS, artifacts, final native gate and p95 acceptance: unavailable/unqualified here; S10 owns integrated qualification.
+Python executable SHA256 /usr/bin/python3.14: 52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41
+Implementation commit hook: status 0; normal Guardian all . --gate; 88 checks passed. Report-only findings remain reported in implementation-commit.log; FEEDBACK.md unchanged.
