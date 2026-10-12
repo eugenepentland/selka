@@ -1,0 +1,5 @@
+plain zero optimized_debug True
+dictionary zero optimized_debug True
+child zero optimized_debug True
+build-slot: FIFO ticket 793, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 3, FIFO ticket 793 after 5s

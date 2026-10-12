@@ -1,0 +1,114 @@
+[
+  {
+    "ownership": "zero",
+    "mode": "release",
+    "command": [
+      "scripts/build-slot.sh",
+      "build",
+      "python3",
+      "-B",
+      ".tmp/memory-closeout/A02/mut-call-validation/native.py",
+      "--ownership",
+      "zero",
+      "--mode",
+      "release"
+    ],
+    "status": 0
+  },
+  {
+    "ownership": "zero",
+    "mode": "debug",
+    "command": [
+      "scripts/build-slot.sh",
+      "build",
+      "python3",
+      "-B",
+      ".tmp/memory-closeout/A02/mut-call-validation/native.py",
+      "--ownership",
+      "zero",
+      "--mode",
+      "debug"
+    ],
+    "status": 0
+  },
+  {
+    "ownership": "zero",
+    "mode": "verify",
+    "command": [
+      "scripts/build-slot.sh",
+      "build",
+      "python3",
+      "-B",
+      ".tmp/memory-closeout/A02/mut-call-validation/native.py",
+      "--ownership",
+      "zero",
+      "--mode",
+      "verify"
+    ],
+    "status": 0
+  },
+  {
+    "ownership": "zero",
+    "mode": "optimized_debug",
+    "command": [
+      "scripts/build-slot.sh",
+      "build",
+      "python3",
+      "-B",
+      ".tmp/memory-closeout/A02/mut-call-validation/native.py",
+      "--ownership",
+      "zero",
+      "--mode",
+      "optimized_debug"
+    ],
+    "status": 0
+  },
+  {
+    "ownership": "zero",
+    "mode": "no_facts",
+    "command": [
+      "scripts/build-slot.sh",
+      "build",
+      "python3",
+      "-B",
+      ".tmp/memory-closeout/A02/mut-call-validation/native.py",
+      "--ownership",
+      "zero",
+      "--mode",
+      "no_facts"
+    ],
+    "status": 0
+  },
+  {
+    "ownership": "ordinary",
+    "mode": "release",
+    "command": [
+      "scripts/build-slot.sh",
+      "build",
+      "python3",
+      "-B",
+      ".tmp/memory-closeout/A02/mut-call-validation/native.py",
+      "--ownership",
+      "ordinary",
+      "--mode",
+      "release"
+    ],
+    "status": 0
+  },
+  {
+    "ownership": "ordinary",
+    "mode": "debug",
+    "command": [
+      "scripts/build-slot.sh",
+      "build",
+      "python3",
+      "-B",
+      ".tmp/memory-closeout/A02/mut-call-validation/native.py",
+      "--ownership",
+      "ordinary",
+      "--mode",
+      "debug"
+    ],
+    "status": 0
+  }
+]

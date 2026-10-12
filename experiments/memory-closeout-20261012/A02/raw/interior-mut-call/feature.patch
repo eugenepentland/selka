@@ -1,0 +1,92 @@
+diff --git a/src/core/build.zig b/src/core/build.zig
+index cc8a91b5c..5134f27a3 100644
+--- a/src/core/build.zig
++++ b/src/core/build.zig
+@@ -2224,6 +2224,8 @@ const FnBuilder = struct {
+         // a value before later arguments; an ancestor write can orphan that selected value.
+         // A later whole-root mutation supersedes publication even if its body preserves the leaf.
+         const places = try self.allocator().alloc(Place, mutated.len);
++        const prepared = try self.allocator().alloc(?PreparedPath, mutated.len);
++        @memset(prepared, null);
+         const values = try self.allocator().alloc(ir.Ref, argument_nodes.len);
+         for (0..argument_nodes.len) |written_position| {
+             const position = if (contract.order.len == 0) written_position else contract.order[written_position];
+@@ -2243,9 +2245,12 @@ const FnBuilder = struct {
+         if (target.op == .call and self.mb.module.functions.items[target.a.index()].signature.linkage == .extern_c and values.len != 0 and self.typeOfRef(values[0]) == .cap) {
+             _ = try self.effectCall("myl_core_host_check", &.{.cap}, .void, &.{values[0]}, span);
+         }
+-        for (mutated, places) |position, *place| {
++        for (mutated, places, prepared) |position, *place, *path| {
+             if (place.steps.len > 0 and self.version(place.root) != place.root_version) {
+                 values[position] = try build_capture.refresh(@TypeOf(self), self, place, values[position], span);
++            } else if (self.module().zero_rc and place.steps.len > 0) {
++                path.* = try self.prepareMutPlace(place.*, span);
++                values[position] = path.*.?.children[place.steps.len - 1];
+             } else values[position] = try self.readPlace(place.*, span);
+         }
+         try self.guardMutPlaces(places, span);
+@@ -2262,12 +2267,48 @@ const FnBuilder = struct {
+         const result = try self.emit(inst);
+         if (mutated.len == 0) return if (inst.ty == .void) .none else result;
+         const declared = try self.mb.mapType(contract.declared, span);
+-        return self.writeBack(result, declared != .void, places, span);
++        return self.writeBack(result, declared != .void, places, prepared, span);
++    }
++
++    /// Transfer a checked interior mut argument through one captured parent path.
++    /// Source checking keeps the root exclusively loaned until the call returns.
++    fn prepareMutPlace(self: *FnBuilder, place: Place, span: u32) Error!PreparedPath {
++        const parents = try self.allocator().alloc(ir.Ref, place.steps.len);
++        const children = try self.allocator().alloc(ir.Ref, place.steps.len);
++        var value = try self.read(place.root, self.current.?);
++        for (place.steps, 0..) |step, index| {
++            parents[index] = value;
++            value = if (step == .payload)
++                try self.propagatedPayload(value, step.payload, span)
++            else
++                try self.stepGet(value, step, span);
++            children[index] = value;
++            const kind = self.module().kind(self.typeOfRef(parents[index]));
++            if ((kind == .list or kind == .dict) and self.module().managed(self.typeOfRef(value))) self.function.insts.items[value.index()].data = flags.place_read;
++        }
++        return .{ .parents = parents, .children = children };
++    }
++
++    /// Reattach each returned child to the exact slot whose owner was transferred.
++    fn storeMutPlace(self: *FnBuilder, place: Place, path: PreparedPath, value: ir.Ref, span: u32) Error!void {
++        var rebuilt = value;
++        var index = place.steps.len;
++        while (index != 0) {
++            index -= 1;
++            const parent = path.parents[index];
++            rebuilt = if (self.module().kind(self.typeOfRef(parent)) == .dict)
++                try self.listSet(parent, self.function.inst(path.children[index]).b, rebuilt, span)
++            else
++                try self.stepSet(parent, place.steps[index], rebuilt, span);
++        }
++        try self.write(place.root, self.current.?, rebuilt);
++        try self.assigned(place.root);
++        try build_capture.invalidate(@TypeOf(self), self, place, span);
+     }
+ 
+     /// A call to a function with `mut` parameters returned `result`: its own value (unless
+     /// `unit`) and each `mut` parameter's final value. Store those into the caller's places.
+-    fn writeBack(self: *FnBuilder, result: ir.Ref, has_value: bool, places: []const Place, span: u32) Error!ir.Ref {
++    fn writeBack(self: *FnBuilder, result: ir.Ref, has_value: bool, places: []const Place, prepared: []const ?PreparedPath, span: u32) Error!ir.Ref {
+         const record_type = self.typeOfRef(result);
+         const parts: []const ir.Type = if (self.mb.module.kind(record_type) == .record) self.mb.module.compound(record_type).record else &.{};
+         // One part alone is not wrapped in a record.
+@@ -2275,9 +2316,11 @@ const FnBuilder = struct {
+         var value: ir.Ref = result;
+         if (wrapped) value = if (has_value) try self.emit(.{ .op = .record_get, .ty = parts[0], .a = result, .data = 0, .span = span }) else .none;
+         const first: usize = if (has_value) 1 else 0;
+-        for (places, 0..) |place, k| {
++        for (places, prepared, 0..) |place, path, k| {
+             const part = if (wrapped) try self.emit(.{ .op = .record_get, .ty = parts[first + k], .a = result, .data = first + k, .span = span }) else result;
+-            if (place.publish == .none) {
++            if (path) |captured| {
++                try self.storeMutPlace(place, captured, part, span);
++            } else if (place.publish == .none) {
+                 _ = try self.storePlace(place, part, span);
+             } else {
+                 const write_block = try self.newBlock();

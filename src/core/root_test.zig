@@ -5,6 +5,7 @@ comptime {
     _ = @import("a08_provider_cache_test.zig");
     _ = @import("a01_parallel_map_test.zig");
     _ = @import("a02_capacity_test.zig");
+    _ = @import("a02_mut_call_test.zig");
     _ = @import("a02_list_methods_test.zig");
     _ = @import("a06_nested_write_test.zig");
     _ = @import("a04_render_test.zig");

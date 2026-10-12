@@ -1,0 +1,277 @@
+{
+  "base": "93b48efcc89360b2e04633e1dab865879a7bd784",
+  "compiler": {
+    "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/5f80b64beac5c8623b77f4ff053db32d/mylang",
+    "sha256": "a6f14d70934bc8aa73ac095ad3996bc9e60bbd39d319a3fa5a7814378d4c3d79",
+    "options": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/2fbbdba74986df79ab2e0143ebe2427a/options.zig"
+  },
+  "source_sha256": {
+    "src/core/build.zig": "aadaf09a2ddcf3bed5fa3ddc638cbb1f7fb4b219a60c617cdcf733de62f31818",
+    "src/core/a02_mut_call_test.zig": "48ccad36e9d99ebf51446fd261e456cb91994232f0672f44b337ea49c7890c00",
+    "src/core/a02_mut_call_fixture.my": "918b2d793588833459cb8228949cd279b824d70872970a734cfc6770049a0d2d",
+    "src/core/own.zig": "7a9765df601d167e62564249fa1dbde1893b64c68211ec631c72d4387287dd06",
+    "src/core/single_owner.zig": "dee8c1342e5c01be33726b5dfac12e1c90a7205a0484a27b57235614db4895ed",
+    "src/core/flags.zig": "0d755cfaf8459362b87a12d41b4ad3e4e61e605b9cec9d7daafb4e1781981c8c",
+    "src/core/root_test.zig": "b57f321acd2353db5207ab91f5c2b1e6dde5f6211807349030186f161dc0cc1e",
+    "SPEC.md": "9989fcab9ef6483e89c9de1da793f5bc5a6a96b55ab5cc03c806b8f1f0d4c223"
+  },
+  "registered_tests_passed": 2,
+  "focused_native_modes": 5,
+  "focused_traps_per_mode": 2,
+  "source_overlap_refusals": 1,
+  "exact_fixture_zero_native_passed": 15,
+  "ordinary_native_semantic_controls_passed": 6,
+  "modes": {
+    "native-ordinary-debug": {
+      "plain": {
+        "pass": true,
+        "output": "True\nTrue\nTrue\n",
+        "rc_events": 45,
+        "direct_drop_sites": 3,
+        "live_bytes_at_exit": 0,
+        "binary_sha256": "b1cebe37e3d88f81d5d2163e8eed136ba66557cc936ba19a0a7a943e3aef7da6",
+        "llvm_sha256": "528a8f0ec8dbda50e50348972edf43aa158517616a767bcbc102cdbc5e3021b1",
+        "llvm_clean": false,
+        "symbols_clean": false
+      },
+      "dictionary": {
+        "pass": true,
+        "output": "True\n",
+        "rc_events": 12,
+        "direct_drop_sites": 4,
+        "live_bytes_at_exit": 0,
+        "binary_sha256": "d9985b50dcf3795bfc41c1ce8eeb590a3b9e1600bd3db8f496f9b53b0a4755a9",
+        "llvm_sha256": "3d881be0e1bc4a11facfc2f02cdcbc0c2f1abc8267bfcc33218e7854449d8010",
+        "llvm_clean": false,
+        "symbols_clean": false
+      },
+      "child": {
+        "pass": true,
+        "output": "8\n",
+        "rc_events": 5,
+        "direct_drop_sites": 1,
+        "live_bytes_at_exit": 0,
+        "binary_sha256": "ad922e624127233460545ab0f5d4154d2b609f1f74324813a0248717cc145ff6",
+        "llvm_sha256": "a015ea16ae24e3d90425088201f6574aecde5725236901828650edf5cead712a",
+        "llvm_clean": false,
+        "symbols_clean": false
+      }
+    },
+    "native-ordinary-release": {
+      "plain": {
+        "pass": true,
+        "output": "True\nTrue\nTrue\n",
+        "rc_events": 42,
+        "direct_drop_sites": 3,
+        "live_bytes_at_exit": 0,
+        "binary_sha256": "7c445b6da367840b1f4f78011b8f0d7a1a24408f94c975215b7342a15751a95e",
+        "llvm_sha256": "660493e4d9e1a4f8e13dbcc2005da42020ac8ba0dbfc7b32ec188880ee7ca06d",
+        "llvm_clean": false,
+        "symbols_clean": false
+      },
+      "dictionary": {
+        "pass": true,
+        "output": "True\n",
+        "rc_events": 6,
+        "direct_drop_sites": 3,
+        "live_bytes_at_exit": 0,
+        "binary_sha256": "f1bc094d9a22c150bbfda8d5fd31822a778c6863726a52a95fa7f17b5e549b0b",
+        "llvm_sha256": "e3f944de03e990577af2421ac6f42e95fc771c2e227b7ced2778e0084e18d081",
+        "llvm_clean": false,
+        "symbols_clean": false
+      },
+      "child": {
+        "pass": true,
+        "output": "8\n",
+        "rc_events": 2,
+        "direct_drop_sites": 1,
+        "live_bytes_at_exit": 0,
+        "binary_sha256": "42aaa3d9874f07d67c25867be253217816d728792c1bd60faee43b0dd7a0a553",
+        "llvm_sha256": "fc51b0c1c95bfb3feb64ca5d4cabc3b78eb6b063ae997c5c26d6b29f3bafb5ae",
+        "llvm_clean": false,
+        "symbols_clean": false
+      }
+    },
+    "native-zero-debug": {
+      "plain": {
+        "pass": true,
+        "output": "True\nTrue\nTrue\n",
+        "rc_events": 0,
+        "direct_drop_sites": 10,
+        "live_bytes_at_exit": 0,
+        "binary_sha256": "6c02d14b01c55d152215db6752ec91551d5cd3b6ca14336c5da78541d703e2ef",
+        "llvm_sha256": "3043d62e872d7df6ad050b64dea5798665c02cb5ba119a8e098faf50d0806855",
+        "llvm_clean": true,
+        "symbols_clean": true
+      },
+      "dictionary": {
+        "pass": true,
+        "output": "True\n",
+        "rc_events": 0,
+        "direct_drop_sites": 6,
+        "live_bytes_at_exit": 0,
+        "binary_sha256": "a1ad662ece3575162c7fa966b4ac9720e60ecb575f7647419d4c9a16e37c9eb9",
+        "llvm_sha256": "84bfddf84072fc95e898be401cb05d55ec6b6af35ab9297466f252bde0889fe4",
+        "llvm_clean": true,
+        "symbols_clean": true
+      },
+      "child": {
+        "pass": true,
+        "output": "8\n",
+        "rc_events": 0,
+        "direct_drop_sites": 1,
+        "live_bytes_at_exit": 0,
+        "binary_sha256": "f3570a550aa7ffd08bed3fbf92f6ea3a89f6e8854968f23b7d6b696e2cb1c51d",
+        "llvm_sha256": "46f18296c517200a05b1136c2c12d5660f54e75ac79cf5c5bc61d71400850f20",
+        "llvm_clean": true,
+        "symbols_clean": true
+      }
+    },
+    "native-zero-no_facts": {
+      "plain": {
+        "pass": true,
+        "output": "True\nTrue\nTrue\n",
+        "rc_events": 0,
+        "direct_drop_sites": 10,
+        "live_bytes_at_exit": 0,
+        "binary_sha256": "e709d0ada759877ff44a0779798a5a0e2cf0b7a804a299094325531baac6621e",
+        "llvm_sha256": "eec576fccf0ba7515d32c0edb4756a21c96143fe5391883694dfdd4eee0d9f00",
+        "llvm_clean": true,
+        "symbols_clean": true
+      },
+      "dictionary": {
+        "pass": true,
+        "output": "True\n",
+        "rc_events": 0,
+        "direct_drop_sites": 6,
+        "live_bytes_at_exit": 0,
+        "binary_sha256": "37db95be7bf094a96a7c007c4074f4d4accd3d93a202a28fe68aa19d03d4dec4",
+        "llvm_sha256": "84bfddf84072fc95e898be401cb05d55ec6b6af35ab9297466f252bde0889fe4",
+        "llvm_clean": true,
+        "symbols_clean": true
+      },
+      "child": {
+        "pass": true,
+        "output": "8\n",
+        "rc_events": 0,
+        "direct_drop_sites": 1,
+        "live_bytes_at_exit": 0,
+        "binary_sha256": "35a7e1782b05f830fa171f3f1faa89c37a087a733fcffb8a043e96a5b4063164",
+        "llvm_sha256": "3665cde52d972f564c7000e8be819e49eb98452cae687015b621a27b852fba02",
+        "llvm_clean": true,
+        "symbols_clean": true
+      }
+    },
+    "native-zero-optimized_debug": {
+      "plain": {
+        "pass": true,
+        "output": "True\nTrue\nTrue\n",
+        "rc_events": 0,
+        "direct_drop_sites": 10,
+        "live_bytes_at_exit": 0,
+        "binary_sha256": "9b6837aa8e1eafb6a3fb7f85594f68401f8cc5fcb893ef5f6a253b685c117637",
+        "llvm_sha256": "c6d9b9c01f4ae15a2fd8ac3e6df43c8e192e61399d69e3e756f54ca36934e30a",
+        "llvm_clean": true,
+        "symbols_clean": true
+      },
+      "dictionary": {
+        "pass": true,
+        "output": "True\n",
+        "rc_events": 0,
+        "direct_drop_sites": 5,
+        "live_bytes_at_exit": 0,
+        "binary_sha256": "0b7752ad05d8829026707364fa3380f25764c9674a816f912437dd1d29d6f300",
+        "llvm_sha256": "d7e33cd86cd1db86c26114820eb2b7df7de8fad9c94013141dde6b4d88e17dd3",
+        "llvm_clean": true,
+        "symbols_clean": true
+      },
+      "child": {
+        "pass": true,
+        "output": "8\n",
+        "rc_events": 0,
+        "direct_drop_sites": 1,
+        "live_bytes_at_exit": 0,
+        "binary_sha256": "b3303e00d107dc3cf0d782321797d96f94267ad46d77c17ef359b5408effecf9",
+        "llvm_sha256": "3665cde52d972f564c7000e8be819e49eb98452cae687015b621a27b852fba02",
+        "llvm_clean": true,
+        "symbols_clean": true
+      }
+    },
+    "native-zero-release": {
+      "plain": {
+        "pass": true,
+        "output": "True\nTrue\nTrue\n",
+        "rc_events": 0,
+        "direct_drop_sites": 10,
+        "live_bytes_at_exit": 0,
+        "binary_sha256": "f1f983ea60a06f383d887159a68cba57f55d9265e459c8d8809e34157db3ee8d",
+        "llvm_sha256": "c6d9b9c01f4ae15a2fd8ac3e6df43c8e192e61399d69e3e756f54ca36934e30a",
+        "llvm_clean": true,
+        "symbols_clean": true
+      },
+      "dictionary": {
+        "pass": true,
+        "output": "True\n",
+        "rc_events": 0,
+        "direct_drop_sites": 5,
+        "live_bytes_at_exit": 0,
+        "binary_sha256": "ce159e394000ee8d4d726900cf1c1a21d18e4b05409b8c25e4dd708ff6a90e4d",
+        "llvm_sha256": "d7e33cd86cd1db86c26114820eb2b7df7de8fad9c94013141dde6b4d88e17dd3",
+        "llvm_clean": true,
+        "symbols_clean": true
+      },
+      "child": {
+        "pass": true,
+        "output": "8\n",
+        "rc_events": 0,
+        "direct_drop_sites": 1,
+        "live_bytes_at_exit": 0,
+        "binary_sha256": "35a7e1782b05f830fa171f3f1faa89c37a087a733fcffb8a043e96a5b4063164",
+        "llvm_sha256": "3665cde52d972f564c7000e8be819e49eb98452cae687015b621a27b852fba02",
+        "llvm_clean": true,
+        "symbols_clean": true
+      }
+    },
+    "native-zero-verify": {
+      "plain": {
+        "pass": true,
+        "output": "True\nTrue\nTrue\n",
+        "rc_events": 0,
+        "direct_drop_sites": 10,
+        "live_bytes_at_exit": 0,
+        "binary_sha256": "34d34a719692bf8c9845e085b317760cda91201bd4af1181ad8369abffe7fb5d",
+        "llvm_sha256": "122b3ae6a77d7997f337f34a969295424a262c7f4f171fd58e777fc5d3a58598",
+        "llvm_clean": true,
+        "symbols_clean": true
+      },
+      "dictionary": {
+        "pass": true,
+        "output": "True\n",
+        "rc_events": 0,
+        "direct_drop_sites": 5,
+        "live_bytes_at_exit": 0,
+        "binary_sha256": "290344db1b67d73d1cbcf5c0220873f895e59332830bad519eb60113e62ab5bc",
+        "llvm_sha256": "b6006ddc1fa397be417be5f102150c2eed5d71548d659e76238734c2fdffcbf2",
+        "llvm_clean": true,
+        "symbols_clean": true
+      },
+      "child": {
+        "pass": true,
+        "output": "8\n",
+        "rc_events": 0,
+        "direct_drop_sites": 1,
+        "live_bytes_at_exit": 0,
+        "binary_sha256": "681455fcf33997815bf5f5caafd128bafb44a75946b74d552452dd3cc5a68467",
+        "llvm_sha256": "1eeaa11287a1c66902b754588a2d3e229b8c8f5a5ab8158aabbb11da71bd57e8",
+        "llvm_clean": true,
+        "symbols_clean": true
+      }
+    }
+  },
+  "review": "A07 inspected exact production diff; requested negative-index, callee-effect-order, and returned-owner/parent-clear checks all included and passed.",
+  "scope": "Qualified isolated prepared-interior-mut-call patch on A02-validation. Coordinator integration and final gate remain required.",
+  "components": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support6-install/libexec/mylang/components",
+  "package_boundary": "Support6 staged components are legacy interim; guest qualification does not establish an RC-free installed package.",
+  "runtime_or_RSS_claim": null,
+  "spec_marker_correction": "Initial Guardian spec check rejected duplicate spec definition; second test marker changed to spec-case and focused tests rerun successfully. No production change."
+}
