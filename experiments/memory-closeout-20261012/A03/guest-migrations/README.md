@@ -151,3 +151,27 @@ compiler identity, sources, harnesses, counters and all refusals. The additional
 key-list `.copy()` in `dictionary_views.my` was applied after the source sweep;
 its current binding refusal still requires A01/A07's compiler fix. Final C1
 qualification remains separate from this interim evidence.
+
+Support6 retests six selected files after the exact slot/array and two-name
+dictionary iteration fixes. `array_places`, `dict_comprehensions` and
+`mut_argument_places` now pass. `loop_rebinding` clears its old iteration refusal
+and exposes a missed migration in the generic `first_of` helper: borrowed
+fallback and iteration values were stored or returned without explicit copies.
+Four `.copy()` calls now make those locals and the fallback return independent;
+the local `value` moves into `seen` at its last read before replacement. All
+public test bodies remain byte-identical, with exact hashes and line/copy counts
+in `loop-helper-review.json`. The focused rerun passes all 14 tests.
+
+Across these six selected Support6 files, four now execute 60 Boolean tests
+successfully with matching outputs, zero RC, zero managed exit-live and clean
+LLVM/symbols. There were seven build attempts, including the preserved initial
+helper refusal. Two compiler failures remain: `field_augmented.my:70` list-field
+`+=` is rejected as borrowed storage, and `mut_dictionary_arguments.my:11`
+cannot lower a mutable nested-dictionary child. A02 is reducing the latter for
+the coordinator/A07; the former remains a distinct ownership-source failure.
+Three other known failures were deliberately held for compiler fixes absent from
+Support6: managed tuple unpacking, fresh field receivers and single-item DictItem
+borrowing. All 36 assigned files remain visible in `support6-summary.json`.
+The exact Support6 identity, every attempt and source/harness/counter snapshots
+are preserved in the `migration-support6-*` archives. This is bounded interim
+qualification, not the final integrated five-mode matrix.

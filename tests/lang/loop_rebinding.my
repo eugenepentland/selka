@@ -23,21 +23,21 @@ func pair(left: i64, right: i64) -> tuple[i64, i64]:
 
 
 func first_of[T: copy + storable](values: T[], fallback: T) -> T:
-    mut seen = fallback
+    mut seen = fallback.copy()
     mut count = 0
     for iteration_index, iteration_value in enumerate(values):
         mut index = iteration_index
-        mut value = iteration_value
+        mut value = iteration_value.copy()
         if index == 0:
             seen = value
         index = 100
-        value = fallback
+        value = fallback.copy()
         count += 1
     for iteration_position in range(len(values)):
         mut position = iteration_position
         position += 50
         count += 1
-    return if (count == 2 * len(values)) then (seen) else (fallback)
+    return if (count == 2 * len(values)) then (seen) else (fallback.copy())
 
 
 func rebinding_steps() -> i64:

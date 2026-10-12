@@ -1,0 +1,69 @@
+{
+  "compiler_source_revision": "5167c588be79dd43d21d5013c36db15110bf239b",
+  "compiler_sha256": "bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4",
+  "assigned_files": 36,
+  "selected_files": [
+    "tests/lang/array_places.my",
+    "tests/lang/dict_comprehensions.my",
+    "tests/lang/field_augmented.my",
+    "tests/lang/loop_rebinding.my",
+    "tests/lang/mut_argument_places.my",
+    "tests/lang/mut_dictionary_arguments.my"
+  ],
+  "total_build_attempts": 7,
+  "latest_selected_states": {
+    "passed": [
+      "tests/lang/array_places.my",
+      "tests/lang/dict_comprehensions.my",
+      "tests/lang/loop_rebinding.my",
+      "tests/lang/mut_argument_places.my"
+    ],
+    "refused": {
+      "tests/lang/field_augmented.my": "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-support6-targeted/sources/tests/lang/field_augmented.my:70:5: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()",
+      "tests/lang/mut_dictionary_arguments.my": "/home/epentland/ai/canopy/mylang-memory-20261012-A03/.tmp/memory-closeout/A03/migration-support6-targeted/sources/tests/lang/mut_dictionary_arguments.my:11:18: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression"
+    }
+  },
+  "unique_passed_files": 4,
+  "executed_boolean_tests": 60,
+  "initial_helper_source_refusal_preserved": true,
+  "helper_retest_source_sha256": "57f54d5e5cd46d4cc20400d1a2f762e7d3adc4409c6992b9a49efcad9f02f9df",
+  "unmeasured_assigned_files": [
+    "tests/lang/aggregate_refs.my",
+    "tests/lang/array_negative_index.my",
+    "tests/lang/array_writes.my",
+    "tests/lang/borrowed_roots.my",
+    "tests/lang/closed_record_inout.my",
+    "tests/lang/collection_read_callbacks.my",
+    "tests/lang/constant_list_image.my",
+    "tests/lang/dictionary_hash_index.my",
+    "tests/lang/dictionary_hashing.my",
+    "tests/lang/dictionary_range_keys.my",
+    "tests/lang/dictionary_views.my",
+    "tests/lang/element_access.my",
+    "tests/lang/element_borrows.my",
+    "tests/lang/frontend_types.my",
+    "tests/lang/gc_footprint.my",
+    "tests/lang/gc_generations.my",
+    "tests/lang/gc_mut_argument_roots.my",
+    "tests/lang/keyed_sorting.my",
+    "tests/lang/live_view_snapshots.my",
+    "tests/lang/local_stack_list.my",
+    "tests/lang/migrated/managed_values.my",
+    "tests/lang/migrated/managed_values_case_1.my",
+    "tests/lang/mut_collection_call_window.my",
+    "tests/lang/mut_rebind_caller.my",
+    "tests/lang/mut_rebind_modules.my",
+    "tests/lang/mut_rebinding.my",
+    "tests/lang/mut_record_call_window.my",
+    "tests/lang/operand_snapshots.my",
+    "tests/lang/option_narrowing.my",
+    "tests/lang/frontend_type_helpers.my"
+  ],
+  "deliberately_held_for_upcoming_compiler_fixes": [
+    "tests/lang/array_negative_index.my",
+    "tests/lang/element_access.my",
+    "tests/lang/dictionary_views.my"
+  ],
+  "all_executions_require_matching_output_zero_rc_zero_exit_live_clean_symbols": true,
+  "not_final_C1": true
+}

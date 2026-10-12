@@ -132,3 +132,13 @@ corrected locally, preserving every assertion; the exact source burden is in
 
 The seven-copy correction and Support5 migration evidence were delivered in
 `546ef247609681cf1474a4ec378fe1b5c14574a0`; all 88 Guardian checks passed.
+
+Support5 original-30 evidence was delivered in `b4a083209`; Guardian passed all
+88 checks. Support6 (`5167c588be79dd43d21d5013c36db15110bf239b`, compiler
+`bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4`)
+then tested six targeted migration files. Four pass 60 Boolean tests after four
+explicit copies in `loop_rebinding.first_of`; public test bodies are unchanged.
+The list-field `+=` and nested-dictionary mutable-child compiler failures remain.
+Three other known failures await fixes excluded from Support6. See
+`guest-migrations/support6-summary.json` for every selected, held and unmeasured
+file and archived attempts. The final 435-build/695-execution census remains due.
