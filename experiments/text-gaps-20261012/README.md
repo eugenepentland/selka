@@ -42,6 +42,9 @@ landed just below the 50 ms target and are disclosed in the report.
 
 Against the frozen checked-ownership C0 compiler, merged runtime is about
 60–62% lower for splitting, 46–49% lower for JSON, and 30% lower for CSV.
+C0 in these text comparisons is
+`78b4bb5934748d5942389b12dfe66cb0031cafdc`; it is the later microbenchmark
+baseline, distinct from the original memory-closeout plan's starting revision.
 JSON managed peak is about 26% lower; process RSS is reported independently.
 The small split reserve policy raises managed peak from 7,528 to 7,944 bytes.
 All counted cells have zero runtime RC events and zero managed live bytes at
@@ -74,6 +77,15 @@ serializer no longer hashes or searches those keys. The production change and
 its independent ordering, ownership, and numeric regressions are integrated;
 combined timing is pending. The small private peek guard is also included in
 that tested source, with its isolated timing limitations retained above.
+
+The [standalone serializer trial](bench/reports/json-serializer-trial-001/REPORT.md)
+subsequently measured 0.968 [0.959, 0.981] against common on the stable small
+case, but 1.055 [1.040, 1.072] against Rust. It does not establish the requested
+target. All seven arms of the large case triggered noise flags; its broad
+intervals are inconclusive. Every sample is retained. A post-cell observation
+found heavy browser CPU activity; it is contemporaneous context, not proof of
+the cause of variation during individual samples. No standalone repeat or
+selective sample removal was performed.
 
 A [read-only JSON audit](split/json-guard-readonly-deferred.md) records the
 serializer and byte-loop costs before these follow-ups. The broader dictionary
