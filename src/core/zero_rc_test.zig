@@ -2102,6 +2102,14 @@ test "zero RC borrowed defaults reject malformed and consuming IR markers" {
             function.insts.items[phi.index()].data = std.math.maxInt(u64);
             try std.testing.expectError(error.UnsupportedInstruction, selections.validate(a, &module, function));
             function.insts.items[phi.index()] = selected;
+            const incoming = @constCast(function.operands(selected.data));
+            std.mem.swap(@import("ir.zig").Ref, &incoming[0], &incoming[1]);
+            // Types and producer identities still match, but the hit value now
+            // arrives on the miss edge where its definition does not dominate.
+            try selections.validate(a, &module, function);
+            try std.testing.expectError(error.UnsupportedInstruction, @import("marker_validation.zig").validate(a, &module, function));
+            try std.testing.expectError(error.Unsupported, @import("own.zig").function(a, &module, function, .{}));
+            std.mem.swap(@import("ir.zig").Ref, &incoming[0], &incoming[1]);
             try function.insts.append(a, .{ .op = .ret, .ty = .void, .a = phi });
             try std.testing.expectError(error.UnsupportedInstruction, selections.validate(a, &module, function));
             function.insts.items.len -= 1;

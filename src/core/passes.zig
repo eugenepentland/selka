@@ -23,7 +23,7 @@ pub const Error = std.mem.Allocator.Error || own.Error;
 pub const CachedError = @import("demand_ir.zig").Error || Error;
 
 fn validateSelections(a: std.mem.Allocator, module: *const ir.Module) Error!void {
-    @import("borrow_selection.zig").validateModule(a, module) catch |err| switch (err) {
+    @import("marker_validation.zig").validateModule(a, module) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         error.UnsupportedInstruction => return error.Unsupported,
     };

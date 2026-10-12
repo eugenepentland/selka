@@ -1,0 +1,23 @@
+{
+  "base": "9bfc52809d00338647b3fc79113249b31000dfaf",
+  "reproducer": "Swap the two type-correct selected phi incoming refs without swapping CFG predecessors; marker-local shape accepts, but selected hit definition does not dominate miss edge.",
+  "fix": "One general IR CFG/type/dominance verification per marker-bearing function per boundary after bounds/producer proof. Fresh own/passes refuse Unsupported; decoded cache returns miss; OOM propagates.",
+  "tests": {
+    "focused_passed": 6,
+    "failed": 0,
+    "guardian_passed": 88,
+    "native_modes": [
+      "unoptimized debug",
+      "verified release"
+    ],
+    "scaling_control": "64-level shared-root selections still execute and clean up"
+  },
+  "source_sha256": {
+    "src/core/marker_validation.zig": "8e8a12ee169c15fe55bb979704b7829260fd8fb5f303941bca81769b41d7842e",
+    "src/core/own.zig": "6b7e788d559c90c78c0223a301fcc95dbbb0978034313fc732b356b0ed7d69a2",
+    "src/core/passes.zig": "ac9f04c6b50ffb0fb189c14322166d61eac1b892e8db3e827c9b74fa689c0a45",
+    "src/core/optimization_cache.zig": "d3eb93d72d0cbe588baed2c6e3fb0ea348c9e381118941005bf7d3b22c28e759",
+    "src/core/zero_rc_test.zig": "22ef3ed500dec761c3f9b9f21190f58ef7f60250b97c9dfea36e6de86eec68e0"
+  },
+  "remaining": "A08 corrupted artifact, replay, physical discovery cache qualification on integrated compiler"
+}

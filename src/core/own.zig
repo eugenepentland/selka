@@ -112,7 +112,7 @@ pub fn run(arena: std.mem.Allocator, module: *ir.Module, options: Options) Error
 
 /// Run ownership with independently reclaimable analysis backing.
 pub fn runWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *ir.Module, options: Options) Error!Stats {
-    selections.validateModule(backing, module) catch |err| switch (err) {
+    @import("marker_validation.zig").validateModule(backing, module) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         error.UnsupportedInstruction => return error.Unsupported,
     };
@@ -140,7 +140,7 @@ pub fn functionWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator,
     var work = std.heap.ArenaAllocator.init(backing);
     defer work.deinit();
     const scratch = work.allocator();
-    selections.validate(backing, module, f) catch |err| switch (err) {
+    @import("marker_validation.zig").validate(backing, module, f) catch |err| switch (err) {
         error.OutOfMemory => return error.OutOfMemory,
         error.UnsupportedInstruction => return error.Unsupported,
     };
