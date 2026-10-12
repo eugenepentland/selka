@@ -89,7 +89,7 @@ sibling. [Methodology](methodology.md), [host metadata](host.json), and the
 [timing schedule](schedule.json) record these constraints.
 
 Still required: freeze C1; compile candidate binaries from identical source/inputs;
-calibrate short runtime cases; run the full two-warmup/nine-pair runtime comparisons;
+confirm the final lengthened input pilot; run the full two-warmup/nine-pair runtime comparisons;
 combine A03/A06/A08 evidence on that exact candidate; repeat affected measurements
 after default promotion and retirement. Earlier artifacts will not be relabeled
 as C1, C2 or C3 results. The prepared harness and baseline do not close those items.
@@ -101,3 +101,43 @@ is a material confound, especially at one worker. Final paired runs must pin
 comparable core topology and investigate any repeatable slowdown above 5%.
 A cancellation attempt did not prevent this already scripted pilot from running;
 the schedule and handoff reflect its actual completion.
+
+
+## Calibrated input and topology preparation
+
+The [fixed-topology pilot](raw/workload-pilot-fixed-topology.json) preserves all
+21 one-shot output checks. The apparent expensive-map slowdown in the earlier
+all-CPU pilot was absent here; this is a calibration observation, with no paired
+speedup or causality claim. Final paired inputs now use one million record
+unpacks, longer application repetitions, and longer expensive maps. Cheap-map
+repetitions are 65,536 / 16,384 / 8,192 at 1 / 2 / 8 workers so each faster arm
+should exceed 100 ms while each baseline fits a bounded window. Raw wall times
+across these worker cases are therefore not a scaling comparison. Every
+before/after pair uses identical arguments, checksums and affinity.
+
+The hybrid host's final worker affinity is CPU 10 for one worker, CPUs 8 and 10
+for two workers, and CPUs 0–11 for eight workers. The last set is six physical
+P cores with twelve logical CPUs; E cores are excluded. The
+[calibrated guest](calibrated-manifest.json) and
+[application](calibrated-applications-manifest.json) manifests and frozen binary
+records retain those exact choices. Argument-only recalibration reuses verified
+binary identities; it does not rebuild or relabel the compiler. The final-input
+pilot is postponed until the coordinator releases its verification gate.
+
+`compare.py` prepares no binaries itself. Given frozen before/after build records,
+it runs one case per timing lease and yields through an ordinary admission ticket
+between cases. Completed cases survive resume; changed artifacts, unequal paired
+arguments/environments and attempted evidence overwrites are refused.
+
+## Migration blocker fixed during preparation
+
+Commit `714ae7645b0315a38eb152e27b8a8b0bb44b79b6` fixes ordinary-mode loop
+versioning reached by A02's migrated `index_return` fixture. An inlined early
+return can join normal loop exit control flow; duplicating that join previously
+copied an outside predecessor without its edge. The optimizer now keeps the
+original loop when a region has an outside entry other than preheader to header.
+The program remains supported. The regression fails before the fix, then passes
+trusted/verified leak-checked execution; a positive control still unswitches.
+Focused tests pass 2/2 and Guardian passes 88/88. Full integrated qualification
+remains the coordinator's gate. Exact evidence is in
+[the versioning report](raw/version/results.json).

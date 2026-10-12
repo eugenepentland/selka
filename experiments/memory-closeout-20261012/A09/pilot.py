@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """One invocation per artifact to select workload sizes; no speedup conclusions."""
 import argparse
+from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
@@ -16,7 +17,8 @@ def main():
         parser.error('requires one enclosing timing admission')
     if args.output.exists():
         parser.error('refusing to overwrite pilot evidence')
-    result = {'scope': __doc__, 'host': measure.host(), 'cases': []}
+    result = {'scope': __doc__, 'started_utc': datetime.now(timezone.utc).isoformat(),
+              'host': measure.host(), 'cases': []}
     for path in args.builds:
         builds = json.loads(path.read_text())
         assert measure.digest(builds['compiler']) == builds['compiler_sha256']
@@ -33,6 +35,8 @@ def main():
                                     'args': case.get('args', []), **row})
             measure.save(args.output, result)
             print(case['id'], row['wall_ns'] / 1e6, 'ms', flush=True)
+    result['finished_utc'] = datetime.now(timezone.utc).isoformat()
+    measure.save(args.output, result)
 
 
 if __name__ == '__main__':

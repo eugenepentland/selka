@@ -218,5 +218,47 @@
     "original_unmigrated_source_admitted": 21,
     "original_unmigrated_source_refused": 9,
     "final_candidate_measured": false
+  },
+  "runtime_preparation": {
+    "calibrated_manifests": [
+      "calibrated-manifest.json",
+      "calibrated-applications-manifest.json"
+    ],
+    "baseline_binaries_built": 15,
+    "final_input_pilot": "pending gate release",
+    "prototype_scope": "A01 map71940901d plus A07 helper only; not integrated candidate",
+    "affinity_by_workers": {
+      "1": [
+        10
+      ],
+      "2": [
+        8,
+        10
+      ],
+      "8": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ]
+    },
+    "cross_worker_cheap_scaling_claim": false,
+    "comparison_runner": "compare.py; one case per exclusive lease with ordinary barriers"
+  },
+  "correctness_fix": {
+    "commit": "714ae7645b0315a38eb152e27b8a8b0bb44b79b6",
+    "owner_file": "src/core/version.zig",
+    "tests_passed": 2,
+    "guardian_passed": 88,
+    "details": "raw/version/results.json",
+    "final_integrated_qualification": false
   }
 }

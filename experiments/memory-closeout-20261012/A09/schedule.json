@@ -88,6 +88,38 @@
       "timing_admission_ticket": 13,
       "queue_wait_s": 20,
       "elapsed_s_approx": 7
+    },
+    {
+      "owner": "A09",
+      "id": "runtime-fixed-topology-pilot",
+      "status": "complete21 one-shot output checks; calibration only",
+      "raw_path": "A09/raw/workload-pilot-fixed-topology.json",
+      "elapsed_guest_s": 8.665786864,
+      "start_end_unavailable": true,
+      "scope": "C0 versus A01 prototype for input sizing; not final integrated compiler"
+    },
+    {
+      "owner": "A09",
+      "id": "runtime-final-input-pilot",
+      "status": "not yet enqueued; owning orchestration terminated while ordinary barrier was queued, before timing wrapper existed",
+      "ordinary_barrier_ticket": 245,
+      "scope": "awaiting coordinator gate-release notification"
     }
-  ]
+  ],
+  "hook_admission_audit": {
+    "A10_unadmitted_hook_end_utc": [
+      "2026-10-12T01:02:36Z",
+      "2026-10-12T01:08:23Z",
+      "2026-10-12T01:16:01Z",
+      "2026-10-12T01:23:37Z",
+      "2026-10-12T01:27:30Z"
+    ],
+    "A09_commit_with_unestablished_admission": {
+      "commit": "4a700cb52",
+      "end_utc": "2026-10-12T00:46:58Z",
+      "overlaps_window": "native-policy-nested5"
+    },
+    "limitation": "Hook start times unavailable; disclose possible extra interference, do not infer whole-host isolation",
+    "future_A09_hook_command": "scripts/build-slot.sh gate git commit ..."
+  }
 }

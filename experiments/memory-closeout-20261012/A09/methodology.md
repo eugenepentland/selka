@@ -19,12 +19,16 @@ the independently specified output with exit status zero and empty stderr.
 The harness verifies source/compiler/binary identities instead of reusing an
 old report's labels. Runtime environment removes counters, sanitizer and
 leak-check controls. Any required capability grants are explicit per-case
-environment entries. An identical worker count and CPU affinity applies to
-both arms. Serial cases use an actually allowed CPU, chosen after inspecting core/sibling load;
-parallel cases retain the allowed set for the 1/2/8-worker matrix. Initial manifests
-record CPU0; runtime `--cpu 10` overrides both serial arms after actual topology
-inspection found CPU0 sharing with a busy sibling. The final result records the
-effective affinity. `--cases` permits one bounded window per case, with durable
+environment entries. Identical runtime arguments, environment, worker count and CPU affinity apply to
+both arms. Final serial cases use CPU 10. On this hybrid i7-12700H, logical CPUs
+0–11 are the six P cores with two threads each; CPUs 12–19 are E cores. The final
+map/application matrix pins worker 1 to CPU 10, worker 2 to CPUs 8 and 10 (distinct
+P cores), and worker 8 to CPUs 0–11. Eight workers therefore share six physical
+P cores; this topology is explicit and identical before/after. The original
+all-CPU pilot is retained as calibration only, with hybrid scheduling a confound.
+Initial manifests record CPU 0 or all allowed CPUs; `calibrated-manifest.json` and
+`calibrated-applications-manifest.json` supersede their sizing and affinity for the
+final paired runs. The result records effective affinity. `--cases` permits one bounded window per case, with durable
 append to a result only when all artifact identities match.
 
 Wall time uses a monotonic nanosecond clock around spawning and waiting for
@@ -56,7 +60,7 @@ result storage; A02's policy experiments may close with a measured rejection.
 Compile measurements use matched ReleaseFast compilers and matched cold/warm/edit
 cache state. A08 owns those cases and requests a separate exclusive window.
 The initial C0 compiler is Debug and is used for correctness and generating
-Release guest binaries. A separate C0-releasefast installation is queued for
+Release guest binaries. The separate C0-releasefast installation is built and frozen for
 compiler throughput measurements; Debug compiler smoke timings are not results. Whole-build replay and warm stages are measured separately: requesting LLVM
 emission disables whole replay. Checked ownership disables lazy/demand
 restoration, rather than all replay.
@@ -89,3 +93,27 @@ permits building the same module files from A06's worktree before integration.
 Build records hash the entrypoint and its local imported modules. Refused cases
 stay in build records and paired results explicitly mark them not comparable;
 they are not silently removed from the application denominator.
+
+
+`measure.py build --reuse-builds PATH` reuses only an existing binary with the
+same compiler, source/local modules, flags and verified binary hash. This permits
+calibrating runtime arguments without recompiling or relabeling an artifact.
+Prepared artifact files and completed samples refuse overwrite. Paired runs
+explicitly reject unequal arguments or environments as well as unequal outputs
+and affinity. Default promotion may change only the compiler's ownership selector
+flags; the guest workload inputs remain identical within every paired case.
+
+`compare.py` sequences one case per exclusive timing lease, with an ordinary
+no-op admission barrier between cases. It records each lease's log, preserves
+completed cases on resume, and stops after an admission or measurement failure.
+Do not wrap it in another admission lease. Initial cheap-map repetitions differ
+by worker case to keep the faster arm measurable without making the baseline
+window excessively long; raw wall times across those worker cases are not a
+worker-scaling claim. Within each before/after case, repetitions are identical.
+
+Some earlier Guardian hooks did not participate in shared admission. A10 reported
+hook completion times 01:02:36, 01:08:23, 01:16:01, 01:23:37 and 01:27:30 UTC;
+exact start times were not retained. A09's earlier commit ending 00:46:58 falls
+inside A02's already-noisy nested-five window; its hook admission is not established
+by preserved metadata. These are additional possible sources of interference.
+Future A09 commits explicitly run under `scripts/build-slot.sh gate git commit`.

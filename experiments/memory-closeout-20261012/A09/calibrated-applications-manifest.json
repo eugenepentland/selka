@@ -1,0 +1,142 @@
+{
+  "method": "Separate timing entrypoints; same application helper files byte-for-byte; argv[0] repetitions; accumulate every answer. Paired C0/candidate comparisons must use identical entrypoint/helper hashes and repetitions.",
+  "cases": [
+    {
+      "id": "a06_word_count",
+      "source": "experiments/memory-closeout-20261012/A06/timing/word_count/main.my",
+      "args": [
+        "200"
+      ],
+      "expected": "7723600\n",
+      "env": {
+        "MYLANG_THREADS": "1"
+      },
+      "repetitions": 200,
+      "one_repetition_checksum": 38618,
+      "dataset_sha256": "39e475528883fa81beab7869d9433796af1ed207497b442a573586dff257b1b3",
+      "helper_identical_to": "experiments/memory-closeout-20261012/A06/programs/word_count/words.my",
+      "semantic_note": "Both compiler arms must use the same timing workload; not a before/after source migration comparison.",
+      "cpus": [
+        10
+      ]
+    },
+    {
+      "id": "a06_nested_json",
+      "source": "experiments/memory-closeout-20261012/A06/timing/nested_json/main.my",
+      "args": [
+        "80"
+      ],
+      "expected": "1967760\n",
+      "env": {
+        "MYLANG_THREADS": "1"
+      },
+      "repetitions": 80,
+      "one_repetition_checksum": 24597,
+      "dataset_sha256": "8de60ad9d0b1919ea2c056c33eec4a370107838b5f99336b7d9924529d6a503f",
+      "helper_identical_to": "experiments/memory-closeout-20261012/A06/programs/nested_json/transform.my",
+      "semantic_note": "Both compiler arms must use the same timing workload; not a before/after source migration comparison.",
+      "cpus": [
+        10
+      ]
+    },
+    {
+      "id": "a06_file_processing",
+      "source": "experiments/memory-closeout-20261012/A06/timing/file_processing/main.my",
+      "args": [
+        "150"
+      ],
+      "expected": "58982550\n",
+      "env": {
+        "MYLANG_THREADS": "1"
+      },
+      "repetitions": 150,
+      "one_repetition_checksum": 393217,
+      "dataset_sha256": "80809ee09c22396a791a21e00acad5084fc02daddf6ffcf9bcb26902d059a4a7",
+      "helper_identical_to": "experiments/memory-closeout-20261012/A06/programs/file_processing/process.my",
+      "semantic_note": "Both compiler arms must use the same timing workload; not a before/after source migration comparison.",
+      "cpus": [
+        10
+      ]
+    },
+    {
+      "id": "a06_parallel_t1",
+      "source": "experiments/memory-closeout-20261012/A06/timing/parallel/main.my",
+      "args": [
+        "40"
+      ],
+      "expected": "920000\n",
+      "env": {
+        "MYLANG_THREADS": "1"
+      },
+      "repetitions": 40,
+      "one_repetition_checksum": 23000,
+      "dataset_sha256": "0e55b5f9a16cf7ff7743aeca77d64e2585b32868c4c6dcd4d07f47e548985418",
+      "helper_identical_to": "experiments/memory-closeout-20261012/A06/programs/parallel/primes.my",
+      "semantic_note": "Both compiler arms must use the same timing workload; not a before/after source migration comparison.",
+      "cpus": [
+        10
+      ]
+    },
+    {
+      "id": "a06_parallel_t2",
+      "source": "experiments/memory-closeout-20261012/A06/timing/parallel/main.my",
+      "args": [
+        "40"
+      ],
+      "expected": "920000\n",
+      "env": {
+        "MYLANG_THREADS": "2"
+      },
+      "repetitions": 40,
+      "one_repetition_checksum": 23000,
+      "dataset_sha256": "0e55b5f9a16cf7ff7743aeca77d64e2585b32868c4c6dcd4d07f47e548985418",
+      "helper_identical_to": "experiments/memory-closeout-20261012/A06/programs/parallel/primes.my",
+      "semantic_note": "Both compiler arms must use the same timing workload; not a before/after source migration comparison.",
+      "cpus": [
+        8,
+        10
+      ]
+    },
+    {
+      "id": "a06_parallel_t8",
+      "source": "experiments/memory-closeout-20261012/A06/timing/parallel/main.my",
+      "args": [
+        "40"
+      ],
+      "expected": "920000\n",
+      "env": {
+        "MYLANG_THREADS": "8"
+      },
+      "repetitions": 40,
+      "one_repetition_checksum": 23000,
+      "dataset_sha256": "0e55b5f9a16cf7ff7743aeca77d64e2585b32868c4c6dcd4d07f47e548985418",
+      "helper_identical_to": "experiments/memory-closeout-20261012/A06/programs/parallel/primes.my",
+      "semantic_note": "Both compiler arms must use the same timing workload; not a before/after source migration comparison.",
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ]
+    }
+  ],
+  "source_sha256": {
+    "experiments/memory-closeout-20261012/A06/timing/word_count/words.my": "61569e71ae3a0723d2f123720f78d32a33df465cdd5be1e2f76d9b8c7203ef6e",
+    "experiments/memory-closeout-20261012/A06/timing/word_count/main.my": "4d633e9d3e0a96decb3654cca0a95ff19e2df2cb73d6fb8e84b3fb03a4e5599f",
+    "experiments/memory-closeout-20261012/A06/timing/nested_json/main.my": "529ff2ba488db292d409ad2af7aac3c49fbc49bb9bfa718504c5ee490270d65f",
+    "experiments/memory-closeout-20261012/A06/timing/nested_json/transform.my": "731d621883eee8968c0a0fb49353de3908f16e711442d2199b73104d05c99f74",
+    "experiments/memory-closeout-20261012/A06/timing/file_processing/process.my": "5226147e7e0e228b006134ea3dc79caa821aadf5b555b3bf034cb35bd280d65b",
+    "experiments/memory-closeout-20261012/A06/timing/file_processing/main.my": "3d8cdf2a39a31f2fd2206690eff3a2f7cc738e6083efab574ba989fb549ebe33",
+    "experiments/memory-closeout-20261012/A06/timing/parallel/primes.my": "8ccc5b22614f0f7fd8ee9cc48ff08ce2d5e08ac85da2a0d5945f058c8e7da4de",
+    "experiments/memory-closeout-20261012/A06/timing/parallel/main.my": "c8bec39775ef6af6d2822af7d7de52822d81db90ee161bd6060849dd3395ba45"
+  },
+  "affinity_note": "Initial affinities selected from this preparation process allowed CPUs; A09 may refine before freezing paired artifacts."
+}

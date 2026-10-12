@@ -41,5 +41,12 @@
   },
   "cache_note": "Version source participates in compiler build_identity; all optimization/emission/native/replay namespaces change (A08 confirmed).",
   "raw": "experiments/memory-closeout-20261012/A09/raw/version",
-  "guardian_initial": "Rejected cognitive-complexity27; predicate extracted, focused2/2 rerun passes; retry required"
+  "guardian_initial": "Rejected cognitive-complexity27; predicate extracted, focused2/2 rerun passes; retry required",
+  "guardian_final": {
+    "status": "passed",
+    "checks_passed": 88,
+    "command": "scripts/build-slot.sh gate git commit",
+    "commit": "714ae7645b0315a38eb152e27b8a8b0bb44b79b6",
+    "log": "guardian-final.log"
+  }
 }

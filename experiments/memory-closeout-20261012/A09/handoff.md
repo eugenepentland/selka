@@ -119,3 +119,16 @@ that failed log remains preserved. `raw/version/results.json` pins source,
 compiler and raw evidence. The source change invalidates compiler cache namespaces
 through build_identity (confirmed by A08). This focused fix still requires the
 coordinator's final full gate and integrated artifact qualification.
+
+
+Version fix committed as `714ae7645b0315a38eb152e27b8a8b0bb44b79b6`; Guardian
+88/88 passed after extracting the eligibility predicate to meet the complexity
+limit. The coordinator owns integration and final full verification.
+
+Current measurement preparation: calibrated manifests, 15 immutable C0 case
+records and six experimental map rows are ready. `compare.py` runs one case per
+timing lease with ordinary barriers and preserves completed evidence on resume.
+The final input-sizing pilot is not enqueued: its owning shell was terminated
+while only an ordinary no-op barrier was queued, before any timing wrapper
+existed. Waiting for the coordinator's gate-release notice. Final C1 Debug and
+ReleaseFast installations remain required before paired runtime/scaling results.

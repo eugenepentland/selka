@@ -1,0 +1,157 @@
+{
+  "cases": [
+    {
+      "id": "array",
+      "source": "experiments/memory-closeout-20261012/A09/samples/array_long.my",
+      "expected": "array 512000000\n",
+      "cpus": [
+        10
+      ],
+      "input_note": "128 sibling JSON items, 4000000 lookups selecting independently owned nested result"
+    },
+    {
+      "id": "object",
+      "source": "experiments/memory-closeout-20261012/A09/samples/object_long.my",
+      "expected": "object 512000000\n",
+      "cpus": [
+        10
+      ],
+      "input_note": "128 sibling JSON items, 4000000 lookups selecting independently owned nested result"
+    },
+    {
+      "id": "record",
+      "source": "experiments/memory-closeout-20261012/A09/samples/record_long.my",
+      "expected": "279555560\n",
+      "cpus": [
+        10
+      ],
+      "input_note": "1000000 fresh owned payload unpacks"
+    },
+    {
+      "id": "parallel_cheap_1",
+      "source": "experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+      "expected": "25853755392\n",
+      "args": [
+        "513",
+        "65536",
+        "cheap"
+      ],
+      "env": {
+        "MYLANG_THREADS": "1"
+      },
+      "cpus": [
+        10
+      ],
+      "input_note": "513 uneven inputs, 65536 maps; identical inputs within each paired worker case. Repetitions differ across worker counts, so raw wall times are not a worker-scaling comparison."
+    },
+    {
+      "id": "parallel_cheap_2",
+      "source": "experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+      "expected": "6463438848\n",
+      "args": [
+        "513",
+        "16384",
+        "cheap"
+      ],
+      "env": {
+        "MYLANG_THREADS": "2"
+      },
+      "cpus": [
+        8,
+        10
+      ],
+      "input_note": "513 uneven inputs, 16384 maps; identical inputs within each paired worker case. Repetitions differ across worker counts, so raw wall times are not a worker-scaling comparison."
+    },
+    {
+      "id": "parallel_cheap_8",
+      "source": "experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+      "expected": "3231719424\n",
+      "args": [
+        "513",
+        "8192",
+        "cheap"
+      ],
+      "env": {
+        "MYLANG_THREADS": "8"
+      },
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "input_note": "513 uneven inputs, 8192 maps; identical inputs within each paired worker case. Repetitions differ across worker counts, so raw wall times are not a worker-scaling comparison."
+    },
+    {
+      "id": "parallel_expensive_1",
+      "source": "experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+      "expected": "131028929568\n",
+      "args": [
+        "8193",
+        "32",
+        "expensive"
+      ],
+      "env": {
+        "MYLANG_THREADS": "1"
+      },
+      "cpus": [
+        10
+      ],
+      "input_note": "8193 uneven inputs, 32 maps, 2048 arithmetic iterations per callback. Same source, arguments, workers and P-core affinity in both arms."
+    },
+    {
+      "id": "parallel_expensive_2",
+      "source": "experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+      "expected": "131028929568\n",
+      "args": [
+        "8193",
+        "32",
+        "expensive"
+      ],
+      "env": {
+        "MYLANG_THREADS": "2"
+      },
+      "cpus": [
+        8,
+        10
+      ],
+      "input_note": "8193 uneven inputs, 32 maps, 2048 arithmetic iterations per callback. Same source, arguments, workers and P-core affinity in both arms."
+    },
+    {
+      "id": "parallel_expensive_8",
+      "source": "experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+      "expected": "131028929568\n",
+      "args": [
+        "8193",
+        "32",
+        "expensive"
+      ],
+      "env": {
+        "MYLANG_THREADS": "8"
+      },
+      "cpus": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "input_note": "8193 uneven inputs, 32 maps, 2048 arithmetic iterations per callback. Same source, arguments, workers and P-core affinity in both arms."
+    }
+  ]
+}
