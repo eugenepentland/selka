@@ -516,3 +516,21 @@ commands and logs. Complete producer/native cold/warm qualification still requir
 the combined compiler. Prepared borrowed/tuple CLI harnesses now require observed
 frontend and lowering reuse for their warm rows; matching output alone is not a
 cache-hit claim.
+
+## Prepared combined-source qualification and retirement
+
+The source-generated typed selection cache suite is prepared in
+`selection_cache.py`: sixteen release build/refusal rows, using an exact copy of
+A04's self-contained min/max/Optional fixture plus four cache refusal inputs.
+It requires observed frontend/lowering reuse, a whole-program receipt replay,
+relocation, and earlier physical record discovery. It has only Python help/parse
+validation; actual execution waits for the combined Support7 compiler. The
+borrowed-dictionary and tuple generic suites remain twelve and eleven rows.
+
+`retirement/retirement.patch` and its manifest record an **unapplied, unqualified
+C3 draft**. It removes mode booleans from A08-owned cache/native boundaries and
+requires explicit nonzero OWN1 provenance in persisted payloads and native
+receipts, with coordinated scope changes. The linker checks every guest unit
+before native tool discovery. Only syntax formatting has run; external ABI,
+runtime and caller migrations are listed explicitly in `retirement/README.md`.
+No active compiler behavior changed and no default/retirement milestone is claimed.

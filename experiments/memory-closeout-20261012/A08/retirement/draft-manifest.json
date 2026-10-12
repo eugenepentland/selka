@@ -1,0 +1,68 @@
+{
+  "status": "isolated_unapplied_unqualified_draft",
+  "base_commit": "779ea9a62d0bdbe6f62f7fa1cb2fc243cb9ba33f",
+  "abi": "checked_owned_v1",
+  "wire_tag": "0x4f574e31",
+  "files": {
+    "ir_snapshot.zig": {
+      "before_sha256": "6147e14d32c65d33ba43bfef91e50a4a5c4589c5e81a2e642b5de68d88ebd5ef",
+      "draft_sha256": "fea133c869e5139294bac32f73003f066fe9d0681156d5784a81f060bc9247e5"
+    },
+    "lowering_cache.zig": {
+      "before_sha256": "ac37ba1bebd72deebc4b6d5844a0adf74f6f6fef6f4eb5bc99864dfdb8e92bc9",
+      "draft_sha256": "9966bb2b903e9adb09afbe3018391fc0956b4dfcdf194ddc4d9377b0b06b098e"
+    },
+    "optimization_cache.zig": {
+      "before_sha256": "d3eb93d72d0cbe588baed2c6e3fb0ea348c9e381118941005bf7d3b22c28e759",
+      "draft_sha256": "82347b19a46dd95ca35d53f4d18d94f44b38b978f9b6013284f1dc38289b97bc"
+    },
+    "canonical_ir.zig": {
+      "before_sha256": "6f0e727b3b19d7cf51e1defb505d60c25c9e6eb312faf3fe63280f1a83c4729f",
+      "draft_sha256": "764278f2e54f8da61a9a26c77b9d8a3ed9de78e6fd64a10b92a147aa95662f7c"
+    },
+    "emission_key.zig": {
+      "before_sha256": "c4796c47538341398c138917fe977baa9435080d96e8b84784ac83287f68a022",
+      "draft_sha256": "13d6a78abe2dfd94f4e9db5e89e1140e2222efd36c524df109539847390a0392"
+    },
+    "emission_cache.zig": {
+      "before_sha256": "a2ed21a4b6fd907f6ddf2b218414ce6e95a420dc0eec1a89043531ec3392e581",
+      "draft_sha256": "d5a856e92d2feb8c135661342c793b0824e977c0bb0c0849e7ef77b67b419068"
+    },
+    "emit_units.zig": {
+      "before_sha256": "611af1ce861b1a4dc6b3f613ed198a735721646ff6a6a3d680728b6d49d9b029",
+      "draft_sha256": "a3a5d187297b8180eb59616cb01ef95335302eb58f1cdf6c85ccc2e1be361361"
+    },
+    "native_receipt.zig": {
+      "before_sha256": "7d7d518516f0b44045cc75c6371f830f81b510eab851f585eb9fe9732598e005",
+      "draft_sha256": "27f4688b1c42d53dcb434f10b893e272d10892e6111a816730fd8e181182d28c"
+    },
+    "unit_cache.zig": {
+      "before_sha256": "63cd9948c004246f73652394e9543d08dba2412b2a80ab8e514923a4cd700878",
+      "draft_sha256": "a618299fd7e0ab2e038c98eb80322f2e2f65aff4e35876d2695d8e017d9f5a8c"
+    },
+    "driver.zig": {
+      "before_sha256": "8b990d67466be745c04313e77f9fa21291e5b0d5b4def7e91a2a844df45df766",
+      "draft_sha256": "eabd3634da8458abdb5e60458aa4ad51d51dc7f1d82f3b88817ed68a4672c4e8"
+    },
+    "optimizer_shortcut.zig": {
+      "before_sha256": "72768463577b92b8f7fbdb46ec4eedad584e5524a2fb74cc424e07ca49ca7d5a",
+      "draft_sha256": "c9c39b3f2277f3e45a6ce02a6867f4344a50e63171504b6ebac7ab918cdb30dc"
+    },
+    "fusion_checkpoint.zig": {
+      "before_sha256": "c13ea452bf726f4e9d1e03984134dd297153ce7607fbd1719e22eb7a353d1adc",
+      "draft_sha256": "771e9725542fcadc2301cf3cfd8cc6c23bec297160689fd47e8594905a7d6318"
+    },
+    "lowering_demand.zig": {
+      "before_sha256": "727ed2d270ab8a83a0622d2b62fd2f96cd29130428de1b5cc3d9e9a9f902f83e",
+      "draft_sha256": "3ec29796a22237a754653d9906790baaac046238a512bcecfa6ad315f2a50c64"
+    }
+  },
+  "new_tests": {
+    "path": "src/core/a08_retired_abi_test.zig",
+    "sha256": "d5d78d6cebf584b70a1c4cc140e08c7b4486d2c568df4114fa2645dc7afa0631",
+    "status": "prepared_uncompiled_unrun",
+    "registered_tests": 3
+  },
+  "patch_sha256": "ed704d3c4eec09079b1f462b7613b86de32d8a1d9f280f6d7b8d3c8744820b3b",
+  "validation": "Zig fmt syntax check only; API/typechecking and all tests await coordinated C3 integration after C2."
+}

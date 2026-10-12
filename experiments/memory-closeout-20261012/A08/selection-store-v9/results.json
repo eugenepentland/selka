@@ -19,6 +19,8 @@
   "relocation": "Both operand NodeIds and source spans relocate; enum kind preserved. No new semantic_copy production branch is required because existing union/struct reflection handles children.",
   "old_artifacts": "Prior-v8 image rejected even with correct recomputed checksum; old-v7 tuple test retained. Private/shared typed keys both include format version.",
   "scope": "Stored representation and copy tests only. Not complete guest source/native qualification or C1/C2/C3 milestone.",
-  "guardian": "commit hook pending",
-  "guardian_first_attempt": "Boolean-expression length and repeated import literal rejected; extracted named body predicate and shared semantic_copy import. All eight focused tests reran and pass."
+  "guardian": "88 checks passed",
+  "guardian_first_attempt": "Boolean-expression length and repeated import literal rejected; extracted named body predicate and shared semantic_copy import. All eight focused tests reran and pass.",
+  "commit": "779ea9a62d0bdbe6f62f7fa1cb2fc243cb9ba33f",
+  "guardian_log": ".tmp/memory-closeout/A08/selection-store-commit-v2.log"
 }

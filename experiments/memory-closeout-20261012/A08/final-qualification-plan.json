@@ -70,9 +70,12 @@
     "numeric_object_builds": 4,
     "borrowed_selection_native_rows_prepared": 12,
     "borrowed_selection_registered_tests": 3,
-    "tuple": "Actual producer/generic specialization source roundtrip pending A01/A07 integrated compiler; store v8 four focused tests already pass.",
+    "tuple": "Actual producer/generic specialization source roundtrip prepared in tuple_cache.py; semantic-cache-v9 retains four tuple tests and adds four selection tests, all eight pass.",
     "aggregate_provider": "Registered A08 cache/physical/signature tests are already integrated; rerun with final inputs.",
-    "commands": "A10 owns guest-test receipt/discovery/portable-cache matrix; A08 native/build tests do not replace it."
+    "commands": "A10 owns guest-test receipt/discovery/portable-cache matrix; A08 native/build tests do not replace it.",
+    "tuple_native_rows_prepared": 11,
+    "typed_selection_native_rows_prepared": 16,
+    "borrowed_provider": "A05 owns checksum-valid owned-parameter corruption and actual provider source replay tests; no duplicate A08 provider corruption test."
   },
   "memory": "Repeat fields64 matched process-tree sampling separately from timings using A09 tree_rss.py; preserve invalid replay sampling, shared-page double count, and missed-transient caveats.",
   "rollout": "After C2 repeat ordinary flagless commands and affected contracts; after C3 repeat selectors refusal/old artifacts and package boundary. Earlier C1 binaries cannot be relabeled."
