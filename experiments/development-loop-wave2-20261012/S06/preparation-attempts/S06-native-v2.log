@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/experiments/development-loop-wave2-20261012/S06/live_native_matrix.py", line 257, in <module>
+    main()
+    ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/experiments/development-loop-wave2-20261012/S06/live_native_matrix.py", line 203, in main
+    row('01-cold', execute=GROUPS)
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/experiments/development-loop-wave2-20261012/S06/live_native_matrix.py", line 201, in row
+    manifest['rows'].append(capture(roots[0], output, label, response, success, set(execute), set(reuse)))
+                            ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/experiments/development-loop-wave2-20261012/S06/live_native_matrix.py", line 131, in capture
+    raise RuntimeError('cohort action inventory mismatch: ' + label)
+RuntimeError: cohort action inventory mismatch: 01-cold

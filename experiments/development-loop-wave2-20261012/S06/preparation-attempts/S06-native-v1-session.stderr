@@ -1,0 +1,22 @@
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-native-v1/tree-a/scripts/cache_session.py", line 345, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-native-v1/tree-a/scripts/cache_session.py", line 320, in main
+    dispatch = load_dispatch(guard)
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-native-v1/tree-a/scripts/cache_session.py", line 243, in load_dispatch
+    module = importlib.import_module(module_name)
+  File "/usr/lib/python3.14/importlib/__init__.py", line 88, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen importlib._bootstrap>", line 1406, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 1371, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1342, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 938, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 759, in exec_module
+  File "<frozen importlib._bootstrap>", line 491, in _call_with_frames_removed
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-native-v1/tree-a/scripts/juice_cache.py", line 25, in <module>
+    import juice_evidence
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-native-v1/tree-a/scripts/juice_evidence.py", line 25, in <module>
+    from juice_tool import collectors as collector_module, common as common_module
+ModuleNotFoundError: No module named 'juice_tool'

@@ -1,0 +1,15 @@
+build-slot: FIFO ticket 139, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 139 after 5s
+verification-text_scalar_unit
++- verification action text_scalar_unit member 0 w
+guardian/test: 9 test(s) selected
+guardian/test: test wall 0.05s
+guardian/test: PASS — 9 passed
+guardian/test: RESULT {"passed":9,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/791e772f27345c8417d1a9ee83cc2b0e/scalar-live-tests --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+Build Summary: 3/3 steps succeeded; 9/9 tests passed
+verification-text_scalar_unit success
++- verification action text_scalar_unit member 0 9 pass (9 total) 66ms MaxRSS:5M
+   +- compile test scalar-live-tests debug native cached 6ms MaxRSS:41M
+

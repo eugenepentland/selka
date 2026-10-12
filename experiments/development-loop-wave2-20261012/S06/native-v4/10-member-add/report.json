@@ -1,0 +1,638 @@
+{
+  "action_budgets": {
+    "actions": [
+      {
+        "action_elapsed_seconds": null,
+        "id": "text_scalar_unit",
+        "members": [
+          {
+            "label": "verification action text_scalar_unit member 0",
+            "maximum_seconds": null,
+            "median_seconds": null,
+            "minimum_seconds": null,
+            "provenance": [],
+            "recommendation": {
+              "expected_seconds": null,
+              "hard_deadline_seconds": null,
+              "regression_seconds": null
+            },
+            "regression_evaluation": {
+              "enforced": false,
+              "samples_exceeding": null,
+              "scope": "named member elapsed observations",
+              "status": "not_configured",
+              "threshold_seconds": null
+            },
+            "sample_count": 0,
+            "status": "unknown"
+          }
+        ],
+        "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+        "targets": {
+          "expected_seconds": null,
+          "hard_deadline_seconds": null,
+          "regression_seconds": null
+        }
+      },
+      {
+        "action_elapsed_seconds": null,
+        "id": "tooling_unit",
+        "members": [
+          {
+            "label": "verification action tooling_unit member 0",
+            "maximum_seconds": null,
+            "median_seconds": null,
+            "minimum_seconds": null,
+            "provenance": [],
+            "recommendation": {
+              "expected_seconds": null,
+              "hard_deadline_seconds": null,
+              "regression_seconds": null
+            },
+            "regression_evaluation": {
+              "enforced": false,
+              "samples_exceeding": null,
+              "scope": "named member elapsed observations",
+              "status": "not_configured",
+              "threshold_seconds": null
+            },
+            "sample_count": 0,
+            "status": "unknown"
+          }
+        ],
+        "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+        "targets": {
+          "expected_seconds": null,
+          "hard_deadline_seconds": null,
+          "regression_seconds": null
+        }
+      },
+      {
+        "action_elapsed_seconds": null,
+        "id": "fixtures",
+        "members": [
+          {
+            "label": "verification action fixtures member 0",
+            "maximum_seconds": 0.18,
+            "median_seconds": 0.18,
+            "minimum_seconds": 0.18,
+            "provenance": [
+              {
+                "action_id": "fixtures",
+                "action_key": "f0ed4fcd7b6130d4d60bb4ec7016aed7aca70a8555a4d1ee77dddc6c7cc6b511",
+                "context": "5d06c24dab5edc9a76c73105471bbfaba287d0634d529d3cc17b85da22f84f68",
+                "member": "verification action fixtures member 0",
+                "provenance": [
+                  1,
+                  1,
+                  0
+                ],
+                "report_sha256": "42ecd22a6fad224f2f50c5414c8597376f13777bf2e790dd88703b4a3ec4a358",
+                "seconds": 0.18,
+                "source": "zig-summary"
+              }
+            ],
+            "recommendation": {
+              "expected_seconds": null,
+              "hard_deadline_seconds": null,
+              "regression_seconds": null
+            },
+            "regression_evaluation": {
+              "enforced": false,
+              "samples_exceeding": null,
+              "scope": "named member elapsed observations",
+              "status": "not_configured",
+              "threshold_seconds": null
+            },
+            "sample_count": 1,
+            "status": "insufficient_samples"
+          }
+        ],
+        "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+        "targets": {
+          "expected_seconds": null,
+          "hard_deadline_seconds": null,
+          "regression_seconds": null
+        }
+      },
+      {
+        "action_elapsed_seconds": null,
+        "id": "format",
+        "members": [
+          {
+            "label": "verification action format member 0",
+            "maximum_seconds": null,
+            "median_seconds": null,
+            "minimum_seconds": null,
+            "provenance": [],
+            "recommendation": {
+              "expected_seconds": null,
+              "hard_deadline_seconds": null,
+              "regression_seconds": null
+            },
+            "regression_evaluation": {
+              "enforced": false,
+              "samples_exceeding": null,
+              "scope": "named member elapsed observations",
+              "status": "not_configured",
+              "threshold_seconds": null
+            },
+            "sample_count": 0,
+            "status": "unknown"
+          }
+        ],
+        "reason": "member graph elapsed durations cannot establish complete action elapsed time",
+        "targets": {
+          "expected_seconds": null,
+          "hard_deadline_seconds": null,
+          "regression_seconds": null
+        }
+      }
+    ],
+    "context": "5d06c24dab5edc9a76c73105471bbfaba287d0634d529d3cc17b85da22f84f68",
+    "enforced": false,
+    "minimum_samples": 5,
+    "notes": [
+      "shared-host operational observations; no isolated latency qualification",
+      "no percentile or hard deadline calibration",
+      "recommendations require review; legacy actions remain report-only"
+    ],
+    "rejections": [
+      "capture unavailable, incomplete, malformed or truncated"
+    ],
+    "sample_limit": 64,
+    "version": 1
+  },
+  "action_coverage": {
+    "actions": [
+      {
+        "id": "text_scalar_unit",
+        "state": "reused"
+      },
+      {
+        "id": "tooling_unit",
+        "state": "reused"
+      },
+      {
+        "id": "fixtures",
+        "state": "executed"
+      },
+      {
+        "id": "format",
+        "state": "reused"
+      }
+    ],
+    "authority": "advisory-only",
+    "counts": {
+      "executed": 1,
+      "failed": 0,
+      "outstanding": 0,
+      "partial": 0,
+      "reused": 3,
+      "unknown": 0
+    },
+    "selected": 4,
+    "unknown": false,
+    "version": 1
+  },
+  "action_metadata": [
+    {
+      "id": "text_scalar_unit",
+      "identity_scope": "group-local-v1",
+      "steps": [
+        {
+          "kind": "run",
+          "label": "verification action text_scalar_unit member 0",
+          "original_label": "run test scalar-live-tests"
+        }
+      ]
+    },
+    {
+      "id": "tooling_unit",
+      "identity_scope": "group-local-v1",
+      "steps": [
+        {
+          "kind": "run",
+          "label": "verification action tooling_unit member 0",
+          "original_label": "run test tooling-live-tests"
+        }
+      ]
+    },
+    {
+      "id": "fixtures",
+      "identity_scope": "group-local-v1",
+      "steps": [
+        {
+          "kind": "run",
+          "label": "verification action fixtures member 0",
+          "original_label": "run python3"
+        }
+      ]
+    },
+    {
+      "id": "format",
+      "identity_scope": "group-local-v1",
+      "steps": [
+        {
+          "kind": "fmt",
+          "label": "verification action format member 0",
+          "original_label": "zig fmt --check"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "action_key": "261602a507cc3ec2812d32fb7604ff04b25ece7a6751d6d7e749921db184eb55",
+      "id": "text_scalar_unit",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "valid prior success",
+        "status": "policy",
+        "truncated": false
+      },
+      "reason": "valid prior success",
+      "state": "reused",
+      "test_telemetry": [
+        {
+          "additive": false,
+          "aggregate_peak_rss_bytes": null,
+          "executed": null,
+          "execution_timing_coverage": "unknown",
+          "reason": "supported test telemetry unavailable",
+          "reused": null,
+          "selected": null,
+          "skipped": null,
+          "status": "unknown",
+          "tests": [],
+          "timed": null,
+          "timing_coverage": "unknown",
+          "truncated": false,
+          "version": 1
+        }
+      ]
+    },
+    {
+      "action_key": "76c9626a406a17bd5f1638cc51bb4c338cb6ef097f9e5539c89aa2f7c45942bd",
+      "id": "tooling_unit",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "valid prior success",
+        "status": "policy",
+        "truncated": false
+      },
+      "reason": "valid prior success",
+      "state": "reused",
+      "test_telemetry": [
+        {
+          "additive": false,
+          "aggregate_peak_rss_bytes": null,
+          "executed": null,
+          "execution_timing_coverage": "unknown",
+          "reason": "supported test telemetry unavailable",
+          "reused": null,
+          "selected": null,
+          "skipped": null,
+          "status": "unknown",
+          "tests": [],
+          "timed": null,
+          "timing_coverage": "unknown",
+          "truncated": false,
+          "version": 1
+        }
+      ]
+    },
+    {
+      "action_key": "f0ed4fcd7b6130d4d60bb4ec7016aed7aca70a8555a4d1ee77dddc6c7cc6b511",
+      "id": "fixtures",
+      "invalidation": {
+        "changes": [
+          {
+            "kind": "file_added",
+            "name": "test/membership/added.txt"
+          }
+        ],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "dependency identity changed",
+        "status": "observed",
+        "truncated": false
+      },
+      "reason": "no valid receipt",
+      "state": "execute",
+      "test_telemetry": [
+        {
+          "action_id": "fixtures",
+          "additive": false,
+          "aggregate_peak_rss_bytes": null,
+          "complete": true,
+          "executed": 3,
+          "execution_timing_coverage": "complete",
+          "member_id": "fixtures/member/0",
+          "process": {
+            "aggregate_peak_rss_bytes": null,
+            "peak_rss_bytes": 24272896,
+            "rss_scope": "process-lifetime-high-water",
+            "scope": "runner-process",
+            "status": "observed",
+            "system_cpu_seconds": 0.0,
+            "user_cpu_seconds": 0.00023500000000001298
+          },
+          "producer": "python-unittest-v1",
+          "reused": 0,
+          "selected": 3,
+          "skipped": 0,
+          "status": "observed",
+          "tests": [
+            {
+              "elapsed_ns": 74728,
+              "state": "passed",
+              "test_id": "membership_cases.Membership.test_a"
+            },
+            {
+              "elapsed_ns": 36372,
+              "state": "passed",
+              "test_id": "membership_cases.Membership.test_added"
+            },
+            {
+              "elapsed_ns": 23601,
+              "state": "passed",
+              "test_id": "membership_cases.Membership.test_stable"
+            }
+          ],
+          "timed": 3,
+          "timing_coverage": "complete",
+          "truncated": false,
+          "version": 1
+        }
+      ]
+    },
+    {
+      "action_key": "02798dcbe84c704d4e94f13c011607815a6a91c2b7cc24c29dcd86ff7229a950",
+      "id": "format",
+      "invalidation": {
+        "changes": [],
+        "comparison_scope": "previous stable request; not necessarily the receipt-producing success",
+        "reason": "valid prior success",
+        "status": "policy",
+        "truncated": false
+      },
+      "reason": "valid prior success",
+      "state": "reused",
+      "test_telemetry": [
+        {
+          "additive": false,
+          "aggregate_peak_rss_bytes": null,
+          "executed": null,
+          "execution_timing_coverage": "unknown",
+          "reason": "supported test telemetry unavailable",
+          "reused": null,
+          "selected": null,
+          "skipped": null,
+          "status": "unknown",
+          "tests": [],
+          "timed": null,
+          "timing_coverage": "unknown",
+          "truncated": false,
+          "version": 1
+        }
+      ]
+    }
+  ],
+  "admissions": [
+    {
+      "admission_wait_seconds": 85.57154550589621,
+      "admitted": true,
+      "cancelled": false,
+      "elapsed_seconds": 85.66254373686388,
+      "execution_limits": {
+        "terminate_grace_seconds": 0.5,
+        "timeout_seconds": null
+      },
+      "incomplete": false,
+      "kind": "build",
+      "log_errors": [],
+      "logs": [
+        {
+          "bytes_seen": 0,
+          "capture_available": true,
+          "capture_complete": true,
+          "observed_steps": {
+            "additive": false,
+            "aggregate_peak_rss_bytes": null,
+            "cpu_seconds": null,
+            "malformed": false,
+            "observations": [],
+            "status": "unknown",
+            "truncated": false
+          },
+          "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-native-v4/tree-a/.mylang-cache/verification-v1/last-logs/preparation/stdout.log",
+          "truncated": false
+        },
+        {
+          "bytes_seen": 1541,
+          "capture_available": true,
+          "capture_complete": true,
+          "observed_steps": {
+            "additive": false,
+            "aggregate_peak_rss_bytes": null,
+            "cpu_seconds": null,
+            "malformed": false,
+            "observations": [
+              {
+                "elapsed_seconds": 0.006,
+                "kind": "build",
+                "node": "compile test scalar-live-tests debug native",
+                "peak_rss": "40M",
+                "raw_label": "|     +- compile test scalar-live-tests debug native cached 6ms MaxRSS:40M",
+                "source": "zig-summary",
+                "state": "cached",
+                "test_counts": null,
+                "tree_prefix": "|     +- "
+              },
+              {
+                "elapsed_seconds": 0.006,
+                "kind": "build",
+                "node": "compile test tooling-live-tests debug native",
+                "peak_rss": "40M",
+                "raw_label": "|     +- compile test tooling-live-tests debug native cached 6ms MaxRSS:40M",
+                "source": "zig-summary",
+                "state": "cached",
+                "test_counts": null,
+                "tree_prefix": "|     +- "
+              }
+            ],
+            "status": "observed",
+            "truncated": false
+          },
+          "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-native-v4/tree-a/.mylang-cache/verification-v1/last-logs/preparation/stderr.log",
+          "truncated": false
+        }
+      ],
+      "observed_held_seconds": 0.09099823096767068,
+      "status": 0,
+      "timed_out": false,
+      "validation_seconds": 0.035669193137437105,
+      "worker_seconds": 0.05527663789689541
+    },
+    {
+      "admission_wait_seconds": 20.388363259844482,
+      "admitted": true,
+      "cancelled": false,
+      "elapsed_seconds": 20.659185725962743,
+      "execution_limits": {
+        "terminate_grace_seconds": 0.5,
+        "timeout_seconds": null
+      },
+      "incomplete": false,
+      "kind": "gate",
+      "log_errors": [],
+      "logs": [
+        {
+          "bytes_seen": 0,
+          "capture_available": true,
+          "capture_complete": true,
+          "observed_steps": {
+            "additive": false,
+            "aggregate_peak_rss_bytes": null,
+            "cpu_seconds": null,
+            "malformed": false,
+            "observations": [],
+            "status": "unknown",
+            "truncated": false
+          },
+          "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-native-v4/tree-a/.mylang-cache/verification-v1/last-logs/gate/stdout.log",
+          "truncated": false
+        },
+        {
+          "bytes_seen": 539,
+          "capture_available": true,
+          "capture_complete": true,
+          "observed_steps": {
+            "additive": false,
+            "aggregate_peak_rss_bytes": null,
+            "cpu_seconds": null,
+            "malformed": false,
+            "observations": [
+              {
+                "elapsed_seconds": 0.18,
+                "kind": "unknown",
+                "node": "verification action fixtures member 0",
+                "peak_rss": null,
+                "raw_label": "+- verification action fixtures member 0 success 180ms",
+                "source": "zig-summary",
+                "state": "success",
+                "test_counts": null,
+                "tree_prefix": "+- "
+              }
+            ],
+            "status": "observed",
+            "truncated": false
+          },
+          "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-native-v4/tree-a/.mylang-cache/verification-v1/last-logs/gate/stderr.log",
+          "truncated": false
+        }
+      ],
+      "observed_held_seconds": 0.2708224661182612,
+      "status": 0,
+      "timed_out": false,
+      "validation_seconds": 0.035885753110051155,
+      "worker_seconds": 0.23488603392615914
+    }
+  ],
+  "budget_context": "5d06c24dab5edc9a76c73105471bbfaba287d0634d529d3cc17b85da22f84f68",
+  "build_admitted_seconds": 0.09099823096767068,
+  "elapsed_seconds": 107.47980422503315,
+  "evidence_store": {
+    "root": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-native-v4/success-store",
+    "shared": true
+  },
+  "gate_admitted_seconds": 0.2708224661182612,
+  "inputs_stable": true,
+  "loop_budget": {
+    "enforced": false,
+    "exceeded": false,
+    "observed_seconds": 1.5198954592924565,
+    "scope": "coordinator elapsed excluding admission queues",
+    "warn_after_seconds": null
+  },
+  "measurement_notes": [
+    "Zig summary steps can overlap and must not be summed",
+    "per-group execution duration is unavailable for the shared gate",
+    "common identity changes name digest facets, not individual tool/environment members"
+  ],
+  "profile_coverage": {
+    "complete_qualification": false,
+    "complete_verification": true,
+    "counts": {
+      "executed": 1,
+      "outstanding": 0,
+      "required": 4,
+      "reused": 3
+    },
+    "filtered_inventory": false,
+    "heuristic": false,
+    "inputs_stable": true,
+    "outstanding": [],
+    "profile": "complete",
+    "qualification_outstanding": [],
+    "required": [
+      "text_scalar_unit",
+      "tooling_unit",
+      "fixtures",
+      "format"
+    ],
+    "status": "complete",
+    "version": "verification-profile-v1"
+  },
+  "profile_plan": {
+    "affected_actions": [
+      "fixtures"
+    ],
+    "cost_scope": "report-only action cost; unknown costs use heuristic member count then inventory order",
+    "deferred": [],
+    "heuristic": false,
+    "pending": [
+      "fixtures"
+    ],
+    "profile": "complete",
+    "required": [
+      "text_scalar_unit",
+      "tooling_unit",
+      "fixtures",
+      "format"
+    ],
+    "selected": [
+      "fixtures"
+    ],
+    "version": "verification-profile-v1"
+  },
+  "scoped_policy": {
+    "enforced": false,
+    "mode": "report_only",
+    "status": "not_configured",
+    "version": 1
+  },
+  "selected_success": true,
+  "snapshot_statistics": {
+    "bytes_hashed": 1119593,
+    "digest_reuses": 22,
+    "directories_enumerated": 8,
+    "files_hashed": 30,
+    "metadata_observations": 269137,
+    "snapshot_reuses": 4,
+    "validation_calls": 64
+  },
+  "stability_diagnostics": null,
+  "status": 0,
+  "success": true,
+  "timings": {
+    "action_input_snapshot_seconds": 0.004477109061554074,
+    "final_validation_seconds": 0.03854886908084154,
+    "prepare_lookup_outside_admission_seconds": 0.9635281541850418,
+    "publication_seconds": 0.1535115740261972,
+    "source_snapshot_seconds": 0.008512809174135327
+  },
+  "version": 1
+}

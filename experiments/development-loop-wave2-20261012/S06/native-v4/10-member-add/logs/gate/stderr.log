@@ -1,0 +1,14 @@
+build-slot: FIFO ticket 156, position 2; earlier gate tickets must run first; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 156 after 20s
+test_a (membership_cases.Membership.test_a) ... ok
+test_added (membership_cases.Membership.test_added) ... ok
+test_stable (membership_cases.Membership.test_stable) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.000s
+
+OK
+Build Summary: 2/2 steps succeeded
+verification-fixtures success
++- verification action fixtures member 0 success 180ms
+

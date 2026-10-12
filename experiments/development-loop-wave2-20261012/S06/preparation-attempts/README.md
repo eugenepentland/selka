@@ -1,0 +1,1 @@
+v1/v2/v3 setup failures are not completed live matrix cases. v4 completed the oracle-revert prefix before an overly strict reuse expectation stopped the first harness invocation. The resumed invocation validates the saved stable report and continues without modifying receipts or keys. Operational logs include shared admission queue time and are not latency evidence.

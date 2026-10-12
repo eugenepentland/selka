@@ -1,0 +1,14 @@
+build-slot: FIFO ticket 161, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: gate slot 1, FIFO ticket 161 after 10s
+test_a (membership_cases.Membership.test_a) ... ok
+test_renamed (membership_cases.Membership.test_renamed) ... ok
+test_stable (membership_cases.Membership.test_stable) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.006s
+
+OK
+Build Summary: 2/2 steps succeeded
+verification-fixtures success
++- verification action fixtures member 0 success 201ms
+

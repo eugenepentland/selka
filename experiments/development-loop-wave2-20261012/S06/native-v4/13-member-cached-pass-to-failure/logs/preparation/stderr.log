@@ -1,0 +1,21 @@
+build-slot: FIFO ticket 622, position 7; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 622, position 5; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 622, position 5; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 622, position 5; earlier build tickets must run first; waiting (180s so far)
+build-slot: FIFO ticket 622, position 5; earlier build tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 622, position 5; earlier build tickets must run first; waiting (301s so far)
+build-slot: FIFO ticket 622, position 5; earlier build tickets must run first; waiting (361s so far)
+build-slot: FIFO ticket 622, position 1; waiting for measurement or memory-accounting settle delay; waiting (421s so far)
+build-slot: build slot 1, FIFO ticket 622 after 426s
+Build Summary: 10/10 steps succeeded
+verification-prepare success
++- install generated to artifacts.json cached
+|  +- run python3 (artifacts.json) cached
+|     +- compile test scalar-live-tests debug native cached 5ms MaxRSS:41M
+|     +- compile test tooling-live-tests debug native cached 6ms MaxRSS:41M
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/.tmp/frozen-final-release/bin/mylang to mylang cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/test-index.json to test-index.json cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/test-index-51339167276d5b5f2a3558b653e61fb00d6cf61719dd9dc04d4e3071c322ff60 to test-index-51339167276d5b5f2a3558b653e61fb00d6cf61719dd9dc04d4e3071c322ff60 cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/cache-plan.json to cache-plan.json cached
++- install /home/epentland/ai/canopy/mylang-dl-closeout-20261012-integration/zig-out/libexec/mylang/components/cache-plan-a67590729b9a2240d001fb4271e7e02c4431c8bb0c95ec96bd18365172e15143 to cache-plan-a67590729b9a2240d001fb4271e7e02c4431c8bb0c95ec96bd18365172e15143 cached
+

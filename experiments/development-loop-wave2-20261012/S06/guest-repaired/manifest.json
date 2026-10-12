@@ -1,0 +1,4088 @@
+{
+  "version": 1,
+  "scope": "actual guest native actions; bounded fixture project, not repository gate",
+  "compiler": {
+    "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-repaired-driver/bin/mylang",
+    "sha256": "abc4663ecc3356557a8238185005f79486343fe2ecde9258b82a266458781040"
+  },
+  "zig": {
+    "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+  },
+  "adapter": {
+    "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S01/scripts/verification_report.py",
+    "sha256": "32a120c3e3cb8ea6bde9eac64108ac84e87fa7f919ecf2ca2532a1b5e08e56cd"
+  },
+  "cache_scope": "private per-tree guest caches plus private experiment shared evidence; global Zig cache remains available",
+  "per_test_timing": "unknown; no timing inferred from raw verdict output",
+  "rows": [
+    {
+      "label": "01-cold",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-repaired-driver/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/cache-a",
+        "--shared-cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/guest-success-store"
+      ],
+      "status": 0,
+      "source_files": {
+        "app_test.my": "6be18b1cc9fd7f2eb1321245c062425a21d7b7f63600d4b217d837df290490dc",
+        "dep.my": "c9c8ed9941121c0457044702530cf7d05c5d549015b3a065e54ed42a386bf561",
+        "expected.txt": "b24d6d33736ecd5604a4b17bc9c6481039fac362bb7df044ef1c10a2bfd21db6"
+      },
+      "report_sha256": "77680475ee536290c7a335cf9f261f2df57468e069366a28c1ae73fbffb2a82b",
+      "sources_reported": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/dep.my"
+      ],
+      "counts": {
+        "passed": 3,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "test_receipt_keys": {
+        "app_test::test_answer": "455dc0ebf1f091f78a0685cd958334662ca746b634bbc06644ae7fa538da13dc",
+        "app_test::test_fixture": "f4e22f72f3011954ccd4060fb5d56f962027818c8ac7b73a7360f794ae4a50b2",
+        "app_test::test_independent": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250"
+      },
+      "test_cache_decisions": {
+        "app_test::test_answer": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "455dc0ebf1f091f78a0685cd958334662ca746b634bbc06644ae7fa538da13dc",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": {
+            "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my#b08876bf872c977ef66508a0d6b14cbee706712fb4e16bff55c53756e0e1fd8e",
+            "producer": {
+              "facts": {
+                "fresh": 5,
+                "reused": 0,
+                "fallback": 4,
+                "decoded": 0
+              },
+              "lowering": {
+                "fresh": 4,
+                "reused": 0,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 0,
+              "nodes_unchanged": 0,
+              "changed_nodes": 5,
+              "candidate_tests": 0,
+              "shards_read": 0,
+              "shards_written": 3
+            },
+            "planner": {
+              "index_nodes": 20,
+              "index_edges": 10,
+              "affected_nodes": 5,
+              "closure_nodes": 10,
+              "closure_edges": 2,
+              "reused_tests": 0,
+              "planned_tests": 3
+            },
+            "storage": {
+              "packed_bytes_read": 0,
+              "decoded_bytes": 0,
+              "blocks_decoded": 0,
+              "payload_bytes_returned": 0,
+              "block_cache_hits": 0,
+              "publication": {
+                "filename_lookups": 2,
+                "refreshes": 3,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 4369,
+                "save_bytes_prepared": 3652,
+                "sequence_locks": 18
+              }
+            },
+            "nanoseconds": {
+              "lowering": 862173,
+              "facts": 323423,
+              "graph": 65064,
+              "planner": 111503341,
+              "keys": 28475,
+              "publication": 1512838,
+              "total": 114382834
+            },
+            "transport": {
+              "request_bytes": 368,
+              "reply_bytes": 208,
+              "startups": 1
+            }
+          }
+        },
+        "app_test::test_fixture": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "f4e22f72f3011954ccd4060fb5d56f962027818c8ac7b73a7360f794ae4a50b2",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        },
+        "app_test::test_independent": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        }
+      },
+      "environment_mode": {
+        "MYL_CORE_LEAKCHECK": null,
+        "MYLANG_CORE_RUNTIME_CACHE": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/runtime-cache",
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.zig-cache",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tmp"
+      },
+      "telemetry": {
+        "version": 1,
+        "status": "observed",
+        "producer": "guest-native-tests-v1",
+        "action_id": "language",
+        "member_id": "language/member/0",
+        "selected": 3,
+        "executed": 3,
+        "reused": 0,
+        "skipped": 0,
+        "unsupported": 0,
+        "timed": 0,
+        "complete": true,
+        "inventory_coverage": "complete",
+        "timing_coverage": "unknown",
+        "execution_timing_coverage": "unknown",
+        "reason": "supported guest verdict report has no per-test timing contract",
+        "tests": [
+          {
+            "test_id": "app_test::test_answer",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_fixture",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_independent",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          }
+        ],
+        "truncated": false,
+        "additive": false,
+        "aggregate_peak_rss_bytes": null,
+        "process": {
+          "status": "unknown",
+          "scope": null,
+          "user_cpu_seconds": null,
+          "system_cpu_seconds": null,
+          "peak_rss_bytes": null,
+          "rss_scope": null,
+          "aggregate_peak_rss_bytes": null
+        }
+      },
+      "action_elapsed_ns": 6092112435,
+      "qualification": "operational correctness only; no isolated latency claim"
+    },
+    {
+      "label": "02-warm",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-repaired-driver/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/cache-a",
+        "--shared-cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/guest-success-store"
+      ],
+      "status": 0,
+      "source_files": {
+        "app_test.my": "6be18b1cc9fd7f2eb1321245c062425a21d7b7f63600d4b217d837df290490dc",
+        "dep.my": "c9c8ed9941121c0457044702530cf7d05c5d549015b3a065e54ed42a386bf561",
+        "expected.txt": "b24d6d33736ecd5604a4b17bc9c6481039fac362bb7df044ef1c10a2bfd21db6"
+      },
+      "report_sha256": "d9129224ca93e2c2dd71fb2ef3ee550c4bf3e54fafb9289605d12a8c93796546",
+      "sources_reported": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/dep.my"
+      ],
+      "counts": {
+        "passed": 3,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "test_receipt_keys": {
+        "app_test::test_answer": "455dc0ebf1f091f78a0685cd958334662ca746b634bbc06644ae7fa538da13dc",
+        "app_test::test_fixture": "f4e22f72f3011954ccd4060fb5d56f962027818c8ac7b73a7360f794ae4a50b2",
+        "app_test::test_independent": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250"
+      },
+      "test_cache_decisions": {
+        "app_test::test_answer": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "455dc0ebf1f091f78a0685cd958334662ca746b634bbc06644ae7fa538da13dc",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": {
+            "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my#b08876bf872c977ef66508a0d6b14cbee706712fb4e16bff55c53756e0e1fd8e",
+            "producer": {
+              "facts": {
+                "fresh": 1,
+                "reused": 4,
+                "fallback": 0,
+                "decoded": 4
+              },
+              "lowering": {
+                "fresh": 0,
+                "reused": 4,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 5,
+              "nodes_unchanged": 5,
+              "changed_nodes": 0,
+              "candidate_tests": 3,
+              "shards_read": 3,
+              "shards_written": 0
+            },
+            "planner": {
+              "index_nodes": 35,
+              "index_edges": 12,
+              "affected_nodes": 0,
+              "closure_nodes": 0,
+              "closure_edges": 0,
+              "reused_tests": 3,
+              "planned_tests": 0
+            },
+            "storage": {
+              "packed_bytes_read": 2808,
+              "decoded_bytes": 5444,
+              "blocks_decoded": 1,
+              "payload_bytes_returned": 2966,
+              "block_cache_hits": 14,
+              "publication": {
+                "filename_lookups": 3,
+                "refreshes": 1,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 508,
+                "save_bytes_prepared": 160,
+                "sequence_locks": 3
+              }
+            },
+            "nanoseconds": {
+              "lowering": 1458988,
+              "facts": 279634,
+              "graph": 396656,
+              "planner": 7757125,
+              "keys": 3646,
+              "publication": 1277875,
+              "total": 11300477
+            },
+            "transport": {
+              "request_bytes": 428,
+              "reply_bytes": 200,
+              "startups": 1
+            }
+          }
+        },
+        "app_test::test_fixture": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "f4e22f72f3011954ccd4060fb5d56f962027818c8ac7b73a7360f794ae4a50b2",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        },
+        "app_test::test_independent": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        }
+      },
+      "environment_mode": {
+        "MYL_CORE_LEAKCHECK": null,
+        "MYLANG_CORE_RUNTIME_CACHE": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/runtime-cache",
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.zig-cache",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tmp"
+      },
+      "telemetry": {
+        "version": 1,
+        "status": "observed",
+        "producer": "guest-native-tests-v1",
+        "action_id": "language",
+        "member_id": "language/member/0",
+        "selected": 3,
+        "executed": 3,
+        "reused": 0,
+        "skipped": 0,
+        "unsupported": 0,
+        "timed": 0,
+        "complete": true,
+        "inventory_coverage": "complete",
+        "timing_coverage": "unknown",
+        "execution_timing_coverage": "unknown",
+        "reason": "supported guest verdict report has no per-test timing contract",
+        "tests": [
+          {
+            "test_id": "app_test::test_answer",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_fixture",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_independent",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          }
+        ],
+        "truncated": false,
+        "additive": false,
+        "aggregate_peak_rss_bytes": null,
+        "process": {
+          "status": "unknown",
+          "scope": null,
+          "user_cpu_seconds": null,
+          "system_cpu_seconds": null,
+          "peak_rss_bytes": null,
+          "rss_scope": null,
+          "aggregate_peak_rss_bytes": null
+        }
+      },
+      "action_elapsed_ns": 6399586083,
+      "qualification": "operational correctness only; no isolated latency claim"
+    },
+    {
+      "label": "03-helper-failure",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-repaired-driver/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/cache-a",
+        "--shared-cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/guest-success-store"
+      ],
+      "status": 1,
+      "source_files": {
+        "app_test.my": "6be18b1cc9fd7f2eb1321245c062425a21d7b7f63600d4b217d837df290490dc",
+        "dep.my": "11737e13b08ed841783b446963b12ad2d0aab33122f68dc7f6e0f7507fb15c78",
+        "expected.txt": "b24d6d33736ecd5604a4b17bc9c6481039fac362bb7df044ef1c10a2bfd21db6"
+      },
+      "report_sha256": "9dc5215160b98c965dbbbb1c321d3dabf3e160246f7dd59e29fd5e5c7a7453a8",
+      "sources_reported": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/dep.my"
+      ],
+      "counts": {
+        "passed": 2,
+        "cached": 0,
+        "failed": 1,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "test_receipt_keys": {
+        "app_test::test_answer": "e36e99756b456c53684f598aaff697cd4f20151457312e10c9c0d56856a00d4c",
+        "app_test::test_fixture": "f4e22f72f3011954ccd4060fb5d56f962027818c8ac7b73a7360f794ae4a50b2",
+        "app_test::test_independent": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250"
+      },
+      "test_cache_decisions": {
+        "app_test::test_answer": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "e36e99756b456c53684f598aaff697cd4f20151457312e10c9c0d56856a00d4c",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": {
+            "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my#b08876bf872c977ef66508a0d6b14cbee706712fb4e16bff55c53756e0e1fd8e",
+            "producer": {
+              "facts": {
+                "fresh": 2,
+                "reused": 3,
+                "fallback": 1,
+                "decoded": 3
+              },
+              "lowering": {
+                "fresh": 1,
+                "reused": 3,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 5,
+              "nodes_unchanged": 4,
+              "changed_nodes": 1,
+              "candidate_tests": 3,
+              "shards_read": 3,
+              "shards_written": 2
+            },
+            "planner": {
+              "index_nodes": 40,
+              "index_edges": 15,
+              "affected_nodes": 2,
+              "closure_nodes": 4,
+              "closure_edges": 1,
+              "reused_tests": 2,
+              "planned_tests": 1
+            },
+            "storage": {
+              "packed_bytes_read": 3075,
+              "decoded_bytes": 5716,
+              "blocks_decoded": 2,
+              "payload_bytes_returned": 2075,
+              "block_cache_hits": 9,
+              "publication": {
+                "filename_lookups": 4,
+                "refreshes": 1,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 2071,
+                "save_bytes_prepared": 1290,
+                "sequence_locks": 8
+              }
+            },
+            "nanoseconds": {
+              "lowering": 1178082,
+              "facts": 222268,
+              "graph": 292575,
+              "planner": 127947086,
+              "keys": 19775,
+              "publication": 1216733,
+              "total": 130980475
+            },
+            "transport": {
+              "request_bytes": 432,
+              "reply_bytes": 204,
+              "startups": 1
+            }
+          }
+        },
+        "app_test::test_fixture": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "f4e22f72f3011954ccd4060fb5d56f962027818c8ac7b73a7360f794ae4a50b2",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        },
+        "app_test::test_independent": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        }
+      },
+      "environment_mode": {
+        "MYL_CORE_LEAKCHECK": null,
+        "MYLANG_CORE_RUNTIME_CACHE": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/runtime-cache",
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.zig-cache",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tmp"
+      },
+      "telemetry": {
+        "version": 1,
+        "status": "observed",
+        "producer": "guest-native-tests-v1",
+        "action_id": "language",
+        "member_id": "language/member/0",
+        "selected": 3,
+        "executed": 3,
+        "reused": 0,
+        "skipped": 0,
+        "unsupported": 0,
+        "timed": 0,
+        "complete": true,
+        "inventory_coverage": "complete",
+        "timing_coverage": "unknown",
+        "execution_timing_coverage": "unknown",
+        "reason": "supported guest verdict report has no per-test timing contract",
+        "tests": [
+          {
+            "test_id": "app_test::test_answer",
+            "state": "failed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_fixture",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_independent",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          }
+        ],
+        "truncated": false,
+        "additive": false,
+        "aggregate_peak_rss_bytes": null,
+        "process": {
+          "status": "unknown",
+          "scope": null,
+          "user_cpu_seconds": null,
+          "system_cpu_seconds": null,
+          "peak_rss_bytes": null,
+          "rss_scope": null,
+          "aggregate_peak_rss_bytes": null
+        }
+      },
+      "action_elapsed_ns": 6071846501,
+      "qualification": "operational correctness only; no isolated latency claim"
+    },
+    {
+      "label": "04-helper-failure-repeat",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-repaired-driver/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/cache-a",
+        "--shared-cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/guest-success-store"
+      ],
+      "status": 1,
+      "source_files": {
+        "app_test.my": "6be18b1cc9fd7f2eb1321245c062425a21d7b7f63600d4b217d837df290490dc",
+        "dep.my": "11737e13b08ed841783b446963b12ad2d0aab33122f68dc7f6e0f7507fb15c78",
+        "expected.txt": "b24d6d33736ecd5604a4b17bc9c6481039fac362bb7df044ef1c10a2bfd21db6"
+      },
+      "report_sha256": "abf044b23b49a338ac8ae0de5aba50efaa2c387cc17c3d0e2b9144f338c6745c",
+      "sources_reported": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/dep.my"
+      ],
+      "counts": {
+        "passed": 2,
+        "cached": 0,
+        "failed": 1,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "test_receipt_keys": {
+        "app_test::test_answer": "e36e99756b456c53684f598aaff697cd4f20151457312e10c9c0d56856a00d4c",
+        "app_test::test_fixture": "f4e22f72f3011954ccd4060fb5d56f962027818c8ac7b73a7360f794ae4a50b2",
+        "app_test::test_independent": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250"
+      },
+      "test_cache_decisions": {
+        "app_test::test_answer": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "e36e99756b456c53684f598aaff697cd4f20151457312e10c9c0d56856a00d4c",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": {
+            "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my#b08876bf872c977ef66508a0d6b14cbee706712fb4e16bff55c53756e0e1fd8e",
+            "producer": {
+              "facts": {
+                "fresh": 1,
+                "reused": 4,
+                "fallback": 0,
+                "decoded": 4
+              },
+              "lowering": {
+                "fresh": 0,
+                "reused": 4,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 5,
+              "nodes_unchanged": 5,
+              "changed_nodes": 0,
+              "candidate_tests": 3,
+              "shards_read": 3,
+              "shards_written": 0
+            },
+            "planner": {
+              "index_nodes": 35,
+              "index_edges": 12,
+              "affected_nodes": 0,
+              "closure_nodes": 0,
+              "closure_edges": 0,
+              "reused_tests": 3,
+              "planned_tests": 0
+            },
+            "storage": {
+              "packed_bytes_read": 4198,
+              "decoded_bytes": 7406,
+              "blocks_decoded": 2,
+              "payload_bytes_returned": 2966,
+              "block_cache_hits": 13,
+              "publication": {
+                "filename_lookups": 5,
+                "refreshes": 1,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 506,
+                "save_bytes_prepared": 160,
+                "sequence_locks": 3
+              }
+            },
+            "nanoseconds": {
+              "lowering": 1080390,
+              "facts": 143717,
+              "graph": 208360,
+              "planner": 104635981,
+              "keys": 3112,
+              "publication": 750826,
+              "total": 106904245
+            },
+            "transport": {
+              "request_bytes": 428,
+              "reply_bytes": 200,
+              "startups": 1
+            }
+          }
+        },
+        "app_test::test_fixture": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "f4e22f72f3011954ccd4060fb5d56f962027818c8ac7b73a7360f794ae4a50b2",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        },
+        "app_test::test_independent": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        }
+      },
+      "environment_mode": {
+        "MYL_CORE_LEAKCHECK": null,
+        "MYLANG_CORE_RUNTIME_CACHE": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/runtime-cache",
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.zig-cache",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tmp"
+      },
+      "telemetry": {
+        "version": 1,
+        "status": "observed",
+        "producer": "guest-native-tests-v1",
+        "action_id": "language",
+        "member_id": "language/member/0",
+        "selected": 3,
+        "executed": 3,
+        "reused": 0,
+        "skipped": 0,
+        "unsupported": 0,
+        "timed": 0,
+        "complete": true,
+        "inventory_coverage": "complete",
+        "timing_coverage": "unknown",
+        "execution_timing_coverage": "unknown",
+        "reason": "supported guest verdict report has no per-test timing contract",
+        "tests": [
+          {
+            "test_id": "app_test::test_answer",
+            "state": "failed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_fixture",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_independent",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          }
+        ],
+        "truncated": false,
+        "additive": false,
+        "aggregate_peak_rss_bytes": null,
+        "process": {
+          "status": "unknown",
+          "scope": null,
+          "user_cpu_seconds": null,
+          "system_cpu_seconds": null,
+          "peak_rss_bytes": null,
+          "rss_scope": null,
+          "aggregate_peak_rss_bytes": null
+        }
+      },
+      "action_elapsed_ns": 5959272220,
+      "qualification": "operational correctness only; no isolated latency claim"
+    },
+    {
+      "label": "05-helper-revert",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-repaired-driver/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/cache-a",
+        "--shared-cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/guest-success-store"
+      ],
+      "status": 0,
+      "source_files": {
+        "app_test.my": "6be18b1cc9fd7f2eb1321245c062425a21d7b7f63600d4b217d837df290490dc",
+        "dep.my": "c9c8ed9941121c0457044702530cf7d05c5d549015b3a065e54ed42a386bf561",
+        "expected.txt": "b24d6d33736ecd5604a4b17bc9c6481039fac362bb7df044ef1c10a2bfd21db6"
+      },
+      "report_sha256": "b346066ad10395201be738885607120b1ab347a3bd9c572bd633c4311477989d",
+      "sources_reported": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/dep.my"
+      ],
+      "counts": {
+        "passed": 3,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "test_receipt_keys": {
+        "app_test::test_answer": "455dc0ebf1f091f78a0685cd958334662ca746b634bbc06644ae7fa538da13dc",
+        "app_test::test_fixture": "f4e22f72f3011954ccd4060fb5d56f962027818c8ac7b73a7360f794ae4a50b2",
+        "app_test::test_independent": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250"
+      },
+      "test_cache_decisions": {
+        "app_test::test_answer": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "455dc0ebf1f091f78a0685cd958334662ca746b634bbc06644ae7fa538da13dc",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": {
+            "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my#b08876bf872c977ef66508a0d6b14cbee706712fb4e16bff55c53756e0e1fd8e",
+            "producer": {
+              "facts": {
+                "fresh": 1,
+                "reused": 4,
+                "fallback": 0,
+                "decoded": 4
+              },
+              "lowering": {
+                "fresh": 0,
+                "reused": 4,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 5,
+              "nodes_unchanged": 4,
+              "changed_nodes": 1,
+              "candidate_tests": 3,
+              "shards_read": 3,
+              "shards_written": 0
+            },
+            "planner": {
+              "index_nodes": 40,
+              "index_edges": 15,
+              "affected_nodes": 2,
+              "closure_nodes": 4,
+              "closure_edges": 1,
+              "reused_tests": 2,
+              "planned_tests": 1
+            },
+            "storage": {
+              "packed_bytes_read": 4463,
+              "decoded_bytes": 7678,
+              "blocks_decoded": 3,
+              "payload_bytes_returned": 2966,
+              "block_cache_hits": 12,
+              "publication": {
+                "filename_lookups": 6,
+                "refreshes": 1,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 507,
+                "save_bytes_prepared": 160,
+                "sequence_locks": 3
+              }
+            },
+            "nanoseconds": {
+              "lowering": 969215,
+              "facts": 147885,
+              "graph": 521511,
+              "planner": 120860785,
+              "keys": 15858,
+              "publication": 888419,
+              "total": 123498973
+            },
+            "transport": {
+              "request_bytes": 432,
+              "reply_bytes": 204,
+              "startups": 1
+            }
+          }
+        },
+        "app_test::test_fixture": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "f4e22f72f3011954ccd4060fb5d56f962027818c8ac7b73a7360f794ae4a50b2",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        },
+        "app_test::test_independent": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        }
+      },
+      "environment_mode": {
+        "MYL_CORE_LEAKCHECK": null,
+        "MYLANG_CORE_RUNTIME_CACHE": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/runtime-cache",
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.zig-cache",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tmp"
+      },
+      "telemetry": {
+        "version": 1,
+        "status": "observed",
+        "producer": "guest-native-tests-v1",
+        "action_id": "language",
+        "member_id": "language/member/0",
+        "selected": 3,
+        "executed": 3,
+        "reused": 0,
+        "skipped": 0,
+        "unsupported": 0,
+        "timed": 0,
+        "complete": true,
+        "inventory_coverage": "complete",
+        "timing_coverage": "unknown",
+        "execution_timing_coverage": "unknown",
+        "reason": "supported guest verdict report has no per-test timing contract",
+        "tests": [
+          {
+            "test_id": "app_test::test_answer",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_fixture",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_independent",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          }
+        ],
+        "truncated": false,
+        "additive": false,
+        "aggregate_peak_rss_bytes": null,
+        "process": {
+          "status": "unknown",
+          "scope": null,
+          "user_cpu_seconds": null,
+          "system_cpu_seconds": null,
+          "peak_rss_bytes": null,
+          "rss_scope": null,
+          "aggregate_peak_rss_bytes": null
+        }
+      },
+      "action_elapsed_ns": 6128804558,
+      "qualification": "operational correctness only; no isolated latency claim"
+    },
+    {
+      "label": "06-embedded-fixture-failure",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-repaired-driver/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/cache-a",
+        "--shared-cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/guest-success-store"
+      ],
+      "status": 1,
+      "source_files": {
+        "app_test.my": "6be18b1cc9fd7f2eb1321245c062425a21d7b7f63600d4b217d837df290490dc",
+        "dep.my": "c9c8ed9941121c0457044702530cf7d05c5d549015b3a065e54ed42a386bf561",
+        "expected.txt": "d67e2e944994496c8d8ec76eed0cf9f09679448d584b532bebf941852a37f5ed"
+      },
+      "report_sha256": "9629b53fe05a67a87d6239c7c242de998dcb6c63b4f1cd4241b1493ce7308dd7",
+      "sources_reported": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/dep.my"
+      ],
+      "counts": {
+        "passed": 2,
+        "cached": 0,
+        "failed": 1,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "test_receipt_keys": {
+        "app_test::test_answer": "455dc0ebf1f091f78a0685cd958334662ca746b634bbc06644ae7fa538da13dc",
+        "app_test::test_fixture": "ef87e52f77824efb1d4e1ee564f94898a87cbf49735463d51d45d49ff51e02ae",
+        "app_test::test_independent": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250"
+      },
+      "test_cache_decisions": {
+        "app_test::test_answer": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "455dc0ebf1f091f78a0685cd958334662ca746b634bbc06644ae7fa538da13dc",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": {
+            "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my#b08876bf872c977ef66508a0d6b14cbee706712fb4e16bff55c53756e0e1fd8e",
+            "producer": {
+              "facts": {
+                "fresh": 2,
+                "reused": 3,
+                "fallback": 1,
+                "decoded": 3
+              },
+              "lowering": {
+                "fresh": 1,
+                "reused": 3,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 5,
+              "nodes_unchanged": 4,
+              "changed_nodes": 1,
+              "candidate_tests": 2,
+              "shards_read": 3,
+              "shards_written": 2
+            },
+            "planner": {
+              "index_nodes": 40,
+              "index_edges": 14,
+              "affected_nodes": 1,
+              "closure_nodes": 4,
+              "closure_edges": 1,
+              "reused_tests": 2,
+              "planned_tests": 1
+            },
+            "storage": {
+              "packed_bytes_read": 3074,
+              "decoded_bytes": 5716,
+              "blocks_decoded": 2,
+              "payload_bytes_returned": 1893,
+              "block_cache_hits": 9,
+              "publication": {
+                "filename_lookups": 7,
+                "refreshes": 1,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 2174,
+                "save_bytes_prepared": 1696,
+                "sequence_locks": 8
+              }
+            },
+            "nanoseconds": {
+              "lowering": 1118825,
+              "facts": 192301,
+              "graph": 238381,
+              "planner": 119782537,
+              "keys": 15485,
+              "publication": 1217190,
+              "total": 122655175
+            },
+            "transport": {
+              "request_bytes": 432,
+              "reply_bytes": 204,
+              "startups": 1
+            }
+          }
+        },
+        "app_test::test_fixture": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "ef87e52f77824efb1d4e1ee564f94898a87cbf49735463d51d45d49ff51e02ae",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        },
+        "app_test::test_independent": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        }
+      },
+      "environment_mode": {
+        "MYL_CORE_LEAKCHECK": null,
+        "MYLANG_CORE_RUNTIME_CACHE": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/runtime-cache",
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.zig-cache",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tmp"
+      },
+      "telemetry": {
+        "version": 1,
+        "status": "observed",
+        "producer": "guest-native-tests-v1",
+        "action_id": "language",
+        "member_id": "language/member/0",
+        "selected": 3,
+        "executed": 3,
+        "reused": 0,
+        "skipped": 0,
+        "unsupported": 0,
+        "timed": 0,
+        "complete": true,
+        "inventory_coverage": "complete",
+        "timing_coverage": "unknown",
+        "execution_timing_coverage": "unknown",
+        "reason": "supported guest verdict report has no per-test timing contract",
+        "tests": [
+          {
+            "test_id": "app_test::test_answer",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_fixture",
+            "state": "failed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_independent",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          }
+        ],
+        "truncated": false,
+        "additive": false,
+        "aggregate_peak_rss_bytes": null,
+        "process": {
+          "status": "unknown",
+          "scope": null,
+          "user_cpu_seconds": null,
+          "system_cpu_seconds": null,
+          "peak_rss_bytes": null,
+          "rss_scope": null,
+          "aggregate_peak_rss_bytes": null
+        }
+      },
+      "action_elapsed_ns": 6747302962,
+      "qualification": "operational correctness only; no isolated latency claim"
+    },
+    {
+      "label": "07-embedded-fixture-failure-repeat",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-repaired-driver/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/cache-a",
+        "--shared-cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/guest-success-store"
+      ],
+      "status": 1,
+      "source_files": {
+        "app_test.my": "6be18b1cc9fd7f2eb1321245c062425a21d7b7f63600d4b217d837df290490dc",
+        "dep.my": "c9c8ed9941121c0457044702530cf7d05c5d549015b3a065e54ed42a386bf561",
+        "expected.txt": "d67e2e944994496c8d8ec76eed0cf9f09679448d584b532bebf941852a37f5ed"
+      },
+      "report_sha256": "9b826ce9951b0a76a9ebf2d372aa7e6c55824498c4020bce978c7da79837d9aa",
+      "sources_reported": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/dep.my"
+      ],
+      "counts": {
+        "passed": 2,
+        "cached": 0,
+        "failed": 1,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "test_receipt_keys": {
+        "app_test::test_answer": "455dc0ebf1f091f78a0685cd958334662ca746b634bbc06644ae7fa538da13dc",
+        "app_test::test_fixture": "ef87e52f77824efb1d4e1ee564f94898a87cbf49735463d51d45d49ff51e02ae",
+        "app_test::test_independent": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250"
+      },
+      "test_cache_decisions": {
+        "app_test::test_answer": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "455dc0ebf1f091f78a0685cd958334662ca746b634bbc06644ae7fa538da13dc",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": {
+            "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my#b08876bf872c977ef66508a0d6b14cbee706712fb4e16bff55c53756e0e1fd8e",
+            "producer": {
+              "facts": {
+                "fresh": 1,
+                "reused": 4,
+                "fallback": 0,
+                "decoded": 4
+              },
+              "lowering": {
+                "fresh": 0,
+                "reused": 4,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 5,
+              "nodes_unchanged": 5,
+              "changed_nodes": 0,
+              "candidate_tests": 3,
+              "shards_read": 3,
+              "shards_written": 0
+            },
+            "planner": {
+              "index_nodes": 35,
+              "index_edges": 12,
+              "affected_nodes": 0,
+              "closure_nodes": 0,
+              "closure_edges": 0,
+              "reused_tests": 3,
+              "planned_tests": 0
+            },
+            "storage": {
+              "packed_bytes_read": 4301,
+              "decoded_bytes": 7812,
+              "blocks_decoded": 2,
+              "payload_bytes_returned": 2968,
+              "block_cache_hits": 13,
+              "publication": {
+                "filename_lookups": 8,
+                "refreshes": 1,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 507,
+                "save_bytes_prepared": 160,
+                "sequence_locks": 3
+              }
+            },
+            "nanoseconds": {
+              "lowering": 2468559,
+              "facts": 321793,
+              "graph": 477145,
+              "planner": 9204053,
+              "keys": 3150,
+              "publication": 1457640,
+              "total": 14074495
+            },
+            "transport": {
+              "request_bytes": 428,
+              "reply_bytes": 200,
+              "startups": 1
+            }
+          }
+        },
+        "app_test::test_fixture": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "ef87e52f77824efb1d4e1ee564f94898a87cbf49735463d51d45d49ff51e02ae",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        },
+        "app_test::test_independent": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        }
+      },
+      "environment_mode": {
+        "MYL_CORE_LEAKCHECK": null,
+        "MYLANG_CORE_RUNTIME_CACHE": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/runtime-cache",
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.zig-cache",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tmp"
+      },
+      "telemetry": {
+        "version": 1,
+        "status": "observed",
+        "producer": "guest-native-tests-v1",
+        "action_id": "language",
+        "member_id": "language/member/0",
+        "selected": 3,
+        "executed": 3,
+        "reused": 0,
+        "skipped": 0,
+        "unsupported": 0,
+        "timed": 0,
+        "complete": true,
+        "inventory_coverage": "complete",
+        "timing_coverage": "unknown",
+        "execution_timing_coverage": "unknown",
+        "reason": "supported guest verdict report has no per-test timing contract",
+        "tests": [
+          {
+            "test_id": "app_test::test_answer",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_fixture",
+            "state": "failed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_independent",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          }
+        ],
+        "truncated": false,
+        "additive": false,
+        "aggregate_peak_rss_bytes": null,
+        "process": {
+          "status": "unknown",
+          "scope": null,
+          "user_cpu_seconds": null,
+          "system_cpu_seconds": null,
+          "peak_rss_bytes": null,
+          "rss_scope": null,
+          "aggregate_peak_rss_bytes": null
+        }
+      },
+      "action_elapsed_ns": 6462916223,
+      "qualification": "operational correctness only; no isolated latency claim"
+    },
+    {
+      "label": "08-embedded-fixture-revert",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-repaired-driver/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/cache-a",
+        "--shared-cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/guest-success-store"
+      ],
+      "status": 0,
+      "source_files": {
+        "app_test.my": "6be18b1cc9fd7f2eb1321245c062425a21d7b7f63600d4b217d837df290490dc",
+        "dep.my": "c9c8ed9941121c0457044702530cf7d05c5d549015b3a065e54ed42a386bf561",
+        "expected.txt": "b24d6d33736ecd5604a4b17bc9c6481039fac362bb7df044ef1c10a2bfd21db6"
+      },
+      "report_sha256": "1af137e5a4cb866096b663f137440947028c12925052a6ac3c8f9b732a1248e5",
+      "sources_reported": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/dep.my"
+      ],
+      "counts": {
+        "passed": 3,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "test_receipt_keys": {
+        "app_test::test_answer": "455dc0ebf1f091f78a0685cd958334662ca746b634bbc06644ae7fa538da13dc",
+        "app_test::test_fixture": "f4e22f72f3011954ccd4060fb5d56f962027818c8ac7b73a7360f794ae4a50b2",
+        "app_test::test_independent": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250"
+      },
+      "test_cache_decisions": {
+        "app_test::test_answer": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "455dc0ebf1f091f78a0685cd958334662ca746b634bbc06644ae7fa538da13dc",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": {
+            "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my#b08876bf872c977ef66508a0d6b14cbee706712fb4e16bff55c53756e0e1fd8e",
+            "producer": {
+              "facts": {
+                "fresh": 1,
+                "reused": 4,
+                "fallback": 0,
+                "decoded": 4
+              },
+              "lowering": {
+                "fresh": 0,
+                "reused": 4,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 5,
+              "nodes_unchanged": 4,
+              "changed_nodes": 1,
+              "candidate_tests": 2,
+              "shards_read": 3,
+              "shards_written": 0
+            },
+            "planner": {
+              "index_nodes": 40,
+              "index_edges": 14,
+              "affected_nodes": 1,
+              "closure_nodes": 4,
+              "closure_edges": 1,
+              "reused_tests": 2,
+              "planned_tests": 1
+            },
+            "storage": {
+              "packed_bytes_read": 4567,
+              "decoded_bytes": 8084,
+              "blocks_decoded": 3,
+              "payload_bytes_returned": 2966,
+              "block_cache_hits": 12,
+              "publication": {
+                "filename_lookups": 9,
+                "refreshes": 1,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 507,
+                "save_bytes_prepared": 160,
+                "sequence_locks": 3
+              }
+            },
+            "nanoseconds": {
+              "lowering": 1064264,
+              "facts": 147914,
+              "graph": 515395,
+              "planner": 117348062,
+              "keys": 14439,
+              "publication": 798476,
+              "total": 119979623
+            },
+            "transport": {
+              "request_bytes": 432,
+              "reply_bytes": 204,
+              "startups": 1
+            }
+          }
+        },
+        "app_test::test_fixture": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "f4e22f72f3011954ccd4060fb5d56f962027818c8ac7b73a7360f794ae4a50b2",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        },
+        "app_test::test_independent": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        }
+      },
+      "environment_mode": {
+        "MYL_CORE_LEAKCHECK": null,
+        "MYLANG_CORE_RUNTIME_CACHE": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/runtime-cache",
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.zig-cache",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tmp"
+      },
+      "telemetry": {
+        "version": 1,
+        "status": "observed",
+        "producer": "guest-native-tests-v1",
+        "action_id": "language",
+        "member_id": "language/member/0",
+        "selected": 3,
+        "executed": 3,
+        "reused": 0,
+        "skipped": 0,
+        "unsupported": 0,
+        "timed": 0,
+        "complete": true,
+        "inventory_coverage": "complete",
+        "timing_coverage": "unknown",
+        "execution_timing_coverage": "unknown",
+        "reason": "supported guest verdict report has no per-test timing contract",
+        "tests": [
+          {
+            "test_id": "app_test::test_answer",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_fixture",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_independent",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          }
+        ],
+        "truncated": false,
+        "additive": false,
+        "aggregate_peak_rss_bytes": null,
+        "process": {
+          "status": "unknown",
+          "scope": null,
+          "user_cpu_seconds": null,
+          "system_cpu_seconds": null,
+          "peak_rss_bytes": null,
+          "rss_scope": null,
+          "aggregate_peak_rss_bytes": null
+        }
+      },
+      "action_elapsed_ns": 7093091246,
+      "qualification": "operational correctness only; no isolated latency claim"
+    },
+    {
+      "label": "09-provider-failure",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-repaired-driver/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/cache-a",
+        "--shared-cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/guest-success-store"
+      ],
+      "status": 1,
+      "source_files": {
+        "app_test.cases.json": "a1e7b3b26fcd47532400ddc841865ef0073db55b0c336fe846378180485aaa26",
+        "app_test.my": "6be18b1cc9fd7f2eb1321245c062425a21d7b7f63600d4b217d837df290490dc",
+        "dep.my": "c9c8ed9941121c0457044702530cf7d05c5d549015b3a065e54ed42a386bf561",
+        "expected.txt": "b24d6d33736ecd5604a4b17bc9c6481039fac362bb7df044ef1c10a2bfd21db6"
+      },
+      "report_sha256": "69d5225df39e67dcc3b07b06bf59597383cfdfbcfdeabf37ffa91e9572610027",
+      "sources_reported": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/dep.my"
+      ],
+      "counts": {
+        "passed": 2,
+        "cached": 0,
+        "failed": 1,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "test_receipt_keys": {
+        "app_test::test_answer": "1abc5e14392cb54bb3fb92d97d3607d3e79316af64ce550a39fd124342998e01",
+        "app_test::test_fixture": "db837c740befbf1d57785177e7cbc055bb3a2088ce705456c16a5a550f1ba22f",
+        "app_test::test_independent": "b36a7a986c2e00e2acde732a3f8e13440c524c5b2ba8c4407eb32f5b3f5b307e"
+      },
+      "test_cache_decisions": {
+        "app_test::test_answer": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "1abc5e14392cb54bb3fb92d97d3607d3e79316af64ce550a39fd124342998e01",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": {
+            "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my#c98c8841e561863202143fff36521cd982b50945e131dbecf11cb41cb0cc76bf",
+            "producer": {
+              "facts": {
+                "fresh": 2,
+                "reused": 0,
+                "fallback": 2,
+                "decoded": 0
+              },
+              "lowering": {
+                "fresh": 2,
+                "reused": 0,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 0,
+              "nodes_unchanged": 0,
+              "changed_nodes": 2,
+              "candidate_tests": 0,
+              "shards_read": 0,
+              "shards_written": 3
+            },
+            "planner": {
+              "index_nodes": 8,
+              "index_edges": 5,
+              "affected_nodes": 2,
+              "closure_nodes": 4,
+              "closure_edges": 1,
+              "reused_tests": 0,
+              "planned_tests": 1
+            },
+            "storage": {
+              "packed_bytes_read": 0,
+              "decoded_bytes": 0,
+              "blocks_decoded": 0,
+              "payload_bytes_returned": 0,
+              "block_cache_hits": 0,
+              "publication": {
+                "filename_lookups": 10,
+                "refreshes": 1,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 2657,
+                "save_bytes_prepared": 1819,
+                "sequence_locks": 12
+              }
+            },
+            "nanoseconds": {
+              "lowering": 885538,
+              "facts": 174905,
+              "graph": 46048,
+              "planner": 122883146,
+              "keys": 14960,
+              "publication": 1373376,
+              "total": 125471774
+            },
+            "transport": {
+              "request_bytes": 220,
+              "reply_bytes": 160,
+              "startups": 1
+            }
+          }
+        },
+        "app_test::test_fixture": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "db837c740befbf1d57785177e7cbc055bb3a2088ce705456c16a5a550f1ba22f",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": {
+            "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my#07f690a473708f14e656ec11bb67d63bc99a68ca00cc7ff69bacac21d8042cd4",
+            "producer": {
+              "facts": {
+                "fresh": 3,
+                "reused": 0,
+                "fallback": 2,
+                "decoded": 0
+              },
+              "lowering": {
+                "fresh": 2,
+                "reused": 0,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 2,
+              "nodes_unchanged": 0,
+              "changed_nodes": 3,
+              "candidate_tests": 0,
+              "shards_read": 3,
+              "shards_written": 3
+            },
+            "planner": {
+              "index_nodes": 12,
+              "index_edges": 5,
+              "affected_nodes": 3,
+              "closure_nodes": 6,
+              "closure_edges": 1,
+              "reused_tests": 0,
+              "planned_tests": 2
+            },
+            "storage": {
+              "packed_bytes_read": 1624,
+              "decoded_bytes": 2939,
+              "blocks_decoded": 1,
+              "payload_bytes_returned": 455,
+              "block_cache_hits": 3,
+              "publication": {
+                "filename_lookups": 11,
+                "refreshes": 1,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 2798,
+                "save_bytes_prepared": 2017,
+                "sequence_locks": 12
+              }
+            },
+            "nanoseconds": {
+              "lowering": 970407,
+              "facts": 189880,
+              "graph": 466843,
+              "planner": 140350172,
+              "keys": 25280,
+              "publication": 1413047,
+              "total": 143511779
+            },
+            "transport": {
+              "request_bytes": 272,
+              "reply_bytes": 176,
+              "startups": 1
+            }
+          }
+        },
+        "app_test::test_independent": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "b36a7a986c2e00e2acde732a3f8e13440c524c5b2ba8c4407eb32f5b3f5b307e",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        }
+      },
+      "environment_mode": {
+        "MYL_CORE_LEAKCHECK": null,
+        "MYLANG_CORE_RUNTIME_CACHE": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/runtime-cache",
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.zig-cache",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tmp"
+      },
+      "telemetry": {
+        "version": 1,
+        "status": "observed",
+        "producer": "guest-native-tests-v1",
+        "action_id": "language",
+        "member_id": "language/member/0",
+        "selected": 3,
+        "executed": 3,
+        "reused": 0,
+        "skipped": 0,
+        "unsupported": 0,
+        "timed": 0,
+        "complete": true,
+        "inventory_coverage": "complete",
+        "timing_coverage": "unknown",
+        "execution_timing_coverage": "unknown",
+        "reason": "supported guest verdict report has no per-test timing contract",
+        "tests": [
+          {
+            "test_id": "app_test::test_answer",
+            "state": "failed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_fixture",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_independent",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          }
+        ],
+        "truncated": false,
+        "additive": false,
+        "aggregate_peak_rss_bytes": null,
+        "process": {
+          "status": "unknown",
+          "scope": null,
+          "user_cpu_seconds": null,
+          "system_cpu_seconds": null,
+          "peak_rss_bytes": null,
+          "rss_scope": null,
+          "aggregate_peak_rss_bytes": null
+        }
+      },
+      "action_elapsed_ns": 12618259234,
+      "qualification": "operational correctness only; no isolated latency claim"
+    },
+    {
+      "label": "10-provider-failure-repeat",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-repaired-driver/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/cache-a",
+        "--shared-cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/guest-success-store"
+      ],
+      "status": 1,
+      "source_files": {
+        "app_test.cases.json": "a1e7b3b26fcd47532400ddc841865ef0073db55b0c336fe846378180485aaa26",
+        "app_test.my": "6be18b1cc9fd7f2eb1321245c062425a21d7b7f63600d4b217d837df290490dc",
+        "dep.my": "c9c8ed9941121c0457044702530cf7d05c5d549015b3a065e54ed42a386bf561",
+        "expected.txt": "b24d6d33736ecd5604a4b17bc9c6481039fac362bb7df044ef1c10a2bfd21db6"
+      },
+      "report_sha256": "bdbdfc2dd157c7c3dd0630704ce645839c0c4641e50e1fed7ac0617074fe517a",
+      "sources_reported": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/dep.my"
+      ],
+      "counts": {
+        "passed": 2,
+        "cached": 0,
+        "failed": 1,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "test_receipt_keys": {
+        "app_test::test_answer": "1abc5e14392cb54bb3fb92d97d3607d3e79316af64ce550a39fd124342998e01",
+        "app_test::test_fixture": "db837c740befbf1d57785177e7cbc055bb3a2088ce705456c16a5a550f1ba22f",
+        "app_test::test_independent": "b36a7a986c2e00e2acde732a3f8e13440c524c5b2ba8c4407eb32f5b3f5b307e"
+      },
+      "test_cache_decisions": {
+        "app_test::test_answer": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "1abc5e14392cb54bb3fb92d97d3607d3e79316af64ce550a39fd124342998e01",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": {
+            "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my#c98c8841e561863202143fff36521cd982b50945e131dbecf11cb41cb0cc76bf",
+            "producer": {
+              "facts": {
+                "fresh": 0,
+                "reused": 2,
+                "fallback": 0,
+                "decoded": 2
+              },
+              "lowering": {
+                "fresh": 0,
+                "reused": 2,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 3,
+              "nodes_unchanged": 0,
+              "changed_nodes": 2,
+              "candidate_tests": 0,
+              "shards_read": 3,
+              "shards_written": 0
+            },
+            "planner": {
+              "index_nodes": 8,
+              "index_edges": 5,
+              "affected_nodes": 2,
+              "closure_nodes": 4,
+              "closure_edges": 1,
+              "reused_tests": 0,
+              "planned_tests": 1
+            },
+            "storage": {
+              "packed_bytes_read": 3389,
+              "decoded_bytes": 6076,
+              "blocks_decoded": 2,
+              "payload_bytes_returned": 1575,
+              "block_cache_hits": 9,
+              "publication": {
+                "filename_lookups": 12,
+                "refreshes": 1,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 508,
+                "save_bytes_prepared": 160,
+                "sequence_locks": 3
+              }
+            },
+            "nanoseconds": {
+              "lowering": 955198,
+              "facts": 80564,
+              "graph": 428640,
+              "planner": 118876534,
+              "keys": 13712,
+              "publication": 798747,
+              "total": 121228579
+            },
+            "transport": {
+              "request_bytes": 220,
+              "reply_bytes": 160,
+              "startups": 1
+            }
+          }
+        },
+        "app_test::test_fixture": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "db837c740befbf1d57785177e7cbc055bb3a2088ce705456c16a5a550f1ba22f",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": {
+            "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my#07f690a473708f14e656ec11bb67d63bc99a68ca00cc7ff69bacac21d8042cd4",
+            "producer": {
+              "facts": {
+                "fresh": 1,
+                "reused": 2,
+                "fallback": 0,
+                "decoded": 2
+              },
+              "lowering": {
+                "fresh": 0,
+                "reused": 2,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 2,
+              "nodes_unchanged": 0,
+              "changed_nodes": 3,
+              "candidate_tests": 0,
+              "shards_read": 3,
+              "shards_written": 0
+            },
+            "planner": {
+              "index_nodes": 12,
+              "index_edges": 5,
+              "affected_nodes": 3,
+              "closure_nodes": 6,
+              "closure_edges": 1,
+              "reused_tests": 0,
+              "planned_tests": 2
+            },
+            "storage": {
+              "packed_bytes_read": 3656,
+              "decoded_bytes": 6348,
+              "blocks_decoded": 3,
+              "payload_bytes_returned": 1599,
+              "block_cache_hits": 8,
+              "publication": {
+                "filename_lookups": 13,
+                "refreshes": 1,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 508,
+                "save_bytes_prepared": 160,
+                "sequence_locks": 3
+              }
+            },
+            "nanoseconds": {
+              "lowering": 1072621,
+              "facts": 80675,
+              "graph": 476096,
+              "planner": 119132477,
+              "keys": 26070,
+              "publication": 737929,
+              "total": 121621382
+            },
+            "transport": {
+              "request_bytes": 272,
+              "reply_bytes": 176,
+              "startups": 1
+            }
+          }
+        },
+        "app_test::test_independent": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "b36a7a986c2e00e2acde732a3f8e13440c524c5b2ba8c4407eb32f5b3f5b307e",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        }
+      },
+      "environment_mode": {
+        "MYL_CORE_LEAKCHECK": null,
+        "MYLANG_CORE_RUNTIME_CACHE": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/runtime-cache",
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.zig-cache",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tmp"
+      },
+      "telemetry": {
+        "version": 1,
+        "status": "observed",
+        "producer": "guest-native-tests-v1",
+        "action_id": "language",
+        "member_id": "language/member/0",
+        "selected": 3,
+        "executed": 3,
+        "reused": 0,
+        "skipped": 0,
+        "unsupported": 0,
+        "timed": 0,
+        "complete": true,
+        "inventory_coverage": "complete",
+        "timing_coverage": "unknown",
+        "execution_timing_coverage": "unknown",
+        "reason": "supported guest verdict report has no per-test timing contract",
+        "tests": [
+          {
+            "test_id": "app_test::test_answer",
+            "state": "failed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_fixture",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_independent",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          }
+        ],
+        "truncated": false,
+        "additive": false,
+        "aggregate_peak_rss_bytes": null,
+        "process": {
+          "status": "unknown",
+          "scope": null,
+          "user_cpu_seconds": null,
+          "system_cpu_seconds": null,
+          "peak_rss_bytes": null,
+          "rss_scope": null,
+          "aggregate_peak_rss_bytes": null
+        }
+      },
+      "action_elapsed_ns": 12124219723,
+      "qualification": "operational correctness only; no isolated latency claim"
+    },
+    {
+      "label": "11-provider-revert",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-repaired-driver/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/cache-a",
+        "--shared-cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/guest-success-store"
+      ],
+      "status": 0,
+      "source_files": {
+        "app_test.cases.json": "60960c05ad545a6674124cabf6d14bb248227674dfd1d70cc7bc7f9d1ecd3e53",
+        "app_test.my": "6be18b1cc9fd7f2eb1321245c062425a21d7b7f63600d4b217d837df290490dc",
+        "dep.my": "c9c8ed9941121c0457044702530cf7d05c5d549015b3a065e54ed42a386bf561",
+        "expected.txt": "b24d6d33736ecd5604a4b17bc9c6481039fac362bb7df044ef1c10a2bfd21db6"
+      },
+      "report_sha256": "4c932da0ad1518baeb3a080699d5757d45e92777f1b1501c9f2f672a7992e720",
+      "sources_reported": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/dep.my"
+      ],
+      "counts": {
+        "passed": 3,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "test_receipt_keys": {
+        "app_test::test_answer": "07400d005febf591b728f57bbaf8ed41750feb0dbbaf6ea9df22f11b370a249d",
+        "app_test::test_fixture": "1e99a03eb620be4c4b4b8324acf6f0ee29d075ae8f654e29168ba63ddbedfc34",
+        "app_test::test_independent": "3582788ec8e53221a213c1f5a99444cfe5a86d7da1bd475cf49fc889c1e2786d"
+      },
+      "test_cache_decisions": {
+        "app_test::test_answer": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "07400d005febf591b728f57bbaf8ed41750feb0dbbaf6ea9df22f11b370a249d",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": {
+            "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my#c98c8841e561863202143fff36521cd982b50945e131dbecf11cb41cb0cc76bf",
+            "producer": {
+              "facts": {
+                "fresh": 1,
+                "reused": 1,
+                "fallback": 1,
+                "decoded": 1
+              },
+              "lowering": {
+                "fresh": 1,
+                "reused": 1,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 0,
+              "nodes_unchanged": 0,
+              "changed_nodes": 2,
+              "candidate_tests": 0,
+              "shards_read": 0,
+              "shards_written": 2
+            },
+            "planner": {
+              "index_nodes": 8,
+              "index_edges": 5,
+              "affected_nodes": 2,
+              "closure_nodes": 4,
+              "closure_edges": 1,
+              "reused_tests": 0,
+              "planned_tests": 1
+            },
+            "storage": {
+              "packed_bytes_read": 1624,
+              "decoded_bytes": 2939,
+              "blocks_decoded": 1,
+              "payload_bytes_returned": 460,
+              "block_cache_hits": 2,
+              "publication": {
+                "filename_lookups": 14,
+                "refreshes": 1,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 1735,
+                "save_bytes_prepared": 909,
+                "sequence_locks": 8
+              }
+            },
+            "nanoseconds": {
+              "lowering": 1109071,
+              "facts": 118925,
+              "graph": 43694,
+              "planner": 113758225,
+              "keys": 14086,
+              "publication": 1043036,
+              "total": 116160715
+            },
+            "transport": {
+              "request_bytes": 220,
+              "reply_bytes": 160,
+              "startups": 1
+            }
+          }
+        },
+        "app_test::test_fixture": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "1e99a03eb620be4c4b4b8324acf6f0ee29d075ae8f654e29168ba63ddbedfc34",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": {
+            "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my#07f690a473708f14e656ec11bb67d63bc99a68ca00cc7ff69bacac21d8042cd4",
+            "producer": {
+              "facts": {
+                "fresh": 1,
+                "reused": 2,
+                "fallback": 0,
+                "decoded": 2
+              },
+              "lowering": {
+                "fresh": 0,
+                "reused": 2,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 2,
+              "nodes_unchanged": 0,
+              "changed_nodes": 3,
+              "candidate_tests": 0,
+              "shards_read": 3,
+              "shards_written": 1
+            },
+            "planner": {
+              "index_nodes": 12,
+              "index_edges": 5,
+              "affected_nodes": 3,
+              "closure_nodes": 6,
+              "closure_edges": 1,
+              "reused_tests": 0,
+              "planned_tests": 2
+            },
+            "storage": {
+              "packed_bytes_read": 4443,
+              "decoded_bytes": 7657,
+              "blocks_decoded": 3,
+              "payload_bytes_returned": 1461,
+              "block_cache_hits": 7,
+              "publication": {
+                "filename_lookups": 15,
+                "refreshes": 1,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 815,
+                "save_bytes_prepared": 298,
+                "sequence_locks": 4
+              }
+            },
+            "nanoseconds": {
+              "lowering": 1084668,
+              "facts": 79504,
+              "graph": 827023,
+              "planner": 116619887,
+              "keys": 21733,
+              "publication": 798944,
+              "total": 119525496
+            },
+            "transport": {
+              "request_bytes": 272,
+              "reply_bytes": 176,
+              "startups": 1
+            }
+          }
+        },
+        "app_test::test_independent": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "3582788ec8e53221a213c1f5a99444cfe5a86d7da1bd475cf49fc889c1e2786d",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        }
+      },
+      "environment_mode": {
+        "MYL_CORE_LEAKCHECK": null,
+        "MYLANG_CORE_RUNTIME_CACHE": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/runtime-cache",
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.zig-cache",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tmp"
+      },
+      "telemetry": {
+        "version": 1,
+        "status": "observed",
+        "producer": "guest-native-tests-v1",
+        "action_id": "language",
+        "member_id": "language/member/0",
+        "selected": 3,
+        "executed": 3,
+        "reused": 0,
+        "skipped": 0,
+        "unsupported": 0,
+        "timed": 0,
+        "complete": true,
+        "inventory_coverage": "complete",
+        "timing_coverage": "unknown",
+        "execution_timing_coverage": "unknown",
+        "reason": "supported guest verdict report has no per-test timing contract",
+        "tests": [
+          {
+            "test_id": "app_test::test_answer",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_fixture",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_independent",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          }
+        ],
+        "truncated": false,
+        "additive": false,
+        "aggregate_peak_rss_bytes": null,
+        "process": {
+          "status": "unknown",
+          "scope": null,
+          "user_cpu_seconds": null,
+          "system_cpu_seconds": null,
+          "peak_rss_bytes": null,
+          "rss_scope": null,
+          "aggregate_peak_rss_bytes": null
+        }
+      },
+      "action_elapsed_ns": 12590807969,
+      "qualification": "operational correctness only; no isolated latency claim"
+    },
+    {
+      "label": "12-negative-cases-revert",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-repaired-driver/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/cache-a",
+        "--shared-cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/guest-success-store"
+      ],
+      "status": 0,
+      "source_files": {
+        "app_test.my": "6be18b1cc9fd7f2eb1321245c062425a21d7b7f63600d4b217d837df290490dc",
+        "dep.my": "c9c8ed9941121c0457044702530cf7d05c5d549015b3a065e54ed42a386bf561",
+        "expected.txt": "b24d6d33736ecd5604a4b17bc9c6481039fac362bb7df044ef1c10a2bfd21db6"
+      },
+      "report_sha256": "0490c93ee289aaddcf8732f15b43076121871da5dd46a9068f93bceb009a8dbf",
+      "sources_reported": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/dep.my"
+      ],
+      "counts": {
+        "passed": 3,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "test_receipt_keys": {
+        "app_test::test_answer": "455dc0ebf1f091f78a0685cd958334662ca746b634bbc06644ae7fa538da13dc",
+        "app_test::test_fixture": "f4e22f72f3011954ccd4060fb5d56f962027818c8ac7b73a7360f794ae4a50b2",
+        "app_test::test_independent": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250"
+      },
+      "test_cache_decisions": {
+        "app_test::test_answer": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "455dc0ebf1f091f78a0685cd958334662ca746b634bbc06644ae7fa538da13dc",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": {
+            "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my#b08876bf872c977ef66508a0d6b14cbee706712fb4e16bff55c53756e0e1fd8e",
+            "producer": {
+              "facts": {
+                "fresh": 1,
+                "reused": 4,
+                "fallback": 0,
+                "decoded": 4
+              },
+              "lowering": {
+                "fresh": 0,
+                "reused": 4,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 5,
+              "nodes_unchanged": 5,
+              "changed_nodes": 0,
+              "candidate_tests": 3,
+              "shards_read": 3,
+              "shards_written": 0
+            },
+            "planner": {
+              "index_nodes": 35,
+              "index_edges": 12,
+              "affected_nodes": 0,
+              "closure_nodes": 0,
+              "closure_edges": 0,
+              "reused_tests": 3,
+              "planned_tests": 0
+            },
+            "storage": {
+              "packed_bytes_read": 3074,
+              "decoded_bytes": 5716,
+              "blocks_decoded": 2,
+              "payload_bytes_returned": 2966,
+              "block_cache_hits": 13,
+              "publication": {
+                "filename_lookups": 16,
+                "refreshes": 1,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 507,
+                "save_bytes_prepared": 160,
+                "sequence_locks": 3
+              }
+            },
+            "nanoseconds": {
+              "lowering": 1809235,
+              "facts": 161424,
+              "graph": 290919,
+              "planner": 117032253,
+              "keys": 3310,
+              "publication": 801958,
+              "total": 120197204
+            },
+            "transport": {
+              "request_bytes": 428,
+              "reply_bytes": 200,
+              "startups": 1
+            }
+          }
+        },
+        "app_test::test_fixture": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "f4e22f72f3011954ccd4060fb5d56f962027818c8ac7b73a7360f794ae4a50b2",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        },
+        "app_test::test_independent": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        }
+      },
+      "environment_mode": {
+        "MYL_CORE_LEAKCHECK": null,
+        "MYLANG_CORE_RUNTIME_CACHE": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/runtime-cache",
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.zig-cache",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tmp"
+      },
+      "telemetry": {
+        "version": 1,
+        "status": "observed",
+        "producer": "guest-native-tests-v1",
+        "action_id": "language",
+        "member_id": "language/member/0",
+        "selected": 3,
+        "executed": 3,
+        "reused": 0,
+        "skipped": 0,
+        "unsupported": 0,
+        "timed": 0,
+        "complete": true,
+        "inventory_coverage": "complete",
+        "timing_coverage": "unknown",
+        "execution_timing_coverage": "unknown",
+        "reason": "supported guest verdict report has no per-test timing contract",
+        "tests": [
+          {
+            "test_id": "app_test::test_answer",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_fixture",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_independent",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          }
+        ],
+        "truncated": false,
+        "additive": false,
+        "aggregate_peak_rss_bytes": null,
+        "process": {
+          "status": "unknown",
+          "scope": null,
+          "user_cpu_seconds": null,
+          "system_cpu_seconds": null,
+          "peak_rss_bytes": null,
+          "rss_scope": null,
+          "aggregate_peak_rss_bytes": null
+        }
+      },
+      "action_elapsed_ns": 6127318899,
+      "qualification": "operational correctness only; no isolated latency claim"
+    },
+    {
+      "label": "13-source-add",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-repaired-driver/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/cache-a",
+        "--shared-cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/guest-success-store"
+      ],
+      "status": 0,
+      "source_files": {
+        "app_test.my": "6be18b1cc9fd7f2eb1321245c062425a21d7b7f63600d4b217d837df290490dc",
+        "dep.my": "c9c8ed9941121c0457044702530cf7d05c5d549015b3a065e54ed42a386bf561",
+        "expected.txt": "b24d6d33736ecd5604a4b17bc9c6481039fac362bb7df044ef1c10a2bfd21db6",
+        "extra_test.my": "4e4bf93e2e553cf6bcb4a5d0b41b01f80f202c2f10eb385d4fdc9ae7606273fd"
+      },
+      "report_sha256": "e7731f0687df20ea744d6cbb7da282571c434ff3a8abe9c0f71f4c715272212b",
+      "sources_reported": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/dep.my",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/extra_test.my"
+      ],
+      "counts": {
+        "passed": 4,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "test_receipt_keys": {
+        "app_test::test_answer": "455dc0ebf1f091f78a0685cd958334662ca746b634bbc06644ae7fa538da13dc",
+        "app_test::test_fixture": "f4e22f72f3011954ccd4060fb5d56f962027818c8ac7b73a7360f794ae4a50b2",
+        "app_test::test_independent": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250",
+        "extra_test::test_extra": "c1d22d26d20e016edec34046ad526f2f685203c617ba6c0b708fc28c8f1c61d7"
+      },
+      "test_cache_decisions": {
+        "app_test::test_answer": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "455dc0ebf1f091f78a0685cd958334662ca746b634bbc06644ae7fa538da13dc",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": {
+            "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my#b08876bf872c977ef66508a0d6b14cbee706712fb4e16bff55c53756e0e1fd8e",
+            "producer": {
+              "facts": {
+                "fresh": 5,
+                "reused": 0,
+                "fallback": 4,
+                "decoded": 0
+              },
+              "lowering": {
+                "fresh": 4,
+                "reused": 0,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 5,
+              "nodes_unchanged": 5,
+              "changed_nodes": 0,
+              "candidate_tests": 3,
+              "shards_read": 3,
+              "shards_written": 0
+            },
+            "planner": {
+              "index_nodes": 35,
+              "index_edges": 12,
+              "affected_nodes": 0,
+              "closure_nodes": 0,
+              "closure_edges": 0,
+              "reused_tests": 3,
+              "planned_tests": 0
+            },
+            "storage": {
+              "packed_bytes_read": 3074,
+              "decoded_bytes": 5716,
+              "blocks_decoded": 2,
+              "payload_bytes_returned": 1592,
+              "block_cache_hits": 5,
+              "publication": {
+                "filename_lookups": 17,
+                "refreshes": 1,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 3618,
+                "save_bytes_prepared": 2936,
+                "sequence_locks": 15
+              }
+            },
+            "nanoseconds": {
+              "lowering": 1413263,
+              "facts": 302008,
+              "graph": 648987,
+              "planner": 122257390,
+              "keys": 2847,
+              "publication": 1384643,
+              "total": 126092493
+            },
+            "transport": {
+              "request_bytes": 428,
+              "reply_bytes": 200,
+              "startups": 1
+            }
+          }
+        },
+        "app_test::test_fixture": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "f4e22f72f3011954ccd4060fb5d56f962027818c8ac7b73a7360f794ae4a50b2",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        },
+        "app_test::test_independent": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        },
+        "extra_test::test_extra": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "c1d22d26d20e016edec34046ad526f2f685203c617ba6c0b708fc28c8f1c61d7",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": {
+            "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/extra_test.my#440eb5a410fc80af213f24941f5b63d8ca690b953e413c5bfcd4480530e6643f",
+            "producer": {
+              "facts": {
+                "fresh": 1,
+                "reused": 0,
+                "fallback": 1,
+                "decoded": 0
+              },
+              "lowering": {
+                "fresh": 1,
+                "reused": 0,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 0,
+              "nodes_unchanged": 0,
+              "changed_nodes": 1,
+              "candidate_tests": 0,
+              "shards_read": 0,
+              "shards_written": 3
+            },
+            "planner": {
+              "index_nodes": 4,
+              "index_edges": 0,
+              "affected_nodes": 1,
+              "closure_nodes": 2,
+              "closure_edges": 0,
+              "reused_tests": 0,
+              "planned_tests": 1
+            },
+            "storage": {
+              "packed_bytes_read": 0,
+              "decoded_bytes": 0,
+              "blocks_decoded": 0,
+              "payload_bytes_returned": 0,
+              "block_cache_hits": 0,
+              "publication": {
+                "filename_lookups": 2,
+                "refreshes": 3,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 1834,
+                "save_bytes_prepared": 846,
+                "sequence_locks": 9
+              }
+            },
+            "nanoseconds": {
+              "lowering": 540243,
+              "facts": 153604,
+              "graph": 82577,
+              "planner": 8419093,
+              "keys": 18587,
+              "publication": 1767905,
+              "total": 11087095
+            },
+            "transport": {
+              "request_bytes": 176,
+              "reply_bytes": 144,
+              "startups": 1
+            }
+          }
+        }
+      },
+      "environment_mode": {
+        "MYL_CORE_LEAKCHECK": null,
+        "MYLANG_CORE_RUNTIME_CACHE": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/runtime-cache",
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.zig-cache",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tmp"
+      },
+      "telemetry": {
+        "version": 1,
+        "status": "observed",
+        "producer": "guest-native-tests-v1",
+        "action_id": "language",
+        "member_id": "language/member/0",
+        "selected": 4,
+        "executed": 4,
+        "reused": 0,
+        "skipped": 0,
+        "unsupported": 0,
+        "timed": 0,
+        "complete": true,
+        "inventory_coverage": "complete",
+        "timing_coverage": "unknown",
+        "execution_timing_coverage": "unknown",
+        "reason": "supported guest verdict report has no per-test timing contract",
+        "tests": [
+          {
+            "test_id": "app_test::test_answer",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_fixture",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_independent",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "extra_test::test_extra",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          }
+        ],
+        "truncated": false,
+        "additive": false,
+        "aggregate_peak_rss_bytes": null,
+        "process": {
+          "status": "unknown",
+          "scope": null,
+          "user_cpu_seconds": null,
+          "system_cpu_seconds": null,
+          "peak_rss_bytes": null,
+          "rss_scope": null,
+          "aggregate_peak_rss_bytes": null
+        }
+      },
+      "action_elapsed_ns": 6939484271,
+      "qualification": "operational correctness only; no isolated latency claim"
+    },
+    {
+      "label": "14-source-rename",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-repaired-driver/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/cache-a",
+        "--shared-cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/guest-success-store"
+      ],
+      "status": 0,
+      "source_files": {
+        "app_test.my": "6be18b1cc9fd7f2eb1321245c062425a21d7b7f63600d4b217d837df290490dc",
+        "dep.my": "c9c8ed9941121c0457044702530cf7d05c5d549015b3a065e54ed42a386bf561",
+        "expected.txt": "b24d6d33736ecd5604a4b17bc9c6481039fac362bb7df044ef1c10a2bfd21db6",
+        "renamed_test.my": "4e4bf93e2e553cf6bcb4a5d0b41b01f80f202c2f10eb385d4fdc9ae7606273fd"
+      },
+      "report_sha256": "57c9a25eae6d691ae45289c84eddda9349c7d3884e2433e1893af3f09997e4ec",
+      "sources_reported": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/dep.my",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/renamed_test.my"
+      ],
+      "counts": {
+        "passed": 4,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "test_receipt_keys": {
+        "app_test::test_answer": "455dc0ebf1f091f78a0685cd958334662ca746b634bbc06644ae7fa538da13dc",
+        "app_test::test_fixture": "f4e22f72f3011954ccd4060fb5d56f962027818c8ac7b73a7360f794ae4a50b2",
+        "app_test::test_independent": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250",
+        "renamed_test::test_extra": "0ea833632d808968e79358a0a6e0aaadb228d303ddc0f6b1fcee04307faee79d"
+      },
+      "test_cache_decisions": {
+        "app_test::test_answer": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "455dc0ebf1f091f78a0685cd958334662ca746b634bbc06644ae7fa538da13dc",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": {
+            "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my#b08876bf872c977ef66508a0d6b14cbee706712fb4e16bff55c53756e0e1fd8e",
+            "producer": {
+              "facts": {
+                "fresh": 5,
+                "reused": 0,
+                "fallback": 4,
+                "decoded": 0
+              },
+              "lowering": {
+                "fresh": 4,
+                "reused": 0,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 5,
+              "nodes_unchanged": 5,
+              "changed_nodes": 0,
+              "candidate_tests": 3,
+              "shards_read": 3,
+              "shards_written": 0
+            },
+            "planner": {
+              "index_nodes": 35,
+              "index_edges": 12,
+              "affected_nodes": 0,
+              "closure_nodes": 0,
+              "closure_edges": 0,
+              "reused_tests": 3,
+              "planned_tests": 0
+            },
+            "storage": {
+              "packed_bytes_read": 5129,
+              "decoded_bytes": 9836,
+              "blocks_decoded": 2,
+              "payload_bytes_returned": 1592,
+              "block_cache_hits": 5,
+              "publication": {
+                "filename_lookups": 18,
+                "refreshes": 1,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 3618,
+                "save_bytes_prepared": 2936,
+                "sequence_locks": 15
+              }
+            },
+            "nanoseconds": {
+              "lowering": 1851000,
+              "facts": 269199,
+              "graph": 896265,
+              "planner": 124322974,
+              "keys": 3384,
+              "publication": 1536039,
+              "total": 128985372
+            },
+            "transport": {
+              "request_bytes": 428,
+              "reply_bytes": 200,
+              "startups": 1
+            }
+          }
+        },
+        "app_test::test_fixture": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "f4e22f72f3011954ccd4060fb5d56f962027818c8ac7b73a7360f794ae4a50b2",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        },
+        "app_test::test_independent": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        },
+        "renamed_test::test_extra": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "0ea833632d808968e79358a0a6e0aaadb228d303ddc0f6b1fcee04307faee79d",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": {
+            "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/renamed_test.my#c9b32000e1b1cb8ab6a593d0f3a18b3bcea186095161ad5c4469659b41ccd8e1",
+            "producer": {
+              "facts": {
+                "fresh": 1,
+                "reused": 0,
+                "fallback": 1,
+                "decoded": 0
+              },
+              "lowering": {
+                "fresh": 1,
+                "reused": 0,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 0,
+              "nodes_unchanged": 0,
+              "changed_nodes": 1,
+              "candidate_tests": 0,
+              "shards_read": 0,
+              "shards_written": 3
+            },
+            "planner": {
+              "index_nodes": 4,
+              "index_edges": 0,
+              "affected_nodes": 1,
+              "closure_nodes": 2,
+              "closure_edges": 0,
+              "reused_tests": 0,
+              "planned_tests": 1
+            },
+            "storage": {
+              "packed_bytes_read": 0,
+              "decoded_bytes": 0,
+              "blocks_decoded": 0,
+              "payload_bytes_returned": 0,
+              "block_cache_hits": 0,
+              "publication": {
+                "filename_lookups": 2,
+                "refreshes": 3,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 1838,
+                "save_bytes_prepared": 850,
+                "sequence_locks": 9
+              }
+            },
+            "nanoseconds": {
+              "lowering": 591605,
+              "facts": 158351,
+              "graph": 61206,
+              "planner": 7843900,
+              "keys": 18911,
+              "publication": 1663634,
+              "total": 10422847
+            },
+            "transport": {
+              "request_bytes": 176,
+              "reply_bytes": 144,
+              "startups": 1
+            }
+          }
+        }
+      },
+      "environment_mode": {
+        "MYL_CORE_LEAKCHECK": null,
+        "MYLANG_CORE_RUNTIME_CACHE": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/runtime-cache",
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.zig-cache",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tmp"
+      },
+      "telemetry": {
+        "version": 1,
+        "status": "observed",
+        "producer": "guest-native-tests-v1",
+        "action_id": "language",
+        "member_id": "language/member/0",
+        "selected": 4,
+        "executed": 4,
+        "reused": 0,
+        "skipped": 0,
+        "unsupported": 0,
+        "timed": 0,
+        "complete": true,
+        "inventory_coverage": "complete",
+        "timing_coverage": "unknown",
+        "execution_timing_coverage": "unknown",
+        "reason": "supported guest verdict report has no per-test timing contract",
+        "tests": [
+          {
+            "test_id": "app_test::test_answer",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_fixture",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_independent",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "renamed_test::test_extra",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          }
+        ],
+        "truncated": false,
+        "additive": false,
+        "aggregate_peak_rss_bytes": null,
+        "process": {
+          "status": "unknown",
+          "scope": null,
+          "user_cpu_seconds": null,
+          "system_cpu_seconds": null,
+          "peak_rss_bytes": null,
+          "rss_scope": null,
+          "aggregate_peak_rss_bytes": null
+        }
+      },
+      "action_elapsed_ns": 6952090196,
+      "qualification": "operational correctness only; no isolated latency claim"
+    },
+    {
+      "label": "15-source-delete",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-repaired-driver/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/cache-a",
+        "--shared-cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/guest-success-store"
+      ],
+      "status": 0,
+      "source_files": {
+        "app_test.my": "6be18b1cc9fd7f2eb1321245c062425a21d7b7f63600d4b217d837df290490dc",
+        "dep.my": "c9c8ed9941121c0457044702530cf7d05c5d549015b3a065e54ed42a386bf561",
+        "expected.txt": "b24d6d33736ecd5604a4b17bc9c6481039fac362bb7df044ef1c10a2bfd21db6"
+      },
+      "report_sha256": "0dddaf4818ea94ffa04f6c535c8dcc63ddccaa9b5f16434e8564345e1859e917",
+      "sources_reported": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/dep.my"
+      ],
+      "counts": {
+        "passed": 3,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "test_receipt_keys": {
+        "app_test::test_answer": "455dc0ebf1f091f78a0685cd958334662ca746b634bbc06644ae7fa538da13dc",
+        "app_test::test_fixture": "f4e22f72f3011954ccd4060fb5d56f962027818c8ac7b73a7360f794ae4a50b2",
+        "app_test::test_independent": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250"
+      },
+      "test_cache_decisions": {
+        "app_test::test_answer": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "455dc0ebf1f091f78a0685cd958334662ca746b634bbc06644ae7fa538da13dc",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": {
+            "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my#b08876bf872c977ef66508a0d6b14cbee706712fb4e16bff55c53756e0e1fd8e",
+            "producer": {
+              "facts": {
+                "fresh": 1,
+                "reused": 4,
+                "fallback": 0,
+                "decoded": 4
+              },
+              "lowering": {
+                "fresh": 0,
+                "reused": 4,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 5,
+              "nodes_unchanged": 5,
+              "changed_nodes": 0,
+              "candidate_tests": 3,
+              "shards_read": 3,
+              "shards_written": 0
+            },
+            "planner": {
+              "index_nodes": 35,
+              "index_edges": 12,
+              "affected_nodes": 0,
+              "closure_nodes": 0,
+              "closure_edges": 0,
+              "reused_tests": 3,
+              "planned_tests": 0
+            },
+            "storage": {
+              "packed_bytes_read": 5129,
+              "decoded_bytes": 9836,
+              "blocks_decoded": 2,
+              "payload_bytes_returned": 2966,
+              "block_cache_hits": 13,
+              "publication": {
+                "filename_lookups": 19,
+                "refreshes": 1,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 507,
+                "save_bytes_prepared": 160,
+                "sequence_locks": 3
+              }
+            },
+            "nanoseconds": {
+              "lowering": 1492992,
+              "facts": 144826,
+              "graph": 545815,
+              "planner": 116165971,
+              "keys": 2732,
+              "publication": 850140,
+              "total": 119291852
+            },
+            "transport": {
+              "request_bytes": 428,
+              "reply_bytes": 200,
+              "startups": 1
+            }
+          }
+        },
+        "app_test::test_fixture": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "f4e22f72f3011954ccd4060fb5d56f962027818c8ac7b73a7360f794ae4a50b2",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        },
+        "app_test::test_independent": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        }
+      },
+      "environment_mode": {
+        "MYL_CORE_LEAKCHECK": null,
+        "MYLANG_CORE_RUNTIME_CACHE": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/runtime-cache",
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.zig-cache",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tmp"
+      },
+      "telemetry": {
+        "version": 1,
+        "status": "observed",
+        "producer": "guest-native-tests-v1",
+        "action_id": "language",
+        "member_id": "language/member/0",
+        "selected": 3,
+        "executed": 3,
+        "reused": 0,
+        "skipped": 0,
+        "unsupported": 0,
+        "timed": 0,
+        "complete": true,
+        "inventory_coverage": "complete",
+        "timing_coverage": "unknown",
+        "execution_timing_coverage": "unknown",
+        "reason": "supported guest verdict report has no per-test timing contract",
+        "tests": [
+          {
+            "test_id": "app_test::test_answer",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_fixture",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_independent",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          }
+        ],
+        "truncated": false,
+        "additive": false,
+        "aggregate_peak_rss_bytes": null,
+        "process": {
+          "status": "unknown",
+          "scope": null,
+          "user_cpu_seconds": null,
+          "system_cpu_seconds": null,
+          "peak_rss_bytes": null,
+          "rss_scope": null,
+          "aggregate_peak_rss_bytes": null
+        }
+      },
+      "action_elapsed_ns": 6121474146,
+      "qualification": "operational correctness only; no isolated latency claim"
+    },
+    {
+      "label": "16-force",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-repaired-driver/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/cache-a",
+        "--shared-cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/guest-success-store",
+        "--force"
+      ],
+      "status": 0,
+      "source_files": {
+        "app_test.my": "6be18b1cc9fd7f2eb1321245c062425a21d7b7f63600d4b217d837df290490dc",
+        "dep.my": "c9c8ed9941121c0457044702530cf7d05c5d549015b3a065e54ed42a386bf561",
+        "expected.txt": "b24d6d33736ecd5604a4b17bc9c6481039fac362bb7df044ef1c10a2bfd21db6"
+      },
+      "report_sha256": "45591f7ab9af0e6989de40ec6f54741a27df554cf52ef0ae980e691610c4ee87",
+      "sources_reported": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/dep.my"
+      ],
+      "counts": {
+        "passed": 3,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "test_receipt_keys": {
+        "app_test::test_answer": "455dc0ebf1f091f78a0685cd958334662ca746b634bbc06644ae7fa538da13dc",
+        "app_test::test_fixture": "f4e22f72f3011954ccd4060fb5d56f962027818c8ac7b73a7360f794ae4a50b2",
+        "app_test::test_independent": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250"
+      },
+      "test_cache_decisions": {
+        "app_test::test_answer": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "455dc0ebf1f091f78a0685cd958334662ca746b634bbc06644ae7fa538da13dc",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": {
+            "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my#b08876bf872c977ef66508a0d6b14cbee706712fb4e16bff55c53756e0e1fd8e",
+            "producer": {
+              "facts": {
+                "fresh": 1,
+                "reused": 4,
+                "fallback": 0,
+                "decoded": 4
+              },
+              "lowering": {
+                "fresh": 0,
+                "reused": 4,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 5,
+              "nodes_unchanged": 5,
+              "changed_nodes": 0,
+              "candidate_tests": 3,
+              "shards_read": 3,
+              "shards_written": 0
+            },
+            "planner": {
+              "index_nodes": 35,
+              "index_edges": 12,
+              "affected_nodes": 0,
+              "closure_nodes": 0,
+              "closure_edges": 0,
+              "reused_tests": 3,
+              "planned_tests": 0
+            },
+            "storage": {
+              "packed_bytes_read": 3074,
+              "decoded_bytes": 5716,
+              "blocks_decoded": 2,
+              "payload_bytes_returned": 2966,
+              "block_cache_hits": 13,
+              "publication": {
+                "filename_lookups": 20,
+                "refreshes": 1,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 508,
+                "save_bytes_prepared": 160,
+                "sequence_locks": 3
+              }
+            },
+            "nanoseconds": {
+              "lowering": 2656136,
+              "facts": 285453,
+              "graph": 525566,
+              "planner": 8622341,
+              "keys": 3476,
+              "publication": 1236671,
+              "total": 13453189
+            },
+            "transport": {
+              "request_bytes": 428,
+              "reply_bytes": 200,
+              "startups": 1
+            }
+          }
+        },
+        "app_test::test_fixture": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "f4e22f72f3011954ccd4060fb5d56f962027818c8ac7b73a7360f794ae4a50b2",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        },
+        "app_test::test_independent": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        }
+      },
+      "environment_mode": {
+        "MYL_CORE_LEAKCHECK": null,
+        "MYLANG_CORE_RUNTIME_CACHE": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/runtime-cache",
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.zig-cache",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tmp"
+      },
+      "telemetry": {
+        "version": 1,
+        "status": "observed",
+        "producer": "guest-native-tests-v1",
+        "action_id": "language",
+        "member_id": "language/member/0",
+        "selected": 3,
+        "executed": 3,
+        "reused": 0,
+        "skipped": 0,
+        "unsupported": 0,
+        "timed": 0,
+        "complete": true,
+        "inventory_coverage": "complete",
+        "timing_coverage": "unknown",
+        "execution_timing_coverage": "unknown",
+        "reason": "supported guest verdict report has no per-test timing contract",
+        "tests": [
+          {
+            "test_id": "app_test::test_answer",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_fixture",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_independent",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          }
+        ],
+        "truncated": false,
+        "additive": false,
+        "aggregate_peak_rss_bytes": null,
+        "process": {
+          "status": "unknown",
+          "scope": null,
+          "user_cpu_seconds": null,
+          "system_cpu_seconds": null,
+          "peak_rss_bytes": null,
+          "rss_scope": null,
+          "aggregate_peak_rss_bytes": null
+        }
+      },
+      "action_elapsed_ns": 5938934272,
+      "qualification": "operational correctness only; no isolated latency claim"
+    },
+    {
+      "label": "17-no-cache",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-repaired-driver/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/cache-a",
+        "--shared-cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/guest-success-store",
+        "--no-cache"
+      ],
+      "status": 0,
+      "source_files": {
+        "app_test.my": "6be18b1cc9fd7f2eb1321245c062425a21d7b7f63600d4b217d837df290490dc",
+        "dep.my": "c9c8ed9941121c0457044702530cf7d05c5d549015b3a065e54ed42a386bf561",
+        "expected.txt": "b24d6d33736ecd5604a4b17bc9c6481039fac362bb7df044ef1c10a2bfd21db6"
+      },
+      "report_sha256": "b0bf8c14938270fba59d0b54ec69da99ff84c4734d2ef7a233635038fab88264",
+      "sources_reported": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/dep.my"
+      ],
+      "counts": {
+        "passed": 3,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "test_receipt_keys": {
+        "app_test::test_answer": "455dc0ebf1f091f78a0685cd958334662ca746b634bbc06644ae7fa538da13dc",
+        "app_test::test_fixture": "f4e22f72f3011954ccd4060fb5d56f962027818c8ac7b73a7360f794ae4a50b2",
+        "app_test::test_independent": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250"
+      },
+      "test_cache_decisions": {
+        "app_test::test_answer": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "455dc0ebf1f091f78a0685cd958334662ca746b634bbc06644ae7fa538da13dc",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": {
+            "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my#b08876bf872c977ef66508a0d6b14cbee706712fb4e16bff55c53756e0e1fd8e",
+            "producer": {
+              "facts": {
+                "fresh": 5,
+                "reused": 0,
+                "fallback": 4,
+                "decoded": 0
+              },
+              "lowering": {
+                "fresh": 4,
+                "reused": 0,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 0,
+              "nodes_unchanged": 0,
+              "changed_nodes": 5,
+              "candidate_tests": 0,
+              "shards_read": 0,
+              "shards_written": 3
+            },
+            "planner": {
+              "index_nodes": 20,
+              "index_edges": 10,
+              "affected_nodes": 5,
+              "closure_nodes": 10,
+              "closure_edges": 2,
+              "reused_tests": 0,
+              "planned_tests": 3
+            },
+            "storage": {
+              "packed_bytes_read": 0,
+              "decoded_bytes": 0,
+              "blocks_decoded": 0,
+              "payload_bytes_returned": 0,
+              "block_cache_hits": 0,
+              "publication": {
+                "filename_lookups": 2,
+                "refreshes": 3,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 4369,
+                "save_bytes_prepared": 3652,
+                "sequence_locks": 18
+              }
+            },
+            "nanoseconds": {
+              "lowering": 1541522,
+              "facts": 603525,
+              "graph": 107743,
+              "planner": 8034896,
+              "keys": 41607,
+              "publication": 1783263,
+              "total": 12221360
+            },
+            "transport": {
+              "request_bytes": 368,
+              "reply_bytes": 208,
+              "startups": 1
+            }
+          }
+        },
+        "app_test::test_fixture": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "f4e22f72f3011954ccd4060fb5d56f962027818c8ac7b73a7360f794ae4a50b2",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        },
+        "app_test::test_independent": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "b45a1fac6bb669dcd1f53324e8cc27917cc1ef6c0e7ad5afc959b7fba2b97250",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        }
+      },
+      "environment_mode": {
+        "MYL_CORE_LEAKCHECK": null,
+        "MYLANG_CORE_RUNTIME_CACHE": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/runtime-cache",
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.zig-cache",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tmp"
+      },
+      "telemetry": {
+        "version": 1,
+        "status": "observed",
+        "producer": "guest-native-tests-v1",
+        "action_id": "language",
+        "member_id": "language/member/0",
+        "selected": 3,
+        "executed": 3,
+        "reused": 0,
+        "skipped": 0,
+        "unsupported": 0,
+        "timed": 0,
+        "complete": true,
+        "inventory_coverage": "complete",
+        "timing_coverage": "unknown",
+        "execution_timing_coverage": "unknown",
+        "reason": "supported guest verdict report has no per-test timing contract",
+        "tests": [
+          {
+            "test_id": "app_test::test_answer",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_fixture",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_independent",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          }
+        ],
+        "truncated": false,
+        "additive": false,
+        "aggregate_peak_rss_bytes": null,
+        "process": {
+          "status": "unknown",
+          "scope": null,
+          "user_cpu_seconds": null,
+          "system_cpu_seconds": null,
+          "peak_rss_bytes": null,
+          "rss_scope": null,
+          "aggregate_peak_rss_bytes": null
+        }
+      },
+      "action_elapsed_ns": 6341878106,
+      "qualification": "operational correctness only; no isolated latency claim"
+    },
+    {
+      "label": "18-facts-leaks",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-repaired-driver/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/cache-a",
+        "--shared-cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/guest-success-store",
+        "--release",
+        "--verify-facts"
+      ],
+      "status": 0,
+      "source_files": {
+        "app_test.my": "6be18b1cc9fd7f2eb1321245c062425a21d7b7f63600d4b217d837df290490dc",
+        "dep.my": "c9c8ed9941121c0457044702530cf7d05c5d549015b3a065e54ed42a386bf561",
+        "expected.txt": "b24d6d33736ecd5604a4b17bc9c6481039fac362bb7df044ef1c10a2bfd21db6"
+      },
+      "report_sha256": "661dbe75cf8b6a1a3d3558cc334122777252368ecbac812bbcdf4844334834a1",
+      "sources_reported": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/dep.my"
+      ],
+      "counts": {
+        "passed": 3,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "test_receipt_keys": {
+        "app_test::test_answer": "eaa12f14e4c645ff5720ffcfc3e9a381cebd1f623572ff5c05f09c2aa16cab83",
+        "app_test::test_fixture": "e4acbf386a228814bbd0c697ec38d7e7b33f0c288f1b8284829b27b4fbf1c2b8",
+        "app_test::test_independent": "9a032137bdf654a98505aa0a4234eff3de9eb50fabee6a0857e01c40b6e83a92"
+      },
+      "test_cache_decisions": {
+        "app_test::test_answer": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "eaa12f14e4c645ff5720ffcfc3e9a381cebd1f623572ff5c05f09c2aa16cab83",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": {
+            "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-a/app_test.my#b08876bf872c977ef66508a0d6b14cbee706712fb4e16bff55c53756e0e1fd8e",
+            "producer": {
+              "facts": {
+                "fresh": 1,
+                "reused": 4,
+                "fallback": 0,
+                "decoded": 4
+              },
+              "lowering": {
+                "fresh": 0,
+                "reused": 4,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 0,
+              "nodes_unchanged": 0,
+              "changed_nodes": 5,
+              "candidate_tests": 0,
+              "shards_read": 0,
+              "shards_written": 1
+            },
+            "planner": {
+              "index_nodes": 20,
+              "index_edges": 10,
+              "affected_nodes": 5,
+              "closure_nodes": 10,
+              "closure_edges": 2,
+              "reused_tests": 0,
+              "planned_tests": 3
+            },
+            "storage": {
+              "packed_bytes_read": 2808,
+              "decoded_bytes": 5444,
+              "blocks_decoded": 1,
+              "payload_bytes_returned": 1887,
+              "block_cache_hits": 9,
+              "publication": {
+                "filename_lookups": 21,
+                "refreshes": 1,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 882,
+                "save_bytes_prepared": 363,
+                "sequence_locks": 4
+              }
+            },
+            "nanoseconds": {
+              "lowering": 1627656,
+              "facts": 158419,
+              "graph": 65322,
+              "planner": 116005828,
+              "keys": 26488,
+              "publication": 901467,
+              "total": 118888386
+            },
+            "transport": {
+              "request_bytes": 368,
+              "reply_bytes": 208,
+              "startups": 1
+            }
+          }
+        },
+        "app_test::test_fixture": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "e4acbf386a228814bbd0c697ec38d7e7b33f0c288f1b8284829b27b4fbf1c2b8",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        },
+        "app_test::test_independent": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "9a032137bdf654a98505aa0a4234eff3de9eb50fabee6a0857e01c40b6e83a92",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        }
+      },
+      "environment_mode": {
+        "MYL_CORE_LEAKCHECK": "1",
+        "MYLANG_CORE_RUNTIME_CACHE": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/runtime-cache",
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.zig-cache",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tmp"
+      },
+      "telemetry": {
+        "version": 1,
+        "status": "observed",
+        "producer": "guest-native-tests-v1",
+        "action_id": "language",
+        "member_id": "language/member/0",
+        "selected": 3,
+        "executed": 3,
+        "reused": 0,
+        "skipped": 0,
+        "unsupported": 0,
+        "timed": 0,
+        "complete": true,
+        "inventory_coverage": "complete",
+        "timing_coverage": "unknown",
+        "execution_timing_coverage": "unknown",
+        "reason": "supported guest verdict report has no per-test timing contract",
+        "tests": [
+          {
+            "test_id": "app_test::test_answer",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_fixture",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_independent",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          }
+        ],
+        "truncated": false,
+        "additive": false,
+        "aggregate_peak_rss_bytes": null,
+        "process": {
+          "status": "unknown",
+          "scope": null,
+          "user_cpu_seconds": null,
+          "system_cpu_seconds": null,
+          "peak_rss_bytes": null,
+          "rss_scope": null,
+          "aggregate_peak_rss_bytes": null
+        }
+      },
+      "action_elapsed_ns": 6218230056,
+      "qualification": "operational correctness only; no isolated latency claim"
+    },
+    {
+      "label": "19-compatible-second-tree",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-repaired-driver/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-b",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/cache-b",
+        "--shared-cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/guest-success-store"
+      ],
+      "status": 0,
+      "source_files": {
+        "app_test.my": "6be18b1cc9fd7f2eb1321245c062425a21d7b7f63600d4b217d837df290490dc",
+        "dep.my": "c9c8ed9941121c0457044702530cf7d05c5d549015b3a065e54ed42a386bf561",
+        "expected.txt": "b24d6d33736ecd5604a4b17bc9c6481039fac362bb7df044ef1c10a2bfd21db6"
+      },
+      "report_sha256": "133bec7309d2a46c3bbfaa89bb64f588b3178d6c87ade9da6e487f7a0224f180",
+      "sources_reported": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-b/app_test.my",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-b/dep.my"
+      ],
+      "counts": {
+        "passed": 3,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "test_receipt_keys": {
+        "app_test::test_answer": "1c14b341d1d97a2805c000accfee470aac9d6b260c16c7cff7802c263d68f7ff",
+        "app_test::test_fixture": "e225d40ceeb43312b5e25f7acffe51556aa5070d429fc06f5a4f1c4c0e85bee1",
+        "app_test::test_independent": "113b570357b2b99cfde2856b29421eefde204a44a49ff070908678fa479e60ab"
+      },
+      "test_cache_decisions": {
+        "app_test::test_answer": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "1c14b341d1d97a2805c000accfee470aac9d6b260c16c7cff7802c263d68f7ff",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": {
+            "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-b/app_test.my#b08876bf872c977ef66508a0d6b14cbee706712fb4e16bff55c53756e0e1fd8e",
+            "producer": {
+              "facts": {
+                "fresh": 5,
+                "reused": 0,
+                "fallback": 4,
+                "decoded": 0
+              },
+              "lowering": {
+                "fresh": 4,
+                "reused": 0,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 0,
+              "nodes_unchanged": 0,
+              "changed_nodes": 5,
+              "candidate_tests": 0,
+              "shards_read": 0,
+              "shards_written": 3
+            },
+            "planner": {
+              "index_nodes": 20,
+              "index_edges": 10,
+              "affected_nodes": 5,
+              "closure_nodes": 10,
+              "closure_edges": 2,
+              "reused_tests": 0,
+              "planned_tests": 3
+            },
+            "storage": {
+              "packed_bytes_read": 0,
+              "decoded_bytes": 0,
+              "blocks_decoded": 0,
+              "payload_bytes_returned": 0,
+              "block_cache_hits": 0,
+              "publication": {
+                "filename_lookups": 2,
+                "refreshes": 3,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 4373,
+                "save_bytes_prepared": 3652,
+                "sequence_locks": 18
+              }
+            },
+            "nanoseconds": {
+              "lowering": 837411,
+              "facts": 309876,
+              "graph": 68062,
+              "planner": 118482335,
+              "keys": 28360,
+              "publication": 1538866,
+              "total": 121351832
+            },
+            "transport": {
+              "request_bytes": 368,
+              "reply_bytes": 208,
+              "startups": 1
+            }
+          }
+        },
+        "app_test::test_fixture": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "e225d40ceeb43312b5e25f7acffe51556aa5070d429fc06f5a4f1c4c0e85bee1",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        },
+        "app_test::test_independent": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "113b570357b2b99cfde2856b29421eefde204a44a49ff070908678fa479e60ab",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        }
+      },
+      "environment_mode": {
+        "MYL_CORE_LEAKCHECK": null,
+        "MYLANG_CORE_RUNTIME_CACHE": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/runtime-cache",
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.zig-cache",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tmp"
+      },
+      "telemetry": {
+        "version": 1,
+        "status": "observed",
+        "producer": "guest-native-tests-v1",
+        "action_id": "language",
+        "member_id": "language/member/0",
+        "selected": 3,
+        "executed": 3,
+        "reused": 0,
+        "skipped": 0,
+        "unsupported": 0,
+        "timed": 0,
+        "complete": true,
+        "inventory_coverage": "complete",
+        "timing_coverage": "unknown",
+        "execution_timing_coverage": "unknown",
+        "reason": "supported guest verdict report has no per-test timing contract",
+        "tests": [
+          {
+            "test_id": "app_test::test_answer",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_fixture",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_independent",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          }
+        ],
+        "truncated": false,
+        "additive": false,
+        "aggregate_peak_rss_bytes": null,
+        "process": {
+          "status": "unknown",
+          "scope": null,
+          "user_cpu_seconds": null,
+          "system_cpu_seconds": null,
+          "peak_rss_bytes": null,
+          "rss_scope": null,
+          "aggregate_peak_rss_bytes": null
+        }
+      },
+      "action_elapsed_ns": 6112665677,
+      "qualification": "operational correctness only; no isolated latency claim"
+    },
+    {
+      "label": "20-second-tree-warm",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-integration/.tmp/frozen-repaired-driver/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-b",
+        "--json",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--jobs",
+        "2",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/cache-b",
+        "--shared-cache-dir",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/guest-success-store"
+      ],
+      "status": 0,
+      "source_files": {
+        "app_test.my": "6be18b1cc9fd7f2eb1321245c062425a21d7b7f63600d4b217d837df290490dc",
+        "dep.my": "c9c8ed9941121c0457044702530cf7d05c5d549015b3a065e54ed42a386bf561",
+        "expected.txt": "b24d6d33736ecd5604a4b17bc9c6481039fac362bb7df044ef1c10a2bfd21db6"
+      },
+      "report_sha256": "064bde386bcdbf1f607d7f2c805648fe4ecb243af2151191678b83e7da87808e",
+      "sources_reported": [
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-b/app_test.my",
+        "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-b/dep.my"
+      ],
+      "counts": {
+        "passed": 3,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "test_receipt_keys": {
+        "app_test::test_answer": "1c14b341d1d97a2805c000accfee470aac9d6b260c16c7cff7802c263d68f7ff",
+        "app_test::test_fixture": "e225d40ceeb43312b5e25f7acffe51556aa5070d429fc06f5a4f1c4c0e85bee1",
+        "app_test::test_independent": "113b570357b2b99cfde2856b29421eefde204a44a49ff070908678fa479e60ab"
+      },
+      "test_cache_decisions": {
+        "app_test::test_answer": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "1c14b341d1d97a2805c000accfee470aac9d6b260c16c7cff7802c263d68f7ff",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": {
+            "scope": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tree-b/app_test.my#b08876bf872c977ef66508a0d6b14cbee706712fb4e16bff55c53756e0e1fd8e",
+            "producer": {
+              "facts": {
+                "fresh": 1,
+                "reused": 4,
+                "fallback": 0,
+                "decoded": 4
+              },
+              "lowering": {
+                "fresh": 0,
+                "reused": 4,
+                "materialized": 0
+              }
+            },
+            "graph": {
+              "nodes_read": 5,
+              "nodes_unchanged": 5,
+              "changed_nodes": 0,
+              "candidate_tests": 3,
+              "shards_read": 3,
+              "shards_written": 0
+            },
+            "planner": {
+              "index_nodes": 35,
+              "index_edges": 12,
+              "affected_nodes": 0,
+              "closure_nodes": 0,
+              "closure_edges": 0,
+              "reused_tests": 3,
+              "planned_tests": 0
+            },
+            "storage": {
+              "packed_bytes_read": 2812,
+              "decoded_bytes": 5444,
+              "blocks_decoded": 1,
+              "payload_bytes_returned": 2966,
+              "block_cache_hits": 14,
+              "publication": {
+                "filename_lookups": 3,
+                "refreshes": 1,
+                "packs_prepared": 1,
+                "pack_bytes_prepared": 508,
+                "save_bytes_prepared": 160,
+                "sequence_locks": 3
+              }
+            },
+            "nanoseconds": {
+              "lowering": 882907,
+              "facts": 149219,
+              "graph": 221345,
+              "planner": 109508515,
+              "keys": 2463,
+              "publication": 773721,
+              "total": 111631766
+            },
+            "transport": {
+              "request_bytes": 428,
+              "reply_bytes": 200,
+              "startups": 1
+            }
+          }
+        },
+        "app_test::test_fixture": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "e225d40ceeb43312b5e25f7acffe51556aa5070d429fc06f5a4f1c4c0e85bee1",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        },
+        "app_test::test_independent": {
+          "action": "execute",
+          "reason": "uncacheable-toolchain",
+          "key": "113b570357b2b99cfde2856b29421eefde204a44a49ff070908678fa479e60ab",
+          "component": "808128327e1c699ffaa23b5c8d9e6b5070dd6e829980a58c4c1d4888c6d4878c",
+          "key_method": "canonical-facts",
+          "work": null
+        }
+      },
+      "environment_mode": {
+        "MYL_CORE_LEAKCHECK": null,
+        "MYLANG_CORE_RUNTIME_CACHE": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/runtime-cache",
+        "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.zig-cache",
+        "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+        "TMPDIR": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-guest-repaired/tmp"
+      },
+      "telemetry": {
+        "version": 1,
+        "status": "observed",
+        "producer": "guest-native-tests-v1",
+        "action_id": "language",
+        "member_id": "language/member/0",
+        "selected": 3,
+        "executed": 3,
+        "reused": 0,
+        "skipped": 0,
+        "unsupported": 0,
+        "timed": 0,
+        "complete": true,
+        "inventory_coverage": "complete",
+        "timing_coverage": "unknown",
+        "execution_timing_coverage": "unknown",
+        "reason": "supported guest verdict report has no per-test timing contract",
+        "tests": [
+          {
+            "test_id": "app_test::test_answer",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_fixture",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          },
+          {
+            "test_id": "app_test::test_independent",
+            "state": "passed",
+            "elapsed_ns": null,
+            "elapsed_scope": "unknown"
+          }
+        ],
+        "truncated": false,
+        "additive": false,
+        "aggregate_peak_rss_bytes": null,
+        "process": {
+          "status": "unknown",
+          "scope": null,
+          "user_cpu_seconds": null,
+          "system_cpu_seconds": null,
+          "peak_rss_bytes": null,
+          "rss_scope": null,
+          "aggregate_peak_rss_bytes": null
+        }
+      },
+      "action_elapsed_ns": 6424978903,
+      "qualification": "operational correctness only; no isolated latency claim"
+    }
+  ],
+  "complete": true,
+  "second_tree_reuse": "recorded actual cached/fresh decisions; no root identity is erased by the harness"
+}

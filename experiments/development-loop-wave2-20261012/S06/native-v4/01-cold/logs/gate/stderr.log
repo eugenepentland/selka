@@ -1,0 +1,35 @@
+build-slot: gate slot 1, FIFO ticket 110 after 0s
+test_a (membership_cases.Membership.test_a) ... ok
+test_stable (membership_cases.Membership.test_stable) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.000s
+
+OK
+test
++- verification action tooling_unit member 0 w
+guardian/test: 28 test(s) selected
+guardian/test: test wall 0.02s
+guardian/test: PASS — 28 passed
+guardian/test: RESULT {"passed":28,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/88a635f4f1978a32e367b2f28f246da2/tooling-live-tests --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+test
++- verification action text_scalar_unit member 0 w
+guardian/test: 9 test(s) selected
+guardian/test: test wall 0.08s; slowest over 50ms:
+guardian/test:   0.06s  format_spec_test.test.float format specifications render every CPython oracle row exactly
+guardian/test: PASS — 9 passed
+guardian/test: RESULT {"passed":9,"failed":0,"skipped":0}
+failed command: ./.zig-cache/o/791e772f27345c8417d1a9ee83cc2b0e/scalar-live-tests --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+Build Summary: 8/8 steps succeeded; 37/37 tests passed
+fmt-check success
++- verification action format member 0 success
+test success
++- verification action text_scalar_unit member 0 9 pass (9 total) 93ms MaxRSS:5M
+|  +- compile test scalar-live-tests debug native cached 5ms MaxRSS:41M
++- verification action tooling_unit member 0 28 pass (28 total) 40ms MaxRSS:6M
+|  +- compile test tooling-live-tests debug native cached 6ms MaxRSS:40M
++- verification action fixtures member 0 success 241ms
+

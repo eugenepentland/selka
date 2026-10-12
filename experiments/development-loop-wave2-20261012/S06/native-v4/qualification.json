@@ -1,0 +1,26 @@
+{
+  "complete": true,
+  "cases": 17,
+  "source_commit": "c1857310e0bf623545380c8de24515f1b9970021",
+  "namespace": "verification-v1",
+  "scope": "bounded real native cohort, not complete repository verification",
+  "all_expected_verdicts_and_decisions_passed": true,
+  "failed_success_receipts_absent": true,
+  "second_tree_source_files_equal": true,
+  "second_tree_cold_executed": [
+    "fixtures",
+    "format",
+    "text_scalar_unit",
+    "tooling_unit"
+  ],
+  "second_tree_warm_reused": [
+    "fixtures",
+    "format",
+    "text_scalar_unit",
+    "tooling_unit"
+  ],
+  "cross_tree_shared_reuse": "unavailable by intentional root/context identity",
+  "final_verification_v2_candidate_qualified": false,
+  "performance": "operational correctness only; no isolated latency claim",
+  "revert": "exact native implementation changes retained; conservative execution recorded"
+}

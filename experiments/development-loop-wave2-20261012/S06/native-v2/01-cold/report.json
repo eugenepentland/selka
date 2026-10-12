@@ -1,0 +1,18 @@
+{
+  "actions": [],
+  "admissions": [],
+  "elapsed_seconds": 4.436411272967234,
+  "error": "cannot snapshot declared inputs: [Errno 2] No such file or directory: '/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S06/.tmp/S06-native-v2/tree-a/build.zig.zon'",
+  "stability_diagnostics": {
+    "reasons": [],
+    "status": "unknown",
+    "truncated": false,
+    "unknown": true,
+    "version": 1
+  },
+  "stage": "preparation",
+  "status": 75,
+  "success": false,
+  "timings": {},
+  "version": 1
+}
