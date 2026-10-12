@@ -282,6 +282,22 @@ class NativeProducerTests(unittest.TestCase):
         changed['src/'][0]['sha256'] = 'c' * 64
         self.assertNotEqual(producers.native_identity('units', self.PRODUCER, changed.__getitem__), first)
 
+    def test_components_producer_binds_the_seed_pin_and_component_sources(self):
+        producer = {'recipes': ['./*.zig', 'selfhost/*.zig', 'selfhost/components/', 'selfhost/component-seed.json'],
+                    'optimize': 'debug', 'zig_version': '0.17.0', 'test_runner': {'kind': 'none'}}
+        record = {'version': 3, 'producers': {},
+                  'artifacts': {'components': {'path': '/abs/components/test-index.json', 'producer': producer}}}
+        self.assertEqual(producers.native_producer(record, 'components'), (producer, ''))
+        def row(path, digest):
+            return {'path': path, 'sha256': digest * 64, 'size': 1, 'mode': 0o644}
+        files = {'./*.zig': [row('build.zig', 'a')], 'selfhost/*.zig': [row('selfhost/components.zig', 'b')],
+                 'selfhost/components/': [row('selfhost/components/test_index/main.my', 'c')],
+                 'selfhost/component-seed.json': [row('selfhost/component-seed.json', 'd')]}
+        first = producers.native_identity('components', producer, files.__getitem__)
+        self.assertEqual(len(first['sources']), 4)
+        files['selfhost/component-seed.json'] = [row('selfhost/component-seed.json', 'e')]
+        self.assertNotEqual(producers.native_identity('components', producer, files.__getitem__), first)
+
     def test_a_recipe_selecting_nothing_is_an_error_not_an_empty_identity(self):
         selections = dict(self.files(1), **{'build.zig': []})
         with self.assertRaisesRegex(producers.ProducerError, 'selects no watched input: build.zig'):

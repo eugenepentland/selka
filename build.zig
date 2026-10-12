@@ -1151,7 +1151,7 @@ pub fn build(b: *std.Build) void {
         .{ .label = "memory-budget", .binary = budget_unit },
         .{ .label = "component-support", .binary = component_support_tests },
         .{ .label = "component-builder", .binary = component_tool },
-    }, &.{ &install_exe.step, &install_component_tool.step });
+    }, .{ .step = install_components.?, .manifest = .{ .relative = .{ .base = .install_prefix, .sub_path = "libexec/mylang/components/test-index.json" } } }, &.{ &install_exe.step, &install_component_tool.step });
     requireLiveEnvironment(b);
     // These scripts use declared source fixtures and isolated stand-ins, and
     // never execute a prepared native compiler or test binary. Unknown/new

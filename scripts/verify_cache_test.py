@@ -47,8 +47,11 @@ elif phase=='prepare':
     producer=json.loads((root/'.producer').read_text()) if (root/'.producer').exists() else None
     record={{'version':1,'artifacts':artifacts}} if producer is None else {{'version':3,'producers':{{}},
         'artifacts':{{name:{{'path':path,'producer':producer}} for name,path in artifacts.items()}}}}
-    (root/'zig-out/verification/artifacts.json').write_text(json.dumps(record))
     package=root/'zig-out/libexec/mylang/components'; package.mkdir(parents=True,exist_ok=True)
+    # .component-producer declares the components provider beside the others.
+    if producer is not None and (root/'.component-producer').exists():
+        record['artifacts']['components']={{'path':str(package/'test-index.json'),'producer':producer}}
+    (root/'zig-out/verification/artifacts.json').write_text(json.dumps(record))
     for name in ['test-index','cache-plan']:
         (package/name).write_bytes(b'fake-component'+values.get('component:'+name,'').encode())
         (package/(name+'.json')).write_text(json.dumps({{'artifact':name}}))
@@ -1417,6 +1420,15 @@ class VerificationCoordinator(unittest.TestCase):
         self.assertEqual(identities['components']['identity'], 'bytes')
         self.assertEqual({row['id']: row['path_free'] for row in first['actions']},
                          {'unit': False, 'docs': False, 'pure': True, 'native': True})
+
+    def test_a_components_producer_makes_every_action_path_free_across_roots(self):
+        self.write('.component-producer', '')
+        first, second = self.two_roots(self.producer())
+        self.assertEqual({row['id']: row['action_key'] for row in first['actions']},
+                         {row['id']: row['action_key'] for row in second['actions']})
+        self.assertEqual(first['artifact_identities']['components']['identity'], 'producer')
+        self.assertEqual({row['id']: row['path_free'] for row in first['actions']},
+                         {'unit': True, 'docs': True, 'pure': True, 'native': True})
 
     def test_missing_producer_falls_back_to_reported_byte_identity(self):
         first, second = self.two_roots(None)

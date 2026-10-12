@@ -195,6 +195,11 @@ fn sameRecipes(left: []const []const u8, right: []const []const u8) bool {
 
 /// A native executable the coordinator must identify before replaying its actions.
 pub const Artifact = struct { label: []const u8, binary: *std.Build.Step.Compile };
+/// The installed Selka components (`libexec/mylang/components`): the step that
+/// builds them and the `test-index.json` manifest that stands for the set in
+/// `artifacts.json`. The coordinator identifies them as the `components`
+/// provider: both manifests and the two executables they name.
+pub const Components = struct { step: *std.Build.Step, manifest: std.Build.LazyPath };
 
 /// One artifact's producer in `artifacts.json` version 3: root-relative
 /// recipes (`dir/`, `base/**/*SUFFIX`, `base/*SUFFIX` or an exact path) that
@@ -232,6 +237,11 @@ fn sourcesFor(b: *std.Build, label: []const u8) []const []const u8 {
     if (std.mem.eql(u8, label, "memory-budget")) return &.{"src/memory_budget.zig"};
     if (std.mem.eql(u8, label, "component-support")) return &.{"selfhost/"};
     if (std.mem.eql(u8, label, "component-builder")) return &.{"selfhost/*.zig"};
+    // `selka-components` (built from `selfhost/*.zig`) compiles each component
+    // from `selfhost/components/` with a seed compiler. The seed archive comes
+    // from outside the tree, but `selfhost/component-seed.json` pins its SHA-256
+    // and the build refuses any other bytes, so the pin bounds it.
+    if (std.mem.eql(u8, label, "components")) return &.{ "selfhost/*.zig", "selfhost/components/", "selfhost/component-seed.json" };
     std.debug.panic("verification artifact {s} has no producer recipe", .{label});
 }
 
@@ -260,8 +270,16 @@ fn concat(b: *std.Build, parts: []const []const []const u8) []const []const u8 {
 /// `artifacts.json`: each artifact's recipes, optimize mode, Zig version and,
 /// for a test root, its test runner.
 fn producers(b: *std.Build, artifacts: []const Artifact) std.Build.LazyPath {
-    const entries = b.allocator.alloc(LabeledProducer, artifacts.len) catch @panic("verification allocation");
-    for (entries, artifacts) |*entry, artifact| {
+    const entries = b.allocator.alloc(LabeledProducer, artifacts.len + 1) catch @panic("verification allocation");
+    // The components are debug builds (`selka-components` passes no --release)
+    // of guest programs; no test runner links them.
+    entries[artifacts.len] = .{ .label = "components", .producer = .{
+        .recipes = concat(b, &.{ &build_files, sourcesFor(b, "components") }),
+        .optimize = "debug",
+        .zig_version = @import("builtin").zig_version_string,
+        .test_runner = .{ .kind = "none" },
+    } };
+    for (entries[0..artifacts.len], artifacts) |*entry, artifact| {
         const tested = artifact.binary.kind == .@"test";
         entry.* = .{ .label = artifact.label, .producer = .{
             .recipes = concat(b, &.{ &build_files, sourcesFor(b, artifact.label), if (tested) &guardian_sources else &.{} }),
@@ -276,7 +294,7 @@ fn producers(b: *std.Build, artifacts: []const Artifact) std.Build.LazyPath {
 
 /// Explicit developer preparation; the normal install graph runs no Python.
 /// Return only explicitly identified artifact/output roots for coverage exclusion.
-pub fn prepare(b: *std.Build, artifacts: []const Artifact, known_outputs: []const *std.Build.Step) []const *std.Build.Step {
+pub fn prepare(b: *std.Build, artifacts: []const Artifact, components: Components, known_outputs: []const *std.Build.Step) []const *std.Build.Step {
     const target = b.step("verification-prepare", "Prepare exact native verification executables and installed components");
     target.dependOn(b.getInstallStep());
     var identified: std.ArrayList(*std.Build.Step) = .empty;
@@ -302,6 +320,9 @@ pub fn prepare(b: *std.Build, artifacts: []const Artifact, known_outputs: []cons
         const installed = b.addInstallFileWithDir(artifact.binary.getEmittedBin(), .{ .custom = "verification" }, b.fmt("bin/{s}", .{artifact.label}));
         target.dependOn(&installed.step);
     }
+    run.step.dependOn(components.step);
+    run.addArg("components");
+    run.addFileArg(components.manifest);
     const installed_paths = b.addInstallFileWithDir(paths, .{ .custom = "verification" }, "artifacts.json");
     target.dependOn(&installed_paths.step);
     return identified.items;

@@ -201,7 +201,14 @@ than by its bytes, whose debug information names the worktree. Version 3:
 
 Every prepared artifact has a producer: `mylang`, `units`, `core`, `cli`,
 `golden`, `memory-budget`, `component-support`, `component-builder`,
-`tooling-units` and `text-scalar-units`. A new artifact must name its recipes
+`tooling-units` and `text-scalar-units`, and so do the installed Selka
+`components`. Their entry's `path` is `libexec/mylang/components/test-index.json`
+(the coordinator's provider is both manifests and the two executables they
+name); recipes are the build files, `selfhost/*.zig`, `selfhost/components/`
+and `selfhost/component-seed.json`, with `optimize: "debug"` and
+`test_runner: {"kind": "none"}`. The seed archive is fetched from outside the
+tree, but the pin's `archive_sha256` fixes its bytes and the component build
+refuses any other archive, so the pin's recipe bounds it. A new artifact must name its recipes
 in `build_verification.zig` or the build refuses to configure.
 
 The report's `action_budgets` evaluates the current request diagnostically. The
