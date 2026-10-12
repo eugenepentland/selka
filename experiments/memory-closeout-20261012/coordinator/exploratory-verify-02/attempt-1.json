@@ -1,0 +1,11 @@
+{
+  "attempt": 1,
+  "source_revision": "3cf5bef12640f4277111f9b0080afe530eae777e",
+  "status": "preparation_failed",
+  "exit_status": 2,
+  "selected_gate_actions": 0,
+  "error": "optimization_cache_test.zig:629 DeferredFinalLoader.ensure did not map new Unsupported error to CacheMiss; production loader already maps it.",
+  "fix_worker_commit": "d80da7e64a512604f973df80d1887291a7b61c24",
+  "log": "prepare-attempt-1.log",
+  "next_attempt_source": "69f797479707dba0fbca18aad5c4fb5d3acbffb7"
+}

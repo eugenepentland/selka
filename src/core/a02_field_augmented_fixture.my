@@ -3,31 +3,38 @@ record AugmentedOwner:
     items: str[]
     label: str
 
+
 record AugmentedParent:
     child: AugmentedOwner
     rows: AugmentedOwner[]
     mapping: dict[int, AugmentedOwner]
 
+
 record InlinedCounter:
     items: int[]
     number: int
+
 
 func replace_counter_items(mut counter: InlinedCounter) -> int[]:
     counter.items = [50]
     counter.number = 7
     return [2]
 
+
 func owner(seed: int) -> AugmentedOwner:
     return AugmentedOwner(items=["item-" + str(seed)], label="label-" + str(seed))
+
 
 func selected(mut events: int[]) -> int:
     events.append(1)
     return -1
 
+
 func values(mut events: int[], out: Stream) -> str[]:
     events.append(2)
     out.print("rhs")
     return ["extra-" + str(len(events))]
+
 
 func main(args: str[], out: Stream) -> int:
     mut parent = AugmentedParent(child=owner(0), rows=[owner(1)], mapping={3: owner(3)})

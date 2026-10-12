@@ -63,7 +63,7 @@
       "requested_by": "user",
       "change": "Expand Result-list support, including parallel.map returning Results.",
       "owner": "A01",
-      "status": "integrated; Support5 Result-map release/TSan at1/2/8 workers passed6/6; final qualification pending"
+      "status": "integrated; Support7 five-mode Result-map and TSan/task stress passed; final revision requalification pending"
     }
   ],
   "interim_compilers": [
@@ -141,7 +141,12 @@
       "noalloc_lint dictionary snapshot panic",
       "Core dict fixture dictionary snapshot panic",
       "CLI fix contextual dictionary snapshot status2"
-    ]
+    ],
+    "latest_attempt": {
+      "source_revision": "d01f772cd",
+      "path": "coordinator/exploratory-verify-02/attempt-3.json",
+      "status": "running; known formatting failure; no pass claimed"
+    }
   },
   "interim_qualification": {
     "final_candidate": false,
@@ -205,7 +210,45 @@
       },
       "operational": "Coordinator ran A06 followups after two agent turns failed before execution with a platform content flag. No checks were skipped or treated as successful."
     },
-    "rss": "Old pilot RSS invalid due launcher high-water contamination; corrected separate guest-child GNU-time controls pass. Final paired measurements pending."
+    "rss": "Old pilot RSS invalid due launcher high-water contamination; corrected separate guest-child GNU-time controls pass. Final paired measurements pending.",
+    "support7_latest": {
+      "source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+      "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+      "census": {
+        "builds": 435,
+        "runs": 695,
+        "passed": true,
+        "original_denominator": 30,
+        "original_allocating": 23,
+        "original_allocation_free": 7,
+        "admitted_run_rc_events": 0,
+        "admitted_run_exit_live_bytes": 0,
+        "evidence": "A03/Support7-full"
+      },
+      "applications": {
+        "builds": 20,
+        "runs": 60,
+        "passed": true,
+        "evidence": "coordinator/support7/applications/summary.json"
+      },
+      "components": {
+        "pure_tests": 42,
+        "counted_protocol_runs": 688,
+        "passed": true,
+        "evidence": [
+          "A10/support7-qualification/package-results.json",
+          "A08/components-support7-cache_plan-counts"
+        ]
+      },
+      "native_guest_survey": {
+        "per_mode_passed": 412,
+        "per_mode_failed": 5,
+        "per_mode_unsupported": 3,
+        "additional_source_blocked_contracts": 16,
+        "milestone_qualified": false
+      },
+      "measurements": "15 same-adapter C0/Support7 counted configurations each pass; 66 initial runtime observations only; remaining timing/RSS/scaling pending"
+    }
   },
   "current_blockers": [
     {
@@ -272,8 +315,8 @@
       "owner": "coordinator/A10/A08",
       "item": "Installed components",
       "reproducer": "Support6 libexec is planned as byte-identical legacy Support5 components; independently qualified owned source pin and actual rebuilt artifacts are still required",
-      "status": "intermediate_owned_package_passed; default_selection_pending",
-      "latest_evidence": "A10 independently pinned source5167 ReleaseFast29cfbd13 and installed42 tests/protocols; historical seed unchanged"
+      "status": "Support7_complete_owned_installation_qualified; default_selection_pending",
+      "latest_evidence": "A10 b962f3f43:42 pure tests and actual installed protocols/symbol audits; A08 counted688 fresh cases"
     },
     {
       "owner": "coordinator/A05/A07",
@@ -313,15 +356,52 @@
     {
       "owner": "A09/A10",
       "item": "Size-aligned C0 counted native linking",
-      "status": "manual_adapter_qualified; candidate_matched_comparison_pending",
+      "status": "same_adapter_C0_and_Support7_comparison_passed; ordinary_C0_link_failure_retained",
       "reproducer": "A09/raw/size-aligned-C0/results.json: eight unique builds fail native-link object FileNotFound, 15 configurations retained",
-      "latest_evidence": "67348fc8c preserves ordinary failures; exact C0 manual supplement passes all 15 configurations, eight binaries and 94 artifact hashes."
+      "latest_evidence": "A10 v2 exact-artifact adapter7b10; A09 aa80f51915/15 each arm"
     },
     {
       "owner": "coordinator/A10",
       "item": "Full verification owned component pin options",
-      "status": "patch_request_in_preparation",
-      "reproducer": "scripts/verify_cache.py parse_options refuses -Dcomponent-owned-compiler-pin and -Dcomponent-seed-source; same package inputs must be bound to verification preparation and replay."
+      "status": "fixed_integrated; 73 tests pass; full gate now executes with owned pin/archive",
+      "reproducer": "scripts/verify_cache.py parse_options refuses -Dcomponent-owned-compiler-pin and -Dcomponent-seed-source; same package inputs must be bound to verification preparation and replay.",
+      "latest_evidence": "c23969d50 plus supported scope glob50ac68c1f; exploratory-verify-02 attempt3 running"
+    },
+    {
+      "owner": "A01",
+      "item": "Recursive Optional scalar-field writeback",
+      "reproducer": "recursive_values.my: copied recursive optional child.value assignment",
+      "status": "worker_fix_in_test"
+    },
+    {
+      "owner": "A08",
+      "item": "Warm generic memo callback cache hydration",
+      "reproducer": "memo.create[str[]] raw bracket name passed to module_names.reference; cold passes/warm InternalError",
+      "status": "narrow_recipe_fallback_in_test"
+    },
+    {
+      "owner": "A02",
+      "item": "Indirect owned aggregate result transfer",
+      "reproducer": "rc_pin_elide.my:141 return f(mut xs); three guest tests refuse lowering",
+      "status": "ownedRecord_call_indirect_fix_in_test"
+    },
+    {
+      "owner": "A05",
+      "item": "Scalar mutable arguments share one parent",
+      "reproducer": "frontend_mut.my dynamic disjoint targets gives [1,22]; named interior case refuses at116",
+      "status": "captured_scalar_writeback_fix_in_test"
+    },
+    {
+      "owner": "A10",
+      "item": "Recursive structural equality lowering",
+      "reproducer": "value_equality.my: three native test roots require unaudited myl_core_equal_<type>",
+      "status": "borrowed_equality_adapter_in_progress"
+    },
+    {
+      "owner": "coordinator",
+      "item": "Registered formatting",
+      "reproducer": "Four new .my fixtures fail full format gate on d01f772cd",
+      "status": "formatted_in_integration; next_full_gate_pending"
     }
   ],
   "next_interim_artifact": {
@@ -332,5 +412,14 @@
     "source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
     "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
     "evidence": "coordinator/support7/support7-identity.json"
+  },
+  "worker_status": {
+    "launched": 10,
+    "simultaneous_slots_confirmed": 11,
+    "unavailable": [
+      "A06",
+      "A07"
+    ],
+    "handoff": "Coordinator and original workers continue their remaining work; no nested/additional agents launched."
   }
 }

@@ -1,8 +1,9 @@
 # Memory-management closeout, 12 October 2026
 
 Execution in progress. None of the three release milestones is yet qualified.
-The session has one coordinator and ten concurrent workers in independent sibling
-worktrees. The original checkout and its unrelated edits are preserved.
+The session launched one coordinator and ten concurrent workers in independent sibling
+worktrees. A06 and A07 later became unavailable; their saved work is being completed
+by the coordinator and existing workers. The original checkout and its unrelated edits are preserved.
 
 C0 is `fbfcaa7a923186a8e773c3760f81c10aa345a432`, exactly `origin/development`
 at kickoff. Both documented ancestor checks passed. Integration branch:
@@ -117,3 +118,31 @@ after 45 fresh actions (no reuse). Raw evidence remains in
 `coordinator/exploratory-verify-01/`. The dictionary snapshot defect is fixed in
 later sources, but complete verification must still pass on frozen final inputs.
 Focused tests do not replace that gate.
+
+## Latest shared-compiler qualification
+
+Support7 passes the complete 435-build/695-execution counted census in five modes.
+Within the original 30-case denominator, 23 allocate and 7 remain workload-allocation-free;
+all admitted counted executions have correct results, zero RC events and no managed
+exit leaks. The four mandatory application shapes also pass 20 builds and 60 runs,
+including the parallel 1/2/8-worker matrix. See [application evidence](coordinator/support7/applications/summary.json).
+
+The actual complete owned Support7 installation passes 42 component tests and 688
+fresh counted protocol cases. Fifteen input-matched C0/Support7 counter configurations
+pass through the same verified v2 native adapter; timing currently covers only three
+cases/66 observations. Remaining runtime, RSS and compile-scaling evidence is pending.
+Earlier package and counter-link blockers above describe superseded artifacts, whose
+failures remain preserved.
+
+Qualification is still blocked. Actual native guest-test execution found recursive
+equality and indirect mutable-call gaps, a disjoint scalar writeback error, recursive
+optional field-update refusal, and warm generic memo callback cache hydration failure.
+Each has a reproducer and owner in the ledger. Source admission alone is not a pass.
+The full registered gate now accepts the exact owned component pin/archive; its current
+attempt has detected four fixture-formatting failures, fixed in subsequent integration
+source. No full-gate or release milestone is claimed yet.
+
+Integrated followups also restore three avoided JSON literal allocations through a
+small read-only helper and repair field-ownership discovery after inlining. Their worker
+results are separate from frozen Support7; the next common compiler must rerun affected
+qualification. Default promotion and active RC retirement are still unapplied.

@@ -1,0 +1,101 @@
+build-slot: FIFO ticket 1004, position 12; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 1004, position 4; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 1, FIFO ticket 1004 after 90s
+Build Summary: 3/3 steps succeeded
+verification-plan success
++- install generated to inventory.json success
+   +- WriteFile verification-inventory.json success
+
+build-slot: FIFO ticket 1018, position 14; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 1018, position 7; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 2, FIFO ticket 1018 after 110s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: diff-scoped vs fbfcaa7a923186a8e773c3760f81c10aa345a432: 116/717 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 18 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 12 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 3886 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 2 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs fbfcaa7a923186a8e773c3760f81c10aa345a432, 116 file(s) in scope
+64dc47ba86e10c81f03630e9f3f62aa787cd2cd8447187190554d8fe3b0396cf
+dc930688523c5b7e2a9568eb06868cf567d7a4bf6976d91e2e38bc979ec09aa6
+verification-prepare
++- install generated to bin/core
+   +- compile test debug native 1 errors
+src/core/optimization_cache_test.zig:629:9: error: expected type 'error{CacheMiss,OutOfMemory}!void', found 'error{CacheMiss,OutOfMemory,Unsupported}'
+        try passes.restoreDeferredFinal(self.arena, scratch.allocator(), self.context, index, self.result);
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/core/optimization_cache_test.zig:629:9: note: 'error.Unsupported' not a member of destination error set
+src/core/optimization_cache_test.zig:624:63: note: function return type declared here
+    fn ensure(pointer: *anyopaque, index: u32) demand_ir.Error!void {
+                                               ~~~~~~~~~~~~~~~^~~~~
+referenced by:
+    compileDemandGuarded: src/core/optimization_cache_test.zig:710:63
+    test.consuming list demand proofs agree with eager ownership across omitted bodies and function values: src/core/optimization_cache_test.zig:266:50
+    1 reference(s) hidden; use '-freference-trace=3' to see all references
+error: 1 compilation errors
+failed command: /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig test .zig-cache/o/4c97392a0fe7357cb3738fea423e3ed9/juice_bytes_hash.o -ODebug -I .zig-cache/o/f77856bf22d15753e2ef722d1f09ae46 --dep mylang --dep core_tool_platform --dep build_identity --dep memory_budget --dep core_test_options --dep core_number_text_object -Mroot=src/core/root_test.zig -ODebug --dep memory_budget -Mmylang=src/compiler.zig -Mcore_tool_platform=src/config_core_tool_platform.zig -ODebug -Mbuild_identity=.zig-cache/o/a09a6b7535ffe64c963c78241d70a9c6/build_identity/identity.zig -ferror-tracing -ODebug -Mmemory_budget=src/memory_budget.zig -Mcore_test_options=.zig-cache/o/c32beeae7edc66d370b41412bef1f1f3/options.zig -Mcore_number_text_object=.zig-cache/o/38d22d1e4461e413e446fb42adf284b2/core_number_text.o --test-runner ../guardian-zig/src/test_runner.zig --cache-dir .zig-cache --global-cache-dir /home/epentland/ai/canopy/.zig-global-cache --name test --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+
+Build Summary: 31/36 steps succeeded (1 failed)
+verification-prepare transitive failure
++- install success
+|  +- install mylang success
+|  |  +- compile exe mylang debug native success 4s MaxRSS:600M
+|  |  |  +- run exe build-identity (build_identity) success 35ms
+|  |  |  |  +- compile exe build-identity debug native success 289ms MaxRSS:145M
+|  |  |  +- WriteFile success
+|  |  |  +- compile obj juice_bytes_hash fast native success 104ms MaxRSS:109M
+|  |  |  +- compile obj juice_bytes_hash fast native (reused)
+|  |  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 success 976ms MaxRSS:155M
+|  |  +- verification action guardian member 2 success 1s
+|  |     +- guardian-selfcheck success
+|  |        +- verification action guardian member 0 success 4ms
+|  +- install generated to selka-components success
+|  |  +- compile exe selka-components safe native success 13s MaxRSS:552M
+|  +- verification action component-preparation member 0 success 15s
+|  |  +- compile exe selka-components safe native (reused)
+|  +- verification action guardian member 2 (+1 more reused dependencies)
++- install generated to bin/mylang success
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- install generated to bin/units success
+|  +- compile test debug native success 3s MaxRSS:468M
+|     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+|     +- options success
+|        +- compile exe mylang debug native (+5 more reused dependencies)
++- install generated to bin/tooling-units success
+|  +- compile test tooling-unit-tests debug native success 360ms MaxRSS:166M
++- install generated to bin/cli success
+|  +- compile test debug native success 938ms MaxRSS:184M
+|     +- options success
+|        +- compile exe mylang debug native (+5 more reused dependencies)
+|        +- compile exe selka-components safe native (reused)
++- install generated to bin/core transitive failure
+|  +- compile test debug native 1 errors
+|     +- WriteFile (reused)
+|     +- compile obj juice_bytes_hash fast native (reused)
+|     +- compile obj juice_bytes_hash fast native (reused)
+|     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+|     +- options success
+|     |  +- compile exe mylang debug native (+5 more reused dependencies)
+|     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
++- install generated to bin/golden success
+|  +- compile test debug native success 503ms MaxRSS:160M
+|     +- options (+2 more reused dependencies)
++- install generated to bin/memory-budget success
+|  +- compile test debug native success 331ms MaxRSS:153M
++- install generated to bin/component-support success
+|  +- compile test debug native success 440ms MaxRSS:159M
++- install generated to bin/component-builder success
+|  +- compile exe selka-components safe native (reused)
++- install generated to artifacts.json transitive failure
+   +- run python3 (artifacts.json) transitive failure
+      +- compile exe mylang debug native (+5 more reused dependencies)
+      +- compile test debug native (+2 more reused dependencies)
+      +- compile test tooling-unit-tests debug native (reused)
+      +- compile test debug native (+1 more reused dependencies)
+      +- compile test debug native (+6 more reused dependencies)
+      +- compile test debug native (+1 more reused dependencies)
+      +- compile test debug native (reused)
+      +- compile test debug native (reused)
+      +- compile exe selka-components safe native (reused)
+
+verification: FAIL: artifact preparation failed or its inputs changed (exit 1)

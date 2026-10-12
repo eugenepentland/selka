@@ -1,0 +1,33 @@
+{
+  "source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+  "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+  "harness_sha256": "927d6f2dad14f1c436130fda86325c4034720fce9a81febafa3128dfd7e2879e",
+  "ownership": "explicit checked zero-RC; default unchanged",
+  "builds": 20,
+  "counted_executions": 60,
+  "cases": [
+    "word_count",
+    "nested_json",
+    "file_processing",
+    "parallel"
+  ],
+  "modes": [
+    "release",
+    "debug",
+    "verify",
+    "optimized_debug",
+    "no_facts"
+  ],
+  "all_correct": true,
+  "all_structural_rc_free": true,
+  "all_rc_free": true,
+  "all_managed_leak_free": true,
+  "evidence_sha256": {
+    "raw.tar.gz": "c36dec045e6cad697e67a76f48d5321f835141f084dcc562832c932a1f6423cd",
+    "results.json.gz": "47e226069a8bf92cfbbfa8a41d22fad52d832f96e008ed50743df01fc31e8593"
+  },
+  "limitations": [
+    "Build elapsed time includes admission wait and is not compile-time evidence.",
+    "Managed counters do not measure RSS or native provider storage."
+  ]
+}

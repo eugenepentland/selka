@@ -1,6 +1,5 @@
 import filesystem
 
-
 func fresh(mut events: int, prefix: str) -> str:
     events += 1
     return prefix + str(events)
@@ -15,7 +14,7 @@ func optional(mut events: int, present: bool) -> str?:
 
 # spec-case: NEW-CORE-ZERO-RC-RESOURCE-SCOPES-1
 # spec-case: NEW-CORE-ZERO-RC-DEFAULT-BORROWS-1
-func scoped(fs: Filesystem, fail: bool, mut events: int) -> Result[int, str]:
+func scoped(fs: Filesystem, fail : bool, mut events: int) -> Result[int, str]:
     mut total = 0
     for i in range(8):
         with fs.read_only() as readonly:

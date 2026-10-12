@@ -1,0 +1,76 @@
+build-slot: FIFO ticket 1078, position 17; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 1078, position 9; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 1, FIFO ticket 1078 after 121s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: diff-scoped vs fbfcaa7a923186a8e773c3760f81c10aa345a432: 117/717 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 18 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 12 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 4019 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 2 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs fbfcaa7a923186a8e773c3760f81c10aa345a432, 117 file(s) in scope
+64dc47ba86e10c81f03630e9f3f62aa787cd2cd8447187190554d8fe3b0396cf
+dc930688523c5b7e2a9568eb06868cf567d7a4bf6976d91e2e38bc979ec09aa6
+Build Summary: 36/36 steps succeeded
+verification-prepare success
++- install success
+|  +- install mylang cached
+|  |  +- compile exe mylang debug native cached 7ms MaxRSS:41M
+|  |  |  +- run exe build-identity (build_identity) cached
+|  |  |  |  +- compile exe build-identity debug native cached 6ms MaxRSS:41M
+|  |  |  +- WriteFile cached
+|  |  |  +- compile obj juice_bytes_hash fast native cached 5ms MaxRSS:42M
+|  |  |  +- compile obj juice_bytes_hash fast native (reused)
+|  |  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 4ms MaxRSS:41M
+|  |  +- verification action guardian member 2 success 1s
+|  |     +- guardian-selfcheck success
+|  |        +- verification action guardian member 0 success 4ms
+|  +- install generated to selka-components cached
+|  |  +- compile exe selka-components safe native cached 6ms MaxRSS:42M
+|  +- verification action component-preparation member 0 success 396ms
+|  |  +- compile exe selka-components safe native (reused)
+|  +- verification action guardian member 2 (+1 more reused dependencies)
++- install generated to bin/mylang cached
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- install generated to bin/units cached
+|  +- compile test debug native cached 10ms MaxRSS:41M
+|     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+|     +- options cached
+|        +- compile exe mylang debug native (+5 more reused dependencies)
++- install generated to bin/tooling-units cached
+|  +- compile test tooling-unit-tests debug native cached 6ms MaxRSS:41M
++- install generated to bin/cli cached
+|  +- compile test debug native cached 7ms MaxRSS:41M
+|     +- options cached
+|        +- compile exe mylang debug native (+5 more reused dependencies)
+|        +- compile exe selka-components safe native (reused)
++- install generated to bin/core success
+|  +- compile test debug native success 3s MaxRSS:579M
+|     +- WriteFile (reused)
+|     +- compile obj juice_bytes_hash fast native (reused)
+|     +- compile obj juice_bytes_hash fast native (reused)
+|     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+|     +- options cached
+|     |  +- compile exe mylang debug native (+5 more reused dependencies)
+|     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
++- install generated to bin/golden cached
+|  +- compile test debug native cached 8ms MaxRSS:41M
+|     +- options (+2 more reused dependencies)
++- install generated to bin/memory-budget cached
+|  +- compile test debug native cached 4ms MaxRSS:41M
++- install generated to bin/component-support cached
+|  +- compile test debug native cached 5ms MaxRSS:41M
++- install generated to bin/component-builder cached
+|  +- compile exe selka-components safe native (reused)
++- install generated to artifacts.json success
+   +- run python3 (artifacts.json) success 67ms
+      +- compile exe mylang debug native (+5 more reused dependencies)
+      +- compile test debug native (+2 more reused dependencies)
+      +- compile test tooling-unit-tests debug native (reused)
+      +- compile test debug native (+1 more reused dependencies)
+      +- compile test debug native (+6 more reused dependencies)
+      +- compile test debug native (+1 more reused dependencies)
+      +- compile test debug native (reused)
+      +- compile test debug native (reused)
+      +- compile exe selka-components safe native (reused)
+
+verification: FAIL: cannot snapshot declared inputs: [Errno 2] No such file or directory: '/home/epentland/ai/canopy/mylang-memory-20261012-verify-02/selfhost/component-*.json'
