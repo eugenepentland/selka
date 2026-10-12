@@ -314,7 +314,7 @@ const Checker = struct {
             .block_value => |block| c.origin(block.value),
             .buffer_operation => |operation| switch (operation.kind) {
                 .read => if (c.zero_rc and c.program.records[c.function.scope.locals[@backingInt(operation.owner)].ty.recordIndex()].collection.kind == .string) null else c.rootOf(@backingInt(operation.owner)),
-                .get, .key_at, .value_at, .borrow_view => c.rootOf(@backingInt(operation.owner)),
+                .get, .key_at, .value_at, .setdefault, .borrow_view => c.rootOf(@backingInt(operation.owner)),
                 .slice => if (c.view(node.ty)) c.rootOf(@backingInt(operation.owner)) else null,
                 else => null,
             },
@@ -736,7 +736,17 @@ const Checker = struct {
         var joined: ?[]State = null;
         for (arms) |arm| {
             @memcpy(c.state, before);
-            if (arm.slot) |slot| c.state[@backingInt(slot)] = .{ .available = true, .borrowed = !owned, .root = if (owned) none else source orelse none, .dependency = dependency orelse none };
+            if (arm.slot) |slot| {
+                const local = c.function.scope.locals[@backingInt(slot)];
+                const narrowing = std.mem.startsWith(u8, local.name, "<");
+                c.state[@backingInt(slot)] = .{
+                    .available = true,
+                    .borrowed = !owned,
+                    .writable = narrowing and local.mutable and source != null and c.state[source.?].writable,
+                    .root = if (owned) none else source orelse none,
+                    .dependency = dependency orelse none,
+                };
+            }
             const body = if (owned and arm.unpack != null) unpacked: {
                 // This is the whole hidden payload, split before source statements.
                 // Each binding is now its own owner; the original is unavailable.
@@ -747,7 +757,11 @@ const Checker = struct {
                 break :unpacked arm.unpack.?.body;
             } else arm.body;
             if (!try c.checkStatement(body)) continue;
-            if (arm.slot) |slot| c.state[@backingInt(slot)].available = false;
+            // A generated narrowing binding is read by its enclosing block value.
+            // Source pattern bindings instead end with the arm's lexical scope.
+            if (arm.slot) |slot| if (!std.mem.startsWith(u8, c.function.scope.locals[@backingInt(slot)].name, "<")) {
+                c.state[@backingInt(slot)].available = false;
+            };
             if (arm.unpack) |unpack| for (unpack.fields) |field| if (field) |slot| {
                 c.state[@backingInt(slot)].available = false;
             };
@@ -782,6 +796,7 @@ const Checker = struct {
             .assertion => |assertion| {
                 try c.expression(assertion.condition, .read);
                 if (assertion.message_value) |message| try c.expression(message, .read);
+                if (c.program.nodes[@backingInt(assertion.condition)].data == .boolean and !c.program.nodes[@backingInt(assertion.condition)].data.boolean) return false;
             },
             .branch => |branch| {
                 try c.expression(branch.condition, .read);

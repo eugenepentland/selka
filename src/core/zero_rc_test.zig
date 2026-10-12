@@ -1667,6 +1667,74 @@ test "zero RC builtin file results preserve named provider origins through helpe
 }
 
 // spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC optional narrowing preserves hidden payload availability and mutation" {
+    try executes(std.testing.allocator,
+        \\record Node:
+        \\    items: int[]
+        \\    next: Node?
+        \\func size(node: Node) -> int:
+        \\    mut child = node.next.copy()
+        \\    if child is None:
+        \\        return len(node.items)
+        \\    child.items.append(9)
+        \\    return len(node.items) + size(child)
+        \\func main(out: Stream) -> int:
+        \\    const root = Node(items=[1], next=Some(Node(items=[2], next=None)))
+        \\    out.print(size(root), size(root))
+        \\    return 0
+    , "3 3\n");
+    try refuses(std.testing.allocator,
+        \\func escape(value: int[]?) -> int[]:
+        \\    if value is None:
+        \\        return []
+        \\    return value
+        \\func main() -> int:
+        \\    return len(escape(Some([1])))
+    , "E_SINGLE_OWNER_BORROW");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+test "zero RC setdefault copies borrowed hit and inserted payloads independently" {
+    try executes(std.testing.allocator,
+        \\func fallback(mut calls: int, value: int) -> int[]:
+        \\    calls += 1
+        \\    return [value]
+        \\func key(mut calls: int, value: str) -> str:
+        \\    calls += 1
+        \\    return value.copy()
+        \\func main(out: Stream) -> int:
+        \\    mut mapping = {"a": [1]}
+        \\    mut key_calls = 0
+        \\    mut value_calls = 0
+        \\    const hit = mapping.setdefault(key(mut key_calls, "a"), fallback(mut value_calls, 99)).copy()
+        \\    const added = mapping.setdefault(key(mut key_calls, "b"), fallback(mut value_calls, 2)).copy()
+        \\    assert key_calls == 2
+        \\    assert value_calls == 2
+        \\    for i in range(40):
+        \\        const grown = mapping.setdefault(str(i), [i]).copy()
+        \\        assert grown[0] == i
+        \\    _ = mapping.pop("5")
+        \\    const after_hole = mapping.setdefault("again-" + str(5), [5]).copy()
+        \\    assert after_hole[0] == 5
+        \\    for i in range(30):
+        \\        _ = mapping.pop(str(i), [])
+        \\    for i in range(30):
+        \\        const compacted = mapping.setdefault("new-" + str(i), [i]).copy()
+        \\        assert compacted[0] == i
+        \\    mapping.clear()
+        \\    out.print(hit[0], added[0])
+        \\    return 0
+    , "1 2\n");
+    try refuses(std.testing.allocator,
+        \\func main() -> int:
+        \\    mut mapping = {"a": [1]}
+        \\    const borrowed = mapping.setdefault("a", [99])
+        \\    mapping.clear()
+        \\    return borrowed[0]
+    , "E_SINGLE_OWNER_BORROW");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
 test "zero RC conditional branch storage transfers owners instead of receiver loans" {
     try executes(std.testing.allocator,
         \\func identity(text: str) -> str:

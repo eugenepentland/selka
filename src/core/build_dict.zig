@@ -223,6 +223,7 @@ pub fn operation(comptime Context: type, b: Context, op: Operation, ty: ir.Type,
             const dict = try b.writableReceiverOf(owner, span);
             const stored_key = try storedKey(Context, b, dict, key);
             const probe = try find(Context, b, dict, stored_key, span);
+            if (b.module().zero_rc) return ownedDefault(Context, b, owner, dict, probe, .{ .key = stored_key, .fallback = fallback }, span);
             const result = try selectValue(Context, b, dict, probe, fallback, false, span);
             const missing = try b.newBlock();
             const join = try b.newBlock();
@@ -238,6 +239,29 @@ pub fn operation(comptime Context: type, b: Context, op: Operation, ty: ir.Type,
         },
         else => return b.refuse(@tagName(op.kind), span),
     }
+}
+
+/// Insert first and borrow from the joined owner, never from an owning payload phi.
+fn ownedDefault(comptime Context: type, b: Context, owner: typed.LocalId, dict: ir.Ref, probe: ir.Ref, values: struct { key: ir.Ref, fallback: ir.Ref }, span: u32) Error!ir.Ref {
+    const entry = try b.synthetic(.i64);
+    try b.write(entry, b.current.?, probe);
+    const missing = try b.newBlock();
+    const join = try b.newBlock();
+    try b.branch(try present(Context, b, probe, span), join, missing, span);
+    try b.seal(missing);
+    b.current = missing;
+    const inserted = try b.emit(.{ .op = .dict_insert, .ty = b.typeOfRef(dict), .a = dict, .b = probe, .data = try b.extraSlice(&.{ values.key, values.fallback }), .span = span });
+    // Insertion appends one entry even after tombstones or storage growth.
+    // The physical entry count gives its slot without a second key lookup.
+    const count = try b.emit(.{ .op = .dict_entries, .ty = .u64, .a = inserted, .span = span });
+    const last = try b.emit(.{ .op = .sub, .ty = .u64, .a = count, .b = try b.constant(.u64, 1), .span = span });
+    const index = try b.emit(.{ .op = .convert, .ty = .i64, .a = last, .span = span });
+    try b.write(entry, b.current.?, index);
+    try b.writeOwner(owner, inserted, span);
+    try b.jump(join);
+    try b.seal(join);
+    b.enter(join);
+    return valueAt(Context, b, try b.receiverOf(owner), try b.read(entry, join), span);
 }
 
 /// Order-independent dictionary equality compares each live key and value.

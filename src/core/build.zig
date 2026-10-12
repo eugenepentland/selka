@@ -1142,14 +1142,17 @@ const FnBuilder = struct {
         if (self.version(place.root) != place.root_version) return self.mb.refuse("write to a receiver's place while its arguments are evaluated", span);
         const root = try self.read(place.root, self.current.?);
         const root_kind = self.mb.module.kind(self.typeOfRef(root));
-        if (root_kind != .list and root_kind != .dict) return alias;
+        if (root_kind != .list and root_kind != .dict and !self.module().zero_rc) return alias;
         const parents = try self.allocator().alloc(ir.Ref, place.steps.len);
         const children = try self.allocator().alloc(ir.Ref, place.steps.len);
         var value = root;
         for (place.steps, 0..) |step, index| {
             value = try self.prepareParent(value, span);
             parents[index] = value;
-            value = try self.stepGet(value, step, span);
+            value = if (self.module().zero_rc and step == .payload)
+                try self.propagatedPayload(value, step.payload, span)
+            else
+                try self.stepGet(value, step, span);
             children[index] = value;
             const kind = self.mb.module.kind(self.typeOfRef(parents[index]));
             if ((kind == .list or kind == .dict) and self.mb.module.managed(self.typeOfRef(value))) self.function.insts.items[value.index()].data = flags.place_read;
