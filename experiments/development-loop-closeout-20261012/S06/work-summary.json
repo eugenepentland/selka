@@ -1,0 +1,236 @@
+[
+  {
+    "capture": "lang-optimized-debug-cold.stdout.gz",
+    "work_records": 240,
+    "canonical_facts": {
+      "fresh": 4073,
+      "reused": 0,
+      "fallback": 3217,
+      "decoded": 0
+    },
+    "lowering": {
+      "fresh": 3217,
+      "reused": 0,
+      "materialized": 0
+    },
+    "note": "Counts only; nested/inclusive work durations are not summed. Absent work means unknown, not zero global cost."
+  },
+  {
+    "capture": "lang-optimized-debug-warm.stdout.gz",
+    "work_records": 0,
+    "canonical_facts": null,
+    "lowering": null,
+    "note": "Counts only; nested/inclusive work durations are not summed. Absent work means unknown, not zero global cost."
+  },
+  {
+    "capture": "lang-release-facts-leaks-cold.stdout.gz",
+    "work_records": 240,
+    "canonical_facts": {
+      "fresh": 4073,
+      "reused": 0,
+      "fallback": 3217,
+      "decoded": 0
+    },
+    "lowering": {
+      "fresh": 3217,
+      "reused": 0,
+      "materialized": 0
+    },
+    "note": "Counts only; nested/inclusive work durations are not summed. Absent work means unknown, not zero global cost."
+  },
+  {
+    "capture": "lang-release-facts-leaks-warm.stdout.gz",
+    "work_records": 240,
+    "canonical_facts": {
+      "fresh": 856,
+      "reused": 3217,
+      "fallback": 0,
+      "decoded": 3217
+    },
+    "lowering": {
+      "fresh": 0,
+      "reused": 3217,
+      "materialized": 0
+    },
+    "note": "Counts only; nested/inclusive work durations are not summed. Absent work means unknown, not zero global cost."
+  },
+  {
+    "capture": "lang-unoptimized-cold.stdout.gz",
+    "work_records": 240,
+    "canonical_facts": {
+      "fresh": 4073,
+      "reused": 0,
+      "fallback": 3217,
+      "decoded": 0
+    },
+    "lowering": {
+      "fresh": 3217,
+      "reused": 0,
+      "materialized": 0
+    },
+    "note": "Counts only; nested/inclusive work durations are not summed. Absent work means unknown, not zero global cost."
+  },
+  {
+    "capture": "lang-unoptimized-warm.stdout.gz",
+    "work_records": 0,
+    "canonical_facts": null,
+    "lowering": null,
+    "note": "Counts only; nested/inclusive work durations are not summed. Absent work means unknown, not zero global cost."
+  },
+  {
+    "capture": "ported-optimized-debug-cold.stdout.gz",
+    "work_records": 19,
+    "canonical_facts": {
+      "fresh": 304,
+      "reused": 0,
+      "fallback": 284,
+      "decoded": 0
+    },
+    "lowering": {
+      "fresh": 284,
+      "reused": 0,
+      "materialized": 0
+    },
+    "note": "Counts only; nested/inclusive work durations are not summed. Absent work means unknown, not zero global cost."
+  },
+  {
+    "capture": "ported-optimized-debug-warm.stdout.gz",
+    "work_records": 0,
+    "canonical_facts": null,
+    "lowering": null,
+    "note": "Counts only; nested/inclusive work durations are not summed. Absent work means unknown, not zero global cost."
+  },
+  {
+    "capture": "ported-release-facts-leaks-cold.stdout.gz",
+    "work_records": 19,
+    "canonical_facts": {
+      "fresh": 304,
+      "reused": 0,
+      "fallback": 284,
+      "decoded": 0
+    },
+    "lowering": {
+      "fresh": 284,
+      "reused": 0,
+      "materialized": 0
+    },
+    "note": "Counts only; nested/inclusive work durations are not summed. Absent work means unknown, not zero global cost."
+  },
+  {
+    "capture": "ported-release-facts-leaks-warm.stdout.gz",
+    "work_records": 19,
+    "canonical_facts": {
+      "fresh": 20,
+      "reused": 284,
+      "fallback": 0,
+      "decoded": 284
+    },
+    "lowering": {
+      "fresh": 0,
+      "reused": 284,
+      "materialized": 0
+    },
+    "note": "Counts only; nested/inclusive work durations are not summed. Absent work means unknown, not zero global cost."
+  },
+  {
+    "capture": "ported-unoptimized-cold.stdout.gz",
+    "work_records": 19,
+    "canonical_facts": {
+      "fresh": 304,
+      "reused": 0,
+      "fallback": 284,
+      "decoded": 0
+    },
+    "lowering": {
+      "fresh": 284,
+      "reused": 0,
+      "materialized": 0
+    },
+    "note": "Counts only; nested/inclusive work durations are not summed. Absent work means unknown, not zero global cost."
+  },
+  {
+    "capture": "ported-unoptimized-warm.stdout.gz",
+    "work_records": 0,
+    "canonical_facts": null,
+    "lowering": null,
+    "note": "Counts only; nested/inclusive work durations are not summed. Absent work means unknown, not zero global cost."
+  },
+  {
+    "capture": "value_semantics-optimized-debug-cold.stdout.gz",
+    "work_records": 19,
+    "canonical_facts": {
+      "fresh": 272,
+      "reused": 0,
+      "fallback": 249,
+      "decoded": 0
+    },
+    "lowering": {
+      "fresh": 249,
+      "reused": 0,
+      "materialized": 0
+    },
+    "note": "Counts only; nested/inclusive work durations are not summed. Absent work means unknown, not zero global cost."
+  },
+  {
+    "capture": "value_semantics-optimized-debug-warm.stdout.gz",
+    "work_records": 0,
+    "canonical_facts": null,
+    "lowering": null,
+    "note": "Counts only; nested/inclusive work durations are not summed. Absent work means unknown, not zero global cost."
+  },
+  {
+    "capture": "value_semantics-release-facts-leaks-cold.stdout.gz",
+    "work_records": 19,
+    "canonical_facts": {
+      "fresh": 272,
+      "reused": 0,
+      "fallback": 249,
+      "decoded": 0
+    },
+    "lowering": {
+      "fresh": 249,
+      "reused": 0,
+      "materialized": 0
+    },
+    "note": "Counts only; nested/inclusive work durations are not summed. Absent work means unknown, not zero global cost."
+  },
+  {
+    "capture": "value_semantics-release-facts-leaks-warm.stdout.gz",
+    "work_records": 19,
+    "canonical_facts": {
+      "fresh": 23,
+      "reused": 249,
+      "fallback": 0,
+      "decoded": 249
+    },
+    "lowering": {
+      "fresh": 0,
+      "reused": 249,
+      "materialized": 0
+    },
+    "note": "Counts only; nested/inclusive work durations are not summed. Absent work means unknown, not zero global cost."
+  },
+  {
+    "capture": "value_semantics-unoptimized-cold.stdout.gz",
+    "work_records": 19,
+    "canonical_facts": {
+      "fresh": 272,
+      "reused": 0,
+      "fallback": 249,
+      "decoded": 0
+    },
+    "lowering": {
+      "fresh": 249,
+      "reused": 0,
+      "materialized": 0
+    },
+    "note": "Counts only; nested/inclusive work durations are not summed. Absent work means unknown, not zero global cost."
+  },
+  {
+    "capture": "value_semantics-unoptimized-warm.stdout.gz",
+    "work_records": 0,
+    "canonical_facts": null,
+    "lowering": null,
+    "note": "Counts only; nested/inclusive work durations are not summed. Absent work means unknown, not zero global cost."
+  }
+]
