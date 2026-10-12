@@ -69,8 +69,9 @@ Support6 is source `5167c588be79dd43d21d5013c36db15110bf239b`, Debug compiler SH
 [Its original A06 checks](coordinator/support6/a06-summary.json) record 56/64
 guest sources, 21/23 additional sources, and both counted native `ce2_effects`
 modes passing. Refusals remain in the denominators. Later explicit-copy migrations
-pass five modes for borrowed elements and row snapshots; `v_nested` remains a
-native scalar-child-write blocker with a reduced reproducer in A03.
+pass five modes for borrowed elements and row snapshots. The scalar-child-write
+fix for `v_nested` is integrated and passes its worker's five-mode checks; it still
+needs the common compiler rerun.
 
 A10 independently rebuilt a ReleaseFast compiler from that exact source, SHA256
 `29cfbd13390692757ce3add9cf61d8398eff283760d16cedb3c5b9addaa03e26`. Both owned
@@ -84,10 +85,20 @@ Explicit qualified pin options now allow development builds without invoking the
 immutable legacy seed's known native-object lifetime defect.
 
 Provider transfer, tuple and borrowed-default implementations are integrated but
-still need the next common-artifact library/application matrices. Remaining
-implementation work includes a local wrapper for borrowed entry providers,
-managed selection between distinct input owners, and scalar record-field writes
-inside lists. Source histories and failed cases remain visible in the ledger.
+still need the next common-artifact library/application matrices. Bounded local
+borrowed-provider wrappers, managed selection between distinct input owners,
+scalar record-field writes inside lists, independent set children and managed
+generator folds are now integrated with focused regressions. Source histories and
+failed cases remain visible in the ledger.
+
+Support7 is frozen at `bed11cf3bf3102ffec44487e431a1573fdf02ad5`. Its complete
+ReleaseFast installation was built successfully with the independently qualified
+owned component compiler pin; compiler SHA256
+`540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef`. The source, command and installation boundary are recorded
+in [the installation identity](coordinator/support7/support7-identity.json). It is a proposed
+qualification candidate, not a completed milestone. The verification coordinator
+also needs to admit and bind the explicit component pin/archive options before
+the complete gate can qualify that same package.
 
 A09 corrected a measured RSS harness defect: outer Python-child rusage included
 launcher memory before exec. New RSS-only GNU-time measurements discriminate
@@ -95,8 +106,11 @@ small and large native children independently of a 256 MiB launcher allocation.
 Old pilot RSS observations are explicitly invalid; no final RSS claim uses them.
 The final schedule separates 330 runtime samples, 90 RSS samples, and 30
 size-aligned counted configurations from the 435-build/695-run census. Eight
-immutable C0 counted builds currently fail native linking; their 15 case slots
-remain blocked while a separately identified native-build adapter is reviewed.
+immutable C0 counted builds fail ordinary native linking. Those failures remain
+recorded. A separately identified exact-artifact native adapter now passes all 15
+C0 configurations, with zero RC events and managed exit-live bytes. The final
+candidate must use the matched adapter and normal/manual controls; those results
+are still pending.
 
 The exploratory full gate on `245e892f8518943ee44a0cc6009ab4b4fa6bca43` failed
 after 45 fresh actions (no reuse). Raw evidence remains in

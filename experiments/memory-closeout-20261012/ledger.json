@@ -236,15 +236,15 @@
       "owner": "A07/A08",
       "item": "Readonly managed dictionary get",
       "reproducer": "managed get(key,fallback) must keep both eagerly evaluated possible owners alive; explicit .copy works but does not qualify readonly get",
-      "status": "integrated_focused_passed; cache_corruption_rerun_pending",
-      "latest_evidence": "A07 exact marker + CFG/dominance guards; integrated six source/native tests pass; allocator repair integrated"
+      "status": "integrated_focused_passed; final_common_revision_pending",
+      "latest_evidence": "Root combined provider/selection focused checks passed; A08 corruption probes prepared."
     },
     {
       "owner": "A01/A07/coordinator",
       "item": "Complete owned tuple unpack",
       "reproducer": "A03/guest-migrations/reproducers/managed_slot_swap.my; A05/samples/provider_tuple.my is mandatory provider contract",
-      "status": "integrated; combined_matrix_pending",
-      "latest_evidence": "A01 producer, A07 checker/Core, A08 semantic-cache-v8; full provider/Result/generic modes pending"
+      "status": "integrated_worker_five_mode_passed; final_common_revision_pending",
+      "latest_evidence": "A07 registered three tests and five guest modes passed; A04 original tuple assertions passed after explicit migration."
     },
     {
       "owner": "A01",
@@ -286,8 +286,8 @@
       "owner": "coordinator/A10/A07",
       "item": "Borrowed entry provider wrapper",
       "reproducer": "A10 effects.md draft block12 constructs Context(fs=borrowed fs,env=borrowed env); Support6 E_SINGLE_OWNER_BORROW",
-      "status": "implementation_in_progress",
-      "latest_evidence": "A05 flat local readonly bundle rooted only in immutable parameter providers; no owning/borrowed mixture or escape"
+      "status": "integrated_focused_passed; final_common_revision_pending",
+      "latest_evidence": "c749ad5a9 includes exact bounded flat readonly borrowed context; root combined 12 focused checks passed."
     },
     {
       "owner": "A02/A03/A07",
@@ -300,26 +300,37 @@
       "owner": "A09/A01/A07",
       "item": "Managed extrema",
       "reproducer": "tests/lang/scalable_sorting.my:21 min(words).copy() hidden collection E_SINGLE_OWNER_MOVED",
-      "status": "list_fix_integrated; distinct_parent_selection_blocked",
-      "latest_evidence": "A04 scalar best-index list fix41e6ef2; min/max two strings and Optional.unwrap_or need explicit two-parent selection"
+      "status": "integrated_focused_passed; final_common_revision_pending",
+      "latest_evidence": "27ffbad1b integrates two-parent min/max/optional selection with semantic-cache v9; A02 generator fold fix also integrated."
     },
     {
       "owner": "A02/A07",
       "item": "Scalar field write inside managed list record",
-      "status": "blocked",
-      "reproducer": "A03/transferred-a06/v-nested-repro: b.items[1].code = 77, source admits, native refuses in five modes"
+      "status": "integrated_worker_five_mode_passed; final_common_revision_pending",
+      "reproducer": "A03/transferred-a06/v-nested-repro: b.items[1].code = 77, source admits, native refuses in five modes",
+      "latest_evidence": "868a0cd27 scalar child write fix; original v_nested passes worker five-mode checks."
     },
     {
       "owner": "A09/A10",
       "item": "Size-aligned C0 counted native linking",
-      "status": "blocked; exact manual adapter in preparation",
-      "reproducer": "A09/raw/size-aligned-C0/results.json: eight unique builds fail native-link object FileNotFound, 15 configurations retained"
+      "status": "manual_adapter_qualified; candidate_matched_comparison_pending",
+      "reproducer": "A09/raw/size-aligned-C0/results.json: eight unique builds fail native-link object FileNotFound, 15 configurations retained",
+      "latest_evidence": "67348fc8c preserves ordinary failures; exact C0 manual supplement passes all 15 configurations, eight binaries and 94 artifact hashes."
+    },
+    {
+      "owner": "coordinator/A10",
+      "item": "Full verification owned component pin options",
+      "status": "patch_request_in_preparation",
+      "reproducer": "scripts/verify_cache.py parse_options refuses -Dcomponent-owned-compiler-pin and -Dcomponent-seed-source; same package inputs must be bound to verification preparation and replay."
     }
   ],
   "next_interim_artifact": {
     "name": "support7",
-    "status": "pending source freeze and complete installation",
-    "purpose": "Combined tuple/provider/readonly-default/list-extrema and source migration qualification; not C1",
-    "component_boundary": "Use actual qualified owned Support6 pin with recorded final-source component receipts; never copy legacy libexec."
+    "status": "complete ReleaseFast owned installation; common qualification running",
+    "purpose": "Proposed C1 common qualification; no milestone until all coverage, measurements and full gate pass",
+    "component_boundary": "Use actual qualified owned Support6 pin with recorded final-source component receipts; never copy legacy libexec.",
+    "source_revision": "bed11cf3bf3102ffec44487e431a1573fdf02ad5",
+    "compiler_sha256": "540283317dab8009ba38f7bc13a521b1b5048cff99701498acd56da7902259ef",
+    "evidence": "coordinator/support7/support7-identity.json"
   }
 }
