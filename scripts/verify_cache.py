@@ -29,6 +29,7 @@ import sys
 import sysconfig
 import tempfile
 import time
+from typing import Mapping
 
 from verification_snapshot import Snapshot, SnapshotError
 import verification_snapshot
@@ -39,12 +40,22 @@ import verification_profiles
 import verification_qualification
 import verification_process
 import verification_producers
+import verification_environment
 import verification_telemetry
 import verification_measurement
 from verification_process import BoundedProcessLogs, ProcessLimits, terminate_owned, wait_owned
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = 2
+# Receipt schema 3: path-free, projected-environment identities. The directory
+# carries the same number, so schema-2 receipts are never opened, let alone misread.
+VERSION = 3
+CACHE_DIRECTORY = Path(".mylang-cache/verification-v3")
+ACTION_DOMAIN = "selka-verification-action-v6"
+# Shared success evidence at the per-user default location (D2: same user, same
+# machine). Off until the week-3 rollout; MYLANG_VERIFICATION_SHARED_CACHE or
+# --shared-cache-dir still select a store explicitly, and an empty value disables.
+DEFAULT_SHARING = False
+SHARED_CACHE_VARIABLE = "MYLANG_VERIFICATION_SHARED_CACHE"
 REPORT_VERSION = 1
 INVENTORY_VERSION = 2
 # Explicit review of the complete CONFIG_INPUTS-only closure, without the
@@ -65,6 +76,7 @@ COORDINATOR_INPUTS = ["scripts/verification_qualification.py", "scripts/verifica
                       "scripts/verification_process.py",
                       "scripts/cache_session.py",
                       "scripts/verification_artifacts.py", "scripts/verification_producers.py",
+                      "scripts/verification_environment.py", "src/environment_identity.zon",
                       "scripts/verification_telemetry.py", "scripts/build_admission.py",
                       "scripts/verification_measurement.py",
                       "scripts/fuzz_campaign_store.py", "scripts/build-slot.sh"]
@@ -317,10 +329,17 @@ def action_configuration(identity: dict, plan: dict, root: Path, configuration_i
 
 
 
-def normalized_environment(root: Path) -> dict[str, str]:
-    env = dict(os.environ)
-    # Deliberately normalize these in the worker too, rather than omit live inputs.
-    env.pop("_", None)
+def normalized_environment(root: Path, source: Mapping[str, str] | None = None) -> dict[str, str]:
+    """The environment every worker runs in: the projected launcher plus fixed settings.
+
+    The live environment (or `source`) is projected through the environment
+    identity contract, so workers receive only keyed, host and placement
+    variables; a dropped one (PWD, TERM, CODEX_*, GIT_*, BASH_FUNC_*, ...) can
+    neither reach a test nor enter a key. The coordinator then applies its own
+    constant settings, which the coordinator's implementation identity covers.
+    Workers take their working directory from the process, never from PWD.
+    """
+    env = verification_environment.project(os.environ if source is None else source)
     # Diagnostic placement must not enter native test receipt settings. Scrub
     # legacy callers too; only the private per-request channel is forwarded.
     env.pop("MYLANG_TEST_TELEMETRY_DIR", None)
@@ -329,18 +348,11 @@ def normalized_environment(root: Path) -> dict[str, str]:
     # markers are installed only on admitted children, never trusted as proof.
     for marker in ("MYLANG_ADMISSION_DIR", "MYLANG_ADMISSION_KIND"):
         env.pop(marker, None)
-    env["SHLVL"] = "0"
-    env["PWD"] = str(root)
     env["PYTHONNOUSERSITE"] = "1"
     env["PYTHONDONTWRITEBYTECODE"] = "1"
     # -B alone still reads timestamp-based .pyc files. A non-directory prefix
     # makes workers load the hashed source even after same-size/mtime edits.
     env["PYTHONPYCACHEPREFIX"] = "/dev/null"
-    # Non-interactive shells may otherwise read an arbitrary startup file, and
-    # exported Bash functions can replace the host tools identified below.
-    for name in list(env):
-        if name in ("BASH_ENV", "ENV") or name.startswith("BASH_FUNC_"):
-            del env[name]
     # Execute with the same existing PATH directories we can watch. A missing
     # earlier entry must not acquire a shadow executable while admission waits.
     env["PATH"] = os.pathsep.join(str(directory) for entry in env.get("PATH", os.defpath).split(os.pathsep)
@@ -348,15 +360,32 @@ def normalized_environment(root: Path) -> dict[str, str]:
     if not env["PATH"]:
         raise VerificationError("verification PATH has no existing directories")
     # Fixture git repositories must not inherit signing, hooks, includes,
-    # external diff drivers, alternate object stores, or user templates.
-    for name in list(env):
-        if name.startswith("GIT_"):
-            del env[name]
+    # external diff drivers, alternate object stores, or user templates. The
+    # projection removed every inherited GIT_* variable; these are constants.
     env.update(GIT_CONFIG_GLOBAL="/dev/null", GIT_CONFIG_SYSTEM="/dev/null",
                GIT_CONFIG_NOSYSTEM="1", GIT_TEMPLATE_DIR="",
                GIT_AUTHOR_NAME="Selka verification", GIT_AUTHOR_EMAIL="verification@example.invalid",
                GIT_COMMITTER_NAME="Selka verification", GIT_COMMITTER_EMAIL="verification@example.invalid")
     return env
+
+
+def identity_variables(env: Mapping[str, str]) -> list[str]:
+    """Sorted names of the keyed and host variables the host-scope digest takes."""
+    return sorted(name for name in env if verification_environment.host_keyed(name))
+
+
+def environment_identity(env: Mapping[str, str], tools: Snapshot | None, tool_files: list[Path], root: Path) -> str:
+    """Host-scope digest of the worker environment and the content of each resolved tool.
+
+    Tools are named by their snapshot label (absolute for host tools, relative
+    for anything inside the checkout) and identified by the digest the tools
+    snapshot already computed; nothing is hashed twice.
+    """
+    wanted = {os.path.abspath(path) for path in tool_files}
+    digests = {} if tools is None else {
+        item["path"]: item["sha256"] for item in tools.identity["files"]
+        if os.path.abspath(root / item["path"]) in wanted}
+    return verification_environment.digest(env, digests, scope="host")
 
 
 def host_contract() -> dict:
@@ -560,15 +589,28 @@ def run_admitted(root: Path, kind: str, argv: list[str], env: dict[str, str], un
                 stream.close()
 
 
-def artifact_paths(root: Path) -> list[Path]:
-    record = read_record(root / "zig-out/verification/artifacts.json")
-    if not record or type(record.get("version")) is not int or record["version"] not in (1, 2) or not isinstance(record.get("artifacts"), dict):
+def artifact_locations(record: dict | None) -> dict[str, str]:
+    """Map each prepared label to its exact absolute path, for inventory versions 1 to 3.
+
+    Version 3 may write an artifact as {"path": ..., "producer": {...}}; the
+    producer is read separately by verification_producers.native_producer.
+    """
+    if (not record or type(record.get("version")) is not int or record["version"] not in (1, 2, 3)
+            or not isinstance(record.get("artifacts"), dict)):
         raise VerificationError("missing or malformed prepared artifact inventory")
-    artifacts = record["artifacts"]
+    locations = {}
+    for label, entry in record["artifacts"].items():
+        path = entry.get("path") if record["version"] == 3 and isinstance(entry, dict) else entry
+        if not isinstance(path, str) or not Path(path).is_absolute():
+            raise VerificationError("prepared artifacts must have exact absolute paths")
+        locations[label] = path
+    return locations
+
+
+def artifact_paths(root: Path) -> list[Path]:
+    artifacts = artifact_locations(read_record(root / "zig-out/verification/artifacts.json"))
     if not {"mylang", "units", "cli", "core"} <= artifacts.keys():
         raise VerificationError("prepared inventory omits native test executables")
-    if not all(isinstance(p, str) and Path(p).is_absolute() for p in artifacts.values()):
-        raise VerificationError("prepared artifacts must have exact absolute paths")
     paths = [Path(p) for p in artifacts.values()]
     paths.extend([root / "zig-out/bin/mylang", root / "zig-out/verification/artifacts.json"])
     for name in ("test-index", "cache-plan"):
@@ -582,10 +624,11 @@ def artifact_paths(root: Path) -> list[Path]:
 
 def artifact_providers(root: Path, snapshot: Snapshot) -> dict[str, list[dict]]:
     """Project only declared providers; retain the complete snapshot for ABA checks."""
-    record = read_record(root / "zig-out/verification/artifacts.json")
-    if not record or not isinstance(record.get("artifacts"), dict):
-        raise VerificationError("prepared artifact inventory changed during provider selection")
-    paths = {name: [Path(path)] for name, path in record["artifacts"].items()}
+    try:
+        locations = artifact_locations(read_record(root / "zig-out/verification/artifacts.json"))
+    except VerificationError as error:
+        raise VerificationError("prepared artifact inventory changed during provider selection") from error
+    paths = {name: [Path(path)] for name, path in locations.items()}
     paths["mylang"].append(root / "zig-out/bin/mylang")
     paths["components"] = []
     for name in ("test-index", "cache-plan"):
@@ -604,25 +647,91 @@ def artifact_providers(root: Path, snapshot: Snapshot) -> dict[str, list[dict]]:
     return providers
 
 
-def matches_recipe(path: str, recipe: str, root: Path) -> bool:
-    """Select a cohort's members from the single watched, hashed union."""
-    normalized = os.path.normpath(os.path.join(root, path))
+def recipe_predicate(recipe: str, root: Path):
+    """Compile one input recipe into a test of a normalized absolute path (see matches_recipe)."""
     value = os.path.normpath(os.path.join(root, recipe))
     if recipe.endswith("/"):
-        return normalized.startswith(value + os.sep)
+        return lambda normalized: normalized.startswith(value + os.sep)
     for marker, recursive in (("/**/*", True), ("/*", False)):
         if marker in recipe:
             base, suffix = recipe.split(marker, 1)
             prefix = os.path.normpath(os.path.join(root, base)) + os.sep
-            if not normalized.startswith(prefix) or not normalized.endswith(suffix):
-                return False
-            return recursive or os.sep not in normalized[len(prefix):]
-    return normalized == value
+            return lambda normalized: (normalized.startswith(prefix) and normalized.endswith(suffix)
+                                       and (recursive or os.sep not in normalized[len(prefix):]))
+    return lambda normalized: normalized == value
+
+
+def matches_recipe(path: str, recipe: str, root: Path) -> bool:
+    """Select a cohort's members from the single watched, hashed union."""
+    return recipe_predicate(recipe, root)(os.path.normpath(os.path.join(root, path)))
+
+
+def recipe_selector(files: list[dict], root: Path):
+    """Return select(recipe) over watched records, normalizing each path once and caching per recipe."""
+    normalized = [(os.path.normpath(os.path.join(root, item["path"])), item) for item in files]
+    cache: dict[str, list[dict]] = {}
+
+    def select(recipe: str) -> list[dict]:
+        if recipe not in cache:
+            matches = recipe_predicate(recipe, root)
+            cache[recipe] = [item for path, item in normalized if matches(path)]
+        return cache[recipe]
+    return select
+
+
+def artifact_identities(record: dict | None, providers: dict[str, list[dict]],
+                        sources: list[dict], root: Path) -> tuple[dict, dict]:
+    """Identify every prepared provider, by producer where declared, else by bytes.
+
+    Returns (identities, report). A producer identity replaces the bytes, which
+    embed the checkout path in their debug information, so two worktrees at one
+    commit agree. An installed copy (zig-out/bin/mylang) must equal the produced
+    bytes, or the provider falls back to bytes. The report names, per label,
+    which identity was used and why a fallback happened.
+    """
+    select = recipe_selector(sources, root)
+    identities, report = {}, {}
+    for label in sorted(providers):
+        producer, reason = verification_producers.native_producer(record, label)
+        if producer is not None and len({item["sha256"] for item in providers[label]}) != 1:
+            producer, reason = None, "installed copy differs from the produced artifact"
+        if producer is None:
+            identities[label] = {"identity": "bytes", "artifacts": providers[label]}
+            report[label] = {"identity": "bytes", "reason": reason}
+            continue
+        try:
+            identity = verification_producers.native_identity(label, producer, select)
+        except verification_producers.ProducerError as error:
+            raise VerificationError(str(error)) from error
+        identities[label] = {"identity": "producer", "sha256": key(identity)}
+        report[label] = {"identity": "producer", "sources": len(identity["sources"])}
+    return identities, report
+
+
+def mentions(value: object, text: str) -> bool:
+    """Whether `text` occurs anywhere in a JSON-serializable value."""
+    return json.dumps(text, ensure_ascii=False)[1:-1] in json.dumps(value, sort_keys=True, ensure_ascii=False)
+
+
+def path_free(payload: dict, root: Path, facets_path_free: bool, report: dict) -> bool:
+    """Whether no checkout path entered an action key.
+
+    The worktree path must occur neither in the payload nor in the facets
+    hashed into it (`facets_path_free`: tools, build configuration, keyed
+    environment values), and every prepared provider the action depends on must
+    have a producer identity: its narrowed selection, else all of them.
+    """
+    if not facets_path_free or mentions(payload, str(root)):
+        return False
+    artifacts = payload["common"].get("artifacts")
+    labels = artifacts.keys() if isinstance(artifacts, dict) else report.keys()
+    return all(report.get(label, {}).get("identity") == "producer" for label in labels)
 
 
 def action_payload(group: dict, snapshot: Snapshot, common: dict, root: Path,
                    providers: dict[str, list[dict]] | None = None, membership: dict | None = None,
-                   producer_manifest: dict | None = None) -> dict:
+                   producer_manifest: dict | None = None, labels: dict | None = None) -> dict:
+    """The exact document an action key hashes; `labels` are artifact_identities' per-provider identities."""
     files = snapshot.selected_files(lambda path: any(
         matches_recipe(path, recipe, root) for recipe in group["inputs"]))
     selected = group.get("artifacts")
@@ -640,14 +749,14 @@ def action_payload(group: dict, snapshot: Snapshot, common: dict, root: Path,
                     break
                 identities[name] = {"producer": producer, "artifacts": providers[name]}
             elif name in legacy:
-                identities[name] = providers[name]
+                identities[name] = labels[name] if labels is not None else providers[name]
             else:
                 break  # New narrowing needs an explicit closure review.
         else:
             common = dict(common, artifacts=identities)
     if membership is not None:
         common = {name: value for name, value in common.items() if name != "inventory"}
-    return {"domain": "selka-verification-action-v5", "contract": group, "common": common,
+    return {"domain": ACTION_DOMAIN, "contract": group, "common": common,
             "files": files, "membership": membership}
 
 
@@ -844,12 +953,57 @@ def prepare(root: Path, cache: Path, zig: Path, options: list[str], env: dict[st
     return plan, artifacts, held
 
 
+def shared_cache_location(flag: str | None, environ: Mapping[str, str],
+                          default_sharing: bool | None = None) -> tuple[Path | None, str]:
+    """Resolve the shared evidence store and how it was chosen.
+
+    Precedence: --shared-cache-dir, then MYLANG_VERIFICATION_SHARED_CACHE, then,
+    only when default sharing is on, $XDG_CACHE_HOME/mylang/verification-shared
+    or ~/.cache/mylang/verification-shared. An explicitly empty value disables
+    sharing. The source is "flag", "environment", "default" or "none".
+    """
+    if flag is not None:
+        return (Path(flag) if flag else None), "flag"
+    value = environ.get(SHARED_CACHE_VARIABLE)
+    if value is not None:
+        return (Path(value) if value else None), "environment"
+    if not (DEFAULT_SHARING if default_sharing is None else default_sharing):
+        return None, "none"
+    base = environ.get("XDG_CACHE_HOME", "")
+    if not os.path.isabs(base):
+        home = environ.get("HOME", "")
+        if not os.path.isabs(home):
+            return None, "none"
+        base = os.path.join(home, ".cache")
+    return Path(base) / "mylang" / "verification-shared", "default"
+
+
+def open_shared_store(location: Path | None, source: str, stack: ExitStack):
+    """Open and lease the shared evidence store, or None.
+
+    An unusable default store warns once and verification proceeds unshared;
+    an unusable store the caller named explicitly stays an error.
+    """
+    if location is None:
+        return None
+    try:
+        store = fuzz_campaign_store.Store(location)
+        stack.enter_context(store.lease())
+        return store
+    except (OSError, fuzz_campaign_store.FormatError) as error:
+        if source != "default":
+            raise
+        print("verification: warning: default shared evidence store %s is unusable (%s); continuing without sharing"
+              % (location, error), file=sys.stderr)
+        return None
+
+
 def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool = False,
             shared_cache_dir: Path | None = None, *, build_timeout: float | None = None,
             gate_timeout: float | None = None, warn_after: float | None = None,
             budget_policy: Path | None = None, profile: str = "complete", quick_actions: int = 3,
             qualification_targets=None, qualification_max_actions=4,
-            qualification_timeout=300, qualification_fuzz_steps=8) -> int:
+            qualification_timeout=300, qualification_fuzz_steps=8, shared_cache_source: str | None = None) -> int:
     if profile not in verification_profiles.PROFILES or type(quick_actions) is not int or not 1 <= quick_actions <= 1024:
         raise ValueError("invalid verification profile or quick action bound")
     qualification_controls = {"targets": list(verification_qualification.OBLIGATIONS if qualification_targets is None else qualification_targets),
@@ -867,9 +1021,10 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
     env["MYLANG_ZIG"] = str(zig)
     tool_recipes, tool_files = tool_contract(zig, env)
     with ExitStack() as stack:
-        shared = None if shared_cache_dir is None else fuzz_campaign_store.Store(shared_cache_dir)
+        shared_source = shared_cache_source or ("none" if shared_cache_dir is None else "flag")
+        shared = open_shared_store(shared_cache_dir, shared_source, stack)
         if shared is not None:
-            stack.enter_context(shared.lease())
+            # Mutual exclusion only: the real checkout path never enters a key.
             coordinator = key({"domain": "verification-coordinator-v1", "root": str(root)})
             stack.enter_context(shared.coordinator_lock(coordinator))
         session = verification_snapshot.DigestSession()
@@ -894,8 +1049,8 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
             return False
 
         stack.push(record_failure)
-        common = {"version": VERSION, "root": str(root), "options": options,
-                  "environment": key(env), "platform": host.identity,
+        common = {"version": VERSION, "options": options,
+                  "environment": environment_identity(env, tools, tool_files, root), "platform": host.identity,
                   "tools": key(tools.identity),
                   "execution_limits": {"build": build_limits.execution_identity(),
                                        "gate": gate_limits.execution_identity(),
@@ -917,10 +1072,22 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                 "stability_diagnostics": stability_diagnostics(snapshots),
                 "elapsed_seconds": time.monotonic() - started})
             raise
-        common["artifacts"] = key(artifacts.identity)
         common["inventory"] = key(plan)
         providers = artifact_providers(root, artifacts)
         producer_manifest = read_record(root / "zig-out/verification/artifacts.json")
+        # Producer identities come from the preparation snapshots, which every
+        # recipe must fall inside; artifacts.json's own bytes hold only paths
+        # and producer metadata, both represented here without a location.
+        recipe_sources = [item for snapshot in snapshots if getattr(snapshot, "verification_role", "")
+                          in ("configuration", "preparation_sources") for item in snapshot.identity["files"]]
+        labels, artifact_report = artifact_identities(producer_manifest, providers, recipe_sources, root)
+        common["artifacts"] = key({"version": producer_manifest.get("version") if producer_manifest else None,
+                                   "providers": labels})
+        environment_names = identity_variables(env)
+        facets_path_free = not mentions({"tools": tools.identity, "environment": {name: env[name] for name in environment_names},
+                                         "configuration": [snapshot.identity for snapshot in snapshots
+                                                           if getattr(snapshot, "verification_role", "") == "coordinator"]},
+                                        str(root))
         groups = plan["groups"]
         recipes = sorted({entry for group in groups for entry in group["inputs"]})
         input_started = time.monotonic()
@@ -938,7 +1105,8 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
         results, selected, keys, summaries = [], [], {}, {}
         failure_context.update(stage="cache_lookup", actions=results)
         for group in groups:
-            payload = action_payload(group, inputs, common, root, providers, metadata[group["id"]], producer_manifest)
+            payload = action_payload(group, inputs, common, root, providers, metadata[group["id"]],
+                                     producer_manifest, labels)
             action_key = key(payload)
             keys[group["id"]] = action_key
             summary = verification_report.dependency_summary(group, payload["files"], dict(payload["common"], membership=metadata[group["id"]]))
@@ -960,7 +1128,9 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                           else {"status": "policy", "reason": reason, "changes": [], "truncated": False})
             diagnostic["comparison_scope"] = "previous stable request; not necessarily the receipt-producing success"
             results.append({"id": group["id"], "action_key": action_key, "state": state, "reason": reason,
-                            "invalidation": diagnostic})
+                            "invalidation": diagnostic,
+                            "path_free": path_free(payload, root, facets_path_free, artifact_report),
+                            "environment_variables": environment_names})
             print("verification: %s %s (%s)" % (state, group["id"], reason), flush=True)
             if not hit:
                 if shared is not None:
@@ -1104,8 +1274,10 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                                         "per-group execution duration is unavailable for the shared gate",
                                         "common identity changes name digest facets, not individual tool/environment members"],
                   "snapshot_statistics": snapshot_statistics(snapshots),
-                  "evidence_store": {"shared": shared is not None,
+                  "evidence_store": {"shared": shared is not None, "source": shared_source,
+                                     "default_sharing": DEFAULT_SHARING,
                                      "root": str(shared.root if shared is not None else cache / "actions")},
+                  "artifact_identities": artifact_report,
                   "elapsed_seconds": elapsed}
         if measurement is not None:
             report["measurement_window"] = measurement.report()
@@ -1177,7 +1349,7 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--qualification-timeout", type=float, default=300)
     parser.add_argument("--qualification-fuzz-steps", type=int, default=8)
     parser.add_argument("--force", action="store_true", help="Ignore prior successes for the requested profile")
-    parser.add_argument("--shared-cache-dir", type=Path, help="Explicit local shared success evidence; inventory and runs stay private")
+    parser.add_argument("--shared-cache-dir", help="Shared success evidence (default: $%s, else off; an empty value disables); inventory and runs stay private" % SHARED_CACHE_VARIABLE)
     parser.add_argument("--build-timeout-seconds", type=float, help="Optional deadline per admitted preparation command; excludes queue time")
     parser.add_argument("--gate-timeout-seconds", type=float, help="Optional deadline for the admitted selected gate; excludes queue time")
     parser.add_argument("--warn-after-seconds", type=float, help="Advisory total work target excluding admission queues; never changes reuse or pass/fail")
@@ -1200,7 +1372,8 @@ def main(argv: list[str]) -> int:
         resolved = shutil.which(args.zig)
         if resolved is None:
             raise VerificationError("cannot find Zig: " + args.zig)
-        cache = ROOT / ".mylang-cache/verification-v2"
+        cache = ROOT / CACHE_DIRECTORY
+        shared_cache_dir, shared_cache_source = shared_cache_location(args.shared_cache_dir, os.environ)
         cache.mkdir(parents=True, exist_ok=True)
         # Serialize coordinators for this checkout, outside the shared server
         # slots, so preparation and forced invalidation cannot race one another.
@@ -1212,18 +1385,19 @@ def main(argv: list[str]) -> int:
                 if args.timing_window_seconds is not None:
                     stack.enter_context(verification_measurement.timing_window(
                         args.timing_window_seconds, coordinator_lock_wait_seconds=lock_wait))
-                return execute(ROOT, cache, Path(resolved).absolute(), parse_options(args.options), args.force, args.shared_cache_dir,
+                return execute(ROOT, cache, Path(resolved).absolute(), parse_options(args.options), args.force, shared_cache_dir,
                                build_timeout=args.build_timeout_seconds, gate_timeout=args.gate_timeout_seconds,
                                warn_after=args.warn_after_seconds, budget_policy=args.budget_policy,
                                profile=args.profile, quick_actions=args.quick_actions,
                                qualification_targets=args.qualification_target,
                                qualification_max_actions=args.qualification_max_actions,
                                qualification_timeout=args.qualification_timeout,
-                               qualification_fuzz_steps=args.qualification_fuzz_steps)
+                               qualification_fuzz_steps=args.qualification_fuzz_steps,
+                               shared_cache_source=shared_cache_source)
     except (verification_measurement.WindowExpired, verification_measurement.WindowLost) as error:
         expired = isinstance(error, verification_measurement.WindowExpired)
         status = 124 if expired else 2
-        diagnostic_record(ROOT / ".mylang-cache/verification-v2/last-run.json",
+        diagnostic_record(ROOT / CACHE_DIRECTORY / "last-run.json",
                           {"version": REPORT_VERSION, "success": False, "status": status,
                            "stage": "measurement_deadline" if expired else "measurement_authority", "error": str(error),
                            "measurement_window_seconds": args.timing_window_seconds})
