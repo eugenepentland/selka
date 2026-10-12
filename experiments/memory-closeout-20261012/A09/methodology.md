@@ -20,8 +20,12 @@ The harness verifies source/compiler/binary identities instead of reusing an
 old report's labels. Runtime environment removes counters, sanitizer and
 leak-check controls. Any required capability grants are explicit per-case
 environment entries. An identical worker count and CPU affinity applies to
-both arms. Serial cases use the first CPU actually allowed by this host;
-parallel cases retain the allowed set for the 1/2/8-worker matrix.
+both arms. Serial cases use an actually allowed CPU, chosen after inspecting core/sibling load;
+parallel cases retain the allowed set for the 1/2/8-worker matrix. Initial manifests
+record CPU0; runtime `--cpu 10` overrides both serial arms after actual topology
+inspection found CPU0 sharing with a busy sibling. The final result records the
+effective affinity. `--cases` permits one bounded window per case, with durable
+append to a result only when all artifact identities match.
 
 Wall time uses a monotonic nanosecond clock around spawning and waiting for
 the guest. It includes process launch and exit. Binaries with median times

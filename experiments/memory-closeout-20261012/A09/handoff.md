@@ -41,3 +41,15 @@ Outstanding: frozen integrated candidate/default/retirement identities; A06
 qualified uninstrumented application binaries; final matched measurements;
 A03 allocation/RC/managed-memory results; A08 cache/scaling results; A01 scheduling
 and A02 policy evidence. Final performance conclusions depend on those artifacts.
+
+Preparation followup: `measure.py run --cases ID --cpu 10` supports bounded
+per-case timing windows and appends only if both artifact sets still match.
+The coordinator approved CPU10 after CPU0's sibling was observed busy. Another
+session's `mylang-dl-closeout-20261012-S10` ReleaseFast build was observed outside
+our admission locks; this limits host isolation. `host.json` records the actual
+allowed affinity, sibling set, cgroup and lack of delegated cgroup writes.
+JSON inputs were extended again to 4,000,000 lookups in distinct `_long.my`
+files after a first-array correctness smoke completed below 100 ms. The earlier
+source/artifact remains preserved; it is not used for throughput conclusions.
+The C0-guest-v2 preparation restarted with the centrally approved two-slot env
+only while its old child wrapper was queued and unadmitted.

@@ -1,0 +1,38 @@
+{
+  "uname": [
+    "Linux",
+    "linuxserver",
+    "7.0.0-31-generic",
+    "#31-Ubuntu SMP PREEMPT_DYNAMIC Sat Aug  1 04:26:38 UTC 2026",
+    "x86_64"
+  ],
+  "allowed_cpus": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "cpu_model": "12th Gen Intel(R) Core(TM) i7-12700H",
+  "cgroup": "/user.slice/user-1000.slice/session-3387.scope",
+  "cgroup_writable": false,
+  "cgroup_cpu_max": "max 100000",
+  "serial_timing_cpu": 10,
+  "serial_timing_siblings": "10-11",
+  "scope_note": "Unrelated mylang-dl-closeout worktree builds observed outside shared admission; no complete host isolation claim."
+}

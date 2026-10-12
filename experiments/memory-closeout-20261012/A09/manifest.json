@@ -2,21 +2,21 @@
   "cases": [
     {
       "id": "array",
-      "source": "experiments/memory-closeout-20261012/A09/samples/array.my",
-      "expected": "array 51200000\n",
+      "source": "experiments/memory-closeout-20261012/A09/samples/array_long.my",
+      "expected": "array 512000000\n",
       "cpus": [
         0
       ],
-      "input_note": "128 sibling JSON items, 400000 lookups selecting independently owned nested result"
+      "input_note": "128 sibling JSON items, 4000000 lookups selecting independently owned nested result"
     },
     {
       "id": "object",
-      "source": "experiments/memory-closeout-20261012/A09/samples/object.my",
-      "expected": "object 51200000\n",
+      "source": "experiments/memory-closeout-20261012/A09/samples/object_long.my",
+      "expected": "object 512000000\n",
       "cpus": [
         0
       ],
-      "input_note": "128 sibling JSON items, 400000 lookups selecting independently owned nested result"
+      "input_note": "128 sibling JSON items, 4000000 lookups selecting independently owned nested result"
     },
     {
       "id": "record",

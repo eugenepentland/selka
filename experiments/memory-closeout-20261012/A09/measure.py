@@ -140,13 +140,25 @@ def run(args):
               "rss_note": "Linux wait4 ru_maxrss KiB for each guest; includes its threads. Child process peaks are not simultaneous process-tree RSS. No process-tree or cgroup RSS claim.",
               "managed_memory_note": "Separate counted executions measure managed traffic and live bytes; these are not RSS.",
               "host": host(), "builds": records, "cases": {}}
+    if args.output.exists():
+        previous = json.loads(args.output.read_text())
+        if previous["builds"] != records:
+            raise ValueError("refusing to append samples from different artifacts")
+        result["cases"] = previous["cases"]
+        result["previous_window_started_utc"] = previous["started_utc"]
     allowed = set(os.sched_getaffinity(0))
-    for name in cases["before"]:
+    selected = args.cases or list(cases["before"])
+    if set(selected) - cases["before"].keys():
+        raise ValueError("unknown case selection")
+    for name in selected:
         first, second = cases["before"][name], cases["after"][name]
         if first["expected"] != second["expected"]:
             raise ValueError(f"{name}: expected outputs differ")
         cpus = first.get("cpus", [min(allowed)])
-        if cpus != second.get("cpus", [min(allowed)]) or not set(cpus) <= allowed:
+        other_cpus = second.get("cpus", [min(allowed)])
+        if args.cpu is not None and len(cpus) == len(other_cpus) == 1:
+            cpus = other_cpus = [args.cpu]
+        if cpus != other_cpus or not set(cpus) <= allowed:
             raise ValueError(f"{name}: invalid or mismatched affinity")
         for case in (first, second):
             if digest(case["binary"]) != case["binary_sha256"]:
@@ -166,6 +178,16 @@ def run(args):
                 summary[f"{arm}_{metric}"] = {"median": statistics.median(values), "min": min(values), "max": max(values)}
         ratio = summary["after_wall_ns"]["median"] / summary["before_wall_ns"]["median"]
         summary["candidate_baseline_wall_ratio"] = ratio
+        paired = [a["wall_ns"] / b["wall_ns"] for a, b in
+                  zip(observations["after"][2:], observations["before"][2:])]
+        summary["paired_candidate_baseline_ratios"] = paired
+        summary["paired_ratio_range"] = [min(paired), max(paired)]
+        summary["paired_ratio_median"] = statistics.median(paired)
+        summary["noisy_ranges"] = any(summary[f"{arm}_wall_ns"]["max"] /
+                                      summary[f"{arm}_wall_ns"]["min"] > 1.20 for arm in observations)
+        summary["comparison_scope"] = ("same-source compiler comparison" if
+                                       first["source_sha256"] == second["source_sha256"] else
+                                       "compiler and source migration; not a compiler-only comparison")
         summary["slowdown_review_trigger"] = ratio > 1.05
         summary["tiny_workload"] = min(summary[f"{arm}_wall_ns"]["median"] for arm in observations) < 100_000_000
         result["cases"][name] = {"cpus": cpus, "samples": observations, "summary": summary}
@@ -189,6 +211,8 @@ def main():
     r.add_argument("--before", type=Path, required=True)
     r.add_argument("--after", type=Path, required=True)
     r.add_argument("--output", type=Path, required=True)
+    r.add_argument("--cases", nargs="+")
+    r.add_argument("--cpu", type=int, help="override both arms' serial affinity after checking allowed topology")
     r.set_defaults(handler=run)
     args = parser.parse_args()
     args.handler(args)
