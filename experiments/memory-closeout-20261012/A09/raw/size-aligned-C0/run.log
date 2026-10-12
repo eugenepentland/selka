@@ -1,0 +1,30 @@
+build-slot: build slot 1, FIFO ticket 834 after 0s
+array build_failed
+build-slot: FIFO ticket 835, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 835 after 5s
+object build_failed
+build-slot: FIFO ticket 836, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 836 after 5s
+record build_failed
+build-slot: FIFO ticket 837, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 837 after 5s
+parallel_cheap_1 build_failed
+parallel_cheap_2 build_failed
+parallel_cheap_8 build_failed
+parallel_expensive_1 build_failed
+parallel_expensive_2 build_failed
+parallel_expensive_8 build_failed
+build-slot: FIFO ticket 838, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 838 after 5s
+a06_word_count build_failed
+build-slot: FIFO ticket 839, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 839 after 5s
+a06_nested_json build_failed
+build-slot: FIFO ticket 840, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 840 after 5s
+a06_file_processing build_failed
+build-slot: FIFO ticket 842, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 842 after 10s
+a06_parallel_t1 build_failed
+a06_parallel_t2 build_failed
+a06_parallel_t8 build_failed

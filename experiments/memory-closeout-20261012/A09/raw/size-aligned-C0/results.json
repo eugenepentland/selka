@@ -1,0 +1,594 @@
+{
+  "schema": "memory-closeout-size-aligned-counters-v1",
+  "scope": "Count the exact calibrated runtime inputs, separately from the pinned census.",
+  "source_commit": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+  "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+  "ownership": "opt-in",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "harness_sha256": "ec7f7fa5a66dc5e48ba0f065031bf789066a317a3a0ec8f1ae6591b0f16ce000",
+  "counter_audit_sha256": "36e0707f6622782d94df1df6489064c4ec2928ef55fc65efa4a0d5eaa6ce1bdb",
+  "structural_helper_sha256": "16fe1882a08b656fa08e792a07c0503d5707f0b99403cd392f012834a2187b8b",
+  "input_builds": {
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/raw/C0-calibrated-guests.json": "8a3205be81040ff87a9684cbf177c68a51e4e3e7ece5becc9e1692861af43ee0",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/raw/C0-calibrated-applications.json": "3a36557c8cb1c35bf05389ea8b62f0d88eeb964dd5d04b739feaedcbd2086fec"
+  },
+  "distinct_builds": 8,
+  "case_denominator": 15,
+  "limitations": [
+    "Whole-program managed counters; not RSS or timing evidence.",
+    "No arbitrary kernel subtraction for these multi-module inputs.",
+    "Separate from the original30/pinned81+6 census; preserves every failed case.",
+    "Recursive copy telemetry differs after the later instrumentation correction; allocation/peak fields are separate."
+  ],
+  "groups": [
+    {
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/array_long.my",
+          "--experimental-zero-rc",
+          "--release",
+          "--counters",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/array/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/array/program.ll"
+        ],
+        "exit": 2,
+        "stdout": "",
+        "stderr": "error: failed to open object /home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/cache/native-link-682e7849264a1481b59bc535d0e1b428/ae5cec2e220668d317669e52a665927510729048b855086779b285dd1a020e95.o: FileNotFound\n",
+        "wall_ns_including_admission": 3083220954,
+        "wall_ns_excludes_admission_wait": true
+      },
+      "cases": [
+        {
+          "id": "array",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/array_long.my",
+          "source_inputs_sha256": {
+            "array_long.my": "82125b5cfdfb1da843e5bdf53650dee86130c005d83701252c7143567d5d0942"
+          },
+          "args": [],
+          "env": {},
+          "cpus": [
+            10
+          ],
+          "expected": "array 512000000\n",
+          "matched_uncounted_binary_sha256": "de4b61e31498a7677ae6f9c06a73b5889ad2ba63e101c39143b4d1d300fb2bfe",
+          "status": "build_failed"
+        }
+      ],
+      "status": "build_failed",
+      "admitted_work_ns": 3083996294,
+      "queue_wait_ns": 60816799
+    },
+    {
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/object_long.my",
+          "--experimental-zero-rc",
+          "--release",
+          "--counters",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/object/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/object/program.ll"
+        ],
+        "exit": 2,
+        "stdout": "",
+        "stderr": "error: failed to open object /home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/cache/native-link-38b6697d5599551da14735028d3ce4d9/e541e3787713f96b001c13d2bc534fbcfc5adf2e3f47358966676fff07671041.o: FileNotFound\n",
+        "wall_ns_including_admission": 3096692994,
+        "wall_ns_excludes_admission_wait": true
+      },
+      "cases": [
+        {
+          "id": "object",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/object_long.my",
+          "source_inputs_sha256": {
+            "object_long.my": "e61f89aa77722e1c3386b47a929383bd2b2e5335a9236415f8aded2398159bc8"
+          },
+          "args": [],
+          "env": {},
+          "cpus": [
+            10
+          ],
+          "expected": "object 512000000\n",
+          "matched_uncounted_binary_sha256": "da5a86e49d86bb2ae069cebf553ef3dc2ee8454700dfa9280159d203206da107",
+          "status": "build_failed"
+        }
+      ],
+      "status": "build_failed",
+      "admitted_work_ns": 3097251954,
+      "queue_wait_ns": 5093188347
+    },
+    {
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/record_long.my",
+          "--experimental-zero-rc",
+          "--release",
+          "--counters",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/record/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/record/program.ll"
+        ],
+        "exit": 2,
+        "stdout": "",
+        "stderr": "error: failed to open object /home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/cache/native-link-415e00ccdf2de61aa572aab4774bf631/6cd09cfb62495898856f1b2e375d9b1086701fb630ab2a8128e5afabec5fccaa.o: FileNotFound\n",
+        "wall_ns_including_admission": 2665493383,
+        "wall_ns_excludes_admission_wait": true
+      },
+      "cases": [
+        {
+          "id": "record",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/record_long.my",
+          "source_inputs_sha256": {
+            "record_long.my": "384023aefd7a12a2e7db8c759649b8ba8928fb18117c8e56649c2e74b68026b1"
+          },
+          "args": [],
+          "env": {},
+          "cpus": [
+            10
+          ],
+          "expected": "279555560\n",
+          "matched_uncounted_binary_sha256": "f5f994a9341c49ad5ac3e0e61c72aa239ad0ad5d509e25dfd38f3c2c2a48840b",
+          "status": "build_failed"
+        }
+      ],
+      "status": "build_failed",
+      "admitted_work_ns": 2666037548,
+      "queue_wait_ns": 5108411679
+    },
+    {
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+          "--experimental-zero-rc",
+          "--release",
+          "--counters",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/parallel_cheap_1/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/parallel_cheap_1/program.ll"
+        ],
+        "exit": 2,
+        "stdout": "",
+        "stderr": "error: failed to open object /home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/cache/native-link-598312f0440caa908beeb969ad08bca7/5495b27b05f345e44c0547f616abe297429cd8a25e05696344c1e849388433a8.o: FileNotFound\n",
+        "wall_ns_including_admission": 2698500628,
+        "wall_ns_excludes_admission_wait": true
+      },
+      "cases": [
+        {
+          "id": "parallel_cheap_1",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+          "source_inputs_sha256": {
+            "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+          },
+          "args": [
+            "513",
+            "65536",
+            "cheap"
+          ],
+          "env": {
+            "MYLANG_THREADS": "1"
+          },
+          "cpus": [
+            10
+          ],
+          "expected": "25853755392\n",
+          "matched_uncounted_binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+          "status": "build_failed"
+        },
+        {
+          "id": "parallel_cheap_2",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+          "source_inputs_sha256": {
+            "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+          },
+          "args": [
+            "513",
+            "16384",
+            "cheap"
+          ],
+          "env": {
+            "MYLANG_THREADS": "2"
+          },
+          "cpus": [
+            8,
+            10
+          ],
+          "expected": "6463438848\n",
+          "matched_uncounted_binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+          "status": "build_failed"
+        },
+        {
+          "id": "parallel_cheap_8",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+          "source_inputs_sha256": {
+            "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+          },
+          "args": [
+            "513",
+            "8192",
+            "cheap"
+          ],
+          "env": {
+            "MYLANG_THREADS": "8"
+          },
+          "cpus": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ],
+          "expected": "3231719424\n",
+          "matched_uncounted_binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+          "status": "build_failed"
+        },
+        {
+          "id": "parallel_expensive_1",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+          "source_inputs_sha256": {
+            "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+          },
+          "args": [
+            "8193",
+            "32",
+            "expensive"
+          ],
+          "env": {
+            "MYLANG_THREADS": "1"
+          },
+          "cpus": [
+            10
+          ],
+          "expected": "131028929568\n",
+          "matched_uncounted_binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+          "status": "build_failed"
+        },
+        {
+          "id": "parallel_expensive_2",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+          "source_inputs_sha256": {
+            "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+          },
+          "args": [
+            "8193",
+            "32",
+            "expensive"
+          ],
+          "env": {
+            "MYLANG_THREADS": "2"
+          },
+          "cpus": [
+            8,
+            10
+          ],
+          "expected": "131028929568\n",
+          "matched_uncounted_binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+          "status": "build_failed"
+        },
+        {
+          "id": "parallel_expensive_8",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/experiments/memory-closeout-20261012/A09/samples/parallel_scaling.my",
+          "source_inputs_sha256": {
+            "parallel_scaling.my": "cc3f0f9e758e309a48d2d1b699e0c29a1f656266cb77c728a8abd484bf03665a"
+          },
+          "args": [
+            "8193",
+            "32",
+            "expensive"
+          ],
+          "env": {
+            "MYLANG_THREADS": "8"
+          },
+          "cpus": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ],
+          "expected": "131028929568\n",
+          "matched_uncounted_binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+          "status": "build_failed"
+        }
+      ],
+      "status": "build_failed",
+      "admitted_work_ns": 2699017069,
+      "queue_wait_ns": 5120280075
+    },
+    {
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/word_count/main.my",
+          "--experimental-zero-rc",
+          "--release",
+          "--counters",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/a06_word_count/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/a06_word_count/program.ll"
+        ],
+        "exit": 2,
+        "stdout": "",
+        "stderr": "error: failed to open object /home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/cache/native-link-1aba690b4e693546263548b1ea89c886/aa69e4798711b7c163d4b97b1ce485b3e8d64af2f892c73620ced35de4f20a4e.o: FileNotFound\n",
+        "wall_ns_including_admission": 2712285682,
+        "wall_ns_excludes_admission_wait": true
+      },
+      "cases": [
+        {
+          "id": "a06_word_count",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/word_count/main.my",
+          "source_inputs_sha256": {
+            "main.my": "4d633e9d3e0a96decb3654cca0a95ff19e2df2cb73d6fb8e84b3fb03a4e5599f",
+            "words.my": "61569e71ae3a0723d2f123720f78d32a33df465cdd5be1e2f76d9b8c7203ef6e"
+          },
+          "args": [
+            "200"
+          ],
+          "env": {
+            "MYLANG_THREADS": "1"
+          },
+          "cpus": [
+            10
+          ],
+          "expected": "7723600\n",
+          "matched_uncounted_binary_sha256": "13974c4ea293b0e43d0f6b5a2dc7c3c0289d5ad691642d0044affd6be88e3efb",
+          "status": "build_failed"
+        }
+      ],
+      "status": "build_failed",
+      "admitted_work_ns": 2712778591,
+      "queue_wait_ns": 5113338078
+    },
+    {
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/nested_json/main.my",
+          "--experimental-zero-rc",
+          "--release",
+          "--counters",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/a06_nested_json/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/a06_nested_json/program.ll"
+        ],
+        "exit": 2,
+        "stdout": "",
+        "stderr": "error: failed to open object /home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/cache/native-link-b3394d5fd5a5ffe828ca458ac1750506/9a0c3d8be53e9df423b26a002f68c5f8b3136dd4d48c93bc1dd2efa53c28d968.o: FileNotFound\n",
+        "wall_ns_including_admission": 3127817742,
+        "wall_ns_excludes_admission_wait": true
+      },
+      "cases": [
+        {
+          "id": "a06_nested_json",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/nested_json/main.my",
+          "source_inputs_sha256": {
+            "main.my": "529ff2ba488db292d409ad2af7aac3c49fbc49bb9bfa718504c5ee490270d65f",
+            "transform.my": "731d621883eee8968c0a0fb49353de3908f16e711442d2199b73104d05c99f74"
+          },
+          "args": [
+            "80"
+          ],
+          "env": {
+            "MYLANG_THREADS": "1"
+          },
+          "cpus": [
+            10
+          ],
+          "expected": "1967760\n",
+          "matched_uncounted_binary_sha256": "5c2737ad2521138f3e7a4a25b685912e87889716379268ebbc085889ac64ffc5",
+          "status": "build_failed"
+        }
+      ],
+      "status": "build_failed",
+      "admitted_work_ns": 3128334113,
+      "queue_wait_ns": 5098746071
+    },
+    {
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/file_processing/main.my",
+          "--experimental-zero-rc",
+          "--release",
+          "--counters",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/a06_file_processing/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/a06_file_processing/program.ll"
+        ],
+        "exit": 2,
+        "stdout": "",
+        "stderr": "error: failed to open object /home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/cache/native-link-2a2134e7dca80a47eaebb5e8633bae3a/232dd1db66e81ee65da87d3a7413c4e26774f93c4fdb19fbdaf406cc8423fe69.o: FileNotFound\n",
+        "wall_ns_including_admission": 2692784934,
+        "wall_ns_excludes_admission_wait": true
+      },
+      "cases": [
+        {
+          "id": "a06_file_processing",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/file_processing/main.my",
+          "source_inputs_sha256": {
+            "main.my": "3d8cdf2a39a31f2fd2206690eff3a2f7cc738e6083efab574ba989fb549ebe33",
+            "process.my": "5226147e7e0e228b006134ea3dc79caa821aadf5b555b3bf034cb35bd280d65b"
+          },
+          "args": [
+            "150"
+          ],
+          "env": {
+            "MYLANG_THREADS": "1"
+          },
+          "cpus": [
+            10
+          ],
+          "expected": "58982550\n",
+          "matched_uncounted_binary_sha256": "c460a2ddff3ddf0d75b4495f49b3d83ef0b02ef22d6c7914e3039dbccde3e161",
+          "status": "build_failed"
+        }
+      ],
+      "status": "build_failed",
+      "admitted_work_ns": 2693276449,
+      "queue_wait_ns": 5099747742
+    },
+    {
+      "build": {
+        "argv": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0/bin/mylang",
+          "build",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/parallel/main.my",
+          "--experimental-zero-rc",
+          "--release",
+          "--counters",
+          "--zig",
+          "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+          "--cache-dir",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/cache",
+          "-o",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/a06_parallel_t1/program",
+          "--emit-llvm",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/a06_parallel_t1/program.ll"
+        ],
+        "exit": 2,
+        "stdout": "",
+        "stderr": "error: failed to open object /home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/C0-size-aligned-counted/cache/native-link-968a17638bf533546b31fe38b72710a9/1392815449c4b06aa5cb9e58230b7c9674b7b9d31fcc259ffaed5068d9c1dedc.o: FileNotFound\n",
+        "wall_ns_including_admission": 2679158796,
+        "wall_ns_excludes_admission_wait": true
+      },
+      "cases": [
+        {
+          "id": "a06_parallel_t1",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/parallel/main.my",
+          "source_inputs_sha256": {
+            "main.my": "c8bec39775ef6af6d2822af7d7de52822d81db90ee161bd6060849dd3395ba45",
+            "primes.my": "8ccc5b22614f0f7fd8ee9cc48ff08ce2d5e08ac85da2a0d5945f058c8e7da4de"
+          },
+          "args": [
+            "40"
+          ],
+          "env": {
+            "MYLANG_THREADS": "1"
+          },
+          "cpus": [
+            10
+          ],
+          "expected": "920000\n",
+          "matched_uncounted_binary_sha256": "3be619806b8517c2de383b9aef455aa9d603a7fb02ca1fd4f6762e6ce474653b",
+          "status": "build_failed"
+        },
+        {
+          "id": "a06_parallel_t2",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/parallel/main.my",
+          "source_inputs_sha256": {
+            "main.my": "c8bec39775ef6af6d2822af7d7de52822d81db90ee161bd6060849dd3395ba45",
+            "primes.my": "8ccc5b22614f0f7fd8ee9cc48ff08ce2d5e08ac85da2a0d5945f058c8e7da4de"
+          },
+          "args": [
+            "40"
+          ],
+          "env": {
+            "MYLANG_THREADS": "2"
+          },
+          "cpus": [
+            8,
+            10
+          ],
+          "expected": "920000\n",
+          "matched_uncounted_binary_sha256": "3be619806b8517c2de383b9aef455aa9d603a7fb02ca1fd4f6762e6ce474653b",
+          "status": "build_failed"
+        },
+        {
+          "id": "a06_parallel_t8",
+          "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A06/experiments/memory-closeout-20261012/A06/timing/parallel/main.my",
+          "source_inputs_sha256": {
+            "main.my": "c8bec39775ef6af6d2822af7d7de52822d81db90ee161bd6060849dd3395ba45",
+            "primes.my": "8ccc5b22614f0f7fd8ee9cc48ff08ce2d5e08ac85da2a0d5945f058c8e7da4de"
+          },
+          "args": [
+            "40"
+          ],
+          "env": {
+            "MYLANG_THREADS": "8"
+          },
+          "cpus": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11
+          ],
+          "expected": "920000\n",
+          "matched_uncounted_binary_sha256": "3be619806b8517c2de383b9aef455aa9d603a7fb02ca1fd4f6762e6ce474653b",
+          "status": "build_failed"
+        }
+      ],
+      "status": "build_failed",
+      "admitted_work_ns": 2679695197,
+      "queue_wait_ns": 10126171348
+    }
+  ],
+  "passed": false
+}

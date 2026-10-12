@@ -1,0 +1,260 @@
+{
+  "scope": "Execution scheduling estimate from preserved observations; no final candidate or performance claim.",
+  "prepared_utc": "2026-10-12T04:38:00.422577+00:00",
+  "candidate_source": null,
+  "candidate_debug_sha256": null,
+  "candidate_releasefast_sha256": null,
+  "freeze_dependencies": [
+    "Exact coordinator C1 source; separate Debug and ReleaseFast complete installations",
+    "Installed owned components provisioned from the independent pinned RF builder with final component source/receipt/binary hashes",
+    "Candidate correctness gates and public release inventory remain mandatory; timing does not replace them"
+  ],
+  "runtime": {
+    "cases": 15,
+    "candidate_distinct_builds": 8,
+    "warmup_pairs_per_case": 2,
+    "measured_pairs_per_case": 9,
+    "guest_launches": 330,
+    "timing_leases": 15,
+    "ordinary_barriers": 15,
+    "individual_guest_timeout_seconds": 120,
+    "pilot_c0_total_seconds": 19.682455554,
+    "equal_c0_candidate_sizing_seconds": 433.014022188,
+    "prototype_substitution_sizing_seconds": 313.674327142,
+    "sizing_basis": "One sizing observation per C0 case; six early prototype observations replace map cases solely for a scheduling scenario. Neither is a final candidate prediction or paired result.",
+    "longest_equal_c0_case_seconds": 98.10787316,
+    "window_note": "Conservative equal-C0 scenario has three cheap-map windows over60s, longest98.1s. Check actual C1 execution before enqueueing complete22-run windows; preserve all2+9pairs if scheduling is split."
+  },
+  "rss": {
+    "cases": 15,
+    "pairs_per_case": 3,
+    "guest_launches": 90,
+    "timing_leases": 15,
+    "ordinary_barriers": 15,
+    "equal_c0_candidate_sizing_seconds": 118.094733324,
+    "prototype_substitution_sizing_seconds": 85.54754376599999,
+    "method": "Separate GNU-time child-rusage runs; no wall-time use; outer launcher RSS discarded",
+    "qualification": "raw/rss-qualification/results.json",
+    "old_pilot_rss": "invalid; raw bytes preserved"
+  },
+  "compile_scaling": {
+    "final_cells": 16,
+    "phases_per_cell": 5,
+    "final_build_calls": 80,
+    "estimated_admitted_seconds_range": [
+      120,
+      300
+    ],
+    "per_build_timeout_seconds": 120,
+    "cpu": 10,
+    "families": {
+      "matches": [
+        16,
+        64,
+        96,
+        128
+      ],
+      "fields": [
+        16,
+        64,
+        128
+      ],
+      "recursive": [
+        16,
+        64,
+        128
+      ],
+      "modules": [
+        16,
+        64,
+        128
+      ],
+      "generics": [
+        16,
+        64,
+        128
+      ]
+    },
+    "matched_c0_accepted_cells": 9,
+    "matched_c0_accepted_builds": 45,
+    "c0_parser_refusals": 5,
+    "c0_known_native_failures": 10,
+    "c0_not_attempted_native_cells": [
+      "modules128",
+      "generics16",
+      "generics64",
+      "generics128"
+    ],
+    "diagnostic_only_calls_per_arm": 6,
+    "diagnostic_source_manifest_sha256": "55bc7f3f8249c93cff43a1f5fc249a083254081a2b9114dee90396b7b7fbc517",
+    "diagnostic_baseline_status": "prepared, not executed; no timing before freeze",
+    "memory_run": "fields64 separate memory-only sampled process-tree run; replay under-sampling limitation remains",
+    "correctness": "44 existing cache rows plus12 borrowed-selection rows and11 generic-tuple rows, with provider/relocation followups; C2/C3 transitions later."
+  },
+  "census": {
+    "main_cases": 81,
+    "supplement_cases": 6,
+    "builds": 435,
+    "guest_executions": 695,
+    "original_source_checks": 30,
+    "compiler_calls": 465,
+    "minimum_ten_call_leases": 47,
+    "c0_81_compiler_seconds": 24.835,
+    "c0_131_guest_seconds": 0.172686548,
+    "c0_lease_admitted_seconds": 26.22,
+    "c0_lease_count": 12,
+    "c0_queue_seconds": 296.492,
+    "support5_original30_admitted_seconds": 5.154,
+    "support5_original30_queue_seconds": 1168.835,
+    "scope": "Warm correctness scheduling evidence, not cold compile or runtime benchmarks. All preserved C0 denominators remain unchanged."
+  },
+  "applications": {
+    "builds": 20,
+    "counted_runs": 60,
+    "example_two_mode_batch_admitted_seconds": 13.1,
+    "same_batch_queue_seconds": 225,
+    "estimate_admitted_seconds_range": [
+      120,
+      180
+    ],
+    "estimate_note": "Extrapolation for scheduling only; exact final pipeline costs may differ. A06 frozen four-shape sources retain complete C0 release baselines."
+  },
+  "components": {
+    "independent_builder_source_prefix": "5167c588",
+    "independent_builder_sha256": "29cfbd13390692757ce3add9cf61d8398eff283760d16cedb3c5b9addaa03e26",
+    "same_builder_can_serve_debug_and_rf": true,
+    "required_identity": "Actual final component sources + seed receipt + toolchain + target + builder digest; verify each installed manifest/artifact, never assume host-mode equality.",
+    "coarse_cold_seed_and_components_seconds": 380,
+    "coarse_changed_component_rebuild_seconds": 12,
+    "prior_native_pure_protocol_seconds": 29,
+    "prior_native_pure_protocol_queue_seconds": 155,
+    "limitation": "These are prior log/receipt intervals, not final measured build costs; root full installation and test-components/full gate still required."
+  },
+  "baseline_gaps": {
+    "runtime": "none;15entries/8binaries and12installed files reverified read-only",
+    "native_scaling": "Known immutable-C0 host/native-fallback failures; never repair/relabel C0 to fabricate native comparisons",
+    "diagnostic_scaling": "Six source/Core-only C0 commands prepared; execute only after freeze timing release",
+    "size_aligned_counters": {
+      "status": "C0 attempted:8/8unique builds fail native-link FileNotFound,15/15configurations build_failed,0executions; candidate arm pending",
+      "distinct_builds_per_arm": 8,
+      "execution_configurations_per_arm": 15,
+      "scope": "Exact calibrated15 sources/args/checksums; do not merge their larger-workload costs into pinned81+6 counts. C0 uncached native failure remains possible.",
+      "evidence": "raw/size-aligned-C0/results.json",
+      "admitted_seconds": 22.760387215,
+      "queue_seconds": 40.820700139
+    }
+  },
+  "c0_artifact_readiness": [
+    {
+      "case": "array",
+      "binary_sha256": "de4b61e31498a7677ae6f9c06a73b5889ad2ba63e101c39143b4d1d300fb2bfe",
+      "source_inputs_match": true,
+      "binary_matches": true
+    },
+    {
+      "case": "object",
+      "binary_sha256": "da5a86e49d86bb2ae069cebf553ef3dc2ee8454700dfa9280159d203206da107",
+      "source_inputs_match": true,
+      "binary_matches": true
+    },
+    {
+      "case": "record",
+      "binary_sha256": "f5f994a9341c49ad5ac3e0e61c72aa239ad0ad5d509e25dfd38f3c2c2a48840b",
+      "source_inputs_match": true,
+      "binary_matches": true
+    },
+    {
+      "case": "parallel_cheap_1",
+      "binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+      "source_inputs_match": true,
+      "binary_matches": true
+    },
+    {
+      "case": "parallel_cheap_2",
+      "binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+      "source_inputs_match": true,
+      "binary_matches": true
+    },
+    {
+      "case": "parallel_cheap_8",
+      "binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+      "source_inputs_match": true,
+      "binary_matches": true
+    },
+    {
+      "case": "parallel_expensive_1",
+      "binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+      "source_inputs_match": true,
+      "binary_matches": true
+    },
+    {
+      "case": "parallel_expensive_2",
+      "binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+      "source_inputs_match": true,
+      "binary_matches": true
+    },
+    {
+      "case": "parallel_expensive_8",
+      "binary_sha256": "b3371b365ff8200c13eec70cf7841fd59baa38baa5397583a5ac65deb9008728",
+      "source_inputs_match": true,
+      "binary_matches": true
+    },
+    {
+      "case": "a06_word_count",
+      "binary_sha256": "13974c4ea293b0e43d0f6b5a2dc7c3c0289d5ad691642d0044affd6be88e3efb",
+      "source_inputs_match": true,
+      "binary_matches": true
+    },
+    {
+      "case": "a06_nested_json",
+      "binary_sha256": "5c2737ad2521138f3e7a4a25b685912e87889716379268ebbc085889ac64ffc5",
+      "source_inputs_match": true,
+      "binary_matches": true
+    },
+    {
+      "case": "a06_file_processing",
+      "binary_sha256": "c460a2ddff3ddf0d75b4495f49b3d83ef0b02ef22d6c7914e3039dbccde3e161",
+      "source_inputs_match": true,
+      "binary_matches": true
+    },
+    {
+      "case": "a06_parallel_t1",
+      "binary_sha256": "3be619806b8517c2de383b9aef455aa9d603a7fb02ca1fd4f6762e6ce474653b",
+      "source_inputs_match": true,
+      "binary_matches": true
+    },
+    {
+      "case": "a06_parallel_t2",
+      "binary_sha256": "3be619806b8517c2de383b9aef455aa9d603a7fb02ca1fd4f6762e6ce474653b",
+      "source_inputs_match": true,
+      "binary_matches": true
+    },
+    {
+      "case": "a06_parallel_t8",
+      "binary_sha256": "3be619806b8517c2de383b9aef455aa9d603a7fb02ca1fd4f6762e6ce474653b",
+      "source_inputs_match": true,
+      "binary_matches": true
+    }
+  ],
+  "queue_caveats": [
+    "Default5s ordinary admission settle affects each no-op barrier;48 runtime/RSS/scaling/diagnostic barriers imply about240s before host queue contention.",
+    "Queue waits overlap across workers, so do not sum every worker receipt into a wall-clock ETA.",
+    "Observed census queue cost ranged24.7s/lease to194.8s/lease; external cooperating timing leases have lasted multiple minutes.",
+    "No finite wall-clock completion guarantee while other sessions enqueue timing or correctness failures require repair."
+  ],
+  "estimate": {
+    "after_final_installations_available": "Approximately20\u201335minutes of scheduled local evidence work with a quiet cooperating queue, including preparation/correctness estimates and settle overhead; excludes full registered verification/Guardian, broad library matrices, seed/host compiler builds, unresolved defects and extra regression investigation.",
+    "contended_host": "Plan roughly1\u20133hours for this measurement/census/application subset under observed minute-scale waits, with explicit risk of longer external timing holds; not a deadline.",
+    "full_closeout": "Cannot estimate honestly from this subset; root full gate, library inventory, C2/C3 rebuilds/reruns and correctness blockers are additional."
+  },
+  "size_aligned_counted": {
+    "planned_executions_both_arms": 30,
+    "cases_per_arm": 15,
+    "distinct_builds_per_arm": 8,
+    "c0_builds_failed": 8,
+    "c0_executions_completed": 0,
+    "c0_configuration_status": "all15build_failed",
+    "candidate_status": "awaiting frozen compiler; no candidate observations",
+    "evidence": "raw/size-aligned-C0/results.json"
+  }
+}

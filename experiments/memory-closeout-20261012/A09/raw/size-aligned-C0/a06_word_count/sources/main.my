@@ -1,0 +1,26 @@
+import words
+
+func repetitions(args: str[]) -> int:
+    if len(args) == 0:
+        return 1
+    match parse_int(args[0]):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+func main(args: str[], out: Stream) -> int:
+    const rounds = repetitions(args)
+    if rounds < 1 or rounds > 10000:
+        return 2
+    mut total = 0
+    for round in range(rounds):
+        mut text = words.document(8192)
+        const counts = words.histogram(text)
+        text = "replaced"
+        const again = words.histogram(words.document(8192))
+        if words.checksum(counts) != words.checksum(again):
+            return 1
+        total += words.checksum(counts)
+    out.print(total)
+    return 0

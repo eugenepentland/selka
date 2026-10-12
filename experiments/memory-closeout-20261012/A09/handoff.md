@@ -1,5 +1,15 @@
 # A09 handoff — prepared runtime matrix, frozen baselines and versioning fix
 
+Latest preparation: `C1-schedule.md/json` distinguish 330 runtime launches,
+90 separate RSS launches, 30 planned size-aligned counted configurations and
+the independent 435-build/695-run census. The corrected RSS harness is commit
+`268a77a3e`, with native parent-memory controls and Guardian 88/88. All 15 frozen
+runtime inputs and both complete C0 installations were reverified unchanged.
+The newly authorized exact-sized counted C0 baseline encountered eight native
+build failures and executed zero of its 15 configurations; see
+`raw/size-aligned-C0`. These are explicit baseline blockers, not zero-allocation
+results. The C1 compiler/package freeze remains outstanding.
+
 Base C0: `fbfcaa7a923186a8e773c3760f81c10aa345a432`.
 Worktree: `/home/epentland/ai/canopy/mylang-memory-20261012-A09`.
 Evidence and scratch remain private to A09. Historical reports were not overwritten.
