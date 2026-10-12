@@ -11,6 +11,18 @@ pub const Claim = work.Claim;
 pub const Digest = [32]u8;
 /// Explicitly configured storage must be usable; damaged receipts remain misses.
 pub const Error = error{ OutOfMemory, ReadFailed, WriteFailed };
+/// What one `save` did. Only `stored` wrote a receipt.
+pub const Saved = enum {
+    /// The success receipt was written.
+    stored,
+    /// The identical receipt was already present; its recency was refreshed.
+    present,
+    /// A collection holds the store, so nothing was written and nothing waited.
+    skipped,
+    /// A well-formed receipt for this identity holds different contents. It is
+    /// kept, nothing is written, and the pair is appended to `mismatches.log`.
+    mismatch,
+};
 const format = "selka-native-test-store-v2\n";
 const maximum_record = 512;
 
@@ -21,6 +33,8 @@ pub const Store = struct {
     root: []const u8,
 
     /// Create or validate the versioned namespace without changing another cache format.
+    /// A present marker is validated without any lock; the throttled sweep that
+    /// follows only tries its exclusive admission, so no open waits on a sweep.
     pub fn open(a: std.mem.Allocator, io: std.Io, directory: []const u8) Error!Store {
         if (directory.len == 0) return error.WriteFailed;
         const self: Store = .{ .arena = a, .io = io, .root = try std.fs.path.join(a, &.{ directory, "native-tests-v2" }) };
@@ -38,26 +52,33 @@ pub const Store = struct {
         return self.retentionContext().lease() catch |err| return mapRetention(err);
     }
 
+    // Only first creation takes the exclusive `.lock`, re-reading the marker
+    // under it. No sweep runs before the marker exists.
     fn initialize(self: Store) Error!void {
-        const io = self.io;
-        const lease_guard = try self.lease();
-        defer lease_guard.close(io);
-        const guard = try self.lock(.exclusive);
-        defer guard.close(io);
-        if (try self.read(try self.path("format"))) |bytes| {
-            if (!std.mem.eql(u8, bytes, format)) return error.ReadFailed;
-        } else {
-            // A lost/corrupt format marker cannot silently adopt old receipts.
-            var dir = std.Io.Dir.cwd().openDir(io, self.root, .{ .iterate = true }) catch return error.ReadFailed;
-            defer dir.close(io);
-            var entries = dir.iterate();
-            while (entries.next(io) catch return error.ReadFailed) |entry| {
-                if (std.mem.eql(u8, entry.name, ".retention.lock") or std.mem.eql(u8, entry.name, ".lock") or std.mem.eql(u8, entry.name, "format.partial")) continue;
-                return error.ReadFailed;
-            }
-            try self.publish(try self.path("format"), format);
+        if (!try self.marked()) {
+            const guard = try self.lock(.exclusive);
+            defer guard.close(self.io);
+            if (!try self.marked()) try self.writeMarker();
         }
         _ = self.retentionContext().policy() catch |err| return mapRetention(err);
+    }
+
+    fn marked(self: Store) Error!bool {
+        const bytes = try self.read(try self.path("format")) orelse return false;
+        if (!std.mem.eql(u8, bytes, format)) return error.ReadFailed;
+        return true;
+    }
+
+    // A lost/corrupt format marker cannot silently adopt old receipts.
+    fn writeMarker(self: Store) Error!void {
+        var dir = std.Io.Dir.cwd().openDir(self.io, self.root, .{ .iterate = true }) catch return error.ReadFailed;
+        defer dir.close(self.io);
+        var entries = dir.iterate();
+        while (entries.next(self.io) catch return error.ReadFailed) |entry| {
+            if (std.mem.eql(u8, entry.name, ".retention.lock") or std.mem.eql(u8, entry.name, ".lock") or std.mem.eql(u8, entry.name, "format.partial")) continue;
+            return error.ReadFailed;
+        }
+        try self.publish(try self.path("format"), format);
     }
 
     /// Address a receipt directly; lookup never enumerates the shared store.
@@ -65,17 +86,16 @@ pub const Store = struct {
         return std.fmt.allocPrint(self.arena, "{s}/receipts/{s}.pass", .{ self.root, std.fmt.bytesToHex(key, .lower) });
     }
 
-    /// Serialize one exact portable test computation without holding the publication lock.
-    pub fn claim(self: Store, key: Digest) Error!Claim {
-        return work.Claim.acquire(self.arena, self.io, self.root, key) catch |err| return mapRetention(err);
+    /// Serialize one exact portable test computation without holding the publication
+    /// lock; null while a collection holds the store, so the caller runs unclaimed.
+    pub fn claim(self: Store, key: Digest) Error!?Claim {
+        return work.Claim.attempt(self.arena, self.io, self.root, key) catch |err| return mapRetention(err);
     }
 
-    /// Accept only an exact success envelope for this identity.
+    /// Accept only an exact success envelope for this identity. A lookup takes no
+    /// lock: receipts change only by atomic rename or unlink, so a vanished,
+    /// truncated or different receipt is a miss.
     pub fn hit(self: Store, key: Digest) Error!bool {
-        const lease_guard = try self.lease();
-        defer lease_guard.close(self.io);
-        const guard = try self.lock(.shared);
-        defer guard.close(self.io);
         try self.validate();
         const found = try self.read(try self.artifactPath(key)) orelse return false;
         const verified = std.mem.eql(u8, found, try self.success(key));
@@ -84,20 +104,28 @@ pub const Store = struct {
     }
 
     /// Atomically publish a completed success after the caller revalidates its inputs.
-    pub fn save(self: Store, key: Digest) Error!void {
-        const lease_guard = try self.lease();
+    /// A damaged receipt is replaced; a well-formed different one is a mismatch.
+    pub fn save(self: Store, key: Digest) Error!Saved {
+        const lease_guard = (self.retentionContext().tryLease() catch |err| return mapRetention(err)) orelse return .skipped;
         defer lease_guard.close(self.io);
         const guard = try self.lock(.exclusive);
         defer guard.close(self.io);
         try self.validate();
         const destination = try self.artifactPath(key);
         const bytes = try self.success(key);
-        if (try self.read(destination)) |previous| if (std.mem.eql(u8, previous, bytes)) {
-            self.retentionContext().touchPath(destination);
-            return;
-        };
+        if (try self.read(destination)) |previous| {
+            if (std.mem.eql(u8, previous, bytes)) {
+                self.retentionContext().touchPath(destination);
+                return .present;
+            }
+            if (sealed(previous, key)) {
+                self.retentionContext().mismatch(.{ .kind = "receipt", .key = key, .existing = digestOf(previous), .attempted = digestOf(bytes) });
+                return .mismatch;
+            }
+        }
         std.Io.Dir.cwd().createDirPath(self.io, try self.path("receipts")) catch return error.WriteFailed;
         try self.publish(destination, bytes);
+        return .stored;
     }
 
     /// Discard an earlier success before an explicit forced execution begins.
@@ -178,6 +206,27 @@ pub const Store = struct {
     }
 };
 
+// A well-formed envelope for `key`: the versioned header, this identity, and a
+// checksum line that matches the payload before it. Damage fails the check.
+fn sealed(record: []const u8, key: Digest) bool {
+    const trailer = 64 + 1;
+    if (record.len <= trailer or record[record.len - 1] != '\n') return false;
+    const payload = record[0 .. record.len - trailer];
+    var checksum: Digest = undefined;
+    std.crypto.hash.Blake3.hash(payload, &checksum, .{});
+    if (!std.mem.eql(u8, record[record.len - trailer .. record.len - 1], &std.fmt.bytesToHex(checksum, .lower))) return false;
+    const header = "selka-shared-test-v1\n";
+    if (!std.mem.startsWith(u8, payload, header)) return false;
+    const identity = payload[header.len..];
+    return identity.len > 65 and std.mem.eql(u8, identity[0..64], &std.fmt.bytesToHex(key, .lower)) and identity[64] == '\n';
+}
+
+fn digestOf(bytes: []const u8) Digest {
+    var digest: Digest = undefined;
+    std.crypto.hash.Blake3.hash(bytes, &digest, .{});
+    return digest;
+}
+
 fn mapRetention(err: retention.Error) Error {
     return switch (err) {
         error.OutOfMemory => error.OutOfMemory,
@@ -201,7 +250,7 @@ test "shared test store checks exact identities rejects corrupt records and reco
     const store = try Store.open(a, std.testing.io, root);
     const key: Digest = @splat(7);
     try std.testing.expect(!try store.hit(key));
-    try store.save(key);
+    _ = try store.save(key);
     const other = try Store.open(a, std.testing.io, root);
     try std.testing.expect(try other.hit(key));
     try std.testing.expect(!try other.hit(@splat(8)));
@@ -210,7 +259,7 @@ test "shared test store checks exact identities rejects corrupt records and reco
     try std.testing.expect(!try other.hit(key));
     try std.Io.Dir.cwd().writeFile(std.testing.io, .{ .sub_path = try std.fmt.allocPrint(a, "{s}.partial", .{path}), .data = "interrupted" });
     try std.testing.expect(!try other.hit(key));
-    try other.save(key);
+    _ = try other.save(key);
     try std.testing.expect(try store.hit(key));
     try other.invalidate(key);
     try std.testing.expect(!try store.hit(key));
@@ -219,18 +268,18 @@ test "shared test store checks exact identities rejects corrupt records and reco
     try std.Io.Dir.cwd().deleteFile(std.testing.io, path);
     try std.Io.Dir.cwd().symLink(std.testing.io, try store.path("format"), path, .{});
     try std.testing.expect(!try store.hit(key));
-    try store.save(key);
+    _ = try store.save(key);
     try std.testing.expect(try store.hit(key));
     try store.invalidate(key);
     try std.Io.Dir.cwd().symLink(std.testing.io, try store.path("format"), try std.fmt.allocPrint(a, "{s}.partial", .{path}), .{});
-    try store.save(key);
+    _ = try store.save(key);
     try std.testing.expectEqualStrings(format, (try store.read(try store.path("format"))).?);
     try std.testing.expect(try store.hit(key));
     try store.invalidate(key);
     const fifo = try a.dupeSentinel(u8, path, 0);
     try std.testing.expectEqual(std.os.linux.E.SUCCESS, std.os.linux.errno(std.os.linux.mknod(fifo, std.os.linux.S.IFIFO | 0o600, 0)));
     try std.testing.expect(!try store.hit(key));
-    try store.save(key);
+    _ = try store.save(key);
     try std.testing.expect(try store.hit(key));
 }
 
@@ -271,7 +320,7 @@ test "shared receipt verified hits refresh retention while corruption remains ol
     const root = try temporary.dir.realPathFileAlloc(io, ".", a);
     const store = try Store.open(a, io, root);
     const key: Digest = @splat(21);
-    try store.save(key);
+    _ = try store.save(key);
     const path_name = try store.artifactPath(key);
     try std.Io.Dir.cwd().setTimestamps(io, path_name, .{ .modify_timestamp = .{ .new = .{ .nanoseconds = 1 } } });
     try std.testing.expect(try store.hit(key));
@@ -293,7 +342,7 @@ test "shared receipt collection misses refill and protects publication lock inod
     const root = try temporary.dir.realPathFileAlloc(io, ".", a);
     const store = try Store.open(a, io, root);
     const key: Digest = @splat(22);
-    try store.save(key);
+    _ = try store.save(key);
     const context = store.retentionContext();
     var policy = retention.Policy.defaults(.tests);
     policy.max_entries = 0;
@@ -307,7 +356,7 @@ test "shared receipt collection misses refill and protects publication lock inod
     lease_guard.close(io);
     try std.testing.expectEqual(@as(usize, 1), (try context.collect(policy, false)).removed.entries);
     try std.testing.expect(!try store.hit(key));
-    try store.save(key);
+    _ = try store.save(key);
     try std.testing.expect(try store.hit(key));
 }
 
@@ -322,13 +371,13 @@ test "portable test claims retain storage and invalidate forced successes before
     const root = try temporary.dir.realPathFileAlloc(io, ".", a);
     const store = try Store.open(a, io, root);
     const key: Digest = @splat(31);
-    try store.save(key);
-    var claim = try store.claim(key);
+    _ = try store.save(key);
+    var claim = (try store.claim(key)).?;
     const path_name = try std.fmt.allocPrint(a, "{s}/work/{s}.lock", .{ store.root, std.fmt.bytesToHex(key, .lower) });
     const contender = try std.Io.Dir.cwd().openFile(io, path_name, .{ .mode = .read_write });
     defer contender.close(io);
     try std.testing.expect(!try contender.tryLock(io, .exclusive));
-    var independent = try store.claim(@splat(32));
+    var independent = (try store.claim(@splat(32))).?;
     independent.deinit();
     var policy = retention.Policy.defaults(.tests);
     policy.max_entries = 0;
@@ -338,9 +387,66 @@ test "portable test claims retain storage and invalidate forced successes before
     claim.deinit();
     try std.testing.expect(try contender.tryLock(io, .exclusive));
     contender.unlock(io);
-    var retry = try store.claim(key);
+    var retry = (try store.claim(key)).?;
     defer retry.deinit();
     try std.testing.expect(!try store.hit(key));
-    try store.save(key);
+    _ = try store.save(key);
+    try std.testing.expect(try store.hit(key));
+}
+
+// spec: SHARED-STORE-3
+test "shared receipt mismatch is a logged miss that keeps the existing receipt" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const io = std.testing.io;
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(io, ".", a);
+    const store = try Store.open(a, io, root);
+    const key: Digest = @splat(41);
+    const payload = try std.fmt.allocPrint(a, "selka-shared-test-v1\n{s}\nfailed\n", .{std.fmt.bytesToHex(key, .lower)});
+    const foreign = try std.fmt.allocPrint(a, "{s}{s}\n", .{ payload, std.fmt.bytesToHex(digestOf(payload), .lower) });
+    try std.Io.Dir.cwd().createDirPath(io, try store.path("receipts"));
+    try std.Io.Dir.cwd().writeFile(io, .{ .sub_path = try store.artifactPath(key), .data = foreign });
+    try std.testing.expect(!try store.hit(key));
+    try std.testing.expectEqual(Saved.mismatch, try store.save(key));
+    try std.testing.expectEqualStrings(foreign, (try store.read(try store.artifactPath(key))).?);
+    try std.testing.expect(!try store.hit(key));
+    const attempted = std.fmt.bytesToHex(digestOf(try store.success(key)), .lower);
+    const expected = try std.fmt.allocPrint(a, "mismatch receipt {s} existing={s} attempted={s}\n", .{ std.fmt.bytesToHex(key, .lower), std.fmt.bytesToHex(digestOf(foreign), .lower), attempted });
+    try std.testing.expectEqualStrings(expected, (try store.read(try store.path("mismatches.log"))).?);
+    try std.Io.Dir.cwd().writeFile(io, .{ .sub_path = try store.artifactPath(key), .data = foreign[0 .. foreign.len - 2] });
+    try std.testing.expectEqual(Saved.stored, try store.save(key));
+    try std.testing.expectEqual(Saved.present, try store.save(key));
+    try std.testing.expect(try store.hit(key));
+    try std.testing.expectEqualStrings(expected, (try store.read(try store.path("mismatches.log"))).?);
+}
+
+// spec: SHARED-STORE-5
+test "shared receipt opens and lookups complete while a sweep holds the store" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const io = std.testing.io;
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(io, ".", a);
+    const store = try Store.open(a, io, root);
+    const key: Digest = @splat(42);
+    try std.testing.expectEqual(Saved.stored, try store.save(key));
+    const sweep = try std.Io.Dir.cwd().openFile(io, try store.path(".retention.lock"), .{ .mode = .read_write });
+    defer sweep.close(io);
+    try std.testing.expect(try sweep.tryLock(io, .exclusive));
+    const second = try Store.open(a, io, root);
+    try std.testing.expect(try second.hit(key));
+    try std.testing.expectEqual(Saved.skipped, try second.save(@splat(43)));
+    try std.testing.expect((try second.claim(key)) == null);
+    try std.Io.Dir.cwd().writeFile(io, .{ .sub_path = try second.artifactPath(key), .data = "selka-shared-test-v1\n" });
+    try std.testing.expect(!try second.hit(key));
+    try std.Io.Dir.cwd().deleteFile(io, try second.artifactPath(key));
+    try std.testing.expect(!try second.hit(key));
+    sweep.unlock(io);
+    try std.testing.expectEqual(Saved.stored, try second.save(key));
     try std.testing.expect(try store.hit(key));
 }

@@ -2,7 +2,7 @@
 const std = @import("std");
 
 /// Storage failures are explicit; damaged or absent artifacts are misses.
-pub const Error = error{ OutOfMemory, ReadFailed, WriteFailed, DeterminismMismatch, InputChanged };
+pub const Error = error{ OutOfMemory, ReadFailed, WriteFailed, InputChanged };
 /// A content digest and exact length, independent of timestamps.
 pub const Content = struct { size: usize, digest: [32]u8 };
 

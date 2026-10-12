@@ -550,9 +550,16 @@ frontend, graph, executable and whole-report caches. Shared reuse requires a
 compatible compiler, toolchain, execution settings and the test's complete
 validated dependency closure. A different checkout location alone need not
 rerun an otherwise identical eligible test. Unknown or unsupported identities
-run normally, and missing or corrupt receipts are misses. The cache location
-does not change a test's execution identity. An explicitly selected unusable
-store reports an error. `--force` bypasses shared hits; `--no-cache` disables
+run normally, and missing or corrupt receipts are misses. A well-formed receipt
+for the same identity with different contents is a mismatch: it is a miss, the
+test runs, the existing receipt is kept, no receipt is published for it, and
+the store appends one `mismatch receipt …` line to
+`DIR/native-tests-v2/mismatches.log`. The cache location does not change a
+test's execution identity. An explicitly selected unusable store reports an
+error. With neither the flag nor the variable, a per-user default
+(`~/.cache/mylang/native-tests`) applies only when the compiler's
+`default_sharing` switch is on; it is off. A default store that cannot be used
+prints one warning and the run continues without sharing. `--force` bypasses shared hits; `--no-cache` disables
 shared lookup and publication even when the environment selects a store.
 
 From the repository root, these two runs use separate private caches and the

@@ -175,20 +175,23 @@ and linker identity match; see [native builds](native-build.md#shared-compiler-a
 A shared program hit still follows frontend checking, lowering and emission.
 
 Shared records carry their kind, key, bounded length and BLAKE3 checksum. Missing
-or corrupt records miss and refill; valid different bytes for the same key raise
-`DeterminismMismatch`. A configured unusable or unknown-format store is an error,
+or corrupt records miss and refill; valid different bytes for the same key are
+a miss that keeps the existing record, publishes nothing and appends one line to
+the namespace's `mismatches.log` (builds count program mismatches as
+`shared_mismatches`). A configured unusable or unknown-format store is an error,
 including before private replay. `--no-cache` and native `--verify-cache` suppress
 shared lookup and publication. Individual payloads above 128 MiB stay private.
 File publication and materialization stream through a fixed buffer.
 
-No cache lock spans parsing, checking, code generation or linking. Records are
-staged and hashed before taking a per-key publication lock; comparing an
-existing record happens under that key's lock. Reads use opened immutable files
-without publication locks. A shared retention lease covers each storage
-operation, including staging and publication-lock waits. It prevents collection
-during active I/O without serializing readers and writers. The directory lock
-covers only format initialization. The store automatically attempts throttled
-LRU collection under an exclusive nonblocking retention lease. Use trusted local
+No cache lock spans parsing, checking, code generation or linking. A per-key
+publication lock covers comparing an existing record (by hashing the new bytes
+in place, without a staging copy), staging and replacement. Reads use opened
+immutable files with no lock or lease. A shared retention lease, taken without
+waiting, covers each write, including staging and publication-lock waits; while
+a collection holds the store, a write is skipped. The directory lock covers
+only first format initialization. The store automatically attempts throttled
+LRU collection under an exclusive nonblocking retention lease; no open, lookup
+or restore waits on it. Use trusted local
 producers and see [retention policies](cache-retention.md#native-cache-retention)
 for budgets, configuration and explicit cleanup.
 

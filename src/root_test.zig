@@ -92,6 +92,8 @@ test {
     _ = @import("headerless_import_test.zig");
     _ = @import("frontend_cache_test.zig");
     _ = @import("shared_artifact_store_test.zig");
+    _ = @import("shared_artifact_store.zig");
+    _ = @import("shared_cache_policy.zig");
     _ = @import("native_cache_retention.zig");
     _ = @import("native_cache_work.zig");
     _ = @import("cache_command.zig");

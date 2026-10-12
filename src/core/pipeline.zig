@@ -329,7 +329,9 @@ fn flags(init: std.process.Init, options: Options, budget: ?run_budget.RunBudget
 
 /// Say what the caches served: for a replayed build (`outcome` null) that it replayed,
 /// else the units linked, reused, compiled and verified, whether the program store
-/// served the executable, and the tool processes started.
+/// served the executable, and the tool processes started. `shared_mismatches`
+/// counts shared program records that disagreed with this build's bytes; the
+/// text line names it only when it is not zero.
 fn cacheReport(allocator: std.mem.Allocator, form: CacheReport, outcome: ?driver.Outcome, stages: ?*const stage_metrics.Report, storage: ?*const stage_metrics.Storage, report: *std.ArrayList(u8)) Error!void {
     const c = if (outcome) |built| built.counts else driver.Counts{};
     const program = if (outcome) |built| (if (built.program_reused) "reused" else "linked") else "replayed";
@@ -345,13 +347,15 @@ fn cacheReport(allocator: std.mem.Allocator, form: CacheReport, outcome: ?driver
             .stages = stages,
             .storage = storage,
             .program_shared = if (outcome) |built| built.program_shared else false,
+            .shared_mismatches = c.shared_mismatches,
         }, .{}) catch return error.OutOfMemory;
         try report.print(allocator, "{s}\n", .{record});
         return;
     }
     if (outcome == null) return report.appendSlice(allocator, "mylang-core: cache: replayed the last identical build\n");
-    const format = "mylang-core: cache: {d} units, {d} reused, {d} compiled, {d} verified; program {s}; {d} processes\n";
-    try report.print(allocator, format, .{ c.units, c.reused, c.compiled, c.verified, program, c.processes });
+    const format = "mylang-core: cache: {d} units, {d} reused, {d} compiled, {d} verified; program {s}; {d} processes{s}\n";
+    const mismatches = if (c.shared_mismatches == 0) "" else try std.fmt.allocPrint(allocator, "; {d} shared mismatches", .{c.shared_mismatches});
+    try report.print(allocator, format, .{ c.units, c.reused, c.compiled, c.verified, program, c.processes, mismatches });
 }
 
 /// What the back half of a build needs to know about the checked source.
@@ -702,4 +706,25 @@ test "prepareCallables function_digest refuses missing native tool authority and
     changed.generation = @splat(4);
     try std.testing.expect(sameIdentityTool(expected, expected));
     try std.testing.expect(!sameIdentityTool(expected, changed));
+}
+
+// spec-case: SHARED-STORE-3
+test "cache reports carry shared program mismatches and name them in text only when present" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var outcome: driver.Outcome = .{ .tool = .{ .path = "zig", .digest = @splat(1), .generation = @splat(2), .native_target = @splat(3), .inputs = 0, .memo_hit = false } };
+    outcome.counts = .{ .units = 2, .reused = 2, .processes = 0 };
+    var clean: std.ArrayList(u8) = .empty;
+    try cacheReport(a, .text, outcome, null, null, &clean);
+    try std.testing.expectEqualStrings("mylang-core: cache: 2 units, 2 reused, 0 compiled, 0 verified; program linked; 0 processes\n", clean.items);
+    outcome.counts.shared_mismatches = 1;
+    var text: std.ArrayList(u8) = .empty;
+    try cacheReport(a, .text, outcome, null, null, &text);
+    try std.testing.expectEqualStrings("mylang-core: cache: 2 units, 2 reused, 0 compiled, 0 verified; program linked; 0 processes; 1 shared mismatches\n", text.items);
+    var json: std.ArrayList(u8) = .empty;
+    try cacheReport(a, .json, outcome, null, null, &json);
+    const parsed = try std.json.parseFromSliceLeaky(std.json.Value, a, json.items, .{});
+    try std.testing.expectEqual(@as(i64, 1), parsed.object.get("shared_mismatches").?.integer);
+    try std.testing.expectEqualStrings("cache-report-v1", parsed.object.get("version").?.string);
 }
