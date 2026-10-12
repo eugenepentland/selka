@@ -32,20 +32,44 @@
       "state": "in_progress",
       "owner": "lox_eda_bench",
       "requirement": "Same-compiler original RC / migrated RC / migrated zeroRC, four reference arms; 2warmups9measured3RSS, bounded guest deadlines",
-      "completed_cells": 44,
+      "completed_cells": 49,
       "total_cells": 60,
       "evidence": [
         "bench/results/initial-fib",
         "bench/results/lox-remaining",
         "bench/results/eda-final"
+      ],
+      "completed_groups": [
+        "eda (34/34)",
+        "lox/tree (13/13)"
       ]
     },
     {
       "id": "managed_counters",
-      "state": "in_progress",
+      "state": "measured_with_censored_cases",
       "owner": "lox_owned,lox_eda_bench",
       "requirement": "Separate counted mylang builds: allocation traffic,reallocations,managed peak,exit-live,RC events",
-      "smoke_evidence": "lox/evidence/counters (separate smaller inputs; not full-size performance cells)"
+      "smoke_evidence": "lox/evidence/counters (separate smaller inputs; not full-size performance cells)",
+      "eda_completed_per_arm": 34,
+      "lox_completed_per_arm": {
+        "mylang-original-rc": 26,
+        "mylang-migrated-rc": 26,
+        "mylang-zero-rc": 20
+      },
+      "lox_common_completed_denominator": "20/26",
+      "censored_cases": [
+        "lox/vm/equality",
+        "lox/vm/invocation",
+        "lox/vm/method_call",
+        "lox/vm/properties",
+        "lox/vm/string_equality",
+        "lox/vm/zoo_batch"
+      ],
+      "censor_reason": "Instrumented checked-ownership guest exceeded120 seconds; metrics unavailable. Ordinary runtime measured separately.",
+      "evidence": [
+        "bench/eda-counted-summary.json",
+        "lox/full-size-counters/summary.json"
+      ]
     },
     {
       "id": "history",
@@ -62,5 +86,6 @@
     }
   ],
   "compiler_implementation_commit": "466a1a5b7",
-  "frozen_compiler_commit": "e2893d2707cbe057a09abf94e04c4b12d16b7b8b"
+  "frozen_compiler_commit": "e2893d2707cbe057a09abf94e04c4b12d16b7b8b",
+  "scope": "Migrate and benchmark full Lox and EDA applications; no default promotion or legacy RC retirement."
 }

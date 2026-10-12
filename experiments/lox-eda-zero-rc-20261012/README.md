@@ -1,15 +1,16 @@
 # Lox and EDA with checked ownership
 
 Status: application correctness and final registered verification have passed.
-The complete 34-design EDA comparison is available; the 26-cell Lox comparison
-is still running. No full-suite Lox result is claimed yet.
+The complete 34-design EDA and 13-workload Lox tree comparisons are available.
+The 13-workload Lox VM comparison is still running; no full-suite VM result is
+claimed yet.
 
 The full Lox interpreter and EDA renderer have been migrated to checked zero-RC
 ownership. The compiler remains `mylang`; checked ownership is selected with
 `--experimental-zero-rc`. Ordinary RC is retained as a comparison control. Lox's
 own guest-object garbage collector and EDA's output semantics are preserved.
 
-## Frozen compiler and verification
+## Compiler identity and verification
 
 - Compiler source: `e2893d2707cbe057a09abf94e04c4b12d16b7b8b`.
 - Compiler SHA256: `6e7938a14ad4abc46b76c149ef12551b170f6c7e6f462beec2f81db18d40a83d`.
@@ -19,6 +20,7 @@ own guest-object garbage collector and EDA's output semantics are preserved.
 - Compiler identity and initial raw verification: [coordinator/compiler-identity.json](coordinator/compiler-identity.json).
 - Final integrated verification at `4034a2fab29e3300b6f70549ce84727d647761db`: 22 executed actions, 11 always-fresh actions and 12 reused actions; stable inputs, exit 0, Guardian 88/88.
 - That gate rebuilt the compiler executable to SHA256 `8e58720cd72de8632aa48df373d18fc8238d46ec27010f8b182820a0eaaf10fa` from unchanged production sources. All benchmark guests retain their original `6e7938...` compiler provenance and frozen executable hashes; their measurements are not relabelled as results of the gate rebuild. See [final gate identity](coordinator/integrated-gate-identity.json).
+- The original `6e7938...` compiler executable was overwritten by the gate rebuild and was not recovered in the audited installations or caches. Its source revision and the compiled benchmark executables remain available. The rebuilt complete installation is separately archived; identical production sources do not establish byte-identical compiler executables.
 
 ## Application qualification
 
@@ -36,6 +38,15 @@ zero managed exit-live bytes, and every checked-ownership run has zero RC traffi
 `release_unique` is a direct-destruction counter, not a reference-count operation.
 Full-size counted results are collected separately and must not be substituted
 with these smaller smoke inputs.
+
+Full-size Lox counting attempted all 26 cells: both RC controls completed 26/26,
+and checked zero-RC completed 20/26. Six instrumented VM cases exceeded the
+120-second deadline; their metrics remain unavailable. Every successful counted
+run has zero managed exit-live bytes, and successful checked runs have zero RC
+and uniqueness-test events. Over the common 20-case subset, cumulative allocation
+traffic is **7.467 TB** for checked ownership versus **10.025 GB** for original
+RC (decimal units, summed independent runs). This is allocation traffic, not
+resident memory. See the [full-size counter report](lox/full-size-counters/README.md).
 
 ## Comparison method
 
@@ -87,14 +98,22 @@ per-case ranges and the separately identified historical Zig/Rust/Go results.
 Existing competitor executables were copied, hashed and rerun on this machine;
 they were not rebuilt in this session.
 
-## Initial complete Lox results
+## Complete Lox tree results
+
+All 13 tree workloads completed across all seven arms. Checked zero-RC takes
+**2.322x** the original RC wall time and **2.366x** the migrated RC wall time
+(geometric means). Matched-case child peak RSS rises by **59.3%** geometrically;
+the largest case, `trees`, rises from **46.453 to 95.992 MiB** (medians of three
+RSS runs). The [tree comparison](bench/LOX-TREE-COMPARISON.md) includes
+per-case ranges and the current and historical Zig/Rust/Go comparisons.
+
+## Initial complete Lox VM result
 
 These are individual cases, not aggregate estimates. Runtime is the median of
 nine runs; RSS is the median of three separate runs.
 
 | Workload | Original RC | Migrated RC | Zero-RC | Zero-RC / original | Original / zero-RC RSS |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Lox tree Fibonacci | 161.58 ms | 153.49 ms | 323.84 ms | 2.00x | 5836 / 7848 KiB |
 | Lox VM Fibonacci | 1.2923 s | 1.3191 s | 31.6937 s | 24.53x | 2636 / 2764 KiB |
 
 Raw samples: [initial Fibonacci receipts](bench/results/initial-fib).
