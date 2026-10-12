@@ -1,0 +1,11 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10004 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/dl-wave2-20261012-S08 b44a9241f] Canonicalize actual loaded Python code identities within strict bounds
+ 2 files changed, 470 insertions(+)
+ create mode 100644 scripts/verification_code_identity.py
+ create mode 100644 scripts/verification_code_identity_test.py

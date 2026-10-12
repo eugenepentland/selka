@@ -1,0 +1,162 @@
+{
+  "after": {
+    "all_equal": true,
+    "canonical": true,
+    "equal_per_module": {
+      "fuzz_campaign_store": true,
+      "verification_process": true,
+      "verification_producers": true,
+      "verification_profiles": true,
+      "verification_snapshot": true,
+      "verify_cache": true
+    },
+    "private_consumer_patch_paths": [
+      "scripts/fuzz_campaign_store.py",
+      "scripts/cache_session.py",
+      "scripts/juice_worker.py",
+      "scripts/juice_evidence.py",
+      "scripts/verify_cache.py",
+      "scripts/juice_provider.py",
+      "scripts/verification_snapshot.py",
+      "scripts/juice_cache.py",
+      "scripts/verification_producers.py",
+      "scripts/verification_process.py",
+      "scripts/fuzz_campaign.py",
+      "scripts/verification_profiles.py",
+      "scripts/fuzz_campaign_identity.py",
+      "scripts/juice_tool/common.py",
+      "scripts/juice_tool/collectors.py"
+    ],
+    "results": {
+      "cli": {
+        "command": [
+          "/usr/bin/python3.14",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S08/.tmp/work/identity-startup-4wpvadg8/after/scripts/verify_cache.py",
+          "--help"
+        ],
+        "exit_status": 0,
+        "observed": [
+          {
+            "filename": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S08/.tmp/work/identity-startup-4wpvadg8/after/scripts/verify_cache.py",
+            "helper": "9ff8a310b72075109ee87b254e52d7adb20589e00b2bb41d48e5b994fa068980",
+            "implementation": {
+              "fuzz_campaign_store": "a5f4d04dd32e55e65e8e7447dba95c2182f9045983461070f201de0a3c661257",
+              "verification_process": "61701ed4ed57e746f669b44f6a33ba17117fa1750e122bf785751ed5a3c46fc0",
+              "verification_producers": "2c3e827b30f4c66f47853220978426d720278961937d194a7bc8a1c2c7e1cd73",
+              "verification_profiles": "1da38daf8e94d9cd819356c45943953f5a72bb7ea722f4a1b3505736fd387879",
+              "verification_snapshot": "82e360e87a3648bc73b65505e5cde657f5d67a2097ba3df33e31c1133e25238d",
+              "verify_cache": "4882f0b803e5b5e93ebf58f7e948308d26919b3ca9e2d780bebc11c3d7efebfe"
+            }
+          }
+        ],
+        "stderr": "",
+        "stdout": "usage: verify_cache.py [-h] [--zig ZIG]\n                       [--profile {quick,complete,long-qualification}]\n                       [--quick-actions QUICK_ACTIONS] [--force]\n                       [--shared-cache-dir SHARED_CACHE_DIR]\n                       [--build-timeout-seconds BUILD_TIMEOUT_SECONDS]\n                       [--gate-timeout-seconds GATE_TIMEOUT_SECONDS]\n                       [--warn-after-seconds WARN_AFTER_SECONDS]\n                       [--budget-policy BUDGET_POLICY]\n                       ...\n\nRun the complete verification inventory, reusing qualified successes before\nadmission. python3 scripts/verify_cache.py --zig /path/to/pinned/zig python3\nscripts/verify_cache.py --force -- -j3 --maxrss 8589934592 This developer\nentry point owns build/gate admission; do not wrap it in another build-slot\ninvocation. Normal `zig build test fmt-check` remains supported. Receipts are\nlocal evidence, never a replacement for an unregistered gate action.\n\npositional arguments:\n  options\n\noptions:\n  -h, --help            show this help message and exit\n  --zig ZIG\n  --profile {quick,complete,long-qualification}\n  --quick-actions QUICK_ACTIONS\n                        Maximum quick-profile pending actions; heuristic and\n                        partial\n  --force               Ignore prior successes for the requested profile\n  --shared-cache-dir SHARED_CACHE_DIR\n                        Explicit local shared success evidence; inventory and\n                        runs stay private\n  --build-timeout-seconds BUILD_TIMEOUT_SECONDS\n                        Optional deadline per admitted preparation command;\n                        excludes queue time\n  --gate-timeout-seconds GATE_TIMEOUT_SECONDS\n                        Optional deadline for the admitted selected gate;\n                        excludes queue time\n  --warn-after-seconds WARN_AFTER_SECONDS\n                        Advisory total work target excluding admission queues;\n                        never changes reuse or pass/fail\n  --budget-policy BUDGET_POLICY\n                        Optional v1 report-only scoped policy; never changes\n                        reuse or pass/fail\n"
+      },
+      "retained": {
+        "command": [
+          "/usr/bin/python3.14",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S08/.tmp/work/identity-startup-4wpvadg8/after/scripts/cache_session.py"
+        ],
+        "exit_status": 0,
+        "observed": [
+          {
+            "filename": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S08/.tmp/work/identity-startup-4wpvadg8/after/scripts/verify_cache.py",
+            "helper": "9ff8a310b72075109ee87b254e52d7adb20589e00b2bb41d48e5b994fa068980",
+            "implementation": {
+              "fuzz_campaign_store": "a5f4d04dd32e55e65e8e7447dba95c2182f9045983461070f201de0a3c661257",
+              "verification_process": "61701ed4ed57e746f669b44f6a33ba17117fa1750e122bf785751ed5a3c46fc0",
+              "verification_producers": "2c3e827b30f4c66f47853220978426d720278961937d194a7bc8a1c2c7e1cd73",
+              "verification_profiles": "1da38daf8e94d9cd819356c45943953f5a72bb7ea722f4a1b3505736fd387879",
+              "verification_snapshot": "82e360e87a3648bc73b65505e5cde657f5d67a2097ba3df33e31c1133e25238d",
+              "verify_cache": "4882f0b803e5b5e93ebf58f7e948308d26919b3ca9e2d780bebc11c3d7efebfe"
+            }
+          }
+        ],
+        "stderr": "usage: cache_session.py [-h] [--zig ZIG]\n                        [--profile {quick,complete,long-qualification}]\n                        [--quick-actions QUICK_ACTIONS] [--force]\n                        [--shared-cache-dir SHARED_CACHE_DIR]\n                        [--build-timeout-seconds BUILD_TIMEOUT_SECONDS]\n                        [--gate-timeout-seconds GATE_TIMEOUT_SECONDS]\n                        [--warn-after-seconds WARN_AFTER_SECONDS]\n                        [--budget-policy BUDGET_POLICY]\n                        ...\n\nRun the complete verification inventory, reusing qualified successes before\nadmission. python3 scripts/verify_cache.py --zig /path/to/pinned/zig python3\nscripts/verify_cache.py --force -- -j3 --maxrss 8589934592 This developer\nentry point owns build/gate admission; do not wrap it in another build-slot\ninvocation. Normal `zig build test fmt-check` remains supported. Receipts are\nlocal evidence, never a replacement for an unregistered gate action.\n\npositional arguments:\n  options\n\noptions:\n  -h, --help            show this help message and exit\n  --zig ZIG\n  --profile {quick,complete,long-qualification}\n  --quick-actions QUICK_ACTIONS\n                        Maximum quick-profile pending actions; heuristic and\n                        partial\n  --force               Ignore prior successes for the requested profile\n  --shared-cache-dir SHARED_CACHE_DIR\n                        Explicit local shared success evidence; inventory and\n                        runs stay private\n  --build-timeout-seconds BUILD_TIMEOUT_SECONDS\n                        Optional deadline per admitted preparation command;\n                        excludes queue time\n  --gate-timeout-seconds GATE_TIMEOUT_SECONDS\n                        Optional deadline for the admitted selected gate;\n                        excludes queue time\n  --warn-after-seconds WARN_AFTER_SECONDS\n                        Advisory total work target excluding admission queues;\n                        never changes reuse or pass/fail\n  --budget-policy BUDGET_POLICY\n                        Optional v1 report-only scoped policy; never changes\n                        reuse or pass/fail\n",
+        "stdout": "{\"id\":\"help\",\"status\":0,\"ok\":true,\"restart_required\":false,\"snapshot_work\":{\"files_hashed\":0,\"bytes_hashed\":0,\"digest_reuses\":0,\"directories_enumerated\":0,\"metadata_observations\":0,\"validation_calls\":0,\"snapshot_reuses\":0}}\n{\"id\":\"stop\",\"status\":0,\"ok\":true,\"restart_required\":false,\"snapshot_work\":{\"files_hashed\":0,\"bytes_hashed\":0,\"digest_reuses\":0,\"directories_enumerated\":0,\"metadata_observations\":0,\"validation_calls\":0,\"snapshot_reuses\":0}}\n"
+      }
+    },
+    "source_sha256": {
+      "fuzz_campaign_store": "c2ac27f6e37fa0db53f4a5cd2d13df94f8756245fcdeadb11dda641e029de415",
+      "verification_process": "5d5b973b2db4dee7fe265ad3ee82efd6a7c5574b7269f13ceb25fa3a5fc669b0",
+      "verification_producers": "c9f75d9cf8628a96fc4c71f3f70c3a8c3f4eb83f5ce5b45ebffb89ba6ecf4746",
+      "verification_profiles": "4d0e46fab3659840240b5d99474e2c2d708930ddc6836b085916a531374afdfe",
+      "verification_snapshot": "f6c83a04616144ca1138f3a987cdcb6121fe534723dd3fb58f3f0242ad8e8f90",
+      "verify_cache": "76739b8761a4875b4401c7ee76d67961605017badf7115531f3240f10def42d6"
+    }
+  },
+  "before": {
+    "all_equal": false,
+    "canonical": false,
+    "equal_per_module": {
+      "fuzz_campaign_store": true,
+      "verification_process": true,
+      "verification_producers": true,
+      "verification_profiles": true,
+      "verification_snapshot": true,
+      "verify_cache": false
+    },
+    "private_consumer_patch_paths": [],
+    "results": {
+      "cli": {
+        "command": [
+          "/usr/bin/python3.14",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S08/.tmp/work/identity-startup-4wpvadg8/before/scripts/verify_cache.py",
+          "--help"
+        ],
+        "exit_status": 0,
+        "observed": [
+          {
+            "filename": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S08/.tmp/work/identity-startup-4wpvadg8/before/scripts/verify_cache.py",
+            "helper": null,
+            "implementation": {
+              "fuzz_campaign_store": "1560cf5abce71590df09934acbbbe871df18ee766fbfb01f912c958a3cc43669",
+              "verification_process": "bedf6b35522aec0a41c79a8fc2efc532f0e04993be0159cd73f8dfa9857e120e",
+              "verification_producers": "f7974c545009a3005f978e39a0cc7dad588f7055e72c97d4b1dd71bb69636e90",
+              "verification_profiles": "59dec1fcbb2dc90c7266ab20606d23a3d71d15ccf177d44d5c96435970b2d1c6",
+              "verification_snapshot": "7ee8c6edb356de00601176a6c22e52ec62e79083cd1854de60e6e4dbb6285a19",
+              "verify_cache": "a522997fbc026db991e99631e88c92c709c2da0626e2a45ebac9c85a93589ad8"
+            }
+          }
+        ],
+        "stderr": "",
+        "stdout": "usage: verify_cache.py [-h] [--zig ZIG]\n                       [--profile {quick,complete,long-qualification}]\n                       [--quick-actions QUICK_ACTIONS] [--force]\n                       [--shared-cache-dir SHARED_CACHE_DIR]\n                       [--build-timeout-seconds BUILD_TIMEOUT_SECONDS]\n                       [--gate-timeout-seconds GATE_TIMEOUT_SECONDS]\n                       [--warn-after-seconds WARN_AFTER_SECONDS]\n                       [--budget-policy BUDGET_POLICY]\n                       ...\n\nRun the complete verification inventory, reusing qualified successes before\nadmission. python3 scripts/verify_cache.py --zig /path/to/pinned/zig python3\nscripts/verify_cache.py --force -- -j3 --maxrss 8589934592 This developer\nentry point owns build/gate admission; do not wrap it in another build-slot\ninvocation. Normal `zig build test fmt-check` remains supported. Receipts are\nlocal evidence, never a replacement for an unregistered gate action.\n\npositional arguments:\n  options\n\noptions:\n  -h, --help            show this help message and exit\n  --zig ZIG\n  --profile {quick,complete,long-qualification}\n  --quick-actions QUICK_ACTIONS\n                        Maximum quick-profile pending actions; heuristic and\n                        partial\n  --force               Ignore prior successes for the requested profile\n  --shared-cache-dir SHARED_CACHE_DIR\n                        Explicit local shared success evidence; inventory and\n                        runs stay private\n  --build-timeout-seconds BUILD_TIMEOUT_SECONDS\n                        Optional deadline per admitted preparation command;\n                        excludes queue time\n  --gate-timeout-seconds GATE_TIMEOUT_SECONDS\n                        Optional deadline for the admitted selected gate;\n                        excludes queue time\n  --warn-after-seconds WARN_AFTER_SECONDS\n                        Advisory total work target excluding admission queues;\n                        never changes reuse or pass/fail\n  --budget-policy BUDGET_POLICY\n                        Optional v1 report-only scoped policy; never changes\n                        reuse or pass/fail\n"
+      },
+      "retained": {
+        "command": [
+          "/usr/bin/python3.14",
+          "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S08/.tmp/work/identity-startup-4wpvadg8/before/scripts/cache_session.py"
+        ],
+        "exit_status": 0,
+        "observed": [
+          {
+            "filename": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S08/.tmp/work/identity-startup-4wpvadg8/before/scripts/verify_cache.py",
+            "helper": null,
+            "implementation": {
+              "fuzz_campaign_store": "1560cf5abce71590df09934acbbbe871df18ee766fbfb01f912c958a3cc43669",
+              "verification_process": "bedf6b35522aec0a41c79a8fc2efc532f0e04993be0159cd73f8dfa9857e120e",
+              "verification_producers": "f7974c545009a3005f978e39a0cc7dad588f7055e72c97d4b1dd71bb69636e90",
+              "verification_profiles": "59dec1fcbb2dc90c7266ab20606d23a3d71d15ccf177d44d5c96435970b2d1c6",
+              "verification_snapshot": "7ee8c6edb356de00601176a6c22e52ec62e79083cd1854de60e6e4dbb6285a19",
+              "verify_cache": "547f8efecda2c6a7b498c50195c06c50bd4cb971298943c5ba5f14a777112ebd"
+            }
+          }
+        ],
+        "stderr": "usage: cache_session.py [-h] [--zig ZIG]\n                        [--profile {quick,complete,long-qualification}]\n                        [--quick-actions QUICK_ACTIONS] [--force]\n                        [--shared-cache-dir SHARED_CACHE_DIR]\n                        [--build-timeout-seconds BUILD_TIMEOUT_SECONDS]\n                        [--gate-timeout-seconds GATE_TIMEOUT_SECONDS]\n                        [--warn-after-seconds WARN_AFTER_SECONDS]\n                        [--budget-policy BUDGET_POLICY]\n                        ...\n\nRun the complete verification inventory, reusing qualified successes before\nadmission. python3 scripts/verify_cache.py --zig /path/to/pinned/zig python3\nscripts/verify_cache.py --force -- -j3 --maxrss 8589934592 This developer\nentry point owns build/gate admission; do not wrap it in another build-slot\ninvocation. Normal `zig build test fmt-check` remains supported. Receipts are\nlocal evidence, never a replacement for an unregistered gate action.\n\npositional arguments:\n  options\n\noptions:\n  -h, --help            show this help message and exit\n  --zig ZIG\n  --profile {quick,complete,long-qualification}\n  --quick-actions QUICK_ACTIONS\n                        Maximum quick-profile pending actions; heuristic and\n                        partial\n  --force               Ignore prior successes for the requested profile\n  --shared-cache-dir SHARED_CACHE_DIR\n                        Explicit local shared success evidence; inventory and\n                        runs stay private\n  --build-timeout-seconds BUILD_TIMEOUT_SECONDS\n                        Optional deadline per admitted preparation command;\n                        excludes queue time\n  --gate-timeout-seconds GATE_TIMEOUT_SECONDS\n                        Optional deadline for the admitted selected gate;\n                        excludes queue time\n  --warn-after-seconds WARN_AFTER_SECONDS\n                        Advisory total work target excluding admission queues;\n                        never changes reuse or pass/fail\n  --budget-policy BUDGET_POLICY\n                        Optional v1 report-only scoped policy; never changes\n                        reuse or pass/fail\n",
+        "stdout": "{\"id\":\"help\",\"status\":0,\"ok\":true,\"restart_required\":false,\"snapshot_work\":{\"files_hashed\":0,\"bytes_hashed\":0,\"digest_reuses\":0,\"directories_enumerated\":0,\"metadata_observations\":0,\"validation_calls\":0,\"snapshot_reuses\":0}}\n{\"id\":\"stop\",\"status\":0,\"ok\":true,\"restart_required\":false,\"snapshot_work\":{\"files_hashed\":0,\"bytes_hashed\":0,\"digest_reuses\":0,\"directories_enumerated\":0,\"metadata_observations\":0,\"validation_calls\":0,\"snapshot_reuses\":0}}\n"
+      }
+    },
+    "source_sha256": {
+      "fuzz_campaign_store": "1f995c00b2add163d242e22432f0fcc38141d51b21726425de7a264b91b6d725",
+      "verification_process": "8dd8dd4d04482f58a94d03f147362dbace897c7f5f76715a72ac7c721451479d",
+      "verification_producers": "f0496bad27f4086430091f791350bc7d626546c9bcd22b91b9d600b0aed7c26e",
+      "verification_profiles": "9a956c6fc6b51b8e3ef12f378b02bc4bbcb292d5aaf6d7dc5c9d3ce66a65bd44",
+      "verification_snapshot": "88064a99ca69ec7b08362bf78fc38281f0a97b623b8ba717399b17f376643731",
+      "verify_cache": "9793bdd98348db8a9a61e5a6c0db3e61c1047fc3f1a353b7ce8c55070cc50ca5"
+    }
+  },
+  "no_guards_suppressed": true,
+  "no_verification_actions": true,
+  "schema": 1,
+  "scope": "real CLI --help and complete RuntimeGuard retained --help in private source copies"
+}
