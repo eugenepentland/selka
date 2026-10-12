@@ -1,0 +1,80 @@
+{
+  "worker_base": "1b9fa28bd26a1acb475ceb88adadc58e1676dc6f",
+  "source_state": "base plus sema_loops patch, coordinator test registration, new test, and exact dictionary_views dependency overlay",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A01/.zig-cache/o/4ac1234b9a4bc96beb20a8c5de01bd5f/mylang",
+  "compiler_sha256": "1d66b78b71e464204b3e7793b574eacd87df1dd3d1a75a8554057ed29f082c9a",
+  "test_binary_sha256": "e4c46469cb5624705501bdaf08543c91d626cdbed890622d1156515d94209b36",
+  "source_hashes": {
+    "src/sema_loops.zig": "38ba96b1d27cc6de0bb9aae7c7e62bfc49d6bd7e4557b4e9465e0f9f5f270be3",
+    "src/core/a01_dict_items_test.zig": "cc8862f912192fa05776243ebcbf3f10d44fe80816f10cce68f193bd824f0a57",
+    "src/core/root_test.zig": "9d72631048060555fa4e1755da8fd9fa1cab3384ba082df69c4a2c86b4e2352e",
+    "src/dictionary_views.zig": "a346eea892fe6d6831ba0fa07acdd4bc4d79d68e07efa87172316783964d3d16",
+    "experiments/memory-closeout-20261012/A01/samples/dict_items.my": "eac7361357e31609ccde446805ffcc455ab303fc01f92e64aa3469520464abd8"
+  },
+  "source_contract_tests": {
+    "passed": 2,
+    "failed": 0,
+    "negative_cases": 6
+  },
+  "native_modes": [
+    "release",
+    "unoptimized",
+    "verified_release",
+    "optimized_debug",
+    "release_without_facts"
+  ],
+  "native_expected_output": "passed 38\n",
+  "native_assertions": [
+    "all expected output and empty stderr",
+    "runtime RC events zero",
+    "managed live bytes at exit zero",
+    "allocation and direct cleanup exercised",
+    "emitted LLVM clean",
+    "legacy RC symbols absent",
+    "old-entry snapshot survives root replacement before borrowed field reads"
+  ],
+  "final_command": "scripts/build-slot.sh build \"$ZIG\" build test-core -Dtest-filter=\"A01 zero RC dictionary item destructuring\" -j\"$MYLANG_DEV_JOBS\" --maxrss \"$MYLANG_DEV_MAXRSS\"",
+  "final_exit": 0,
+  "historical_failures": [
+    {
+      "log": "test-1.log.gz",
+      "reason": "Missing previously integrated dictionary-view owner-unwrapping prerequisite; applied exact authorized dependency only."
+    },
+    {
+      "log": "test-2.log.gz",
+      "reason": "Negative root-rebinding oracle contradicted existing D1-LIVE-PLACE/NEW-CORE-IR-3 entry-snapshot semantics; coordinator directed positive old-entry snapshot test instead. Other negative cases unchanged."
+    }
+  ],
+  "allocation_classification": "Root-rebinding entry snapshot is required semantic copying with independently owned storage; no RC fallback or performance claim. Materialized list(items()) and explicit field .copy() also preserve independent outputs.",
+  "limitations": [
+    "Intermediate worker qualification, not final integrated C1/C2/C3 or package qualification.",
+    "Single-item DictItem record binding is separate A07 work.",
+    "Native test asserts raw counters inside temporary directory then removes them; no traffic or peak comparison inferred from this test."
+  ],
+  "final_log": "test-5.log.gz",
+  "guardian_initial_failure": {
+    "failed_checks": [
+      "statementForEach cognitive complexity27>25",
+      "helper hardcodes global test allocator"
+    ],
+    "fix": "Extracted unpackedIteration helper and threaded allocator; native five-mode regression rerun passed2/2."
+  },
+  "prior_success_logs": [
+    "test-3.log.gz",
+    "test-4.log.gz"
+  ],
+  "guardian": {
+    "final_passed": 88,
+    "final_log": "guardian-4.log.gz",
+    "previous_failures": [
+      "cognitive complexity after first partial extraction",
+      "return try prohibited; used local value then return"
+    ],
+    "changes": "Extracted narrow read and projection helpers, threaded allocator; no contract change."
+  },
+  "review": {
+    "owner": "A07",
+    "status": "approved",
+    "scope": "Exact items projection plus unpack condition; ordinary tuple and materialized pair path preserved; native and invalidation coverage appropriate."
+  }
+}

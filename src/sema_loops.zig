@@ -158,16 +158,12 @@ fn statementForEach(comptime Checker: type, self: *Checker, stmt: ast.Statement,
     const iteration_check = try walkGuard(Checker, b, prepared, owner, limit);
     var iteration_statements: std.ArrayList(typed.StatementId) = .empty;
     if (iteration_check) |guarded| try iteration_statements.append(self.allocator, guarded);
-    const value = try iterationRead(Checker, self, b, owner, i, .{ .kind = kind, .fixed = fixed, .projection = if (projected) view else null });
+    const value = try bindingIterationRead(Checker, self, b, owner, i, .{ .kind = kind, .fixed = fixed, .projection = if (projected) view else null }, unpack);
     if (unpack) {
-        const pair = try b.local(element);
-        try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = pair, .value = value } }));
-        const first_value = try b.node(first_type, .{ .field = .{ .base = try b.read(pair), .index = 0 } });
-        const second_type = self.locals.items[@backingInt(second_slot)].ty;
-        const second_value = try b.node(second_type, .{ .field = .{ .base = try b.read(pair), .index = 1 } });
-        try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = first_slot, .value = first_value } }));
-        try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = second_slot, .value = second_value } }));
-    } else try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = first_slot, .value = value } }));
+        const values = try unpackedIteration(Checker, self, b, &iteration_statements, owner, i, value);
+        try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = first_slot, .value = values[0] } }));
+        try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = second_slot, .value = values[1] } }));
+    } else try iteration_statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = first_slot, .value = value.? } }));
     try appendRebinding(Checker, self, b, &iteration_statements, position, i);
     try iteration_statements.append(self.allocator, body.id);
     const iteration = try b.stmt(.{ .block = try iteration_statements.toOwnedSlice(self.allocator) });
@@ -184,6 +180,30 @@ fn statementForEach(comptime Checker: type, self: *Checker, stmt: ast.Statement,
     };
     // Walking the array in place, the loop reads the variable itself.
     return finishWalk(Checker, self, source_walk, prepared, &setup);
+}
+
+// Direct item unpacking needs projections rather than a temporary owning pair.
+fn bindingIterationRead(comptime Checker: type, self: *Checker, b: collections.Builder(Checker), owner: typed.LocalId, index: typed.NodeId, shape: IterationShape, unpack: bool) Error!?typed.NodeId {
+    if (unpack and shape.projection == .items) return null;
+    const value = try iterationRead(Checker, self, b, owner, index, shape);
+    return value;
+}
+
+// Immediate items() destructuring binds borrowed fields directly. Other pair
+// sources keep their aggregate temporary and ordinary field projections.
+fn unpackedIteration(comptime Checker: type, self: *Checker, b: collections.Builder(Checker), statements: *std.ArrayList(typed.StatementId), owner: typed.LocalId, index: typed.NodeId, value: ?typed.NodeId) Error![2]typed.NodeId {
+    if (value == null) return .{
+        try dictionary_views.at(Checker, self, b.span, owner, index, .keys),
+        try dictionary_views.at(Checker, self, b.span, owner, index, .values),
+    };
+    const ty = self.nodes.items[@backingInt(value.?)].ty;
+    const fields = self.catalog.records[ty.recordIndex()].fields;
+    const pair = try b.local(ty);
+    try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = pair, .value = value.? } }));
+    return .{
+        try b.node(fields[0].ty, .{ .field = .{ .base = try b.read(pair), .index = 0 } }),
+        try b.node(fields[1].ty, .{ .field = .{ .base = try b.read(pair), .index = 1 } }),
+    };
 }
 
 fn walkGuard(comptime Checker: type, b: collections.Builder(Checker), prepared: ?iteration_place.Source, owner: typed.LocalId, limit: typed.LocalId) Error!?typed.StatementId {

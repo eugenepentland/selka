@@ -22,6 +22,7 @@ EXPECTED = {'wide': '2145\n', 'managed': '2016 item-0! 16\n', 'outcome': '416\n'
             'result': str(sum(len(('bad-' if i%3==0 else 'good-')+str(i)) for i in range(257)))+'\n'}
 
 EXPECTED['result_list']='27 4 5 4 5\n3889\n'
+EXPECTED['dict_items']='passed 38\n'
 
 EXPECTED['result_direct']=EXPECTED['result']
 

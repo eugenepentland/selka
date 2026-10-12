@@ -158,3 +158,12 @@ LLVM/symbol audits and the required unhandled-list refusal. Exact identities,
 commands and raw counters are in `support5-result-map/`. Historical Support4 RC
 libexec components remain in that installation; this does not qualify C1 or the
 installed package.
+
+The two-name dictionary items lowering now borrows key/value projections directly.
+`dict-items/` records 2/2 focused checks and five native modes with exact outputs,
+RC0/live0 and structural audits. Root-rebinding preserves the existing D1 independent
+entry snapshot; clearing/entry mutation and borrowed escape remain refusals. The
+exact `dictionary_views.zig` prerequisite is already integrated by the coordinator
+and excluded from this worker's feature commit. Single-item record borrowing remains
+A07's separate work. `qualify.py --cases dict_items` supports later final-artifact
+qualification, including ordinary command mode.

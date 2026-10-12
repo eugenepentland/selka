@@ -1,0 +1,48 @@
+func first_key(values: dict[str, str[]]) -> str:
+    for key, value in values.items():
+        return key.copy()
+    return "empty"
+func first_value(values: dict[str, str[]]) -> str[]:
+    for key, value in values.items():
+        return value.copy()
+    return []
+func main(out: Stream) -> int:
+    mut values = {"key-" + str(1): ["value-" + str(1)], "key-" + str(2): ["value-" + str(2)]}
+    mut keys: str[] = []
+    mut rows: str[][] = []
+    for key, value in values.items():
+        keys.append(key.copy())
+        rows.append(value.copy())
+    const early_key = first_key(values)
+    const early_value = first_value(values)
+    const lengths = {key.copy(): len(value[0]) for key, value in values.items()}
+    mut score = 0
+    for _, value in values.items():
+        score += len(value[0])
+    for key, _ in values.items():
+        score += len(key)
+    for _, _ in values.items():
+        score += 1
+    const entries = list(values.items())
+    for key, value in entries:
+        score += len(key) + len(value)
+    values.clear()
+    for key, value in values.items():
+        score += 1000 + len(key) + len(value)
+    assert keys == ["key-1", "key-2"]
+    assert rows[0][0] == "value-1" and rows[1][0] == "value-2"
+    assert early_key == "key-1" and early_value == ["value-1"]
+    assert lengths["key-1"] == 7 and lengths["key-2"] == 7
+    mut rebound = {"old-" + str(1): ["before-" + str(1)], "old-" + str(2): ["before-" + str(2)]}
+    mut old_keys: str[] = []
+    mut old_values: str[][] = []
+    for key, value in rebound.items():
+        rebound = {"new": ["replacement"]}
+        old_keys.append(key.copy())
+        old_values.append(value.copy())
+    rebound.clear()
+    assert old_keys == ["old-1", "old-2"]
+    assert old_values[0] == ["before-1"] and old_values[1] == ["before-2"]
+    assert score == 38
+    out.print("passed", score)
+    return 0
