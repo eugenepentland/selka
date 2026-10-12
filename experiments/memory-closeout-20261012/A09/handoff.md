@@ -69,3 +69,24 @@ allocation regression supports retaining the current capacity policy; no native
 policy throughput improvement is claimed. The first two windows' sources and
 binaries belong to A02's controlled C0 policy experiment, not an integrated final
 compiler. Final C1/C2/C3 measurement dependencies remain outstanding.
+
+C0 ReleaseFast is now built and frozen. Compiler SHA-256:
+`78ac31605c7505c7cb330d41bdf2d3a232043e032f487e599f454b3bc6f2bd37`.
+Its complete installation is `.tmp/memory-closeout/A09/C0-releasefast`; manifest
+and raw build log are committed. Nine C0 guest and six A06 application timing
+entries are built; exact identities are in `raw/C0-guests.json` and
+`raw/C0-applications.json`. Final candidate paired comparisons remain pending.
+
+A09 completed A02's remaining replacement/buffer/reserved native policy timings
+on the same verified binaries, using longer workloads with two warmup and nine
+alternating measured pairs. All samples/checksums/RSS are preserved in `raw/`.
+The growth policy remains unchanged; no runtime or RSS saving is established.
+The broad-noise buffer median triggers review but does not establish a repeatable
+regression; the list-capacity edit does not change the byte-buffer growth path.
+See `README.md` and machine-readable `results.json` for scope and precise metrics.
+
+An A01 prototype map binary was built only for future workload calibration.
+Optional calibration was stopped before admission (only a queued no-op barrier
+was canceled), to prioritize the coordinator's installed-component defect fix.
+No active compilation or measurement was interrupted and no data was lost.
+A09 has no timing lease while that critical fix is underway.

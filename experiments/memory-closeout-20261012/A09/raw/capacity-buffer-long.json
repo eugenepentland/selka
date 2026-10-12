@@ -1,0 +1,282 @@
+{
+  "artifacts": {
+    "source_revision": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+    "harness_sha256": "8ebed8ad9d339d1ab42ccb0ba48118440ede3288e4450494636cb6bac10083e1",
+    "fixture_sha256": "6d45b75a9bb74cc2e735dc60ec68641751d3341976d841be35d82a15c6f2e084",
+    "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+    "policies": {
+      "baseline": {
+        "plain": {
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/capacity-buffer-long/baseline/plain/program",
+          "binary_sha256": "d7aab10a0807e2963d3cdb4fa2666780d6e2d240789d9f1c56adcf18a7877fbe",
+          "runtime_sha256": "be9779c8a76eb818fbf60d0a85fabb54102a385885d4f49efe6f9ae61cfa7d2f",
+          "build_argv": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "cc",
+            "-O2",
+            "-g",
+            "-std=c11",
+            "-pthread",
+            "-ffunction-sections",
+            "-Wl,--gc-sections",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity-v2/baseline/plain/fixture.c",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity-v2/baseline/plain/program"
+          ],
+          "build_stderr": "",
+          "original_binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity-v2/baseline/plain/program"
+        },
+        "counted": {
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/capacity-policy/baseline/counted/program",
+          "binary_sha256": "53330b540c5d241480ea95a9905e03581be65ef912fe0721f6ced4f1790f23e0",
+          "runtime_sha256": "ff1957e1db368eb0fc42bfa9d85f66871fb0eb9928f1f3799df8b8b2e1815574",
+          "build_argv": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "cc",
+            "-O2",
+            "-g",
+            "-std=c11",
+            "-pthread",
+            "-ffunction-sections",
+            "-Wl,--gc-sections",
+            "-DA02_COUNTED=1",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity-v2/baseline/counted/fixture.c",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity-v2/baseline/counted/program"
+          ],
+          "build_stderr": "",
+          "original_binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity-v2/baseline/counted/program"
+        }
+      },
+      "start_one": {
+        "plain": {
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/capacity-buffer-long/start_one/plain/program",
+          "binary_sha256": "895b31c16ce6656a8fba158bb39efec4cce3fb7860febe8c31784bd12d5c99ab",
+          "runtime_sha256": "33839a486c3b082c7d3db4dbe21062152dcb16d5a1e59bb6d17e532580480749",
+          "build_argv": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "cc",
+            "-O2",
+            "-g",
+            "-std=c11",
+            "-pthread",
+            "-ffunction-sections",
+            "-Wl,--gc-sections",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity-v2/start_one/plain/fixture.c",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity-v2/start_one/plain/program"
+          ],
+          "build_stderr": "",
+          "original_binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity-v2/start_one/plain/program"
+        },
+        "counted": {
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/capacity-policy/start_one/counted/program",
+          "binary_sha256": "a2ad37ac98dd258a4abc46d3fa3bb3a0916f65cf60b48f4d14213a18cc65f71d",
+          "runtime_sha256": "4b28c133acd7f29a7d84ae5ceec590346da805f6055443f051793138e6e97f8e",
+          "build_argv": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "cc",
+            "-O2",
+            "-g",
+            "-std=c11",
+            "-pthread",
+            "-ffunction-sections",
+            "-Wl,--gc-sections",
+            "-DA02_COUNTED=1",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity-v2/start_one/counted/fixture.c",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity-v2/start_one/counted/program"
+          ],
+          "build_stderr": "",
+          "original_binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity-v2/start_one/counted/program"
+        }
+      },
+      "start_four": {
+        "plain": {
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/capacity-policy/start_four/plain/program",
+          "binary_sha256": "d21413ed478ddd5beff2aacd4299b523118e3723a1ed26b84030224a1405fbbd",
+          "runtime_sha256": "102899d5d20078541fab6f3e33199b17acb15c5a736dfe50b1a506a1f7f705c9",
+          "build_argv": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "cc",
+            "-O2",
+            "-g",
+            "-std=c11",
+            "-pthread",
+            "-ffunction-sections",
+            "-Wl,--gc-sections",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity-v2/start_four/plain/fixture.c",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity-v2/start_four/plain/program"
+          ],
+          "build_stderr": "",
+          "original_binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity-v2/start_four/plain/program"
+        },
+        "counted": {
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/capacity-policy/start_four/counted/program",
+          "binary_sha256": "f4a4aa1addde373a6b9c123042735af4e5d6d410097d0044d93a9c1c0fd0b790",
+          "runtime_sha256": "0f668c4a1f825c95bb8b8f52f0076e1c423c9bd1d23e5acf3e0d2c729222a4d3",
+          "build_argv": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "cc",
+            "-O2",
+            "-g",
+            "-std=c11",
+            "-pthread",
+            "-ffunction-sections",
+            "-Wl,--gc-sections",
+            "-DA02_COUNTED=1",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity-v2/start_four/counted/fixture.c",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity-v2/start_four/counted/program"
+          ],
+          "build_stderr": "",
+          "original_binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity-v2/start_four/counted/program"
+        }
+      },
+      "three_halves": {
+        "plain": {
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/capacity-policy/three_halves/plain/program",
+          "binary_sha256": "68d29a2cca2eb177e3f7984b167673caa697132afc7283d4a8498f43d61ec8d9",
+          "runtime_sha256": "c71db42d0941482b401a7c731739cf0ef36104633a7c7c6ddc8b202ce64f27e8",
+          "build_argv": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "cc",
+            "-O2",
+            "-g",
+            "-std=c11",
+            "-pthread",
+            "-ffunction-sections",
+            "-Wl,--gc-sections",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity-v2/three_halves/plain/fixture.c",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity-v2/three_halves/plain/program"
+          ],
+          "build_stderr": "",
+          "original_binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity-v2/three_halves/plain/program"
+        },
+        "counted": {
+          "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/capacity-policy/three_halves/counted/program",
+          "binary_sha256": "e896a85401a35a0142decd60eab7bed6c4456eed5efb974aead931aa48ea06a8",
+          "runtime_sha256": "0f2f144d917baafc24fdd6f61ee1aacadcb5966a0330437935ee77f3430456cf",
+          "build_argv": [
+            "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+            "cc",
+            "-O2",
+            "-g",
+            "-std=c11",
+            "-pthread",
+            "-ffunction-sections",
+            "-Wl,--gc-sections",
+            "-DA02_COUNTED=1",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity-v2/three_halves/counted/fixture.c",
+            "-o",
+            "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity-v2/three_halves/counted/program"
+          ],
+          "build_stderr": "",
+          "original_binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A02/.tmp/memory-closeout/A02/capacity-v2/three_halves/counted/program"
+        }
+      }
+    },
+    "relocation_note": "A09 copied A02 native-policy artifacts byte-for-byte; all binary hashes verified before timing."
+  },
+  "method": "2 warmup groups, 9 alternating groups; process wall clock; uninstrumented",
+  "measurement_harness_sha256": "db29865d59bb04ef8690cd64c53f4894f0e97ba6da32090b566df6e4ff42705e",
+  "started_utc": "2026-10-12T01:03:41.957956+00:00",
+  "cpu": 10,
+  "rss_scope": "single process max RSS via GNU time, excluding compilation",
+  "cases": {
+    "buffer": {
+      "baseline": {
+        "ns": [
+          234302976,
+          235118514,
+          230407185,
+          237937795,
+          249877855,
+          605417233,
+          362102270,
+          490568001,
+          250361520
+        ],
+        "rss_kib": [
+          3572,
+          3572,
+          3572,
+          3568,
+          3572,
+          3572,
+          3572,
+          3572,
+          3572
+        ],
+        "warmup_ns": [
+          229684479,
+          228535731
+        ],
+        "warmup_rss_kib": [
+          3572,
+          3572
+        ],
+        "repetitions": 200,
+        "output": {
+          "checksum": 8400,
+          "length": 1000001,
+          "capacity": 1048576
+        },
+        "median_ns": 249877855,
+        "range_ns": [
+          230407185,
+          605417233
+        ]
+      },
+      "start_one": {
+        "ns": [
+          228678824,
+          228839990,
+          230873535,
+          281589668,
+          344711805,
+          427952411,
+          416143113,
+          281022086,
+          235652686
+        ],
+        "rss_kib": [
+          3572,
+          3572,
+          3568,
+          3572,
+          3568,
+          3568,
+          3572,
+          3568,
+          3564
+        ],
+        "warmup_ns": [
+          249384415,
+          227045559
+        ],
+        "warmup_rss_kib": [
+          3572,
+          3572
+        ],
+        "repetitions": 200,
+        "output": {
+          "checksum": 8400,
+          "length": 1000001,
+          "capacity": 1048576
+        },
+        "median_ns": 281022086,
+        "range_ns": [
+          228678824,
+          427952411
+        ]
+      }
+    }
+  },
+  "finished_utc": "2026-10-12T01:03:48.504565+00:00",
+  "continuation_wrapper_sha256": "a42e564d879fb46371fe20a72145e85c5be87bd027d9d63347cf2207d980977f",
+  "continuation_note": "A09 explicit repetitions lengthen A02 native policy workloads; same frozen binaries. No final compiler or guest-program claim."
+}

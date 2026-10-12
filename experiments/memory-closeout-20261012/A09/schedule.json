@@ -29,8 +29,55 @@
       "owner": "A02",
       "id": "native-policy-replacement",
       "actual_cpu": 10,
-      "status": "queued, waiting for C0 ReleaseFast compiler build to drain",
+      "status": "cancelled before admission to permit slot2 builds while RF compiler finished; no measurement lost",
       "max_admitted_duration_s": 30
+    },
+    {
+      "owner": "A09",
+      "id": "native-policy-replacement",
+      "started_utc": "2026-10-12T00:59:13.793590+00:00",
+      "finished_utc": "2026-10-12T00:59:14.784021+00:00",
+      "cpu": 10,
+      "raw_path": "A09/raw/capacity-replacement.json",
+      "status": "complete2warmup+9measured alternating pairs",
+      "scope": "C0 native-policy experiment, not final integrated compiler"
+    },
+    {
+      "owner": "A08",
+      "id": "C0-RF-matches16",
+      "status": "completed5of5cold/warm/receipt/replay/edit builds in approximately5s admitted time",
+      "raw_path": "A08/c0-rf-matches-16/results.json",
+      "cpu": 10
+    },
+    {
+      "owner": "A09",
+      "id": "native-policy-replacement-long",
+      "started_utc": "2026-10-12T01:02:26.343725+00:00",
+      "finished_utc": "2026-10-12T01:02:30.235746+00:00",
+      "cpu": 10,
+      "raw_path": "A09/raw/capacity-replacement-long.json",
+      "status": "complete2warmup+9measured alternating pairs;10million repeats",
+      "scope": "C0 native-policy experiment; not integrated compiler"
+    },
+    {
+      "owner": "A09",
+      "id": "native-policy-buffer-long",
+      "started_utc": "2026-10-12T01:03:41.957956+00:00",
+      "finished_utc": "2026-10-12T01:03:48.504565+00:00",
+      "cpu": 10,
+      "raw_path": "experiments/memory-closeout-20261012/A09/raw/capacity-buffer-long.json",
+      "status": "complete2warmup+9measured alternating pairs;200repeats",
+      "scope": "C0 native-policy experiment; not integrated compiler"
+    },
+    {
+      "owner": "A09",
+      "id": "native-policy-reserved-long",
+      "started_utc": "2026-10-12T01:04:08.675627+00:00",
+      "finished_utc": "2026-10-12T01:04:13.348659+00:00",
+      "cpu": 10,
+      "raw_path": "experiments/memory-closeout-20261012/A09/raw/capacity-reserved-long.json",
+      "status": "complete2warmup+9measured alternating pairs;200repeats",
+      "scope": "C0 native-policy experiment; not integrated compiler"
     }
   ]
 }
