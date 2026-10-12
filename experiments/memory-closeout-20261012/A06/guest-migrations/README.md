@@ -101,3 +101,26 @@ source and diagnostic. The coordinator owns final assignment and integration:
 A06's exact field and slot writeback proposals are in `../nested-write/`. Their
 registered counted tests cover independent storage and cleanup. Source admission
 or a prepared patch alone does not close those implementation items.
+
+## Support3 followup and owned text extrema
+
+Support3 admits 12 of the 26 previously pending sources, for 50/64 source
+admissions before the next three explicit-copy fixes. Its exact compiler identity
+and diagnostics are in `after-support3/`; this is not native qualification.
+
+With coordinator approval, `scalable_sorting.least(words)` now copies the selected
+minimum text and drops that helper's `noalloc` promise. An independent owner
+returned from an arbitrary borrowed list needs storage. The existing Unicode
+ordering/value assertion stays unchanged, and no temporary text encoding was
+introduced. A source search found no other caller or native allocation assertion
+for this helper. Its original noalloc borrowed return remains a negative ownership
+regression. This is an explicit source allocation-contract migration.
+
+`properties` copies the borrowed record before `replace`, and `rc_journal_types`
+copies a selected managed element before storing it in an independent record.
+
+The C0 RC execution controls for the two live-iteration fixtures did not execute:
+the release compiler rejected one with an invalid CFG edge and the other hit the
+native-object lifetime/link bug. `../evidence/C0-live-iteration-controls.json`
+preserves both failures and source/compiler hashes. There is no paired runtime
+result from those failed builds; the updated compiler must requalify the sources.

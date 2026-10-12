@@ -10,7 +10,7 @@ func rebuilt(mapping: dict[int, int[]], count: int) -> Mixed:
             result = Mixed(values=[index, index + 1], view=list(mapping.values()))
         else:
             mut saved = result.copy()
-            result = Mixed(values=list(saved.view)[0], view=list(mapping.values()))
+            result = Mixed(values=list(saved.view)[0].copy(), view=list(mapping.values()))
     return result
 
 

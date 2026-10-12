@@ -175,6 +175,7 @@ const slot_records =
 ;
 
 // spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+// spec-case: NEW-CORE-TAKE-READS-1
 test "zero RC fixed array writeback captures a dynamic signed index once" {
     try counted(std.testing.allocator, slot_records ++
         \\func select_last(mut calls: int) -> int:
@@ -194,6 +195,7 @@ test "zero RC fixed array writeback captures a dynamic signed index once" {
 }
 
 // spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+// spec-case: NEW-CORE-TAKE-READS-1
 test "zero RC array transfer analysis preserves unknown index and conditional live borrows" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();

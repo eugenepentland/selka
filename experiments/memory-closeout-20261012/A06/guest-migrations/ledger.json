@@ -1,36 +1,43 @@
 {
   "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
   "reserved_sources": 64,
-  "source_admitted_current": 38,
-  "not_yet_admitted_or_recheck_required": 26,
-  "changed_sources": 54,
-  "added_copy_sites": 307,
-  "added_lines": 521,
-  "removed_lines": 334,
+  "source_admitted_current": 51,
+  "not_yet_admitted_or_recheck_required": 13,
+  "changed_sources": 56,
+  "added_copy_sites": 313,
+  "added_lines": 528,
+  "removed_lines": 341,
   "scope": "Exploratory source admission only. Native five-mode execution and cleanup remain required on frozen integrated compiler.",
   "sources": [
     {
       "source": "tests/lang/rc_journal_types.my",
       "original_sha256": "a9795862ccf226ada4c2a7a31f91bad0e63ce85628dd10fe1d45b8cfd27fc98f",
       "original_archive": "experiments/memory-closeout-20261012/A06/guest-migrations/original-sources/tests__lang__rc_journal_types.my.gz",
-      "migrated_sha256": "8b37edbe1c1f4abf0cb34d4329ce273a2811ece77849f4620e1390782a526934",
+      "migrated_sha256": "a7bc5a26bc785c196460d7f13caa7c90024287c2e5913cc08fc8e761d6f453d6",
       "changed": true,
-      "removed_lines": 1,
-      "added_lines": 1,
+      "removed_lines": 2,
+      "added_lines": 2,
       "original_copy_sites": 0,
-      "migrated_copy_sites": 1,
+      "migrated_copy_sites": 2,
       "public_test_functions": 2,
       "assertions_preserved": true,
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/rc_journal_types.my",
-        "source_sha256": "8b37edbe1c1f4abf0cb34d4329ce273a2811ece77849f4620e1390782a526934",
-        "status": 1,
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_journal_types.my",
+          "--no-cache",
+          "--experimental-zero-rc"
+        ],
+        "source_sha256": "a7bc5a26bc785c196460d7f13caa7c90024287c2e5913cc08fc8e761d6f453d6",
+        "status": 0,
         "stdout": "",
-        "stderr": "rc_journal_types.my:7:41: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut result = Mixed(values=[0], view=list(mapping.values()))\n                                          ^\n",
+        "stderr": "",
         "copy_changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-manual-copies/batch-0.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support4-copies/batch-0.json",
+        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
       },
       "source_check_matches_current": true
     },
@@ -262,92 +269,20 @@
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/rc_owning_element_borrows.my",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_owning_element_borrows.my",
+          "--no-cache",
+          "--experimental-zero-rc"
+        ],
         "source_sha256": "1590198b404aff838777e6501d04550b1ab4a4cd08a3a7fc5524f5e7be02ae1d",
         "status": 1,
         "stdout": "",
-        "stderr": "rc_owning_element_borrows.my:101:5: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n      pins[3].net = Span(source=b\"CHANGED\", start=0, end=7)\n      ^\n",
-        "copy_changes": [
-          {
-            "line": 41,
-            "before": "        mut found = pins[i]",
-            "after": "        mut found = pins[i].copy()",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          },
-          {
-            "line": 51,
-            "before": "    mut target = Span(source=wanted, start=0, end=len(wanted))",
-            "after": "    mut target = Span(source=wanted.copy(), start=0, end=len(wanted))",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          },
-          {
-            "line": 54,
-            "before": "        mut current = pins[i]",
-            "after": "        mut current = pins[i].copy()",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          },
-          {
-            "line": 56,
-            "before": "            out.append(current.display)",
-            "after": "            out.append(current.display.copy())",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          },
-          {
-            "line": 57,
-            "before": "            out.append(Span(source=current.net.source, start=1, end=current.net.end))",
-            "after": "            out.append(Span(source=current.net.source.copy(), start=1, end=current.net.end))",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          },
-          {
-            "line": 66,
-            "before": "    mut view = pins",
-            "after": "    mut view = pins.copy()",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          },
-          {
-            "line": 69,
-            "before": "        mut current = view[i]",
-            "after": "        mut current = view[i].copy()",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          },
-          {
-            "line": 73,
-            "before": "            mut other = view[j]",
-            "after": "            mut other = view[j].copy()",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          },
-          {
-            "line": 84,
-            "before": "    mut result = pins[0]",
-            "after": "    mut result = pins[0].copy()",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          },
-          {
-            "line": 87,
-            "before": "        mut current = pins[i]",
-            "after": "        mut current = pins[i].copy()",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          },
-          {
-            "line": 88,
-            "before": "        kept.append(current.net.source)",
-            "after": "        kept.append(current.net.source.copy())",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          },
-          {
-            "line": 90,
-            "before": "            result = pins[i]",
-            "after": "            result = pins[i].copy()",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          },
-          {
-            "line": 93,
-            "before": "        return pins[0]",
-            "after": "        return pins[0].copy()",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          }
-        ],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-manual-copies/batch-0.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "stderr": "rc_owning_element_borrows.my:101:5: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      pins[3].net = Span(source=b\"CHANGED\", start=0, end=7)\n      ^\n",
+        "copy_changes": [],
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support3/batch-0.json",
+        "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7"
       },
       "source_check_matches_current": true
     },
@@ -391,20 +326,20 @@
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/rc_plain_field_loans.my",
-        "source_sha256": "956a3d5f472260df90c131fcb4a9976495300826467c4f43ed5acc52ade5a55f",
-        "status": 1,
-        "stdout": "",
-        "stderr": "rc_plain_field_loans.my:84:30: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut rows = [HeldRow(view=list(mapping.values()), number=3)]\n                               ^\n",
-        "copy_changes": [
-          {
-            "line": 43,
-            "before": "    mut row = rows[at]",
-            "after": "    mut row = rows[at].copy()",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          }
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_plain_field_loans.my",
+          "--no-cache",
+          "--experimental-zero-rc"
         ],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-manual-copies/batch-10.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "source_sha256": "956a3d5f472260df90c131fcb4a9976495300826467c4f43ed5acc52ade5a55f",
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "copy_changes": [],
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support3/batch-0.json",
+        "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7"
       },
       "source_check_matches_current": true
     },
@@ -637,13 +572,20 @@
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/rc_semantic_publication.my",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_semantic_publication.my",
+          "--no-cache",
+          "--experimental-zero-rc"
+        ],
         "source_sha256": "39b1f3f52140749b7c3ea2b398b3f5bf58e6a4ac460288d58f718eaecc9516c5",
         "status": 1,
         "stdout": "",
         "stderr": "rc_semantic_publication.my:5:27: error[E_SINGLE_OWNER_MOVED]: '<collection>' was moved or is unavailable on this path; use .copy() when both values are needed\n          joined = joined + word.unwrap_or(\".\")\n                            ^\n",
         "copy_changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-manual-copies/batch-20.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support3/batch-0.json",
+        "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7"
       },
       "source_check_matches_current": true
     },
@@ -662,15 +604,22 @@
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/rc_tree_drains.my",
-        "source_sha256": "436d1cabb9da464fa91ef74b2cec0527f79a7646075e0c517adceb1da6947e60",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_tree_drains.my",
+          "--no-cache",
+          "--experimental-zero-rc"
+        ],
+        "source_sha256": "7380fc6b0ea4bca4d90db4902ea68dea43745119ccd1c07a3a578d5fb4ed7fd1",
         "status": 1,
         "stdout": "",
         "stderr": "rc_tree_drains.my:19:22: error[E_SINGLE_OWNER_MOVED]: '<collection>' was moved or is unavailable on this path; use .copy() when both values are needed\n      return 1 + check(left) + check(right)\n                       ^\n",
         "copy_changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-manual-copies/batch-20.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support3/batch-0.json",
+        "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7"
       },
-      "source_check_matches_current": false
+      "source_check_matches_current": true
     },
     {
       "source": "tests/lang/rc_variant_reads.my",
@@ -712,13 +661,20 @@
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/rc_view_receivers.my",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_view_receivers.my",
+          "--no-cache",
+          "--experimental-zero-rc"
+        ],
         "source_sha256": "e06c0325b188b3719d5be2137a9f85b3e8a2ffb1a3b974c7abf3da175492d869",
-        "status": 1,
+        "status": 0,
         "stdout": "",
-        "stderr": "rc_view_receivers.my:4:17: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut saved = list(mapping.values())\n                  ^\n",
+        "stderr": "",
         "copy_changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-manual-copies/batch-20.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support3/batch-0.json",
+        "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7"
       },
       "source_check_matches_current": true
     },
@@ -737,56 +693,20 @@
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/rc_writeback_moves.my",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_writeback_moves.my",
+          "--no-cache",
+          "--experimental-zero-rc"
+        ],
         "source_sha256": "c9d2930cddb14289a344273275fb7d775cad287b2ecac8f0f6d0a8d10915ea7b",
         "status": 1,
         "stdout": "",
         "stderr": "rc_writeback_moves.my:99:176: error[E_SINGLE_OWNER_MOVED]: '<collection>' was moved or is unavailable on this path; use .copy() when both values are needed\n      return len(it.rt.objects) == 20 and it.rt.objects[0] == 4 and it.rt.names[\"it\"] == 19 and len(saved.rt.objects) == 0 and note.words == [\"a\", \"b\"] and last is not None and last.words == [\"it\"]\n                                                                                                                                                                                 ^\n",
-        "copy_changes": [
-          {
-            "line": 62,
-            "before": "        mut wb = it.rt",
-            "after": "        mut wb = it.rt.copy()",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          },
-          {
-            "line": 71,
-            "before": "    mut first = it.rt",
-            "after": "    mut first = it.rt.copy()",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          },
-          {
-            "line": 75,
-            "before": "    mut saved_rt = it.rt",
-            "after": "    mut saved_rt = it.rt.copy()",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          },
-          {
-            "line": 77,
-            "before": "        mut wb = it.rt",
-            "after": "        mut wb = it.rt.copy()",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          },
-          {
-            "line": 84,
-            "before": "    mut wb = it.rt",
-            "after": "    mut wb = it.rt.copy()",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          },
-          {
-            "line": 87,
-            "before": "    mut names = it.rt",
-            "after": "    mut names = it.rt.copy()",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          },
-          {
-            "line": 98,
-            "before": "    mut last = it.rt.last",
-            "after": "    mut last = it.rt.last.copy()",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          }
-        ],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-manual-copies/batch-20.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "copy_changes": [],
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support3/batch-0.json",
+        "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7"
       },
       "source_check_matches_current": true
     },
@@ -837,13 +757,20 @@
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/recursive_values.my",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/recursive_values.my",
+          "--no-cache",
+          "--experimental-zero-rc"
+        ],
         "source_sha256": "3ba89960ac71da5fa0a55326b1dfd2266998906453b08d93543dd6e98e50a5dd",
         "status": 1,
         "stdout": "",
         "stderr": "recursive_values.my:88:38: error[E_TYPE]: a tuple has no methods; take it apart with `head, rest = value`\n              const value, rest = pair.copy()\n                                       ^\n",
         "copy_changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-manual-copies/batch-20.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support3/batch-0.json",
+        "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7"
       },
       "source_check_matches_current": true
     },
@@ -876,26 +803,33 @@
       "source": "tests/lang/scalable_sorting.my",
       "original_sha256": "b8770c247c9f99d10f3f797a8642c79b31eeca540ae093937ea813503eecf83d",
       "original_archive": "experiments/memory-closeout-20261012/A06/guest-migrations/original-sources/tests__lang__scalable_sorting.my.gz",
-      "migrated_sha256": "b8770c247c9f99d10f3f797a8642c79b31eeca540ae093937ea813503eecf83d",
-      "changed": false,
-      "removed_lines": 0,
-      "added_lines": 0,
+      "migrated_sha256": "08c01a778b6ceb847dfd35b025c51d4bcdaf06a851c4924851df8b1ad98b83b8",
+      "changed": true,
+      "removed_lines": 3,
+      "added_lines": 3,
       "original_copy_sites": 2,
-      "migrated_copy_sites": 2,
+      "migrated_copy_sites": 4,
       "public_test_functions": 4,
       "assertions_preserved": true,
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/scalable_sorting.my",
-        "source_sha256": "b8770c247c9f99d10f3f797a8642c79b31eeca540ae093937ea813503eecf83d",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/scalable_sorting.my",
+          "--no-cache",
+          "--experimental-zero-rc"
+        ],
+        "source_sha256": "e6824fc918c827485ff8815567ae9841c6b9a2d7f8734f5507a0e5f04c7b59fa",
         "status": 1,
         "stdout": "",
-        "stderr": "scalable_sorting.my:16:19: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut ordered = sorted(source)\n                    ^\n",
+        "stderr": "scalable_sorting.my:37:12: error[E_SINGLE_OWNER_MOVED]: 'words' was moved or is unavailable on this path; use .copy() when both values are needed\n      return words == expected and before == [\"\ud83d\ude00\", \"\u00e9\", \"z\", \"a\"] and groups[0] == expected\n             ^\n",
         "copy_changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-manual-copies/batch-20.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support4-copies/batch-0.json",
+        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
       },
-      "source_check_matches_current": true
+      "source_check_matches_current": false
     },
     {
       "source": "tests/lang/scalar_dictionary_publication.my",
@@ -912,13 +846,20 @@
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/scalar_dictionary_publication.my",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/scalar_dictionary_publication.my",
+          "--no-cache",
+          "--experimental-zero-rc"
+        ],
         "source_sha256": "f0f560f71e42fbdb4414ee713d82a2ed635fbf9e274a7653c6c37e50f5adfac8",
-        "status": 1,
+        "status": 0,
         "stdout": "",
-        "stderr": "scalar_dictionary_publication.my:56:12: error[E_SINGLE_OWNER_MOVED]: '<membership>' was moved or is unavailable on this path; use .copy() when both values are needed\n          if str(i) not in mapping or mapping.get(str(i), -1) != i:\n             ^\n",
+        "stderr": "",
         "copy_changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-manual-copies/batch-20.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support3/batch-0.json",
+        "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7"
       },
       "source_check_matches_current": true
     },
@@ -937,13 +878,20 @@
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/sets.my",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/sets.my",
+          "--no-cache",
+          "--experimental-zero-rc"
+        ],
         "source_sha256": "cead8715e2c46a86830dbb3564d81e4d47f602c4916708d6c05e0f55bbd3f11c",
         "status": 1,
         "stdout": "",
-        "stderr": "sets.my:63:19: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n      mut letters = set(\"banana\")\n                    ^\n",
+        "stderr": "sets.my:64:16: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      mut keys = set({\"b\": 1, \"a\": 2})\n                 ^\n",
         "copy_changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-manual-copies/batch-30.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support3/batch-10.json",
+        "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7"
       },
       "source_check_matches_current": true
     },
@@ -962,13 +910,20 @@
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/stable_sorting.my",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/stable_sorting.my",
+          "--no-cache",
+          "--experimental-zero-rc"
+        ],
         "source_sha256": "8dc66d0c6ebf47e494626730c827eb325264db5d24ca4d1598b4137175a76837",
-        "status": 1,
+        "status": 0,
         "stdout": "",
-        "stderr": "stable_sorting.my:292:74: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      return words == [\"Apple\", \"apple\", \"pear\", \"pear\", \"\u00e9\", \"\ud83d\ude00\"] and sorted(words) == words and snapshot[0] == \"pear\"\n                                                                           ^\n",
+        "stderr": "",
         "copy_changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-manual-copies/batch-30.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support3/batch-10.json",
+        "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7"
       },
       "source_check_matches_current": true
     },
@@ -1037,13 +992,20 @@
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/argument_evaluation_order.my",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/argument_evaluation_order.my",
+          "--no-cache",
+          "--experimental-zero-rc"
+        ],
         "source_sha256": "420f1c1bd790416b9d584d60c5ed96b254d18c873338da76e7ebaefb1454c17b",
-        "status": 1,
+        "status": 0,
         "stdout": "",
-        "stderr": "argument_evaluation_order.my:21:5: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      shape.corner.a.x = 100\n      ^\n",
+        "stderr": "",
         "copy_changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-manual-copies/batch-30.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support3/batch-10.json",
+        "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7"
       },
       "source_check_matches_current": true
     },
@@ -1062,13 +1024,20 @@
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/discard_names.my",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/discard_names.my",
+          "--no-cache",
+          "--experimental-zero-rc"
+        ],
         "source_sha256": "d4187db0080ecb899065ab8639b21f576f9002e7e70f17f763ae5153e88caea1",
         "status": 1,
         "stdout": "",
-        "stderr": "discard_names.my:24:5: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      for _, count in counts.items():\n      ^\n",
+        "stderr": "discard_names.my:24:5: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      for _, count in counts.items():\n      ^\n",
         "copy_changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-manual-copies/batch-30.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support3/batch-10.json",
+        "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7"
       },
       "source_check_matches_current": true
     },
@@ -1137,13 +1106,20 @@
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/generator_arguments.my",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/generator_arguments.my",
+          "--no-cache",
+          "--experimental-zero-rc"
+        ],
         "source_sha256": "50eb60df08637500cc26f486561fdb465f1ff4156e8ce4d4c576cfca50436a29",
         "status": 1,
         "stdout": "",
         "stderr": "generator_arguments.my:41:84: error[E_SINGLE_OWNER_LOOP]: a value moved inside a loop must be reinitialized before the next iteration or loop exit\n      return min(x * 2 for x in xs) == -4 and max(x + 1 for x in xs) == 10 and max(w for w in words) == \"pear\" and min(len(w) for w in words) == 3 and max(x * 0.5 for x in xs) == 4.5\n                                                                                     ^\n",
         "copy_changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-manual-copies/batch-30.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support3/batch-10.json",
+        "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7"
       },
       "source_check_matches_current": true
     },
@@ -1187,13 +1163,20 @@
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/iteration_identity.my",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/iteration_identity.my",
+          "--no-cache",
+          "--experimental-zero-rc"
+        ],
         "source_sha256": "9265a1b7d2c1e8d0ce7f4839cb682021291183f6efbad1906c6c7a0b2a562933",
-        "status": 1,
+        "status": 0,
         "stdout": "",
-        "stderr": "iteration_identity.my:4:28: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      const iteration_keys = list(values.keys())\n                             ^\n",
+        "stderr": "",
         "copy_changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-live-iteration/batch-0.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support3/batch-10.json",
+        "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7"
       },
       "source_check_matches_current": true
     },
@@ -1212,13 +1195,20 @@
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/lambda_sort_keys.my",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/lambda_sort_keys.my",
+          "--no-cache",
+          "--experimental-zero-rc"
+        ],
         "source_sha256": "0d7706f337900b9d0e084cec00d739433d65aa894a8ea5db2487c21096ccf561",
-        "status": 1,
+        "status": 0,
         "stdout": "",
-        "stderr": "lambda_sort_keys.my:21:12: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      return [for item in items yield item.name.copy()]\n             ^\n",
+        "stderr": "",
         "copy_changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-manual-copies/batch-40.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support3/batch-10.json",
+        "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7"
       },
       "source_check_matches_current": true
     },
@@ -1237,13 +1227,20 @@
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/live_place_iteration.my",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/live_place_iteration.my",
+          "--no-cache",
+          "--experimental-zero-rc"
+        ],
         "source_sha256": "7fb7b3b4ae150828c110cbd7b0868698686eb5ae2e016f498fbb630ab083501a",
-        "status": 1,
+        "status": 0,
         "stdout": "",
-        "stderr": "live_place_iteration.my:300:28: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      const iteration_keys = list(mapping.keys())\n                             ^\n",
+        "stderr": "",
         "copy_changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-live-iteration/batch-0.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support3/batch-10.json",
+        "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7"
       },
       "source_check_matches_current": true
     },
@@ -1312,13 +1309,20 @@
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/move_elision.my",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/move_elision.my",
+          "--no-cache",
+          "--experimental-zero-rc"
+        ],
         "source_sha256": "6e634e3800fc3d67bab08f69b68e01e8ad0c733d3ed3a79fbb75c390ba8c858c",
         "status": 1,
         "stdout": "",
-        "stderr": "move_elision.my:59:13: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n              ps[i].x = ps[i].x + i\n              ^\n",
+        "stderr": "move_elision.my:59:13: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n              ps[i].x = ps[i].x + i\n              ^\n",
         "copy_changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-manual-copies/batch-40.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support3/batch-10.json",
+        "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7"
       },
       "source_check_matches_current": true
     },
@@ -1326,26 +1330,33 @@
       "source": "tests/lang/properties.my",
       "original_sha256": "1a126a85cadd1b2e018a84be17940d11d86051f80570c706e54d1f23339e84cc",
       "original_archive": "experiments/memory-closeout-20261012/A06/guest-migrations/original-sources/tests__lang__properties.my.gz",
-      "migrated_sha256": "1a126a85cadd1b2e018a84be17940d11d86051f80570c706e54d1f23339e84cc",
-      "changed": false,
-      "removed_lines": 0,
-      "added_lines": 0,
+      "migrated_sha256": "633f6ed79183d22d2732bbb6c6632b176ac4fde70c221122e1e7323970cfa4a6",
+      "changed": true,
+      "removed_lines": 3,
+      "added_lines": 3,
       "original_copy_sites": 2,
-      "migrated_copy_sites": 2,
+      "migrated_copy_sites": 5,
       "public_test_functions": 16,
       "assertions_preserved": true,
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/properties.my",
-        "source_sha256": "1a126a85cadd1b2e018a84be17940d11d86051f80570c706e54d1f23339e84cc",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/properties.my",
+          "--no-cache",
+          "--experimental-zero-rc"
+        ],
+        "source_sha256": "1f4b5440453c87bbd3b32432fc23eb0a0146940b27fa9138a29db787ee94042d",
         "status": 1,
         "stdout": "",
-        "stderr": "properties.my:66:5: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      for key in d.keys():\n      ^\n",
+        "stderr": "properties.my:109:11: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      const number, text = pair\n            ^\n",
         "copy_changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-manual-copies/batch-40.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support4-copies/batch-0.json",
+        "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375"
       },
-      "source_check_matches_current": true
+      "source_check_matches_current": false
     },
     {
       "source": "tests/lang/python_comprehension.my",
@@ -1362,13 +1373,20 @@
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/python_comprehension.my",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/python_comprehension.my",
+          "--no-cache",
+          "--experimental-zero-rc"
+        ],
         "source_sha256": "0af0792c14c6327a40a119ab5abfcad6faae4ee26a7e6c1e30491b76e04b3a42",
-        "status": 1,
+        "status": 0,
         "stdout": "",
-        "stderr": "python_comprehension.my:21:18: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut values = [for key in counts yield counts[key]]\n                   ^\n",
+        "stderr": "",
         "copy_changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-manual-copies/batch-40.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support3/batch-20.json",
+        "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7"
       },
       "source_check_matches_current": true
     },
@@ -1487,20 +1505,20 @@
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/rc_nested_read_loans.my",
-        "source_sha256": "7eb51f5eb6a8d8bc42f75e31a8385f248b34cd1ed4b424ec63cc1a991c57dd9c",
-        "status": 1,
-        "stdout": "",
-        "stderr": "rc_nested_read_loans.my:47:16: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut view = list(mapping.values())\n                 ^\n",
-        "copy_changes": [
-          {
-            "line": 33,
-            "before": "    mut selected = rows[0]",
-            "after": "    mut selected = rows[0].copy()",
-            "diagnostic": "E_SINGLE_OWNER_BORROW"
-          }
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_nested_read_loans.my",
+          "--no-cache",
+          "--experimental-zero-rc"
         ],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-manual-copies/batch-50.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "source_sha256": "7eb51f5eb6a8d8bc42f75e31a8385f248b34cd1ed4b424ec63cc1a991c57dd9c",
+        "status": 0,
+        "stdout": "",
+        "stderr": "",
+        "copy_changes": [],
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support3/batch-20.json",
+        "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7"
       },
       "source_check_matches_current": true
     },
@@ -1651,13 +1669,20 @@
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/rc_readonly_body.my",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_readonly_body.my",
+          "--no-cache",
+          "--experimental-zero-rc"
+        ],
         "source_sha256": "f3681fd2b7a0cc555ce220f06f42e1a39e4f98f7e4c594a994d027b7f7b41955",
         "status": 1,
         "stdout": "",
         "stderr": "rc_readonly_body.my:37:23: error[E_SINGLE_OWNER_MOVED]: '<collection>' was moved or is unavailable on this path; use .copy() when both values are needed\n      return 1 + length(tail)\n                        ^\n",
         "copy_changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-manual-copies/batch-50.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support3/batch-20.json",
+        "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7"
       },
       "source_check_matches_current": true
     },
@@ -1676,13 +1701,20 @@
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/rc_scalar_replacements.my",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_scalar_replacements.my",
+          "--no-cache",
+          "--experimental-zero-rc"
+        ],
         "source_sha256": "ed3e72d4e6e69d53e469580debf52c75815ab9d163268e8290a1adf66ff11bfa",
         "status": 1,
         "stdout": "",
-        "stderr": "rc_scalar_replacements.my:44:5: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n      values[0].scalar = 7\n      ^\n",
+        "stderr": "rc_scalar_replacements.my:44:5: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it\n      values[0].scalar = 7\n      ^\n",
         "copy_changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-manual-copies/batch-50.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support3/batch-20.json",
+        "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7"
       },
       "source_check_matches_current": true
     },
@@ -1726,13 +1758,20 @@
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/rc_semantic_history.my",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_semantic_history.my",
+          "--no-cache",
+          "--experimental-zero-rc"
+        ],
         "source_sha256": "e794e8361f35145924ae0b9f100e1ac22e17a859c3aba8a5d72d3b11facfbd5b",
-        "status": 1,
+        "status": 0,
         "stdout": "",
-        "stderr": "rc_semantic_history.my:4:17: error[E_SINGLE_OWNER_BORROW]: moving a field out of a record is outside this prototype; use .copy() or pass the field to a helper\n      mut saved = list(mapping.values())\n                  ^\n",
+        "stderr": "",
         "copy_changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-manual-copies/batch-60.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support3/batch-20.json",
+        "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7"
       },
       "source_check_matches_current": true
     },
@@ -1776,13 +1815,20 @@
       "public_functions_preserved": true,
       "source_check": {
         "source": "tests/lang/rc_temporary_lifetimes.my",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+          "check",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A06/tests/lang/rc_temporary_lifetimes.my",
+          "--no-cache",
+          "--experimental-zero-rc"
+        ],
         "source_sha256": "f00a593691b8733d32da6b7b1eab15d5aaad83a2d55f5ec89340fd9bf059449d",
-        "status": 1,
+        "status": 0,
         "stdout": "",
-        "stderr": "rc_temporary_lifetimes.my:61:19: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value\n      mut ordered = sorted(source)\n                    ^\n",
+        "stderr": "",
         "copy_changes": [],
-        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-manual-copies/batch-60.json",
-        "compiler_sha256": "8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9"
+        "report": "experiments/memory-closeout-20261012/A06/guest-migrations/after-support3/batch-20.json",
+        "compiler_sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7"
       },
       "source_check_matches_current": true
     }

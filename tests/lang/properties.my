@@ -79,7 +79,7 @@ public func test_a_span_is_ordered(span: PropertySpan) -> bool:
 
 
 public func test_a_record_keeps_its_fields(tagged: PropertyTagged) -> bool:
-    mut copy = replace(tagged, weight=tagged.weight)
+    mut copy = replace(tagged.copy(), weight=tagged.weight)
     return copy.name == tagged.name and copy.weight == tagged.weight
 
 
@@ -106,8 +106,8 @@ public func test_negating_twice_keeps_a_float(f: float) -> bool:
 
 
 public func test_a_tuple_swaps_back(pair: tuple[int, str]) -> bool:
-    const number, text = pair
-    mut swapped = (text, number)
+    const number, text = pair.copy()
+    mut swapped = (text.copy(), number)
     const back_text, back_number = swapped
     return back_number == number and back_text == text
 
