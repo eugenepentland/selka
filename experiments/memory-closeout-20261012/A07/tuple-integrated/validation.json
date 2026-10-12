@@ -1,0 +1,31 @@
+{
+  "source_commit": "157901e5c6e35447bd32df825147d56074fcedaf",
+  "compiler_path": "/home/epentland/ai/canopy/mylang-memory-20261012-A07-validation/.tmp/memory-closeout/A07/zig-cache/o/68e6b46a2477b97c4167434d7952b6d1/mylang",
+  "compiler_sha256": "4a554651e57ffb569c0971da569e85eac3e57d9179a98cf2bd0032af84f7f8cd",
+  "component_pin": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+  "component_pin_sha256": "32f37baa2509b01c231a104d7e9ba224a7193399201d0f87ec8a5db8fa6f039b",
+  "registered_tests": {
+    "passed": 3,
+    "failed": 0,
+    "exit": 0
+  },
+  "native_modes": [
+    "release",
+    "unoptimized debug",
+    "verified release",
+    "optimized debug",
+    "release without facts"
+  ],
+  "native_output": "tuple-unpack 3\ntuple-results 28\ntuple-providers 56\n",
+  "asserted_native_contract": [
+    "zero runtime RC events",
+    "zero managed exit-live bytes",
+    "clean emitted LLVM and linked symbols",
+    "provider caller reuse/swap/return and independent file contents",
+    "complete RHS evaluation before ordered destination effects",
+    "named Result handling and ignored-field cleanup",
+    "borrowed tuple explicit copy and optional tuple copy"
+  ],
+  "raw_counter_scope": "Registered test asserts each per-run counter JSON but its temporary files are cleaned; fresh final raw census/metrics remain A03/A09 work. No allocation/throughput saving claimed.",
+  "fixture_sha256": "5521f6c951f5603db0e2cc349c7e79165abc66e52c7f1ea8c787c24ee14b504c"
+}
