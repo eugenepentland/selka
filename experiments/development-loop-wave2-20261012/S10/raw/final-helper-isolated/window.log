@@ -1,0 +1,3 @@
+build-slot: FIFO ticket 46, position 1; waiting for memory-accounting settle delay or another measurement; waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 46 after 5s
+{"repetitions": 40, "median_ns": 365502972.5, "empirical_p95_ns": 425486433, "first_feedback_empirical_p95_ns": 81629329, "targets": {"feedback_5s": true, "completion_empirical_p95_15s": true}, "all_completed": true, "scope": "guest project edit; does not measure Zig compiler-source rebuilding or whole gate", "qualification": "empirical cohort only; no stable tail inference or broader compiler-edit claim"}
