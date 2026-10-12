@@ -73,3 +73,17 @@ Command support qualification (worker candidate, C0 plus this command changeset)
   still surface. Parent assigned migrations to their source owners.
 - Required full integration verification remains the coordinator's gate. These
   focused passes are command-stage evidence, not milestone 1 qualification.
+
+Support commit: `8d4a9845f`, required Guardian 88/88 passed. Post-refactor
+repeat focused tests pass 3/3; all 23 command rows pass in
+`test-support-matrix-refactor.json`, compiler SHA256
+`8a4f53e6202bd25c44f0b7a65851b281188a6921630b5862ec6aaa6725e798f9`.
+`test-support-assertion-audit.json` additionally checks exact test counts, no
+unsupported tests, exact move diagnostics and run output against that raw report.
+
+Separately prepared the optional independent owned-component compiler route,
+including immutable-pin validation, mode-bound cache identity, explicit guest
+selection and native qualification-driver forwarding. See
+`packaging-preparation.md`/`.json`. Fake-tool orchestration tests pass 21/21.
+No production new manifest exists and root builds still select the historical
+route, so this is packaging preparation, not installed RC retirement.

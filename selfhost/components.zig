@@ -8,12 +8,13 @@ const Value = std.json.Value;
 const Field = files.Field;
 const cwd = std.Io.Dir.cwd;
 
+const Bootstrap = struct { source: ?[]const u8 = null, owned_pin: ?[]const u8 = null };
 const Config = struct {
     root: []const u8,
     zig: []const u8,
     cache: []const u8,
     install: []const u8,
-    seed_source: ?[]const u8 = null,
+    bootstrap: Bootstrap = .{},
     uncached: bool = false,
     seed_only: bool = false,
 };
@@ -89,9 +90,22 @@ fn quotedField(value: []const u8, name: []const u8) ![]const u8 {
     return after[0..end];
 }
 
-const Seed = struct { binary: []const u8, qualification: Value };
+const Seed = struct { binary: []const u8, qualification: Value, owned: bool };
+
+/// The optional final-component compiler has a separate immutable source pin.
+/// It must build independently of the components that its guest output replaces.
+fn ownedPin(ctx: *Context, pin: Value) !void {
+    const recipe = try get(pin, "recipe");
+    if (!std.mem.eql(u8, try text(try get(pin, "memory_mode")), "zero-rc-v1") or
+        !std.mem.eql(u8, try text(try get(recipe, "step")), "seed-compiler") or
+        !std.mem.eql(u8, try text(try get(recipe, "optimize")), "ReleaseFast") or
+        !std.mem.eql(u8, try text(try get(recipe, "target")), "native"))
+        return ctx.fail("owned component compiler requires zero-rc-v1 and independent native ReleaseFast seed-compiler recipe");
+}
 fn qualifySeed(ctx: *Context, config: Config) !Seed {
-    const pin = try ctx.metadata(try ctx.path(&.{ config.root, "selfhost", "component-seed.json" }));
+    const owned = config.bootstrap.owned_pin != null;
+    const pin = try ctx.metadata(config.bootstrap.owned_pin orelse try ctx.path(&.{ config.root, "selfhost", "component-seed.json" }));
+    if (owned) try ownedPin(ctx, pin);
     const expected_version = try text(try get(pin, "zig"));
     const version = try ctx.checked(&.{ config.zig, "version" }, null, null);
     if (!std.mem.eql(u8, std.mem.trim(u8, version, "\r\n \t"), expected_version)) return ctx.fail("seed requires the pinned Zig version");
@@ -122,13 +136,13 @@ fn qualifySeed(ctx: *Context, config: Config) !Seed {
     if (try files.exists(ctx.io, receipt)) {
         const qualification = try ctx.metadata(receipt);
         if (!try equals(ctx.a, try get(qualification, "recipe"), recipe) or !try digestEquals(ctx.io, binary, try text(try get(qualification, "sha256")))) return ctx.fail("qualified seed digest mismatch; remove corrupt seed cache and rebuild");
-        return .{ .binary = binary, .qualification = qualification };
+        return .{ .binary = binary, .qualification = qualification, .owned = owned };
     }
     try files.remove(ctx.io, directory);
     try cwd().createDirPath(ctx.io, source);
     errdefer files.discard(ctx.io, directory);
     const archive_path = try ctx.path(&.{ directory, "seed.tar" });
-    if (config.seed_source) |supplied| {
+    if (config.bootstrap.source) |supplied| {
         try files.copy(ctx.io, supplied, archive_path, 0o600);
     } else {
         const git = try findTool(ctx, "git");
@@ -142,7 +156,7 @@ fn qualifySeed(ctx: *Context, config: Config) !Seed {
     if (!try files.exists(ctx.io, guardian)) return ctx.fail("seed build requires sibling guardian-zig dependency");
     const guardian_real = try cwd().realPathFileAlloc(ctx.io, guardian, ctx.a);
     try cwd().symLink(ctx.io, guardian_real, try ctx.path(&.{ directory, "guardian-zig" }), .{ .is_directory = true });
-    const output = try ctx.checked(&.{ config.zig, "build", "affected-compiler", "-Doptimize=ReleaseFast", "-j1" }, source, null);
+    const output = try ctx.checked(&.{ config.zig, "build", if (owned) "seed-compiler" else "affected-compiler", "-Doptimize=ReleaseFast", "-j1" }, source, null);
     if (output.len != 0) try std.Io.File.stderr().writeStreamingAll(ctx.io, output);
     const qualification = try files.object(ctx.a, &.{
         .{ .name = "recipe", .value = recipe },
@@ -150,7 +164,7 @@ fn qualifySeed(ctx: *Context, config: Config) !Seed {
         .{ .name = "source_identity", .value = try files.tree(ctx.a, ctx.io, try ctx.path(&.{ source, "src" })) },
     });
     try files.atomicJson(ctx.a, ctx.io, receipt, qualification, 0o600);
-    return .{ .binary = binary, .qualification = qualification };
+    return .{ .binary = binary, .qualification = qualification, .owned = owned };
 }
 
 fn nativeTarget(ctx: *Context) !Value {
@@ -209,6 +223,7 @@ fn component(ctx: *Context, config: Config, seed: Seed, descriptor: Component) !
     try flags.append(files.string("debug"));
     try flags.append(files.string("fresh-private-cache"));
     try flags.append(files.string("private-zig-global-v1"));
+    if (seed.owned) try flags.append(files.string("zero-rc-v1"));
     const identity = try files.object(ctx.a, &.{
         .{ .name = "format", .value = files.integer(2) },
         .{ .name = "component", .value = files.string(descriptor.name) },
@@ -257,7 +272,10 @@ fn component(ctx: *Context, config: Config, seed: Seed, descriptor: Component) !
         // Shared Zig CRT objects retain the directory of their first compilation
         // in DWARF. A deterministic private cache makes every byte reproducible.
         try environment.put("ZIG_GLOBAL_CACHE_DIR", try ctx.path(&.{ work, "cache", "zig-global" }));
-        const compile_output = try ctx.checked(&.{ seed.binary, "build", try ctx.path(&.{ copied, "main.my" }), "-o", output, "--cache-dir", try ctx.path(&.{ work, "cache" }) }, work, &environment);
+        var arguments: std.ArrayList([]const u8) = .empty;
+        try arguments.appendSlice(ctx.a, &.{ seed.binary, "build", try ctx.path(&.{ copied, "main.my" }), "-o", output, "--cache-dir", try ctx.path(&.{ work, "cache" }) });
+        if (seed.owned) try arguments.append(ctx.a, "--experimental-zero-rc");
+        const compile_output = try ctx.checked(arguments.items, work, &environment);
         if (compile_output.len != 0) try std.Io.File.stderr().writeStreamingAll(ctx.io, compile_output);
         const fresh = try files.object(ctx.a, &.{ .{ .name = "identity", .value = identity }, .{ .name = "sha256", .value = try ctx.hashValue(output) } });
         if (has_receipt) {
@@ -287,7 +305,7 @@ fn component(ctx: *Context, config: Config, seed: Seed, descriptor: Component) !
         .{ .name = "format", .value = files.integer(1) },                    .{ .name = "component", .value = files.string(descriptor.name) },
         .{ .name = "protocol", .value = files.integer(version) },            .{ .name = "schema", .value = files.integer(version) },
         .{ .name = "artifact", .value = files.string(name) },                .{ .name = "sha256", .value = files.string(expected) },
-        .{ .name = "key", .value = files.string(try ctx.a.dupe(u8, &key)) },
+        .{ .name = "key", .value = files.string(try ctx.a.dupe(u8, &key)) }, .{ .name = "memory_mode", .value = files.string(if (seed.owned) "zero-rc-v1" else "legacy-rc") },
     });
     try files.atomicJson(ctx.a, ctx.io, try ctx.path(&.{ config.install, try std.fmt.allocPrint(ctx.a, "{s}.json", .{descriptor.name}) }), manifest, 0o644);
     return ctx.a.dupe(u8, &key);
@@ -309,13 +327,14 @@ fn run(ctx: *Context, args: []const []const u8) !void {
     var cache: ?[]const u8 = ctx.environ.get("MYLANG_COMPONENT_CACHE");
     var install: ?[]const u8 = null;
     var source_archive: ?[]const u8 = null;
+    var owned_pin: ?[]const u8 = null;
     var uncached = false;
     var seed_only = false;
     var index: usize = 1;
     while (index < args.len) : (index += 1) {
         const arg = args[index];
         if (std.mem.eql(u8, arg, "--help") or std.mem.eql(u8, arg, "-h")) {
-            try std.Io.File.stdout().writeStreamingAll(ctx.io, "usage: selka-components [--root DIR] [--zig PATH] [--cache-dir DIR] [--install-dir DIR] [--seed-source TAR] [--uncached] [--seed-only]\n");
+            try std.Io.File.stdout().writeStreamingAll(ctx.io, "usage: selka-components [--root DIR] [--zig PATH] [--cache-dir DIR] [--install-dir DIR] [--seed-source TAR] [--owned-compiler-pin FILE] [--uncached] [--seed-only]\n");
             return;
         }
         if (std.mem.eql(u8, arg, "--uncached")) {
@@ -328,7 +347,7 @@ fn run(ctx: *Context, args: []const []const u8) !void {
         }
         index += 1;
         if (index >= args.len) return ctx.fail("option requires a value");
-        if (std.mem.eql(u8, arg, "--root")) root = args[index] else if (std.mem.eql(u8, arg, "--zig")) zig = args[index] else if (std.mem.eql(u8, arg, "--cache-dir")) cache = args[index] else if (std.mem.eql(u8, arg, "--install-dir")) install = args[index] else if (std.mem.eql(u8, arg, "--seed-source")) source_archive = args[index] else return ctx.fail("unknown coordinator option");
+        if (std.mem.eql(u8, arg, "--root")) root = args[index] else if (std.mem.eql(u8, arg, "--zig")) zig = args[index] else if (std.mem.eql(u8, arg, "--cache-dir")) cache = args[index] else if (std.mem.eql(u8, arg, "--install-dir")) install = args[index] else if (std.mem.eql(u8, arg, "--seed-source")) source_archive = args[index] else if (std.mem.eql(u8, arg, "--owned-compiler-pin")) owned_pin = args[index] else return ctx.fail("unknown coordinator option");
     }
     root = try cwd().realPathFileAlloc(ctx.io, root, ctx.a);
     const home = ctx.environ.get("HOME") orelse if (cache == null) return ctx.fail("HOME is unset; supply --cache-dir") else current;
@@ -337,7 +356,10 @@ fn run(ctx: *Context, args: []const []const u8) !void {
         .zig = try findTool(ctx, zig),
         .cache = try std.fs.path.resolve(ctx.a, &.{ current, cache orelse try ctx.path(&.{ home, ".cache", "mylang", "components" }) }),
         .install = try std.fs.path.resolve(ctx.a, &.{ current, install orelse try ctx.path(&.{ root, "zig-out", "libexec", "mylang", "components" }) }),
-        .seed_source = if (source_archive) |path_name| try cwd().realPathFileAlloc(ctx.io, path_name, ctx.a) else null,
+        .bootstrap = .{
+            .source = if (source_archive) |path_name| try cwd().realPathFileAlloc(ctx.io, path_name, ctx.a) else null,
+            .owned_pin = if (owned_pin) |path_name| try cwd().realPathFileAlloc(ctx.io, path_name, ctx.a) else null,
+        },
         .uncached = uncached,
         .seed_only = seed_only,
     };

@@ -24,8 +24,18 @@ rows = []
 def run(name, args, expected=0, owned=True, extra=None):
     cmd = [str(compiler)] + args + (["--seed", "7"] if args[0] == "test" else []) + (flag if owned else [])
     result = subprocess.run(cmd, capture_output=True, text=True, env=dict(env, **(extra or {})))
+    passed = result.returncode == expected
+    if args[0] == "test" and expected == 0 and result.returncode == 0:
+        report = json.loads(result.stdout)
+        count = 6 if name.startswith("directory") else (1 if name == "invalid-rc-control" else 3)
+        passed = passed and report.get("passed", 0) + report.get("cached", 0) == count
+        passed = passed and report.get("unsupported", 0) == 0 and report.get("failed", 0) == 0
+    if name in {"check-library-invalid", "invalid-cold", "invalid-repeat"}:
+        passed = passed and "E_SINGLE_OWNER_MOVED" in result.stderr
+    if name in {"run", "run-project"}:
+        passed = passed and result.stdout == "value-7\n"
     rows.append(dict(name=name, argv=cmd, expected=expected, status=result.returncode,
-                     passed=result.returncode == expected, stdout=result.stdout, stderr=result.stderr))
+                     passed=passed, stdout=result.stdout, stderr=result.stderr))
     return result
 source = str(root / "fixtures/guest_tests.my")
 invalid = str(root / "fixtures/invalid_move.my")

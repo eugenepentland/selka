@@ -46,6 +46,7 @@ class ComponentCacheTests(unittest.TestCase):
             "#!/bin/sh\n"
             "case \"$ZIG_GLOBAL_CACHE_DIR\" in */cache/zig-global) ;; *) exit 12;; esac\n"
             "printf 'component\\n' >> \"$COMPONENT_FIXTURE_LOG\"\n"
+            "case \" $* \" in *' --experimental-zero-rc '*) printf 'owned\\n' >> \"$COMPONENT_FIXTURE_LOG\";; esac\n"
             "test \"${COMPONENT_FIXTURE_FAIL:-0}\" = 0 || exit 7\n"
             "while test $# -gt 0; do\n"
             "  if test \"$1\" = -o; then shift; printf '%s' \"${COMPONENT_FIXTURE_OUTPUT:-native-component}\" > \"$1\"; exit 0; fi\n"
@@ -62,6 +63,7 @@ class ComponentCacheTests(unittest.TestCase):
             f"version) printf '%s\\n' {shlex.quote(self.version)};;\n"
             f"env) printf '%s\\n' {shlex.quote(f'.lib_dir = "{library}", .target = "test-native"')};;\n"
             "build) printf 'seed\\n' >> \"$COMPONENT_FIXTURE_LOG\"; "
+            "printf 'step:%s\\n' \"$2\" >> \"$COMPONENT_FIXTURE_LOG\"; "
             "test ! -e abandoned || exit 9; test \"$(cat src/runtime.c)\" = pinned-runtime || exit 10; "
             "mkdir -p zig-out/focus; cp src/fake-seed zig-out/focus/mylang; chmod 755 zig-out/focus/mylang;;\n"
             "*) exit 11;;\nesac\n"
@@ -98,6 +100,47 @@ class ComponentCacheTests(unittest.TestCase):
 
     def calls(self, kind="component"):
         return self.log.read_text().splitlines().count(kind)
+
+    def owned_pin(self):
+        pin = json.loads((self.root / "selfhost/component-seed.json").read_text())
+        pin.update(memory_mode="zero-rc-v1", recipe={
+            "step": "seed-compiler", "optimize": "ReleaseFast", "target": "native"})
+        path = self.root / "selfhost/component-owned-compiler.json"
+        path.write_text(json.dumps(pin))
+        return path
+
+    def test_owned_route_builds_independent_compiler_and_separates_component_cache(self):
+        pin = self.owned_pin()
+        historical_pin = self.root / "selfhost/component-seed.json"
+        before = historical_pin.read_bytes()
+        legacy = self.invoke()
+        owned = self.invoke("--owned-compiler-pin", str(pin))
+        self.assertNotEqual(legacy, owned)
+        self.assertEqual(self.calls("step:affected-compiler"), 1)
+        self.assertEqual(self.calls("step:seed-compiler"), 1)
+        self.assertEqual(self.calls("owned"), 2)
+        receipt = json.loads((self.cache / "artifacts" / owned / "receipt.json").read_text())
+        self.assertIn("zero-rc-v1", receipt["identity"]["flags"])
+        self.assertEqual(json.loads((self.install / "test-index.json").read_text())["memory_mode"], "zero-rc-v1")
+        self.assertEqual(owned, self.invoke("--owned-compiler-pin", str(pin)))
+        self.assertEqual(self.calls("component"), 4)
+        self.assertEqual(before, historical_pin.read_bytes())
+
+    def test_owned_route_refuses_component_dependent_seed_recipe(self):
+        path = self.owned_pin()
+        pin = json.loads(path.read_text())
+        pin["recipe"]["step"] = "affected-compiler"
+        path.write_text(json.dumps(pin))
+        self.assertIn("independent", self.invoke("--owned-compiler-pin", str(path), success=False))
+        self.assertFalse(self.log.exists())
+
+    def test_owned_route_refuses_wrong_memory_mode(self):
+        path = self.owned_pin()
+        pin = json.loads(path.read_text())
+        pin["memory_mode"] = "rc"
+        path.write_text(json.dumps(pin))
+        self.assertIn("zero-rc-v1", self.invoke("--owned-compiler-pin", str(path), success=False))
+        self.assertFalse(self.log.exists())
 
     def artifact(self, key):
         return self.cache / "artifacts" / key / "test-index"
