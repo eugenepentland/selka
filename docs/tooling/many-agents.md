@@ -265,6 +265,13 @@ mkdir -p "$TMPDIR"
 
 - **One `ZIG_LOCAL_CACHE_DIR` per worktree.** Zig's configure cache ignores the
   build root, so two trees sharing one cache once embedded the wrong runtime.
+- **Test steps see a projected environment.** Every command `zig build` wraps
+  (test roots, shards, Python and guest drivers) runs through `build-env
+  project`, which passes only the keyed, host and placement variables of
+  `src/environment_identity.zon`; session variables such as `CODEX_THREAD_ID`,
+  `TERM` or `PWD` never reach a test and never invalidate a cached verdict.
+  A test that needs a new variable must have it classified first
+  ([environment identity](environment-identity.md#in-the-build-graph)).
 - **`TMPDIR` on disk, not the `/tmp` tmpfs.** `/tmp` has a per-user quota. When
   other sessions filled it, every command that writes scratch under `TMPDIR`
   failed with `DiskQuota`.

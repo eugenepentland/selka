@@ -152,6 +152,58 @@ the whole-artifact fallback. Other reviewed artifact selectors retain their
 existing conservative source contracts. An unchanged wire schema alone never
 authorizes replacement producer reuse.
 
+## Prepared artifact inventory (`artifacts.json`)
+
+`zig build verification-prepare` installs every prepared native artifact under
+`zig-out/verification/bin/` and writes `zig-out/verification/artifacts.json`
+through `scripts/verification_artifacts.py` (a developer step, never part of the
+install graph). `build_verification.zig` exports each artifact's producer
+recipe, so the coordinator can identify an artifact by what produced it rather
+than by its bytes, whose debug information names the worktree. Version 3:
+
+```json
+{
+  "version": 3,
+  "artifacts": {
+    "units": {
+      "path": "/abs/zig-out/.../test",
+      "producer": {
+        "recipes": ["./*.zig", "build.zig.zon", ".zigversion", "guardian.toml", "src/",
+                    "test/fixtures/environment-identity/", "docs/primer.md",
+                    "../guardian-zig/build.zig", "../guardian-zig/build.zig.zon", "../guardian-zig/src/"],
+        "optimize": "debug",
+        "zig_version": "0.17.0-dev.1683+5ceec001b",
+        "test_runner": {"kind": "guardian", "dependency": "guardian",
+                        "location": "../guardian-zig", "runner": "src/test_runner.zig"}
+      }
+    }
+  },
+  "producers": {"tooling-units": {"version": 2, "domain": "...", "...": "..."}}
+}
+```
+
+- `artifacts[label].path`: the exact absolute path of the prepared binary (a
+  bare string in versions 1 and 2).
+- `artifacts[label].producer.recipes`: unique root-relative recipes in the
+  input-list syntax (`dir/`, `base/**/*SUFFIX`, `base/*SUFFIX`, or one file)
+  that bound every compile-time input: the build files (`./*.zig`,
+  `build.zig.zon`, `.zigversion`, `guardian.toml`), the root's sources, the
+  user guides `src/user_docs.zig` embeds (`mylang` and `units`), and for a Zig
+  test root the Guardian sources its runner and diagnostics compile from.
+- `optimize`: the artifact's optimize mode as the build spells it (`debug`,
+  `safe`, ...); `zig_version`: the toolchain the build runs.
+- `test_runner`: `{"kind": "guardian", "dependency", "location", "runner"}`
+  for a test root, which links Guardian's runner from the path dependency in
+  `build.zig.zon`, or `{"kind": "none"}` for an executable. It holds no
+  absolute path; the runner's content is bound through the Guardian recipes.
+- `producers`: the reviewed closure metadata of `tooling-units` and
+  `text-scalar-units`, unchanged from version 2.
+
+Every prepared artifact has a producer: `mylang`, `units`, `core`, `cli`,
+`golden`, `memory-budget`, `component-support`, `component-builder`,
+`tooling-units` and `text-scalar-units`. A new artifact must name its recipes
+in `build_verification.zig` or the build refuses to configure.
+
 The report's `action_budgets` evaluates the current request diagnostically. The
 [budget evaluator](verification-budgets.md) combines archived compatible reports
 and reevaluates advisory targets without executing tests. A single measurement

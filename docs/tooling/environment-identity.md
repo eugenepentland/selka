@@ -101,10 +101,64 @@ step actually runs in: if a variable is not keyed, the process must not see it
 change a verdict that a cache then replays. `verification_environment.project(env)`
 keeps the keyed, host and placement variables and removes the dropped ones. The compiler already follows
 the rule for receipts: a guest test reads no environment, and a non-empty
-`LD_*` variable still refuses every receipt. The build graph (`build.zig`) and
-the verification coordinator adopt the projection in later lanes of the
-[output-keyed verification plan](../audits/output-keyed-shared-receipts-plan-2026-10-12.md);
-until then their own environment digests are unchanged.
+`LD_*` variable still refuses every receipt. The build graph follows it through
+`build-env` (below); the verification coordinator adopts it in its own lane of
+the [output-keyed verification plan](../audits/output-keyed-shared-receipts-plan-2026-10-12.md).
+
+## In the build graph
+
+`zig build` keys a cached test verdict on its command, its artifacts, its
+declared input files and one environment manifest, and it runs every test
+command in the environment that manifest describes. One host tool does both:
+`build-env`, built from `build_env.zig` for the build host (its pure half,
+`src/build_env_rules.zig`, is tested from the unit root).
+
+- **The manifest** (ENV-PROJECTION-2). On every build that runs a cached test
+  step, `build-env digest OUT TOOL...` writes `environment.txt`. Its first line
+  is the host-scope digest, `environment_identity.digest(.host, …)`, of the live
+  environment and the named tools; the following lines explain it: every keyed
+  and host `NAME=VALUE` in name order (a backslash and a line feed escaped as
+  `\\` and `\n`), then `tool:NAME=SHA256` per tool. Placement and dropped
+  variables never appear. Every cached step declares the file as an input, so a
+  changed manifest re-runs the cached verdicts and an unchanged one keeps them.
+- **The keyed tools.** A `TOOL` argument is `NAME=PATH` or a bare `NAME`
+  resolved on the live `PATH` when the step runs, so the configure phase never
+  bakes a tool location. The build names its configured Zig by path (`zig=…`)
+  and `sh`, `env`, `python3` and `git` by name. A tool that cannot be found or
+  read is recorded as `absent`. The tool is compiled ReleaseSafe: hashing the
+  184 MB Zig binary takes about 0.17 s on every build, against about 1 s in Debug.
+- **The projection** (ENV-PROJECTION-1). `withTools` in `build.zig` wraps every
+  test root, shard and driver as
+  `sh -c SCRIPT with-tools BUILD-ENV NAME=VALUE... CMD...`; the script exports
+  the Zig cache variables and then runs
+  `exec BUILD-ENV project -- env NAME=VALUE... CMD...`. `build-env project`
+  keeps the keyed, host and placement variables (`passedThrough`), drops the
+  rest and replaces itself with the command, which keeps the wrapper's pid,
+  exit status and resource accounting. It exits with status 2 and one line on
+  standard error when the command cannot be executed. Variables the build
+  itself sets (`MYLANG_ZIG`, `MYLANG_COMPONENT_DIR`, `MYLANG_UNIT_SHARDS`,
+  `MYLANG_TEST_COMPILER`, ...) follow the projection through `env`.
+- **`MYLANG_TEST_COMPILER`** (TEST-PATHS-1). The unit, core, CLI and golden
+  test binaries do not embed the compiler's path or any absolute path of the
+  tree. The wrapper sets the placement variable `MYLANG_TEST_COMPILER` (and
+  `MYLANG_TEST_COMPONENT_BUILDER` for the CLI root) to the artifact's absolute
+  path; the step keys the artifact by content, not by path, so a changed
+  compiler re-runs the step without rebuilding the test binary. Fixture paths
+  (`test/core`, `tests/lang`, `benchmarks/runtime/ports/native_clock.c`) are
+  relative to the build root, which every test step uses as its working
+  directory. `src/core/test_paths.zig` holds both and is imported as
+  `core_test_options` by the core root and `test_paths` by the others.
+
+```console
+$ CODEX_THREAD_ID=x MYLANG_MEMORY_LIMIT=1G zig build run -- run probe.my
+None Some('1G') None Some('/…/.tmp/work')
+```
+
+A program that prints `env.get` of `CODEX_THREAD_ID`, `MYLANG_MEMORY_LIMIT`,
+`TERM` and `TMPDIR` shows a dropped variable absent, a keyed one present and a
+placement one present. The manifest is byte-identical with and without
+`CODEX_THREAD_ID`, and `MYLANG_MEMORY_LIMIT=1G` changes its first line and adds
+its line.
 
 ## Audit of `MYL_`, `MYLANG_` and `SELKA_` variables
 

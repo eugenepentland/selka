@@ -139,7 +139,13 @@ verdict you suspect). When a test starts reading a new fixture, declare it in
 `build_test_inputs.zig`. Test steps always run in the live environment of the
 `zig build` that runs them: never call `Step.Run.setEnvironmentVariable` in
 `build.zig` (a cached configuration freezes the whole environment it copies, and
-the build refuses to configure); pass variables through `withTools`.
+the build refuses to configure); pass variables through `withTools`. That live
+environment is projected: `withTools` runs every command through `build-env
+project`, so a test sees only the variables `src/environment_identity.zon` keys
+or marks as placement, and the environment manifest keys exactly the keyed and
+host ones (`docs/tooling/environment-identity.md#in-the-build-graph`). Test
+binaries get the compiler through `MYLANG_TEST_COMPILER` and fixture paths
+relative to the build root, never an absolute path.
 
 `zig build test` splits its slow Zig roots across processes: `src/core/root_test.zig`
 into `-Dcore-shards=N` shards (default 8), `src/root_test.zig` into

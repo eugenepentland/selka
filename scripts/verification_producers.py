@@ -109,7 +109,7 @@ unknown new narrowing still needs proof. Inherited context includes all arbitrar
 build code, Guardian runner/diagnostic source and pinned Zig tools/library bytes.
 """
     try:
-        if type(record.get('version')) is not int or record['version'] != 2:
+        if type(record.get('version')) is not int or record['version'] not in (2, 3):
             return None
         metadata = record['producers'][label]
         fields = {'version', 'domain', 'label', 'implementation', 'sources',

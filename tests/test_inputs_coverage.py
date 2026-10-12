@@ -64,13 +64,15 @@ def declared_lists(text: str) -> dict[str, list[str]]:
             constants[name] = value
             continue
         entries = []
-        for literal, ident in STRING.findall(body):
-            if literal:
-                entries.append(literal)
-            elif ident in constants:
-                entries.append(constants[ident])
-            elif ident in lists:
-                entries.extend(lists[ident])
+        for term in re.finditer(LIST_TERM, body, re.S):
+            if not term.group().startswith("["):
+                entries.extend(lists.get(term.group(), []))
+                continue
+            for literal, ident in STRING.findall(term.group()):
+                if literal:
+                    entries.append(literal)
+                elif ident in constants:
+                    entries.append(constants[ident])
         lists[name] = entries
     return lists
 
