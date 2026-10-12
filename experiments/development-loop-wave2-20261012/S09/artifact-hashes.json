@@ -1,0 +1,10 @@
+{
+  "adapter-tests.log": "634b6b18994c3f5639b44aa34ee997c3225cd376552caf2652b9eb969f46ce9c",
+  "bootstrap_evidence_bridge.py": "ad0f6765ab047f3ddeb3a3b3a3009b7f96e2df6ff6501de8dd1928f53c50ca6e",
+  "bootstrap_evidence_bridge_test.py": "d16c6103392d0a4968244992bbd6c754b207c4139d08611a44e6dc4e7c531606",
+  "caller-contract.md": "ae45e58e351a860351878a1520833b380f8f2b1e7fb61b69b876ecd43f7f7791",
+  "commands.md": "34fdfa3ff5bf5312fe20769a93ac1d20c2b844629fa99a92892b7539b7d8dbeb",
+  "external-evidence.json": "b669704708a724a70430fbe963aa854a4e8da36c828a0b13dafc638854135c91",
+  "handoff.md": "92e274e2e5295319591f9e26f4e7a5ca0d067058806ba6d8eba96c52b464c3d8",
+  "memory-owner-observation.json": "2092450bd7df69702164c60f4fc7a1ba3cec6c13e191db7efb7745e0508b3085"
+}
