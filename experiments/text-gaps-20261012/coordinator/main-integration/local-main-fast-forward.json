@@ -1,0 +1,34 @@
+{
+  "old_head": "4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9",
+  "new_head": "1994cb76e266080d971be6f41e98fba5707234dd",
+  "checkout": "/home/epentland/ai/canopy/mylang-debug-speedup-main",
+  "existing_status_preserved": true,
+  "files": [
+    {
+      "status": " M",
+      "path": "docs/README.md",
+      "sha256": "519dec9d6d5fb7e8b75f4893e102d8fc155803dae2f38bf5deda07b286b0d29f"
+    },
+    {
+      "status": " M",
+      "path": "docs/audits/zero-rc-closeout-10-agent-plan-2026-10-11.md",
+      "sha256": "9b95c29c5bb7eab44e49cfb8428f8d76a5141b5ea4e3b1e6f958522d2e5f7d76"
+    },
+    {
+      "status": "??",
+      "path": "docs/audits/development-loop-audit-2026-10-12.md",
+      "sha256": "9cddf7763d0f09c07e22ee0b04a4d08710374cf0b09c9436d539d13910c7b078"
+    },
+    {
+      "status": "??",
+      "path": "docs/audits/output-keyed-shared-receipts-plan-2026-10-12.md",
+      "sha256": "db64fe4ce3d3e047939e2fc6f9ad5b89e9d5c85340b7e43b5360c089dd46e22f"
+    },
+    {
+      "status": "??",
+      "path": "docs/audits/zero-rc-closeout-10-agent-plan-2026-10-12.md",
+      "sha256": "501bb081390cb0b870851b2b30fd97035b662bac39f31793ee8bfdc3cd0550f6"
+    }
+  ],
+  "remote_push": false
+}

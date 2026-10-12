@@ -1,0 +1,958 @@
+{
+  "binary": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+  "sha256": "429854488c74f3bc0a39aa0e0a8216e81bb21362bfad58e573a7fb1a96bc7994",
+  "results": [
+    {
+      "case": "bytes_scan",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "bytes_scan",
+        "2",
+        "1",
+        "1"
+      ],
+      "stdout": "39 522\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 39,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "bytes_scan",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "bytes_scan",
+        "3",
+        "7",
+        "42"
+      ],
+      "stdout": "1382 653\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 1382,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "bytes_scan",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "bytes_scan",
+        "17",
+        "31",
+        "999983"
+      ],
+      "stdout": "57495 1258\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 57495,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "bytes_scan",
+      "size": 64,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "bytes_scan",
+        "64",
+        "3",
+        "42"
+      ],
+      "stdout": "24480 805\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 24480,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "bytes_scan",
+      "size": 4096,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "bytes_scan",
+        "4096",
+        "3",
+        "42"
+      ],
+      "stdout": "1566720 1106\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 1566720,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_equal",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "string_equal",
+        "2",
+        "1",
+        "1"
+      ],
+      "stdout": "0 800\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 0,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_equal",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "string_equal",
+        "3",
+        "7",
+        "42"
+      ],
+      "stdout": "4 751\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 4,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_equal",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "string_equal",
+        "17",
+        "31",
+        "999983"
+      ],
+      "stdout": "16 1198\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 16,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_equal",
+      "size": 64,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "string_equal",
+        "64",
+        "3",
+        "42"
+      ],
+      "stdout": "2 909\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 2,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_equal",
+      "size": 4096,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "string_equal",
+        "4096",
+        "3",
+        "42"
+      ],
+      "stdout": "2 1674\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 2,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_search",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "string_search",
+        "2",
+        "1",
+        "1"
+      ],
+      "stdout": "9 1820\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 9,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_search",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "string_search",
+        "3",
+        "7",
+        "42"
+      ],
+      "stdout": "28 1735\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 28,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_search",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "string_search",
+        "17",
+        "31",
+        "999983"
+      ],
+      "stdout": "376 4139\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 376,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_search",
+      "size": 64,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "string_search",
+        "64",
+        "3",
+        "42"
+      ],
+      "stdout": "70 1993\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 70,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_search",
+      "size": 4096,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "string_search",
+        "4096",
+        "3",
+        "42"
+      ],
+      "stdout": "4102 4294\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 4102,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_split",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "string_split",
+        "2",
+        "1",
+        "1"
+      ],
+      "stdout": "1204 1616\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 1204,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_split",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "string_split",
+        "3",
+        "7",
+        "42"
+      ],
+      "stdout": "11277 2511\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 11277,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_split",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "string_split",
+        "17",
+        "31",
+        "999983"
+      ],
+      "stdout": "228811 14551\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 228811,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_split",
+      "size": 64,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "string_split",
+        "64",
+        "3",
+        "42"
+      ],
+      "stdout": "82182 6600\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 82182,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_split",
+      "size": 4096,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "string_split",
+        "4096",
+        "3",
+        "42"
+      ],
+      "stdout": "5279658 294932\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 5279658,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_join",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "string_join",
+        "2",
+        "1",
+        "1"
+      ],
+      "stdout": "1308 868\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 1308,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_join",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "string_join",
+        "3",
+        "7",
+        "42"
+      ],
+      "stdout": "12838 1702\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 12838,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_join",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "string_join",
+        "17",
+        "31",
+        "999983"
+      ],
+      "stdout": "285330 4912\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 285330,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_join",
+      "size": 64,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "string_join",
+        "64",
+        "3",
+        "42"
+      ],
+      "stdout": "104022 2955\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 104022,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "string_join",
+      "size": 4096,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "string_join",
+        "4096",
+        "3",
+        "42"
+      ],
+      "stdout": "6700602 95190\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 6700602,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "int_parse",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "int_parse",
+        "2",
+        "1",
+        "1"
+      ],
+      "stdout": "999999869 672\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 999999869,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "int_parse",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "int_parse",
+        "3",
+        "7",
+        "42"
+      ],
+      "stdout": "400 1231\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 400,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "int_parse",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "int_parse",
+        "17",
+        "31",
+        "999983"
+      ],
+      "stdout": "2006253 2533\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 2006253,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "int_parse",
+      "size": 64,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "int_parse",
+        "64",
+        "3",
+        "42"
+      ],
+      "stdout": "5933 1212\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 5933,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "int_parse",
+      "size": 4096,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "int_parse",
+        "4096",
+        "3",
+        "42"
+      ],
+      "stdout": "5933 32450\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 5933,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "int_format",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "int_format",
+        "2",
+        "1",
+        "1"
+      ],
+      "stdout": "159 1538\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 159,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "int_format",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "int_format",
+        "3",
+        "7",
+        "42"
+      ],
+      "stdout": "1092 1264\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 1092,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "int_format",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "int_format",
+        "17",
+        "31",
+        "999983"
+      ],
+      "stdout": "6683 2722\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 6683,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "int_format",
+      "size": 64,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "int_format",
+        "64",
+        "3",
+        "42"
+      ],
+      "stdout": "694 1318\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 694,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "int_format",
+      "size": 4096,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "int_format",
+        "4096",
+        "3",
+        "42"
+      ],
+      "stdout": "694 1990\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 694,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "word_count",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "word_count",
+        "2",
+        "1",
+        "1"
+      ],
+      "stdout": "2379 5012\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 2379,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "word_count",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "word_count",
+        "3",
+        "7",
+        "42"
+      ],
+      "stdout": "15733 6120\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 15733,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "word_count",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "word_count",
+        "17",
+        "31",
+        "999983"
+      ],
+      "stdout": "1076884 23069\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 1076884,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "word_count",
+      "size": 16,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "word_count",
+        "16",
+        "3",
+        "42"
+      ],
+      "stdout": "91044 7004\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 91044,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "word_count",
+      "size": 256,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "word_count",
+        "256",
+        "3",
+        "42"
+      ],
+      "stdout": "20382504 23759\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 20382504,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "csv_aggregate",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "csv_aggregate",
+        "2",
+        "1",
+        "1"
+      ],
+      "stdout": "1510 8059\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 1510,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "csv_aggregate",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "csv_aggregate",
+        "3",
+        "7",
+        "42"
+      ],
+      "stdout": "21679 18452\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 21679,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "csv_aggregate",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "csv_aggregate",
+        "17",
+        "31",
+        "999983"
+      ],
+      "stdout": "6658645 308882\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 6658645,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "csv_aggregate",
+      "size": 16,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "csv_aggregate",
+        "16",
+        "3",
+        "42"
+      ],
+      "stdout": "48300 25696\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 48300,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "csv_aggregate",
+      "size": 256,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "csv_aggregate",
+        "256",
+        "3",
+        "42"
+      ],
+      "stdout": "3496086 367010\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 3496086,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "json_transform",
+      "size": 2,
+      "seed": 1,
+      "iterations": 1,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "json_transform",
+        "2",
+        "1",
+        "1"
+      ],
+      "stdout": "7450 11503\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 7450,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "json_transform",
+      "size": 3,
+      "seed": 42,
+      "iterations": 7,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "json_transform",
+        "3",
+        "7",
+        "42"
+      ],
+      "stdout": "53402 27734\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 53402,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "json_transform",
+      "size": 17,
+      "seed": 999983,
+      "iterations": 31,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "json_transform",
+        "17",
+        "31",
+        "999983"
+      ],
+      "stdout": "1390987 767725\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 1390987,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "json_transform",
+      "size": 16,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "json_transform",
+        "16",
+        "3",
+        "42"
+      ],
+      "stdout": "114612 80463\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 114612,
+      "ok": true,
+      "counters": null
+    },
+    {
+      "case": "json_transform",
+      "size": 256,
+      "seed": 42,
+      "iterations": 3,
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-001/text-runtime",
+        "json_transform",
+        "256",
+        "3",
+        "42"
+      ],
+      "stdout": "2021052 1146953\n",
+      "stderr": "",
+      "status": 0,
+      "expected": 2021052,
+      "ok": true,
+      "counters": null
+    }
+  ],
+  "all_ok": true,
+  "note": "Protocol validation only; no timing comparison."
+}

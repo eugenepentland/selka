@@ -1,7 +1,9 @@
 # Local main integration checkpoint
 
-Status: complete verification is green. This evidence commit is ready for the
-user-authorized fast-forward of local `main`.
+Status: merged into local `main` at
+`1994cb76e266080d971be6f41e98fba5707234dd` after complete verification passed.
+All five pre-existing documentation edits were preserved byte for byte; see
+`local-main-fast-forward.json`. No remote push was performed.
 
 The user requested merging the current work before continuing performance work,
 and explicitly selected the local main / development line. Its starting commit
