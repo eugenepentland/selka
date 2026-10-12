@@ -38,11 +38,21 @@ are recorded in the focused-test receipt. Guardian passed all 88 checks while
 committing the driver dependency after correcting the in-progress renderer's
 import cycle and complexity/test-structure findings.
 
-Native five-mode counted execution and explicit debug/release replay are pending
-in `qualify.py`. The first prototype reproduced the shared missing native-object
-bug; `prototype-01/` retains those failures. The driver repair is in the second
-prototype. Current host tool approval may prevent C0 native linking and cache
-replay; those failures must remain explicit, not count as successful qualification.
+`prototype-02/` passes all five native counted zero-RC modes and the ordinary
+release control. Every zero-RC lane records 51 whole-program managed allocations,
+3,680 cumulative managed bytes, 640 peak live bytes and zero bytes live at exit;
+emitted LLVM, linked symbols and counted runtime events are RC-free. These totals
+describe this fixture and compiler, not a reduction or performance comparison.
+Ordinary release has 48 allocations, 3,488 bytes and the same managed peak.
+
+Three qualification failures remain explicit. Both debug and release replay
+attempts link successfully twice but report `program=linked`, not `replayed`:
+the changed host `/etc/ld.so.cache` is outside this compiler's qualified native
+tool closure, disabling native artifact reuse. The immutable C0 ordinary control
+fails linking because its old driver removes uncached unit objects prematurely.
+The coordinator owns host qualification; A08 owns the integrated cache rerun.
+No successful C0 comparison is claimed. `prototype-01/` retains the earlier five
+missing-object failures before the approved driver repair.
 Managed counters omit the renderer's native scratch buffer and are not RSS.
 No runtime, allocation or peak-memory saving is claimed before paired evidence.
 The integrated compiler must rerun all affected cases and the registered full gate.

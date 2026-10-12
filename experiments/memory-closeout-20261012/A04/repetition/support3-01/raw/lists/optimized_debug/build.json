@@ -1,0 +1,21 @@
+{
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+    "build",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/repetition/support3-01/lists/optimized_debug/main.my",
+    "--zig",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/repetition/support3-01/cache",
+    "--experimental-zero-rc",
+    "--counters",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/repetition/support3-01/lists/optimized_debug/program",
+    "--emit-llvm",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/repetition/support3-01/lists/optimized_debug/program.ll"
+  ],
+  "status": 2,
+  "elapsed_ns": 3040266818,
+  "stdout": "",
+  "stderr": "error: failed to open object /home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/repetition/support3-01/cache/native-link-78c3882d072ea190ada5f5156b7de327/370cb727089f279cff599ef8213d7cd4055f1ff68a51de2bf6340f8299dbfff2.o: FileNotFound\n"
+}

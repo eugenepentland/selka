@@ -1,0 +1,1351 @@
+{
+  "schema": "memory-closeout-a04-results-v1",
+  "compiler": {
+    "path": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang",
+    "sha256": "7b911f91acefccc9dbfd0d1bcfee46e1ec5acc7f47a7ca5954481d44393c7de7",
+    "source_commit": "0d17e4e130706639c0f49e78b60502bfb2151ebc"
+  },
+  "harness_sha256": "e8818ee85ed83ab4e2401483851e4e2bad579457ef37f997b299bed8bf6d53aa",
+  "inventory": {
+    "schema": "memory-closeout-a04-inventory-v1",
+    "declarations": [
+      {
+        "module": "json",
+        "name": "Json",
+        "kind": "enum",
+        "line": 4,
+        "source": "src/stdlib/json.my",
+        "source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+        "signature": "public enum Json:",
+        "contract": "Owned aggregate; managed children move into constructors; borrowing field access does not transfer ownership.",
+        "coverage_sources": [],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "json",
+        "name": "Error",
+        "kind": "enum",
+        "line": 15,
+        "source": "src/stdlib/json.my",
+        "source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+        "signature": "public enum Error:",
+        "contract": "Owned aggregate; managed children move into constructors; borrowing field access does not transfer ownership.",
+        "coverage_sources": [],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "json",
+        "name": "message",
+        "kind": "func",
+        "line": 20,
+        "source": "src/stdlib/json.my",
+        "source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+        "signature": "public func message(error: Error) -> str:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/json.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "json",
+        "name": "max_depth",
+        "kind": "func",
+        "line": 33,
+        "source": "src/stdlib/json.my",
+        "source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+        "signature": "public func max_depth() -> int effects():",
+        "contract": "Ordinary managed inputs borrowed; scalar or optional-scalar result owns no input storage.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/json.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "json",
+        "name": "null_value",
+        "kind": "func",
+        "line": 38,
+        "source": "src/stdlib/json.my",
+        "source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+        "signature": "public func null_value() -> Json effects():",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/json.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "json",
+        "name": "boolean",
+        "kind": "func",
+        "line": 43,
+        "source": "src/stdlib/json.my",
+        "source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+        "signature": "public func boolean(value: bool) -> Json effects():",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/json.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "json",
+        "name": "integer",
+        "kind": "func",
+        "line": 48,
+        "source": "src/stdlib/json.my",
+        "source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+        "signature": "public func integer(value: int) -> Json effects():",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/json.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "json",
+        "name": "number",
+        "kind": "func",
+        "line": 53,
+        "source": "src/stdlib/json.my",
+        "source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+        "signature": "public func number(value: float) -> Json effects():",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/json.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "json",
+        "name": "text",
+        "kind": "func",
+        "line": 58,
+        "source": "src/stdlib/json.my",
+        "source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+        "signature": "public func text(value: str) -> Json:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/json.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "json",
+        "name": "array",
+        "kind": "func",
+        "line": 63,
+        "source": "src/stdlib/json.my",
+        "source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+        "signature": "public func array(items: Json[]) -> Json:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/json.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "json",
+        "name": "object",
+        "kind": "func",
+        "line": 68,
+        "source": "src/stdlib/json.my",
+        "source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+        "signature": "public func object(fields: dict[str, Json]) -> Json:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/json.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "json",
+        "name": "type_name",
+        "kind": "func",
+        "line": 73,
+        "source": "src/stdlib/json.my",
+        "source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+        "signature": "public func type_name(value: Json) -> str:",
+        "contract": "Ordinary input borrowed when present; immutable literal result may use immortal storage.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/json.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "json",
+        "name": "is_null",
+        "kind": "func",
+        "line": 92,
+        "source": "src/stdlib/json.my",
+        "source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+        "signature": "public func is_null(value: Json) -> bool effects():",
+        "contract": "Ordinary managed inputs borrowed; scalar or optional-scalar result owns no input storage.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/json.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "json",
+        "name": "as_bool",
+        "kind": "func",
+        "line": 111,
+        "source": "src/stdlib/json.my",
+        "source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+        "signature": "public func as_bool(value: Json) -> bool? effects():",
+        "contract": "Ordinary managed inputs borrowed; scalar or optional-scalar result owns no input storage.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/json.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "json",
+        "name": "as_int",
+        "kind": "func",
+        "line": 130,
+        "source": "src/stdlib/json.my",
+        "source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+        "signature": "public func as_int(value: Json) -> int? effects():",
+        "contract": "Ordinary managed inputs borrowed; scalar or optional-scalar result owns no input storage.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/json.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "json",
+        "name": "as_float",
+        "kind": "func",
+        "line": 149,
+        "source": "src/stdlib/json.my",
+        "source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+        "signature": "public func as_float(value: Json) -> float? effects():",
+        "contract": "Ordinary managed inputs borrowed; scalar or optional-scalar result owns no input storage.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/json.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "json",
+        "name": "as_str",
+        "kind": "func",
+        "line": 168,
+        "source": "src/stdlib/json.my",
+        "source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+        "signature": "public func as_str(value: Json) -> str?:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/json.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "json",
+        "name": "as_list",
+        "kind": "func",
+        "line": 187,
+        "source": "src/stdlib/json.my",
+        "source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+        "signature": "public func as_list(value: Json) -> Json[]?:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/json.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "json",
+        "name": "as_dict",
+        "kind": "func",
+        "line": 206,
+        "source": "src/stdlib/json.my",
+        "source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+        "signature": "public func as_dict(value: Json) -> dict[str, Json]?:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/json.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "json",
+        "name": "get",
+        "kind": "func",
+        "line": 225,
+        "source": "src/stdlib/json.my",
+        "source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+        "signature": "public func get(value: Json, key: str) -> Json?:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/json.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "json",
+        "name": "at",
+        "kind": "func",
+        "line": 246,
+        "source": "src/stdlib/json.my",
+        "source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+        "signature": "public func at(value: Json, index: int) -> Json?:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/json.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "json",
+        "name": "loads",
+        "kind": "func",
+        "line": 612,
+        "source": "src/stdlib/json.my",
+        "source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+        "signature": "public func loads(source: str) -> Result[Json, Error]:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/json.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "json",
+        "name": "dumps",
+        "kind": "func",
+        "line": 723,
+        "source": "src/stdlib/json.my",
+        "source_sha256": "d73c1c067ec7c91e16444bedc0e305fa0517b44b78e0d3c1e3bcb7f06a45aa0b",
+        "signature": "public func dumps(value: Json) -> str:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/json.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "digits",
+        "kind": "func",
+        "line": 4,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func digits() -> str:",
+        "contract": "Ordinary input borrowed when present; immutable literal result may use immortal storage.",
+        "coverage_sources": [
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "Error",
+        "kind": "enum",
+        "line": 9,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public enum Error:",
+        "contract": "Owned aggregate; managed children move into constructors; borrowing field access does not transfer ownership.",
+        "coverage_sources": [],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "message",
+        "kind": "func",
+        "line": 15,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func message(error: Error) -> str:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "letters",
+        "kind": "func",
+        "line": 29,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func letters() -> str:",
+        "contract": "Ordinary input borrowed when present; immutable literal result may use immortal storage.",
+        "coverage_sources": [
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "whitespace",
+        "kind": "func",
+        "line": 34,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func whitespace() -> str:",
+        "contract": "Ordinary input borrowed when present; immutable literal result may use immortal storage.",
+        "coverage_sources": [
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "is_digit",
+        "kind": "func",
+        "line": 57,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func is_digit(text: str) -> bool effects():",
+        "contract": "Ordinary managed inputs borrowed; scalar or optional-scalar result owns no input storage.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/strings.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "is_alpha",
+        "kind": "func",
+        "line": 62,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func is_alpha(text: str) -> bool effects():",
+        "contract": "Ordinary managed inputs borrowed; scalar or optional-scalar result owns no input storage.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/strings.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "is_alnum",
+        "kind": "func",
+        "line": 67,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func is_alnum(text: str) -> bool:",
+        "contract": "Ordinary managed inputs borrowed; scalar or optional-scalar result owns no input storage.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/strings.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "is_space",
+        "kind": "func",
+        "line": 72,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func is_space(text: str) -> bool effects():",
+        "contract": "Ordinary managed inputs borrowed; scalar or optional-scalar result owns no input storage.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/strings.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "starts_with",
+        "kind": "func",
+        "line": 77,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func starts_with(text: str, prefix: str) -> bool effects():",
+        "contract": "Ordinary managed inputs borrowed; scalar or optional-scalar result owns no input storage.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/strings.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "ends_with",
+        "kind": "func",
+        "line": 82,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func ends_with(text: str, suffix: str) -> bool effects():",
+        "contract": "Ordinary managed inputs borrowed; scalar or optional-scalar result owns no input storage.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/strings.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "find",
+        "kind": "func",
+        "line": 87,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func find(text: str, needle: str) -> int? effects():",
+        "contract": "Ordinary managed inputs borrowed; scalar or optional-scalar result owns no input storage.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/strings.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "count",
+        "kind": "func",
+        "line": 95,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func count(text: str, needle: str) -> int effects():",
+        "contract": "Ordinary managed inputs borrowed; scalar or optional-scalar result owns no input storage.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/strings.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "lstrip",
+        "kind": "func",
+        "line": 102,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func lstrip(text: str) -> str:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/strings.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "rstrip",
+        "kind": "func",
+        "line": 107,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func rstrip(text: str) -> str:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/strings.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "strip",
+        "kind": "func",
+        "line": 112,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func strip(text: str) -> str:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/strings.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "lines",
+        "kind": "func",
+        "line": 117,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func lines(text: str) -> str[]:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/strings.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "repeat",
+        "kind": "func",
+        "line": 133,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func repeat(text: str, times: int) -> Result[str, Error]:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/strings.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "pad_left",
+        "kind": "func",
+        "line": 149,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func pad_left(text: str, width: int, fill: str) -> Result[str, Error]:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/strings.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "pad_right",
+        "kind": "func",
+        "line": 159,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func pad_right(text: str, width: int, fill: str) -> Result[str, Error]:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/strings.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "upper",
+        "kind": "func",
+        "line": 169,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func upper(text: str) -> str:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/strings.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "lower",
+        "kind": "func",
+        "line": 174,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func lower(text: str) -> str:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/strings.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "substitute",
+        "kind": "func",
+        "line": 179,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func substitute(text: str, needle: str, insertion: str) -> Result[str, Error]:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/strings.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "to_int",
+        "kind": "func",
+        "line": 186,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func to_int(text: str) -> int?:",
+        "contract": "Ordinary managed inputs borrowed; scalar or optional-scalar result owns no input storage.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/strings.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "to_float",
+        "kind": "func",
+        "line": 191,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func to_float(text: str) -> float?:",
+        "contract": "Ordinary managed inputs borrowed; scalar or optional-scalar result owns no input storage.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/strings.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "format_int",
+        "kind": "func",
+        "line": 196,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func format_int(value: int, base: int) -> Result[str, Error]:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/strings.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "format_float",
+        "kind": "func",
+        "line": 230,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func format_float(value: float, decimals: int) -> Result[str, Error]:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/strings.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "ord",
+        "kind": "func",
+        "line": 264,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func ord(text: str) -> Result[int, Error]:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "strings",
+        "name": "chr",
+        "kind": "func",
+        "line": 285,
+        "source": "src/stdlib/strings.my",
+        "source_sha256": "bfa155fff5774746ff8ebab5777de0329a2b747c8952658b57e818c8798d328e",
+        "signature": "public func chr(code: int) -> Result[str, Error]:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "path",
+        "name": "Split",
+        "kind": "record",
+        "line": 4,
+        "source": "src/stdlib/path.my",
+        "source_sha256": "fef8fbc7ec78a5c72d8ab3891ab3c2cd8592836f4b29e3aa3435508c8027de65",
+        "signature": "public record Split:",
+        "contract": "Owned aggregate; managed children move into constructors; borrowing field access does not transfer ownership.",
+        "coverage_sources": [],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "path",
+        "name": "separator",
+        "kind": "func",
+        "line": 10,
+        "source": "src/stdlib/path.my",
+        "source_sha256": "fef8fbc7ec78a5c72d8ab3891ab3c2cd8592836f4b29e3aa3435508c8027de65",
+        "signature": "public func separator() -> str:",
+        "contract": "Ordinary input borrowed when present; immutable literal result may use immortal storage.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/path.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "path",
+        "name": "is_absolute",
+        "kind": "func",
+        "line": 15,
+        "source": "src/stdlib/path.my",
+        "source_sha256": "fef8fbc7ec78a5c72d8ab3891ab3c2cd8592836f4b29e3aa3435508c8027de65",
+        "signature": "public func is_absolute(value: str) -> bool:",
+        "contract": "Ordinary managed inputs borrowed; scalar or optional-scalar result owns no input storage.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/path.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "path",
+        "name": "join",
+        "kind": "func",
+        "line": 20,
+        "source": "src/stdlib/path.my",
+        "source_sha256": "fef8fbc7ec78a5c72d8ab3891ab3c2cd8592836f4b29e3aa3435508c8027de65",
+        "signature": "public func join(left: str, right: str) -> str:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/path.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "path",
+        "name": "join_all",
+        "kind": "func",
+        "line": 31,
+        "source": "src/stdlib/path.my",
+        "source_sha256": "fef8fbc7ec78a5c72d8ab3891ab3c2cd8592836f4b29e3aa3435508c8027de65",
+        "signature": "public func join_all(parts: str[]) -> str:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/path.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "path",
+        "name": "basename",
+        "kind": "func",
+        "line": 39,
+        "source": "src/stdlib/path.my",
+        "source_sha256": "fef8fbc7ec78a5c72d8ab3891ab3c2cd8592836f4b29e3aa3435508c8027de65",
+        "signature": "public func basename(value: str) -> str:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/path.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "path",
+        "name": "dirname",
+        "kind": "func",
+        "line": 47,
+        "source": "src/stdlib/path.my",
+        "source_sha256": "fef8fbc7ec78a5c72d8ab3891ab3c2cd8592836f4b29e3aa3435508c8027de65",
+        "signature": "public func dirname(value: str) -> str:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/path.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "path",
+        "name": "splitext",
+        "kind": "func",
+        "line": 57,
+        "source": "src/stdlib/path.my",
+        "source_sha256": "fef8fbc7ec78a5c72d8ab3891ab3c2cd8592836f4b29e3aa3435508c8027de65",
+        "signature": "public func splitext(value: str) -> Split:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/path.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "path",
+        "name": "stem",
+        "kind": "func",
+        "line": 69,
+        "source": "src/stdlib/path.my",
+        "source_sha256": "fef8fbc7ec78a5c72d8ab3891ab3c2cd8592836f4b29e3aa3435508c8027de65",
+        "signature": "public func stem(value: str) -> str:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/path.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "path",
+        "name": "extension",
+        "kind": "func",
+        "line": 74,
+        "source": "src/stdlib/path.my",
+        "source_sha256": "fef8fbc7ec78a5c72d8ab3891ab3c2cd8592836f4b29e3aa3435508c8027de65",
+        "signature": "public func extension(value: str) -> str:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/path.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "path",
+        "name": "components",
+        "kind": "func",
+        "line": 80,
+        "source": "src/stdlib/path.my",
+        "source_sha256": "fef8fbc7ec78a5c72d8ab3891ab3c2cd8592836f4b29e3aa3435508c8027de65",
+        "signature": "public func components(value: str) -> str[]:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/path.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "path",
+        "name": "normalize",
+        "kind": "func",
+        "line": 89,
+        "source": "src/stdlib/path.my",
+        "source_sha256": "fef8fbc7ec78a5c72d8ab3891ab3c2cd8592836f4b29e3aa3435508c8027de65",
+        "signature": "public func normalize(value: str) -> str:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/path.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "base64",
+        "name": "standard_alphabet",
+        "kind": "func",
+        "line": 2,
+        "source": "src/stdlib/base64.my",
+        "source_sha256": "1eefad34b7b64f0f423581bfeb50effc7f8ffceba315117d7653321d7138f94e",
+        "signature": "public func standard_alphabet() -> bytes:",
+        "contract": "Ordinary input borrowed when present; immutable literal result may use immortal storage.",
+        "coverage_sources": [
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "base64",
+        "name": "urlsafe_alphabet",
+        "kind": "func",
+        "line": 7,
+        "source": "src/stdlib/base64.my",
+        "source_sha256": "1eefad34b7b64f0f423581bfeb50effc7f8ffceba315117d7653321d7138f94e",
+        "signature": "public func urlsafe_alphabet() -> bytes:",
+        "contract": "Ordinary input borrowed when present; immutable literal result may use immortal storage.",
+        "coverage_sources": [
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "base64",
+        "name": "b64encode",
+        "kind": "func",
+        "line": 99,
+        "source": "src/stdlib/base64.my",
+        "source_sha256": "1eefad34b7b64f0f423581bfeb50effc7f8ffceba315117d7653321d7138f94e",
+        "signature": "public func b64encode(data: bytes) -> bytes:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/codecs.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "base64",
+        "name": "b64decode",
+        "kind": "func",
+        "line": 104,
+        "source": "src/stdlib/base64.my",
+        "source_sha256": "1eefad34b7b64f0f423581bfeb50effc7f8ffceba315117d7653321d7138f94e",
+        "signature": "public func b64decode(data: bytes) -> Result[bytes, str]:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/codecs.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "base64",
+        "name": "urlsafe_b64encode",
+        "kind": "func",
+        "line": 109,
+        "source": "src/stdlib/base64.my",
+        "source_sha256": "1eefad34b7b64f0f423581bfeb50effc7f8ffceba315117d7653321d7138f94e",
+        "signature": "public func urlsafe_b64encode(data: bytes) -> bytes:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/codecs.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "base64",
+        "name": "urlsafe_b64decode",
+        "kind": "func",
+        "line": 114,
+        "source": "src/stdlib/base64.my",
+        "source_sha256": "1eefad34b7b64f0f423581bfeb50effc7f8ffceba315117d7653321d7138f94e",
+        "signature": "public func urlsafe_b64decode(data: bytes) -> Result[bytes, str]:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/codecs.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "hex",
+        "name": "encode",
+        "kind": "func",
+        "line": 4,
+        "source": "src/stdlib/hex.my",
+        "source_sha256": "f525eb8531d12b9389bd487dec5b985d9694464d9034662779d522e4f2d4b9ad",
+        "signature": "public func encode(data: bytes) -> str:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/codecs.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "hex",
+        "name": "encode_upper",
+        "kind": "func",
+        "line": 9,
+        "source": "src/stdlib/hex.my",
+        "source_sha256": "f525eb8531d12b9389bd487dec5b985d9694464d9034662779d522e4f2d4b9ad",
+        "signature": "public func encode_upper(data: bytes) -> str:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/codecs.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "hex",
+        "name": "decode",
+        "kind": "func",
+        "line": 14,
+        "source": "src/stdlib/hex.my",
+        "source_sha256": "f525eb8531d12b9389bd487dec5b985d9694464d9034662779d522e4f2d4b9ad",
+        "signature": "public func decode(text: str) -> Result[bytes, str]:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/codecs.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "hex",
+        "name": "is_hex",
+        "kind": "func",
+        "line": 19,
+        "source": "src/stdlib/hex.my",
+        "source_sha256": "f525eb8531d12b9389bd487dec5b985d9694464d9034662779d522e4f2d4b9ad",
+        "signature": "public func is_hex(text: str) -> bool:",
+        "contract": "Ordinary managed inputs borrowed; scalar or optional-scalar result owns no input storage.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/codecs.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "byte_builder",
+        "name": "Builder",
+        "kind": "record",
+        "line": 8,
+        "source": "src/stdlib/byte_builder.my",
+        "source_sha256": "389b91e14ef959257f42c2ef10fcf40007d0be8dcac568e32d014aeb248e3c85",
+        "signature": "public record Builder:",
+        "contract": "Owned aggregate; managed children move into constructors; borrowing field access does not transfer ownership.",
+        "coverage_sources": [],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "byte_builder",
+        "name": "create",
+        "kind": "func",
+        "line": 13,
+        "source": "src/stdlib/byte_builder.my",
+        "source_sha256": "389b91e14ef959257f42c2ef10fcf40007d0be8dcac568e32d014aeb248e3c85",
+        "signature": "public func create() -> Builder:",
+        "contract": "Ordinary managed inputs borrowed; managed return independently owned (explicit deep copy, construction or owned temporary transfer).",
+        "coverage_sources": [
+          "src/stdlib/fixtures/byte_builder.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "byte_builder",
+        "name": "append_byte",
+        "kind": "func",
+        "line": 20,
+        "source": "src/stdlib/byte_builder.my",
+        "source_sha256": "389b91e14ef959257f42c2ef10fcf40007d0be8dcac568e32d014aeb248e3c85",
+        "signature": "public func append_byte(mut builder: Builder, value: int) -> bool:",
+        "contract": "Exclusive mutable builder writeback; ordinary data/text arguments borrowed for the call; scalar success or Unit returned.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/byte_builder.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "byte_builder",
+        "name": "append_range",
+        "kind": "func",
+        "line": 29,
+        "source": "src/stdlib/byte_builder.my",
+        "source_sha256": "389b91e14ef959257f42c2ef10fcf40007d0be8dcac568e32d014aeb248e3c85",
+        "signature": "public func append_range(mut builder: Builder, data: bytes, start: int, end: int) -> bool:",
+        "contract": "Exclusive mutable builder writeback; ordinary data/text arguments borrowed for the call; scalar success or Unit returned.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/byte_builder.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "byte_builder",
+        "name": "append",
+        "kind": "func",
+        "line": 34,
+        "source": "src/stdlib/byte_builder.my",
+        "source_sha256": "389b91e14ef959257f42c2ef10fcf40007d0be8dcac568e32d014aeb248e3c85",
+        "signature": "public func append(mut builder: Builder, data: bytes):",
+        "contract": "Exclusive mutable builder writeback; ordinary data/text arguments borrowed for the call; scalar success or Unit returned.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/byte_builder.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "byte_builder",
+        "name": "append_text",
+        "kind": "func",
+        "line": 40,
+        "source": "src/stdlib/byte_builder.my",
+        "source_sha256": "389b91e14ef959257f42c2ef10fcf40007d0be8dcac568e32d014aeb248e3c85",
+        "signature": "public func append_text(mut builder: Builder, text: str):",
+        "contract": "Exclusive mutable builder writeback; ordinary data/text arguments borrowed for the call; scalar success or Unit returned.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/byte_builder.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "byte_builder",
+        "name": "append_int",
+        "kind": "func",
+        "line": 48,
+        "source": "src/stdlib/byte_builder.my",
+        "source_sha256": "389b91e14ef959257f42c2ef10fcf40007d0be8dcac568e32d014aeb248e3c85",
+        "signature": "public func append_int(mut builder: Builder, value: int):",
+        "contract": "Exclusive mutable builder writeback; ordinary data/text arguments borrowed for the call; scalar success or Unit returned.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/byte_builder.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "byte_builder",
+        "name": "append_float",
+        "kind": "func",
+        "line": 57,
+        "source": "src/stdlib/byte_builder.my",
+        "source_sha256": "389b91e14ef959257f42c2ef10fcf40007d0be8dcac568e32d014aeb248e3c85",
+        "signature": "public func append_float(mut builder: Builder, value: float) -> bool:",
+        "contract": "Exclusive mutable builder writeback; ordinary data/text arguments borrowed for the call; scalar success or Unit returned.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/byte_builder.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "byte_builder",
+        "name": "append_spaces",
+        "kind": "func",
+        "line": 63,
+        "source": "src/stdlib/byte_builder.my",
+        "source_sha256": "389b91e14ef959257f42c2ef10fcf40007d0be8dcac568e32d014aeb248e3c85",
+        "signature": "public func append_spaces(mut builder: Builder, count: int) -> bool:",
+        "contract": "Exclusive mutable builder writeback; ordinary data/text arguments borrowed for the call; scalar success or Unit returned.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/byte_builder.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "byte_builder",
+        "name": "reserve",
+        "kind": "func",
+        "line": 81,
+        "source": "src/stdlib/byte_builder.my",
+        "source_sha256": "389b91e14ef959257f42c2ef10fcf40007d0be8dcac568e32d014aeb248e3c85",
+        "signature": "public func reserve(mut builder: Builder, extra: int) -> bool:",
+        "contract": "Exclusive mutable builder writeback; ordinary data/text arguments borrowed for the call; scalar success or Unit returned.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/byte_builder.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      },
+      {
+        "module": "byte_builder",
+        "name": "finish",
+        "kind": "func",
+        "line": 89,
+        "source": "src/stdlib/byte_builder.my",
+        "source_sha256": "389b91e14ef959257f42c2ef10fcf40007d0be8dcac568e32d014aeb248e3c85",
+        "signature": "public func finish(builder: Builder) -> bytes:",
+        "contract": "Builder borrowed; immutable bytes snapshot owns a fresh copy and survives builder mutation/destruction.",
+        "coverage_sources": [
+          "src/stdlib/fixtures/byte_builder.my",
+          "tests/lang/a04_memory_library_contracts.my"
+        ],
+        "scope": "supported public contract",
+        "qualification": "see phase results; inventory alone is not a pass"
+      }
+    ],
+    "public_functions": 80,
+    "public_types": 5,
+    "uncovered_functions": [],
+    "boundaries": [
+      "Ordinary source parameters borrow; returning that borrowed storage requires explicit .copy().",
+      "Borrowed text/byte views may not escape their owner, be stored in aggregates, or survive owner mutation/replacement.",
+      "Text classification/case conversion in strings is ASCII as documented; ord/chr and UTF-8 operations cover Unicode scalars.",
+      "Malformed input is an API Result/Option error, not an unsupported ownership shape."
+    ]
+  },
+  "cases": {
+    "strings": {
+      "release": {
+        "status": "failed",
+        "error": "{'argv': ['/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support3-install/bin/mylang', 'build', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/support3-public/strings/release/main.my', '--zig', '/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig', '--cache-dir', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/support3-public/cache', '--experimental-zero-rc', '--release', '--counters', '-o', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/support3-public/strings/release/program', '--emit-llvm', '/home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/support3-public/strings/release/program.ll'], 'status': 2, 'elapsed_ns': 3267878133, 'stdout': '', 'stderr': 'error: failed to open object /home/epentland/ai/canopy/mylang-memory-20261012-A04/.tmp/memory-closeout/A04/support3-public/cache/native-link-16fe74544773c1a6cfec1f973eeb1f20/c4cbe61eefcbd603ddb83147428a5eb12b1a9fac002781df3d36d546d96590ea.o: FileNotFound\\n'}",
+        "source_sha256": "48e88a4c0f6003e82ee2a938fe8e6b9a312f273d5f49b7b9b0d771c6fcc78a5e"
+      }
+    }
+  },
+  "limitations": [
+    "Managed counters omit native metadata/provider buffers/allocator overhead; no RSS or timing claims.",
+    "Count-free LLVM and symbol checks supplement execution counters; package bootstrap is owned by A10."
+  ],
+  "selection": {
+    "baseline": false,
+    "only": null,
+    "modes": null,
+    "note": "baseline runs every case in release plus the new public ownership supplement in all requested modes; final qualification uses all modes"
+  },
+  "qualification_status": "interrupted after confirming integrated native object-lifetime infrastructure failure; no passing native qualification claim",
+  "interruption": "Pending work cancelled; library debug lane interrupted without result. Source checks completed separately."
+}

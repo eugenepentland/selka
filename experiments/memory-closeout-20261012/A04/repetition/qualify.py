@@ -19,6 +19,7 @@ parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--compiler', type=Path, required=True)
 parser.add_argument('--zig', type=Path, required=True)
 parser.add_argument('--phase', required=True)
+parser.add_argument('--source-commit', required=True, help='exact source revision of the supplied compiler')
 parser.add_argument('--lists-only', action='store_true')
 args = parser.parse_args()
 args.compiler = args.compiler.resolve()
@@ -35,8 +36,8 @@ env = dict(os.environ, ZIG=str(args.zig), MYLANG_ZIG=str(args.zig), MYL_CORE_LEA
 for name in ('MYLANG_COUNTERS', 'MYLANG_OPTIONS', 'MYLANG_CORE_SANITIZE'):
     env.pop(name, None)
 report = {'compiler': str(args.compiler), 'compiler_sha256': digest(args.compiler),
-          'source_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
-          'source_diff': subprocess.check_output(['git', 'diff', '--', 'src'], cwd=ROOT, text=True),
+          'source_commit': args.source_commit,
+          'fixture_commit': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip(),
           'harness_sha256': digest(Path(__file__)), 'cases': {}, 'negative_cases': {},
           'scope': 'lists only; text/byte helper contracts pending' if args.lists_only else 'full repetition contract',
           'limitations': 'Managed counters are not RSS. Build times include no admitted queue wait but are not controlled performance samples.'}

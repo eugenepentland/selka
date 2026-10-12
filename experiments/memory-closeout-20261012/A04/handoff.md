@@ -113,3 +113,23 @@ Native qualification and registered exact diagnostic oracles remain required.
 The 19 earlier guest sources now admit 18 files under support4; only borrowed
 tuple destructuring remains source-blocked. `first_word` now explicitly copies a
 borrowed generic string return, with source burden recorded separately.
+
+## Completed support4 and renderer evidence
+
+`repetition/support4-01/` passes ten counted lanes plus three required negative
+cases on source `66890fbc5135a771e6a423724d13c30018ab717f`, compiler SHA256
+`4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375`.
+The compiler includes approved helper contracts and byte-kind preservation.
+Zero-RC counters, leak checks and structural LLVM/symbol audits pass throughout.
+The source-commit argument is now mandatory in the repetition harness, keeping
+external compiler identity distinct from the fixture checkout's revision.
+
+`rendering/prototype-02/` completes five counted zero-RC modes and ordinary release.
+The two replay checks fail their reuse requirement despite successful links, since
+the changed host native tool closure is unqualified. The immutable C0 ordinary
+control fails on the old native-object lifetime bug. These three failures remain
+in the report and block a cache/baseline qualification claim; the coordinator and
+A08 own the host approval and integrated rerun. No paired savings are claimed.
+The complete public-export matrix and migrated guest executions are still running
+against support4 and will be recorded separately. Their final-candidate rerun is
+required after integration, default promotion and retirement as affected.

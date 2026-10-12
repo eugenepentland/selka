@@ -1,0 +1,27 @@
+record Wide:
+    words: str[]
+    numbers: int[]
+    text: str
+
+
+func repeat_words(values: str[], count: int) -> str[]:
+    return values * count
+
+
+func main() -> int:
+    mut source = ["a" + "b", "c" + "d"]
+    const words = repeat_words(source, 3)
+    source = ["replacement"]
+    mut inner = [1, 2]
+    const rows = [inner.copy()] * 3
+    inner = [9]
+    mut wide = Wide(words=["a" + "b"], numbers=[1], text="x" + "y")
+    const many = [wide.copy()] * 2
+    wide = Wide(words=[], numbers=[], text="replacement")
+    const empty: str[] = []
+    const huge: u64 = 18446744073709551615
+    assert len(empty * huge) == 0
+    assert words == ["ab", "cd", "ab", "cd", "ab", "cd"]
+    assert rows == [[1, 2], [1, 2], [1, 2]]
+    assert many[0].words == ["ab"] and many[1].numbers == [1] and many[1].text == "xy"
+    return 0

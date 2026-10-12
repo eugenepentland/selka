@@ -48,7 +48,15 @@ explicit bytes hint for an empty literal; `initial-02.json` has the expected
 unaudited-helper native refusal before A07's contracts; `initial-03.json` confirmed
 the existing nested-place assignment boundary. They are not successful runs.
 
-For final integration, run `qualify.py --compiler COMPILER --zig ZIG --phase NAME`
+`support4-01/` passes all ten counted lanes and all three negative cases on
+integrated source `66890fbc5135a771e6a423724d13c30018ab717f`, compiler SHA256
+`4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375`.
+This compiler includes A07's fresh helper contracts and the byte-kind repair.
+Every admitted run has zero RC events, zero managed exit-live bytes and clean
+LLVM/symbol audits. `support3-01/` preserves the previous missing-object failures
+and interrupted batch; it is not counted as qualification.
+
+For final integration, run `qualify.py --compiler COMPILER --zig ZIG --phase NAME --source-commit SHA`
 without `--lists-only`. It owns bounded build admission, publishes exact source
 and binary identities, and requires ten counted lanes plus three negative cases.
 Compiler/source hashes and raw commands/counters remain in the resulting phase
