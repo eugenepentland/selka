@@ -36,6 +36,8 @@ pub const Contract = struct { owned: u64 = 0, views: u64 = 0, result: enum { sca
 
 /// Keep this list explicit: adding a helper requires auditing its complete path.
 pub fn contract(symbol: []const u8) ?Contract {
+    if (std.mem.eql(u8, symbol, "myl_core_owned_list_rotate") or
+        std.mem.eql(u8, symbol, "myl_core_owned_list_reverse")) return .{ .owned = 1, .result = .transferred };
     if (std.mem.eql(u8, symbol, "myl_core_owned_sort_keyed")) return .{ .owned = 3, .result = .transferred };
     if (std.mem.eql(u8, symbol, "myl_core_owned_map")) return .{ .owned = 64, .result = .transferred };
     if (std.mem.eql(u8, symbol, "myl_core_owned_task_submit")) return .{ .owned = 4 };

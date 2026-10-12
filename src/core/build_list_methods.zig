@@ -33,6 +33,13 @@ pub fn operation(comptime Context: type, b: Context, node: Operation, result_ty:
         },
         .reverse, .clear => {
             const receiver = try b.writableReceiverOf(node.owner, span);
+            if (node.kind == .reverse and b.module().zero_rc) {
+                const ty = b.typeOfRef(receiver);
+                const size = try b.constant(.i64, b.module().size(b.module().compound(ty).list));
+                const result = try b.effectCall("myl_core_owned_list_reverse", &.{ ty, .i64 }, ty, &.{ receiver, size }, span);
+                try b.writeOwner(node.owner, result, span);
+                return .none;
+            }
             const capacity = if (node.kind == .clear) try b.constant(.u64, 0) else try length(Context, b, receiver, span);
             const empty = try fresh(Context, b, receiver, capacity, span);
             const result = if (node.kind == .clear) empty else try compose(Context, b, empty, receiver, true, span);
@@ -102,6 +109,11 @@ fn insert(comptime Context: type, b: Context, node: Operation, span: u32) Error!
     const low = try select(Context, b, try compare(Context, b, .lt, adjusted, zero, span), zero, adjusted, span);
     const clamped = try select(Context, b, try compare(Context, b, .gt, low, signed_count, span), signed_count, low, span);
     const at = try b.emit(.{ .op = .convert, .ty = .u64, .a = clamped, .span = span });
+    if (b.module().zero_rc) {
+        const pushed = try b.emit(.{ .op = .list_push, .ty = b.typeOfRef(source), .a = source, .b = value, .span = span });
+        try b.writeOwner(node.owner, try rotate(Context, b, pushed, at, true, span), span);
+        return .none;
+    }
     const empty = try fresh(Context, b, source, try b.emit(.{ .op = .add, .ty = .u64, .a = count, .b = try b.constant(.u64, 1), .check = .exact, .span = span }), span);
     const first = try range(Context, b, empty, source, .{ .start = try b.constant(.u64, 0), .stop = at }, span);
     const middle = try b.emit(.{ .op = .list_push, .ty = b.typeOfRef(source), .a = first, .b = value, .span = span });
@@ -127,11 +139,31 @@ fn remove(comptime Context: type, b: Context, node: Operation, result_ty: ir.Typ
         value = try b.emit(.{ .op = .list_get, .ty = element, .a = source, .b = index, .data = flags.pop_index_read, .check = .exact, .span = span });
         index = try b.emit(.{ .op = .convert, .ty = .u64, .a = index, .span = span });
     }
+    if (b.module().zero_rc) {
+        // The indexed read above retains the existing located pop bounds check.
+        // Rotate whole slots, then use the ordinary last-slot transfer protocol.
+        const rotated = try rotate(Context, b, source, index, false, span);
+        const last = try b.emit(.{ .op = .sub, .ty = .u64, .a = count, .b = try b.constant(.u64, 1), .span = span });
+        const element = b.module().compound(b.typeOfRef(source)).list;
+        const taken = try b.emit(.{ .op = .list_get, .ty = element, .a = rotated, .b = last, .data = flags.pop_read, .check = .exact, .span = span });
+        const rest = try b.emit(.{ .op = .list_pop, .ty = b.typeOfRef(source), .a = rotated, .check = .exact, .span = span });
+        try b.writeOwner(node.owner, rest, span);
+        return if (result_ty == .void) .none else taken;
+    }
     const empty = try fresh(Context, b, source, try b.emit(.{ .op = .sub, .ty = .u64, .a = count, .b = try b.constant(.u64, 1), .span = span }), span);
     const first = try range(Context, b, empty, source, .{ .start = try b.constant(.u64, 0), .stop = index }, span);
     const next = try b.emit(.{ .op = .add, .ty = .u64, .a = index, .b = try b.constant(.u64, 1), .span = span });
     try b.writeOwner(node.owner, try range(Context, b, first, source, .{ .start = next, .stop = count }, span), span);
     return if (result_ty == .void) .none else value;
+}
+
+// A consuming permutation moves the existing child owners without copying them.
+fn rotate(comptime Context: type, b: Context, source: ir.Ref, index: ir.Ref, last_to_index: bool, span: u32) Error!ir.Ref {
+    const ty = b.typeOfRef(source);
+    const size = try b.constant(.i64, b.module().size(b.module().compound(ty).list));
+    const direction = try b.constant(.i64, @intFromBool(last_to_index));
+    const at = if (b.typeOfRef(index) == .i64) index else try b.emit(.{ .op = .convert, .ty = .i64, .a = index, .span = span });
+    return b.effectCall("myl_core_owned_list_rotate", &.{ ty, .i64, .i64, .i64 }, ty, &.{ source, at, size, direction }, span);
 }
 
 fn range(comptime Context: type, b: Context, target: ir.Ref, source: ir.Ref, limits: Range, span: u32) Error!ir.Ref {

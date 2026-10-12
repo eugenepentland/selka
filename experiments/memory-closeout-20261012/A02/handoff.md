@@ -44,3 +44,13 @@ identity. Remaining native timing/RSS cases are queued for A09's measurement
 schedule after the smoke-build backlog. No unresolved correctness defect is
 known in the A02 change. This evidence does not claim default promotion or
 legacy-RC retirement.
+
+## Managed list mutation follow-up
+
+`insert`, `reverse`, indexed `pop`, and `remove` now operate on zero-RC lists of managed children. Insert appends the new owner and rotates it into place; indexed removal rotates the selected owner to the final slot and uses the existing pop transfer/destruction path. Reverse swaps slots. The consuming runtime helpers preserve the list header, capacity, layout descriptor and every child owner, with bounded byte scratch and no allocation or deep copies. Ordinary RC lowering is unchanged at this stage. A07 reviewed the complete helper and lowering path.
+
+The registered `A02 list methods` test passes release, unoptimized debug, verified release, optimized debug, and release without facts. Every mode checks 100 nested-list, wide-record and recursive-union trials (output `500`), independent snapshots, clamped insertion, discarded pop, removed-child cleanup and four failure paths. Counted runs have zero exit-live bytes, clean RC symbols/LLVM, and exact indexed-pop error metadata for -3/2, 2/2 and 0/0. `remove` of a missing element reports `R_LIST_VALUE`. Exact compiler, source, binary and LLVM hashes and complete counter/trap results are in `raw/list-methods/`. No runtime-speed or RSS claim is made for this API completion.
+
+The test uses a read-only equality helper for nested comparisons: direct nested-list equality followed by mutation currently produces an unrelated ownership phi retain. A07 received the full IR reproducer at `.tmp/memory-closeout/A02/list-methods-ir.txt`; this remains a separate support issue, not a passed general equality claim.
+
+Reproduction: `scripts/build-slot.sh build "$ZIG" build test-core -Dtest-filter="A02 list methods" -j"$MYLANG_DEV_JOBS" --maxrss "$MYLANG_DEV_MAXRSS"`; durable native matrix: `scripts/build-slot.sh build python3 -B experiments/memory-closeout-20261012/A02/list_methods.py --compiler COMPILER --output NEW_DIRECTORY`. The integrated candidate must rerun this registered test. Coordinator authored SPEC/root registration and approved A07 contract edits in this worktree.

@@ -1,0 +1,8 @@
+{
+  "src/core/build_list_methods.zig": "75824e3b29d3f878b4f5ff97d5edfdad1b4c72011e66cf491e26a491bc9f4fcd",
+  "src/core/runtime/core_rt.c": "696253f91e4d1d2c95a1d3cb4b68bf67f98342dd44cbd1b3fd90dbae0ab47a82",
+  "src/core/single_owner.zig": "36a52b8a38b91aa1fd57510d6587cc7b84dcdd57edd3e21b485b4c6961f1662c",
+  "src/core/zero_rc.zig": "8d1f6fb7f9472459091fdaf7ecb14df298aeaec8507858d165ce20714ce96398",
+  "src/core/a02_list_methods_test.zig": "f7f8fcdd2bd95cefdab063888118df10b507adf8615d9d398e00a31c3fe75a9d",
+  "src/core/a02_list_methods_fixture.my": "44e38b44eeb0385394af015602b9c08e4b892457430eca47ced87fc46407db8f"
+}

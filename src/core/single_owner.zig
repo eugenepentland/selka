@@ -531,7 +531,8 @@ const Checker = struct {
             // These methods implicitly duplicate elements. Nested owned
             // lists need an explicit deep copy, which .copy() provides.
             const duplicates = switch (operation.kind) {
-                .extend, .slice, .slice_step, .insert, .remove, .pop_at, .reverse => true,
+                .extend, .slice, .slice_step => true,
+                .insert, .remove, .pop_at, .reverse => !c.zero_rc,
                 else => false,
             };
             if (linear and duplicates) {

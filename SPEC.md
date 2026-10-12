@@ -1652,3 +1652,5 @@ The separate `mylang-core` executable (`zig build core`, `docs/design/new-core-i
 - [OWNED-CAPACITY-BOUNDS-1] Runtime block allocation and list growth reject negative capacity or element sizes, unrepresentable element-byte products, header or alignment overflow, and growth past representable capacity through the existing out-of-memory or test memory-budget path before allocating or copying; ordinary growth preserves contents and direct cleanup.
 
 - [NEW-CORE-ZERO-RC-TEST-1] `test FILE|DIR --experimental-zero-rc` validates checked ownership before test-key reuse, lowers guest adapters and roots using the count-free ABI, propagates selection into directory children, and keys local, portable and indexed receipts by ownership mode; invalid source never reuses an RC success.
+
+- [OWNED-LIST-MUTATION-1] Checked zero-RC list insert, reverse, indexed pop and remove move existing element storage without duplicating child owners. Order and original index diagnostics are preserved. Popped values transfer ownership; discarded or removed managed children are destroyed exactly once.
