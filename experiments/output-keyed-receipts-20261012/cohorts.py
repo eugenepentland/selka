@@ -72,6 +72,42 @@ def coordinator_sample(tree: Path, env: dict, out: Path, label: str, window: flo
             "action_keys": {row.get("id"): row.get("action_key") for row in report.get("actions", [])}}
 
 
+F9_TEST = "test_owned_commands_execute_without_nested_admission_and_expiry_cleans_up"
+
+
+def failures(out: Path, label: str) -> list[str]:
+    """Zig and Python test failures a coordinator request's logs name."""
+    found = set()
+    for suffix in (".stdout", ".stderr"):
+        try:
+            text = (out / (label + suffix)).read_text(errors="replace")
+        except OSError:
+            continue
+        found.update(re.findall(r"^error: '(.+)' failed:", text, re.MULTILINE))
+        found.update(name for name in re.findall(r"^FAIL: (\S+)", text, re.MULTILINE))
+    return sorted(found)
+
+
+def windowed_samples(tree: Path, env: dict, out: Path, prefix: str, window: float, count: int,
+                     extra=(), attempts: int = 4) -> tuple[list, list]:
+    """COUNT accepted samples. A sample that failed only on F9 (the expiry
+    cleanup test, verification_measurement_test.py:120, which flakes under
+    load) is voided, recorded and replaced, at most ATTEMPTS extra times."""
+    accepted, voided = [], []
+    index = 0
+    while len(accepted) < count and index < count + attempts:
+        index += 1
+        label = "%s-%d" % (prefix, index)
+        row = coordinator_sample(tree, env, out, label, window, extra)
+        row["failed_tests"] = failures(out, label)
+        if not row["success"] and row["failed_tests"] and all(F9_TEST in name for name in row["failed_tests"]):
+            row["voided"] = "failed only on F9 (%s)" % F9_TEST
+            voided.append(row)
+            continue
+        accepted.append(row)
+    return accepted, voided
+
+
 def timed_test(tree: Path, env: dict, out: Path, label: str, cache: Path) -> dict:
     argv = [str(tree / "scripts/build-slot.sh"), "timing", "/usr/bin/time", "-f", "COHORT-TIME %e s %M KiB",
             str(tree / "zig-out/bin/mylang"), "test", "tests/lang", "--json", "--cache-dir", str(cache)]
@@ -128,13 +164,21 @@ def manifest(target: Path, tree: Path, out: Path, label: str):
     return frozen
 
 
+# `measurement_window_seconds` is part of the coordinator's
+# `common.execution_limits`, so a windowed request never reuses an unwindowed
+# receipt (finding F14). Primes therefore use the samples' own window.
+C1_WINDOW = 900
+C3_WINDOW = 1800
+
+
 def c1(target: Path, out: Path, samples: int) -> dict:
     env = tree_env(target)
     before = manifest(target, target, out, "C1-before")
-    prime = coordinator_sample(target, env, out, "prime", None)
-    rows = [coordinator_sample(target, env, out, "sample-%d" % i, 900) for i in range(1, samples + 1)]
+    prime = coordinator_sample(target, env, out, "prime", C1_WINDOW)
+    prime["failed_tests"] = failures(out, "prime")
+    rows, voided = windowed_samples(target, env, out, "sample", C1_WINDOW, samples)
     after = manifest(target, target, out, "C1-after")
-    return {"cohort": "C1", "prime": prime, "samples": rows,
+    return {"cohort": "C1", "window_seconds": C1_WINDOW, "prime": prime, "samples": rows, "voided": voided,
             "compiler_stable": before["compiler_sha256"] == after["compiler_sha256"],
             "keys_stable": all(r["action_keys"] == prime["action_keys"] for r in rows),
             "request_seconds": median([r["request_seconds"] for r in rows]),
@@ -173,22 +217,32 @@ def c3(target: Path, out: Path, samples: int) -> dict:
     The edit is reverted afterwards, whatever happens."""
     env = tree_env(target)
     manifest(target, target, out, "C3-before")
-    result = {"cohort": "C3", "prime": coordinator_sample(target, env, out, "prime", None)}
-    rows = []
+    result = {"cohort": "C3", "window_seconds": C3_WINDOW,
+              "prime": coordinator_sample(target, env, out, "prime", C3_WINDOW)}
+    result["prime"]["failed_tests"] = failures(out, "prime")
+    rows, voided = [], []
     try:
-        for i in range(1, samples + 1):
+        edit = 0
+        while len(rows) < samples and edit < samples + 4:
+            edit += 1
             with open(target / "src/parser.zig", "a") as handle:
-                handle.write("\n// cohort C3 edit %d\n" % i)
-            rows.append(coordinator_sample(target, env, out, "edit-%d" % i, 1800))
+                handle.write("\n// cohort C3 edit %d\n" % edit)
+            accepted, void = windowed_samples(target, env, out, "edit-%d" % edit, C3_WINDOW, 1, attempts=0)
+            rows += accepted
+            voided += void
     finally:
         subprocess.run(["git", "-C", str(target), "checkout", "--", "src/parser.zig"])
     result["samples"] = rows
+    result["voided"] = voided
     result["request_seconds"] = median([r["request_seconds"] for r in rows])
     result["gate_admitted_seconds"] = median([r["gate_admitted_seconds"] for r in rows])
     return result
 
 
 def c4(target: Path, out: Path, samples: int, shared: Path) -> dict:
+    """One sample per fresh worktree, all sharing one evidence store that the
+    first worktree fills, so later worktrees may reuse what it published."""
+    shared.mkdir(parents=True, exist_ok=True)
     rows = []
     for i in range(1, samples + 1):
         tree = HERE / ("work/c4-tree-%d" % i)
@@ -196,11 +250,13 @@ def c4(target: Path, out: Path, samples: int, shared: Path) -> dict:
         env = tree_env(tree, CODEX_THREAD_ID="lane-f-c4-%d" % i, TERM="dumb")
         status = build(tree, env, out, "build-%d" % i)
         manifest(target, tree, out, "C4-%d" % i)
-        row = coordinator_sample(tree, env, out, "sample-%d" % i, 1800, ("--shared-cache-dir", str(shared)))
+        row = coordinator_sample(tree, env, out, "sample-%d" % i, C3_WINDOW, ("--shared-cache-dir", str(shared)))
         row["build_exit"] = status
+        row["failed_tests"] = failures(out, "sample-%d" % i)
         rows.append(row)
         remove_worktree(target, tree)
     return {"cohort": "C4", "shared": str(shared), "samples": rows,
+            "keys_equal_to_first": [r["action_keys"] == rows[0]["action_keys"] for r in rows],
             "request_seconds": median([r["request_seconds"] for r in rows]),
             "gate_admitted_seconds": median([r["gate_admitted_seconds"] for r in rows])}
 
@@ -229,7 +285,7 @@ def main(argv):
     else:
         result = c4(target, out, args.samples, Path(args.shared).resolve())
     (out / "result.json").write_text(json.dumps(result, indent=1, sort_keys=True, default=str))
-    print(json.dumps({k: v for k, v in result.items() if k not in ("samples", "c2", "warm", "prime")},
+    print(json.dumps({k: v for k, v in result.items() if k not in ("samples", "c2", "warm", "prime", "voided")},
                      indent=1, default=str))
     return 0
 
