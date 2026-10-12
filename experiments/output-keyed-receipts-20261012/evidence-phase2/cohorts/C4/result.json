@@ -1,0 +1,333 @@
+{
+ "cohort": "C4",
+ "gate_admitted_seconds": {
+  "max": 1068.990267920075,
+  "median": 910.7256191479973,
+  "min": 877.8794446170796,
+  "n": 3
+ },
+ "keys_equal_to_first": [
+  true,
+  false,
+  false
+ ],
+ "request_seconds": {
+  "max": 1096.7716717121657,
+  "median": 941.4695473930333,
+  "min": 902.5135227639694,
+  "n": 3
+ },
+ "samples": [
+  {
+   "action_keys": {
+    "affected": "ac9c61c08801a8972d82dd9c279512617e777915a6337b503ff9ef56560eecb6",
+    "application_cache": "490c96df732d7ecfcd03dd93c110a63223eca2bd8e4a82f8bea2103663550ef3",
+    "cli": "6b520ddd31666603a823263ee3f98046197b88dad78628b64405df86438de594",
+    "component-preparation": "16923e05397332764352ce991253dcca9410248042e7247b24504ad6e46e0287",
+    "component-support": "ca2650f0b7a0cc4e67406eec86e7cfbfcff62acc5b3aecd9e85f07735b8f113f",
+    "component_builder": "d5dc9330230799fb732f424cce7a89b4832199afedded75500fc7324c931a011",
+    "component_native": "4a4607bb7cd574f0661198e36d056c1c7aa3ebc74837223222ea8f5246f3ce4d",
+    "core": "00f271aab13b5b2dcab328d1f856b6c64e78bee9e43a38ed6ebaca9fa7295a7b",
+    "coverage": "30101d79ec856280f4c660e765c4896137a19510fb3710f52c1a0fd79feb5b35",
+    "coverage_self": "e8c137ca2f7cfedc027d278a9f024fd56f26767cfb833f29fead8fce67aae929",
+    "doc-coverage": "155cf31c84b92e68995f339d516b828f96b104a34add29f6bd8f824a5c0b7485",
+    "doctest": "9dd18010d670336cc8e4aa080b9e0d85a5e6eb1fec262fa61ee4e019f99506f7",
+    "embedded_migration": "8e0a819d3a2680eb7f988a45373a57e080e1aa9c963fe5bddb9e24839a4fcb06",
+    "environment-discovery": "ad2d1dde752f443a132b27d342b64889afa0a61e42f829dacb99042703a8b381",
+    "friction": "06fd917d65adedc2377ecf49a996e97f6fbd04f05fb3b8a823ac315018f5b4b3",
+    "fuzz_campaign": "5a8e97311635f9990e258200c832db07ce8ab9d25717142a770a6a8468366c3a",
+    "golden": "f101837f01a1981fff709d74b17f44fb7427d1715ca7c1e3e3c83dc4e3a2f7d4",
+    "guardian": "c9cc2cfa35ca8df9a097764ccd6127a9c65a5d02f6a587b01a592a343e7a0921",
+    "guest": "b0fdfdf652eb053f2e0d4fb46bb8a9d66788f51490acaeda8692f8a96944306d",
+    "identity-qualification": "a4e80eece31136347253d711e08b69f5ecdd06e23a48d5b8c9f4ebba31b7fc5f",
+    "idioms": "08fae520b0d8b00ae31ec5045e3f2f27c807db7a217291398b60f5fb1894520e",
+    "idioms_self": "e1c46b0bbeb18eb943dec3c3e6b8452a8336b49d8c5eb2fb6a78bac2abba2a96",
+    "incremental": "7204e1bc48cf2d5c24f446861137833a0c06c329d49a6d5a14e47dfeca316259",
+    "input-discovery": "58c2c42c30f6d96dd97c691b3c3651b11789b203d627ec18d35a5fc5255e08c1",
+    "interface_oracle": "94bf01fb298fdd67daf70b963907175b29e9fa795b808347cc35a12a1287915d",
+    "interfaces": "d6219b2810c114279fa1992b88f3ba3f5b903498e178072b29dbf83fe645f009",
+    "juice": "4562c40733050d21a614cefe52aa32ed9be278757343ca0ec7bfb119fc638316",
+    "juice-runtime": "be643023784f47e6ac2c480ef8e1d938d6cab55f6059b22caaf41326232b1b3d",
+    "juice_cache": "477f4bd8043e53e3314a038a9b09d043c75ae7bbf8838586a3f92899c1fa050e",
+    "juice_pure": "9f861b4ba0f7807b55ae42fb7f09599fcaf9f33f3c04fba1c52b24f34817c006",
+    "language": "9c9f0868cc516a350bf2397450e03b40718a7177af88fcffed80185cade1dd04",
+    "manifest_self": "95c121719b1937bb338418239411143695f9f8fc6ba171f849074848888e8526",
+    "memory_budget": "d728b534cc0bbe7cbb515b6ca3a5620ab4fe7e35d0cb7cd4cc552f4f77554df2",
+    "my_format": "a8d24aaa12a6a70da9f5c050570b7a54d288d4e1f687228513892a1fc688f6ed",
+    "my_format_self": "6e5e00845379267c61434cfdfff24eb07b44c1622bed474c6f63bbd5f3aa18ae",
+    "noalloc_lint": "47959a6623346574a8723de209ded06957de9c4f4eeab8e9f9330c278bcbb45c",
+    "parser_hints": "3a35b4f6d1a12869f877593f8b66a7b3bd6a8e1ef8e16cce21706fdb597aa2c1",
+    "selfhost_numeric": "a8d3a0b2d72c6b8fce5938f54adf65181461a4122147c9b9267667b0ddca9dd2",
+    "spec-history": "420e401a1c4cb9a969b8af85e78dcba12052ea82ce8ac71277e7a0ccdde0109e",
+    "text_scalar_unit": "cbdc1e481a0733dbdad2613eb5711e0743f0fcdb3750a495f42160db84ec0a97",
+    "tooling_isolation": "3314ff2c158c794e80cd747d15a3db14dd7b83c890f53b8909fa99f64935fd69",
+    "tooling_unit": "73c21a9de5b125b1a591f4eba7074de0756ef3dcb866fb529c3f2cacf69475b3",
+    "unit": "d410e3d6481a70a876fc608cf58ffbaa90ef515d345db54add070bbd11067579",
+    "verification_cache": "2ebbbedfb1cbaa719029413df821f603dacf4990557a6ea16d760e2d48d91282",
+    "verification_session": "e2fd0eb410306831238767d234448efa9a80bd4ed186b70ae82f23c21682827e",
+    "zig-format": "5e414d2373098eef554e79cdd0e837ca9e438b9088f552adc7162f114563b89c"
+   },
+   "admission_waits": [
+    0.497,
+    0.369,
+    0.376
+   ],
+   "build_admitted_seconds": 10.807730350177735,
+   "build_exit": 0,
+   "exit": 1,
+   "failed_tests": [
+    "integration.test.CLI context keeps emitted bytes within the requested budget",
+    "test_owned_commands_execute_without_nested_admission_and_expiry_cleans_up"
+   ],
+   "gate_admitted_seconds": 1068.990267920075,
+   "label": "sample-1",
+   "language": {
+    "executed": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "state": "fresh"
+   },
+   "measurement_window": {
+    "admission_wait_seconds": 5.114846895914525,
+    "coordinator_lock_wait_seconds": 8.89715738594532e-06,
+    "deadline_seconds": 1800.0,
+    "elapsed_seconds": 1096.881922162138,
+    "kind": "exclusive-coordinator-request",
+    "scope": "request start through final report assembly; report write, final output and session startup excluded",
+    "slot_directory": "/home/epentland/.cache/mylang/slots",
+    "version": 1
+   },
+   "outer_seconds_including_queue": 1102.529,
+   "request_seconds": 1096.7716717121657,
+   "snapshot_statistics": {
+    "bytes_hashed": 2333684572,
+    "digest_reuses": 0,
+    "directories_enumerated": 2294,
+    "files_hashed": 28912,
+    "metadata_observations": 763484,
+    "snapshot_reuses": 0,
+    "validation_calls": 48
+   },
+   "states": {
+    "execute": 35,
+    "fresh": 11
+   },
+   "success": false
+  },
+  {
+   "action_keys": {
+    "affected": "48e6ef75f12345a6e6780bd5f404026e20955ce5d88d761200993bf255987b04",
+    "application_cache": "0f3adb190af41abb3737fc8d8486f1a603fcc27d36607ad239854a26dbb4ca7b",
+    "cli": "de17d524a3fc638647499dfad79f1873a845423a3255a0a8efa316257371d2c8",
+    "component-preparation": "9eddd347a3f43570313322d0be5f92c9efde8d0e7221aa6fa06f4ccddf75d777",
+    "component-support": "d8a307aa1edea318674a9131183963769ac99bf2e9d7d0cf76d094886c07c66b",
+    "component_builder": "c5154311db85d107436f9fbb38c339b18bafb32403856c8a01b2f3d535447810",
+    "component_native": "15c4101611e76c318949ce0430d07f0abaf60f711825c3dc8a96cb95752dea88",
+    "core": "d6c5393927349baf4aa16785a85316e84408a97c16ce877b2eb39e43caf0fe3f",
+    "coverage": "fcb6e76bbe93ccdef234a9b199f91a83d80aba9e272f4fdd40815406bd3b802e",
+    "coverage_self": "c3e3d4ec13709968e292d2f95d712c44ffe5c04f5aaf8ec734ed8db414e511f8",
+    "doc-coverage": "5e2d0bc5dbb2cd5482ba411caffe9fd188b1b0c9e46630d600c88bf3da13ebe3",
+    "doctest": "6ac15d8572d08769cb2e4c58038ce7843aa319a9a8b6d15402dbd521b06398dd",
+    "embedded_migration": "ee90b4a12311fd8ac777e85760b9dace0323d68fb4e1a436a502c7001f0a019c",
+    "environment-discovery": "838099d123f439156f7e3125b5956659722dcd60e3ea493c970f1b2b1195f8a4",
+    "friction": "80407f98b333fffb5ab4e7c098ef34a05c5ca7bb42c5b3aa7867f0adfb386909",
+    "fuzz_campaign": "be6210b3b1a8f70dc0fe8afa410f8a8e2c5ffd440e45e4c98ce31705e29e975c",
+    "golden": "cd059cb102158782b01ef86957d289063578f980770eb9aceb129a2fda32d09e",
+    "guardian": "7cc269c88eb1ac69c85fc1cf713d222be6407e3e9f57bb7ee7b5902761d57ef2",
+    "guest": "0c95e301193548105980b4c0c08603493d81fc86b5dbbf774ffb2c9af2479ae7",
+    "identity-qualification": "1bd96360c3676a95ac95d6b6bf359ba1f2c5952600ea3c77a05216788974031b",
+    "idioms": "4bc484ee54a1f547d836e909694a8e2098b45f3c5c8e8b6d879c88152f9ca938",
+    "idioms_self": "8e36a9431ff8c3d4628ac12c50681b4e653d96dad0af6a76750650e09d3a21b0",
+    "incremental": "46bddee9cc20c7490a1a95c70449b501d96d708ebe2b6511702588732de55ffc",
+    "input-discovery": "6e791ebafbe2bd386ba3bb0e75e48d94d7d3f59d010313dd486c8f6b74d2f6e1",
+    "interface_oracle": "b12b0f2134f680f0835db32a521dd67594b88c6de6f43896c3a987fe70e20c16",
+    "interfaces": "ef80612f11da944fb314618dadd17c0c2643f7f6745c6440f0ef51b0cd65542f",
+    "juice": "6630cf107649538464c9aa0678be56b015654574288141fdc55016eafb80a7bd",
+    "juice-runtime": "38040d22caa7dea8af0242750cc7396f1b6033c9a404868e35e6bad07891b378",
+    "juice_cache": "09d6c494cdeb10c56eb1428d71a1c9f2df4e14543eb23c6f1b8a23051aecfc9a",
+    "juice_pure": "a61dd8a2ec984bc8c51fc27d962d716cc1ef3d1db8c2ef6870c1bde60b63ba6d",
+    "language": "ea6bc39572f099ce26c2670337ec917bf741f8616a04cbbec73b847302886cdf",
+    "manifest_self": "7c66bde1327adc97d5f932898b9a46fc3080b789d1ecd9fdad1957c4a249dccf",
+    "memory_budget": "45360e0edf0666623f5f208a8efbf7f616e3bd0eee7a1219ab3329114cdb1bbc",
+    "my_format": "509ffc98110bed675b3ceb73b0b1c1a3ebcb1ba40f69a83edf944f3eadcf7751",
+    "my_format_self": "51347b1046aea9fb9b3e9bc352dc83ca3b431cb21eed84fcbc129ce4b4c5398d",
+    "noalloc_lint": "d29d3d2b373dcc43dddf97f62c1c478735b3727c38fcdd076c69b3e760d0019a",
+    "parser_hints": "3b24d50f5c616c8827b665ca04993146e0236b77683e70ad783ef7575a61be9a",
+    "selfhost_numeric": "5fdc14ffec5436313122940003ce40f57fa6967cb03668944592cf48e552b59a",
+    "spec-history": "d5ae0809e29437fd3fee3d24a66d4d5d2e56c3b3b61a56b4a59cfbdc0711d112",
+    "text_scalar_unit": "4b67a3172dc1597c95ce10ad929463efcfe0929190c6c9cb269cdf3f4109ee16",
+    "tooling_isolation": "338b38fadfe4631b1301685c77c7bed65e539bb85a126510625d1080e53d5733",
+    "tooling_unit": "584ff1ad17962614a7448b9b4ac0774a2f7be89e1d1a8fa5dc913f608369b50b",
+    "unit": "d5a9902724d6090058d0d536dfc7aa1f185bd5c4ca28acc1240bcb47695e242c",
+    "verification_cache": "0d8fa27bf75344acec3426556c93f592525138d054e182500b47a270547f102d",
+    "verification_session": "4be382634261810389f01604ce093bffd28dd645054a9966eadcd6df7e4d390c",
+    "zig-format": "a4e39b61ac304f5ca3cfa847a5640c285b9e3787238dea635c01b86b13409fc0"
+   },
+   "admission_waits": [
+    0.339,
+    0.337,
+    0.344
+   ],
+   "build_admitted_seconds": 10.055676673073322,
+   "build_exit": 0,
+   "exit": 1,
+   "failed_tests": [
+    "integration.test.CLI context keeps emitted bytes within the requested budget"
+   ],
+   "gate_admitted_seconds": 877.8794446170796,
+   "label": "sample-2",
+   "language": {
+    "executed": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "state": "fresh"
+   },
+   "measurement_window": {
+    "admission_wait_seconds": 331.7000557850115,
+    "coordinator_lock_wait_seconds": 6.7891087383031845e-06,
+    "deadline_seconds": 1800.0,
+    "elapsed_seconds": 902.5906980591826,
+    "kind": "exclusive-coordinator-request",
+    "scope": "request start through final report assembly; report write, final output and session startup excluded",
+    "slot_directory": "/home/epentland/.cache/mylang/slots",
+    "version": 1
+   },
+   "outer_seconds_including_queue": 1234.716,
+   "request_seconds": 902.5135227639694,
+   "snapshot_statistics": {
+    "bytes_hashed": 2333747509,
+    "digest_reuses": 0,
+    "directories_enumerated": 2294,
+    "files_hashed": 28912,
+    "metadata_observations": 763484,
+    "snapshot_reuses": 0,
+    "validation_calls": 48
+   },
+   "states": {
+    "execute": 35,
+    "fresh": 11
+   },
+   "success": false
+  },
+  {
+   "action_keys": {
+    "affected": "a9bd29a282ef8b193b8510b9da93f5673d0587b56fc5e4167fc6ce77a12dc675",
+    "application_cache": "a117713dce6740a7a1800e346900c031b6afdd41b89d645c632a27f46047eab2",
+    "cli": "58f53ae742174d0e9afa83b6beafe616035fe1220958a947247ea0fe8dd25391",
+    "component-preparation": "02799d1a980b7bbb8ab5807f120133a4796483de59b4514b83753d21caf7426e",
+    "component-support": "d27321a65b1b9176083387eae217da4955877499f1ad88110991f71cba490a0e",
+    "component_builder": "3ed71ada97b29a55e7bd5987d3dcff24fb25db7b12e092f151d9e0e06ef58193",
+    "component_native": "c582d009a14be6656937b281f6350f88ad961975a1114c8aad5fe8e671871c38",
+    "core": "a9393b5e600ab4172966ced1a37365dcd00566fecf1eae0e21f46a03e88ecdf2",
+    "coverage": "040a1e57bfd72859437f6b1f501335764556d12511fad33e8f05f5ff4ebcf172",
+    "coverage_self": "82a2762d8ddb3a7c275131bff7795529027d51ee1b544ca6f311b2db801d07b1",
+    "doc-coverage": "62629d930c11d216998375b65631a38d6b78d585819ac5ed9528f77b9b4fb804",
+    "doctest": "67ef34155a422657005ecd9a00c3fb26ac08eb801dbc8c10454de193f2f45b81",
+    "embedded_migration": "4e41de37b77fc3f5ad6d4f6abb7a909adc16213a3fb291e3ebe34c7edcabf5a0",
+    "environment-discovery": "0883f38d55441bfc63ffb27bc45ef247d17ca1b58716a774d0ffd5d49774d1c0",
+    "friction": "3bc3ba6477943d293d4dbd41da4cc6c7671a9dd123bbd6fc53d1a0074f9a1c18",
+    "fuzz_campaign": "84934536a162d37fac9a4a8afa38108fb58bb46f056deb99fac647ff4886c91b",
+    "golden": "bd2b19e23dca3debe06853c7e80fe536c5015f07923110214c76e1e95ae082db",
+    "guardian": "b2aba080243d1aa0378c10e9e555897d559e282233b83dc449d259d3c51d1dac",
+    "guest": "04768ab28d72782321fd0529a9cebaa0a7238350f0ae7f0e03f7c38e6b617032",
+    "identity-qualification": "c803af8698100dc0eaa25f8c7e72259b8f07443711d686a51c45927446541b12",
+    "idioms": "fb4e82150cc498fd66638dca0211639761980e658287d12e8f68a53d94ed7bef",
+    "idioms_self": "dce184403f739e3e2c3153728740e41147913dab92b14c4cdb51d12f5d536128",
+    "incremental": "694466c22c66bf84d784f8791851de603802b734e2aa9666b6129dbbd9cf72ee",
+    "input-discovery": "6537af4647638b284a566e92a8a1c5a7371c311be7169c6a791c6cbf9bfdc278",
+    "interface_oracle": "31b0a76ce6ad4effe02b3cd55ac6beb7737b77a3c7530676334d8288818d2e66",
+    "interfaces": "7a4376e19e3ba7d0a94e9929e8bc9a13e48a9ed4b6835e661a1c5391bcef7d2f",
+    "juice": "69cf04e99075816db9965196c4de2782d766f22bc1a99419ef268fa924734e9a",
+    "juice-runtime": "8a6843e7419e5e7ee7f230bb8a755d6442477f38de2882f921caf3d04f29aa94",
+    "juice_cache": "813f7d2412550c47a4a15545ff996a8a260f1271fce0f6887c1d6d205541bfad",
+    "juice_pure": "c886f110b1816e9498da85ede65a38b8975e40e8dd7b7623427a0f719c51f0bc",
+    "language": "e803c69fdf95d295392ec593f06617e98f560e9c657f7f7ac28b71980cbd0208",
+    "manifest_self": "6733c28d549fd533231d3223b8c9bd973b4b61313e2fffa85df4e41041d06141",
+    "memory_budget": "413ffceabc14fd30d5f056ef106a5aa417ae1c475663b04e03b5546bf32433ea",
+    "my_format": "c0584d14935d902e89566a9919818d29a0256906fd9184c3533b6779f38c7261",
+    "my_format_self": "542edaff5dc17a324ba4812a536371dc169ac5903fc28534a9626c6a65819527",
+    "noalloc_lint": "ce835bd8b32438dd26c10a15ba7a4d494f5944e5a4342e9912f1b92e835dd21f",
+    "parser_hints": "32d12b7e45824a2e7d4617e0c3c9f49118ce259204bbbd68223eab19e1f89952",
+    "selfhost_numeric": "ab28a9d58e25e8992c3997f42589cfdf1c736a6b9f93f9d60d4563eba2a735c8",
+    "spec-history": "a4289f7f64a50498b995d17f87e30bbaafafbd3a09ee083135103ed980338b36",
+    "text_scalar_unit": "2554a721eb05c17de56c007130383a6d434d060386761524064794ea78ee115b",
+    "tooling_isolation": "b40f7ef004ba90134583fc3d40a3e34afcee7282c0ee198516411f68ba8986dd",
+    "tooling_unit": "50631741a74b3de570315b178b1a3492435343edafc00ae596640c1a2eeab324",
+    "unit": "dc410659aaf1697ada3309e97351dcdabe0463b08fdf4f52a7d3bf6aa0b010cf",
+    "verification_cache": "496aa501cee7d3e8c06909ac443275a0e8fd79ff879c4f2699cfd23550e62327",
+    "verification_session": "ee55ae0adf8a4f0406ecc2993ac2aaf2e5e8d3daf45d445e2d87cd304574667d",
+    "zig-format": "2aa873981896530ea790c050f04214528de3e6408485ca649fad51a6b2920ec8"
+   },
+   "admission_waits": [
+    0.348,
+    0.334,
+    0.644
+   ],
+   "build_admitted_seconds": 9.825965167023242,
+   "build_exit": 0,
+   "exit": 1,
+   "failed_tests": [
+    "integration.test.CLI context keeps emitted bytes within the requested budget"
+   ],
+   "gate_admitted_seconds": 910.7256191479973,
+   "label": "sample-3",
+   "language": {
+    "executed": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "state": "fresh"
+   },
+   "measurement_window": {
+    "admission_wait_seconds": 456.6498098601587,
+    "coordinator_lock_wait_seconds": 9.568873792886734e-06,
+    "deadline_seconds": 1800.0,
+    "elapsed_seconds": 941.5969829289243,
+    "kind": "exclusive-coordinator-request",
+    "scope": "request start through final report assembly; report write, final output and session startup excluded",
+    "slot_directory": "/home/epentland/.cache/mylang/slots",
+    "version": 1
+   },
+   "outer_seconds_including_queue": 1398.751,
+   "request_seconds": 941.4695473930333,
+   "snapshot_statistics": {
+    "bytes_hashed": 2333695824,
+    "digest_reuses": 0,
+    "directories_enumerated": 2294,
+    "files_hashed": 28912,
+    "metadata_observations": 763484,
+    "snapshot_reuses": 0,
+    "validation_calls": 48
+   },
+   "states": {
+    "execute": 35,
+    "fresh": 11
+   },
+   "success": false
+  }
+ ],
+ "shared": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/c4-shared"
+}

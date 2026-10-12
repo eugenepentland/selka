@@ -445,19 +445,45 @@ keep DWARF paths only; (F8) one CLI test depends on the checkout location;
 (F9) `verification_measurement_test.py:120` failed inside an exclusive
 coordinator window.
 
-**Cohorts.** C2, front-end comment edit then `mylang test tests/lang`, five
-edits under exclusive timing windows: median 14.15 s (7.75 to 16.17 s, no
-queue wait above 5 s), 1,544 execution-receipt hits and 5 executions per edit,
-against 78 s with 0 cached on 5 October. C1, C3 and C4 could not produce valid
-samples: because of F1 every request reruns the whole gate, the window changes
-the action identities (so the unwindowed prime does not warm the windowed
-samples), and the first windowed sample failed on F9 after 764 s (35 actions
-executed). Descriptive, unwindowed observations: unchanged repeat 532 s
-request and 475 s gate (row 1); cold verification in two fresh worktrees,
-gate occupancy 1,186 s and 854 s (row 7, both failing on F8). The fact/leak share of the warm floor is
-removed (row 1); after the F1 fix the floor is 23.1 s request and 13.4 s gate
-(unwindowed, under load); C1, C3 and C4 still need their windowed samples, then
-audit change 7.
+**Cohorts.** All exclusive-window samples; evidence in
+`experiments/output-keyed-receipts-20261012/evidence-phase2/cohorts/`. C2 ran
+on `7313c483e`; C1, C3 and C4 ran on `385c46bae` (after the F1 fix), compiler
+SHA-256 unchanged across each cohort.
+
+- **C1, unchanged complete verification, 5 samples:** request median 29.9 s
+  (24.2 to 36.5), gate occupancy median 14.4 s (13.8 to 24.8); 35 actions
+  reused, 11 always fresh, all keys equal to the prime's; window queue at most
+  0.1 s; no sample voided. Baseline 33.5 to 36.8 s request, 23 to 28 s gate.
+  The prime itself took 660.6 s because a windowed request never reuses an
+  unwindowed receipt (F14, below).
+- **C2, comment edit then `mylang test tests/lang`, 5 edits:** median
+  14.15 s (7.75 to 16.17), queue at most 5 s; 1,544 execution-receipt hits and
+  5 executions per edit. Baseline 78 s, 0 cached.
+- **C3, comment edit then complete verification, 2 samples:** request
+  737.8 s and 787.4 s (median 762.6), gate 712.0 s and 753.9 s; window queue
+  0.1 s and 10.1 s. 16 actions reused, 19 executed, 11 fresh: the Zig roots,
+  drivers and their dependants rerun because the compiler is their input, while
+  every guest and language member answered from execution receipts (8 tests
+  executed per `tests/lang` mode). Baseline 596 to 1,034 s, every group.
+- **C4, first verification in a fresh worktree, 3 worktrees sharing one
+  evidence store:** request 1,096.8 s, 902.5 s and 941.5 s (median 941.5),
+  gate 1,069.0, 877.9 and 910.7 s; window queue 5.1 s, 331.7 s and 456.7 s
+  (other teams' timing runs). Every worktree executed 35 actions and reused
+  none; worktrees two and three had different action keys from the first
+  (F3), and every gate failed on F8 (the first also on F9), so nothing was
+  published to share. Snapshot work per worktree: 28,912 files, 2.33 GB,
+  2,294 directories, 763,484 metadata observations. Baseline: a cold gate plus
+  2.33 GB hashed, 600 to 1,000 s. This is the pre-Lane-G baseline.
+
+The warm floor moved by the fact/leak share (C1); a compiler edit no longer
+reruns guest tests (C2, C3); nothing is yet shared between worktrees (C4).
+
+**F14 (Lane D).** `measurement_window_seconds` is part of
+`common.execution_limits` (`scripts/verify_cache.py`, the `common` dictionary
+of `execute`), so windowed and unwindowed requests have disjoint receipts: a
+timed request after an untimed one reruns everything, and a C1 prime must use
+the samples' own window. Two windows of different lengths are disjoint too
+(C3's prime under 1,800 s reran the gate C1 had warmed under 900 s).
 
 **Integration gate.** `--integration` (Section 7) is implemented in
 `scripts/verify_cache.py` with eight tests in `scripts/verify_cache_test.py`.
