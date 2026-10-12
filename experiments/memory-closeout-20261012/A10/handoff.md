@@ -358,3 +358,10 @@ The borrowed entry capability wrapper is now also preserved as standalone
 check exits1/E_SINGLE_OWNER_BORROW at Context(fs=fs,env=env). The exact paired
 diagnostic report is `rollout/borrowed-entry-context-support6.json`. Coordinator/A07
 own resolution; no replacement authority, external I/O or source semantics was used.
+
+The rebased C3 component preparation now independently compiles ReleaseSafe/LLVM
+and passes28/28 fake-tool tests, including private extracted cache/TMPDIR and
+selector-free routing. Updated exact hashes/raw logs are recorded separately in
+`rollout/component-retirement-validation/rebased-validation.json`; the prior27-test
+report remains immutable. Production retirement remains unapplied and actual C3
+compiler/package qualification is still required.

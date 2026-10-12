@@ -1,0 +1,25 @@
+{
+  "status": "PASS: native rebased preparation only; C3 patch remains unapplied",
+  "source_revision": "f26a570e385743dd4046864575ce28ace7cf525b",
+  "builder_sha256": "9c213448e0c3dbdbe3a6a1c2fb6a466c9b8ee587e48d6a6e153e742e98702a3b",
+  "draft_sources": {
+    "selfhost/component_archive.zig": "d8adb175b1399e0a93ad856456be5cdd8b29df57af27e223baf357f33feb3aed",
+    "selfhost/component_files.zig": "5abb3f52b1bd2cec6c7911d153aa93f34a90eb7209946ea77ecf347480c88def",
+    "selfhost/components.zig": "e7f4e83236c131cf6192e96e3568ff508434ac3060f4fee86ecc4e36bff84fba",
+    "selfhost/test_component_native.py": "c7adcfaa930cd469b22759322b2bdc06f6d3d4092a12e22183e03db87d1794c9",
+    "selfhost/test_components.py": "8ae5b5ad93f3830885628844eb1796fb1fb658d57bf27240d692f51a1b2feb5b"
+  },
+  "patch_sha256": "12d7b99aa17d1684c0514cf95822e57e63d50df3f4954dbc0c09964b7619a815",
+  "builder_compile": "PASS ReleaseSafe LLVM",
+  "tests": {
+    "passed": 28,
+    "failed": 0,
+    "skipped": 0,
+    "scope": "fake-tool cache/archive/manifest refusals and native qualification argument routing; no actual C3 compiler/package qualification"
+  },
+  "raw_build": "rebased-build.log",
+  "raw_tests": "rebased-tests.log",
+  "actual_pin": null,
+  "historical_seed_sha256": "a2e02f86f24b139c1b3b71c035ad0f376246f43b12081f3f5beac1bbc007da1c",
+  "required_integration": "Apply only at coordinator Stage4 with actual qualified checked-default-v1 compiler pin and root default forwarding; manifest and root default route deliberately absent from patch"
+}

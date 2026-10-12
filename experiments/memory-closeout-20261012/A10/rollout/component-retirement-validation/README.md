@@ -34,3 +34,10 @@ private-local-and-tmp-v1 seed environment change and its regression. The27-test
 log above remains evidence for its exact earlier draft source hashes. The rebased
 patch has fresh application/format checks; its updated28-test native draft must
 be rerun before application. No earlier binary is relabeled as the updated one.
+
+
+The rebased preparation now also compiles with ReleaseSafe/LLVM and passes all28
+fake-tool tests. `rebased-validation.json` binds the updated source, builder and
+patch hashes; `rebased-build.log` and `rebased-tests.log` are the new raw results.
+The preceding27-test evidence remains unchanged for its original draft. No actual
+C3 source pin, production deletion or default change is part of this test.
