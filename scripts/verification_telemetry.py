@@ -78,6 +78,9 @@ def validate_tests(record, *, action_id=None, member=None):
             if scope not in ('test-execution', 'runner-protocol-interval'):
                 return unknown
             detached.append(dict(test_id=name, state=state, elapsed_ns=ns, elapsed_scope=scope))
+        selection_scope = record.get('selection_scope', 'declared-producer-selection')
+        if selection_scope not in ('declared-producer-selection', 'loaded-unittest-suite', 'actual-client-dispatch'):
+            return unknown
         complete = record['complete'] and len(rows) == selected
         timing = 'complete' if complete and counts['timed'] == selected else 'partial'
         execution_timing = 'complete' if complete and counts['timed'] == counts['executed'] else 'partial'
@@ -85,7 +88,7 @@ def validate_tests(record, *, action_id=None, member=None):
         process = verification_report.process_observations(record.get('process'))
         return dict(version=VERSION, status='observed', process=process, producer=record['producer'],
                     action_id=record['action_id'], member_id=record['member_id'],
-                    selected=selected, **counts, tests=detached, complete=complete,
+                    selected=selected, selection_scope=selection_scope, **counts, tests=detached, complete=complete,
                     timing_coverage=timing, execution_timing_coverage=execution_timing, truncated=len(rows) < selected,
                     additive=False, aggregate_peak_rss_bytes=None)
     except (KeyError, TypeError, ValueError):
@@ -219,7 +222,8 @@ def document(result, action_id, index):
     """Build producer output after the suite terminates, preserving partial runs."""
     return dict(version=VERSION, producer='python-unittest-v1', action_id=action_id,
                 member_id=member_id(action_id, index), selected=result.telemetry_selected,
-                complete=result.telemetry_complete, tests=result.telemetry, process=result.telemetry_process)
+                complete=result.telemetry_complete, selection_scope='loaded-unittest-suite',
+                tests=result.telemetry, process=result.telemetry_process)
 
 
 def write_document(path, record):

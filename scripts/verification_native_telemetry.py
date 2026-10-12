@@ -162,7 +162,8 @@ class Observation:
                         member_id=telemetry.member_id(action, member),
                         selected=len(self.requested), complete=complete, tests=list(self.rows),
                         elapsed_scope=INTERVAL_SCOPE, body_duration_ns=None,
-                        selection_scope='actual-client-dispatch', malformed=self.malformed)
+                        selection_scope='actual-client-dispatch',
+                        malformed=self.malformed or not self.supported or self.names is None)
 
 
 def write_all(fd, data):
@@ -174,7 +175,7 @@ def write_all(fd, data):
 def proxy(command, observer):
     """Forward all wire bytes and inherited stderr; preserve runner exit status."""
     child = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                             stderr=None, bufsize=0)
+                             stderr=None, bufsize=0, close_fds=False)
     client_frames = Frames(observer.client, observer.fail)
     server_frames = Frames(observer.server, observer.fail)
     cancelled = []
@@ -202,7 +203,10 @@ def proxy(command, observer):
             observer.fail()
         finally:
             client_frames.finish()
-            child.stdin.close()
+            try:
+                child.stdin.close()
+            except OSError:
+                observer.fail()
 
     reader = threading.Thread(target=client_forward, daemon=True)
     reader.start()

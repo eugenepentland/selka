@@ -112,3 +112,14 @@ must agree on an additive authenticated contract before changes:
 Core runtime remains memory-team-owned. No guest/Guardian implementation file was
 edited by S01. Guest individual timing acceptance remains open until that owner
 supplies and qualifies the producer; the inventory adapter does not close it.
+
+Central adoption approved by coordinator: prefix the proxy around original argv
+for reachable native Run steps whose test_runner_mode is already true, during
+registry export. Preserve the entire original argv/producer/stdio/name/filters/
+sideeffects and use the exported **reachable member index** (not raw registration
+index when unreachable whole-root runs precede shards). Existing withTools
+exec-shell forwards Maker's appended listen flag to the original artifact.
+Group root ID is stable if the group owns one binary root; include stable artifact
+qualification if a group spans different roots. Preserve native inherited
+side-channel descriptors: proxy Popen explicitly uses close_fds=False so the
+original runner retains ZIG_PROGRESS and any existing inherited capability.

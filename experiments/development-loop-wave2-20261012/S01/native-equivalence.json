@@ -1,0 +1,11 @@
+{
+  "equal_wire": true,
+  "equal_stderr": true,
+  "equal_status": true,
+  "selected": 2,
+  "executed": 1,
+  "skipped": 1,
+  "timed": 1,
+  "scope": "runner-protocol-interval",
+  "isolated_latency_qualification": false
+}

@@ -55,6 +55,7 @@ class NativeTelemetryTests(unittest.TestCase):
         self.assertEqual(result['tests'][0]['elapsed_scope'], native.INTERVAL_SCOPE)
         self.assertEqual((result['selected'], result['executed'], result['timed']), (3, 2, 2))
         self.assertTrue(result['complete'])
+        self.assertEqual(result['selection_scope'], 'actual-client-dispatch')
         self.assertEqual(result['timing_coverage'], 'partial')
 
     def test_leak_and_logged_error_preserve_failure(self):
@@ -91,6 +92,7 @@ class NativeTelemetryTests(unittest.TestCase):
         parsed.feed(frame(0, b'other-version'))
         self.assertTrue(observed.malformed)
         self.assertFalse(observed.document('unit', 0, 0)['complete'])
+        self.assertTrue(native.Observation('root').document('unit', 0, 0)['malformed'])
         for body in (b'', metadata(('duplicate', 'duplicate')), struct.pack('<II', 1, native.telemetry.MAX_TESTS + 1)):
             observed = native.Observation('root')
             observed.server(0, native.PINNED_ZIG.encode())
@@ -116,6 +118,20 @@ class NativeTelemetryTests(unittest.TestCase):
             document = json.loads((Path(directory) / 'unit.member.0.json').read_text())
             self.assertFalse(document['complete'])
             self.assertTrue(document['malformed'])
+
+    def test_inherited_progress_and_other_descriptors_reach_original_runner(self):
+        reader, writer = os.pipe()
+        try:
+            runner = "import os; os.write(int(os.environ['TELEMETRY_FIXTURE_FD']),b'side-channel')"
+            completed = subprocess.run([sys.executable, native.__file__, '--action-id', 'unit',
+                                        '--member', '0', '--root-id', 'root', '--', sys.executable, '-c', runner],
+                                       input=b'', capture_output=True, pass_fds=(writer,),
+                                       env=dict(os.environ, TELEMETRY_FIXTURE_FD=str(writer)), timeout=5)
+            self.assertEqual(completed.returncode, 0)
+            self.assertEqual(os.read(reader, 12), b'side-channel')
+        finally:
+            os.close(reader)
+            os.close(writer)
 
     def test_cancellation_reaps_noncooperating_runner(self):
         runner = "import os,signal,time; signal.signal(signal.SIGTERM,signal.SIG_IGN); os.write(2,b'ready\\n'); time.sleep(60)"
