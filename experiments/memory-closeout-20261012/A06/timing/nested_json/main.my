@@ -1,0 +1,30 @@
+import transform
+
+func repetitions(args: str[]) -> int:
+    if len(args) == 0:
+        return 1
+    match parse_int(args[0]):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+func main(args: str[], out: Stream) -> int:
+    const rounds = repetitions(args)
+    if rounds < 1 or rounds > 10000:
+        return 2
+    mut total = 0
+    for round in range(rounds):
+        mut source = transform.document(512)
+        match transform.roundtrip(source):
+            case Ok(rendered):
+                source = "replaced"
+                match transform.score(rendered):
+                    case Ok(value):
+                        total += value
+                    case Err(_):
+                        return 1
+            case Err(_):
+                return 2
+    out.print(total)
+    return 0

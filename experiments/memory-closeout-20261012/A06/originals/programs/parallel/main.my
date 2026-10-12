@@ -1,0 +1,20 @@
+import parallel
+import primes
+
+func main(args: str[], out: Stream) -> int:
+    mut n = 4
+    if len(args) > 0:
+        n = 256
+    mut input: int[] = []
+    for i in range(n):
+        input.append(i)
+    const output = parallel.map(input, primes.count)
+    input.clear()
+    mut total = 0
+    for result in output:
+        total += result.count
+    if output[n - 1].label != "batch-" + str(n - 1):
+        return 1
+    _ = parallel.map([0, 1, 2], primes.count)
+    out.print(n, total)
+    return 0

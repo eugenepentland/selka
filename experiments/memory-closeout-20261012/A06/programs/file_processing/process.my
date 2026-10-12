@@ -1,0 +1,28 @@
+public func document(n: int) -> str:
+    mut text = ""
+    for i in range(n):
+        text += str((i * 17 + 11) % 97) + "\n"
+    return text
+
+public func summarize(fs: Filesystem, fail: bool) -> Result[int, str]:
+    with fs.open("input.txt", "r") as input:
+        const text = input.read()
+        mut total = 0
+        for line in text.split("\n"):
+            if line != "":
+                match parse_int(line):
+                    case Some(value):
+                        total += value
+                    case None:
+                        return Err("invalid number")
+        if fail:
+            return Err("requested early exit")
+        with fs.open("summary.txt", "w") as output:
+            _ = output.write(str(total))
+        return Ok(total)
+
+public func missing(fs: Filesystem) -> Result[int, str]:
+    with fs.open("input.txt", "r") as input:
+        _ = input.read()
+        _ = try fs.read_text("missing.txt")
+        return Ok(0)

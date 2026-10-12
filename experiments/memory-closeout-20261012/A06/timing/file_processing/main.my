@@ -1,0 +1,47 @@
+import filesystem
+import process
+
+func repetitions(args: str[]) -> int:
+    if len(args) == 0:
+        return 1
+    match parse_int(args[0]):
+        case Some(value):
+            return value
+        case None:
+            return 0
+
+func run() -> int:
+    const fs = filesystem.memory()
+    with fs.open("input.txt", "w") as input:
+        _ = input.write(process.document(8192))
+    mut answer = 0
+    for i in range(3):
+        match process.summarize(fs, False):
+            case Ok(total):
+                answer = total
+            case Err(_):
+                return -1
+    match process.summarize(fs, True):
+        case Ok(_):
+            return -2
+        case Err(_):
+            _ = 0
+    match process.missing(fs):
+        case Ok(_):
+            return -3
+        case Err(_):
+            _ = 0
+    return answer
+
+func main(args: str[], out: Stream) -> int:
+    const rounds = repetitions(args)
+    if rounds < 1 or rounds > 10000:
+        return 2
+    mut total = 0
+    for round in range(rounds):
+        const value = run()
+        if value < 0:
+            return 1
+        total += value
+    out.print(total)
+    return 0

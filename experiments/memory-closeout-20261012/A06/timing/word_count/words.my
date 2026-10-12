@@ -1,0 +1,19 @@
+public func document(count: int) -> str:
+    const vocabulary = ["red", "blue", "green", "violet", "amber", "white", "black"]
+    mut text = ""
+    for i in range(count):
+        text += vocabulary[(i * 17 + 11) % 7] + " "
+    return text
+
+public func histogram(text: str) -> dict[str, int]:
+    mut counts: dict[str, int] = {}
+    for word in text.split(" "):
+        if word != "":
+            counts[word.copy()] = counts.get(word, 0) + 1
+    return counts
+
+public func checksum(counts: dict[str, int]) -> int:
+    mut total = 0
+    for word in counts:
+        total += len(word) * counts[word]
+    return total

@@ -1,0 +1,92 @@
+{
+  "sources": [
+    {
+      "original": "originals/programs/file_processing/main.my",
+      "original_sha256": "8cd863158b7cab142456063f07025a97f790dc6806fbacf3db762e7bcf60a3eb",
+      "migrated": "programs/file_processing/main.my",
+      "migrated_sha256": "8cd863158b7cab142456063f07025a97f790dc6806fbacf3db762e7bcf60a3eb",
+      "removed_lines": 0,
+      "added_lines": 0,
+      "explicit_copy_sites": 0
+    },
+    {
+      "original": "originals/programs/file_processing/process.my",
+      "original_sha256": "5226147e7e0e228b006134ea3dc79caa821aadf5b555b3bf034cb35bd280d65b",
+      "migrated": "programs/file_processing/process.my",
+      "migrated_sha256": "5226147e7e0e228b006134ea3dc79caa821aadf5b555b3bf034cb35bd280d65b",
+      "removed_lines": 0,
+      "added_lines": 0,
+      "explicit_copy_sites": 0
+    },
+    {
+      "original": "originals/programs/nested_json/main.my",
+      "original_sha256": "c37319aadc2db25b3b312187279a27a7292556692b32ed9c096ceabd9fbde22b",
+      "migrated": "programs/nested_json/main.my",
+      "migrated_sha256": "c37319aadc2db25b3b312187279a27a7292556692b32ed9c096ceabd9fbde22b",
+      "removed_lines": 0,
+      "added_lines": 0,
+      "explicit_copy_sites": 0
+    },
+    {
+      "original": "originals/programs/nested_json/transform.my",
+      "original_sha256": "731d621883eee8968c0a0fb49353de3908f16e711442d2199b73104d05c99f74",
+      "migrated": "programs/nested_json/transform.my",
+      "migrated_sha256": "731d621883eee8968c0a0fb49353de3908f16e711442d2199b73104d05c99f74",
+      "removed_lines": 0,
+      "added_lines": 0,
+      "explicit_copy_sites": 0
+    },
+    {
+      "original": "originals/programs/parallel/main.my",
+      "original_sha256": "417994b665dfdb6bdb72c3e4524b7754a8692f2d89d4f324d3fda6718db5e962",
+      "migrated": "programs/parallel/main.my",
+      "migrated_sha256": "417994b665dfdb6bdb72c3e4524b7754a8692f2d89d4f324d3fda6718db5e962",
+      "removed_lines": 0,
+      "added_lines": 0,
+      "explicit_copy_sites": 0
+    },
+    {
+      "original": "originals/programs/parallel/primes.my",
+      "original_sha256": "8ccc5b22614f0f7fd8ee9cc48ff08ce2d5e08ac85da2a0d5945f058c8e7da4de",
+      "migrated": "programs/parallel/primes.my",
+      "migrated_sha256": "8ccc5b22614f0f7fd8ee9cc48ff08ce2d5e08ac85da2a0d5945f058c8e7da4de",
+      "removed_lines": 0,
+      "added_lines": 0,
+      "explicit_copy_sites": 0
+    },
+    {
+      "original": "originals/programs/word_count/main.my",
+      "original_sha256": "754f348c9fe5e2aa38618077ffed2464f623ea7ae3a0be66a72c4a289dd8ac2c",
+      "migrated": "programs/word_count/main.my",
+      "migrated_sha256": "754f348c9fe5e2aa38618077ffed2464f623ea7ae3a0be66a72c4a289dd8ac2c",
+      "removed_lines": 0,
+      "added_lines": 0,
+      "explicit_copy_sites": 0
+    },
+    {
+      "original": "originals/programs/word_count/words.my",
+      "original_sha256": "8da50119f947abbdc3c520c7e192c27e662967b2099cd6d1ddafcaea44c9d773",
+      "migrated": "programs/word_count/words.my",
+      "migrated_sha256": "61569e71ae3a0723d2f123720f78d32a33df465cdd5be1e2f76d9b8c7203ef6e",
+      "removed_lines": 1,
+      "added_lines": 1,
+      "explicit_copy_sites": 1
+    }
+  ],
+  "new_application_workloads": true,
+  "syntax_annotations_added": 0,
+  "unqualified_until_matrix_completes": true,
+  "diagnostics": [
+    {
+      "source": "originals/python-word-count/main.my",
+      "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+      "status": 1,
+      "code": "E_SINGLE_OWNER_OVERLAP",
+      "stderr": "build-slot: FIFO ticket 39, position 17; earlier build tickets must run first; waiting (0s so far)\nbuild-slot: FIFO ticket 39, position 16; earlier build tickets must run first; waiting (60s so far)\nbuild-slot: FIFO ticket 39, position 10; earlier build tickets must run first; waiting (120s so far)\nbuild-slot: FIFO ticket 39, position 3; earlier build tickets must run first; waiting (181s so far)\nbuild-slot: build slot 1, FIFO ticket 39 after 201s\nmain.my:5:20: error[E_SINGLE_OWNER_OVERLAP]: a list cannot be moved or mutated while another argument or iteration borrows it\n              counts[word] = counts.get(word, 0) + 1\n                     ^\n",
+      "resolution": "Dictionary key insertion copies the iteration-borrowed word explicitly.",
+      "surprising_wording": "C0 says a list although this key is str; A07 owns proposed generic wording correction."
+    }
+  ],
+  "explicit_copies_added_to_existing_example": 1,
+  "existing_example_source_lines_changed": 1
+}

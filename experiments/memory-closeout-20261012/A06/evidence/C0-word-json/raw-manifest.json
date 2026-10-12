@@ -1,0 +1,52 @@
+{
+  "nested_json/release/build.json": {
+    "raw_sha256": "4227587559dadac9aea680bf9cb64c5f141b8c6ade8dc18068b528b8c97b78dd",
+    "compressed_sha256": "4878fed3fad74a3c691f36a0d7e954f297ad063160685fc08683a779c0a69846",
+    "raw_bytes": 1463
+  },
+  "nested_json/release/counts-large-threads-1.json": {
+    "raw_sha256": "c0b67876d6093e7b5dfdbe04cc4b28e053432989d91b5e43e719e23c4965fe4b",
+    "compressed_sha256": "57c5d40c6660e36334b5af850921c33bff0815536ced929dc36931402ef604ba",
+    "raw_bytes": 30873
+  },
+  "nested_json/release/counts-small-threads-1.json": {
+    "raw_sha256": "90f022a79ddcc797158245d99ac3750c98fc5841ba6f3c7082aba1923931bf77",
+    "compressed_sha256": "da430d612dcd308709406043bfad5ad17cd471a5de5ef1412c2fec03745ccdcf",
+    "raw_bytes": 30587
+  },
+  "nested_json/release/run-large-threads-1.json": {
+    "raw_sha256": "e23836a02e559854956a1d2ed395e37a38c026fbb70f6a4e284aff07b2eccc08",
+    "compressed_sha256": "a243ddf945879d313c4d8cfc7b17989ba2636d89557961ce222e6a5b591389c6",
+    "raw_bytes": 259
+  },
+  "nested_json/release/run-small-threads-1.json": {
+    "raw_sha256": "47704f15c6cf0534058818a216f1efff3fb95c41a29b841b60fc2d8071e86621",
+    "compressed_sha256": "793179775c1b84cfe00fcfd3299cbbac9320d28e53709e3a1b5ca7a8ee128e60",
+    "raw_bytes": 242
+  },
+  "word_count/release/build.json": {
+    "raw_sha256": "7d3542e461b53ffb3a4d24acc8e5acf1dfab8fd38fd5e2ff1df63cc79a4f551e",
+    "compressed_sha256": "0934b054be48b3f12210e7eb8f55831a50c2c82a5bd9a77010266c3752d5e300",
+    "raw_bytes": 1145
+  },
+  "word_count/release/counts-large-threads-1.json": {
+    "raw_sha256": "d29afab60914949a774a55326fc194e94cee8e0aa5a0d35d9507810d3eeb976e",
+    "compressed_sha256": "63729bf1e018fb481f783875408bb9f40c9d0281d800e4443eea01fe74833e7e",
+    "raw_bytes": 9372
+  },
+  "word_count/release/counts-small-threads-1.json": {
+    "raw_sha256": "14927831f17a45efc15116725c622372cdf52e6abd5b9fa9c601225c2dbaba3a",
+    "compressed_sha256": "bfc9c6fd4a4e1f958ab4e0a75c74a86ad1bacd32eb215bcce15f842a98082c69",
+    "raw_bytes": 9283
+  },
+  "word_count/release/run-large-threads-1.json": {
+    "raw_sha256": "fd858bad91785ce510db8c615ecb88796fbffa1f8a4c3dc9638fc5d7275e5c82",
+    "compressed_sha256": "344e21cf9c072b1895cc9c355a9d692b8e1c23b424d977afa63a602a19e0041a",
+    "raw_bytes": 261
+  },
+  "word_count/release/run-small-threads-1.json": {
+    "raw_sha256": "593242f0f84e105ad28aeaad82df8b3c376766d0af0fd6666de12a5333abf0d2",
+    "compressed_sha256": "dbec13a3185584f5893607a0bca34a2438db1d2f812aa204fe1d409314315b41",
+    "raw_bytes": 243
+  }
+}
