@@ -4,6 +4,14 @@ const ir = @import("ir.zig");
 const flags = @import("flags.zig");
 
 pub const prefix = "myl_core_borrow_select_v1_";
+pub const choice_prefix = "myl_core_borrow_choice_v1_";
+/// Exact generated choice operations sharing a two-owner borrowed result.
+pub const Kind = enum { min_text, max_text, optional_default };
+
+/// Recognize reserved compiler marker names before their complete validation.
+pub fn reserved(symbol: []const u8) bool {
+    return std.mem.startsWith(u8, symbol, prefix) or std.mem.startsWith(u8, symbol, choice_prefix);
+}
 pub const Error = error{UnsupportedInstruction};
 
 /// Selected bytes borrow both roots until their last use; neither root transfers.
@@ -26,20 +34,65 @@ fn number(text: []const u8) ?ir.Type {
     return @fromBackingInt(std.fmt.parseInt(u32, text, 10) catch return null);
 }
 
+const Identity = struct { kind: ?Kind = null, first: ir.Type, value: ir.Type };
+
+fn identity(symbol: []const u8) Error!?Identity {
+    if (!reserved(symbol)) return null;
+    var suffix: []const u8 = undefined;
+    var kind: ?Kind = null;
+    if (std.mem.startsWith(u8, symbol, choice_prefix)) {
+        suffix = symbol[choice_prefix.len..];
+        // Kind names contain underscores, so match an exact delimited name.
+        inline for (.{ Kind.min_text, Kind.max_text, Kind.optional_default }) |choice| {
+            const tag = @tagName(choice);
+            if (std.mem.startsWith(u8, suffix, tag ++ "_")) {
+                kind = choice;
+                suffix = suffix[tag.len + 1 ..];
+                break;
+            }
+        }
+        if (kind == null) return error.UnsupportedInstruction;
+    } else suffix = symbol[prefix.len..];
+    const split = std.mem.indexOfScalar(u8, suffix, '_') orelse return error.UnsupportedInstruction;
+    return .{
+        .kind = kind,
+        .first = number(suffix[0..split]) orelse return error.UnsupportedInstruction,
+        .value = number(suffix[split + 1 ..]) orelse return error.UnsupportedInstruction,
+    };
+}
+
+const Optional = struct { tag: usize, payload: ir.Type };
+
+/// Only a two-case optional containing one managed value and one empty case.
+fn optional(module: *const ir.Module, first: ir.Type, value: ir.Type) ?Optional {
+    if (module.kind(first) != .@"union") return null;
+    const cases = module.compound(first).@"union";
+    if (cases.len != 2) return null;
+    const tag: usize = if (cases[0] == .void) 1 else if (cases[1] == .void) 0 else return null;
+    const payload = cases[tag];
+    if (payload == value) return .{ .tag = tag, .payload = payload };
+    if (!module.valid(payload) or module.kind(payload) != .box) return null;
+    if (module.compound(payload).box != value) return null;
+    return .{ .tag = tag, .payload = payload };
+}
+
+fn validIdentity(module: *const ir.Module, id: Identity) bool {
+    if (!module.valid(id.first) or !module.valid(id.value)) return false;
+    if (!module.managed(id.value)) return false;
+    if (id.kind) |kind| return switch (kind) {
+        .min_text, .max_text => id.first == .str and id.value == .str,
+        .optional_default => optional(module, id.first, id.value) != null,
+    };
+    return module.kind(id.first) == .dict and module.compound(id.first).dict.value == id.value;
+}
+
 /// A reserved prefix never grants authority to a malformed or source C declaration.
 pub fn declaration(module: *const ir.Module, function: *const ir.Function) Error!bool {
-    if (!std.mem.startsWith(u8, function.name, prefix)) return false;
-    const suffix = function.name[prefix.len..];
-    const split = std.mem.indexOfScalar(u8, suffix, '_') orelse return error.UnsupportedInstruction;
-    const dictionary = number(suffix[0..split]) orelse return error.UnsupportedInstruction;
-    const value = number(suffix[split + 1 ..]) orelse return error.UnsupportedInstruction;
-    if (!module.zero_rc) return error.UnsupportedInstruction;
-    if (!module.valid(dictionary) or !module.valid(value)) return error.UnsupportedInstruction;
-    if (module.kind(dictionary) != .dict or !module.managed(value)) return error.UnsupportedInstruction;
-    if (module.compound(dictionary).dict.value != value) return error.UnsupportedInstruction;
+    const id = (try identity(function.name)) orelse return false;
+    if (!module.zero_rc or !validIdentity(module, id)) return error.UnsupportedInstruction;
     const signature = function.signature;
     if (signature.linkage != .runtime_c or signature.params.len != 3) return error.UnsupportedInstruction;
-    if (signature.ret != value or !std.mem.eql(ir.Type, signature.params, &.{ value, dictionary, value })) return error.UnsupportedInstruction;
+    if (signature.ret != id.value or !std.mem.eql(ir.Type, signature.params, &.{ id.value, id.first, id.value })) return error.UnsupportedInstruction;
     if ((signature.owned | signature.consumes | signature.views) != 0) return error.UnsupportedInstruction;
     if (function.blocks.items.len != 0 or function.insts.items.len != 0) return error.UnsupportedInstruction;
     return true;
@@ -73,6 +126,27 @@ fn entry(function: *const ir.Function, raw: ir.Ref, dictionary: ir.Ref) Error!bo
     return owner == dictionary;
 }
 
+fn firstValue(module: *const ir.Module, function: *const ir.Function, raw: ir.Ref, first: ir.Ref, id: Identity) Error!bool {
+    if (id.kind) |kind| switch (kind) {
+        .min_text, .max_text => {
+            const value = try resolve(function, raw);
+            return value == first;
+        },
+        .optional_default => {
+            const shape = optional(module, id.first, id.value) orelse return error.UnsupportedInstruction;
+            var value = try resolve(function, raw);
+            if (shape.payload != id.value) {
+                const box = function.inst(value);
+                if (box.op != .box_get or box.ty != id.value) return false;
+                value = try resolve(function, box.a);
+            }
+            const payload = function.inst(value);
+            return payload.op == .union_payload and payload.ty == shape.payload and payload.data == shape.tag and try resolve(function, payload.a) == first;
+        },
+    };
+    return entry(function, raw, first);
+}
+
 /// Recognize only a validated get selection or its trivial resolved hit/miss.
 /// The ordinary verifier separately checks operand types and dominance.
 pub fn call(module: *const ir.Module, function: *const ir.Function, inst: ir.Inst) Error!?Selection {
@@ -84,13 +158,15 @@ pub fn call(module: *const ir.Module, function: *const ir.Function, inst: ir.Ins
     const value = try resolve(function, args[0]);
     const dictionary = try resolve(function, args[1]);
     const fallback = try resolve(function, args[2]);
-    const signature = module.functions.items[inst.a.index()].signature;
+    const callee = &module.functions.items[inst.a.index()];
+    const signature = callee.signature;
+    const id = (try identity(callee.name)).?;
     if (inst.ty != signature.ret) return error.UnsupportedInstruction;
     for (args, signature.params) |argument, ty| {
         if (function.inst(try resolve(function, argument)).ty != ty) return error.UnsupportedInstruction;
     }
     const result: Selection = .{ .value = value, .dictionary = dictionary, .fallback = fallback, .phi = null };
-    if (value == fallback or try entry(function, value, dictionary)) return result;
+    if (value == fallback or try firstValue(module, function, value, dictionary, id)) return result;
     const selected = function.inst(value);
     if (selected.op != .phi) return error.UnsupportedInstruction;
     const values = try operands(function, selected.data);
@@ -100,8 +176,8 @@ pub fn call(module: *const ir.Module, function: *const ir.Function, inst: ir.Ins
     }
     const first = try resolve(function, values[0]);
     const second = try resolve(function, values[1]);
-    const hit_first = try entry(function, first, dictionary);
-    const hit_second = try entry(function, second, dictionary);
+    const hit_first = try firstValue(module, function, first, dictionary, id);
+    const hit_second = try firstValue(module, function, second, dictionary, id);
     const hit_then_fallback = hit_first and second == fallback;
     const fallback_then_hit = hit_second and first == fallback;
     if (!hit_then_fallback and !fallback_then_hit) return error.UnsupportedInstruction;
@@ -122,7 +198,7 @@ pub fn validate(a: std.mem.Allocator, module: *const ir.Module, function: *const
     var any_marker = false;
     for (function.insts.items) |inst| {
         if (inst.op != .call or inst.a.index() >= module.functions.items.len) continue;
-        if (std.mem.startsWith(u8, module.functions.items[inst.a.index()].name, prefix)) any_marker = true;
+        if (reserved(module.functions.items[inst.a.index()].name)) any_marker = true;
     }
     if (!any_marker) return;
     var borrowed: std.AutoHashMapUnmanaged(ir.Ref, void) = .empty;
@@ -190,6 +266,16 @@ pub fn takes(module: *const ir.Module, function: *const ir.Function, inst: ir.In
 /// Declare a compiler-only marker; source extern declarations cannot select it.
 pub fn declare(a: std.mem.Allocator, module: *ir.Module, dictionary: ir.Type, value: ir.Type) (Error || std.mem.Allocator.Error)!u32 {
     const symbol = try name(a, dictionary, value);
+    return declareNamed(a, module, symbol, dictionary, value);
+}
+
+/// Min/max and optional defaults share the same nonconsuming two-root contract.
+pub fn declareChoice(a: std.mem.Allocator, module: *ir.Module, kind: Kind, first: ir.Type, value: ir.Type) (Error || std.mem.Allocator.Error)!u32 {
+    const symbol = try std.fmt.allocPrint(a, "{s}{s}_{d}_{d}", .{ choice_prefix, @tagName(kind), @backingInt(first), @backingInt(value) });
+    return declareNamed(a, module, symbol, first, value);
+}
+
+fn declareNamed(a: std.mem.Allocator, module: *ir.Module, symbol: []const u8, dictionary: ir.Type, value: ir.Type) (Error || std.mem.Allocator.Error)!u32 {
     for (module.functions.items, 0..) |*function, index| {
         if (!std.mem.eql(u8, function.name, symbol)) continue;
         if (!try declaration(module, function)) return error.UnsupportedInstruction;

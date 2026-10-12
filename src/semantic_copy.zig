@@ -286,3 +286,28 @@ test "A08 unpack semantic relocation preserves local IDs and independently owns 
     fields[2] = @fromBackingInt(8);
     try t.expectEqualSlices(?typed.LocalId, &.{ @fromBackingInt(3), null, @fromBackingInt(7) }, after.data.initialize.unpack.?);
 }
+
+// spec-case: SEMANTIC-CACHE-3
+test "A08 selection semantic copy relocates both ordered operand NodeIds" {
+    const t = std.testing;
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const before: typed.Node = .{
+        .ty = .i64,
+        .span = .{ .start = 10, .end = 20 },
+        .data = .{ .borrow_selection = .{ .kind = .optional_default, .first = @fromBackingInt(7), .second = @fromBackingInt(8) } },
+    };
+    const mapper: Mapper = .{
+        .segments = &.{.{ .before = .{ .start = 10, .end = 20 }, .after = 100 }},
+        .before = .{ .nodes = .{ .start = 7, .end = 10 }, .statements = .{ .start = 0, .end = 1 } },
+        .after = .{ .nodes = .{ .start = 40, .end = 43 }, .statements = .{ .start = 50, .end = 51 } },
+    };
+    const after = try mapper.copy(arena.allocator(), typed.Node, before);
+    try t.expectEqual(@as(usize, 100), after.span.start);
+    try t.expectEqual(@as(usize, 110), after.span.end);
+    try t.expectEqual(before.data.borrow_selection.kind, after.data.borrow_selection.kind);
+    try t.expectEqual(@as(usize, 40), @backingInt(after.data.borrow_selection.first));
+    try t.expectEqual(@as(usize, 41), @backingInt(after.data.borrow_selection.second));
+    try t.expectEqual(@as(usize, 7), @backingInt(before.data.borrow_selection.first));
+    try t.expectEqual(@as(usize, 8), @backingInt(before.data.borrow_selection.second));
+}

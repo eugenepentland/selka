@@ -22,6 +22,11 @@
   },
   "command": "scripts/build-slot.sh build \"$ZIG\" build test-core -Dtest-filter=\"borrowed selection\" -Dcomponent-owned-compiler-pin=A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json -Dcomponent-seed-source=A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar -j\"$MYLANG_DEV_JOBS\" --maxrss \"$MYLANG_DEV_MAXRSS\"",
   "component_boundary": "MYLANG_COMPONENT_CACHE selects A10 independently source-pinned Support6 RF compiler and actual owned components; immutable historical seed unchanged.",
-  "guardian": "commit hook pending",
-  "guardian_first_attempt": "Allocator-hygiene rejected a helper hardcoding testing allocator; fixed by passing backing allocator explicitly from the tests. Four focused tests rerun and pass without leaks."
+  "guardian": {
+    "status": "passed",
+    "checks": 88,
+    "log": "guardian-pass.log"
+  },
+  "guardian_first_attempt": "Allocator-hygiene rejected a helper hardcoding testing allocator; fixed by passing backing allocator explicitly from the tests. Four focused tests rerun and pass without leaks.",
+  "commit": "46a42d5de1d4988ceffd380bc85032d6b658d9d2"
 }

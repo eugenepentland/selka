@@ -106,6 +106,10 @@ pub const Walker = struct {
                     try self.expr(block.value);
                     try self.stmt(block.body);
                 },
+                .borrow_selection => |selection| {
+                    try self.expr(selection.second);
+                    try self.expr(selection.first);
+                },
                 .variant => |v| if (v.value) |value| try self.expr(value),
                 .array => |values| try self.arguments(values),
                 .record => |values| try self.fields(values),

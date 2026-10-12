@@ -1,0 +1,24 @@
+{
+  "base_commit": "46a42d5de1d4988ceffd380bc85032d6b658d9d2",
+  "status": "eight_focused_storage_copy_tests_passed",
+  "schema_before": "semantic-cache-v8",
+  "schema_after": "semantic-cache-v9",
+  "shared_change": "Coordinator-authored typed.Node.borrow_selection tag and BorrowSelection declaration included atomically with schema version.",
+  "command": "scripts/build-slot.sh build \"$ZIG\" test src/semantic_store.zig --test-filter A08",
+  "tests": 8,
+  "new_selection_tests": 4,
+  "existing_tuple_tests": 4,
+  "malformed_selection_images": 27,
+  "source_hashes": {
+    "src/typed.zig": "9c3e3fac8161e56b24eb97ce143a8d54ee4467ae913799b068d31670e50a6293",
+    "src/semantic_store.zig": "2db32dd9352b24feb8bdabfe2a37174772811b9e58502ea6e5bf14d03dd668d4",
+    "src/semantic_copy.zig": "e885235eda8892b6b653ee7152c12dec5e6aea29421d1433ab7c1e18a9faffe0"
+  },
+  "validation": "Ordinary and specialized decoded/publication bodies require selection operands within body range and before the selection node, first aggregate, fallback/result same logical type, and text min/max all equal logical type. No allocator needed for this linear node scan.",
+  "live_dependency": "A04/A07 always-on checker/Core validators must prove canonical str and exact Optional payload shape against live record catalog. Source-generated/native cache roundtrip waits combined compiler.",
+  "relocation": "Both operand NodeIds and source spans relocate; enum kind preserved. No new semantic_copy production branch is required because existing union/struct reflection handles children.",
+  "old_artifacts": "Prior-v8 image rejected even with correct recomputed checksum; old-v7 tuple test retained. Private/shared typed keys both include format version.",
+  "scope": "Stored representation and copy tests only. Not complete guest source/native qualification or C1/C2/C3 milestone.",
+  "guardian": "commit hook pending",
+  "guardian_first_attempt": "Boolean-expression length and repeated import literal rejected; extracted named body predicate and shared semantic_copy import. All eight focused tests reran and pass."
+}

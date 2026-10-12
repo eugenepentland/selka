@@ -1,0 +1,6 @@
+func main() -> int:
+    mut first = "a" + str(1)
+    mut second = "b" + str(2)
+    const view = min(first, second).borrow(0, 1)
+    second = "changed"
+    return len(view)

@@ -245,3 +245,22 @@ The coordinator authored SPEC/root-test overlays. Different-root two-string
 extrema and Optional.unwrap_or remain separate support blockers for follow-up;
 no generic ownership merge or helper registry was changed. Final integration
 qualification remains required, and the pending tuple migration stays separate.
+
+Two-parent borrowed selections are now implemented and locally qualified in
+`selections/`. On base07f16c654 plus the exact recorded overlays, compiler
+SHA256 70525285968f79d1bd3e78705b189763ea015d4ac9073676eb0eaa1ed6667d5e
+passes Core5/5, frontend11/11, native6/6 and source-negative8/8. Five checked
+native modes are RC0/live0 with clean LLVM/symbol audits; ordinary release is a
+behavior/leak control. This is intermediate evidence, not a final candidate.
+The feature requires A08 atomic typed/semantic v9 commit779ea9a62; its shared
+files remain validation overlays outside the A04 feature commit. A07 authored
+and reviewed source/IR two-parent marker contracts, root authored shared Core
+hooks, registrations and SPEC prose. The logical validator is always-on before
+selection operands; no generic ownership merge changed. A08 will qualify native
+cache/replay on the integrated compiler. Generator extrema folds and set(iterable)
+remain separate owner tasks. Pending tuple source migration remains unstaged.
+
+Final selection phaseprototype-04 also includes the existing522e66671 verifier
+scratch-arena validation dependency. All compiler build stderr is now empty;
+earlier112-allocation compiler diagnostics are preserved as an omitted-overlay
+reproducer in selections/compiler-leaks.json, distinct from clean guest counters.

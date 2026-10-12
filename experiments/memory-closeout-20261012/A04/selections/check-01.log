@@ -1,0 +1,37 @@
+build-slot: FIFO ticket 895, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 895 after 15s
+a04_borrow_selections.my 0 
+affine_optional.my 1 experiments/memory-closeout-20261012/A04/selections/affine_optional.my:6:20: error[E_GENERIC_REQUIREMENT]: type argument does not guarantee the nominal template's required operations
+  func choose(value: Owned?, fallback: Owned) -> Owned effects(filesystem):
+                     ^
+  note: experiments/memory-closeout-20261012/A04/selections/affine_optional.my:1:1: type parameter requirements are declared here
+
+second_parent_invalidated.my 1 experiments/memory-closeout-20261012/A04/selections/second_parent_invalidated.my:11:44: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+      return read(min(first, second), change(mut second))
+                                             ^
+
+selected_view.my 1 experiments/memory-closeout-20261012/A04/selections/selected_view.my:4:18: error[E_ZERO_RC_VIEW_ESCAPE]: a view cannot borrow from a selection with multiple possible owners; copy the selected value into a named owner first
+      const view = min(first, second).borrow(0, 1)
+                   ^
+
+fresh_escape.my 1 experiments/memory-closeout-20261012/A04/selections/fresh_escape.my:2:12: error[E_SINGLE_OWNER_BORROW]: a borrowed selection cannot be stored or returned; make an explicit .copy()
+      return min("a" + str(1), "b" + str(2))
+             ^
+
+optional_receiver_invalidated.my 1 experiments/memory-closeout-20261012/A04/selections/optional_receiver_invalidated.my:7:39: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+      return len(value.unwrap_or(change(mut value)).copy())
+                                        ^
+
+first_parent_invalidated.my 1 experiments/memory-closeout-20261012/A04/selections/first_parent_invalidated.my:11:44: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+      return read(min(first, second), change(mut first))
+                                             ^
+
+first_argument_invalidated.my 1 experiments/memory-closeout-20261012/A04/selections/first_argument_invalidated.my:7:34: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+      return len(min(value, change(mut value)).copy())
+                                   ^
+
+pending_result_optional.my 1 experiments/memory-closeout-20261012/A04/selections/pending_result_optional.my:1:20: error[E_GENERIC_REQUIREMENT]: type argument does not guarantee the nominal template's required operations
+  func choose(value: Result[str, str]?, fallback: Result[str, str]) -> Result[str, str]:
+                     ^
+  note: experiments/memory-closeout-20261012/A04/selections/pending_result_optional.my:1:1: type parameter requirements are declared here
+

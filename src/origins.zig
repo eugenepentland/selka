@@ -360,6 +360,10 @@ const Context = struct {
             .unwrap => |value| self.childIfManaged(node.ty, function, origins, value, depth),
             .propagate => |propagate| self.nodeOrigin(function, origins, propagate.value, depth + 1),
             .block_value => |block| if (self.tracks(node.ty)) self.blockValueOrigin(function, origins, block, depth + 1) else Origin{},
+            .borrow_selection => |selection| Origin.merge(
+                self.childIfManaged(node.ty, function, origins, selection.first, depth),
+                self.childIfManaged(node.ty, function, origins, selection.second, depth),
+            ),
             .variant => |variant| self.variantOrigin(node.ty, function, origins, variant.value, depth),
             .array => |values| self.mergeValues(function, origins, values, depth),
             .record => |fields| self.mergeFields(function, origins, fields, depth),

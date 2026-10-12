@@ -149,6 +149,11 @@ const Dumper = struct {
                 for (call.arguments) |argument| try self.node(argument, depth + 1);
                 if (call.evaluation) |evaluation| try self.statement(evaluation.body, depth + 1);
             },
+            .borrow_selection => |selection| {
+                try self.out.print(self.allocator, " {s}\n", .{@tagName(selection.kind)});
+                try self.node(selection.first, depth + 1);
+                try self.node(selection.second, depth + 1);
+            },
             .block_value => |block| {
                 try self.out.appendSlice(self.allocator, "\n");
                 try self.statement(block.body, depth + 1);

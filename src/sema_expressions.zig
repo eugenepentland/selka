@@ -1023,7 +1023,7 @@ fn consumedTemporaries(comptime Checker: type, self: *Checker, node: ast.Node, o
         .stand_in => |stand| stand.kind.operands(),
         .acquire_buffer => 1,
         .acquire_resource, .environment_get, .environment_only => 2,
-        .index, .binary => 2,
+        .index, .binary, .borrow_selection => 2,
         .replace => 3,
         .variant => |variant| if (node.data == .variant and node.data.variant.fielded)
             (if (variant.value) |record_node| self.nodes.items[@backingInt(record_node)].data.record.len else 0)

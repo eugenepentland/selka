@@ -307,7 +307,7 @@ const Checker = struct {
             return c.reject(span, "E_SINGLE_OWNER_MOVED", message);
         }
         if (c.state[root].provider_context and access != .read) return c.reject(span, borrow_error, "a borrowed provider context is read-only and cannot be moved, stored or returned");
-        if (c.state[slot].ambiguous_borrow and access != .read) return c.reject(span, borrow_error, "a dictionary default selection is read-only; make an explicit .copy() before changing it");
+        if (c.state[slot].ambiguous_borrow and access != .read) return c.reject(span, borrow_error, "a borrowed selection is read-only; make an explicit .copy() before changing it");
         if (c.view(local.ty) and access != .read) return c.reject(span, view_escape, "views are read-only; use .copy() for independent owned storage");
         const write = access != .read;
         if (c.zero_rc) try c.resourceAccess(slot, root, write, span);
@@ -379,6 +379,7 @@ const Checker = struct {
     fn ambiguousBorrow(c: *const Checker, id: typed.NodeId) bool {
         return switch (c.program.nodes[@backingInt(id)].data) {
             .local => |slot| c.state[@backingInt(slot)].ambiguous_borrow,
+            .borrow_selection => true,
             .field => |field| c.ambiguousBorrow(field.base),
             .index => |index| c.ambiguousBorrow(index.base),
             .wrap, .unwrap, .cast => |value| c.ambiguousBorrow(value),
@@ -423,6 +424,10 @@ const Checker = struct {
             .index => |index| try pending.append(c.a, index.base),
             .wrap, .unwrap, .cast => |value| try pending.append(c.a, value),
             .block_value => |block| try pending.append(c.a, block.value),
+            .borrow_selection => |selection| {
+                try pending.append(c.a, selection.first);
+                try pending.append(c.a, selection.second);
+            },
             .buffer_operation => |operation| {
                 try c.borrowLocal(@backingInt(operation.owner), pending);
                 if (operation.kind == .get and operation.arguments.len == 2)
@@ -512,6 +517,20 @@ const Checker = struct {
         // The front end introduces receiver/iteration aliases. They are temporary
         // loans, not source assignments, and cannot themselves escape.
         if (c.temporary(slot)) {
+            // Even two fresh inputs produce a borrow. Lack of a named root
+            // cannot turn a generated selection receiver into a new owner.
+            if (c.ambiguousBorrow(store.value)) {
+                try c.expression(store.value, .read);
+                const source = c.origin(store.value);
+                c.state[slot] = .{
+                    .available = true,
+                    .borrowed = true,
+                    .root = if (source) |root| if (root == slot) none else root else none,
+                    .view_definition = store.value,
+                    .ambiguous_borrow = true,
+                };
+                return;
+            }
             if (c.origin(store.value)) |source| {
                 try c.expression(store.value, .read);
                 if (source == slot) return;
@@ -577,6 +596,15 @@ const Checker = struct {
         switch (node.data) {
             .integer, .boolean, .unit, .blob, .function_value => {},
             .local => |slot| try c.checkLocal(@backingInt(slot), access, node.span),
+            .borrow_selection => |selection| {
+                if (!@import("build_borrow_selection.zig").valid(c.program, selection, node.ty)) return c.reject(node.span, zero_unsupported, "invalid borrowed selection type contract");
+                if (access != .read and c.owns(node.ty)) return c.reject(node.span, borrow_error, "a borrowed selection cannot be stored or returned; make an explicit .copy()");
+                const saved = c.loans.items.len;
+                defer c.loans.shrinkRetainingCapacity(saved);
+                try c.expression(selection.first, .read);
+                try c.loanExpression(selection.first, false);
+                try c.expression(selection.second, .read);
+            },
             .block_value => |block| {
                 _ = try c.checkStatement(block.body);
                 try c.expression(block.value, access);
@@ -872,12 +900,12 @@ const Checker = struct {
 
     fn collection(c: *Checker, node: typed.Node, access: Access) Error!void {
         const operation = node.data.buffer_operation;
-        if (operation.kind == .get and access != .read and c.owns(node.ty)) return c.reject(node.span, borrow_error, "a dictionary default selection is read-only; make an explicit .copy() before changing it");
+        if (operation.kind == .get and access != .read and c.owns(node.ty)) return c.reject(node.span, borrow_error, "a borrowed selection is read-only; make an explicit .copy() before changing it");
         if (c.zero_rc and (operation.kind == .snapshot or operation.kind == .view))
             return c.reject(node.span, zero_unsupported, "shared snapshots and retained views are unsupported; use .borrow() for a checked view or .copy() for ownership");
         const owner = @backingInt(operation.owner);
         if (c.zero_rc and c.view(node.ty) and c.state[owner].ambiguous_borrow)
-            return c.reject(node.span, view_escape, "a view cannot borrow from a dictionary lookup with a fallback; copy the selected value into a named owner first");
+            return c.reject(node.span, view_escape, "a view cannot borrow from a selection with multiple possible owners; copy the selected value into a named owner first");
         if (operation.kind == .copy) {
             if (c.zero_rc and providers.contains(c.provider_types, c.function.scope.locals[owner].ty))
                 return c.reject(node.span, zero_unsupported, "provider owners cannot be copied; borrow the enclosing record or move it");

@@ -494,3 +494,25 @@ Both harnesses currently have Python help/parse checks only. Actual command runs
 wait for the combined compiler, and tuple runs require the producer plus Core
 contract validation. `final-qualification-plan.json` records exact remaining
 scaling, cache and rollout work. No timing window was started during this batch.
+
+
+## Typed selection wire format
+
+The coordinator-authored `typed.Node.borrow_selection` tag is committed atomically
+with **semantic-cache-v9**. Ordinary and specialized load/publication validate
+both operand IDs against the stored body and require them to precede the selection
+node. Structural logical-type checks reject scalar first operands, differing
+fallback/result types, and differing text-selection operand/result types. A single
+node scan performs this storage check without allocations. Exact canonical string
+and Optional payload schemas require A04/A07's always-on live-catalog checks.
+
+Eight focused tests pass: the four existing tuple storage/copy tests plus four new
+selection tests. The new tests cover 27 malformed images, valid ordinary and
+specialized publication/decode, a prior-v8 image with recomputed checksum, and
+relocation of both operand NodeIds and source spans. Optional scalar payloads remain
+structurally representable; the current frontend's selection policy is qualified
+separately. `selection-store-v9/results.json` records scope, exact source hashes,
+commands and logs. Complete producer/native cold/warm qualification still requires
+the combined compiler. Prepared borrowed/tuple CLI harnesses now require observed
+frontend and lowering reuse for their warm rows; matching output alone is not a
+cache-hit claim.

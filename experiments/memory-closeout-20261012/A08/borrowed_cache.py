@@ -71,6 +71,15 @@ def main():
         qualify.write(cold / 'main.my', invalid)
         run.build('borrow-invalid-' + owner + '-cold', cold, refuse='E_SINGLE_OWNER_OVERLAP', emit=False)
     qualify.write(project / 'main.my', original)
+    for row in run.rows:
+        if row['expected_refusal'] or not row['name'].endswith('-warm'):
+            continue
+        stages = (row['report'] or {}).get('stages', {})
+        frontend = stages.get('frontend', {})
+        lowering = stages.get('lowering', {})
+        row['stage_reuse_verified'] = frontend.get('reused', 0) > 0 and lowering.get('reused', 0) > 0 and frontend.get('damaged', 0) == 0
+        row['passed'] &= row['stage_reuse_verified']
+    run.save()
     qualify.write(run.out / 'contract.json', json.dumps(dict(
         status='passed' if all(row['passed'] for row in run.rows) else 'failed',
         harness_sha256=qualify.digest(__file__), engine_sha256=qualify.digest(qualify.__file__),

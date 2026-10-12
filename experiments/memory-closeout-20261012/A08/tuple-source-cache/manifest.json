@@ -7,5 +7,6 @@
   "oracle": "tuple-generic generic-9 3 2 8\n",
   "harness": "../tuple_cache.py",
   "harness_rows": 11,
-  "scope": "Actual generic complete tuple split through cold/warm/replay/source relocation/earlier declaration/valid edit/duplicate-move refusal. Native claims await integrated producer+Core compiler."
+  "scope": "Actual generic complete tuple split through cold/warm/replay/source relocation/earlier declaration/valid edit/duplicate-move refusal. Native claims await integrated producer+Core compiler.",
+  "source_owner_commit": "01c00de44951162daeb14c36eac41b020ee633d0"
 }

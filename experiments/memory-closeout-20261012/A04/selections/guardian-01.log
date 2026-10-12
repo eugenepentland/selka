@@ -1,0 +1,32 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 18 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 7/88 failed (formatting, doc-comments, test-no-conditional, bool-ops-per-condition, line-length, repeated-string-literal, try-in-return)
+guardian: failures grouped by check (7):
+  formatting (1 finding)
+    - src/typed.zig:111: non-conforming formatting (first difference on this line)
+      fix: zig fmt src/typed.zig
+  doc-comments (2 findings)
+    - src/core/borrow_selection.zig: pub fn reserved: has no /// doc comment
+      fix: add a real /// doc comment above each public declaration (>= 12 non-whitespace chars, no TODO/FIXME).
+    - src/core/borrow_selection.zig: pub const Kind (enum_): has no /// doc comment
+  test-no-conditional (4 findings)
+    - src/a04_borrow_selection_test.zig:31: if at top level of test body
+      fix: one top-level loop is fine; merge multiple loops into one table-driven loop, split a branch into two independent tests, or hoist the computation into a helper. A multi-loop finding names the loop to hoist — the assertion-free one when there is one, otherwise the extra loop itself.
+    - src/a04_borrow_selection_test.zig:81: if at top level of test body
+    - src/a04_borrow_selection_test.zig:90: more than one top-level loop — a test may keep one; the loop at line 81 asserts nothing, so hoist that one into a named helper
+    - +1 more — use --verbose for full detail
+  bool-ops-per-condition (1 finding)
+    - src/core/borrow_selection.zig:77: condition has 5 boolean ops (cap 3)
+      fix: split into nested/sequential ifs, or extract into a named bool.
+  line-length (1 finding)
+    - src/effects.zig:79: line is 251 chars (hard limit 240)
+      fix: split the expression when doing so improves readability
+  repeated-string-literal (1 finding)
+    - src/core/build.zig: string literal borrow_selection.zig appears 3 times (lines 1148, 1156, 1158) — extract a const
+      fix: extract the literal/const into a shared file-scope const and import it.
+  try-in-return (1 finding)
+    - src/core/borrow_selection.zig:127: `return try resolve...` — bind the tried value to a local, then return it
+      fix: const v = try <expr>; return v;
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

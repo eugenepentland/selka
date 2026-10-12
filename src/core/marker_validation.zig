@@ -13,7 +13,7 @@ fn present(module: *const ir.Module, function: *const ir.Function) Error!bool {
         if (inst.op != .call) continue;
         if (inst.a == .none or inst.a.index() >= module.functions.items.len) return error.UnsupportedInstruction;
         const name = module.functions.items[inst.a.index()].name;
-        if (std.mem.startsWith(u8, name, selection.prefix) or std.mem.startsWith(u8, name, providers.prefix)) return true;
+        if (selection.reserved(name) or std.mem.startsWith(u8, name, providers.prefix)) return true;
     }
     return false;
 }

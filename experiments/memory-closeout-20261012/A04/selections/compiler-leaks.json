@@ -1,0 +1,116 @@
+{
+  "prototype-02": {
+    "debug": {
+      "compiler_leak_reports": 112,
+      "reported_compiler_bytes": 23476,
+      "stderr_file": "prototype-02/raw/debug/build.stderr",
+      "guest_runs_separately_pass": true
+    },
+    "no_facts": {
+      "compiler_leak_reports": 112,
+      "reported_compiler_bytes": 23476,
+      "stderr_file": "prototype-02/raw/no_facts/build.stderr",
+      "guest_runs_separately_pass": true
+    },
+    "optimized_debug": {
+      "compiler_leak_reports": 112,
+      "reported_compiler_bytes": 23476,
+      "stderr_file": "prototype-02/raw/optimized_debug/build.stderr",
+      "guest_runs_separately_pass": true
+    },
+    "ordinary": {
+      "compiler_leak_reports": 0,
+      "reported_compiler_bytes": 0,
+      "stderr_file": "prototype-02/raw/ordinary/build.stderr",
+      "guest_runs_separately_pass": true
+    },
+    "release": {
+      "compiler_leak_reports": 112,
+      "reported_compiler_bytes": 23476,
+      "stderr_file": "prototype-02/raw/release/build.stderr",
+      "guest_runs_separately_pass": true
+    },
+    "verify": {
+      "compiler_leak_reports": 112,
+      "reported_compiler_bytes": 23476,
+      "stderr_file": "prototype-02/raw/verify/build.stderr",
+      "guest_runs_separately_pass": true
+    }
+  },
+  "prototype-03": {
+    "debug": {
+      "compiler_leak_reports": 112,
+      "reported_compiler_bytes": 23476,
+      "stderr_file": "prototype-03/raw/debug/build.stderr",
+      "guest_runs_separately_pass": true
+    },
+    "no_facts": {
+      "compiler_leak_reports": 112,
+      "reported_compiler_bytes": 23476,
+      "stderr_file": "prototype-03/raw/no_facts/build.stderr",
+      "guest_runs_separately_pass": true
+    },
+    "optimized_debug": {
+      "compiler_leak_reports": 112,
+      "reported_compiler_bytes": 23476,
+      "stderr_file": "prototype-03/raw/optimized_debug/build.stderr",
+      "guest_runs_separately_pass": true
+    },
+    "ordinary": {
+      "compiler_leak_reports": 0,
+      "reported_compiler_bytes": 0,
+      "stderr_file": "prototype-03/raw/ordinary/build.stderr",
+      "guest_runs_separately_pass": true
+    },
+    "release": {
+      "compiler_leak_reports": 112,
+      "reported_compiler_bytes": 23476,
+      "stderr_file": "prototype-03/raw/release/build.stderr",
+      "guest_runs_separately_pass": true
+    },
+    "verify": {
+      "compiler_leak_reports": 112,
+      "reported_compiler_bytes": 23476,
+      "stderr_file": "prototype-03/raw/verify/build.stderr",
+      "guest_runs_separately_pass": true
+    }
+  },
+  "prototype-04": {
+    "debug": {
+      "compiler_stderr_empty": true,
+      "compiler_leak_reports": 0,
+      "reported_compiler_bytes": 0,
+      "stderr_file": "prototype-04/raw/debug/build.stderr"
+    },
+    "no_facts": {
+      "compiler_stderr_empty": true,
+      "compiler_leak_reports": 0,
+      "reported_compiler_bytes": 0,
+      "stderr_file": "prototype-04/raw/no_facts/build.stderr"
+    },
+    "optimized_debug": {
+      "compiler_stderr_empty": true,
+      "compiler_leak_reports": 0,
+      "reported_compiler_bytes": 0,
+      "stderr_file": "prototype-04/raw/optimized_debug/build.stderr"
+    },
+    "ordinary": {
+      "compiler_stderr_empty": true,
+      "compiler_leak_reports": 0,
+      "reported_compiler_bytes": 0,
+      "stderr_file": "prototype-04/raw/ordinary/build.stderr"
+    },
+    "release": {
+      "compiler_stderr_empty": true,
+      "compiler_leak_reports": 0,
+      "reported_compiler_bytes": 0,
+      "stderr_file": "prototype-04/raw/release/build.stderr"
+    },
+    "verify": {
+      "compiler_stderr_empty": true,
+      "compiler_leak_reports": 0,
+      "reported_compiler_bytes": 0,
+      "stderr_file": "prototype-04/raw/verify/build.stderr"
+    }
+  }
+}

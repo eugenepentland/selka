@@ -76,7 +76,27 @@ fn returnContribution(program: typed.Program, function: typed.Function, value: t
         .local, .call, .invoke, .complete_resource, .acquire_resource, .acquire_buffer, .array, .record, .variant, .update => {
             if (node.ty.isAggregate()) ctx.unknown.* = true;
         },
-        .binary, .unary, .cast, .wrap, .unwrap, .length, .field, .index, .replace, .buffer_operation, .file_access, .file_method, .print, .stream_write, .arena_escape, .block_value, .propagate, .restrict_resource, .dir_resource => {
+        .binary,
+        .unary,
+        .cast,
+        .wrap,
+        .unwrap,
+        .length,
+        .field,
+        .index,
+        .replace,
+        .buffer_operation,
+        .file_access,
+        .file_method,
+        .print,
+        .stream_write,
+        .arena_escape,
+        .block_value,
+        .borrow_selection,
+        .propagate,
+        .restrict_resource,
+        .dir_resource,
+        => {
             if (node.ty.isAggregate()) ctx.unknown.* = true;
         },
         .resource_io => {
@@ -760,6 +780,7 @@ fn directEffect(program: typed.Program, function: typed.Function, node: typed.No
         .propagate,
         .wrap,
         .block_value,
+        .borrow_selection,
         .unwrap,
         .replace,
         .length,

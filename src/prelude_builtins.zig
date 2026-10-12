@@ -462,6 +462,11 @@ fn extreme(comptime Checker: type, checker: *Checker, span: source.Span, argumen
     const ty = nodeType(Checker, checker, left);
     if (ty != nodeType(Checker, checker, right)) return checker.sink.fail(unsupported, span, "min and max require two values of the same type");
     const family = familyOf(Checker, checker, ty) orelse return checker.sink.fail(unsupported, span, "min and max require int, float or str values");
+    if (family == .text) return .{ .span = span, .ty = ty, .data = .{ .borrow_selection = .{
+        .kind = if (greatest) .max_text else .min_text,
+        .first = left,
+        .second = right,
+    } } };
     const b = builder(Checker, checker, span);
     const result = try b.local(ty);
     // PRELUDE-EXTREME-2: each argument evaluates once, left to right; the

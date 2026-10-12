@@ -1,0 +1,11 @@
+func read(value: str, other: int) -> int:
+    return len(value) + other
+
+func change(mut value: str) -> int:
+    value = "changed"
+    return 0
+
+func main() -> int:
+    mut first = "a" + str(1)
+    mut second = "b" + str(2)
+    return read(min(first, second), change(mut second))

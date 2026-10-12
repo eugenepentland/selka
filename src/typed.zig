@@ -62,6 +62,7 @@ pub const Node = struct {
         boolean: bool,
         unit,
         block_value: struct { body: StatementId, value: NodeId },
+        borrow_selection: BorrowSelection,
         function_value: FunctionId,
         invoke: struct { evaluation_order: []const usize = &.{}, callee: NodeId, arguments: []const NodeId, evaluation: ?struct { body: StatementId, cleanup: []const LocalId } = null },
         local: LocalId,
@@ -106,6 +107,14 @@ pub const Node = struct {
         binary: struct { op: BinaryOp, left: NodeId, right: NodeId, op_span: Span },
     },
 };
+/// Compiler-generated selection borrows one of two eagerly evaluated inputs.
+/// Inputs evaluate exactly once, first then second; no source syntax names this node.
+pub const BorrowSelection = struct {
+    kind: enum { min_text, max_text, optional_default },
+    first: NodeId,
+    second: NodeId,
+};
+
 /// An embedded file (`EMBED-1`) as checked code names it: the content digest
 /// that identifies its static object and the payload length. The bytes stay with
 /// the loaded source, so a checked tree carries no per-byte data.

@@ -1,0 +1,5 @@
+func choose(value: Result[str, str]?, fallback: Result[str, str]) -> Result[str, str]:
+    return value.unwrap_or(fallback)
+
+func main() -> int:
+    return 0

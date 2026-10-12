@@ -30,6 +30,7 @@ const single_owner_copy = @import("single_owner_copy.zig");
 const build_capture = @import("build_capture.zig");
 const lowering_cache = @import("lowering_cache.zig");
 const aggregate_provider = @import("aggregate_provider.zig");
+const borrow_selection = @import("borrow_selection.zig");
 
 /// Refusal reasons several constructs share.
 const refuse_payload = "match payload";
@@ -1146,11 +1147,21 @@ const FnBuilder = struct {
     /// Pin both evaluated get inputs without allocating or transferring either.
     pub fn borrowSelection(self: *FnBuilder, selected: ir.Ref, dictionary: ir.Ref, fallback: ir.Ref, span: u32) Error!ir.Ref {
         const ty = self.typeOfRef(selected);
-        const callee = @import("borrow_selection.zig").declare(self.allocator(), self.module(), self.typeOfRef(dictionary), ty) catch |err| switch (err) {
+        const callee = borrow_selection.declare(self.allocator(), self.module(), self.typeOfRef(dictionary), ty) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             error.UnsupportedInstruction => return self.mb.refuse("invalid borrowed dictionary selection", span),
         };
         return self.emit(.{ .op = .call, .ty = ty, .a = @fromBackingInt(callee), .data = try self.extraSlice(&.{ selected, dictionary, fallback }), .span = span });
+    }
+
+    /// Borrow one selected value while both eagerly evaluated inputs stay live.
+    pub fn borrowChoice(self: *FnBuilder, kind: borrow_selection.Kind, selected: ir.Ref, first: ir.Ref, second: ir.Ref, span: u32) Error!ir.Ref {
+        const ty = self.typeOfRef(selected);
+        const callee = borrow_selection.declareChoice(self.allocator(), self.module(), kind, self.typeOfRef(first), ty) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.UnsupportedInstruction => return self.mb.refuse("invalid borrowed value selection", span),
+        };
+        return self.emit(.{ .op = .call, .ty = ty, .a = @fromBackingInt(callee), .data = try self.extraSlice(&.{ selected, first, second }), .span = span });
     }
 
     /// Preserve one evaluated lookup for an immediately requested independent copy.
@@ -1513,6 +1524,7 @@ const FnBuilder = struct {
             .boolean => |value| return self.constant(.bool, @intFromBool(value)),
             .unit => return .none,
             .local => |slot| return self.localExpression(slot, n.ty, out, span),
+            .borrow_selection => |choice| return @import("build_borrow_selection.zig").lower(@TypeOf(self), self, choice, n.ty, try self.typeOf(id), span),
             .block_value => |block| {
                 try self.statement(block.body);
                 return self.expressionPlace(block.value, out);

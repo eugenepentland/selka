@@ -21,6 +21,7 @@
 const std = @import("std");
 const sources = @import("semantic_sources.zig");
 const typed = @import("typed.zig");
+const semantic_copy = @import("semantic_copy.zig");
 const source = @import("source.zig");
 const codec = @import("persist_codec.zig");
 const owned = @import("semantic_entry.zig");
@@ -28,7 +29,7 @@ const cache_key = @import("cache_key.zig");
 const shared_artifacts = @import("shared_artifact_store.zig");
 
 /// On-disk format version. Bump for any layout, tag or validation change.
-pub const format_version = "semantic-cache-v8";
+pub const format_version = "semantic-cache-v9";
 /// Default root for ordinary one-shot commands; `--cache-dir=DIR` maps to
 /// `DIR/semantic` through the same shared cache-root option.
 pub const default_directory = ".mylang-cache/semantic";
@@ -67,7 +68,7 @@ pub const StoredBody = struct {
     function: typed.Function,
     nodes: []const typed.Node,
     statements: []const typed.Statement,
-    range: @import("semantic_copy.zig").Range,
+    range: semantic_copy.Range,
     source_bytes: SourceBytes = .{},
 };
 
@@ -220,6 +221,7 @@ pub const Store = struct {
         };
         if (!payload_reader.done()) return self.reject();
         if (!self.valid(body)) return self.reject();
+        if (!validSelectionStorage(body.nodes, body.range)) return self.reject();
         if (!try validUnpackStorage(self.allocator, body.function, body.nodes, body.statements, body.range)) return self.reject();
         if (!std.mem.eql(u8, body.meta.identity.key, stable_key)) return self.reject();
         if (!std.mem.eql(u8, &body.meta.identity.context, &context)) return self.reject();
@@ -301,6 +303,7 @@ pub const Store = struct {
         };
         if (!payload_reader.done()) return self.rejectSpecialization();
         if (!owned.validSpecialization(payload, max_declarations, self.limits.max_entry_bytes)) return self.rejectSpecialization();
+        if (!validSelectionStorage(payload.body.nodes, payload.body.range)) return self.rejectSpecialization();
         if (!try validUnpackStorage(self.allocator, payload.body.function, payload.body.nodes, payload.body.statements, payload.body.range)) return self.rejectSpecialization();
         if (!std.mem.eql(u8, payload.identity.key, stable_key)) return self.rejectSpecialization();
         if (!std.mem.eql(u8, &payload.identity.context, &context)) return self.rejectSpecialization();
@@ -438,7 +441,8 @@ pub const Store = struct {
     /// Publish one entry atomically. Private write failures bypass retention;
     /// configured shared-store failures are reported and fail the request.
     pub fn put(self: *Store, entry: *const owned.Entry) error{ OutOfMemory, InternalError }!bool {
-        if (!self.validOwned(entry) or !try validUnpackStorage(self.allocator, entry.function, entry.nodes, entry.statements, entry.range)) {
+        const valid_body = self.validOwned(entry) and validSelectionStorage(entry.nodes, entry.range);
+        if (!valid_body or !try validUnpackStorage(self.allocator, entry.function, entry.nodes, entry.statements, entry.range)) {
             self.statistics.bypassed += 1;
             return false;
         }
@@ -480,7 +484,8 @@ pub const Store = struct {
     /// Publish one checked concrete-specialization entry under its own kind.
     pub fn putSpecialization(self: *Store, entry: *const owned.SpecializationEntry) error{OutOfMemory}!bool {
         const body = entry.payload.body;
-        if (!owned.validSpecialization(entry.payload, max_declarations, self.limits.max_entry_bytes) or !try validUnpackStorage(self.allocator, body.function, body.nodes, body.statements, body.range)) {
+        const valid_body = owned.validSpecialization(entry.payload, max_declarations, self.limits.max_entry_bytes) and validSelectionStorage(body.nodes, body.range);
+        if (!valid_body or !try validUnpackStorage(self.allocator, body.function, body.nodes, body.statements, body.range)) {
             self.statistics.bypassed += 1;
             return false;
         }
@@ -800,10 +805,35 @@ fn pathFree(name: []const u8) bool {
     return std.mem.indexOfAny(u8, name, "/\\") == null;
 }
 
+/// Check body-local, acyclic selection operands before record-catalog relocation.
+/// The live checker/Core must separately prove exact str and Optional shapes.
+fn validSelectionStorage(nodes: []const typed.Node, range: semantic_copy.Range) bool {
+    if (range.nodes.start > range.nodes.end or range.nodes.end - range.nodes.start != nodes.len) return false;
+    for (nodes, 0..) |node, index| {
+        const selection = switch (node.data) {
+            .borrow_selection => |value| value,
+            else => continue,
+        };
+        const first = @backingInt(selection.first);
+        const second = @backingInt(selection.second);
+        const current = range.nodes.start + index;
+        if (first < range.nodes.start or first >= current) return false;
+        if (second < range.nodes.start or second >= current) return false;
+        const left = nodes[first - range.nodes.start].ty;
+        const right = nodes[second - range.nodes.start].ty;
+        if (!left.isAggregate() or right != node.ty) return false;
+        switch (selection.kind) {
+            .min_text, .max_text => if (left != node.ty) return false,
+            .optional_default => {},
+        }
+    }
+    return true;
+}
+
 /// Validate unpack storage before catalog relocation. The restored checker/Core
 /// must additionally prove tuple arity and field types against the live catalog.
 /// Local IDs stay local when the complete function scope is restored.
-fn validUnpackStorage(allocator: std.mem.Allocator, function: typed.Function, nodes: []const typed.Node, statements: []const typed.Statement, range: @import("semantic_copy.zig").Range) error{OutOfMemory}!bool {
+fn validUnpackStorage(allocator: std.mem.Allocator, function: typed.Function, nodes: []const typed.Node, statements: []const typed.Statement, range: semantic_copy.Range) error{OutOfMemory}!bool {
     const locals = function.scope.locals;
     var seen: []bool = &.{};
     defer allocator.free(seen);
@@ -1082,4 +1112,149 @@ test "A08 unpack specialization decode and publication enforce the same slot con
     try encoded.write(owned.StoredSpecialization, specialization.payload);
     try t.expect(try store.publishPayload("unpack-specialization", @splat(0), encoded.bytes.items));
     try t.expect((try store.lookupSpecialization(t.allocator, "unpack-specialization", @splat(0))) == null);
+}
+
+const SelectionKind = @TypeOf(@as(typed.BorrowSelection, undefined).kind);
+const SelectionDamage = enum { none, first_before, second_before, first_self, second_self, first_after, second_after, scalar_first, wrong_second, wrong_result };
+const selection_test_key = "selection-body";
+
+fn selectionImage(allocator: std.mem.Allocator, store: *Store, kind: SelectionKind, damage: SelectionDamage, scalar_payload: bool) !void {
+    const aggregate: typed.Type = @fromBackingInt(typed.Type.record_base);
+    const optional: typed.Type = @fromBackingInt(typed.Type.record_base + 1);
+    const value_type: typed.Type = if (scalar_payload) .i64 else aggregate;
+    const owner_type = if (kind == .optional_default) optional else value_type;
+    const span: source.Span = .{ .start = 0, .end = 1 };
+    const locals = [_]typed.Local{
+        .{ .name = "first", .declaration = span, .ty = owner_type, .mutable = false },
+        .{ .name = "second", .declaration = span, .ty = value_type, .mutable = false },
+    };
+    var nodes = [_]typed.Node{
+        .{ .span = span, .ty = owner_type, .data = .{ .local = @fromBackingInt(0) } },
+        .{ .span = span, .ty = value_type, .data = .{ .local = @fromBackingInt(1) } },
+        .{ .span = span, .ty = value_type, .data = .{ .borrow_selection = .{ .kind = kind, .first = @fromBackingInt(7), .second = @fromBackingInt(8) } } },
+    };
+    const selection = &nodes[2].data.borrow_selection;
+    switch (damage) {
+        .none => {},
+        .first_before => selection.first = @fromBackingInt(6),
+        .second_before => selection.second = @fromBackingInt(6),
+        .first_self => selection.first = @fromBackingInt(9),
+        .second_self => selection.second = @fromBackingInt(9),
+        .first_after => selection.first = @fromBackingInt(10),
+        .second_after => selection.second = @fromBackingInt(10),
+        .scalar_first => nodes[0].ty = .i64,
+        .wrong_second => nodes[1].ty = .bool,
+        .wrong_result => nodes[2].ty = .bool,
+    }
+    const statements = [_]typed.Statement{.{ .span = span, .terminates = true, .data = .{ .ret = @fromBackingInt(9) } }};
+    const body: StoredBody = .{
+        .meta = .{
+            .identity = .{ .key = selection_test_key, .context = @splat(0), .body = span, .region = span },
+            .old_function_count = 1,
+            .old_record_count = 2,
+            .function_refs = &.{},
+            .record_refs = &.{ .{ .index = 0, .key = "str" }, .{ .index = 1, .key = "Optional[str]" } },
+        },
+        .function = .{
+            .id = @fromBackingInt(0),
+            .name = "main",
+            .declaration = span,
+            .signature = .{ .parameter_count = 2, .return_type = value_type },
+            .scope = .{ .body = @fromBackingInt(11), .locals = &locals },
+        },
+        .nodes = &nodes,
+        .statements = &statements,
+        .range = .{ .nodes = .{ .start = 7, .end = 10 }, .statements = .{ .start = 11, .end = 12 } },
+        .source_bytes = .{ .old_len = 1, .body = "x", .region = "x" },
+    };
+    var payload = codec.Writer.init(allocator);
+    defer payload.deinit();
+    try payload.write(StoredBody, body);
+    try std.testing.expect(try store.publishPayload(selection_test_key, @splat(0), payload.bytes.items));
+}
+
+// spec-case: SEMANTIC-CACHE-1
+test "A08 selection durable operands validate range order and structural types" {
+    const t = std.testing;
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    var store = Store.init(t.allocator, t.io, root, cache_key.Contract.default, selection_test_key);
+    defer store.deinit();
+    for (std.meta.tags(SelectionKind)) |kind| {
+        for (std.meta.tags(SelectionDamage)[1..]) |damage| {
+            try selectionImage(t.allocator, &store, kind, damage, false);
+            try t.expect((try store.lookup(t.allocator, selection_test_key, @splat(0))) == null);
+        }
+        try selectionImage(t.allocator, &store, kind, .none, false);
+        var entry = (try store.lookup(t.allocator, selection_test_key, @splat(0))).?;
+        defer entry.deinit();
+        try t.expect(try store.put(&entry));
+        @constCast(entry.nodes)[2].data.borrow_selection.second = @fromBackingInt(9);
+        try t.expect(!try store.put(&entry));
+    }
+    try selectionImage(t.allocator, &store, .optional_default, .none, true);
+    var scalar = (try store.lookup(t.allocator, selection_test_key, @splat(0))).?;
+    defer scalar.deinit();
+    try t.expectEqual(typed.Type.i64, scalar.nodes[2].ty);
+}
+
+// spec-case: SEMANTIC-CACHE-1
+test "A08 selection rejects prior v8 wire with valid checksum" {
+    const t = std.testing;
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    var store = Store.init(t.allocator, t.io, root, cache_key.Contract.default, selection_test_key);
+    defer store.deinit();
+    try selectionImage(t.allocator, &store, .min_text, .none, false);
+    const path = try store.entryPath(selection_test_key, @splat(0));
+    defer t.allocator.free(path);
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(t.io, path, t.allocator, .limited(max_entry_bytes));
+    defer t.allocator.free(bytes);
+    const old = "semantic-cache-v8";
+    try t.expectEqual(old.len, format_version.len);
+    @memcpy(bytes[12..][0..old.len], old);
+    std.mem.writeInt(u64, bytes[bytes.len - 8 ..][0..8], codec.checksum(bytes[0 .. bytes.len - 8]), .little);
+    try std.Io.Dir.cwd().writeFile(t.io, .{ .sub_path = path, .data = bytes });
+    try t.expect((try store.lookup(t.allocator, selection_test_key, @splat(0))) == null);
+}
+
+// spec-case: SEMANTIC-CACHE-1
+test "A08 selection specialization publication and decoded operands fail closed" {
+    const t = std.testing;
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    var store = Store.init(t.allocator, t.io, root, cache_key.Contract.default, selection_test_key);
+    defer store.deinit();
+    try selectionImage(t.allocator, &store, .optional_default, .none, false);
+    var entry = (try store.lookup(t.allocator, selection_test_key, @splat(0))).?;
+    defer entry.deinit();
+    const key = "selection-specialization";
+    var specialization: owned.SpecializationEntry = .{
+        .arena = std.heap.ArenaAllocator.init(t.allocator),
+        .payload = .{
+            .identity = .{ .key = key, .context = @splat(0), .fingerprint = "fixture", .template = "Optional", .arguments = &.{}, .lengths = &.{} },
+            .source = .{ .old_len = 1, .region = entry.meta.identity.region, .body = entry.meta.identity.body, .region_bytes = "x", .body_bytes = "x" },
+            .body = .{ .function = entry.function, .nodes = entry.nodes, .statements = entry.statements, .range = entry.range },
+            .refs = .{ .function_refs = &.{}, .record_refs = entry.meta.record_refs },
+            .counts = .{ .old_function_count = 1, .old_record_count = 2 },
+        },
+    };
+    defer specialization.deinit();
+    try t.expect(try store.putSpecialization(&specialization));
+    var restored = (try store.lookupSpecialization(t.allocator, key, @splat(0))).?;
+    defer restored.deinit();
+    @constCast(entry.nodes)[2].data.borrow_selection.first = @fromBackingInt(9);
+    try t.expect(!try store.putSpecialization(&specialization));
+    try t.expectEqual(@as(usize, 7), @backingInt(restored.payload.body.nodes[2].data.borrow_selection.first));
+    var encoded = codec.Writer.init(t.allocator);
+    defer encoded.deinit();
+    try encoded.write(owned.StoredSpecialization, specialization.payload);
+    try t.expect(try store.publishPayload(key, @splat(0), encoded.bytes.items));
+    try t.expect((try store.lookupSpecialization(t.allocator, key, @splat(0))) == null);
 }

@@ -217,7 +217,7 @@ pub const Facts = struct {
     pub fn classify(self: *const Facts, id: typed.NodeId, target: ?typed.LocalId) Source {
         const node = self.program.nodes[@backingInt(id)];
         return switch (node.data) {
-            .local => .place,
+            .local, .borrow_selection => .place,
             // A field of a `class`, Cell or live view is shared storage, whoever
             // produced the object.
             .field => |field| if (sharedFields(self.program.records, self.program.nodes[@backingInt(field.base)].ty)) .place else self.classify(field.base, null),
