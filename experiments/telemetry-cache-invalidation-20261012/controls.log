@@ -1,0 +1,15 @@
+build-slot: FIFO ticket 1312, position 3; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 1312, position 3; earlier build tickets must run first; waiting (61s so far)
+build-slot: FIFO ticket 1312, position 2; earlier build tickets must run first; waiting (121s so far)
+build-slot: build slot 1, FIFO ticket 1312 after 131s
+new-a 2 0 0
+new-b 0 2 0
+new-absent 0 2 0
+semantic-a 2 0 0
+semantic-b 2 0 0
+semantic-restored 0 2 0
+forced 2 0 0
+facts 2 0 0
+leaks 2 0 0
+source-failure 0 1 1
+source-restored 0 2 0

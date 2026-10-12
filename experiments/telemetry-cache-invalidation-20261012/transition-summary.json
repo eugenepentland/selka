@@ -1,0 +1,1017 @@
+{
+  "schema": 1,
+  "status": "incomplete",
+  "exit_status": 124,
+  "deadline_seconds": 360,
+  "scope": "bounded namespace-transition diagnostic; not steady-state or complete-gate latency",
+  "completed_pairs": [
+    0,
+    1
+  ],
+  "incomplete_pair": 2,
+  "rows": [
+    {
+      "label": "measure--1-new-guest-debug",
+      "suite": "guest",
+      "mode": "debug",
+      "variant": "new",
+      "cohort": -1,
+      "status": 0,
+      "elapsed_seconds": 0.902057474013418,
+      "counts": {
+        "passed": 42,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 42
+      }
+    },
+    {
+      "label": "measure--1-new-lang-debug",
+      "suite": "lang",
+      "mode": "debug",
+      "variant": "new",
+      "cohort": -1,
+      "status": 0,
+      "elapsed_seconds": 22.898623497923836,
+      "counts": {
+        "passed": 1552,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 1549,
+        "uncacheable-metadata": 3
+      }
+    },
+    {
+      "label": "measure--1-new-lang-unoptimized",
+      "suite": "lang",
+      "mode": "unoptimized",
+      "variant": "new",
+      "cohort": -1,
+      "status": 0,
+      "elapsed_seconds": 20.329967118101195,
+      "counts": {
+        "passed": 1552,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 1549,
+        "uncacheable-metadata": 3
+      }
+    },
+    {
+      "label": "measure--1-new-lang-release",
+      "suite": "lang",
+      "mode": "release",
+      "variant": "new",
+      "cohort": -1,
+      "status": 0,
+      "elapsed_seconds": 21.898719676071778,
+      "counts": {
+        "passed": 1552,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "verify-facts": 1552
+      }
+    },
+    {
+      "label": "measure--1-new-value_semantics-debug",
+      "suite": "value_semantics",
+      "mode": "debug",
+      "variant": "new",
+      "cohort": -1,
+      "status": 0,
+      "elapsed_seconds": 1.8218663779553026,
+      "counts": {
+        "passed": 140,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 140
+      }
+    },
+    {
+      "label": "measure--1-new-value_semantics-unoptimized",
+      "suite": "value_semantics",
+      "mode": "unoptimized",
+      "variant": "new",
+      "cohort": -1,
+      "status": 0,
+      "elapsed_seconds": 1.7173865349031985,
+      "counts": {
+        "passed": 140,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 140
+      }
+    },
+    {
+      "label": "measure--1-new-value_semantics-release",
+      "suite": "value_semantics",
+      "mode": "release",
+      "variant": "new",
+      "cohort": -1,
+      "status": 0,
+      "elapsed_seconds": 1.8344155480153859,
+      "counts": {
+        "passed": 140,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "verify-facts": 140
+      }
+    },
+    {
+      "label": "measure--1-new-ported-debug",
+      "suite": "ported",
+      "mode": "debug",
+      "variant": "new",
+      "cohort": -1,
+      "status": 0,
+      "elapsed_seconds": 1.9719213391654193,
+      "counts": {
+        "passed": 98,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 98
+      }
+    },
+    {
+      "label": "measure--1-new-ported-unoptimized",
+      "suite": "ported",
+      "mode": "unoptimized",
+      "variant": "new",
+      "cohort": -1,
+      "status": 0,
+      "elapsed_seconds": 1.8831057650968432,
+      "counts": {
+        "passed": 98,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 98
+      }
+    },
+    {
+      "label": "measure--1-new-ported-release",
+      "suite": "ported",
+      "mode": "release",
+      "variant": "new",
+      "cohort": -1,
+      "status": 0,
+      "elapsed_seconds": 2.3656838671304286,
+      "counts": {
+        "passed": 98,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "verify-facts": 98
+      }
+    },
+    {
+      "label": "measure-0-old-guest-debug",
+      "suite": "guest",
+      "mode": "debug",
+      "variant": "old",
+      "cohort": 0,
+      "status": 0,
+      "elapsed_seconds": 0.9106097789481282,
+      "counts": {
+        "passed": 42,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 42
+      }
+    },
+    {
+      "label": "measure-0-old-lang-debug",
+      "suite": "lang",
+      "mode": "debug",
+      "variant": "old",
+      "cohort": 0,
+      "status": 0,
+      "elapsed_seconds": 21.675503035075963,
+      "counts": {
+        "passed": 1552,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 1549,
+        "uncacheable-metadata": 3
+      }
+    },
+    {
+      "label": "measure-0-old-lang-unoptimized",
+      "suite": "lang",
+      "mode": "unoptimized",
+      "variant": "old",
+      "cohort": 0,
+      "status": 0,
+      "elapsed_seconds": 19.953216440975666,
+      "counts": {
+        "passed": 1552,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 1549,
+        "uncacheable-metadata": 3
+      }
+    },
+    {
+      "label": "measure-0-old-lang-release",
+      "suite": "lang",
+      "mode": "release",
+      "variant": "old",
+      "cohort": 0,
+      "status": 0,
+      "elapsed_seconds": 21.785177676938474,
+      "counts": {
+        "passed": 1552,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "verify-facts": 1552
+      }
+    },
+    {
+      "label": "measure-0-old-value_semantics-debug",
+      "suite": "value_semantics",
+      "mode": "debug",
+      "variant": "old",
+      "cohort": 0,
+      "status": 0,
+      "elapsed_seconds": 1.7875044071115553,
+      "counts": {
+        "passed": 140,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 140
+      }
+    },
+    {
+      "label": "measure-0-old-value_semantics-unoptimized",
+      "suite": "value_semantics",
+      "mode": "unoptimized",
+      "variant": "old",
+      "cohort": 0,
+      "status": 0,
+      "elapsed_seconds": 1.7102851660456508,
+      "counts": {
+        "passed": 140,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 140
+      }
+    },
+    {
+      "label": "measure-0-old-value_semantics-release",
+      "suite": "value_semantics",
+      "mode": "release",
+      "variant": "old",
+      "cohort": 0,
+      "status": 0,
+      "elapsed_seconds": 1.7899193239863962,
+      "counts": {
+        "passed": 140,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "verify-facts": 140
+      }
+    },
+    {
+      "label": "measure-0-old-ported-debug",
+      "suite": "ported",
+      "mode": "debug",
+      "variant": "old",
+      "cohort": 0,
+      "status": 0,
+      "elapsed_seconds": 1.9471988598816097,
+      "counts": {
+        "passed": 98,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 98
+      }
+    },
+    {
+      "label": "measure-0-old-ported-unoptimized",
+      "suite": "ported",
+      "mode": "unoptimized",
+      "variant": "old",
+      "cohort": 0,
+      "status": 0,
+      "elapsed_seconds": 1.7512420830316842,
+      "counts": {
+        "passed": 98,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 98
+      }
+    },
+    {
+      "label": "measure-0-old-ported-release",
+      "suite": "ported",
+      "mode": "release",
+      "variant": "old",
+      "cohort": 0,
+      "status": 0,
+      "elapsed_seconds": 2.399057628819719,
+      "counts": {
+        "passed": 98,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "verify-facts": 98
+      }
+    },
+    {
+      "label": "measure-0-new-guest-debug",
+      "suite": "guest",
+      "mode": "debug",
+      "variant": "new",
+      "cohort": 0,
+      "status": 0,
+      "elapsed_seconds": 0.6616765991784632,
+      "counts": {
+        "passed": 0,
+        "cached": 42,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "whole-receipt-hit": 42
+      }
+    },
+    {
+      "label": "measure-0-new-lang-debug",
+      "suite": "lang",
+      "mode": "debug",
+      "variant": "new",
+      "cohort": 0,
+      "status": 0,
+      "elapsed_seconds": 14.291162700159475,
+      "counts": {
+        "passed": 3,
+        "cached": 1549,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "whole-receipt-hit": 1544,
+        "uncacheable-metadata": 3,
+        "receipt-hit": 5
+      }
+    },
+    {
+      "label": "measure-0-new-lang-unoptimized",
+      "suite": "lang",
+      "mode": "unoptimized",
+      "variant": "new",
+      "cohort": 0,
+      "status": 0,
+      "elapsed_seconds": 14.363398644840345,
+      "counts": {
+        "passed": 3,
+        "cached": 1549,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "whole-receipt-hit": 1544,
+        "uncacheable-metadata": 3,
+        "receipt-hit": 5
+      }
+    },
+    {
+      "label": "measure-0-new-lang-release",
+      "suite": "lang",
+      "mode": "release",
+      "variant": "new",
+      "cohort": 0,
+      "status": 0,
+      "elapsed_seconds": 22.093568086856976,
+      "counts": {
+        "passed": 1552,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "verify-facts": 1552
+      }
+    },
+    {
+      "label": "measure-0-new-value_semantics-debug",
+      "suite": "value_semantics",
+      "mode": "debug",
+      "variant": "new",
+      "cohort": 0,
+      "status": 0,
+      "elapsed_seconds": 1.2144973361864686,
+      "counts": {
+        "passed": 0,
+        "cached": 140,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "whole-receipt-hit": 140
+      }
+    },
+    {
+      "label": "measure-0-new-value_semantics-unoptimized",
+      "suite": "value_semantics",
+      "mode": "unoptimized",
+      "variant": "new",
+      "cohort": 0,
+      "status": 0,
+      "elapsed_seconds": 1.2288052060175687,
+      "counts": {
+        "passed": 0,
+        "cached": 140,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "whole-receipt-hit": 140
+      }
+    },
+    {
+      "label": "measure-0-new-value_semantics-release",
+      "suite": "value_semantics",
+      "mode": "release",
+      "variant": "new",
+      "cohort": 0,
+      "status": 0,
+      "elapsed_seconds": 1.8350593659561127,
+      "counts": {
+        "passed": 140,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "verify-facts": 140
+      }
+    },
+    {
+      "label": "measure-0-new-ported-debug",
+      "suite": "ported",
+      "mode": "debug",
+      "variant": "new",
+      "cohort": 0,
+      "status": 0,
+      "elapsed_seconds": 1.4130957960151136,
+      "counts": {
+        "passed": 0,
+        "cached": 98,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "whole-receipt-hit": 98
+      }
+    },
+    {
+      "label": "measure-0-new-ported-unoptimized",
+      "suite": "ported",
+      "mode": "unoptimized",
+      "variant": "new",
+      "cohort": 0,
+      "status": 0,
+      "elapsed_seconds": 1.3710733400657773,
+      "counts": {
+        "passed": 0,
+        "cached": 98,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "whole-receipt-hit": 98
+      }
+    },
+    {
+      "label": "measure-0-new-ported-release",
+      "suite": "ported",
+      "mode": "release",
+      "variant": "new",
+      "cohort": 0,
+      "status": 0,
+      "elapsed_seconds": 2.377690630964935,
+      "counts": {
+        "passed": 98,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "verify-facts": 98
+      }
+    },
+    {
+      "label": "measure-1-new-guest-debug",
+      "suite": "guest",
+      "mode": "debug",
+      "variant": "new",
+      "cohort": 1,
+      "status": 0,
+      "elapsed_seconds": 0.14739332511089742,
+      "counts": {
+        "passed": 0,
+        "cached": 42,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "whole-report-hit": 42
+      }
+    },
+    {
+      "label": "measure-1-new-lang-debug",
+      "suite": "lang",
+      "mode": "debug",
+      "variant": "new",
+      "cohort": 1,
+      "status": 0,
+      "elapsed_seconds": 3.656343037961051,
+      "counts": {
+        "passed": 3,
+        "cached": 1549,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "whole-report-hit": 1544,
+        "uncacheable-metadata": 3,
+        "receipt-hit": 5
+      }
+    },
+    {
+      "label": "measure-1-new-lang-unoptimized",
+      "suite": "lang",
+      "mode": "unoptimized",
+      "variant": "new",
+      "cohort": 1,
+      "status": 0,
+      "elapsed_seconds": 3.346299960045144,
+      "counts": {
+        "passed": 3,
+        "cached": 1549,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "whole-report-hit": 1544,
+        "uncacheable-metadata": 3,
+        "receipt-hit": 5
+      }
+    },
+    {
+      "label": "measure-1-new-lang-release",
+      "suite": "lang",
+      "mode": "release",
+      "variant": "new",
+      "cohort": 1,
+      "status": 0,
+      "elapsed_seconds": 22.16203260794282,
+      "counts": {
+        "passed": 1552,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "verify-facts": 1552
+      }
+    },
+    {
+      "label": "measure-1-new-value_semantics-debug",
+      "suite": "value_semantics",
+      "mode": "debug",
+      "variant": "new",
+      "cohort": 1,
+      "status": 0,
+      "elapsed_seconds": 0.18995908997021616,
+      "counts": {
+        "passed": 0,
+        "cached": 140,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "whole-report-hit": 140
+      }
+    },
+    {
+      "label": "measure-1-new-value_semantics-unoptimized",
+      "suite": "value_semantics",
+      "mode": "unoptimized",
+      "variant": "new",
+      "cohort": 1,
+      "status": 0,
+      "elapsed_seconds": 0.3047199109569192,
+      "counts": {
+        "passed": 0,
+        "cached": 140,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "whole-report-hit": 140
+      }
+    },
+    {
+      "label": "measure-1-new-value_semantics-release",
+      "suite": "value_semantics",
+      "mode": "release",
+      "variant": "new",
+      "cohort": 1,
+      "status": 0,
+      "elapsed_seconds": 1.8067704339046031,
+      "counts": {
+        "passed": 140,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "verify-facts": 140
+      }
+    },
+    {
+      "label": "measure-1-new-ported-debug",
+      "suite": "ported",
+      "mode": "debug",
+      "variant": "new",
+      "cohort": 1,
+      "status": 0,
+      "elapsed_seconds": 0.3657088680192828,
+      "counts": {
+        "passed": 0,
+        "cached": 98,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "whole-report-hit": 98
+      }
+    },
+    {
+      "label": "measure-1-new-ported-unoptimized",
+      "suite": "ported",
+      "mode": "unoptimized",
+      "variant": "new",
+      "cohort": 1,
+      "status": 0,
+      "elapsed_seconds": 0.36689015105366707,
+      "counts": {
+        "passed": 0,
+        "cached": 98,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "whole-report-hit": 98
+      }
+    },
+    {
+      "label": "measure-1-new-ported-release",
+      "suite": "ported",
+      "mode": "release",
+      "variant": "new",
+      "cohort": 1,
+      "status": 0,
+      "elapsed_seconds": 2.381142308935523,
+      "counts": {
+        "passed": 98,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "verify-facts": 98
+      }
+    },
+    {
+      "label": "measure-1-old-guest-debug",
+      "suite": "guest",
+      "mode": "debug",
+      "variant": "old",
+      "cohort": 1,
+      "status": 0,
+      "elapsed_seconds": 0.910008650040254,
+      "counts": {
+        "passed": 42,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 42
+      }
+    },
+    {
+      "label": "measure-1-old-lang-debug",
+      "suite": "lang",
+      "mode": "debug",
+      "variant": "old",
+      "cohort": 1,
+      "status": 0,
+      "elapsed_seconds": 21.892248082906008,
+      "counts": {
+        "passed": 1552,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 1549,
+        "uncacheable-metadata": 3
+      }
+    },
+    {
+      "label": "measure-1-old-lang-unoptimized",
+      "suite": "lang",
+      "mode": "unoptimized",
+      "variant": "old",
+      "cohort": 1,
+      "status": 0,
+      "elapsed_seconds": 20.212838626932353,
+      "counts": {
+        "passed": 1552,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 1549,
+        "uncacheable-metadata": 3
+      }
+    },
+    {
+      "label": "measure-1-old-lang-release",
+      "suite": "lang",
+      "mode": "release",
+      "variant": "old",
+      "cohort": 1,
+      "status": 0,
+      "elapsed_seconds": 21.95311792404391,
+      "counts": {
+        "passed": 1552,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "verify-facts": 1552
+      }
+    },
+    {
+      "label": "measure-1-old-value_semantics-debug",
+      "suite": "value_semantics",
+      "mode": "debug",
+      "variant": "old",
+      "cohort": 1,
+      "status": 0,
+      "elapsed_seconds": 1.8052179291844368,
+      "counts": {
+        "passed": 140,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 140
+      }
+    },
+    {
+      "label": "measure-1-old-value_semantics-unoptimized",
+      "suite": "value_semantics",
+      "mode": "unoptimized",
+      "variant": "old",
+      "cohort": 1,
+      "status": 0,
+      "elapsed_seconds": 1.6746442699804902,
+      "counts": {
+        "passed": 140,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 140
+      }
+    },
+    {
+      "label": "measure-1-old-value_semantics-release",
+      "suite": "value_semantics",
+      "mode": "release",
+      "variant": "old",
+      "cohort": 1,
+      "status": 0,
+      "elapsed_seconds": 1.8221619569230825,
+      "counts": {
+        "passed": 140,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "verify-facts": 140
+      }
+    },
+    {
+      "label": "measure-1-old-ported-debug",
+      "suite": "ported",
+      "mode": "debug",
+      "variant": "old",
+      "cohort": 1,
+      "status": 0,
+      "elapsed_seconds": 1.9677316909655929,
+      "counts": {
+        "passed": 98,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 98
+      }
+    },
+    {
+      "label": "measure-1-old-ported-unoptimized",
+      "suite": "ported",
+      "mode": "unoptimized",
+      "variant": "old",
+      "cohort": 1,
+      "status": 0,
+      "elapsed_seconds": 1.8349013759288937,
+      "counts": {
+        "passed": 98,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 98
+      }
+    },
+    {
+      "label": "measure-1-old-ported-release",
+      "suite": "ported",
+      "mode": "release",
+      "variant": "old",
+      "cohort": 1,
+      "status": 0,
+      "elapsed_seconds": 2.3641422840300947,
+      "counts": {
+        "passed": 98,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "verify-facts": 98
+      }
+    },
+    {
+      "label": "measure-2-old-guest-debug",
+      "suite": "guest",
+      "mode": "debug",
+      "variant": "old",
+      "cohort": 2,
+      "status": 0,
+      "elapsed_seconds": 0.9141443681437522,
+      "counts": {
+        "passed": 42,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 42
+      }
+    },
+    {
+      "label": "measure-2-old-lang-debug",
+      "suite": "lang",
+      "mode": "debug",
+      "variant": "old",
+      "cohort": 2,
+      "status": 0,
+      "elapsed_seconds": 21.840678612934425,
+      "counts": {
+        "passed": 1552,
+        "cached": 0,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0
+      },
+      "reasons": {
+        "no-success-receipt": 1549,
+        "uncacheable-metadata": 3
+      }
+    }
+  ]
+}

@@ -820,6 +820,38 @@ class VerificationCoordinator(unittest.TestCase):
             self.assertEqual(self.execute(), 0)
             self.assertEqual(len(self.events('prepare')), 2)
 
+    def test_telemetry_placement_is_private_and_preserves_action_reuse(self):
+        observed = []
+        self.plan['groups'][1]['cacheable'] = False
+        self.save_plan()
+
+        def admit(root, kind, argv, env, unchanged, **controls):
+            self.assertNotIn('MYLANG_TEST_TELEMETRY_DIR', env)
+            if kind == 'gate':
+                directory = Path(env['SELKA_VERIFICATION_TELEMETRY_DIR'])
+                self.assertTrue(directory.is_dir())
+                observed.append(directory)
+            else:
+                self.assertNotIn('SELKA_VERIFICATION_TELEMETRY_DIR', env)
+            return self.admit(root, kind, argv, env, unchanged, **controls)
+
+        with patch.dict(os.environ, MYLANG_TEST_TELEMETRY_DIR='legacy-caller',
+                        SELKA_VERIFICATION_TELEMETRY_DIR='caller', MYLANG_MEMORY_LIMIT='512M'):
+            environment = coordinator.normalized_environment(self.root)
+            self.assertNotIn('MYLANG_TEST_TELEMETRY_DIR', environment)
+            self.assertNotIn('SELKA_VERIFICATION_TELEMETRY_DIR', environment)
+            self.assertEqual(environment['MYLANG_MEMORY_LIMIT'], '512M')
+            self.assertEqual(os.environ['MYLANG_TEST_TELEMETRY_DIR'], 'legacy-caller')
+            with patch.object(coordinator, 'run_admitted', side_effect=admit):
+                self.assertEqual(self.execute(), 0)
+                with patch.dict(os.environ, MYLANG_TEST_TELEMETRY_DIR='other-legacy',
+                                SELKA_VERIFICATION_TELEMETRY_DIR='other-caller'):
+                    self.assertEqual(self.execute(), 0)
+        self.assertEqual(len(observed), 2)
+        self.assertNotEqual(observed[0], observed[1])
+        self.assertTrue(all(not directory.exists() for directory in observed))
+        self.assertEqual(self.states(), {'unit': 'reused', 'docs': 'fresh'})
+
     def test_normalized_environment_isolates_git_config_templates_and_command_overrides(self):
         git = shutil.which('git')
         self.assertIsNotNone(git, 'git is required by the verification tool contract')

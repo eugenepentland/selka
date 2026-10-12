@@ -20,6 +20,7 @@ def isolated_environment(**overrides):
     """Nested collectors cannot publish into the invoking gate's namespace."""
     environment = dict(os.environ)
     environment.pop('MYLANG_TEST_TELEMETRY_DIR', None)
+    environment.pop('SELKA_VERIFICATION_TELEMETRY_DIR', None)
     environment.update(overrides)
     return environment
 
@@ -117,7 +118,10 @@ class NativeTelemetryTests(unittest.TestCase):
         payload = b'not-protocol\x00\xff'
         runner = "import os,sys; data=sys.stdin.buffer.read(); os.write(1,data); os.write(2,b'runner stderr\\n'); sys.exit(7)"
         with tempfile.TemporaryDirectory() as directory:
-            env = isolated_environment(MYLANG_TEST_TELEMETRY_DIR=directory)
+            legacy = Path(directory) / 'legacy'
+            legacy.mkdir()
+            env = isolated_environment(SELKA_VERIFICATION_TELEMETRY_DIR=directory,
+                                       MYLANG_TEST_TELEMETRY_DIR=str(legacy))
             completed = subprocess.run([sys.executable, str(script), '--action-id', 'unit', '--member', '0',
                                         '--root-id', 'root', '--', sys.executable, '-c', runner],
                                        input=payload, capture_output=True, env=env, timeout=5)
@@ -127,6 +131,7 @@ class NativeTelemetryTests(unittest.TestCase):
             document = json.loads((Path(directory) / 'unit.member.0.json').read_text())
             self.assertFalse(document['complete'])
             self.assertTrue(document['malformed'])
+            self.assertEqual(list(legacy.iterdir()), [])
 
     def test_inherited_progress_and_other_descriptors_reach_original_runner(self):
         reader, writer = os.pipe()
@@ -148,8 +153,10 @@ class NativeTelemetryTests(unittest.TestCase):
             sidecar = parent / 'unit.member.0.json'
             authentic = b'parent gate telemetry must remain byte-exact'
             sidecar.write_bytes(authentic)
-            with patch.dict(os.environ, MYLANG_TEST_TELEMETRY_DIR=directory):
+            with patch.dict(os.environ, MYLANG_TEST_TELEMETRY_DIR=directory,
+                            SELKA_VERIFICATION_TELEMETRY_DIR=directory):
                 self.assertNotIn('MYLANG_TEST_TELEMETRY_DIR', isolated_environment())
+                self.assertNotIn('SELKA_VERIFICATION_TELEMETRY_DIR', isolated_environment())
                 self.test_byte_exact_transport_and_runner_status_with_unknown_protocol()
                 self.test_inherited_progress_and_other_descriptors_reach_original_runner()
                 self.test_cancellation_reaps_noncooperating_runner()

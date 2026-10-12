@@ -82,9 +82,9 @@ class TelemetryTests(unittest.TestCase):
 
     def test_optional_request_directory_environment_produces_supported_document(self):
         with tempfile.TemporaryDirectory() as directory:
-            env = dict(os.environ, MYLANG_TEST_TELEMETRY_DIR=directory)
+            env = dict(os.environ, SELKA_VERIFICATION_TELEMETRY_DIR=directory)
             command = [sys.executable, telemetry.__file__, '--action-id', 'verification-cache',
-                       '--member', '3', '--output-directory-env', 'MYLANG_TEST_TELEMETRY_DIR',
+                       '--member', '3', '--output-directory-env', 'SELKA_VERIFICATION_TELEMETRY_DIR',
                        'verification_report_test']
             completed = subprocess.run(command, env=env, capture_output=True, text=True)
             self.assertEqual(completed.returncode, 0)
@@ -92,7 +92,7 @@ class TelemetryTests(unittest.TestCase):
             observed = report.test_timings(output, action_id='verification-cache', member='verification-cache/member/3')
             self.assertEqual(observed['selected'], 12)
             self.assertEqual(observed['timing_coverage'], 'complete')
-            env.pop('MYLANG_TEST_TELEMETRY_DIR')
+            env.pop('SELKA_VERIFICATION_TELEMETRY_DIR')
             completed = subprocess.run(command, env=env, capture_output=True, text=True)
             self.assertEqual(completed.returncode, 0)
 

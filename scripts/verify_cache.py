@@ -50,9 +50,10 @@ INVENTORY_VERSION = 2
 # Explicit review of the complete CONFIG_INPUTS-only closure, without the
 # declarative list file. None keeps every action conservatively broad. Never
 # auto-update this qualification after consumer changes.
-# Qualified by coordinator + S04 consumer audit and real writer/caller checks.
-# Evidence: experiments/development-loop-wave2-20261012/S04/final-configuration-review.md
-DECLARATIVE_CONFIG_SHA256 = "4493db3a525705b6f1222c50796175cdff55b2301d5160e8d02297d43942885e"
+# Qualified by coordinator + delegated consumer review; only the developer
+# telemetry channel changed across the previously qualified 212-file closure.
+# Evidence: experiments/telemetry-cache-invalidation-20261012/REPORT.md
+DECLARATIVE_CONFIG_SHA256 = "6e21ce1c64e0d3e82e2ce1fee75053579b67221706d4aeb46f128691049801c6"
 RETRY = 75
 MAX_RECORD = 32 * 1024 * 1024
 CONFIG_INPUTS = ["./*.zig", "build.zig.zon", ".zigversion", "guardian.toml",
@@ -320,7 +321,10 @@ def normalized_environment(root: Path) -> dict[str, str]:
     env = dict(os.environ)
     # Deliberately normalize these in the worker too, rather than omit live inputs.
     env.pop("_", None)
+    # Diagnostic placement must not enter native test receipt settings. Scrub
+    # legacy callers too; only the private per-request channel is forwarded.
     env.pop("MYLANG_TEST_TELEMETRY_DIR", None)
+    env.pop("SELKA_VERIFICATION_TELEMETRY_DIR", None)
     # The process-local measurement capability controls admission. Transport
     # markers are installed only on admitted children, never trusted as proof.
     for marker in ("MYLANG_ADMISSION_DIR", "MYLANG_ADMISSION_KIND"):
@@ -989,7 +993,7 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
             try:
                 telemetry_directory = Path(stack.enter_context(tempfile.TemporaryDirectory(
                     prefix="test-telemetry-", dir=cache)))
-                gate_environment["MYLANG_TEST_TELEMETRY_DIR"] = str(telemetry_directory)
+                gate_environment["SELKA_VERIFICATION_TELEMETRY_DIR"] = str(telemetry_directory)
             except OSError:
                 pass  # Diagnostic storage cannot change test selection or verdict.
             # Force chosen Run steps: an outer miss (tool/environment/ABA) must not

@@ -248,7 +248,7 @@ def main(argv=None):
     parser.add_argument('--action-id', required=True)
     parser.add_argument('--member', type=int, required=True)
     parser.add_argument('--root-id', required=True)
-    parser.add_argument('--output-directory-env', default='MYLANG_TEST_TELEMETRY_DIR')
+    parser.add_argument('--output-directory-env', default='SELKA_VERIFICATION_TELEMETRY_DIR')
     parser.add_argument('command', nargs=argparse.REMAINDER)
     args = parser.parse_args(argv)
     telemetry.member_id(args.action_id, args.member)

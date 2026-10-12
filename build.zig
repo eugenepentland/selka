@@ -946,7 +946,7 @@ pub fn build(b: *std.Build) void {
     for ([_][]const u8{ "scripts/verify_cache_test.py", "scripts/verification_snapshot_test.py", "scripts/verification_process_test.py", "scripts/verification_report_test.py", "scripts/verification_budgets_test.py", "scripts/build_slot_test.py", "scripts/verification_telemetry_test.py", "scripts/verification_producers_test.py", "scripts/verification_policy_test.py", "scripts/verification_profiles_test.py", "scripts/verification_qualification_test.py", "scripts/development_loop_workloads_test.py", "scripts/verification_native_telemetry_test.py", "scripts/verification_guest_telemetry_test.py", "scripts/verification_measurement_test.py", "scripts/verification_code_identity_test.py" }, 0..) |script, member| {
         const verification_run = driver(b, b.fmt("python3 {s}", .{script}), rss.script, "verification_cache");
         const module = std.fs.path.stem(script);
-        verification_run.addArgs(&.{ "python3", "scripts/verification_telemetry.py", "--action-id", "verification_cache", "--member", b.fmt("{d}", .{member}), "--output-directory-env", "MYLANG_TEST_TELEMETRY_DIR", module });
+        verification_run.addArgs(&.{ "python3", "scripts/verification_telemetry.py", "--action-id", "verification_cache", "--member", b.fmt("{d}", .{member}), "--output-directory-env", "SELKA_VERIFICATION_TELEMETRY_DIR", module });
         verification_tests.dependOn(&verification_run.step);
     }
     test_step.dependOn(verification_tests);
