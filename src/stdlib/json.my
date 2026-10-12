@@ -767,13 +767,13 @@ func write_array(mut out: byte_buffer, items: Json[]):
 func write_object(mut out: byte_buffer, fields: dict[str, Json]):
     _ = out.append_byte(123)
     mut first = True
-    for key in fields:
+    for key, item in fields.items():
         if not first:
             _ = out.append_byte(44)
         first = False
         write_quoted(mut out, key)
         _ = out.append_byte(58)
-        write_value(mut out, fields[key])
+        write_value(mut out, item)
     _ = out.append_byte(125)
     return
 
