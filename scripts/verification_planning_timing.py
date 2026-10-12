@@ -19,6 +19,8 @@ import verify_cache as support
 
 
 def load(path, name):
+    if str(path.parent) not in sys.path:
+        sys.path.append(str(path.parent))
     specification = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(specification)
     sys.modules[name] = module
