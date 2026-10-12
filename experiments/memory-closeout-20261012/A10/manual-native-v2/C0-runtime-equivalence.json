@@ -1,0 +1,17 @@
+{
+  "v1_method": "counted-release-native-replay-v1",
+  "v2_method": "counted-release-native-replay-v2",
+  "compiler_sha256": "324e0023f643e4949f72086d13744054f4b5bf7a38975822807f1d74ead2ec4a",
+  "exact_file_hashes_equal": {
+    "base.c": true,
+    "counted.c": true,
+    "runtime.o": true,
+    "number.o": true
+  },
+  "hashes": {
+    "base.c": "d5c393bd561ad2ca363d983209b187d4d823e5f2de7e13312a7f6ce6f960f36e",
+    "counted.c": "ff1957e1db368eb0fc42bfa9d85f66871fb0eb9928f1f3799df8b8b2e1815574",
+    "runtime.o": "b7c6e90cd06f2a65f4ce892084ad5da14c9ad0ba4c0d05b4402c99a424b220c5",
+    "number.o": "f85642aaba0d26989f5201363adde207470e34e678c7ed45eb2dbbb900e00ae0"
+  }
+}
