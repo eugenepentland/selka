@@ -1,0 +1,118 @@
+{
+  "runtime_source_commit": "3c8c494758221d8d1f3dce6f65a05dce3ada5868",
+  "fixture_sha256": "a4a8e185ebe71ed40a92578c79d18892c2e386742ec19788a686bdad1e5ba603",
+  "test_source_sha256": "ad1895006921da33b81a9bfa281b3025d927eb6a98f691b8805b2b3a1c7a8f0d",
+  "increment_callbacks_each_run": 1010002,
+  "additional_nested_tasks": true,
+  "binary_tree_depth": 12,
+  "chain_depth": 2048,
+  "workers": [
+    1,
+    2,
+    8
+  ],
+  "tsan_workers": [
+    8
+  ],
+  "tests_passed": 2,
+  "test_command_status": 0,
+  "binaries": {
+    "a01-owned-scheduler-counted": {
+      "sha256": "c257a722ac0163331a57f2c7da7f88bcc5e745475b4486974a411dcfaecddea4",
+      "structural_rc_free": true
+    },
+    "a01-owned-scheduler-tsan": {
+      "sha256": "37c8f898614d83772384eaf4a7ff46c96d6f359ef7bb6fd66e328f8d5bf2d0d6",
+      "structural_rc_free": true
+    }
+  },
+  "counted": {
+    "a01-owned-scheduler-counts-1": {
+      "counter_file": ".tmp/memory-closeout/A01/owned-scheduler-binaries/a01-owned-scheduler-counts-1.json",
+      "counter_sha256": "497fee16b5d650ddc18c614831c5c26dc12526777b2809c42c5b9f1f79658329",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 3073622,
+        "alloc_bytes": 229741224,
+        "frees": 3073622,
+        "reallocs": 707,
+        "peak_live_bytes": 1731240,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    "a01-owned-scheduler-counts-2": {
+      "counter_file": ".tmp/memory-closeout/A01/owned-scheduler-binaries/a01-owned-scheduler-counts-2.json",
+      "counter_sha256": "cea2fd358d178fbab8973d680463785054ec91855c8c23a153648ff53315f5c1",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 3073622,
+        "alloc_bytes": 229741224,
+        "frees": 3073622,
+        "reallocs": 707,
+        "peak_live_bytes": 1731304,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    },
+    "a01-owned-scheduler-counts-8": {
+      "counter_file": ".tmp/memory-closeout/A01/owned-scheduler-binaries/a01-owned-scheduler-counts-8.json",
+      "counter_sha256": "0f485b9f8fa3005a9a5d91ed9cab1c0bd8e70d0e81de1ef51dc5242724b8e205",
+      "observed_rc_free": true,
+      "managed_leak_free": true,
+      "emitted_rc": {
+        "retain": 0,
+        "release": 0,
+        "unique_test": 0
+      },
+      "runtime_rc": {
+        "runtime_retains": 0,
+        "runtime_releases": 0,
+        "shared_retains": 0,
+        "shared_releases": 0,
+        "share_marks": 0
+      },
+      "direct_frees": 0,
+      "memory": {
+        "allocs": 3073622,
+        "alloc_bytes": 229741224,
+        "frees": 3073622,
+        "reallocs": 707,
+        "peak_live_bytes": 1731240,
+        "live_bytes_at_exit": 0
+      },
+      "executed_rc_sites": [],
+      "runtime_rc_functions": []
+    }
+  }
+}

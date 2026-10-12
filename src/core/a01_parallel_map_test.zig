@@ -231,3 +231,44 @@ test "A01 pending Results retain resource capability container boxing and generi
         \\    return ignore(3)
     , "E_RESULT_UNHANDLED");
 }
+
+fn ownedScheduler(parent: std.mem.Allocator, sanitized: bool) !void {
+    var arena = std.heap.ArenaAllocator.init(parent);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    var fixture = try @import("native_fixture.zig").Fixture.init(a, root, @embedFile("a01_owned_scheduler_fixture.c"), .{ .counted = !sanitized, .sanitized = sanitized });
+    const threads: []const []const u8 = if (sanitized) &.{"8"} else &.{ "1", "2", "8" };
+    for (threads) |workers| {
+        const ran = try fixture.run("stress", workers);
+        try std.testing.expectEqual(@as(u8, 0), ran.status);
+        try std.testing.expectEqualStrings("", ran.stderr);
+        try std.testing.expect(std.mem.indexOf(u8, ran.stdout, "1010002 submits, binary depth 12, chain 2048") != null);
+        if (!sanitized) {
+            for ([_][]const u8{ "\"runtime_retains\":0", "\"runtime_releases\":0", "\"shared_retains\":0", "\"shared_releases\":0", "\"live_bytes_at_exit\":0" }) |marker|
+                try std.testing.expect(std.mem.indexOf(u8, ran.counts, marker) != null);
+        }
+        if (!sanitized) if (fixture.environment.get("MYLANG_P1_FIXTURE_OUTPUT")) |destination| {
+            try std.Io.Dir.cwd().createDirPath(std.testing.io, destination);
+            const name = try std.fmt.allocPrint(a, "{s}/a01-owned-scheduler-counts-{s}.json", .{ destination, workers });
+            try std.Io.Dir.cwd().writeFile(std.testing.io, .{ .sub_path = name, .data = ran.counts });
+        };
+        const twice = try fixture.run("twice", workers);
+        try std.testing.expectEqual(@as(u8, 1), twice.status);
+        try std.testing.expect(std.mem.indexOf(u8, twice.stderr, "R_TASK_GROUP") != null);
+        try std.testing.expect(std.mem.indexOf(u8, twice.stderr, "ThreadSanitizer") == null);
+    }
+    try fixture.exportBinary(if (sanitized) "a01-owned-scheduler-tsan" else "a01-owned-scheduler-counted");
+}
+
+// spec-case: NEW-CORE-ZERO-RC-TASKS-1
+test "A01 zero RC scheduler million-submit nested and discarded-result stress" {
+    try ownedScheduler(std.testing.allocator, false);
+}
+
+// spec-case: TSAN-BUILD-1
+test "A01 zero RC scheduler million-submit stress has no ThreadSanitizer reports" {
+    try ownedScheduler(std.testing.allocator, true);
+}

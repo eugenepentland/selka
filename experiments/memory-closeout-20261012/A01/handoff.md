@@ -141,3 +141,12 @@ C2 checks, and active RC retirement remain pending. `qualify.py --ordinary` omit
 the prototype selector for C2/C3 and records that choice. No default or retirement
 milestone is claimed. Guest test migrations were explicitly transferred to A03;
 remaining local `tests/lang` diffs are excluded from A01 commits.
+
+The additional count-free native scheduler fixture passed counted million-submit
+stress at 1/2/8 workers and separate TSan at 8 workers stress. Each run executes 1,010,002 increment
+callbacks plus nested tasks (tree depth 12, chain2048), destroys discarded results,
+checks transferred result survival and refuses repeated take. All counted runs are
+RC-free and leak-free; native symbols are RC-free. `owned-scheduler-evidence/`
+records exact fixture/runtime/binary identities and raw counters. This adds direct
+owned-runtime stress without confusing the earlier legacy scheduler control with
+count-free evidence. Retirement edits remain unapplied pending C2 authorization.
