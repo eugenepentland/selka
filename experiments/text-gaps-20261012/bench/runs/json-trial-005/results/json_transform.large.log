@@ -1,0 +1,10 @@
+build-slot: FIFO ticket 462, position 1; draining active work (gate1.lock); waiting (0s so far)
+build-slot: FIFO ticket 462, position 1; draining active work (gate1.lock); waiting (61s so far)
+build-slot: FIFO ticket 462, position 1; draining active work (gate1.lock); waiting (121s so far)
+build-slot: FIFO ticket 462, position 1; draining active work (gate1.lock); waiting (181s so far)
+build-slot: FIFO ticket 462, position 1; draining active work (gate1.lock); waiting (241s so far)
+build-slot: FIFO ticket 462, position 1; draining active work (gate1.lock); waiting (301s so far)
+build-slot: FIFO ticket 462, position 1; draining active work (gate1.lock); waiting (361s so far)
+build-slot: FIFO ticket 462, position 1; draining active work (gate1.lock); waiting (422s so far)
+build-slot: timing slot 1, FIFO ticket 462 after 477s
+text-gaps/json-trial-005/json_transform/large {'checked-baseline': True, 'checked-candidate': True, 'zig-safe': True, 'zig-fast': True, 'rust': True, 'go': True}

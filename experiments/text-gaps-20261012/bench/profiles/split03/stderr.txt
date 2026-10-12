@@ -1,0 +1,4 @@
+build-slot: FIFO ticket 473, position 1; waiting for memory-accounting settle delay or another measurement; waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 473 after 5s
+[ perf record: Woken up 47 times to write data ]
+[ perf record: Captured and wrote 11.578 MB experiments/text-gaps-20261012/bench/profiles/split03/perf.data (1420 samples) ]

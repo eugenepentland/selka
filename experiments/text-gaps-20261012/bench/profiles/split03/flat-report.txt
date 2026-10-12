@@ -1,0 +1,40 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 1K of event 'cpu_core/cycles/u'
+# Event count (approx.): 5031941415
+#
+# Overhead  Command       Shared Object     Symbol                         
+# ........  ............  ................  ...............................
+#
+    26.95%  text-runtime  text-runtime      [.] core_span_find
+    22.56%  text-runtime  text-runtime      [.] my.text::kernel
+    17.09%  text-runtime  libc.so.6         [.] 0x0000000000197028
+            |
+            ---0x7b123f197028
+
+    13.32%  text-runtime  text-runtime      [.] myl_core_span_split_offsets
+     6.08%  text-runtime  libc.so.6         [.] 0x0000000000197039
+            |
+            ---0x7b123f197039
+
+     3.55%  text-runtime  text-runtime      [.] memchr@plt
+     3.37%  text-runtime  libc.so.6         [.] 0x0000000000197019
+            |
+            ---0x7b123f197019
+
+     3.17%  text-runtime  libc.so.6         [.] 0x0000000000197036
+            |
+            ---0x7b123f197036
+
+     2.81%  text-runtime  libc.so.6         [.] 0x000000000019703c
+            |
+            ---0x7b123f19703c
+
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

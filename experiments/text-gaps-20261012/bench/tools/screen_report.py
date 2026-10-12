@@ -18,7 +18,8 @@ assert not a.output.exists(), 'never overwrite screen summary'
 rows = []
 for path in sorted((a.run / 'results').glob('*.json')):
     d = json.loads(path.read_text()); spec = d['spec']
-    assert d['schema'] == 'text-gap-screen-v1' and spec['screening']
+    assert d['schema'] == 'text-gap-screen-v1' and spec['screening'] and d['cpu'] == 8
+    assert spec == json.loads((a.run / 'specs' / path.name).read_text())
     assert (spec['warmups'], spec['rounds'], spec['rss_rounds']) == (1, 5, 0)
     assert d['identities'] == d['identities_after']
     for source, sha in d['identities'].items():
@@ -41,7 +42,7 @@ for path in sorted((a.run / 'results').glob('*.json')):
     rows.append(dict(case=spec['case'], profile=spec['profile'], iterations=d['iterations'], medians_ns=medians,
                      candidate_ratios={k: medians['checked-candidate'] / v for k, v in medians.items() if k != 'checked-candidate'},
                      raw_ranges_ns={k: [min(v), max(v)] for k, v in values.items()}, receipt_sha256=m.digest(path)))
-assert len(rows) == 2
+assert len(rows) == 2 and {r['profile'] for r in rows} == {'small', 'large'} and len({r['case'] for r in rows}) == 1
 payload = dict(schema='text-gap-screen-summary-v1', rows=rows,
                limitation='Exploratory5round paired screen only,1warmup,3arms,noRSS/count phase. No final target claim or pooling with15round final evidence.')
 a.output.parent.mkdir(parents=True, exist_ok=True)

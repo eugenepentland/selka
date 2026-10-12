@@ -1,0 +1,9 @@
+build-slot: FIFO ticket 466, position 1; draining active work (gate1.lock); waiting (0s so far)
+build-slot: FIFO ticket 466, position 1; draining active work (gate1.lock); waiting (60s so far)
+build-slot: FIFO ticket 466, position 1; draining active work (gate1.lock); waiting (121s so far)
+build-slot: FIFO ticket 466, position 1; draining active work (gate1.lock); waiting (181s so far)
+build-slot: FIFO ticket 466, position 1; draining active work (gate1.lock); waiting (241s so far)
+build-slot: FIFO ticket 466, position 1; draining active work (gate1.lock); waiting (301s so far)
+build-slot: timing slot 1, FIFO ticket 466 after 316s
+[ perf record: Woken up 46 times to write data ]
+[ perf record: Captured and wrote 11.260 MB /home/epentland/ai/canopy/mylang-text-gaps-20261012-bench/experiments/text-gaps-20261012/bench/profiles/json05/perf.data (1381 samples) ]
