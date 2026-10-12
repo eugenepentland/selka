@@ -784,6 +784,7 @@ const FnBuilder = struct {
             if (kind != .array and kind != .record) return self.mb.refuse("element store", span);
         }
         try self.guardViewRebind(self.local(store.slot), span);
+        if (assign and self.module().zero_rc) try self.prepareOptionalWriteback(store, span);
         var place: ?Place = null;
         const borrowed_context = self.module().zero_rc and !assign and @import("borrowed_provider.zig").initializer(self.mb.input.program, self.checked, store.value);
         const value = if (borrowed_context) try self.borrowedProvider(store.value, span) else try self.expressionPlace(store.value, &place);
@@ -793,6 +794,19 @@ const FnBuilder = struct {
         try self.assigned(self.local(store.slot));
         if (assign) try build_capture.invalidate(@TypeOf(self), self, .{ .root = self.local(store.slot), .steps = &.{} }, span);
         try self.noteAlias(store.slot, place);
+    }
+
+    /// The RHS and defensive refresh have completed; transfer only this payload.
+    fn prepareOptionalWriteback(self: *FnBuilder, store: typed.Store, span: u32) Error!void {
+        const found = @import("optional_writeback.zig").shape(self.mb.input.program, self.checked, store) orelse return;
+        const receiver = self.local(found.receiver);
+        const place = self.places.get(receiver) orelse return self.mb.refuse("optional writeback without a payload place", span);
+        if (place.root != self.local(store.slot) or place.steps.len != 1 or place.steps[0] != .payload or place.steps[0].payload != found.tag)
+            return self.mb.refuse("optional writeback must reconstruct its original payload", span);
+        if (place.root_version != self.version(place.root)) return self.mb.refuse("optional writeback has a stale payload", span);
+        const root = try self.read(place.root, self.current.?);
+        const payload = try self.propagatedPayload(root, found.tag, span);
+        try self.write(receiver, self.current.?, payload);
     }
 
     /// Validate the complete logical shape before evaluating or splitting a tuple.

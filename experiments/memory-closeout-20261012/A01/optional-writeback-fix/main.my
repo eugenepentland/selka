@@ -1,0 +1,111 @@
+record Inner:
+    number: int
+    words: str[]
+
+record Node:
+    value: int
+    inner: Inner
+    text: str
+    words: str[]
+    left: Node?
+    right: Node?
+
+func leaf(value: int) -> Node:
+    return Node(value=value, inner=Inner(number=value, words=["inner-" + str(value)]), text="text-" + str(value), words=["word-" + str(value)], left=None, right=None)
+
+func original() -> Node?:
+    return Some(Node(value=1, inner=Inner(number=1, words=["inner-" + str(1)]), text="parent-" + str(1), words=["top-" + str(1)], left=Some(leaf(2)), right=Some(leaf(3))))
+
+func early(value: int) -> str:
+    mut child = original()
+    if child is not None:
+        child.value = value
+        child.text = "early-" + str(child.value)
+        return child.text.copy()
+    return "absent"
+
+func failure() -> Result[str, str]:
+    mut child = original()
+    if child is not None:
+        child.value = 70
+        child.text = "error-" + str(child.value)
+        return Err(child.text.copy())
+    return Ok("absent")
+
+func fail_int() -> Result[int, str]:
+    return Err("staged-" + str(7))
+
+func failed_rhs() -> Result[str, str]:
+    mut child = original()
+    if child is not None:
+        const staged = try fail_int()
+        child.value = staged
+        return Ok(child.text.copy())
+    return Ok("absent")
+
+func mutate(mut child: Node?) -> int:
+    if child is not None:
+        child.value = 41
+        child.text = "mut-" + str(42)
+        return child.value
+    return 0
+
+func main(out: Stream) -> int:
+    const source = original()
+    mut child = source.copy()
+    if child is not None:
+        child.value = 20
+        child.value += 1
+        child.value -= 1
+        child.inner.number = 30
+        child.inner.words = ["inner-new-" + str(31)]
+        assert child.inner.number == 30 and child.inner.words == ["inner-new-31"]
+        child.text = "new-" + str(21)
+        child.words = ["new-word-" + str(22)]
+        assert child.value == 20 and child.text == "new-21" and child.words == ["new-word-22"]
+        match child.left:
+            case Some(left):
+                assert left.value == 2 and left.text == "text-2" and left.words == ["word-2"]
+            case None:
+                assert False
+        match child.right:
+            case Some(right):
+                assert right.value == 3 and right.text == "text-3"
+            case None:
+                assert False
+        for i in range(32):
+            child.value = i
+            child.text = "repeat-" + str(i)
+            child.words = ["repeat-word-" + str(i)]
+            if i == 19:
+                break
+        assert child.value == 19 and child.text == "repeat-19"
+        child = Some(leaf(90))
+        if child is not None:
+            child.value = 91
+            assert child.value == 91 and child.text == "text-90"
+    match source:
+        case Some(before):
+            assert before.value == 1 and before.text == "parent-1" and before.words == ["top-1"]
+        case None:
+            assert False
+    mut parameter_child = original()
+    assert mutate(mut parameter_child) == 41
+    if parameter_child is not None:
+        assert parameter_child.text == "mut-42"
+    child = None
+    if child is not None:
+        child.value = 99
+    assert early(8) == "early-8"
+    match failure():
+        case Ok(value):
+            assert False
+        case Err(error):
+            assert error == "error-70"
+    match failed_rhs():
+        case Ok(value):
+            assert False
+        case Err(error):
+            assert error == "staged-7"
+    out.print("optional-writeback", 42)
+    return 0

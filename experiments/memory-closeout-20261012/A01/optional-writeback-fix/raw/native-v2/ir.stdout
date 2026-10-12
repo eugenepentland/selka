@@ -1,0 +1,1312 @@
+fn main(cap) -> i64
+b0:
+  %1 = call option[box[#16]] original()
+  %2 = union_tag u32 %1
+  %4 = cmp.eq bool %2, 0:u32
+  branch %4, b2, b3
+b1: ; preds b2 b4
+  %13 = phi option[box[#16]] %6, %11
+  %14 = union_tag u32 %13
+  %16 = cmp.eq bool %14, 1:u32
+  branch %16, b8, b9
+b2: ; preds b0
+  %6 = union_make option[box[#16]] tag0
+  jump b1
+b3: ; preds b0
+  jump b4
+b4: ; preds b3
+  %9 = union_payload box[#16] tag1 %1
+  %10 = call box[#16] myl_core_owned_copy_19(%9)
+  %11 = union_make option[box[#16]] tag1 %10
+  jump b1
+b5: ; preds b7
+  %27 = union_tag u32 %13
+  %29 = cmp.eq bool %27, 1:u32
+  branch %29, b12, b13
+b6: ; preds b7 b180
+  %614 = union_tag u32 %1
+  %616 = cmp.eq bool %614, 1:u32
+  branch %616, b205, b206
+b7: ; preds b8 b10
+  %23 = phi bool 0:bool, 1:bool
+  branch %23, b6, b5
+b8: ; preds b1
+  jump b7
+b9: ; preds b1
+  jump b10
+b10: ; preds b9
+  jump b7
+b11: ; preds b12
+  %36 = union_tag u32 %13
+  %38 = cmp.eq bool %36, 1:u32
+  branch %38, b16, b17
+b12: ; preds b5
+  %31 = union_payload box[#16] tag1 %13
+  %32 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %31
+  jump b11
+b13: ; preds b5
+  jump b14
+b14: ; preds b13
+  unreachable
+b15: ; preds b16
+  %45 = union_take record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} tag1 %13
+  %46 = record_set record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %45, field0, 20:i64
+  %47 = box_make box[#16] %46
+  %48 = union_make option[box[#16]] tag1 %47
+  %49 = union_tag u32 %48
+  %51 = cmp.eq bool %49, 1:u32
+  branch %51, b20, b21
+b16: ; preds b11
+  %40 = union_payload box[#16] tag1 %13
+  %41 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %40
+  jump b15
+b17: ; preds b11
+  jump b18
+b18: ; preds b17
+  unreachable
+b19: ; preds b20
+  %58 = record_get i64 %54, field0
+  %60 = add.exact i64 %58, 1:i64
+  %61 = union_tag u32 %48
+  %63 = cmp.eq bool %61, 1:u32
+  branch %63, b24, b25
+b20: ; preds b15
+  %53 = union_payload box[#16] tag1 %48
+  %54 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %53
+  jump b19
+b21: ; preds b15
+  jump b22
+b22: ; preds b21
+  unreachable
+b23: ; preds b24
+  %70 = union_take record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} tag1 %48
+  %71 = record_set record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %70, field0, %60
+  %72 = box_make box[#16] %71
+  %73 = union_make option[box[#16]] tag1 %72
+  %74 = union_tag u32 %73
+  %76 = cmp.eq bool %74, 1:u32
+  branch %76, b28, b29
+b24: ; preds b19
+  %65 = union_payload box[#16] tag1 %48
+  %66 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %65
+  jump b23
+b25: ; preds b19
+  jump b26
+b26: ; preds b25
+  unreachable
+b27: ; preds b28
+  %83 = record_get i64 %79, field0
+  %85 = sub.exact i64 %83, 1:i64
+  %86 = union_tag u32 %73
+  %88 = cmp.eq bool %86, 1:u32
+  branch %88, b32, b33
+b28: ; preds b23
+  %78 = union_payload box[#16] tag1 %73
+  %79 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %78
+  jump b27
+b29: ; preds b23
+  jump b30
+b30: ; preds b29
+  unreachable
+b31: ; preds b32
+  %95 = union_take record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} tag1 %73
+  %96 = record_set record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %95, field0, %85
+  %97 = box_make box[#16] %96
+  %98 = union_make option[box[#16]] tag1 %97
+  %100 = union_tag u32 %98
+  %102 = cmp.eq bool %100, 1:u32
+  branch %102, b36, b37
+b32: ; preds b27
+  %90 = union_payload box[#16] tag1 %73
+  %91 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %90
+  jump b31
+b33: ; preds b27
+  jump b34
+b34: ; preds b33
+  unreachable
+b35: ; preds b36
+  %109 = union_tag u32 %98
+  %111 = cmp.eq bool %109, 1:u32
+  branch %111, b40, b41
+b36: ; preds b31
+  %104 = union_payload box[#16] tag1 %98
+  %105 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %104
+  jump b35
+b37: ; preds b31
+  jump b38
+b38: ; preds b37
+  unreachable
+b39: ; preds b40
+  %118 = union_take record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} tag1 %98
+  %119 = record_get record{i64, list[str]} %118, field1
+  %120 = record_set record{i64, list[str]} %119, field0, 30:i64
+  %121 = record_set record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %118, field1, %120
+  %122 = box_make box[#16] %121
+  %123 = union_make option[box[#16]] tag1 %122
+  %125 = list_new list[str] 1:i64
+  %128 = call str myl_core_str_from_i64(31:i64)
+  %129 = str_append str str8, %128
+  %130 = list_push list[str] %125, %129
+  %131 = union_tag u32 %123
+  %133 = cmp.eq bool %131, 1:u32
+  branch %133, b44, b45
+b40: ; preds b35
+  %113 = union_payload box[#16] tag1 %98
+  %114 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %113
+  jump b39
+b41: ; preds b35
+  jump b42
+b42: ; preds b41
+  unreachable
+b43: ; preds b44
+  %140 = union_tag u32 %123
+  %142 = cmp.eq bool %140, 1:u32
+  branch %142, b48, b49
+b44: ; preds b39
+  %135 = union_payload box[#16] tag1 %123
+  %136 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %135
+  jump b43
+b45: ; preds b39
+  jump b46
+b46: ; preds b45
+  unreachable
+b47: ; preds b48
+  %149 = union_take record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} tag1 %123
+  %150 = record_get record{i64, list[str]} %149, field1
+  %151 = record_set record{i64, list[str]} %150, field1, %130
+  %152 = record_set record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %149, field1, %151
+  %153 = box_make box[#16] %152
+  %154 = union_make option[box[#16]] tag1 %153
+  %155 = union_tag u32 %154
+  %157 = cmp.eq bool %155, 1:u32
+  branch %157, b55, b56
+b48: ; preds b43
+  %144 = union_payload box[#16] tag1 %123
+  %145 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %144
+  jump b47
+b49: ; preds b43
+  jump b50
+b50: ; preds b49
+  unreachable
+b51: ; preds b54 b63
+  unreachable
+b52: ; preds b63
+  %209 = call str myl_core_str_from_i64(21:i64)
+  %210 = str_append str str15, %209
+  %213 = union_tag u32 %154
+  %215 = cmp.eq bool %213, 1:u32
+  branch %215, b70, b71
+b53: ; preds b54
+  %169 = union_tag u32 %154
+  %171 = cmp.eq bool %169, 1:u32
+  branch %171, b59, b60
+b54: ; preds b55
+  %164 = record_get record{i64, list[str]} %160, field1
+  %165 = record_get i64 %164, field0
+  %167 = cmp.eq bool %165, 30:i64
+  branch %167, b53, b51
+b55: ; preds b47
+  %159 = union_payload box[#16] tag1 %154
+  %160 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %159
+  jump b54
+b56: ; preds b47
+  jump b57
+b57: ; preds b56
+  unreachable
+b58: ; preds b59
+  %178 = record_get record{i64, list[str]} %174, field1
+  %179 = record_get list[str] %178, field1
+  %181 = list_new list[str] 1:i64
+  %183 = list_push list[str] %181, str13
+  %184 = list_len u64 %179
+  %185 = list_len u64 %183
+  %186 = cmp.eq bool %184, %185
+  branch %186, b64, b63
+b59: ; preds b53
+  %173 = union_payload box[#16] tag1 %154
+  %174 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %173
+  jump b58
+b60: ; preds b53
+  jump b61
+b61: ; preds b60
+  unreachable
+b62: ; preds b64 b67
+  %190 = phi u64 0:u64, %198
+  %191 = cmp.lt bool %190, %184
+  branch %191, b65, b66
+b63: ; preds b58 b68 b66
+  %204 = phi bool %186, 0:bool, 1:bool
+  branch %204, b52, b51
+b64: ; preds b58
+  jump b62
+b65: ; preds b62
+  %193 = list_get str %179, %190
+  %194 = list_get str %183, %190
+  %195 = call bool myl_core_str_eq(%193, %194)
+  branch %195, b67, b68
+b66: ; preds b62
+  jump b63
+b67: ; preds b65
+  %198 = add u64 %190, 1:u64
+  jump b62
+b68: ; preds b65
+  jump b63
+b69: ; preds b70
+  %222 = union_tag u32 %154
+  %224 = cmp.eq bool %222, 1:u32
+  branch %224, b74, b75
+b70: ; preds b52
+  %217 = union_payload box[#16] tag1 %154
+  %218 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %217
+  jump b69
+b71: ; preds b52
+  jump b72
+b72: ; preds b71
+  unreachable
+b73: ; preds b74
+  %231 = union_take record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} tag1 %154
+  %232 = record_set record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %231, field2, %210
+  %233 = box_make box[#16] %232
+  %234 = union_make option[box[#16]] tag1 %233
+  %236 = list_new list[str] 1:i64
+  %239 = call str myl_core_str_from_i64(22:i64)
+  %240 = str_append str str18, %239
+  %241 = list_push list[str] %236, %240
+  %242 = union_tag u32 %234
+  %244 = cmp.eq bool %242, 1:u32
+  branch %244, b78, b79
+b74: ; preds b69
+  %226 = union_payload box[#16] tag1 %154
+  %227 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %226
+  jump b73
+b75: ; preds b69
+  jump b76
+b76: ; preds b75
+  unreachable
+b77: ; preds b78
+  %251 = union_tag u32 %234
+  %253 = cmp.eq bool %251, 1:u32
+  branch %253, b82, b83
+b78: ; preds b73
+  %246 = union_payload box[#16] tag1 %234
+  %247 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %246
+  jump b77
+b79: ; preds b73
+  jump b80
+b80: ; preds b79
+  unreachable
+b81: ; preds b82
+  %260 = union_take record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} tag1 %234
+  %261 = record_set record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %260, field3, %241
+  %262 = box_make box[#16] %261
+  %263 = union_make option[box[#16]] tag1 %262
+  %264 = union_tag u32 %263
+  %266 = cmp.eq bool %264, 1:u32
+  branch %266, b90, b91
+b82: ; preds b77
+  %255 = union_payload box[#16] tag1 %234
+  %256 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %255
+  jump b81
+b83: ; preds b77
+  jump b84
+b84: ; preds b83
+  unreachable
+b85: ; preds b89 b93 b102
+  unreachable
+b86: ; preds b102
+  %329 = union_tag u32 %263
+  %331 = cmp.eq bool %329, 1:u32
+  branch %331, b109, b110
+b87: ; preds b93
+  %290 = union_tag u32 %263
+  %292 = cmp.eq bool %290, 1:u32
+  branch %292, b98, b99
+b88: ; preds b89
+  %277 = union_tag u32 %263
+  %279 = cmp.eq bool %277, 1:u32
+  branch %279, b94, b95
+b89: ; preds b90
+  %273 = record_get i64 %269, field0
+  %275 = cmp.eq bool %273, 20:i64
+  branch %275, b88, b85
+b90: ; preds b81
+  %268 = union_payload box[#16] tag1 %263
+  %269 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %268
+  jump b89
+b91: ; preds b81
+  jump b92
+b92: ; preds b91
+  unreachable
+b93: ; preds b94
+  %286 = record_get str %282, field2
+  %288 = call bool myl_core_str_eq(%286, str23)
+  branch %288, b87, b85
+b94: ; preds b88
+  %281 = union_payload box[#16] tag1 %263
+  %282 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %281
+  jump b93
+b95: ; preds b88
+  jump b96
+b96: ; preds b95
+  unreachable
+b97: ; preds b98
+  %299 = record_get list[str] %295, field3
+  %301 = list_new list[str] 1:i64
+  %303 = list_push list[str] %301, str25
+  %304 = list_len u64 %299
+  %305 = list_len u64 %303
+  %306 = cmp.eq bool %304, %305
+  branch %306, b103, b102
+b98: ; preds b87
+  %294 = union_payload box[#16] tag1 %263
+  %295 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %294
+  jump b97
+b99: ; preds b87
+  jump b100
+b100: ; preds b99
+  unreachable
+b101: ; preds b103 b106
+  %310 = phi u64 0:u64, %318
+  %311 = cmp.lt bool %310, %304
+  branch %311, b104, b105
+b102: ; preds b97 b107 b105
+  %324 = phi bool %306, 0:bool, 1:bool
+  branch %324, b86, b85
+b103: ; preds b97
+  jump b101
+b104: ; preds b101
+  %313 = list_get str %299, %310
+  %314 = list_get str %303, %310
+  %315 = call bool myl_core_str_eq(%313, %314)
+  branch %315, b106, b107
+b105: ; preds b101
+  jump b102
+b106: ; preds b104
+  %318 = add u64 %310, 1:u64
+  jump b101
+b107: ; preds b104
+  jump b102
+b108: ; preds b109
+  %338 = record_get option[box[#16]] %334, field4
+  %339 = union_tag u32 %338
+  %341 = cmp.eq bool %339, 1:u32
+  branch %341, b113, b114
+b109: ; preds b86
+  %333 = union_payload box[#16] tag1 %263
+  %334 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %333
+  jump b108
+b110: ; preds b86
+  jump b111
+b111: ; preds b110
+  unreachable
+b112: ; preds b116
+  %386 = union_tag u32 %263
+  %388 = cmp.eq bool %386, 1:u32
+  branch %388, b128, b129
+b113: ; preds b108
+  %343 = union_payload box[#16] tag1 %338
+  %344 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %343
+  %345 = record_get i64 %344, field0
+  %347 = cmp.eq bool %345, 2:i64
+  branch %347, b118, b115
+b114: ; preds b108
+  jump b126
+b115: ; preds b113 b118 b120
+  unreachable
+b116: ; preds b120
+  jump b112
+b117: ; preds b118
+  %353 = record_get list[str] %344, field3
+  %355 = list_new list[str] 1:i64
+  %357 = list_push list[str] %355, str29
+  %358 = list_len u64 %353
+  %359 = list_len u64 %357
+  %360 = cmp.eq bool %358, %359
+  branch %360, b121, b120
+b118: ; preds b113
+  %349 = record_get str %344, field2
+  %351 = call bool myl_core_str_eq(%349, str28)
+  branch %351, b117, b115
+b119: ; preds b121 b124
+  %364 = phi u64 0:u64, %372
+  %365 = cmp.lt bool %364, %358
+  branch %365, b122, b123
+b120: ; preds b117 b125 b123
+  %378 = phi bool %360, 0:bool, 1:bool
+  branch %378, b116, b115
+b121: ; preds b117
+  jump b119
+b122: ; preds b119
+  %367 = list_get str %353, %364
+  %368 = list_get str %357, %364
+  %369 = call bool myl_core_str_eq(%367, %368)
+  branch %369, b124, b125
+b123: ; preds b119
+  jump b120
+b124: ; preds b122
+  %372 = add u64 %364, 1:u64
+  jump b119
+b125: ; preds b122
+  jump b120
+b126: ; preds b114
+  unreachable
+b127: ; preds b128
+  %395 = record_get option[box[#16]] %391, field5
+  %396 = union_tag u32 %395
+  %398 = cmp.eq bool %396, 1:u32
+  branch %398, b132, b133
+b128: ; preds b112
+  %390 = union_payload box[#16] tag1 %263
+  %391 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %390
+  jump b127
+b129: ; preds b112
+  jump b130
+b130: ; preds b129
+  unreachable
+b131: ; preds b135
+  jump b138
+b132: ; preds b127
+  %400 = union_payload box[#16] tag1 %395
+  %401 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %400
+  %402 = record_get i64 %401, field0
+  %404 = cmp.eq bool %402, 3:i64
+  branch %404, b136, b134
+b133: ; preds b127
+  jump b137
+b134: ; preds b132 b136
+  unreachable
+b135: ; preds b136
+  jump b131
+b136: ; preds b132
+  %406 = record_get str %401, field2
+  %408 = call bool myl_core_str_eq(%406, str33)
+  branch %408, b135, b134
+b137: ; preds b133
+  unreachable
+b138: ; preds b131 b140
+  %417 = phi i64 0:i64, %503
+  %421 = phi option[box[#16]] %263, %496
+  %419 = cmp.lt bool %417, 32:i64
+  branch %419, b139, b141
+b139: ; preds b138
+  %422 = union_tag u32 %421
+  %424 = cmp.eq bool %422, 1:u32
+  branch %424, b143, b144
+b140: ; preds b167
+  %503 = add.exact i64 %417, 1:i64
+  jump b138
+b141: ; preds b138 b166
+  %505 = phi option[box[#16]] %421, %496
+  %506 = union_tag u32 %505
+  %508 = cmp.eq bool %506, 1:u32
+  branch %508, b172, b173
+b142: ; preds b143
+  %431 = union_tag u32 %421
+  %433 = cmp.eq bool %431, 1:u32
+  branch %433, b147, b148
+b143: ; preds b139
+  %426 = union_payload box[#16] tag1 %421
+  %427 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %426
+  jump b142
+b144: ; preds b139
+  jump b145
+b145: ; preds b144
+  unreachable
+b146: ; preds b147
+  %440 = union_take record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} tag1 %421
+  %441 = record_set record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %440, field0, %417
+  %442 = box_make box[#16] %441
+  %443 = union_make option[box[#16]] tag1 %442
+  %445 = call str myl_core_str_from_i64(%417)
+  %446 = str_append str str38, %445
+  %447 = union_tag u32 %443
+  %449 = cmp.eq bool %447, 1:u32
+  branch %449, b151, b152
+b147: ; preds b142
+  %435 = union_payload box[#16] tag1 %421
+  %436 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %435
+  jump b146
+b148: ; preds b142
+  jump b149
+b149: ; preds b148
+  unreachable
+b150: ; preds b151
+  %456 = union_tag u32 %443
+  %458 = cmp.eq bool %456, 1:u32
+  branch %458, b155, b156
+b151: ; preds b146
+  %451 = union_payload box[#16] tag1 %443
+  %452 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %451
+  jump b150
+b152: ; preds b146
+  jump b153
+b153: ; preds b152
+  unreachable
+b154: ; preds b155
+  %465 = union_take record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} tag1 %443
+  %466 = record_set record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %465, field2, %446
+  %467 = box_make box[#16] %466
+  %468 = union_make option[box[#16]] tag1 %467
+  %470 = list_new list[str] 1:i64
+  %472 = call str myl_core_str_from_i64(%417)
+  %473 = str_append str str41, %472
+  %474 = list_push list[str] %470, %473
+  %475 = union_tag u32 %468
+  %477 = cmp.eq bool %475, 1:u32
+  branch %477, b159, b160
+b155: ; preds b150
+  %460 = union_payload box[#16] tag1 %443
+  %461 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %460
+  jump b154
+b156: ; preds b150
+  jump b157
+b157: ; preds b156
+  unreachable
+b158: ; preds b159
+  %484 = union_tag u32 %468
+  %486 = cmp.eq bool %484, 1:u32
+  branch %486, b163, b164
+b159: ; preds b154
+  %479 = union_payload box[#16] tag1 %468
+  %480 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %479
+  jump b158
+b160: ; preds b154
+  jump b161
+b161: ; preds b160
+  unreachable
+b162: ; preds b163
+  %493 = union_take record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} tag1 %468
+  %494 = record_set record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %493, field3, %474
+  %495 = box_make box[#16] %494
+  %496 = union_make option[box[#16]] tag1 %495
+  %498 = cmp.eq bool %417, 19:i64
+  branch %498, b166, b167
+b163: ; preds b158
+  %488 = union_payload box[#16] tag1 %468
+  %489 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %488
+  jump b162
+b164: ; preds b158
+  jump b165
+b165: ; preds b164
+  unreachable
+b166: ; preds b162
+  jump b141
+b167: ; preds b162
+  jump b140
+b168: ; preds b171 b175
+  unreachable
+b169: ; preds b175
+  %534 = call record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} leaf(90:i64)
+  %535 = box_make box[#16] %534
+  %536 = union_make option[box[#16]] tag1 %535
+  %537 = union_tag u32 %536
+  %539 = cmp.eq bool %537, 1:u32
+  branch %539, b182, b183
+b170: ; preds b171
+  %519 = union_tag u32 %505
+  %521 = cmp.eq bool %519, 1:u32
+  branch %521, b176, b177
+b171: ; preds b172
+  %515 = record_get i64 %511, field0
+  %517 = cmp.eq bool %515, 19:i64
+  branch %517, b170, b168
+b172: ; preds b141
+  %510 = union_payload box[#16] tag1 %505
+  %511 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %510
+  jump b171
+b173: ; preds b141
+  jump b174
+b174: ; preds b173
+  unreachable
+b175: ; preds b176
+  %528 = record_get str %524, field2
+  %530 = call bool myl_core_str_eq(%528, str46)
+  branch %530, b169, b168
+b176: ; preds b170
+  %523 = union_payload box[#16] tag1 %505
+  %524 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %523
+  jump b175
+b177: ; preds b170
+  jump b178
+b178: ; preds b177
+  unreachable
+b179: ; preds b181
+  %550 = union_tag u32 %536
+  %552 = cmp.eq bool %550, 1:u32
+  branch %552, b186, b187
+b180: ; preds b181 b194
+  jump b6
+b181: ; preds b182 b184
+  %546 = phi bool 0:bool, 1:bool
+  branch %546, b180, b179
+b182: ; preds b169
+  jump b181
+b183: ; preds b169
+  jump b184
+b184: ; preds b183
+  jump b181
+b185: ; preds b186
+  %559 = union_tag u32 %536
+  %561 = cmp.eq bool %559, 1:u32
+  branch %561, b190, b191
+b186: ; preds b179
+  %554 = union_payload box[#16] tag1 %536
+  %555 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %554
+  jump b185
+b187: ; preds b179
+  jump b188
+b188: ; preds b187
+  unreachable
+b189: ; preds b190
+  %568 = union_take record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} tag1 %536
+  %569 = record_set record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %568, field0, 91:i64
+  %570 = box_make box[#16] %569
+  %571 = union_make option[box[#16]] tag1 %570
+  %572 = union_tag u32 %571
+  %574 = cmp.eq bool %572, 1:u32
+  branch %574, b197, b198
+b190: ; preds b185
+  %563 = union_payload box[#16] tag1 %536
+  %564 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %563
+  jump b189
+b191: ; preds b185
+  jump b192
+b192: ; preds b191
+  unreachable
+b193: ; preds b196 b200
+  unreachable
+b194: ; preds b200
+  jump b180
+b195: ; preds b196
+  %585 = union_tag u32 %571
+  %587 = cmp.eq bool %585, 1:u32
+  branch %587, b201, b202
+b196: ; preds b197
+  %581 = record_get i64 %577, field0
+  %583 = cmp.eq bool %581, 91:i64
+  branch %583, b195, b193
+b197: ; preds b189
+  %576 = union_payload box[#16] tag1 %571
+  %577 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %576
+  jump b196
+b198: ; preds b189
+  jump b199
+b199: ; preds b198
+  unreachable
+b200: ; preds b201
+  %594 = record_get str %590, field2
+  %596 = call bool myl_core_str_eq(%594, str52)
+  branch %596, b194, b193
+b201: ; preds b195
+  %589 = union_payload box[#16] tag1 %571
+  %590 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %589
+  jump b200
+b202: ; preds b195
+  jump b203
+b203: ; preds b202
+  unreachable
+b204: ; preds b208
+  %659 = call option[box[#16]] original()
+  %660 = call record{i64, option[box[#16]]} mutate(%659)
+  %661 = record_get i64 %660, field0
+  %662 = record_get option[box[#16]] %660, field1
+  %664 = cmp.eq bool %661, 41:i64
+  branch %664, b220, b219
+b205: ; preds b6
+  %618 = union_payload box[#16] tag1 %1
+  %619 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %618
+  %620 = record_get i64 %619, field0
+  %622 = cmp.eq bool %620, 1:i64
+  branch %622, b210, b207
+b206: ; preds b6
+  jump b218
+b207: ; preds b205 b210 b212
+  unreachable
+b208: ; preds b212
+  jump b204
+b209: ; preds b210
+  %628 = record_get list[str] %619, field3
+  %630 = list_new list[str] 1:i64
+  %632 = list_push list[str] %630, str55
+  %633 = list_len u64 %628
+  %634 = list_len u64 %632
+  %635 = cmp.eq bool %633, %634
+  branch %635, b213, b212
+b210: ; preds b205
+  %624 = record_get str %619, field2
+  %626 = call bool myl_core_str_eq(%624, str54)
+  branch %626, b209, b207
+b211: ; preds b213 b216
+  %639 = phi u64 0:u64, %647
+  %640 = cmp.lt bool %639, %633
+  branch %640, b214, b215
+b212: ; preds b209 b217 b215
+  %653 = phi bool %635, 0:bool, 1:bool
+  branch %653, b208, b207
+b213: ; preds b209
+  jump b211
+b214: ; preds b211
+  %642 = list_get str %628, %639
+  %643 = list_get str %632, %639
+  %644 = call bool myl_core_str_eq(%642, %643)
+  branch %644, b216, b217
+b215: ; preds b211
+  jump b212
+b216: ; preds b214
+  %647 = add u64 %639, 1:u64
+  jump b211
+b217: ; preds b214
+  jump b212
+b218: ; preds b206
+  unreachable
+b219: ; preds b204
+  unreachable
+b220: ; preds b204
+  %667 = union_tag u32 %662
+  %669 = cmp.eq bool %667, 1:u32
+  branch %669, b224, b225
+b221: ; preds b223
+  %679 = union_tag u32 %662
+  %681 = cmp.eq bool %679, 1:u32
+  branch %681, b228, b229
+b222: ; preds b223 b232
+  %694 = union_make option[box[#16]] tag0
+  %695 = union_tag u32 %694
+  %697 = cmp.eq bool %695, 1:u32
+  branch %697, b236, b237
+b223: ; preds b224 b226
+  %676 = phi bool 0:bool, 1:bool
+  branch %676, b222, b221
+b224: ; preds b220
+  jump b223
+b225: ; preds b220
+  jump b226
+b226: ; preds b225
+  jump b223
+b227: ; preds b228
+  %688 = record_get str %684, field2
+  %690 = call bool myl_core_str_eq(%688, str60)
+  branch %690, b232, b231
+b228: ; preds b221
+  %683 = union_payload box[#16] tag1 %662
+  %684 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %683
+  jump b227
+b229: ; preds b221
+  jump b230
+b230: ; preds b229
+  unreachable
+b231: ; preds b227
+  unreachable
+b232: ; preds b227
+  jump b222
+b233: ; preds b235
+  %708 = union_tag u32 %694
+  %710 = cmp.eq bool %708, 1:u32
+  branch %710, b240, b241
+b234: ; preds b235 b243
+  %732 = call str early(8:i64)
+  %734 = call bool myl_core_str_eq(%732, str64)
+  branch %734, b248, b247
+b235: ; preds b236 b238
+  %704 = phi bool 0:bool, 1:bool
+  branch %704, b234, b233
+b236: ; preds b222
+  jump b235
+b237: ; preds b222
+  jump b238
+b238: ; preds b237
+  jump b235
+b239: ; preds b240
+  %717 = union_tag u32 %694
+  %719 = cmp.eq bool %717, 1:u32
+  branch %719, b244, b245
+b240: ; preds b233
+  %712 = union_payload box[#16] tag1 %694
+  %713 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %712
+  jump b239
+b241: ; preds b233
+  jump b242
+b242: ; preds b241
+  unreachable
+b243: ; preds b244
+  %726 = union_take record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} tag1 %694
+  %727 = record_set record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %726, field0, 99:i64
+  %728 = box_make box[#16] %727
+  %729 = union_make option[box[#16]] tag1 %728
+  jump b234
+b244: ; preds b239
+  %721 = union_payload box[#16] tag1 %694
+  %722 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %721
+  jump b243
+b245: ; preds b239
+  jump b246
+b246: ; preds b245
+  unreachable
+b247: ; preds b234
+  unreachable
+b248: ; preds b234
+  %737 = call union{str, str} failure()
+  %738 = union_tag u32 %737
+  %740 = cmp.eq bool %738, 0:u32
+  branch %740, b250, b251
+b249: ; preds b254
+  %751 = call union{str, str} failed_rhs()
+  %752 = union_tag u32 %751
+  %754 = cmp.eq bool %752, 0:u32
+  branch %754, b256, b257
+b250: ; preds b248
+  %742 = union_take str tag0 %737
+  unreachable
+b251: ; preds b248
+  jump b252
+b252: ; preds b251
+  %745 = union_take str tag1 %737
+  %747 = call bool myl_core_str_eq(%745, str67)
+  branch %747, b254, b253
+b253: ; preds b252
+  unreachable
+b254: ; preds b252
+  jump b249
+b255: ; preds b260
+  print param0, str72, 42:i64
+  ret 0:i64
+b256: ; preds b249
+  %756 = union_take str tag0 %751
+  unreachable
+b257: ; preds b249
+  jump b258
+b258: ; preds b257
+  %759 = union_take str tag1 %751
+  %761 = call bool myl_core_str_eq(%759, str70)
+  branch %761, b260, b259
+b259: ; preds b258
+  unreachable
+b260: ; preds b258
+  jump b255
+fn original() -> option[box[#16]]
+b0:
+  %3 = list_new list[str] 1:i64
+  %6 = call str myl_core_str_from_i64(1:i64)
+  %7 = str_append str str73, %6
+  %8 = list_push list[str] %3, %7
+  %9 = record_make record{i64, list[str]} 1:i64, %8
+  %12 = call str myl_core_str_from_i64(1:i64)
+  %13 = str_append str str74, %12
+  %15 = list_new list[str] 1:i64
+  %18 = call str myl_core_str_from_i64(1:i64)
+  %19 = str_append str str75, %18
+  %20 = list_push list[str] %15, %19
+  %22 = call record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} leaf(2:i64)
+  %23 = box_make box[#16] %22
+  %24 = union_make option[box[#16]] tag1 %23
+  %26 = call record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} leaf(3:i64)
+  %27 = box_make box[#16] %26
+  %28 = union_make option[box[#16]] tag1 %27
+  %29 = record_make record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} 1:i64, %9, %13, %20, %24, %28
+  %30 = box_make box[#16] %29
+  %31 = union_make option[box[#16]] tag1 %30
+  ret %31
+fn myl_core_owned_copy_19(box[#16]) -> box[#16] runtime
+fn myl_core_str_from_i64(i64) -> str extern
+fn myl_core_str_eq(str, str) -> bool runtime
+fn leaf(i64) -> record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]}
+b0:
+  %2 = list_new list[str] 1:i64
+  %4 = call str myl_core_str_from_i64(param0)
+  %5 = str_append str str76, %4
+  %6 = list_push list[str] %2, %5
+  %7 = record_make record{i64, list[str]} param0, %6
+  %9 = call str myl_core_str_from_i64(param0)
+  %10 = str_append str str77, %9
+  %12 = list_new list[str] 1:i64
+  %14 = call str myl_core_str_from_i64(param0)
+  %15 = str_append str str78, %14
+  %16 = list_push list[str] %12, %15
+  %17 = union_make option[box[#16]] tag0
+  %18 = union_make option[box[#16]] tag0
+  %19 = record_make record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} param0, %7, %10, %16, %17, %18
+  ret %19
+fn mutate(option[box[#16]]) -> record{i64, option[box[#16]]}
+b0:
+  %1 = union_tag u32 param0
+  %3 = cmp.eq bool %1, 1:u32
+  branch %3, b4, b5
+b1: ; preds b3
+  %14 = union_tag u32 param0
+  %16 = cmp.eq bool %14, 1:u32
+  branch %16, b8, b9
+b2: ; preds b3
+  %75 = record_make record{i64, option[box[#16]]} 0:i64, param0
+  ret %75
+b3: ; preds b4 b6
+  %10 = phi bool 0:bool, 1:bool
+  branch %10, b2, b1
+b4: ; preds b0
+  jump b3
+b5: ; preds b0
+  jump b6
+b6: ; preds b5
+  jump b3
+b7: ; preds b8
+  %23 = union_tag u32 param0
+  %25 = cmp.eq bool %23, 1:u32
+  branch %25, b12, b13
+b8: ; preds b1
+  %18 = union_payload box[#16] tag1 param0
+  %19 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %18
+  jump b7
+b9: ; preds b1
+  jump b10
+b10: ; preds b9
+  unreachable
+b11: ; preds b12
+  %32 = union_take record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} tag1 param0
+  %33 = record_set record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %32, field0, 41:i64
+  %34 = box_make box[#16] %33
+  %35 = union_make option[box[#16]] tag1 %34
+  %38 = call str myl_core_str_from_i64(42:i64)
+  %39 = str_append str str81, %38
+  %40 = union_tag u32 %35
+  %42 = cmp.eq bool %40, 1:u32
+  branch %42, b16, b17
+b12: ; preds b7
+  %27 = union_payload box[#16] tag1 param0
+  %28 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %27
+  jump b11
+b13: ; preds b7
+  jump b14
+b14: ; preds b13
+  unreachable
+b15: ; preds b16
+  %49 = union_tag u32 %35
+  %51 = cmp.eq bool %49, 1:u32
+  branch %51, b20, b21
+b16: ; preds b11
+  %44 = union_payload box[#16] tag1 %35
+  %45 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %44
+  jump b15
+b17: ; preds b11
+  jump b18
+b18: ; preds b17
+  unreachable
+b19: ; preds b20
+  %58 = union_take record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} tag1 %35
+  %59 = record_set record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %58, field2, %39
+  %60 = box_make box[#16] %59
+  %61 = union_make option[box[#16]] tag1 %60
+  %62 = union_tag u32 %61
+  %64 = cmp.eq bool %62, 1:u32
+  branch %64, b24, b25
+b20: ; preds b15
+  %53 = union_payload box[#16] tag1 %35
+  %54 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %53
+  jump b19
+b21: ; preds b15
+  jump b22
+b22: ; preds b21
+  unreachable
+b23: ; preds b24
+  %71 = record_get i64 %67, field0
+  %72 = record_make record{i64, option[box[#16]]} %71, %61
+  ret %72
+b24: ; preds b19
+  %66 = union_payload box[#16] tag1 %61
+  %67 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %66
+  jump b23
+b25: ; preds b19
+  jump b26
+b26: ; preds b25
+  unreachable
+fn early(i64) -> str
+b0:
+  %1 = call option[box[#16]] original()
+  %2 = union_tag u32 %1
+  %4 = cmp.eq bool %2, 1:u32
+  branch %4, b4, b5
+b1: ; preds b3
+  %15 = union_tag u32 %1
+  %17 = cmp.eq bool %15, 1:u32
+  branch %17, b8, b9
+b2: ; preds b3
+  ret str92
+b3: ; preds b4 b6
+  %11 = phi bool 0:bool, 1:bool
+  branch %11, b2, b1
+b4: ; preds b0
+  jump b3
+b5: ; preds b0
+  jump b6
+b6: ; preds b5
+  jump b3
+b7: ; preds b8
+  %24 = union_tag u32 %1
+  %26 = cmp.eq bool %24, 1:u32
+  branch %26, b12, b13
+b8: ; preds b1
+  %19 = union_payload box[#16] tag1 %1
+  %20 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %19
+  jump b7
+b9: ; preds b1
+  jump b10
+b10: ; preds b9
+  unreachable
+b11: ; preds b12
+  %33 = union_take record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} tag1 %1
+  %34 = record_set record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %33, field0, param0
+  %35 = box_make box[#16] %34
+  %36 = union_make option[box[#16]] tag1 %35
+  %38 = union_tag u32 %36
+  %40 = cmp.eq bool %38, 1:u32
+  branch %40, b16, b17
+b12: ; preds b7
+  %28 = union_payload box[#16] tag1 %1
+  %29 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %28
+  jump b11
+b13: ; preds b7
+  jump b14
+b14: ; preds b13
+  unreachable
+b15: ; preds b16
+  %47 = record_get i64 %43, field0
+  %48 = call str myl_core_str_from_i64(%47)
+  %49 = str_append str str87, %48
+  %50 = union_tag u32 %36
+  %52 = cmp.eq bool %50, 1:u32
+  branch %52, b20, b21
+b16: ; preds b11
+  %42 = union_payload box[#16] tag1 %36
+  %43 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %42
+  jump b15
+b17: ; preds b11
+  jump b18
+b18: ; preds b17
+  unreachable
+b19: ; preds b20
+  %59 = union_tag u32 %36
+  %61 = cmp.eq bool %59, 1:u32
+  branch %61, b24, b25
+b20: ; preds b15
+  %54 = union_payload box[#16] tag1 %36
+  %55 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %54
+  jump b19
+b21: ; preds b15
+  jump b22
+b22: ; preds b21
+  unreachable
+b23: ; preds b24
+  %68 = union_take record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} tag1 %36
+  %69 = record_set record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %68, field2, %49
+  %70 = box_make box[#16] %69
+  %71 = union_make option[box[#16]] tag1 %70
+  %72 = union_tag u32 %71
+  %74 = cmp.eq bool %72, 1:u32
+  branch %74, b28, b29
+b24: ; preds b19
+  %63 = union_payload box[#16] tag1 %36
+  %64 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %63
+  jump b23
+b25: ; preds b19
+  jump b26
+b26: ; preds b25
+  unreachable
+b27: ; preds b28
+  %81 = record_get str %77, field2
+  %82 = call str myl_core_owned_octets_copy(%81)
+  ret %82
+b28: ; preds b23
+  %76 = union_payload box[#16] tag1 %71
+  %77 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %76
+  jump b27
+b29: ; preds b23
+  jump b30
+b30: ; preds b29
+  unreachable
+fn failure() -> union{str, str}
+b0:
+  %0 = call option[box[#16]] original()
+  %1 = union_tag u32 %0
+  %3 = cmp.eq bool %1, 1:u32
+  branch %3, b4, b5
+b1: ; preds b3
+  %14 = union_tag u32 %0
+  %16 = cmp.eq bool %14, 1:u32
+  branch %16, b8, b9
+b2: ; preds b3
+  %86 = union_make union{str, str} tag0 str100
+  ret %86
+b3: ; preds b4 b6
+  %10 = phi bool 0:bool, 1:bool
+  branch %10, b2, b1
+b4: ; preds b0
+  jump b3
+b5: ; preds b0
+  jump b6
+b6: ; preds b5
+  jump b3
+b7: ; preds b8
+  %23 = union_tag u32 %0
+  %25 = cmp.eq bool %23, 1:u32
+  branch %25, b12, b13
+b8: ; preds b1
+  %18 = union_payload box[#16] tag1 %0
+  %19 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %18
+  jump b7
+b9: ; preds b1
+  jump b10
+b10: ; preds b9
+  unreachable
+b11: ; preds b12
+  %32 = union_take record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} tag1 %0
+  %33 = record_set record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %32, field0, 70:i64
+  %34 = box_make box[#16] %33
+  %35 = union_make option[box[#16]] tag1 %34
+  %37 = union_tag u32 %35
+  %39 = cmp.eq bool %37, 1:u32
+  branch %39, b16, b17
+b12: ; preds b7
+  %27 = union_payload box[#16] tag1 %0
+  %28 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %27
+  jump b11
+b13: ; preds b7
+  jump b14
+b14: ; preds b13
+  unreachable
+b15: ; preds b16
+  %46 = record_get i64 %42, field0
+  %47 = call str myl_core_str_from_i64(%46)
+  %48 = str_append str str95, %47
+  %49 = union_tag u32 %35
+  %51 = cmp.eq bool %49, 1:u32
+  branch %51, b20, b21
+b16: ; preds b11
+  %41 = union_payload box[#16] tag1 %35
+  %42 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %41
+  jump b15
+b17: ; preds b11
+  jump b18
+b18: ; preds b17
+  unreachable
+b19: ; preds b20
+  %58 = union_tag u32 %35
+  %60 = cmp.eq bool %58, 1:u32
+  branch %60, b24, b25
+b20: ; preds b15
+  %53 = union_payload box[#16] tag1 %35
+  %54 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %53
+  jump b19
+b21: ; preds b15
+  jump b22
+b22: ; preds b21
+  unreachable
+b23: ; preds b24
+  %67 = union_take record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} tag1 %35
+  %68 = record_set record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %67, field2, %48
+  %69 = box_make box[#16] %68
+  %70 = union_make option[box[#16]] tag1 %69
+  %71 = union_tag u32 %70
+  %73 = cmp.eq bool %71, 1:u32
+  branch %73, b28, b29
+b24: ; preds b19
+  %62 = union_payload box[#16] tag1 %35
+  %63 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %62
+  jump b23
+b25: ; preds b19
+  jump b26
+b26: ; preds b25
+  unreachable
+b27: ; preds b28
+  %80 = record_get str %76, field2
+  %81 = call str myl_core_owned_octets_copy(%80)
+  %82 = union_make union{str, str} tag1 %81
+  err_trace origin
+  ret %82
+b28: ; preds b23
+  %75 = union_payload box[#16] tag1 %70
+  %76 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %75
+  jump b27
+b29: ; preds b23
+  jump b30
+b30: ; preds b29
+  unreachable
+fn failed_rhs() -> union{str, str}
+b0:
+  %0 = call option[box[#16]] original()
+  %1 = union_tag u32 %0
+  %3 = cmp.eq bool %1, 1:u32
+  branch %3, b4, b5
+b1: ; preds b3
+  %12 = call union{i64, str} fail_int()
+  %13 = union_tag u32 %12
+  %15 = cmp.eq bool %13, 1:u32
+  branch %15, b7, b8
+b2: ; preds b3
+  %59 = union_make union{str, str} tag0 str104
+  ret %59
+b3: ; preds b4 b6
+  %10 = phi bool 0:bool, 1:bool
+  branch %10, b2, b1
+b4: ; preds b0
+  jump b3
+b5: ; preds b0
+  jump b6
+b6: ; preds b5
+  jump b3
+b7: ; preds b1
+  err_trace append
+  %18 = union_take str tag1 %12
+  %19 = union_make union{str, str} tag1 %18
+  ret %19
+b8: ; preds b1
+  %21 = union_take i64 tag0 %12
+  %23 = union_tag u32 %0
+  %25 = cmp.eq bool %23, 1:u32
+  branch %25, b10, b11
+b9: ; preds b10
+  %32 = union_tag u32 %0
+  %34 = cmp.eq bool %32, 1:u32
+  branch %34, b14, b15
+b10: ; preds b8
+  %27 = union_payload box[#16] tag1 %0
+  %28 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %27
+  jump b9
+b11: ; preds b8
+  jump b12
+b12: ; preds b11
+  unreachable
+b13: ; preds b14
+  %41 = union_take record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} tag1 %0
+  %42 = record_set record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %41, field0, %21
+  %43 = box_make box[#16] %42
+  %44 = union_make option[box[#16]] tag1 %43
+  %45 = union_tag u32 %44
+  %47 = cmp.eq bool %45, 1:u32
+  branch %47, b18, b19
+b14: ; preds b9
+  %36 = union_payload box[#16] tag1 %0
+  %37 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %36
+  jump b13
+b15: ; preds b9
+  jump b16
+b16: ; preds b15
+  unreachable
+b17: ; preds b18
+  %54 = record_get str %50, field2
+  %55 = call str myl_core_owned_octets_copy(%54)
+  %56 = union_make union{str, str} tag0 %55
+  ret %56
+b18: ; preds b13
+  %49 = union_payload box[#16] tag1 %44
+  %50 = box_get record{i64, record{i64, list[str]}, str, list[str], option[box[#16]], option[box[#16]]} %49
+  jump b17
+b19: ; preds b13
+  jump b20
+b20: ; preds b19
+  unreachable
+fn myl_core_owned_octets_copy(str) -> str extern
+fn fail_int() -> union{i64, str}
+b0:
+  %2 = call str myl_core_str_from_i64(7:i64)
+  %3 = str_append str str105, %2
+  %4 = union_make union{i64, str} tag1 %3
+  err_trace origin
+  ret %4

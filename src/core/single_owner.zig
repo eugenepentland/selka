@@ -548,10 +548,11 @@ const Checker = struct {
             }
         }
         const node = c.program.nodes[@backingInt(store.value)];
-        const updating = !initializing and (store.element or node.data == .update or node.data == .replace);
+        const optional = if (c.zero_rc and !initializing) c.optionalWriteback(store) else null;
+        const updating = !initializing and (store.element or node.data == .update or node.data == .replace or optional != null);
         if (updating) {
             try c.checkLocal(slot, .mutate, span);
-            try c.expression(store.value, .update);
+            try c.expression(optional orelse store.value, .update);
         } else {
             if (!initializing and c.state[slot].available) try c.checkLocal(slot, .mutate, span);
             try c.expression(store.value, .move);
@@ -560,6 +561,17 @@ const Checker = struct {
         const affine = c.zero_rc and resources.affine(c.program, local.ty);
         const dependency = if (c.zero_rc and resources.dependent(c.program, local.ty)) try c.resourceOrigin(store.value) else null;
         c.state[slot] = .{ .available = true, .borrowed = parameter and !affine, .writable = local.mutable, .dependency = dependency orelse none };
+    }
+
+    /// Complete same-owner reconstruction is a writeback, never a borrowed move.
+    fn optionalWriteback(c: *const Checker, store: typed.Store) ?typed.NodeId {
+        const contract = @import("optional_writeback.zig");
+        const found = contract.shape(c.program, c.function, store) orelse return null;
+        const receiver = @backingInt(found.receiver);
+        if (!c.state[receiver].borrowed or c.rootOf(receiver) != @backingInt(store.slot)) return null;
+        const definition = c.state[receiver].view_definition orelse return null;
+        if (!contract.projection(c.program, c.function, store, found, definition)) return null;
+        return found.payload;
     }
 
     /// The entire tuple transfers once, before any destination expression runs.

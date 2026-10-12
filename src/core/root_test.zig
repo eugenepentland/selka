@@ -6,6 +6,7 @@ comptime {
     _ = @import("a02_public_constructors_test.zig");
     _ = @import("a02_field_augmented_test.zig");
     _ = @import("a02_indirect_owned_test.zig");
+    _ = @import("a01_optional_writeback_test.zig");
     _ = @import("a02_scalar_child_test.zig");
     _ = @import("a08_borrow_cache_test.zig");
     _ = @import("provider_store_test.zig");
