@@ -82,26 +82,29 @@ public func extract_pad_names(source: bytes) -> Result[bytes[], str]:
             return Err(parser_mod.error_name(error))
     if len(nodes) == 0:
         return Err(err_invalid_format)
-    mut root = nodes[0].copy()
-    if not ast_mod.is_form(root, b"footprint"):
+    if not ast_mod.is_form(nodes[0], b"footprint"):
         return Err(err_invalid_format)
-    mut children = ast_mod.as_list(root)
-    if children is None:
-        return Err(err_invalid_format)
-    mut pads: bytes[] = []
-    for child in children[2:]:
-        if ast_mod.is_form(child, b"pad"):
-            mut cl = ast_mod.as_list(child)
-            if cl is None:
-                continue
-            if len(cl) < 2:
-                continue
-            mut name = ast_mod.token_text(cl[1])
-            if name is not None:
-                pads.append(name.copy())
-    return Ok(pads)
+    match nodes[0].tag:
+        case ast_mod.Tag.list(value=children):
+            mut pads: bytes[] = []
+            for child_index_0 in range(len(children)):
+                if child_index_0 < 2:
+                    continue
+                if ast_mod.is_form(children[child_index_0], b"pad"):
+                    match children[child_index_0].tag:
+                        case ast_mod.Tag.list(value=cl):
+                            if len(cl) < 2:
+                                continue
+                            mut name = ast_mod.token_text(cl[1])
+                            if name is not None:
+                                pads.append(name.copy())
+                        case _:
+                            continue
+            return Ok(pads)
 
 
+        case _:
+            return Err(err_invalid_format)
 # Map internal project footprint id to its declared KiCad library name.
 public func extract_footprint_name(source: bytes) -> Result[bytes, str]:
     mut nodes: ast_mod.Node[] = []
@@ -112,17 +115,17 @@ public func extract_footprint_name(source: bytes) -> Result[bytes, str]:
             return Err(parser_mod.error_name(error))
     if len(nodes) == 0:
         return Err(err_invalid_format)
-    mut root = nodes[0].copy()
-    if not ast_mod.is_form(root, b"footprint"):
+    if not ast_mod.is_form(nodes[0], b"footprint"):
         return Err(err_invalid_format)
-    mut children = ast_mod.as_list(root)
-    if children is None:
-        return Err(err_invalid_format)
-    if len(children) < 2:
-        return Err(err_invalid_format)
-    mut name = ast_mod.as_atom(children[1])
-    if name is None:
-        name = ast_mod.as_string(children[1])
-    if name is None:
-        return Err(err_invalid_format)
-    return Ok(name.copy())
+    match nodes[0].tag:
+        case ast_mod.Tag.list(value=children):
+            if len(children) < 2:
+                return Err(err_invalid_format)
+            mut name = ast_mod.as_atom(children[1])
+            if name is None:
+                name = ast_mod.as_string(children[1])
+            if name is None:
+                return Err(err_invalid_format)
+            return Ok(name.copy())
+        case _:
+            return Err(err_invalid_format)

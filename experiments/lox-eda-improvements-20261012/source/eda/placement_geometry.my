@@ -111,188 +111,236 @@ public func load(fs: Filesystem, project_dir: str, fp_name: bytes, pin_count_hin
             nodes = parsed
     if len(nodes) == 0 or not ast.is_form(nodes[0], b"footprint"):
         return fallback_geom(pin_count_hint)
-    mut children = ast.as_list(nodes[0])
-    if children is None or len(children) < 2:
-        return fallback_geom(pin_count_hint)
-    mut pads: Pad[] = []
-    mut keepouts: CopperPourKeepout[] = []
-    mut lines: SilkLine[] = []
-    mut circles: SilkCircle[] = []
-    mut court: Ext? = None
-    mut courtyard_circle: SilkCircle? = None
-    for sub in children[2:]:
-        if ast.is_form(sub, b"pad"):
-            mut p = parse_pad(sub)
-            if p is not None:
-                pads.append(p.copy())
-        elif ast.is_form(sub, b"copper-pour-keepout"):
-            mut k = parse_copper_pour_keepout(sub)
-            if k is not None:
-                keepouts.append(k.copy())
-        elif ast.is_form(sub, b"courtyard"):
-            mut ext = parse_courtyard(sub)
-            if ext is not None:
-                court = Some(ext)
-                courtyard_circle = None
-                if ext.circular:
-                    courtyard_circle = Some(SilkCircle(cx=ext.cx, cy=ext.cy, r=ext.hw))
-        elif ast.is_form(sub, b"silkscreen"):
-            parse_silkscreen(sub, mut lines, mut circles)
-    mut bounds = court
-    if bounds is None or bounds.hw <= 0.0 or bounds.hh <= 0.0:
-        bounds = pad_extents(pads)
-    if bounds is None:
-        return fallback_geom(pin_count_hint)
-    mut features = FootprintFeatures(courtyard_circle=courtyard_circle, silk_lines=lines, silk_circles=circles, copper_pour_keepouts=keepouts)
-    return Geom(hw=bounds.hw + margin, hh=bounds.hh + margin, pads=pads, fallback=False, ccx=bounds.cx, ccy=bounds.cy, features=features)
+    match nodes[0].tag:
+        case ast.Tag.list(value=children):
+            if len(children) < 2:
+                return fallback_geom(pin_count_hint)
+            mut pads: Pad[] = []
+            mut keepouts: CopperPourKeepout[] = []
+            mut lines: SilkLine[] = []
+            mut circles: SilkCircle[] = []
+            mut court: Ext? = None
+            mut courtyard_circle: SilkCircle? = None
+            for child_index_6 in range(len(children)):
+                if child_index_6 < 2:
+                    continue
+                if ast.is_form(children[child_index_6], b"pad"):
+                    mut p = parse_pad(children[child_index_6])
+                    if p is not None:
+                        pads.append(p.copy())
+                elif ast.is_form(children[child_index_6], b"copper-pour-keepout"):
+                    mut k = parse_copper_pour_keepout(children[child_index_6])
+                    if k is not None:
+                        keepouts.append(k.copy())
+                elif ast.is_form(children[child_index_6], b"courtyard"):
+                    mut ext = parse_courtyard(children[child_index_6])
+                    if ext is not None:
+                        court = Some(ext)
+                        courtyard_circle = None
+                        if ext.circular:
+                            courtyard_circle = Some(SilkCircle(cx=ext.cx, cy=ext.cy, r=ext.hw))
+                elif ast.is_form(children[child_index_6], b"silkscreen"):
+                    parse_silkscreen(children[child_index_6], mut lines, mut circles)
+            mut bounds = court
+            if bounds is None or bounds.hw <= 0.0 or bounds.hh <= 0.0:
+                bounds = pad_extents(pads)
+            if bounds is None:
+                return fallback_geom(pin_count_hint)
+            mut features = FootprintFeatures(courtyard_circle=courtyard_circle, silk_lines=lines, silk_circles=circles, copper_pour_keepouts=keepouts)
+            return Geom(hw=bounds.hw + margin, hh=bounds.hh + margin, pads=pads, fallback=False, ccx=bounds.cx, ccy=bounds.cy, features=features)
+        case _:
+            return fallback_geom(pin_count_hint)
 
 
 # Private Zig parsers are public solely for their split test modules.
 public func parse_copper_pour_keepout(node: ast.Node) -> CopperPourKeepout?:
-    mut cl = try ast.as_list(node)
-    if len(cl) < 3:
-        return None
-    mut layer = try ast.as_text(cl[1])
-    mut side = CopperSide.front
-    if layer == board_layers.b_cu:
-        side = CopperSide.back
-    elif layer != board_layers.f_cu:
-        return None
-    mut vias_not_allowed = False
-    mut poly: float[][]? = None
-    for child in cl[2:]:
-        if ast.is_form(child, b"vias"):
-            mut rule = ast.as_list(child)
-            if rule is not None and len(rule) >= 2:
-                mut action = ast.as_text(rule[1])
-                if action is not None:
-                    vias_not_allowed = action == b"not_allowed"
-        if ast.is_form(child, b"poly"):
-            mut value = try parse_pad_poly(child)
-            poly = Some(value)
-    mut points = try poly
-    return Some(CopperPourKeepout(side=side, poly=points, vias_not_allowed=vias_not_allowed))
+    match node.tag:
+        case ast.Tag.list(value=cl):
+            if len(cl) < 3:
+                return None
+            mut layer = try ast.as_text(cl[1])
+            mut side = CopperSide.front
+            if layer == board_layers.b_cu:
+                side = CopperSide.back
+            elif layer != board_layers.f_cu:
+                return None
+            mut vias_not_allowed = False
+            mut poly: float[][]? = None
+            for child_index_5 in range(len(cl)):
+                if child_index_5 < 2:
+                    continue
+                if ast.is_form(cl[child_index_5], b"vias"):
+                    match cl[child_index_5].tag:
+                        case ast.Tag.list(value=rule):
+                            if len(rule) >= 2:
+                                mut action = ast.as_text(rule[1])
+                                if action is not None:
+                                    vias_not_allowed = action == b"not_allowed"
+                        case _:
+                            pass
+                if ast.is_form(cl[child_index_5], b"poly"):
+                    mut value = try parse_pad_poly(cl[child_index_5])
+                    poly = Some(value)
+            mut points = try poly
+            return Some(CopperPourKeepout(side=side, poly=points, vias_not_allowed=vias_not_allowed))
 
 
+        case _:
+            return None
 public func parse_silkscreen(node: ast.Node, mut lines: SilkLine[], mut circles: SilkCircle[]):
-    mut cl = ast.as_list(node)
-    if cl is None or len(cl) < 2:
-        return
-    for c in cl[1:]:
-        if ast.is_form(c, b"line"):
-            mut l = parse_silk_line(c)
-            if l is not None:
-                lines.append(l)
-        elif ast.is_form(c, b"circle"):
-            mut ci = parse_silk_circle(c)
-            if ci is not None:
-                circles.append(ci)
+    match node.tag:
+        case ast.Tag.list(value=cl):
+            if len(cl) < 2:
+                return
+            for child_index_4 in range(len(cl)):
+                if child_index_4 < 1:
+                    continue
+                if ast.is_form(cl[child_index_4], b"line"):
+                    mut l = parse_silk_line(cl[child_index_4])
+                    if l is not None:
+                        lines.append(l)
+                elif ast.is_form(cl[child_index_4], b"circle"):
+                    mut ci = parse_silk_circle(cl[child_index_4])
+                    if ci is not None:
+                        circles.append(ci)
+        case _:
+            return
 
 
 func parse_point(node: ast.Node) -> float[]?:
-    mut cl = try ast.as_list(node)
-    if len(cl) < 2:
-        return None
-    mut x = try ast.as_number(cl[0])
-    mut y = try ast.as_number(cl[1])
-    return Some([x, y])
+    match node.tag:
+        case ast.Tag.list(value=cl):
+            if len(cl) < 2:
+                return None
+            mut x = try ast.as_number(cl[0])
+            mut y = try ast.as_number(cl[1])
+            return Some([x, y])
+        case _:
+            return None
 
 
 func parse_silk_line(node: ast.Node) -> SilkLine?:
-    mut cl = try ast.as_list(node)
-    if len(cl) < 3:
-        return None
-    mut a = try parse_point(cl[1])
-    mut b = try parse_point(cl[2])
-    return Some(SilkLine(x1=a[0], y1=a[1], x2=b[0], y2=b[1]))
+    match node.tag:
+        case ast.Tag.list(value=cl):
+            if len(cl) < 3:
+                return None
+            mut a = try parse_point(cl[1])
+            mut b = try parse_point(cl[2])
+            return Some(SilkLine(x1=a[0], y1=a[1], x2=b[0], y2=b[1]))
+        case _:
+            return None
 
 
 func parse_silk_circle(node: ast.Node) -> SilkCircle?:
-    mut cl = try ast.as_list(node)
-    if len(cl) < 3:
-        return None
-    mut c = try parse_point(cl[1])
-    mut r = try ast.as_number(cl[2])
-    return Some(SilkCircle(cx=c[0], cy=c[1], r=r))
+    match node.tag:
+        case ast.Tag.list(value=cl):
+            if len(cl) < 3:
+                return None
+            mut c = try parse_point(cl[1])
+            mut r = try ast.as_number(cl[2])
+            return Some(SilkCircle(cx=c[0], cy=c[1], r=r))
+        case _:
+            return None
 
 
 public func parse_pad(node: ast.Node) -> Pad?:
-    mut cl = try ast.as_list(node)
-    if len(cl) < 2:
-        return None
-    mut number = node_text(cl[1])
-    mut ptype = b"smd"
-    mut shape = b"rect"
-    if len(cl) >= 3:
-        ptype = ast.as_atom(cl[2]).unwrap_or(b"smd").copy()
-    if len(cl) >= 4:
-        shape = ast.as_atom(cl[3]).unwrap_or(b"rect").copy()
-    mut p = Pad(number=number, shape=shape, poly=[], slot_half=[0.0, 0.0], overrides=PadOverrides(rf_min_size=[0.0, 0.0]), npth=ptype == b"npth", thru=ptype == b"npth" or ptype == b"thru")
-    for c in cl[2:]:
-        if ast.as_atom(c).unwrap_or(b"") == b"no-paste":
-            p.overrides.no_paste = True
-        if ast.is_form(c, b"mask-margin"):
-            mut ml = ast.as_list(c)
-            if ml is not None and len(ml) >= 2:
-                p.overrides.mask_margin = ast.as_number(ml[1])
-        elif ast.is_form(c, b"pos"):
-            mut pl = ast.as_list(c)
-            if pl is not None:
-                if len(pl) >= 2:
-                    p.x = ast.as_number(pl[1]).unwrap_or(0.0)
-                if len(pl) >= 3:
-                    p.y = ast.as_number(pl[2]).unwrap_or(0.0)
-                if len(pl) >= 4:
-                    p.rot = ast.as_number(pl[3]).unwrap_or(0.0)
-        elif ast.is_form(c, b"size"):
-            mut sl = ast.as_list(c)
-            if sl is not None:
-                if len(sl) >= 2:
-                    p.w = ast.as_number(sl[1]).unwrap_or(0.0)
-                if len(sl) >= 3:
-                    p.h = ast.as_number(sl[2]).unwrap_or(0.0)
-        elif ast.is_form(c, b"rf-min-size"):
-            p.overrides.rf_min_size = parse_rf_min_size(c)
-        elif ast.is_form(c, b"poly"):
-            p.poly = parse_pad_poly(c).unwrap_or(p.poly).copy()
-        elif ast.is_form(c, b"roundrect_rratio"):
-            mut rl = ast.as_list(c)
-            if rl is not None and len(rl) >= 2:
-                p.overrides.rratio = ast.as_number(rl[1]).unwrap_or(0.0)
-        elif ast.is_form(c, b"drill"):
-            mut dl = ast.as_list(c)
-            if dl is None:
-                continue
-            if len(dl) >= 4 and is_atom_eql(dl[1], b"oval"):
-                mut dw = ast.as_number(dl[2]).unwrap_or(0.0)
-                mut dh = ast.as_number(dl[3]).unwrap_or(0.0)
-                p.drill = min(dw, dh)
-                mut half = max(0.0, (max(dw, dh) - p.drill) / 2.0)
-                p.slot_half = [0.0, half]
-                if dw >= dh:
-                    p.slot_half = [half, 0.0]
-            else:
-                for dn in dl[1:]:
-                    mut d = ast.as_number(dn)
-                    if d is not None:
-                        p.drill = max(p.drill, d)
-    match paste_mod.parse(node):
-        case Err(_):
+    match node.tag:
+        case ast.Tag.list(value=cl):
+            if len(cl) < 2:
+                return None
+            mut number = node_text(cl[1])
+            mut ptype = b"smd"
+            mut shape = b"rect"
+            if len(cl) >= 3:
+                ptype = ast.as_atom(cl[2]).unwrap_or(b"smd").copy()
+            if len(cl) >= 4:
+                shape = ast.as_atom(cl[3]).unwrap_or(b"rect").copy()
+            mut p = Pad(number=number, shape=shape, poly=[], slot_half=[0.0, 0.0], overrides=PadOverrides(rf_min_size=[0.0, 0.0]), npth=ptype == b"npth", thru=ptype == b"npth" or ptype == b"thru")
+            for child_index_3 in range(len(cl)):
+                if child_index_3 < 2:
+                    continue
+                if ast.as_atom(cl[child_index_3]).unwrap_or(b"") == b"no-paste":
+                    p.overrides.no_paste = True
+                if ast.is_form(cl[child_index_3], b"mask-margin"):
+                    match cl[child_index_3].tag:
+                        case ast.Tag.list(value=ml):
+                            if len(ml) >= 2:
+                                p.overrides.mask_margin = ast.as_number(ml[1])
+                        case _:
+                            pass
+                elif ast.is_form(cl[child_index_3], b"pos"):
+                    match cl[child_index_3].tag:
+                        case ast.Tag.list(value=pl):
+                            if len(pl) >= 2:
+                                p.x = ast.as_number(pl[1]).unwrap_or(0.0)
+                            if len(pl) >= 3:
+                                p.y = ast.as_number(pl[2]).unwrap_or(0.0)
+                            if len(pl) >= 4:
+                                p.rot = ast.as_number(pl[3]).unwrap_or(0.0)
+                        case _:
+                            pass
+                elif ast.is_form(cl[child_index_3], b"size"):
+                    match cl[child_index_3].tag:
+                        case ast.Tag.list(value=sl):
+                            if len(sl) >= 2:
+                                p.w = ast.as_number(sl[1]).unwrap_or(0.0)
+                            if len(sl) >= 3:
+                                p.h = ast.as_number(sl[2]).unwrap_or(0.0)
+                        case _:
+                            pass
+                elif ast.is_form(cl[child_index_3], b"rf-min-size"):
+                    p.overrides.rf_min_size = parse_rf_min_size(cl[child_index_3])
+                elif ast.is_form(cl[child_index_3], b"poly"):
+                    p.poly = parse_pad_poly(cl[child_index_3]).unwrap_or(p.poly).copy()
+                elif ast.is_form(cl[child_index_3], b"roundrect_rratio"):
+                    match cl[child_index_3].tag:
+                        case ast.Tag.list(value=rl):
+                            if len(rl) >= 2:
+                                p.overrides.rratio = ast.as_number(rl[1]).unwrap_or(0.0)
+                        case _:
+                            pass
+                elif ast.is_form(cl[child_index_3], b"drill"):
+                    match cl[child_index_3].tag:
+                        case ast.Tag.list(value=dl):
+                            if len(dl) >= 4 and is_atom_eql(dl[1], b"oval"):
+                                mut dw = ast.as_number(dl[2]).unwrap_or(0.0)
+                                mut dh = ast.as_number(dl[3]).unwrap_or(0.0)
+                                p.drill = min(dw, dh)
+                                mut half = max(0.0, (max(dw, dh) - p.drill) / 2.0)
+                                p.slot_half = [0.0, half]
+                                if dw >= dh:
+                                    p.slot_half = [half, 0.0]
+                            else:
+                                for child_index_2 in range(len(dl)):
+                                    if child_index_2 < 1:
+                                        continue
+                                    mut d = ast.as_number(dl[child_index_2])
+                                    if d is not None:
+                                        p.drill = max(p.drill, d)
+                        case _:
+                            continue
+            match paste_mod.parse(node):
+                case Err(_):
+                    return None
+                case Ok(paste):
+                    p.paste = paste
+            return Some(p)
+        case _:
             return None
-        case Ok(paste):
-            p.paste = paste
-    return Some(p)
 
 
 func parse_rf_min_size(node: ast.Node) -> float[]:
-    mut sl = ast.as_list(node)
-    if sl is None or len(sl) < 3:
-        return [0.0, 0.0]
-    mut w = ast.as_number(sl[1])
-    mut h = ast.as_number(sl[2])
-    if w is None or h is None or w <= 0.0 or h <= 0.0:
-        return [0.0, 0.0]
-    return [w, h]
+    match node.tag:
+        case ast.Tag.list(value=sl):
+            if len(sl) < 3:
+                return [0.0, 0.0]
+            mut w = ast.as_number(sl[1])
+            mut h = ast.as_number(sl[2])
+            if w is None or h is None or w <= 0.0 or h <= 0.0:
+                return [0.0, 0.0]
+            return [w, h]
+        case _:
+            return [0.0, 0.0]
 
 
 func is_atom_eql(n: ast.Node, s: bytes) -> bool:
@@ -301,17 +349,22 @@ func is_atom_eql(n: ast.Node, s: bytes) -> bool:
 
 
 func parse_pad_poly(node: ast.Node) -> float[][]?:
-    mut cl = try ast.as_list(node)
-    if len(cl) < 4:
-        return None
-    mut pts: float[][] = []
-    for pn in cl[1:]:
-        mut xy = parse_point(pn)
-        if xy is not None:
-            pts.append(xy.copy())
-    if len(pts) < 3:
-        return None
-    return Some(pts)
+    match node.tag:
+        case ast.Tag.list(value=cl):
+            if len(cl) < 4:
+                return None
+            mut pts: float[][] = []
+            for child_index_1 in range(len(cl)):
+                if child_index_1 < 1:
+                    continue
+                mut xy = parse_point(cl[child_index_1])
+                if xy is not None:
+                    pts.append(xy.copy())
+            if len(pts) < 3:
+                return None
+            return Some(pts)
+        case _:
+            return None
 
 
 public record Ext:
@@ -323,62 +376,75 @@ public record Ext:
 
 
 public func parse_courtyard(node: ast.Node) -> Ext?:
-    mut cl = try ast.as_list(node)
-    if len(cl) < 2:
-        return None
-    mut shape = cl[1].copy()
-    if ast.is_form(shape, b"rect"):
-        return parse_rect_ext(shape)
-    if ast.is_form(shape, b"circle"):
-        return parse_circle_ext(shape)
-    if ast.is_form(shape, b"poly"):
-        return parse_poly_ext(shape)
-    return None
+    match node.tag:
+        case ast.Tag.list(value=cl):
+            if len(cl) < 2:
+                return None
+            if ast.is_form(cl[1], b"rect"):
+                return parse_rect_ext(cl[1])
+            if ast.is_form(cl[1], b"circle"):
+                return parse_circle_ext(cl[1])
+            if ast.is_form(cl[1], b"poly"):
+                return parse_poly_ext(cl[1])
+            return None
+        case _:
+            return None
 
 
 func parse_poly_ext(shape: ast.Node) -> Ext?:
-    mut pl = try ast.as_list(shape)
-    if len(pl) < 4:
-        return None
-    mut minx = math.infinity()
-    mut miny = math.infinity()
-    mut maxx = -math.infinity()
-    mut maxy = -math.infinity()
-    mut count = 0
-    for point in pl[1:]:
-        mut xy = parse_point(point)
-        if xy is None:
-            continue
-        minx = min(minx, xy[0])
-        miny = min(miny, xy[1])
-        maxx = max(maxx, xy[0])
-        maxy = max(maxy, xy[1])
-        count += 1
-    if count < 3 or not maxx > minx or not maxy > miny:
-        return None
-    return Some(Ext(hw=(maxx - minx) / 2.0, hh=(maxy - miny) / 2.0, cx=(minx + maxx) / 2.0, cy=(miny + maxy) / 2.0))
+    match shape.tag:
+        case ast.Tag.list(value=pl):
+            if len(pl) < 4:
+                return None
+            mut minx = math.infinity()
+            mut miny = math.infinity()
+            mut maxx = -math.infinity()
+            mut maxy = -math.infinity()
+            mut count = 0
+            for child_index_0 in range(len(pl)):
+                if child_index_0 < 1:
+                    continue
+                mut xy = parse_point(pl[child_index_0])
+                if xy is None:
+                    continue
+                minx = min(minx, xy[0])
+                miny = min(miny, xy[1])
+                maxx = max(maxx, xy[0])
+                maxy = max(maxy, xy[1])
+                count += 1
+            if count < 3 or not maxx > minx or not maxy > miny:
+                return None
+            return Some(Ext(hw=(maxx - minx) / 2.0, hh=(maxy - miny) / 2.0, cx=(minx + maxx) / 2.0, cy=(miny + maxy) / 2.0))
+        case _:
+            return None
 
 
 func parse_rect_ext(shape: ast.Node) -> Ext?:
-    mut rl = try ast.as_list(shape)
-    if len(rl) < 5:
-        return None
-    mut x1 = try ast.as_number(rl[1])
-    mut y1 = try ast.as_number(rl[2])
-    mut x2 = try ast.as_number(rl[3])
-    mut y2 = try ast.as_number(rl[4])
-    return Some(Ext(hw=abs(x2 - x1) / 2.0, hh=abs(y2 - y1) / 2.0, cx=(x1 + x2) / 2.0, cy=(y1 + y2) / 2.0))
+    match shape.tag:
+        case ast.Tag.list(value=rl):
+            if len(rl) < 5:
+                return None
+            mut x1 = try ast.as_number(rl[1])
+            mut y1 = try ast.as_number(rl[2])
+            mut x2 = try ast.as_number(rl[3])
+            mut y2 = try ast.as_number(rl[4])
+            return Some(Ext(hw=abs(x2 - x1) / 2.0, hh=abs(y2 - y1) / 2.0, cx=(x1 + x2) / 2.0, cy=(y1 + y2) / 2.0))
+        case _:
+            return None
 
 
 func parse_circle_ext(shape: ast.Node) -> Ext?:
-    mut cc = try ast.as_list(shape)
-    if len(cc) < 2:
-        return None
-    mut r = try ast.as_number(cc[len(cc) - 1])
-    mut c = [0.0, 0.0]
-    if len(cc) >= 3:
-        c = parse_point(cc[1]).unwrap_or(c).copy()
-    return Some(Ext(hw=abs(r), hh=abs(r), cx=c[0], cy=c[1], circular=True))
+    match shape.tag:
+        case ast.Tag.list(value=cc):
+            if len(cc) < 2:
+                return None
+            mut r = try ast.as_number(cc[len(cc) - 1])
+            mut c = [0.0, 0.0]
+            if len(cc) >= 3:
+                c = parse_point(cc[1]).unwrap_or(c).copy()
+            return Some(Ext(hw=abs(r), hh=abs(r), cx=c[0], cy=c[1], circular=True))
+        case _:
+            return None
 
 
 func pad_extents(pads: Pad[]) -> Ext?:

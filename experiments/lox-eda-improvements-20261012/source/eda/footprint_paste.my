@@ -15,41 +15,46 @@ public const err_invalid_paste: str = "InvalidPaste"
 
 
 public func parse(pad: ast.Node) -> Result[Aperture[]?, str]:
-    mut items = ast.as_list(pad)
-    if items is None:
-        return Ok(None)
-    for item in items:
-        if not ast.is_form(item, b"paste"):
-            continue
-        mut forms = ast.as_list(item)
-        if forms is None:
-            return Err(err_invalid_paste)
-        if len(forms) > 257:
-            return Err(err_invalid_paste)
-        mut windows: Aperture[] = []
-        for form in forms[1:len(forms)]:
-            if not ast.is_form(form, b"rect"):
-                return Err(err_invalid_paste)
-            mut v = ast.as_list(form)
-            if v is None:
-                return Err(err_invalid_paste)
-            if len(v) != 5:
-                return Err(err_invalid_paste)
-            mut x = ast.as_number(v[1])
-            mut y = ast.as_number(v[2])
-            mut w_ = ast.as_number(v[3])
-            mut h = ast.as_number(v[4])
-            if x is None or y is None or w_ is None or h is None:
-                return Err(err_invalid_paste)
-            mut rect = Aperture(x=x, y=y, w=w_, h=h)
-            for n in [rect.x, rect.y, rect.w, rect.h]:
-                if not math.is_finite(n) or abs(n) > 1000.0:
-                    return Err(err_invalid_paste)
-            if rect.w <= 0.0 or rect.h <= 0.0:
-                return Err(err_invalid_paste)
-            windows.append(rect)
-        return Ok(Some(windows))
-    return Ok(None)
+    match pad.tag:
+        case ast.Tag.list(value=items):
+            for item in items:
+                if not ast.is_form(item, b"paste"):
+                    continue
+                match item.tag:
+                    case ast.Tag.list(value=forms):
+                        if len(forms) > 257:
+                            return Err(err_invalid_paste)
+                        mut windows: Aperture[] = []
+                        for child_index_0 in range(len(forms)):
+                            if child_index_0 < 1:
+                                continue
+                            if not ast.is_form(forms[child_index_0], b"rect"):
+                                return Err(err_invalid_paste)
+                            match forms[child_index_0].tag:
+                                case ast.Tag.list(value=v):
+                                    if len(v) != 5:
+                                        return Err(err_invalid_paste)
+                                    mut x = ast.as_number(v[1])
+                                    mut y = ast.as_number(v[2])
+                                    mut w_ = ast.as_number(v[3])
+                                    mut h = ast.as_number(v[4])
+                                    if x is None or y is None or w_ is None or h is None:
+                                        return Err(err_invalid_paste)
+                                    mut rect = Aperture(x=x, y=y, w=w_, h=h)
+                                    for n in [rect.x, rect.y, rect.w, rect.h]:
+                                        if not math.is_finite(n) or abs(n) > 1000.0:
+                                            return Err(err_invalid_paste)
+                                    if rect.w <= 0.0 or rect.h <= 0.0:
+                                        return Err(err_invalid_paste)
+                                    windows.append(rect)
+                                case _:
+                                    return Err(err_invalid_paste)
+                        return Ok(Some(windows))
+                    case _:
+                        return Err(err_invalid_paste)
+            return Ok(None)
+        case _:
+            return Ok(None)
 
 
 public func write(mut w: byte_builder.Builder, windows: Aperture[]):
