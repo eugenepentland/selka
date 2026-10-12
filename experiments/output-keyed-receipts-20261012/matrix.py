@@ -486,6 +486,7 @@ class Cmd:
     slot: str | None = None
     parse: str | None = None  # "tests" | "cache-report" | "coordinator"
     always: bool = False      # cleanup: run even after an earlier failure
+    required: bool = False    # a non-zero exit stops the sub-case (builds)
 
     def render(self, tree: str) -> str:
         parts = ["cd " + shlex.quote(self.cwd), "&&"]
@@ -696,6 +697,9 @@ class Run:
                     self.results[step.name] = record
                 else:
                     self.results[step.name] = self.run_command(index, step)
+                    if step.required and self.results[step.name]["exit"] != 0:
+                        raise RuntimeError("required step exited %d: %s" % (
+                            self.results[step.name]["exit"], self.results[step.name]["stderr_tail"][-600:]))
             except Exception as error:  # noqa: BLE001 - recorded as row evidence
                 self.results[step.name] = {"step": step.name, "error": "%s: %s" % (type(error).__name__, error)}
                 if failure is None:
@@ -712,7 +716,7 @@ class Run:
             if directory in step.env:
                 Path(step.env[directory]).mkdir(parents=True, exist_ok=True)
         full = ([str(self.ctx.tree / "scripts/build-slot.sh"), step.slot] if step.slot else []) + argv
-        compiler = next((item for item in argv if item.endswith("/zig-out/bin/mylang")), None)
+        compiler = next((item for item in argv if item.endswith(("/zig-out/bin/mylang", "/zig-out/focus/mylang"))), None)
         if compiler and compiler not in self.compilers:
             self.compilers[compiler] = sha256_file(Path(compiler))
         stem = "%02d-%s" % (index, step.name)
@@ -804,8 +808,9 @@ def remove_worktree(label: str) -> Py:
     return Py("worktree-remove-" + label, "git worktree remove --force work/%s" % label, action, always=True)
 
 
-def build(ctx: Context, tree: Path, name: str = "build") -> Cmd:
-    return Cmd(name, ["zig", "build"], str(tree), ctx.tree_env(tree), slot="build")
+def build(ctx: Context, tree: Path, name: str = "build", target: str | None = None) -> Cmd:
+    argv = ["zig", "build"] + ([target] if target else [])
+    return Cmd(name, argv, str(tree), ctx.tree_env(tree), slot="build", required=True)
 
 
 def mylang_test(ctx: Context, name: str, tree: Path, entry: str, cache: Path, *, compiler: str | None = None,
@@ -925,15 +930,21 @@ def edit_row_plan(row_id: str, *, force_compare: bool = False):
         # A row-private object store: new entries in it after the edit are
         # exactly the `zig cc` compiles and links the edited run performed.
         env = ctx.test_env(tree, work, MYLANG_CORE_RUNTIME_CACHE=str(work / "core-runtime"))
-        steps = [reset_dir(lambda c: c.row_work(row_id, "edit")), add_worktree(label), build(ctx, tree, "build-before"),
-                 mylang_test(ctx, "cold", tree, entry, work / "cache", env=env),
-                 mylang_test(ctx, "warm", tree, entry, work / "cache", env=env),
-                 edit(label, relative, old, new, description), build(ctx, tree, "build-after"),
+        # An edit without its spec-tagged test fails Guardian, which gates the
+        # install of zig-out/bin/mylang; `affected-compiler` installs the same
+        # compiler ungated at zig-out/focus/mylang, so both sides use that copy.
+        focus = str(tree / "zig-out/focus/mylang")
+        steps = [reset_dir(lambda c: c.row_work(row_id, "edit")), add_worktree(label),
+                 build(ctx, tree, "build-before", "affected-compiler"),
+                 mylang_test(ctx, "cold", tree, entry, work / "cache", compiler=focus, env=env),
+                 mylang_test(ctx, "warm", tree, entry, work / "cache", compiler=focus, env=env),
+                 edit(label, relative, old, new, description), build(ctx, tree, "build-after", "affected-compiler"),
                  store_count(row_id, "stores-before"),
-                 mylang_test(ctx, "after-edit", tree, entry, work / "cache", env=env),
+                 mylang_test(ctx, "after-edit", tree, entry, work / "cache", compiler=focus, env=env),
                  store_count(row_id, "stores-after")]
         if force_compare:
-            steps.append(mylang_test(ctx, "forced", tree, entry, work / "cache-forced", flags=("--force",), env=env))
+            steps.append(mylang_test(ctx, "forced", tree, entry, work / "cache-forced", compiler=focus,
+                                     flags=("--force",), env=env))
         steps += [restore(label, relative), remove_worktree(label)]
         return steps
     return plan
@@ -1088,8 +1099,8 @@ def row7_plan(ctx: Context) -> list:
                                        unset=["MYL_CORE_LEAKCHECK"], slot="build", parse="tests")
     verification = ("--shared-cache-dir", str(shared / "verification"))
     return [reset_dir(lambda c: c.row_work("07-two-worktrees", "shared")), add_worktree("row07-a"), add_worktree("row07-b"),
-            Cmd("build-a", ["zig", "build"], str(a), env_a, slot="build"),
-            Cmd("build-b", ["zig", "build"], str(b), env_b, slot="build"),
+            Cmd("build-a", ["zig", "build"], str(a), env_a, slot="build", required=True),
+            Cmd("build-b", ["zig", "build"], str(b), env_b, slot="build", required=True),
             test("tests-a", a, env_a), test("tests-b", b, env_b),
             coordinator(ctx, "complete-a", a, *verification, env=env_a),
             coordinator(ctx, "complete-b", b, *verification, env=env_b),
