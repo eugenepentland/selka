@@ -16,5 +16,11 @@
   "source_contract_dependency": "Coordinator-owned typed.Store overlay; A01 source producer and A07 live-catalog arity/type validation are separate changes. Source-generated cold/warm/native tuple qualification remains pending integration.",
   "first_attempt": "Fixture used Core spelling str in typed.Type; failed to compile. Corrected fixture uses checked i64 type. Both logs retained.",
   "registration": "Tests live in existing semantic_store/semantic_copy modules already reached by compiler root. Focused direct test avoids unrelated historical seed provisioning; full registered final gate remains coordinator-owned.",
-  "guardian_first_attempt": "Two overlong fixture lines and repeated hidden-name literal; corrected, focused4tests rerun passed; Guardian rerun pending."
+  "guardian_first_attempt": "Two overlong fixture lines and repeated hidden-name literal; corrected, focused four tests rerun passed. Initial failure log retained.",
+  "commit": "3bbff3a61db91c4f8105749cefc1652159a2d162",
+  "guardian_final": {
+    "status": "passed",
+    "checks": 88,
+    "log": "guardian-pass.log"
+  }
 }

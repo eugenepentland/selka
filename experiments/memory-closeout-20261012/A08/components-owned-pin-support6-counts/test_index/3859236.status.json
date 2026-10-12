@@ -1,0 +1,1 @@
+{"arguments": ["--request", "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/work/tmp71f9wunr/request.bin"], "request_sha256": "3b582c3a41390c74fc2508d3a026f74386c9a106428a0f7f89e357ad1a537a44", "status": 2, "stderr": "test-index: invalid request message kind\n"}

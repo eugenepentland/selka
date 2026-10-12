@@ -81,8 +81,36 @@ candidate invalidation/repair, not old C0 execution of the Unicode fixture.
 
 `pending-contract-reviews.md` separately records A07's borrowed-selection marker
 review and A01's complete tuple-unpack cache review. They remain proposals under
-implementation. A07 has addressed the reported bounded traversal and always-on marker
-validation concerns in its working draft, with tests still pending.
+implementation. A07 committed the bounded traversal and always-on marker validation
+plus the central optimization-cache restoration guard as `ba273f041`. Its focused
+tests and Guardian pass; A08 cached-corruption/replay qualification is still pending.
+
+## Independent source-pinned compiler qualification
+
+The independently provisioned ReleaseFast compiler from the exact Support6 source
+`5167c588be79dd43d21d5013c36db15110bf239b` repeats all **688** counted component
+protocol executions successfully. Compiler SHA-256 is
+`29cfbd13390692757ce3add9cf61d8398eff283760d16cedb3c5b9addaa03e26`; its provisioning
+receipt and source archive are pinned in
+`owned-pin-support6-provisioning-snapshot.json`. The immutable historical seed was
+not modified. This is a separate fresh build against the new compiler, not a
+relabeling of the earlier Debug compiler's result.
+
+`components-owned-pin-support6.json`, its compressed per-process counter/status
+records, and `owned-pin-support6-summary.json` retain source, compiler, native
+binary, LLVM and protocol-oracle identities. The 560 cache-plan and 128 test-index
+runs pass with the same success/handled-error/hard-trap cohorts described above.
+All observed RC events are zero, normal and handled returns have zero managed
+exit-live bytes, and generated LLVM/linked symbols pass the RC audit. The two
+counted binaries are byte-identical to their prior Support6 Debug-compiler outputs;
+this is an observed artifact identity, not a compiler throughput claim.
+
+A10 independently owns installed uninstrumented binaries and their package/native
+qualification. Those binary hashes differ from these counted executables. The
+provisioning snapshot records its creation-time state and is not amended to claim
+later tests. This Support6 source is an intermediate qualification, not C1, a
+default promotion, or legacy RC retirement. Final compiler/package changes require
+fresh affected qualification.
 
 ## Complete-unpack persisted storage
 
@@ -99,7 +127,9 @@ and visible field destinations. Validation allocates one lazy seen-slot array an
 clears only actual bound fields: O(locals + total unpack fields), with no claimed
 measured compile-time improvement.
 
-Four focused tests pass in the existing semantic-store/copy modules, including
+Commit `3bbff3a61db91c4f8105749cefc1652159a2d162` includes the shared declaration
+and v8 change atomically; Guardian passes all 88 checks. Four focused tests pass
+in the existing semantic-store/copy modules, including
 14 malformed metadata cases, a prior-version image with a valid checksum,
 specialization publication/load, and independent relocated field-slot storage.
 `tuple-cache/results.json` pins source hashes and commands; both the corrected

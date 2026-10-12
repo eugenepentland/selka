@@ -1,0 +1,85 @@
+{
+  "state": "independently provisioned compiler and exact installed components passed native qualification; default package selection unchanged",
+  "source_revision": "5167c588be79dd43d21d5013c36db15110bf239b",
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/component-cache/seeds/e52b4e7ef5dfda4c79290757c9c889f4a3bf1d0b3be68a5f250b38c37d41b89d/source/zig-out/focus/mylang",
+  "compiler_sha256": "29cfbd13390692757ce3add9cf61d8398eff283760d16cedb3c5b9addaa03e26",
+  "compiler_receipt": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/component-cache/seeds/e52b4e7ef5dfda4c79290757c9c889f4a3bf1d0b3be68a5f250b38c37d41b89d/receipt.json",
+  "compiler_receipt_sha256": "ecc8714291796e8a28bdfdd84ae8de1bf17905e576f82e9c05d4ce6bd2e4a421",
+  "recipe": {
+    "build_environment": "private-local-and-tmp-v1",
+    "pin": {
+      "archive_sha256": "0557a645579881d54d3f4c493c8b07be38d42b0a21622ab712b84589ee212c27",
+      "commit": "5167c588be79dd43d21d5013c36db15110bf239b",
+      "format": 1,
+      "memory_mode": "zero-rc-v1",
+      "qualification": "Local qualification must bind source, toolchain, compiler and component identities and record native protocol plus ownership/ABI checks before installation is selected.",
+      "recipe": {
+        "optimize": "ReleaseFast",
+        "step": "seed-compiler",
+        "target": "native"
+      },
+      "zig": "0.17.0-dev.1683+5ceec001b"
+    },
+    "target": "x86_64-linux.7.0...7.0-gnu.2.43",
+    "zig_library_sha256": "e95e7a37418cadc470a087aa19384ee6ac71b6386198687c0844510e16f77940",
+    "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+  },
+  "components": {
+    "test-index": {
+      "manifest": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/install/libexec/mylang/components/test-index.json",
+      "manifest_sha256": "7c40b3d2814bd8dd15b59fb2e78a9cbe56bb2b9d2a68dc4f8923f30c463845ce",
+      "metadata": {
+        "artifact": "test-index-251a66b2a8b8fea513e820480bcbd35af43692029822804433d65b64eb072412",
+        "component": "test-index",
+        "format": 1,
+        "key": "6e14a8bc6adfcf1cdd760329f7bfb531c0470411735676328af174ac21efde93",
+        "memory_mode": "zero-rc-v1",
+        "protocol": 1,
+        "schema": 1,
+        "sha256": "251a66b2a8b8fea513e820480bcbd35af43692029822804433d65b64eb072412"
+      },
+      "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/install/libexec/mylang/components/test-index-251a66b2a8b8fea513e820480bcbd35af43692029822804433d65b64eb072412",
+      "binary_sha256": "251a66b2a8b8fea513e820480bcbd35af43692029822804433d65b64eb072412",
+      "symbol_audit": {
+        "command": [
+          "nm",
+          "-a",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/install/libexec/mylang/components/test-index-251a66b2a8b8fea513e820480bcbd35af43692029822804433d65b64eb072412"
+        ],
+        "raw_file": "test-index-installed.nm",
+        "raw_sha256": "299f10e37eb6176b81f3e09f353167e1cceb8c44242491d21cc1203c3c488c82",
+        "legacy_rc_symbols": [],
+        "direct_drop_present": true,
+        "count_matches": "bytes/span UTF-8 and string split counts are lengths, not ownership reference counts"
+      }
+    },
+    "cache-plan": {
+      "manifest": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/install/libexec/mylang/components/cache-plan.json",
+      "manifest_sha256": "45251145c6ce08ad3b92988cf34471005008a940592e32a3816e01c5b6aee00c",
+      "metadata": {
+        "artifact": "cache-plan-c59e0c1705610097ca65c6aa50d2917c5004a2e756e0100655789721f3e162cc",
+        "component": "cache-plan",
+        "format": 1,
+        "key": "8faeffefc911f487e485da2cc626e2e865d3d85f8e452033cb0139a514573eb8",
+        "memory_mode": "zero-rc-v1",
+        "protocol": 2,
+        "schema": 2,
+        "sha256": "c59e0c1705610097ca65c6aa50d2917c5004a2e756e0100655789721f3e162cc"
+      },
+      "binary": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/install/libexec/mylang/components/cache-plan-c59e0c1705610097ca65c6aa50d2917c5004a2e756e0100655789721f3e162cc",
+      "binary_sha256": "c59e0c1705610097ca65c6aa50d2917c5004a2e756e0100655789721f3e162cc",
+      "symbol_audit": {
+        "command": [
+          "nm",
+          "-a",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/install/libexec/mylang/components/cache-plan-c59e0c1705610097ca65c6aa50d2917c5004a2e756e0100655789721f3e162cc"
+        ],
+        "raw_file": "cache-plan-installed.nm",
+        "raw_sha256": "eb3629128c21486e4db2fe543a0a7b3b0c9938a8d2fe841ed6bac41472ed6fd1",
+        "legacy_rc_symbols": [],
+        "direct_drop_present": true,
+        "count_matches": "bytes/span UTF-8 and string split counts are lengths, not ownership reference counts"
+      }
+    }
+  }
+}

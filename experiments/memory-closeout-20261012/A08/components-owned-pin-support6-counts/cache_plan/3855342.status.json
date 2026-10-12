@@ -1,0 +1,1 @@
+{"arguments": ["--request", "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/work/cache-plan-oracle-uxqbiool/request.bin"], "request_sha256": "c09f61803b39e8b06fe98352da3170188806212e74b2454cbff53867e7a10548", "status": 2, "stderr": "cache-plan: request root count exceeds limit\n"}
