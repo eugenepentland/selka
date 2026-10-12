@@ -1,0 +1,7 @@
+func first(pair: tuple[int, str]) -> int:
+    const number, letter = pair.copy()
+    return number + len(letter)
+
+
+func main() -> int:
+    return first((1, "x"))

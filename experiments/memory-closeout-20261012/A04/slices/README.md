@@ -43,8 +43,8 @@ python3 -B experiments/memory-closeout-20261012/A04/slices/qualify.py \
 ```
 
 The integrated Support6 rerun (`support6-01/results.json`) passes all 17/17
-lanes: the new regression program in five modes, and each unchanged original
-s1_reads/s1_views program in five checked modes plus ordinary. Compiler source
+lanes: the new regression program in five modes, and each previously migrated
+s1_reads/s1_views program with unchanged assertions in five checked modes plus ordinary. Compiler source
 is 5167c588be79dd43d21d5013c36db15110bf239b, SHA256
 bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4.
 All fifteen counted checked executions have RC0, no managed exit bytes and clean
@@ -53,3 +53,9 @@ in this integrated artifact; no additional source migration changed either S1
 program. The full final C1/C2/C3 reruns remain required after affected changes.
 Shared admission waited about 250 seconds for the last fixture; queue time is
 not compiler or program timing and is not included in any performance claim.
+
+`support5-support6-source-identity.json` verifies that both S1 inputs are byte-for-
+byte the same migrated sources on Support5 and Support6. Against C0, the earlier
+source migration added one `.copy()` in s1_reads and three in s1_views; their
+original hashes and copies are explicitly retained. The optimizer repair adds no
+further source workaround, and no compiler-only allocation saving is claimed.

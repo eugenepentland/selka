@@ -196,7 +196,7 @@ materialized snapshots across owner transfers or updates. Analysis remains
 O(nodes + edges) per candidate query. A07 reviewed the alias and consuming-operand
 contracts. No workaround changes either original S1 source.
 
-The additional14 support5 native survey plus targeted corrected reruns now covers
+The additional 14 support5 native survey plus targeted corrected reruns now covers
 12/14 cases; two S1 slice failures remain assigned to the optimizer repair. The
 benchmark-provider failure was harness misuse of --link with an object instead of
 C source, preserved in the initial results and corrected in a separate phase.
@@ -206,16 +206,26 @@ assertions; the source burden is 44 line pairs / 45 added copy calls. See
 Borrowed tuple decomposition migrations await the integrated tuple.copy frontend
 fix (A01 eccea1cc) and are not yet counted as qualified.
 
-Support6 source5167c588 / compiler SHA256bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4
+Support6 source 5167c588 / compiler SHA256 bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4
 now completes two integrated follow-ups. Numeric formatting passes all six
 native lanes and both release/debug receipt-replay checks; the stored object
-SHA2560fa3619e922e68e6418d487417de4b127281abe2618947cc023277dc7746c03c
+SHA256 0fa3619e922e68e6418d487417de4b127281abe2618947cc023277dc7746c03c
 is recorded separately from the earlier prototype. A08 owns old-object repair.
-Slice qualification passes all17 lanes, including both full original S1 fixtures
-with their existing output assertions. All15 counted checked slice lanes are
+Slice qualification passes all 17 lanes, including both full original S1 fixtures
+with their existing output assertions. All 15 counted checked slice lanes are
 RC0/live0 and structurally clean. See formatting/support6-01 and slices/support6-01.
 These results remain intermediate; Support6 retains historical RC installed
-components and is not the final C1/default/retirement artifact. The19-source
+components and is not the final C1/default/retirement artifact. The 19-source
 migration survey still refuses the optional tuple unpack at found.copy(); A01's
 complete-unpack fix is excluded from Support6. Forced native tests for the
-admitted subset are underway and will retain all19 sources/133 tests in evidence.
+admitted subset are underway and will retain all 19 sources/133 tests in evidence.
+
+The completed Support6 migration run records 18/19 admitted sources and all 128
+admitted tests executed in both modes. Ordinary 128/128 passes; checked 127/128
+passes with no unsupported tests. The remaining native refusal is
+`push(mut frame.rows[0])` in rc_plain_update_paths.my:28 (A07); nested writes and
+numeric repr now pass. Optional tuple.copy unpack remains source-refused at
+tuples.my:26 (A01 complete unpack work), retaining its five tests in the 133 total.
+The minimal pending tuple migration is snapshotted with exact hashes but is not
+qualified or integrated. Native command JSON and earlier Support5 survey remain
+in migrations evidence. No running A04 processes remain.

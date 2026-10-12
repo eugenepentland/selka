@@ -1,0 +1,392 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "sources": [
+    {
+      "source": "tests/lang/builtin_context.my",
+      "original_sha256": "889f49deb75cf093ce893dfb8972440b0d762f8fac1433215befd4dd007603d4",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/migrations/originals/tests/lang/builtin_context.my.txt",
+      "original_copy_calls": 0,
+      "migrated_sha256": "888b1bcf8837ac260506622f597a7ef35900ac47b6b68af96f021956c9685e89",
+      "migrated_copy_calls": 2,
+      "added_lines": 2,
+      "removed_lines": 2,
+      "public_tests": [
+        "test_generic_list_result_and_contextual_constructors_keep_symbolic_type_parameters",
+        "test_builtin_list_and_result_resolve_without_imports_or_explicit_declarations",
+        "test_empty_lists_and_ok_err_inherit_binding_return_and_argument_contexts",
+        "test_record_fields_and_nested_list_elements_propagate_empty_list_context",
+        "test_ok_unit_values_preserve_fallible_result_handling"
+      ],
+      "execution_status": "passed"
+    },
+    {
+      "source": "tests/lang/byte_buffer.my",
+      "original_sha256": "0a44b99f728a9b26973e45443d7c5f5d0d8802ab03e5daefe96b4384220f4fea",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/migrations/originals/tests/lang/byte_buffer.my.txt",
+      "original_copy_calls": 0,
+      "migrated_sha256": "157ca5f3a90a6ac03d77407f0ee96609606ee0462ca1dfcbd68061c3a932868c",
+      "migrated_copy_calls": 7,
+      "added_lines": 6,
+      "removed_lines": 6,
+      "public_tests": [
+        "test_append_methods_write_in_place_and_refuse_without_writing",
+        "test_a_buffer_storeback_preserves_an_earlier_snapshot",
+        "test_growth_preserves_identity_content_and_earlier_snapshots",
+        "test_byte_kinds_share_reads_and_compare_by_content",
+        "test_buffers_are_traced_through_record_fields_lists_and_generics",
+        "test_byte_buffer_builds_from_an_integer_list",
+        "test_append_float_matches_the_printed_spelling",
+        "test_growth_past_the_segment_threshold_keeps_every_octet"
+      ],
+      "execution_status": "passed"
+    },
+    {
+      "source": "tests/lang/byte_buffer_from_list.my",
+      "original_sha256": "db73c8f046dde4e1faf33beb61ff4073ca95543c681c000ccd5f5df41736ea63",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/migrations/originals/tests/lang/byte_buffer_from_list.my.txt",
+      "original_copy_calls": 0,
+      "migrated_sha256": "bf84253197a370b46f59ec39b99bb0fbe89dbe795ed476d8f8a959f11e06ea37",
+      "migrated_copy_calls": 2,
+      "added_lines": 2,
+      "removed_lines": 2,
+      "public_tests": [
+        "test_writing_a_buffer_built_from_a_list_leaves_the_list_alone",
+        "test_writing_the_list_after_the_conversion_leaves_the_buffer_alone",
+        "test_two_buffers_built_from_one_list_are_independent",
+        "test_a_buffer_built_from_a_record_field_leaves_the_field_alone",
+        "test_a_returned_buffer_owns_its_octets",
+        "test_a_buffer_grown_in_a_callee_is_independent_of_its_list",
+        "test_a_snapshot_taken_before_a_write_keeps_its_octets",
+        "test_a_rebuilt_buffer_in_a_loop_starts_from_the_list_every_time",
+        "test_a_renamed_buffer_is_still_a_value_of_its_own",
+        "test_a_buffer_stored_in_a_record_is_a_value_of_its_own"
+      ],
+      "execution_status": "passed"
+    },
+    {
+      "source": "tests/lang/byte_views.my",
+      "original_sha256": "17d2e86533e09100718abbc734a670efde0108e2cd7fbf25e49377d44ebb3e31",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/migrations/originals/tests/lang/byte_views.my.txt",
+      "original_copy_calls": 5,
+      "migrated_sha256": "7a7b83933cac7998f9c2a4941087bed24d1a8f0a7f8d74736799e126ab2213f3",
+      "migrated_copy_calls": 5,
+      "added_lines": 45,
+      "removed_lines": 44,
+      "public_tests": [
+        "test_a_view_reads_its_range_with_every_byte_string_operation",
+        "test_view_endpoints_clamp_like_a_slice",
+        "test_views_retain_their_source_across_collection",
+        "test_views_nest_and_slices_copy_their_range",
+        "test_scalar_count_counts_scalars_and_rejects_malformed_utf8",
+        "test_byte_strings_parse_numbers_without_decoding"
+      ],
+      "execution_status": "passed"
+    },
+    {
+      "source": "tests/lang/migrated/python_format.my",
+      "original_sha256": "b91253b242151f3f9dda587c3f19a3f52739290eaf3a5bc7f33924186f4e3883",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/migrations/originals/tests/lang/migrated/python_format.my.txt",
+      "original_copy_calls": 0,
+      "migrated_sha256": "b91253b242151f3f9dda587c3f19a3f52739290eaf3a5bc7f33924186f4e3883",
+      "migrated_copy_calls": 0,
+      "added_lines": 0,
+      "removed_lines": 0,
+      "public_tests": [
+        "test_an_f_before_anything_but_a_quote_stays_an_or",
+        "test_doubled_braces_are_literal_and_an_empty_form",
+        "test_format_strings_interpolate_expressions_and_r"
+      ],
+      "execution_status": "passed"
+    },
+    {
+      "source": "tests/lang/migrated/python_format_case_3.my",
+      "original_sha256": "c566ad7c36ca48304a2f80005ccb7967a85a8209e43cb3934171de8e99bb9d63",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/migrations/originals/tests/lang/migrated/python_format_case_3.my.txt",
+      "original_copy_calls": 0,
+      "migrated_sha256": "435edbca6a12988d2dd096bf2be9a568cf977c1cd15f9ac0ae08c2d5af0ab284",
+      "migrated_copy_calls": 1,
+      "added_lines": 1,
+      "removed_lines": 1,
+      "public_tests": [],
+      "execution_status": "helper tested through importer"
+    },
+    {
+      "source": "tests/lang/python_bytes.my",
+      "original_sha256": "2331c3e04df54a3d610c847301a88fffeae1a4b6075e401e1e71460be087216a",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/migrations/originals/tests/lang/python_bytes.my.txt",
+      "original_copy_calls": 0,
+      "migrated_sha256": "11a20571bb89ba593cb8f9c0deded355db2bc8180ac944aeb754c94b3f194761",
+      "migrated_copy_calls": 9,
+      "added_lines": 8,
+      "removed_lines": 8,
+      "public_tests": [
+        "test_byte_literals_index_slice_concatenate_compare_and_iterate",
+        "test_membership_accepts_a_byte_scalar_or_a_contiguous_subsequence",
+        "test_byte_strings_alias_through_helpers_and_survive_collection_stress",
+        "test_split_join_prefix_suffix_search_and_container_storage",
+        "test_generic_bodies_preserve_managed_byte_string_identities",
+        "test_find_any_reports_the_first_octet_of_a_set_at_or_after_start",
+        "test_find_any_searches_a_two_octet_set_with_one_pass_per_octet",
+        "test_find_any_walks_an_input_missing_one_octet_in_linear_time",
+        "test_find_any_finds_either_octet_across_its_search_windows",
+        "test_find_any_clamps_start_and_reads_values_as_a_byte_set",
+        "test_find_keeps_its_first_index_answer_for_short_and_long_needles",
+        "test_integer_list_text_and_hexadecimal_conversions_round_trip",
+        "test_a_decoded_slice_keeps_clamping_and_invalid_utf8"
+      ],
+      "execution_status": "passed"
+    },
+    {
+      "source": "tests/lang/python_expressions.my",
+      "original_sha256": "24b07101baf1a51849c3ce764ff94f5f6afcdf872d2053d04d33291d4ec17b6b",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/migrations/originals/tests/lang/python_expressions.my.txt",
+      "original_copy_calls": 0,
+      "migrated_sha256": "2d78e1c6d6530d5a0155fffec9a5d3c87108a35b21572e74e5ecb66734c50bcc",
+      "migrated_copy_calls": 7,
+      "added_lines": 7,
+      "removed_lines": 7,
+      "public_tests": [
+        "test_str_orders_by_code_point_with_a_prefix_first",
+        "test_a_generic_body_orders_its_str_operands",
+        "test_bytes_order_by_octet_with_a_prefix_first",
+        "test_a_comparison_chain_reads_as_python_and",
+        "test_a_chain_evaluates_each_operand_once_and_stops_at_a_false_link",
+        "test_a_chain_types_each_literal_by_its_neighbour",
+        "test_a_parenthesized_comparison_is_a_bool_operand",
+        "test_a_constant_chain_folds_and_short_circuits",
+        "test_a_generic_body_checks_each_link_of_a_chain",
+        "test_range_counts_by_its_step_in_either_direction",
+        "test_a_stepped_range_feeds_a_comprehension_and_list",
+        "test_the_last_step_never_overflows_the_counter_type",
+        "test_str_and_bytes_repeat_by_an_integer_on_either_side",
+        "test_an_int_times_a_float_is_still_arithmetic",
+        "test_a_list_repeats_by_an_integer_into_independent_values",
+        "test_a_repetition_evaluates_its_operands_once_in_order",
+        "test_a_generic_body_repeats_text"
+      ],
+      "execution_status": "passed"
+    },
+    {
+      "source": "tests/lang/python_text_surface.my",
+      "original_sha256": "3e893e420b86696ce4a36d8159592e8bbe7de3a2c124b77ceca34c8ce00fefdc",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/migrations/originals/tests/lang/python_text_surface.my.txt",
+      "original_copy_calls": 0,
+      "migrated_sha256": "4d32d2d368586321b08ef8e459fdc2e059ce25fd12f3da0b2cc9ac13d93af7c7",
+      "migrated_copy_calls": 5,
+      "added_lines": 6,
+      "removed_lines": 6,
+      "public_tests": [
+        "test_sorted_bytes_unsigned_prefix_order_and_value_copy",
+        "test_sort_bytes_in_place_and_reverse",
+        "test_bytes_key_and_tuple_keys_preserve_equal_key_order",
+        "test_bytes_sort_and_keys_in_generic_body",
+        "test_charset_is_a_set_empty_set_and_aliases",
+        "test_unicode_default_whitespace_and_bytes_ascii_whitespace",
+        "test_byte_charset_invalid_utf8_nul_and_empty",
+        "test_ranges_count_scalars_and_return_global_positions",
+        "test_empty_needles_at_end_and_beyond_end_are_distinct",
+        "test_empty_needles_reversed_and_extreme_ranges",
+        "test_ranged_affixes_and_overlapping_reverse_search",
+        "test_byte_ranges_views_and_constant_receivers",
+        "test_generic_methods_and_expression_receivers",
+        "test_repr_quote_selection_escapes_and_printable_unicode",
+        "test_repr_bytes_all_octet_classes_and_quotes",
+        "test_repr_integer_widths_boolean_and_generic",
+        "test_repr_float_shortest_exponents_signed_zero_and_nonfinite",
+        "test_repr_large_unicode_result_is_indexed_and_survives_views",
+        "test_unsigned64_bounds_saturate_positive_instead_of_becoming_negative",
+        "test_generic_nominal_bytes_inputs_sort_and_repr",
+        "test_contextual_octet_declarations_keep_legacy_text_compatibility"
+      ],
+      "execution_status": "passed"
+    },
+    {
+      "source": "tests/lang/rc_byte_loop_versions.my",
+      "original_sha256": "08e0ca2ba642f62359f9eb56107716ab85991e95d9dbdd16aeeef509b97d9f0f",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/migrations/originals/tests/lang/rc_byte_loop_versions.my.txt",
+      "original_copy_calls": 0,
+      "migrated_sha256": "a8876940969936b6823e114eda8d194254a8a55e289b2de0f22562ba0f8937e2",
+      "migrated_copy_calls": 1,
+      "added_lines": 1,
+      "removed_lines": 1,
+      "public_tests": [
+        "test_full_short_empty_and_negative_byte_scans",
+        "test_byte_snapshot_and_rebound_source_keep_canonical_backing",
+        "test_held_byte_iteration_and_mutable_buffer_keep_fallbacks",
+        "test_empty_backing_and_multiple_byte_owners"
+      ],
+      "execution_status": "passed"
+    },
+    {
+      "source": "tests/lang/rc_byte_receivers.my",
+      "original_sha256": "6918406124b126264807c3b97760aad2572c5df791a0fcc58bc40ae71d845baa",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/migrations/originals/tests/lang/rc_byte_receivers.my.txt",
+      "original_copy_calls": 0,
+      "migrated_sha256": "8b3ede3dbba4b4a195d6cd5e4039ff4bb0b300f6590db78797328248e47477a3",
+      "migrated_copy_calls": 1,
+      "added_lines": 3,
+      "removed_lines": 2,
+      "public_tests": [
+        "test_appends_through_a_mut_record_field_write_in_place",
+        "test_appending_a_snapshot_of_the_same_buffer_reads_the_old_octets",
+        "test_computed_and_rebound_inputs_keep_their_scopes",
+        "test_length_limits_read_the_field_in_place"
+      ],
+      "execution_status": "passed"
+    },
+    {
+      "source": "tests/lang/rc_dictionary_text_loops.my",
+      "original_sha256": "ef1217f0bf1b3eaedd733ed27f96bb5a85dc654b0e9396aee4b614bbeb690e30",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/migrations/originals/tests/lang/rc_dictionary_text_loops.my.txt",
+      "original_copy_calls": 0,
+      "migrated_sha256": "b6945b52b5307661cbeaec51e4e6b197e9ca3029e817fed1348fc06f70582cee",
+      "migrated_copy_calls": 5,
+      "added_lines": 5,
+      "removed_lines": 5,
+      "public_tests": [
+        "test_owned_text_keys_preserve_growth_and_empty_loop",
+        "test_published_dictionary_keeps_copy_on_write"
+      ],
+      "execution_status": "passed"
+    },
+    {
+      "source": "tests/lang/rc_loop_guard_context.my",
+      "original_sha256": "d4ac2d1373d8929b99815e5203e8a0b137db6500f6f9f33c46ea38c9f1eee7a8",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/migrations/originals/tests/lang/rc_loop_guard_context.my.txt",
+      "original_copy_calls": 0,
+      "migrated_sha256": "f69e1c3db7d85648590f328ef8c9d3757e8c0e623a493c89743a7b7d89a0e8a7",
+      "migrated_copy_calls": 1,
+      "added_lines": 1,
+      "removed_lines": 1,
+      "public_tests": [
+        "test_adjacent_dictionary_and_byte_loops_keep_their_own_guard_context"
+      ],
+      "execution_status": "passed"
+    },
+    {
+      "source": "tests/lang/rc_plain_update_paths.my",
+      "original_sha256": "8b7ffc4760c53757ea62e5215a28b29527da2bc8ff9b50cc4646515db57411d9",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/migrations/originals/tests/lang/rc_plain_update_paths.my.txt",
+      "original_copy_calls": 0,
+      "migrated_sha256": "69add28b6b2ee7febf4ba34d991e92bcf6c60e279026061060299f12a0dba81c",
+      "migrated_copy_calls": 3,
+      "added_lines": 11,
+      "removed_lines": 8,
+      "public_tests": [
+        "test_a_nested_write_callee_keeps_the_captured_receiver",
+        "test_a_mut_field_argument_callee_keeps_the_captured_receiver",
+        "test_a_mut_element_argument_callee_keeps_the_captured_receiver"
+      ],
+      "execution_status": "one native failure"
+    },
+    {
+      "source": "tests/lang/rc_readonly_bytes.my",
+      "original_sha256": "60d00b8f8e51db05e0050faaa3a5425728800c2f1da9bf22487491eda339207f",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/migrations/originals/tests/lang/rc_readonly_bytes.my.txt",
+      "original_copy_calls": 0,
+      "migrated_sha256": "9f465b81a535ff6b3314c41c7f191d48ec02edc8ba77af285b05a5a16db175cb",
+      "migrated_copy_calls": 1,
+      "added_lines": 1,
+      "removed_lines": 1,
+      "public_tests": [
+        "test_readonly_octets_preserve_positive_and_negative_boundaries",
+        "test_readonly_octets_keep_view_backing_anchored"
+      ],
+      "execution_status": "passed"
+    },
+    {
+      "source": "tests/lang/text_index.my",
+      "original_sha256": "3a9405324c1a27ab534c80210d1307a5c65f9960bc92b7188e87b1a0fb4a3e5f",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/migrations/originals/tests/lang/text_index.my.txt",
+      "original_copy_calls": 0,
+      "migrated_sha256": "00453baf779c1a7ea9ef7915a49a88b4ddc838a6954523367b97ab0dd078cbf8",
+      "migrated_copy_calls": 2,
+      "added_lines": 2,
+      "removed_lines": 2,
+      "public_tests": [
+        "test_every_scalar_of_a_long_text_is_found_in_every_order",
+        "test_iteration_visits_each_scalar_once_in_order",
+        "test_lookups_agree_on_both_sides_of_the_index_threshold",
+        "test_one_non_ascii_scalar_in_ascii_text",
+        "test_a_text_of_four_octet_scalars",
+        "test_slices_of_a_long_text_read_the_scalars_they_name",
+        "test_slice_endpoints_clamp_and_count_from_the_end",
+        "test_the_rest_of_a_text_after_each_cut",
+        "test_views_of_a_long_text_have_positions_of_their_own",
+        "test_search_reports_scalar_positions_in_a_long_text",
+        "test_texts_built_by_methods_are_indexed_correctly",
+        "test_short_empty_and_ascii_texts_are_unchanged",
+        "test_aliases_and_copies_read_independently"
+      ],
+      "execution_status": "passed"
+    },
+    {
+      "source": "tests/lang/text_scanning.my",
+      "original_sha256": "e0573a98deb1b8124547fa45bcf69bc7c7f3d6ef57112b28c5851f883b39d97a",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/migrations/originals/tests/lang/text_scanning.my.txt",
+      "original_copy_calls": 0,
+      "migrated_sha256": "02e3c18cfddafafe42e228b9ea9dd5c397f2e47280d5155b736420e7ace40807",
+      "migrated_copy_calls": 1,
+      "added_lines": 1,
+      "removed_lines": 1,
+      "public_tests": [
+        "test_count_is_non_overlapping_at_every_position",
+        "test_count_and_find_multibyte_needles_and_haystacks",
+        "test_count_and_find_over_long_inputs",
+        "test_replace_copies_runs_between_non_overlapping_matches",
+        "test_replace_over_long_inputs",
+        "test_split_keeps_empty_pieces_and_measures_each_piece",
+        "test_split_over_long_inputs",
+        "test_byte_string_separator_split_uses_the_same_cuts"
+      ],
+      "execution_status": "passed"
+    },
+    {
+      "source": "tests/lang/text_views.my",
+      "original_sha256": "3d2f0247a0409195c6c4bcc4bf3fde0e14aa085badf40e76b92ee83510a09a89",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/migrations/originals/tests/lang/text_views.my.txt",
+      "original_copy_calls": 0,
+      "migrated_sha256": "c480fec08b4134604838034f58f7ad40d67db4a6ddee4f67b9bb0f4eec3e4e54",
+      "migrated_copy_calls": 6,
+      "added_lines": 5,
+      "removed_lines": 9,
+      "public_tests": [
+        "test_pieces_outlive_every_other_reference_to_their_receiver",
+        "test_views_of_views_read_the_right_octets",
+        "test_non_ascii_pieces_index_by_scalar",
+        "test_pieces_are_dictionary_keys_equal_to_owned_text",
+        "test_a_short_piece_does_not_keep_a_large_receiver_alive",
+        "test_pieces_at_the_policy_edges",
+        "test_every_consumer_reads_a_piece",
+        "test_streaming_tails_preserve_scalars_and_consumers"
+      ],
+      "execution_status": "passed"
+    },
+    {
+      "source": "tests/lang/tuples.my",
+      "original_sha256": "2227a535862dc7f7dd7e41911de7a6b4550cb16bcfb1ea8ebb2574ec0b3206ec",
+      "original_snapshot": "experiments/memory-closeout-20261012/A04/migrations/originals/tests/lang/tuples.my.txt",
+      "original_copy_calls": 0,
+      "migrated_sha256": "9b19c3b5b7e42b2d98475a0fa703ecc104055991e971d8da764dfe77d6458710",
+      "migrated_copy_calls": 9,
+      "added_lines": 9,
+      "removed_lines": 9,
+      "public_tests": [
+        "test_a_returned_tuple_destructures_and_the_swap_idiom_works",
+        "test_a_tuple_nests_in_a_list_and_in_a_record_field",
+        "test_an_option_and_a_result_payload_can_be_a_tuple",
+        "test_tuple_equality_and_rendering_follow_the_aggregate_rule",
+        "test_a_generic_function_over_a_tuple_keeps_its_element_type"
+      ],
+      "execution_status": "source blocked"
+    }
+  ],
+  "totals": {
+    "sources": 19,
+    "public_tests": 133,
+    "added_lines": 116,
+    "removed_lines": 115,
+    "added_copy_calls": 63
+  },
+  "interpretation": "Support6 exact source identities; tuples.my remains a prepared source migration with source refusal, captured separately, not qualified or integrated. All original assertions retained."
+}

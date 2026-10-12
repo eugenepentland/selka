@@ -72,3 +72,27 @@ for an unsupported-only file, so command status alone is insufficient evidence.
 
 The guest-test harness can resume a queued checkpoint while preserving completed
 file/mode results, only with matching compiler identity, survey and source hashes.
+
+Support6 (`check-support6.json`, `execution-support6.json`) completes the next
+source/native survey on compiler source 5167c588be79dd43d21d5013c36db15110bf239b,
+SHA256 bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4.
+Source admission is 18/19; the admitted subset executes 128 original tests in each
+mode. Ordinary passes 128/128; checked ownership passes 127 and retains one native
+failure. There are no unsupported tests in the admitted subset. Both numeric
+repr tests now pass, and the nested-write regression now passes.
+
+The remaining native failure is `push(mut frame.rows[0])` at line 28 of
+rc_plain_update_paths.my, with E_ZERO_RC_LOWERING. A07 owns that path; the original
+assertions and explicit captured snapshot are unchanged. The five tuple tests
+remain in the 133-test total: Support6 fixes the tuple.copy frontend panic but
+refuses the narrowed optional tuple unpack `const number, letter = found.copy()`
+at line 26. A01 owns complete unpack support. The candidate tuple source is kept
+in `tuple-copy-repro/source-support6.my.txt` and remains unqualified; this evidence
+commit does not integrate it into the shared source. `sources-support6.json`
+records 116 added lines, 115 removed lines and 63 extra explicit copies against C0
+for the complete current 19-source candidate. All original assertions remain.
+The Support5 source survey is retained independently, not relabeled as Support6.
+
+No active A04 guest jobs remain after this run. Final C1 and affected C2/C3
+qualification must consume exact new compiler/source identities and must keep
+both blockers visible until their original cases pass.
