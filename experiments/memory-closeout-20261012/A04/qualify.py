@@ -80,7 +80,7 @@ def capture(args):
     for name in ("compiler", "zig", "output", "evidence"):
         setattr(args, name, getattr(args, name).resolve())
     result_path = args.evidence / "results.json"
-    if result_path.exists():
+    if result_path.exists() and not args.resume:
         raise SystemExit(f"Refusing to overwrite {result_path}; choose a new phase directory")
     env = dict(os.environ, ZIG=str(args.zig), MYLANG_ZIG=str(args.zig), MYL_CORE_LEAKCHECK="1")
     for name in ("MYLANG_COUNTERS", "MYLANG_OPTIONS", "MYLANG_CORE_SANITIZE"):
@@ -89,16 +89,31 @@ def capture(args):
               "harness_sha256": digest(Path(__file__)), "inventory": inventory(), "cases": {},
               "limitations": ["Managed counters omit native metadata/provider buffers/allocator overhead; no RSS or timing claims.",
                               "Count-free LLVM and symbol checks supplement execution counters; package bootstrap is owned by A10."]}
+    if args.resume and result_path.exists():
+        previous = json.loads(result_path.read_text())
+        assert "summary" not in previous, "completed evidence is immutable; choose a new phase"
+        assert previous["compiler"] == result["compiler"], "compiler identity changed"
+        assert previous["inventory"] == result["inventory"], "export inventory changed"
+        result = previous
+        result.setdefault("resume_harness_sha256", []).append(digest(Path(__file__)))
+    result["selection"] = {"baseline": args.baseline, "only": args.only, "modes": args.modes,
+                           "note": "baseline runs every case in release plus the new public ownership supplement in all requested modes; final qualification uses all modes"}
     cases = [(name, ROOT / f"src/stdlib/fixtures/{name}.my", 42) for name in FIXTURES]
     cases.extend([("ownership_contracts", SUPPLEMENT, 0), ("json_lookup", ROOT / "test/core/zero_rc_json_lookup.my", 0),
                   ("view_contracts", HERE / "samples/view_contracts.my", 0)])
     modes = {name: flags for name, flags in q.common.MODES.items() if not args.modes or name in args.modes}
-    failures = 0
+    failures = len(result["inventory"]["uncovered_functions"]) + sum(row["status"] != "passed" for modes in result["cases"].values() for row in modes.values())
     for name, source, expected in cases:
         if args.only and name not in args.only:
             continue
-        lanes = result["cases"][name] = {}
+        lanes = result["cases"].setdefault(name, {})
         for mode, flags in modes.items():
+            if args.baseline and name != "ownership_contracts" and mode != "release":
+                continue
+            if mode in lanes:
+                assert lanes[mode]["source_sha256"] == digest(source), "completed source changed"
+                print(name, mode, "preserved", lanes[mode]["status"], flush=True)
+                continue
             try:
                 with admission("build"):
                     lanes[mode] = dict(q.lane(args, env, name, source, ["--experimental-zero-rc", *flags], mode, expected), status="passed")
@@ -108,7 +123,7 @@ def capture(args):
             raw = args.output / name / mode
             destination = args.evidence / "raw" / name / mode
             destination.mkdir(parents=True, exist_ok=True)
-            for pattern in ("*.json", "*.stdout", "*.stderr"):
+            for pattern in ("*.my", "*.json", "*.stdout", "*.stderr"):
                 for artifact in raw.glob(pattern):
                     shutil.copyfile(artifact, destination / artifact.name)
             save(result_path, result)
@@ -134,15 +149,18 @@ def capture(args):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--inventory", action="store_true")
+    parser.add_argument("--resume", action="store_true", help="resume an interrupted phase only when compiler, exports and completed sources match")
+    parser.add_argument("--baseline", action="store_true", help="all exports in release and new ownership supplement across five modes; final qualification remains the full matrix")
     for name in ("compiler", "zig", "output", "evidence"):
         parser.add_argument("--" + name, type=Path)
     parser.add_argument("--source-commit")
-    parser.add_argument("--modes", nargs="+")
-    parser.add_argument("--only", nargs="+")
+    parser.add_argument("--modes", nargs="+", choices=("release", "debug", "verify", "optimized_debug", "no_facts"))
+    parser.add_argument("--only", nargs="+", choices=(*FIXTURES, "ownership_contracts", "json_lookup", "view_contracts"))
     args = parser.parse_args()
     if args.inventory:
-        save(HERE / "inventory.json", inventory())
-        return 0
+        report = inventory()
+        save(HERE / "inventory.json", report)
+        return int(bool(report["uncovered_functions"]))
     if not all(getattr(args, name) for name in ("compiler", "zig", "output", "evidence", "source_commit")):
         parser.error("capture requires --compiler, --zig, --output, --evidence and --source-commit")
     return capture(args)

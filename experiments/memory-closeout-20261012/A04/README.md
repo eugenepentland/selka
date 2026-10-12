@@ -143,7 +143,7 @@ No export is excluded from the denominator because a compiler rejects it. A refu
 
 ## Reproduction
 
-Run `qualify.py --inventory` to refresh the machine-readable declaration/source-hash inventory. Capture owns shared build admission separately for each lane; the harness accepts separate compiler, Zig, scratch-output, evidence-output and source-commit identities. It imports read-only historical helper functions but never invokes their report-writing entrypoints. Refusals and failures remain in the output. Existing evidence directories cannot be overwritten.
+Run `qualify.py --inventory` to refresh the machine-readable declaration/source-hash inventory. Capture owns shared build admission separately for each lane; the harness accepts separate compiler, Zig, scratch-output, evidence-output and source-commit identities. It imports read-only historical helper functions but never invokes their report-writing entrypoints. Refusals and failures remain in the output. Completed evidence directories cannot be overwritten. `--resume` preserves completed lanes in an interrupted phase only after checking compiler, export inventory and source identities.
 
 ```sh
 . "$HOME/.config/mylang/dev-env.sh"
@@ -154,3 +154,5 @@ python3 -B experiments/memory-closeout-20261012/A04/qualify.py \
 ```
 
 All five guest modes are selected by default: release, unoptimized debug, release with verified facts, optimized debug and release without facts. Each admitted run checks expected exit status, managed leaks, emitted/runtime RC counters, LLVM and native symbols. Negative view cases check exact diagnostic identifiers. Build wall observations are not controlled compile-time measurements; A09 owns runtime/RSS measurement.
+
+For a baseline without production A04 changes, `--baseline` keeps all eight release fixtures and runs the new public ownership supplement in all five modes (12 lanes). The integrated candidate uses the full 40-lane matrix. Baseline selection was approved by the coordinator; it does not remove any public export from coverage.

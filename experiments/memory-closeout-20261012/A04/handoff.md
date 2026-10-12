@@ -3,7 +3,7 @@
 Base: `fbfcaa7a923186a8e773c3760f81c10aa345a432` (C0).
 Branch: `codex/memory-closeout-20261012-A04`.
 
-The first commit adds executable coverage and release inventory. It makes no
+Coverage commit `d36558ac3e18ef1ba5547b67d9e14c7101998ab1` adds executable coverage and release inventory. Its required Guardian hook passed all 88 checks after correcting a duplicate primary spec tag to `spec-case`. It makes no
 production allocation-policy or runtime change. The 80 public functions and five
 public types in JSON, strings, path, base64, hex and byte_builder remain in scope;
 none is silently excluded. Every function has direct fixture call coverage in
@@ -38,11 +38,9 @@ complete installed component layout.
   zero managed bytes live at exit; LLVM and symbol audits pass.
 - Raw commands, compiler/source/binary/LLVM hashes and counters:
   `c0-pilot/results.json` and `c0-pilot/raw/`.
-- Full eight-fixture, five-mode C0 matrix is running; `c0/` records partial output.
-  It is not yet claimed as passed in this initial handoff.
+- C0 baseline qualification passed all 12 requested lanes and all three exact negative diagnostics. Every one of the eight fixtures runs in release; the six-test public ownership supplement also runs in unoptimized debug, verified release, optimized debug and release without facts. All counted runs have zero RC and zero managed exit-live bytes; LLVM/symbol audits pass. Raw evidence is in `c0/`, with compact totals in `c0-summary.json`. The coordinator approved this baseline scope because A04 makes no production change; the integrated candidate still requires the full 40-lane matrix.
 
-The harness owns shared admission for each lane, writes raw evidence only under
-the specified phase directory, and refuses to overwrite existing results. It
+The harness owns shared admission for each lane and reuses an authorized bounded outer build lease. The final ten baseline lanes used one lease after coordinator approval; individual observed compiles had been 0.17–1.21 seconds. It preserves validated completed lanes when resuming an interrupted phase, archives exact source inputs, and refuses to overwrite completed reports. It
 imports historical helper functions without invoking their old report writers.
 Build elapsed times are operational observations, not controlled performance
 measurements. Managed counters are not RSS. No allocation reduction is claimed.
@@ -54,7 +52,7 @@ rerun this matrix on the frozen integrated compiler, then on changed default and
 retirement artifacts. C0 evidence cannot qualify a different compiler. The
 coordinator owns the full registered gate and final Guardian check.
 
-No production correctness failure was found in the pilot. Active RC remains at
+No production correctness failure was found in the complete C0 baseline library qualification. Active RC remains at
 C0; this handoff does not claim rollout or retirement. `core_text.c` has two
 legacy alternatives to remove only after stage approval: the uniqueness check in
 `core_text_append_bytes` and the retained alias in `myl_core_text_encode`.
