@@ -23,6 +23,7 @@ import datetime
 import hashlib
 import json
 import os
+import re
 import shlex
 import shutil
 import struct
@@ -538,7 +539,7 @@ FEATURE_NOTES = {
     "coordinator_path_free": "per-action path_free in last-run.json (Lane D)",
     "mismatch_counter": "mismatches.log and the determinism-mismatch counter (Lane E, D3)",
     "build_env": "build_env.zig host tool and its built binary (Lane A/C)",
-    "program_key_report": "per-test program_key in the test report (Lane B)",
+    "execution_key_report": "per-test cache.execution_key in the test report (Lane B)",
 }
 
 
@@ -568,7 +569,7 @@ def probe_features(tree: Path) -> dict[str, bool]:
         "coordinator_path_free": _grep(tree, ["scripts/verify_cache.py"], "path_free"),
         "mismatch_counter": _grep(tree, ["src/*.zig", "src/core/*.zig"], "mismatches.log"),
         "build_env": (tree / "build_env.zig").exists(),
-        "program_key_report": _grep(tree, ["src/core/test_runner_report.zig"], "program_key"),
+        "execution_key_report": _grep(tree, ["src/core/test_runner_report.zig"], "execution_key"),
     }
 
 
@@ -720,7 +721,10 @@ class Run:
         seconds = round(time.monotonic() - started, 3)
         (self.dir / (stem + ".stdout")).write_text(completed.stdout)
         (self.dir / (stem + ".stderr")).write_text(completed.stderr)
+        queue = admission_queue_seconds(completed.stderr) if step.slot else 0
         record = {"step": step.name, "kind": "command", "argv": full, "cwd": step.cwd,
+                  "queue_seconds": queue,
+                  "seconds_excluding_queue": None if queue is None else round(seconds - queue, 3),
                   "env_set": step.env, "env_unset": step.unset, "exit": completed.returncode,
                   "started": started_at, "harness_seconds_including_queue": seconds,
                   "stdout": stem + ".stdout", "stderr": stem + ".stderr",
@@ -738,6 +742,15 @@ class Run:
                 record["excerpt"] = [{key: row.get(key) for key in ("id", "state", "reason", "action_key", "path_free")}
                                      for row in record["parsed"].get("actions", [])]
         return record
+
+
+QUEUE_LINE = re.compile(r"^build-slot: \w+ slot \d+, FIFO ticket \d+ after (\d+)s", re.MULTILINE)
+
+
+def admission_queue_seconds(stderr: str) -> int | None:
+    """The wait `scripts/build-slot.sh` reports before admitting the command."""
+    found = QUEUE_LINE.findall(stderr)
+    return int(found[-1]) if found else None
 
 
 def latest_coordinator_report(tree: Path, since_monotonic: float) -> dict | None:
@@ -909,17 +922,39 @@ def edit_row_plan(row_id: str, *, force_compare: bool = False):
         tree = ctx.scratch(label)
         work = ctx.row_work(row_id, "edit")
         entry = entry_for_lang(ctx)
-        env = ctx.test_env(tree, work)
+        # A row-private object store: new entries in it after the edit are
+        # exactly the `zig cc` compiles and links the edited run performed.
+        env = ctx.test_env(tree, work, MYLANG_CORE_RUNTIME_CACHE=str(work / "core-runtime"))
         steps = [reset_dir(lambda c: c.row_work(row_id, "edit")), add_worktree(label), build(ctx, tree, "build-before"),
                  mylang_test(ctx, "cold", tree, entry, work / "cache", env=env),
                  mylang_test(ctx, "warm", tree, entry, work / "cache", env=env),
                  edit(label, relative, old, new, description), build(ctx, tree, "build-after"),
-                 mylang_test(ctx, "after-edit", tree, entry, work / "cache", env=env)]
+                 store_count(row_id, "stores-before"),
+                 mylang_test(ctx, "after-edit", tree, entry, work / "cache", env=env),
+                 store_count(row_id, "stores-after")]
         if force_compare:
             steps.append(mylang_test(ctx, "forced", tree, entry, work / "cache-forced", flags=("--force",), env=env))
         steps += [restore(label, relative), remove_worktree(label)]
         return steps
     return plan
+
+
+def store_count(row_id: str, name: str) -> Py:
+    def action(run: Run) -> dict:
+        work = run.ctx.row_work(row_id, "edit")
+        count = lambda root: sum(1 for p in root.rglob("*") if p.is_file()) if root.exists() else 0
+        return {"objects": count(work / "core-runtime" / "units-v1"),
+                "runtime_store_files": count(work / "core-runtime"),
+                "programs": sum(count(path) for path in (work / "cache").glob("programs-v*"))}
+    return Py(name, "count unit objects and linked programs in the row-private stores", action)
+
+
+def store_growth(run: Run) -> dict | None:
+    before = run.result("stores-before").get("result")
+    after = run.result("stores-after").get("result")
+    if not before or not after:
+        return None
+    return {key: after[key] - before[key] for key in before}
 
 
 def baseline_checks(run: Run) -> list[dict]:
@@ -930,9 +965,16 @@ def row2_judge(run: Run) -> list[dict]:
     after = run.tests("after-edit")
     checks = baseline_checks(run) + judge_no_failures("after-edit", after, run.status("after-edit"))
     checks += judge_exec_tier("after-edit", after, run.ctx.features)
-    seconds = run.result("after-edit").get("harness_seconds_including_queue")
-    checks.append(check("after-edit wall time recorded", "lowering and emission only", seconds, True,
-                        "informational: harness clock including admission queue; not a timed cohort sample"))
+    growth = store_growth(run)
+    checks.append(check("after-edit: zero zig cc (no new unit object, no new linked program)",
+                        {"objects": 0, "programs": 0}, growth,
+                        None if growth is None else growth["objects"] == 0 and growth["programs"] == 0,
+                        "" if growth else "not judged: store counts missing"))
+    seconds = run.result("after-edit").get("seconds_excluding_queue")
+    checks.append(check("after-edit wall time recorded", "lowering and emission only (baseline 78 s, 0 cached)",
+                        {"seconds_excluding_queue": seconds,
+                         "queue_seconds": run.result("after-edit").get("queue_seconds")}, True,
+                        "informational: harness clock minus the build-slot queue; not an exclusive timing window"))
     return checks
 
 
@@ -941,7 +983,7 @@ def row3_judge(run: Run) -> list[dict]:
     a, f = verdict_map(after), verdict_map(forced)
     differing = sorted(name for name in set(a) | set(f) if a.get(name) != f.get(name))
     summary = run.tests("after-edit")
-    checks = baseline_checks(run) + [
+    checks = baseline_checks(run) + [growth_note(run),
         check("verdicts equal a --force run", "0 differing", {"tests": len(a), "differing": differing[:50]},
               bool(a) and not differing),
         gated("only tests whose program bytes changed execute", "0 < executed < eligible",
@@ -949,23 +991,39 @@ def row3_judge(run: Run) -> list[dict]:
                "executed_names": summary.get("executed_names", [])[:50]},
               0 < summary.get("eligible_executed", 0) < summary.get("eligible", 0), "exec_receipts", run.ctx.features),
     ]
-    keyed = [t for t in (after or {}).get("tests", []) if isinstance(t.get("cache"), dict) and "program_key" in t["cache"]]
-    warm = {t.get("name"): t["cache"].get("program_key") for t in (run.report("warm") or {}).get("tests", [])
-            if isinstance(t.get("cache"), dict) and "program_key" in t["cache"]}
-    if keyed and warm:
-        wrong = sorted(t["name"] for t in keyed
-                       if (t["cache"]["program_key"] != warm.get(t["name"])) != (t.get("status") in EXECUTED_STATUSES)
-                       and eligible(t))
-        checks.append(check("executed set equals changed program_key set", "0 mismatched", wrong, not wrong))
+    keys_after = execution_keys(after)
+    keys_warm = execution_keys(run.report("warm"))
+    if keys_after and keys_warm:
+        changed = sorted(name for name, key in keys_after.items() if keys_warm.get(name) != key)
+        wrong = sorted(t["name"] for t in (after or {}).get("tests", [])
+                       if t.get("name") in keys_after and eligible(t)
+                       and (keys_warm.get(t["name"]) != keys_after[t["name"]]) != (t.get("status") in EXECUTED_STATUSES))
+        checks.append(check("executed set equals changed execution_key set", "0 mismatched",
+                            {"changed_keys": len(changed), "mismatched": wrong[:50]}, not wrong))
     else:
-        checks.append(check("executed set equals changed program_key set", "per-test program_key", None, None,
-                            "not judged: the test report carries no per-test program_key"))
+        checks.append(check("executed set equals changed execution_key set", "per-test execution_key", None, None,
+                            "not judged: the test report carries no per-test cache.execution_key"))
     return checks
+
+
+def execution_keys(report: dict | None) -> dict[str, str]:
+    """Per-test `cache.execution_key` (the program-keyed receipt identity)."""
+    keys = {}
+    for test in (report or {}).get("tests", []):
+        cache = test.get("cache")
+        if isinstance(cache, dict) and isinstance(cache.get("execution_key"), str):
+            keys[test.get("name")] = cache["execution_key"]
+    return keys
+
+
+def growth_note(run: Run) -> dict:
+    return check("store growth recorded", "informational", store_growth(run), True,
+                 "new unit objects and linked programs during the edited run")
 
 
 def row4_judge(run: Run) -> list[dict]:
     after = run.tests("after-edit")
-    checks = baseline_checks(run) + judge_no_failures("after-edit", after, run.status("after-edit"))
+    checks = baseline_checks(run) + judge_no_failures("after-edit", after, run.status("after-edit")) + [growth_note(run)]
     checks.append(gated("every execution receipt misses", "0 exec hits", after.get("exec_hits"),
                         after.get("available") and after.get("exec_hits") == 0, "exec_receipts", run.ctx.features))
     checks.append(check("IR receipts also miss", "0 IR hits", after.get("ir_hits"),
@@ -976,7 +1034,7 @@ def row4_judge(run: Run) -> list[dict]:
 
 def row5_judge(run: Run) -> list[dict]:
     after = run.tests("after-edit")
-    checks = baseline_checks(run) + judge_no_failures("after-edit", after, run.status("after-edit"))
+    checks = baseline_checks(run) + judge_no_failures("after-edit", after, run.status("after-edit")) + [growth_note(run)]
     checks.append(gated("every execution receipt misses", "0 exec hits", after.get("exec_hits"),
                         after.get("available") and after.get("exec_hits") == 0, "exec_receipts", run.ctx.features))
     checks.append(check("IR tier outcome recorded", "informational", after.get("ir_hits"), True,
@@ -1118,7 +1176,7 @@ def row8_projection_plan(ctx: Context) -> list:
     env = ctx.test_env(ctx.tree, work, CODEX_THREAD_ID="lane-f-row08-probe")
     run_probe = [ctx.compiler(ctx.tree), "run", probe, "--cache-dir", str(work / "cache")]
     return [reset_dir(lambda c: c.row_work("08-negative-controls", "projection")),
-            locate_build_env(ctx.tree),
+            *locate_build_env(ctx, ctx.tree, work),
             Cmd("control-unprojected", run_probe, str(ctx.tree), env, slot="build"),
             Cmd("projected", ["{build_env}", "project", "--", *run_probe], str(ctx.tree), env, slot="build")]
 
@@ -1130,18 +1188,24 @@ def row8_projection_judge(run: Run) -> list[dict]:
                   run.status("projected") == 0)]
 
 
-def locate_build_env(tree: Path) -> Py:
-    def action(run: Run) -> dict:
-        explicit = run.ctx.build_env
-        candidates = [Path(explicit)] if explicit else []
-        candidates += [tree / "zig-out/bin/build-env", tree / "zig-out/tools/build-env", tree / "zig-out/libexec/build-env"]
-        for candidate in candidates:
-            if candidate.is_file() and os.access(candidate, os.X_OK):
-                run.state["build_env"] = str(candidate)
-                return {"build_env": str(candidate), "sha256": sha256_file(candidate)}
-        raise RuntimeError("build-env binary not found (pass --build-env PATH); looked in: "
-                           + ", ".join(str(c) for c in candidates))
-    return Py("locate-build-env", "find the build-env host tool (--build-env or zig-out)", action)
+def locate_build_env(ctx: Context, tree: Path, work: Path) -> list:
+    """`build-env` is a build-graph host tool and is not installed. Use
+    --build-env when given, else compile TREE's build_env.zig exactly as
+    `build.zig` declares it (host target, ReleaseSafe) into the row's work dir."""
+    target = work / "build-env"
+
+    def record(run: Run) -> dict:
+        chosen = Path(run.ctx.build_env) if run.ctx.build_env else target
+        if not (chosen.is_file() and os.access(chosen, os.X_OK)):
+            raise RuntimeError("build-env binary not found at " + str(chosen))
+        run.state["build_env"] = str(chosen)
+        return {"build_env": str(chosen), "sha256": sha256_file(chosen)}
+    steps = []
+    if not ctx.build_env:
+        steps.append(Cmd("compile-build-env", [ctx.zig, "build-exe", "build_env.zig", "-OReleaseSafe",
+                                               "-femit-bin=" + str(target)], str(tree), ctx.tree_env(tree), slot="build"))
+    steps.append(Py("locate-build-env", "record the build-env host tool and its SHA-256", record))
+    return steps
 
 
 # Row 9 ----------------------------------------------------------------------
@@ -1326,7 +1390,7 @@ def row12_plan(ctx: Context) -> list:
     tree = ctx.scratch("row12-tree")
     shared = ctx.row_work("12-projection-gate", "complete")
     return [reset_dir(lambda c: c.row_work("12-projection-gate", "complete")), add_worktree("row12-tree"),
-            build(ctx, tree), locate_build_env(tree),
+            build(ctx, tree), *locate_build_env(ctx, tree, shared),
             coordinator(ctx, "projected-complete", tree, "--force", "--shared-cache-dir", str(shared / "verification"),
                         prefix=("{build_env}", "project", "--")),
             remove_worktree("row12-tree")]
