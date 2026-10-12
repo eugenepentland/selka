@@ -77,6 +77,7 @@
         "MYLANG_TEST_CHILDREN",
         "MYL_CORE_PARENT_TOOL_TICKET",
         "MYLANG_TEST_COMPILER",
+        "MYLANG_TEST_COMPONENT_BUILDER",
         // Build-slot admission and developer job sizing.
         "MYLANG_SLOT_DIR",
         "MYLANG_ADMISSION_*",

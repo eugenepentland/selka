@@ -52,6 +52,7 @@ MYLANG_TEST_ISOLATE=exact MYLANG_TEST_ISOLATE value with spaces and = signs=1
 MYLANG_TEST_CHILDREN=exact MYLANG_TEST_CHILDREN value with spaces and = signs=1
 MYL_CORE_PARENT_TOOL_TICKET=exact MYL_CORE_PARENT_TOOL_TICKET value with spaces and = signs=1
 MYLANG_TEST_COMPILER=exact MYLANG_TEST_COMPILER value with spaces and = signs=1
+MYLANG_TEST_COMPONENT_BUILDER=exact MYLANG_TEST_COMPONENT_BUILDER value with spaces and = signs=1
 MYLANG_SLOT_DIR=exact MYLANG_SLOT_DIR value with spaces and = signs=1
 MYLANG_ADMISSION_FIXTURE_A=placement prefix MYLANG_ADMISSION_ = one
 MYLANG_ADMISSION_B=x=y=z placement
