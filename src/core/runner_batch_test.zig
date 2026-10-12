@@ -22,7 +22,7 @@ fn run(a: std.mem.Allocator, fixture: []const u8, flags: []const []const u8, mod
     if (probe.log.len != 0) try environment.put("MYL_BATCH_PROBE_LOG", probe.log);
     if (probe.fault) try environment.put("MYL_BATCH_PROBE_FAULT", "1");
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(a, &.{ options.core_path, "test", try std.fs.path.join(a, &.{ options.fixtures, fixture }), "--json", "--jobs", "1", "--cache-dir", root });
+    try argv.appendSlice(a, &.{ options.corePath(), "test", try std.fs.path.join(a, &.{ options.fixtures, fixture }), "--json", "--jobs", "1", "--cache-dir", root });
     try argv.appendSlice(a, flags);
     const result = try std.process.run(a, std.testing.io, .{ .argv = argv.items, .environ_map = &environment });
     try std.testing.expectEqualStrings("", result.stderr);

@@ -1,7 +1,10 @@
 //! Retention runs through the installed native command, including an empty PATH.
 const std = @import("std");
 const testing = std.testing;
-const compiler_path = @import("test_options").compiler_path;
+/// The `mylang` executable under test, which `zig build` names at run time (TEST-PATHS-1).
+fn compilerPath() []const u8 {
+    return @import("test_paths").corePath();
+}
 const key = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 
 const Fixture = struct {
@@ -28,7 +31,7 @@ const Fixture = struct {
 
     fn run(self: *Fixture, command: []const u8, kind: []const u8, flags: []const []const u8) !std.process.RunResult {
         const a = self.arena.allocator();
-        const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, a);
+        const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compilerPath(), a);
         const root = try self.temp.dir.realPathFileAlloc(testing.io, "shared", a);
         var environment = try std.process.Environ.createMap(testing.environ, a);
         try environment.put("PATH", "");
@@ -154,7 +157,7 @@ test "native retention CLI refuses preview without a lock without creating one" 
 
 fn checkFresh(fixture: *Fixture) !std.process.RunResult {
     const a = fixture.arena.allocator();
-    const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, a);
+    const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compilerPath(), a);
     const root = try fixture.temp.dir.realPathFileAlloc(testing.io, ".", a);
     const source = try std.fs.path.join(a, &.{ root, "program.my" });
     const cache = try std.fs.path.join(a, &.{ root, "private" });

@@ -335,7 +335,7 @@ fn fixtureRun(arena: std.mem.Allocator, root: []const u8, tag: []const u8, flags
     const source = try std.fmt.allocPrint(arena, "{s}/ce_records.my", .{options.fixtures});
     const output = try std.fmt.allocPrint(arena, "{s}/ce_records-{s}", .{ root, tag });
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(arena, &.{ options.core_path, "build", source, "-o", output, "--cache-dir", try std.fmt.allocPrint(arena, "{s}/cache", .{root}) });
+    try argv.appendSlice(arena, &.{ options.corePath(), "build", source, "-o", output, "--cache-dir", try std.fmt.allocPrint(arena, "{s}/cache", .{root}) });
     try argv.appendSlice(arena, flags);
     const built = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
     try std.testing.expect(built.term == .exited and built.term.exited == 0);

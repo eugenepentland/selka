@@ -456,7 +456,7 @@ fn leakChecked(arena: std.mem.Allocator, root: []const u8, name: []const u8, fla
     const output = try std.fmt.allocPrint(arena, "{s}/{s}-{s}", .{ root, name, if (flags.len == 0) "debug" else flags[flags.len - 1] });
     const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(arena, &.{ options.core_path, "build", source, "-o", output, "--link", options.clock_path, "--cache-dir", cache });
+    try argv.appendSlice(arena, &.{ options.corePath(), "build", source, "-o", output, "--link", options.clock_path, "--cache-dir", cache });
     try argv.appendSlice(arena, flags);
     const built = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
     try std.testing.expect(built.term == .exited and built.term.exited == 0);
@@ -513,7 +513,7 @@ fn stackRun(arena: std.mem.Allocator, root: []const u8, tag: []const u8, flags: 
     const output = try std.fmt.allocPrint(arena, "{s}/rc_stack-{s}", .{ root, tag });
     const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(arena, &.{ options.core_path, "build", source, "-o", output, "--cache-dir", cache, "--stats" });
+    try argv.appendSlice(arena, &.{ options.corePath(), "build", source, "-o", output, "--cache-dir", cache, "--stats" });
     try argv.appendSlice(arena, flags);
     const built = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
     try std.testing.expect(built.term == .exited and built.term.exited == 0);
@@ -999,7 +999,7 @@ test "mut appends, mut records and aliases match the old core, linear and leak-f
         const source = try std.fmt.allocPrint(arena.allocator(), "{s}/rc_mut.my", .{options.fixtures});
         const output = try std.fmt.allocPrint(arena.allocator(), "{s}/rc_mut-{}", .{ root, release });
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(arena.allocator(), &.{ options.core_path, "build", source, "-o", output, "--cache-dir", try std.fmt.allocPrint(arena.allocator(), "{s}/cache", .{root}) });
+        try argv.appendSlice(arena.allocator(), &.{ options.corePath(), "build", source, "-o", output, "--cache-dir", try std.fmt.allocPrint(arena.allocator(), "{s}/cache", .{root}) });
         if (release) try argv.append(arena.allocator(), "--release");
         const built = try std.process.run(arena.allocator(), std.testing.io, .{ .argv = argv.items });
         try std.testing.expect(built.term == .exited and built.term.exited == 0);
@@ -1028,7 +1028,7 @@ test "a list retained into a container in one iteration is never updated in plac
         const source = try std.fmt.allocPrint(arena.allocator(), "{s}/rc_shared_loops.my", .{options.fixtures});
         const output = try std.fmt.allocPrint(arena.allocator(), "{s}/shared-{}", .{ root, release });
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(arena.allocator(), &.{ options.core_path, "build", source, "-o", output, "--cache-dir", try std.fmt.allocPrint(arena.allocator(), "{s}/cache", .{root}) });
+        try argv.appendSlice(arena.allocator(), &.{ options.corePath(), "build", source, "-o", output, "--cache-dir", try std.fmt.allocPrint(arena.allocator(), "{s}/cache", .{root}) });
         if (release) try argv.append(arena.allocator(), "--release");
         const built = try std.process.run(arena.allocator(), std.testing.io, .{ .argv = argv.items });
         try std.testing.expect(built.term == .exited and built.term.exited == 0);
@@ -1048,7 +1048,7 @@ test "a block shared on one of several paths into a loop is tested before the lo
     for ([_][]const []const u8{ &.{"--release"}, &.{ "--release", "--verify-facts" } }, 0..) |flags, k| {
         const output = try std.fmt.allocPrint(arena.allocator(), "{s}/alias-{d}", .{ root, k });
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(arena.allocator(), &.{ options.core_path, "build", source, "-o", output, "--cache-dir", try std.fmt.allocPrint(arena.allocator(), "{s}/cache", .{root}) });
+        try argv.appendSlice(arena.allocator(), &.{ options.corePath(), "build", source, "-o", output, "--cache-dir", try std.fmt.allocPrint(arena.allocator(), "{s}/cache", .{root}) });
         try argv.appendSlice(arena.allocator(), flags);
         const built = try std.process.run(arena.allocator(), std.testing.io, .{ .argv = argv.items });
         try std.testing.expect(built.term == .exited and built.term.exited == 0);
@@ -1083,7 +1083,7 @@ test "a call that takes a mut argument and also reads it gets a second owner, an
     try environment.put("MYL_CORE_LEAKCHECK", "1");
     for ([_][]const []const u8{ &.{}, &.{"--release"} }) |flags| {
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(arena.allocator(), &.{ options.core_path, "test", try std.fs.path.join(arena.allocator(), &.{ root, "taken.my" }), "--cache-dir", try std.fs.path.join(arena.allocator(), &.{ root, "cache" }) });
+        try argv.appendSlice(arena.allocator(), &.{ options.corePath(), "test", try std.fs.path.join(arena.allocator(), &.{ root, "taken.my" }), "--cache-dir", try std.fs.path.join(arena.allocator(), &.{ root, "cache" }) });
         try argv.appendSlice(arena.allocator(), flags);
         const ran = try std.process.run(arena.allocator(), std.testing.io, .{ .argv = argv.items, .environ_map = &environment });
         // Under the leak check the runner fails a test that ends with blocks live (`leak: …`).
@@ -1216,7 +1216,7 @@ test "a record phi read only through its fields still takes its operands, so uns
     const source = try std.fmt.allocPrint(arena, "{s}/rc_phi_fields.my", .{options.fixtures});
     const output = try std.fmt.allocPrint(arena, "{s}/rc_phi_fields-release", .{root});
     const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
-    const built = try std.process.run(arena, std.testing.io, .{ .argv = &.{ options.core_path, "build", source, "-o", output, "--release", "--link", options.clock_path, "--cache-dir", cache } });
+    const built = try std.process.run(arena, std.testing.io, .{ .argv = &.{ options.corePath(), "build", source, "-o", output, "--release", "--link", options.clock_path, "--cache-dir", cache } });
     try std.testing.expect(built.term == .exited and built.term.exited == 0);
     var environment = try std.testing.environ.createMap(arena);
     try environment.put("MYL_CORE_LEAKCHECK", "1");

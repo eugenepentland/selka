@@ -196,6 +196,84 @@ fn sameRecipes(left: []const []const u8, right: []const []const u8) bool {
 /// A native executable the coordinator must identify before replaying its actions.
 pub const Artifact = struct { label: []const u8, binary: *std.Build.Step.Compile };
 
+/// One artifact's producer in `artifacts.json` version 3: root-relative
+/// recipes (`dir/`, `base/**/*SUFFIX`, `base/*SUFFIX` or an exact path) that
+/// bound every compile-time input of the binary, and the settings, toolchain
+/// and test runner that turn them into bytes. The coordinator identifies the
+/// artifact by the content the recipes select instead of by its bytes, which
+/// embed the tree's path in their debug information.
+const Producer = struct { recipes: []const []const u8, optimize: []const u8, zig_version: []const u8, test_runner: TestRunner };
+/// What links the artifact's test runner. A Zig test root links Guardian's
+/// runner from the `guardian` path dependency (`build.zig.zon`), whose sources
+/// the root's recipes select; an executable links none. Relative, so two
+/// worktrees agree.
+const TestRunner = struct { kind: []const u8, dependency: ?[]const u8 = null, location: ?[]const u8 = null, runner: ?[]const u8 = null };
+const LabeledProducer = struct { label: []const u8, producer: Producer };
+/// The build scripts and configuration every artifact's build reads.
+const build_files = [_][]const u8{ "./*.zig", "build.zig.zon", ".zigversion", "guardian.toml" };
+/// The Guardian sources a test root's runner and diagnostics compile from.
+const guardian_sources = [_][]const u8{ "../guardian-zig/build.zig", "../guardian-zig/build.zig.zon", "../guardian-zig/src/" };
+const guardian_runner: TestRunner = .{ .kind = "guardian", .dependency = "guardian", .location = "../guardian-zig", .runner = "src/test_runner.zig" };
+
+/// The compile-time input recipes of one prepared artifact besides the build
+/// files and the test runner's sources. A label without recipes is a
+/// configuration error: a new artifact must say what it is built from.
+fn sourcesFor(b: *std.Build, label: []const u8) []const []const u8 {
+    const user_docs = @import("src/user_docs.zig");
+    var docs: [user_docs.topics.len][]const u8 = undefined;
+    for (&docs, user_docs.topics) |*path, topic| path.* = topic.path;
+    // The compiler and the unit root embed the user guides `src/user_docs.zig` names.
+    if (std.mem.eql(u8, label, "mylang")) return concat(b, &.{ &.{"src/"}, &docs });
+    if (std.mem.eql(u8, label, "units")) return concat(b, &.{ &.{ "src/", "test/fixtures/environment-identity/" }, &docs });
+    if (std.mem.eql(u8, label, "core")) return &.{"src/"};
+    if (std.mem.eql(u8, label, "cli") or std.mem.eql(u8, label, "golden")) return &.{ "test/", "src/core/test_paths.zig" };
+    if (std.mem.eql(u8, label, "tooling-units")) return compiled(b, &test_inputs.tooling_unit);
+    if (std.mem.eql(u8, label, "text-scalar-units")) return compiled(b, &test_inputs.text_scalar_unit);
+    if (std.mem.eql(u8, label, "memory-budget")) return &.{"src/memory_budget.zig"};
+    if (std.mem.eql(u8, label, "component-support")) return &.{"selfhost/"};
+    if (std.mem.eql(u8, label, "component-builder")) return &.{"selfhost/*.zig"};
+    std.debug.panic("verification artifact {s} has no producer recipe", .{label});
+}
+
+/// The entries of a declared test-input list the root compiles: its `src/`
+/// files, without the scripts and environment contract its run reads.
+fn compiled(b: *std.Build, list: []const []const u8) []const []const u8 {
+    var kept: std.ArrayList([]const u8) = .empty;
+    for (list) |entry| {
+        if (!std.mem.startsWith(u8, entry, "src/")) continue;
+        if (listed(entry, &test_inputs.environment_contract)) continue;
+        kept.append(b.allocator, entry) catch @panic("verification allocation");
+    }
+    return kept.items;
+}
+
+fn listed(entry: []const u8, list: []const []const u8) bool {
+    for (list) |item| if (std.mem.eql(u8, item, entry)) return true;
+    return false;
+}
+
+fn concat(b: *std.Build, parts: []const []const []const u8) []const []const u8 {
+    return std.mem.concat(b.allocator, []const u8, parts) catch @panic("verification allocation");
+}
+
+/// The `artifact_producers` file `scripts/verification_artifacts.py` merges into
+/// `artifacts.json`: each artifact's recipes, optimize mode, Zig version and,
+/// for a test root, its test runner.
+fn producers(b: *std.Build, artifacts: []const Artifact) std.Build.LazyPath {
+    const entries = b.allocator.alloc(LabeledProducer, artifacts.len) catch @panic("verification allocation");
+    for (entries, artifacts) |*entry, artifact| {
+        const tested = artifact.binary.kind == .@"test";
+        entry.* = .{ .label = artifact.label, .producer = .{
+            .recipes = concat(b, &.{ &build_files, sourcesFor(b, artifact.label), if (tested) &guardian_sources else &.{} }),
+            .optimize = @tagName(artifact.binary.root_module.optimize.?),
+            .zig_version = @import("builtin").zig_version_string,
+            .test_runner = if (tested) guardian_runner else .{ .kind = "none" },
+        } };
+    }
+    const bytes = std.json.Stringify.valueAlloc(b.allocator, entries, .{ .whitespace = .indent_2, .emit_null_optional_fields = false }) catch @panic("verification serialization");
+    return b.addWriteFiles().add("artifact-producers.json", bytes);
+}
+
 /// Explicit developer preparation; the normal install graph runs no Python.
 /// Return only explicitly identified artifact/output roots for coverage exclusion.
 pub fn prepare(b: *std.Build, artifacts: []const Artifact, known_outputs: []const *std.Build.Step) []const *std.Build.Step {
@@ -210,6 +288,8 @@ pub fn prepare(b: *std.Build, artifacts: []const Artifact, known_outputs: []cons
     run.addFileInput(b.path("scripts/verification_code_identity.py"));
     run.setCwd(b.path("."));
     const paths = run.addOutputFileArg("artifacts.json");
+    run.addArg("--producers");
+    run.addFileArg(producers(b, artifacts));
     for (artifacts) |artifact| {
         if (std.mem.eql(u8, artifact.label, "tooling-units") or std.mem.eql(u8, artifact.label, "text-scalar-units")) {
             run.addArgs(&.{ "--qualify", artifact.label, @tagName(artifact.binary.root_module.optimize.?) });

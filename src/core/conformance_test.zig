@@ -78,7 +78,7 @@ fn judge(arena: std.mem.Allocator, pinned: Pinned, report: std.json.Value, out: 
 fn runFile(arena: std.mem.Allocator, name: []const u8, release: bool, cache: []const u8) !std.json.Value {
     const source = try std.fmt.allocPrint(arena, "{s}/{s}.my", .{ options.lang_tests, name });
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(arena, &.{ options.core_path, "test", source, "--json", "--cache-dir", cache });
+    try argv.appendSlice(arena, &.{ options.corePath(), "test", source, "--json", "--cache-dir", cache });
     if (release) try argv.append(arena, "--release");
     const result = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
     const clean = switch (result.term) {

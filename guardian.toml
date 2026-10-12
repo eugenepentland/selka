@@ -16,4 +16,4 @@ enabled = false
 roots = ["src/text_scalar_root_test.zig", "src/tooling_root_test.zig", "src/root_test.zig", "test/integration.zig", "test/golden_parity.zig", "src/memory_budget.zig", "src/core/root_test.zig"]
 
 [orphan_files]
-roots = ["src/text_scalar_root_test.zig", "src/tooling_root_test.zig", "src/compiler.zig", "src/main.zig", "src/root_test.zig", "src/memory_budget.zig", "src/core/cli.zig", "src/core/root_test.zig", "src/config_core_tool_platform.zig", "src/core/juice/bytes_hash_impl.zig"]
+roots = ["src/text_scalar_root_test.zig", "src/tooling_root_test.zig", "src/compiler.zig", "src/main.zig", "src/root_test.zig", "src/memory_budget.zig", "src/core/cli.zig", "src/core/root_test.zig", "src/config_core_tool_platform.zig", "src/core/juice/bytes_hash_impl.zig", "src/core/test_paths.zig"]

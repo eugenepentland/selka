@@ -61,7 +61,7 @@ const Projects = struct {
     }
 
     fn run(self: *const Projects, invocation: Invocation) !Outcome {
-        const executable = try cwd.realPathFileAlloc(io, tools.core_path, self.arena);
+        const executable = try cwd.realPathFileAlloc(io, tools.corePath(), self.arena);
         var arguments: std.ArrayList([]const u8) = .empty;
         try arguments.appendSlice(self.arena, &.{ executable, "build", try self.path(&.{ invocation.project, invocation.source }), "-o", try self.path(&.{ invocation.project, "program" }) });
         try arguments.appendSlice(self.arena, &.{ "--cache-dir", try self.path(&.{ invocation.project, "private" }), "--report" });
@@ -76,7 +76,7 @@ const Projects = struct {
     }
 
     fn check(self: *const Projects, invocation: Invocation) !Outcome {
-        const executable = try cwd.realPathFileAlloc(io, tools.core_path, self.arena);
+        const executable = try cwd.realPathFileAlloc(io, tools.corePath(), self.arena);
         var arguments: std.ArrayList([]const u8) = .empty;
         try arguments.appendSlice(self.arena, &.{ executable, "check-project", try self.path(&.{ invocation.project, invocation.source }) });
         const cache = try std.fmt.allocPrint(self.arena, "--cache-dir={s}", .{try self.path(&.{ invocation.project, "private" })});

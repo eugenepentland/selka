@@ -187,17 +187,38 @@ class ProducerTests(unittest.TestCase):
         root.write_text(root.read_text() + '\nconst extra = @embedFile("new_oracle.txt");')
         self.assertIsNone(producers.producer_metadata(self.root, 'text-scalar-units', self.artifact, 'Debug'))
 
-    def test_writer_atomic_v2_inventory_and_invalid_labels(self):
+    def test_writer_atomic_v3_inventory_and_invalid_labels(self):
         output = self.root / 'artifacts.json'
         result = subprocess.run([sys.executable, str(ROOT / 'scripts/verification_artifacts.py'),
                                  str(output), '--qualify', 'tooling-units', 'Debug',
                                  'tooling-units', str(self.artifact)], cwd=self.root, capture_output=True)
         self.assertEqual(result.returncode, 0, result.stderr.decode())
         record = json.loads(output.read_text())
-        self.assertEqual(record['version'], 2)
+        self.assertEqual(record['version'], 3)
+        self.assertIsInstance(record['artifacts']['tooling-units'], str)
         self.assertIsNotNone(self.qualify(record))
         with self.assertRaises(SystemExit):
             verification_artifacts.main([str(output), 'bad', str(self.artifact), 'bad', str(self.artifact)])
+        self.assertEqual(json.loads(output.read_text()), record)
+
+    def test_writer_records_producer_recipes_for_exactly_the_artifacts(self):
+        output, recipes = self.root / 'artifacts.json', self.root / 'recipes.json'
+        producer = {'recipes': ['build.zig', 'src/'], 'optimize': 'Debug', 'zig_version': '0.17.0',
+                    'test_runner': {'kind': 'guardian', 'dependency': 'guardian', 'location': '../guardian-zig',
+                                    'runner': 'src/test_runner.zig'}}
+        recipes.write_text(json.dumps([{'label': 'units', 'producer': producer}]))
+        verification_artifacts.main([str(output), '--producers', str(recipes), 'units', str(self.artifact)])
+        record = json.loads(output.read_text())
+        self.assertEqual(record['version'], 3)
+        self.assertEqual(record['artifacts'], {'units': {'path': str(self.artifact.resolve()), 'producer': producer}})
+        self.assertEqual(record['producers'], {})
+        with self.assertRaises(SystemExit):
+            verification_artifacts.main([str(output), '--producers', str(recipes), 'cli', str(self.artifact)])
+        for change in ({'recipes': []}, {'recipes': ['src/', 'src/']}, {'recipes': ['/abs/src/']},
+                       {'optimize': ''}, {'test_runner': None}, {'extra': 1}):
+            recipes.write_text(json.dumps([{'label': 'units', 'producer': dict(producer, **change)}]))
+            with self.subTest(change=change), self.assertRaises(SystemExit):
+                verification_artifacts.main([str(output), '--producers', str(recipes), 'units', str(self.artifact)])
         self.assertEqual(json.loads(output.read_text()), record)
 
     def test_publication_mutation_cannot_publish_success_from_manifest_alone(self):

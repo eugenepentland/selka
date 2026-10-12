@@ -28,7 +28,7 @@ fn counted(a: std.mem.Allocator, root: []const u8, fixture: []const u8, flags: [
     const label = try std.fmt.allocPrint(a, "{s}{d}{d}", .{ std.fs.path.stem(std.fs.path.basename(fixture)), flags.len, arguments.len });
     const binary = try std.fs.path.join(a, &.{ root, label });
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(a, &.{ options.core_path, "build", source, "-o", binary, "--cache-dir", root });
+    try argv.appendSlice(a, &.{ options.corePath(), "build", source, "-o", binary, "--cache-dir", root });
     try argv.appendSlice(a, flags);
     const built = try std.process.run(a, std.testing.io, .{ .argv = argv.items });
     if (built.term != .exited or built.term.exited != 0) report("counting build: {s}{s}\n", .{ built.stdout, built.stderr });

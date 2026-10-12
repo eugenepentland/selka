@@ -25,23 +25,30 @@
 //! reading a new file, declare it here; `-Dtest-rerun=true` re-runs every cached
 //! test step regardless.
 
+/// The environment identity contract behind the build graph's environment
+/// manifest and projection (`build_env.zig`, ENV-PROJECTION-1/2): every step a
+/// list below covers runs in the environment it projects, and every cached
+/// one is keyed on the manifest it writes. Lists that already cover `src/`
+/// include it.
+pub const environment_contract = [_][]const u8{ "src/environment_identity.zon", "src/environment_identity.zig", "src/build_env_rules.zig" };
+
 /// Complete independent tooling test implementation closure; no live fixtures.
 pub const tooling_unit = [_][]const u8{
     "src/tooling_root_test.zig", "src/doc_coverage_test.zig", "src/doc_coverage.zig",
     "src/input_probe_test.zig",  "src/input_probe.zig",       "src/fix_plan_test.zig",
     "src/fix_plan.zig",          "src/timings_test.zig",      "src/timings.zig",
     "src/invalidation_test.zig", "src/invalidation.zig",
-} ++ [_][]const u8{ "scripts/verification_native_telemetry.py", "scripts/verification_telemetry.py" };
+} ++ [_][]const u8{ "scripts/verification_native_telemetry.py", "scripts/verification_telemetry.py" } ++ environment_contract;
 
 /// Complete scalar-text implementation and embedded oracle closure.
 pub const text_scalar_unit = [_][]const u8{
     "src/text_scalar_root_test.zig", "src/number_text.zig", "src/number_text_test.zig",
     "src/number_grammar.txt",        "src/format_spec.zig", "src/format_spec_test.zig",
     "src/format_spec_cases.tsv",
-} ++ [_][]const u8{ "scripts/verification_native_telemetry.py", "scripts/verification_telemetry.py" };
+} ++ [_][]const u8{ "scripts/verification_native_telemetry.py", "scripts/verification_telemetry.py" } ++ environment_contract;
 
 /// The independently gated named byte-ceiling module.
-pub const memory_budget = [_][]const u8{"src/memory_budget.zig"} ++ [_][]const u8{ "scripts/verification_native_telemetry.py", "scripts/verification_telemetry.py" };
+pub const memory_budget = [_][]const u8{"src/memory_budget.zig"} ++ [_][]const u8{ "scripts/verification_native_telemetry.py", "scripts/verification_telemetry.py" } ++ environment_contract;
 
 /// `src/root_test.zig`, the unit root. Its guest programs also read the
 /// runtime sources the compiler embeds, which `src/` covers.
@@ -95,8 +102,8 @@ pub const doc_coverage = [_][]const u8{ "README.md", "SPEC.md", "docs/", "src/" 
 
 /// Every Zig file selected by the normal format gate, including new files.
 pub const zig_format = [_][]const u8{
-    "build.zig",    "build_identity.zig", "build_test_inputs.zig", "build_verification.zig",
-    "src/**/*.zig", "tests/**/*.zig",     "test/**/*.zig",         "selfhost/**/*.zig",
+    "build.zig",    "build_env.zig",  "build_identity.zig", "build_test_inputs.zig", "build_verification.zig",
+    "src/**/*.zig", "tests/**/*.zig", "test/**/*.zig",      "selfhost/**/*.zig",
 };
 
 /// `test/golden_parity.zig` (`test-golden`): the golden corpora and the
@@ -104,13 +111,13 @@ pub const zig_format = [_][]const u8{
 pub const golden = [_][]const u8{ "selfhost/components/", "selfhost/*.zig", "selfhost/component-seed.json", "src/", "tests/goldens/", "examples/", "test/fixtures/" } ++ [_][]const u8{ "scripts/verification_native_telemetry.py", "scripts/verification_telemetry.py" };
 
 /// `tests/idiom_probes.py --compiler`: the probe corpus and its manifest.
-pub const idioms = [_][]const u8{ "tests/idiom_probes.py", "tests/fixtures/idioms/" };
+pub const idioms = [_][]const u8{ "tests/idiom_probes.py", "tests/fixtures/idioms/" } ++ environment_contract;
 
 /// `tests/incremental_diff.py`: the mutation walk and its fixture project.
-pub const incremental = [_][]const u8{ "tests/incremental_diff.py", "tests/differential_corpus.py", "tests/fixtures/incremental/", "tests/fixtures/module_projects/" };
+pub const incremental = [_][]const u8{ "tests/incremental_diff.py", "tests/differential_corpus.py", "tests/fixtures/incremental/", "tests/fixtures/module_projects/" } ++ environment_contract;
 
 /// `tests/interface_diff.py`: the interface-hash mutation walk and its fixture.
-pub const interfaces = [_][]const u8{ "tests/interface_diff.py", "tests/differential_corpus.py", "tests/fixtures/interfaces/", "tests/fixtures/interfaces_generic/" };
+pub const interfaces = [_][]const u8{ "tests/interface_diff.py", "tests/differential_corpus.py", "tests/fixtures/interfaces/", "tests/fixtures/interfaces_generic/" } ++ environment_contract;
 
 /// `tests/interface_oracle.py`: the per-module check oracle over `tests/lang`
 /// and the interface fixtures.
@@ -120,10 +127,10 @@ pub const interface_oracle = [_][]const u8{
     "tests/fixtures/interfaces/",
     "tests/fixtures/interfaces_generic/",
     "tests/fixtures/incremental/",
-};
+} ++ environment_contract;
 
 /// `tests/idiom_probes.py --self-test`: the CPython oracle only.
-pub const idioms_self = [_][]const u8{"tests/idiom_probes.py"};
+pub const idioms_self = [_][]const u8{"tests/idiom_probes.py"} ++ environment_contract;
 
 /// `tests/parser_hints.py`, static and against the compiler.
 pub const parser_hints = [_][]const u8{
@@ -131,23 +138,23 @@ pub const parser_hints = [_][]const u8{
     "src/parser.zig",
     "velocity/friction/",
     "velocity/suites/idioms/",
-};
+} ++ environment_contract;
 
 /// `tests/test_friction_harvest.py`: the harvester and its replay fixture.
-pub const friction = [_][]const u8{ "tests/test_friction_harvest.py", "velocity/friction/" };
+pub const friction = [_][]const u8{ "tests/test_friction_harvest.py", "velocity/friction/" } ++ environment_contract;
 
 /// Synthetic contracts, parsers, reports and calibration; retain the complete
 /// imported package closure and its membership, including CLI/engine imports.
-pub const juice_pure = [_][]const u8{ "scripts/verification_code_identity.py", "tests/test_juice.py", "scripts/juice_tool/" };
+pub const juice_pure = [_][]const u8{ "scripts/verification_code_identity.py", "tests/test_juice.py", "scripts/juice_tool/" } ++ environment_contract;
 
 /// Juice's live runner and native collector integration tests.
-pub const juice = [_][]const u8{ "scripts/verification_code_identity.py", "tests/test_juice.py", "tests/test_juice_native.py", "scripts/juice", "scripts/juice_tool/", "scripts/juice_validate.py", "examples/juice/" };
+pub const juice = [_][]const u8{ "scripts/verification_code_identity.py", "tests/test_juice.py", "tests/test_juice_native.py", "scripts/juice", "scripts/juice_tool/", "scripts/juice_validate.py", "examples/juice/" } ++ environment_contract;
 
 /// Runtime collector experiments observe CPU, scheduler and current host state.
-pub const juice_runtime = [_][]const u8{ "scripts/verification_code_identity.py", "tests/test_juice_runtime_bench.py", "scripts/juice_tool/", "scripts/juice_runtime_bench.py", "scripts/build_admission.py", "scripts/build-slot.sh" };
+pub const juice_runtime = [_][]const u8{ "scripts/verification_code_identity.py", "tests/test_juice_runtime_bench.py", "scripts/juice_tool/", "scripts/juice_runtime_bench.py", "scripts/build_admission.py", "scripts/build-slot.sh" } ++ environment_contract;
 
 /// `mylang doctest .`: every page it walks.
-pub const doctest = [_][]const u8{ "README.md", "SPEC.md", "docs/**/*.md" };
+pub const doctest = [_][]const u8{ "README.md", "SPEC.md", "docs/**/*.md" } ++ environment_contract;
 
 /// `tests/test_affected_tests.py`: `scripts/affected_tests.py`'s mapping,
 /// pinned on a synthetic repository it writes itself.
@@ -156,7 +163,7 @@ pub const affected = [_][]const u8{
     "scripts/focused_test.py",
     "tests/test_affected_tests.py",
     "tests/test_focused_test.py",
-};
+} ++ environment_contract;
 
 /// `tests/test_inputs_coverage.py`: this file and every Zig test source the
 /// cached roots compile.
@@ -165,10 +172,10 @@ pub const coverage = [_][]const u8{
     "build_test_inputs.zig",
     "src/**/*.zig",
     "test/**/*.zig",
-};
+} ++ environment_contract;
 
 /// `tests/test_inputs_coverage.py --self-test`.
-pub const coverage_self = [_][]const u8{"tests/test_inputs_coverage.py"};
+pub const coverage_self = [_][]const u8{"tests/test_inputs_coverage.py"} ++ environment_contract;
 
 /// Receipt admission and immutable-snapshot adversarial tests use fake actions.
 pub const verification_cache = [_][]const u8{
@@ -240,7 +247,7 @@ pub const verification_cache = [_][]const u8{
 };
 
 /// Persistent coordinator startup watches the complete developer implementation.
-pub const verification_session = [_][]const u8{"scripts/"};
+pub const verification_session = [_][]const u8{"scripts/"} ++ environment_contract;
 
 /// Independent fuzz shards, concrete replay, evidence and native-worker lifecycle.
 pub const fuzz_campaign = [_][]const u8{
@@ -275,10 +282,10 @@ pub const fuzz_campaign = [_][]const u8{
     "scripts/verification_measurement.py",
     "scripts/build_admission.py",
     "scripts/verification_guest_telemetry.py",
-};
+} ++ environment_contract;
 
 /// `tests/input_manifest.py --self-test`.
-pub const manifest_self = [_][]const u8{"tests/input_manifest.py"};
+pub const manifest_self = [_][]const u8{"tests/input_manifest.py"} ++ environment_contract;
 
 /// Qualified Juice evidence and admission tests use isolated simulated collectors.
 pub const juice_cache = [_][]const u8{
@@ -309,19 +316,19 @@ pub const juice_cache = [_][]const u8{
     "scripts/verification_measurement.py",
     "scripts/build_admission.py",
     "scripts/verification_guest_telemetry.py",
-};
+} ++ environment_contract;
 
 /// Isolated CLI cache, frame-diagnostic and guest-address-space probes.
-pub const tooling_isolation = [_][]const u8{"tests/tooling_cache_isolation.py"};
+pub const tooling_isolation = [_][]const u8{"tests/tooling_cache_isolation.py"} ++ environment_contract;
 
 /// The bootstrap lexer source and live-compiler numeric extent oracle.
-pub const selfhost_numeric = [_][]const u8{"selfhost/"};
+pub const selfhost_numeric = [_][]const u8{"selfhost/"} ++ environment_contract;
 
 /// The independent component cache and qualification builder.
-pub const component_builder = [_][]const u8{ "selfhost/*.zig", "selfhost/test_components.py", "selfhost/component-seed.json" } ++ [_][]const u8{ "scripts/verification_native_telemetry.py", "scripts/verification_telemetry.py" };
+pub const component_builder = [_][]const u8{ "selfhost/*.zig", "selfhost/test_components.py", "selfhost/component-seed.json" } ++ [_][]const u8{ "scripts/verification_native_telemetry.py", "scripts/verification_telemetry.py" } ++ environment_contract;
 
 /// Qualified-seed pure tests and native protocol oracle.
-pub const component_native = [_][]const u8{ "selfhost/components/", "selfhost/*.zig", "selfhost/component-seed.json", "selfhost/test_component_native.py", "selfhost/tests/run_test_index_component.py", "selfhost/tests/run_cache_plan_component.py" };
+pub const component_native = [_][]const u8{ "selfhost/components/", "selfhost/*.zig", "selfhost/component-seed.json", "selfhost/test_component_native.py", "selfhost/tests/run_test_index_component.py", "selfhost/tests/run_cache_plan_component.py" } ++ environment_contract;
 
 /// The live .my formatting corpus, selection script and deliberate exclusions.
 pub const my_format = [_][]const u8{
@@ -336,17 +343,17 @@ pub const my_format = [_][]const u8{
     "test/**/*.my",
     "tests/**/*.my",
     "velocity/**/*.my",
-};
+} ++ environment_contract;
 
 /// Synthetic corpus selection and real formatter failure propagation.
-pub const my_format_self = [_][]const u8{ "scripts/check_my_format.py", "tests/test_my_format.py" };
+pub const my_format_self = [_][]const u8{ "scripts/check_my_format.py", "tests/test_my_format.py" } ++ environment_contract;
 
 /// Embedded migration extraction, census evidence and atomic staging checks.
 pub const embedded_migration = [_][]const u8{
     "scripts/migrate_embedded.py",
     "scripts/spelling_census.py",
     "tests/test_migrate_embedded.py",
-};
+} ++ environment_contract;
 
 /// All live sources and selection policy read by the allocation-contract lint gate.
 pub const noalloc_lint = my_format ++ [_][]const u8{"scripts/check_noalloc.py"};

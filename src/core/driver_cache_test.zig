@@ -43,7 +43,7 @@ const Project = struct {
 
     fn attempt(self: *Project, extra: []const []const u8) !std.process.RunResult {
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(self.arena, &.{ tools.core_path, "build", try self.path("app.my"), "-o", try self.path("program"), "--cache-dir", try self.path("cache"), "--cache-report" });
+        try argv.appendSlice(self.arena, &.{ tools.corePath(), "build", try self.path("app.my"), "-o", try self.path("program"), "--cache-dir", try self.path("cache"), "--cache-report" });
         try argv.appendSlice(self.arena, extra);
         return std.process.run(self.arena, io, .{ .argv = argv.items, .environ_map = &self.environment });
     }

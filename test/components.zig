@@ -1,7 +1,6 @@
 //! Production consumers and relocatable installations of native Selka components.
 const std = @import("std");
 const t = std.testing;
-const compiler = @import("test_options").compiler_path;
 const fixture =
     \\public func helper() -> int:
     \\    return 7
@@ -17,7 +16,7 @@ const fixture =
 
 fn run(environment: *const std.process.Environ.Map, command: []const u8, path: []const u8) !std.process.RunResult {
     const context = std.mem.eql(u8, command, "context");
-    const args = [_][]const u8{ compiler, command, path, if (context) "--symbol=input::helper" else "input::helper" };
+    const args = [_][]const u8{ @import("test_paths").corePath(), command, path, if (context) "--symbol=input::helper" else "input::helper" };
     const length: usize = if (context or std.mem.eql(u8, command, "tests-for")) 4 else 3;
     return std.process.run(t.allocator, t.io, .{ .argv = args[0..length], .environ_map = environment });
 }
@@ -71,7 +70,7 @@ test "CLI component bootstrap rebuilds and installs without an interpreter on PA
     defer environment.deinit();
     try environment.put("PATH", empty_path);
     const result = try std.process.run(t.allocator, t.io, .{
-        .argv = &.{ @import("test_options").component_builder_path, "--zig", @import("test_options").zig_path, "--install-dir", installation, "--uncached" },
+        .argv = &.{ @import("test_paths").componentBuilderPath(), "--zig", @import("test_options").zig_path, "--install-dir", installation, "--uncached" },
         .environ_map = &environment,
     });
     defer release(result);

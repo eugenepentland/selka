@@ -71,7 +71,7 @@ fn leakChecked(arena: std.mem.Allocator, root: []const u8, name: []const u8, fla
     const output = try std.fmt.allocPrint(arena, "{s}/{s}-{d}", .{ root, name, flags.len });
     const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(arena, &.{ options.core_path, "build", source, "-o", output, "--cache-dir", cache });
+    try argv.appendSlice(arena, &.{ options.corePath(), "build", source, "-o", output, "--cache-dir", cache });
     try argv.appendSlice(arena, flags);
     const built = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
     try std.testing.expect(built.term == .exited and built.term.exited == 0);
@@ -459,7 +459,7 @@ test "a byte-buffer append copies in place when the range fits the room and call
 fn expectGrowthTrap(a: std.mem.Allocator, root: []const u8, expected: []const u8, flags: []const []const u8) !void {
     const source = try std.fmt.allocPrint(a, "{s}/ce_appends.my", .{options.fixtures});
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(a, &.{ options.core_path, "run", source, "--max-memory=1M", "--cache-dir", try std.fmt.allocPrint(a, "{s}/run-cache", .{root}) });
+    try argv.appendSlice(a, &.{ options.corePath(), "run", source, "--max-memory=1M", "--cache-dir", try std.fmt.allocPrint(a, "{s}/run-cache", .{root}) });
     try argv.appendSlice(a, flags);
     try argv.appendSlice(a, &.{ "--", "grow", "10000000" });
     const ran = try std.process.run(a, std.testing.io, .{ .argv = argv.items });

@@ -20,7 +20,7 @@ fn buildHeader(a: std.mem.Allocator, root: []const u8, environment: *const std.p
     var argv: std.ArrayList([]const u8) = .empty;
     const output = try std.fs.path.join(a, &.{ root, "guest" });
     const cache = try std.fs.path.join(a, &.{ root, "cache" });
-    try argv.appendSlice(a, &.{ tools.core_path, "build", try std.fs.path.join(a, &.{ root, "app.my" }), "-o", output, "--link", try std.fs.path.join(a, &.{ root, "value.c" }), "--cache-dir", cache });
+    try argv.appendSlice(a, &.{ tools.corePath(), "build", try std.fs.path.join(a, &.{ root, "app.my" }), "-o", output, "--link", try std.fs.path.join(a, &.{ root, "value.c" }), "--cache-dir", cache });
     if (release) try argv.append(a, "--release");
     const built = try std.process.run(a, io, .{ .argv = argv.items, .environ_map = environment });
     if (built.term != .exited or built.term.exited != 0) diagnostic("foreign header build: {s}{s}\n", .{ built.stdout, built.stderr });
@@ -153,7 +153,7 @@ const payload_main =
 fn payloadPrint(a: std.mem.Allocator, root: []const u8, release: bool) !void {
     var argv: std.ArrayList([]const u8) = .empty;
     const output = try std.fs.path.join(a, &.{ root, "guest" });
-    try argv.appendSlice(a, &.{ tools.core_path, "build", try std.fs.path.join(a, &.{ root, "main.my" }), "-o", output, "--cache-dir", try std.fs.path.join(a, &.{ root, "cache" }) });
+    try argv.appendSlice(a, &.{ tools.corePath(), "build", try std.fs.path.join(a, &.{ root, "main.my" }), "-o", output, "--cache-dir", try std.fs.path.join(a, &.{ root, "cache" }) });
     if (release) try argv.append(a, "--release");
     const built = try std.process.run(a, io, .{ .argv = argv.items });
     if (built.term != .exited or built.term.exited != 0) diagnostic("payload print build: {s}{s}\n", .{ built.stdout, built.stderr });

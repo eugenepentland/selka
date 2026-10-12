@@ -4,5 +4,5 @@
     .fingerprint = 0xe12764e71b51fef7,
     .minimum_zig_version = "0.17.0-dev.1683+5ceec001b",
     .dependencies = .{ .guardian = .{ .path = "../guardian-zig" } },
-    .paths = .{ "selfhost", "build_identity.zig", "build_test_inputs.zig", "build_verification.zig", "scripts", "build.zig", "build.zig.zon", ".zigversion", ".qbeversion", "src", "vendor", "tests", "test", "guardian.toml", "SPEC.md", "examples", "docs", "README.md" },
+    .paths = .{ "selfhost", "build_env.zig", "build_identity.zig", "build_test_inputs.zig", "build_verification.zig", "scripts", "build.zig", "build.zig.zon", ".zigversion", ".qbeversion", "src", "vendor", "tests", "test", "guardian.toml", "SPEC.md", "examples", "docs", "README.md" },
 }
