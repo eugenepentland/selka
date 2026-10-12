@@ -1,0 +1,966 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/.tmp/memory-closeout/A04/text-cursor/install/focus/mylang",
+  "compiler_sha256": "ec89910347476ceec8a50e4196292bfcb5a9206bb025423110b8fbae0a74a58d",
+  "source_commit": "78dbb358d2306a043f22c1b9fafe81641ad8ea55",
+  "fixture_commit": "78dbb358d2306a043f22c1b9fafe81641ad8ea55",
+  "default_ownership": false,
+  "ownership_support_sha256": "9b9df63e0dd72e3e2984a77af8f888efe8e39626f65c34c5f0b51a643758f97b",
+  "harness_sha256": "4af5a040f6a9a6e3f170aa353e64d6e0c1a700f24971ba1f921da43602ac1073",
+  "cases": {
+    "lists": {
+      "release": {
+        "compiler_sha256": "ec89910347476ceec8a50e4196292bfcb5a9206bb025423110b8fbae0a74a58d",
+        "source_sha256": "8dd0bf47fd760443b876c4fb51a8cbc1c299a8e7d058a75a9048ecefcc1b7e97",
+        "binary_sha256": "a484a944e0765231bf8db5052df54f386e0745900a77ddf5ab7494c29fd08464",
+        "llvm_sha256": "0578ef2262efda2c7d14aa22fca80d69aaf7c4f2607ab46e94268d2aefa2a4e7",
+        "build_ns": 2797919825,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/.tmp/memory-closeout/A04/repetition/cursor-corrected-01/lists/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1246198,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A04/repetition/cursor-corrected-01/lists/release/counts-1.json",
+              "counter_sha256": "6d443a0b02435312fffa3bdd06febe4a883ff1e57c47629877dc9009b89e4184",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 19,
+              "memory": {
+                "allocs": 52,
+                "alloc_bytes": 3424,
+                "frees": 52,
+                "reallocs": 0,
+                "peak_live_bytes": 1856,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 2,
+              "allocs": 52,
+              "alloc_bytes": 3424,
+              "frees": 52,
+              "free_bytes": 3424,
+              "list_grows": 2,
+              "list_grow_bytes": 56,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 10,
+              "list_copy_bytes": 112,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 16,
+              "text_copy_bytes": 28,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 0,
+              "buffer_grow_bytes": 0,
+              "text_grows": 4,
+              "text_grow_bytes": 4,
+              "text_appends": 4,
+              "text_append_bytes": 4,
+              "buffer_pushes": 0,
+              "buffer_appends": 0,
+              "buffer_append_bytes": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 1856,
+              "live_bytes_at_exit": 0
+            }
+          }
+        },
+        "status": "passed"
+      },
+      "debug": {
+        "compiler_sha256": "ec89910347476ceec8a50e4196292bfcb5a9206bb025423110b8fbae0a74a58d",
+        "source_sha256": "8dd0bf47fd760443b876c4fb51a8cbc1c299a8e7d058a75a9048ecefcc1b7e97",
+        "binary_sha256": "9db02900f2ca67f7f10f546cdadea44ba6c07386e15dee0e3de672a2e5268e83",
+        "llvm_sha256": "582e282f39a5c16722b7b9cd10d7b08a365dfaa549385fb0723907f72a467563",
+        "build_ns": 173448691,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/.tmp/memory-closeout/A04/repetition/cursor-corrected-01/lists/debug/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1303587,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A04/repetition/cursor-corrected-01/lists/debug/counts-1.json",
+              "counter_sha256": "cb7dc752787282f7d0f39e55626701e5f93fa514af0737f6e60a23368ec50ba4",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 21,
+              "memory": {
+                "allocs": 54,
+                "alloc_bytes": 3552,
+                "frees": 54,
+                "reallocs": 0,
+                "peak_live_bytes": 1856,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 2,
+              "allocs": 54,
+              "alloc_bytes": 3552,
+              "frees": 54,
+              "free_bytes": 3552,
+              "list_grows": 2,
+              "list_grow_bytes": 56,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 10,
+              "list_copy_bytes": 112,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 16,
+              "text_copy_bytes": 28,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 0,
+              "buffer_grow_bytes": 0,
+              "text_grows": 4,
+              "text_grow_bytes": 4,
+              "text_appends": 4,
+              "text_append_bytes": 4,
+              "buffer_pushes": 0,
+              "buffer_appends": 0,
+              "buffer_append_bytes": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 1856,
+              "live_bytes_at_exit": 0
+            }
+          }
+        },
+        "status": "passed"
+      },
+      "verify": {
+        "compiler_sha256": "ec89910347476ceec8a50e4196292bfcb5a9206bb025423110b8fbae0a74a58d",
+        "source_sha256": "8dd0bf47fd760443b876c4fb51a8cbc1c299a8e7d058a75a9048ecefcc1b7e97",
+        "binary_sha256": "c03e0a5638c2d6b031c14a460d68c54cd6e7cde978a0da87ff32b073dd05f304",
+        "llvm_sha256": "d7acec405f8310aef9254c1429bf85b79440221b538cfd80b221d7799c9f8453",
+        "build_ns": 258371871,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/.tmp/memory-closeout/A04/repetition/cursor-corrected-01/lists/verify/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1259816,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A04/repetition/cursor-corrected-01/lists/verify/counts-1.json",
+              "counter_sha256": "94d8e973688835f25f77277847a20a012faa10a92d2470f446407689edc0dbca",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 19,
+              "memory": {
+                "allocs": 52,
+                "alloc_bytes": 3424,
+                "frees": 52,
+                "reallocs": 0,
+                "peak_live_bytes": 1856,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 2,
+              "allocs": 52,
+              "alloc_bytes": 3424,
+              "frees": 52,
+              "free_bytes": 3424,
+              "list_grows": 2,
+              "list_grow_bytes": 56,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 10,
+              "list_copy_bytes": 112,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 16,
+              "text_copy_bytes": 28,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 0,
+              "buffer_grow_bytes": 0,
+              "text_grows": 4,
+              "text_grow_bytes": 4,
+              "text_appends": 4,
+              "text_append_bytes": 4,
+              "buffer_pushes": 0,
+              "buffer_appends": 0,
+              "buffer_append_bytes": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 1856,
+              "live_bytes_at_exit": 0
+            }
+          }
+        },
+        "status": "passed"
+      },
+      "optimized_debug": {
+        "compiler_sha256": "ec89910347476ceec8a50e4196292bfcb5a9206bb025423110b8fbae0a74a58d",
+        "source_sha256": "8dd0bf47fd760443b876c4fb51a8cbc1c299a8e7d058a75a9048ecefcc1b7e97",
+        "binary_sha256": "26121b307da9406e444594aec7549e116569932cf79d17142ebe9051de4ac34a",
+        "llvm_sha256": "e184039514d188d83692b8d66e610d318a7aa6cbf822d331889dd9fbc3471f8e",
+        "build_ns": 212539867,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/.tmp/memory-closeout/A04/repetition/cursor-corrected-01/lists/optimized_debug/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1036688,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A04/repetition/cursor-corrected-01/lists/optimized_debug/counts-1.json",
+              "counter_sha256": "53475fe07a5e11b30e699402fe4812673b15e43298e19ca3a5082746e8ba4eb6",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 19,
+              "memory": {
+                "allocs": 52,
+                "alloc_bytes": 3424,
+                "frees": 52,
+                "reallocs": 0,
+                "peak_live_bytes": 1856,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 2,
+              "allocs": 52,
+              "alloc_bytes": 3424,
+              "frees": 52,
+              "free_bytes": 3424,
+              "list_grows": 2,
+              "list_grow_bytes": 56,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 10,
+              "list_copy_bytes": 112,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 16,
+              "text_copy_bytes": 28,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 0,
+              "buffer_grow_bytes": 0,
+              "text_grows": 4,
+              "text_grow_bytes": 4,
+              "text_appends": 4,
+              "text_append_bytes": 4,
+              "buffer_pushes": 0,
+              "buffer_appends": 0,
+              "buffer_append_bytes": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 1856,
+              "live_bytes_at_exit": 0
+            }
+          }
+        },
+        "status": "passed"
+      },
+      "no_facts": {
+        "compiler_sha256": "ec89910347476ceec8a50e4196292bfcb5a9206bb025423110b8fbae0a74a58d",
+        "source_sha256": "8dd0bf47fd760443b876c4fb51a8cbc1c299a8e7d058a75a9048ecefcc1b7e97",
+        "binary_sha256": "e9083f50f9b62fdac388797dabda57a2168323462c9e4876cf9f2560ee3d03b6",
+        "llvm_sha256": "f8a47445886505bca8a194f6f2d5e73c990af0738ef52f59da7c2ec583fcc885",
+        "build_ns": 187885127,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/.tmp/memory-closeout/A04/repetition/cursor-corrected-01/lists/no_facts/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1192028,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A04/repetition/cursor-corrected-01/lists/no_facts/counts-1.json",
+              "counter_sha256": "ececeb1ba75e9e63a09a00c067f38573f8f230920c1bf7afacdc3613b8f01429",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 21,
+              "memory": {
+                "allocs": 54,
+                "alloc_bytes": 3552,
+                "frees": 54,
+                "reallocs": 0,
+                "peak_live_bytes": 1856,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 2,
+              "allocs": 54,
+              "alloc_bytes": 3552,
+              "frees": 54,
+              "free_bytes": 3552,
+              "list_grows": 2,
+              "list_grow_bytes": 56,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 10,
+              "list_copy_bytes": 112,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 16,
+              "text_copy_bytes": 28,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 0,
+              "buffer_grow_bytes": 0,
+              "text_grows": 4,
+              "text_grow_bytes": 4,
+              "text_appends": 4,
+              "text_append_bytes": 4,
+              "buffer_pushes": 0,
+              "buffer_appends": 0,
+              "buffer_append_bytes": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 1856,
+              "live_bytes_at_exit": 0
+            }
+          }
+        },
+        "status": "passed"
+      }
+    },
+    "complete": {
+      "release": {
+        "compiler_sha256": "ec89910347476ceec8a50e4196292bfcb5a9206bb025423110b8fbae0a74a58d",
+        "source_sha256": "87f833318f1e84ffa20ef35ec152fa2875a4485dba72ecf0faf03c12494de570",
+        "binary_sha256": "e90b54d66d8251f2d534bc1850078f13c050fb1bd46a61ef3acbe45397cdedd9",
+        "llvm_sha256": "0649cd571f823d237430e7ae673a3f3b9cc1ba0159c899cacc8fe5baeae2bc6a",
+        "build_ns": 223567917,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/.tmp/memory-closeout/A04/repetition/cursor-corrected-01/complete/release/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 2911678,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A04/repetition/cursor-corrected-01/complete/release/counts-1.json",
+              "counter_sha256": "0ee328eb03e42a701feab0c340ac70d8eb68fdf4c97aba71992e3ac6b0b86257",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 29,
+              "memory": {
+                "allocs": 40,
+                "alloc_bytes": 2560,
+                "frees": 40,
+                "reallocs": 0,
+                "peak_live_bytes": 800,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 10,
+              "allocs": 40,
+              "alloc_bytes": 2560,
+              "frees": 40,
+              "free_bytes": 2560,
+              "list_grows": 2,
+              "list_grow_bytes": 32,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 16,
+              "text_copy_bytes": 28,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 0,
+              "buffer_grow_bytes": 0,
+              "text_grows": 3,
+              "text_grow_bytes": 3,
+              "text_appends": 3,
+              "text_append_bytes": 4,
+              "buffer_pushes": 0,
+              "buffer_appends": 0,
+              "buffer_append_bytes": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 800,
+              "live_bytes_at_exit": 0
+            }
+          }
+        },
+        "status": "passed"
+      },
+      "debug": {
+        "compiler_sha256": "ec89910347476ceec8a50e4196292bfcb5a9206bb025423110b8fbae0a74a58d",
+        "source_sha256": "87f833318f1e84ffa20ef35ec152fa2875a4485dba72ecf0faf03c12494de570",
+        "binary_sha256": "66dc61303e4105389767bbe1cf75394e45134a511a0e630d3668b92fef64cd39",
+        "llvm_sha256": "5fc643c9696058e30b53278eb0af0286181b1c2f1800ebab5daf6718cb53f322",
+        "build_ns": 174521149,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/.tmp/memory-closeout/A04/repetition/cursor-corrected-01/complete/debug/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1102552,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A04/repetition/cursor-corrected-01/complete/debug/counts-1.json",
+              "counter_sha256": "4ccb5dfdef2e6c273219354be4fc8e38f40972489909952818ff484e85853c08",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 33,
+              "memory": {
+                "allocs": 44,
+                "alloc_bytes": 2816,
+                "frees": 44,
+                "reallocs": 0,
+                "peak_live_bytes": 800,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 16,
+              "allocs": 44,
+              "alloc_bytes": 2816,
+              "frees": 44,
+              "free_bytes": 2816,
+              "list_grows": 2,
+              "list_grow_bytes": 32,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 16,
+              "text_copy_bytes": 28,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 0,
+              "buffer_grow_bytes": 0,
+              "text_grows": 3,
+              "text_grow_bytes": 3,
+              "text_appends": 3,
+              "text_append_bytes": 4,
+              "buffer_pushes": 0,
+              "buffer_appends": 0,
+              "buffer_append_bytes": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 800,
+              "live_bytes_at_exit": 0
+            }
+          }
+        },
+        "status": "passed"
+      },
+      "verify": {
+        "compiler_sha256": "ec89910347476ceec8a50e4196292bfcb5a9206bb025423110b8fbae0a74a58d",
+        "source_sha256": "87f833318f1e84ffa20ef35ec152fa2875a4485dba72ecf0faf03c12494de570",
+        "binary_sha256": "2b63cee86234f6f648f77f6fbbcb59f21a2793ff4ac8efcccda2d478e3bb1212",
+        "llvm_sha256": "469a838389018e88751ea5af4eaadfd061df60ae7fd5dda705d7ffda083b2940",
+        "build_ns": 283516201,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/.tmp/memory-closeout/A04/repetition/cursor-corrected-01/complete/verify/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1861548,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A04/repetition/cursor-corrected-01/complete/verify/counts-1.json",
+              "counter_sha256": "6424f45790e74b2f391baff7f520b1537ea032162cfe08a6c76f9d014bf32332",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 29,
+              "memory": {
+                "allocs": 40,
+                "alloc_bytes": 2560,
+                "frees": 40,
+                "reallocs": 0,
+                "peak_live_bytes": 800,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 10,
+              "allocs": 40,
+              "alloc_bytes": 2560,
+              "frees": 40,
+              "free_bytes": 2560,
+              "list_grows": 2,
+              "list_grow_bytes": 32,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 16,
+              "text_copy_bytes": 28,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 0,
+              "buffer_grow_bytes": 0,
+              "text_grows": 3,
+              "text_grow_bytes": 3,
+              "text_appends": 3,
+              "text_append_bytes": 4,
+              "buffer_pushes": 0,
+              "buffer_appends": 0,
+              "buffer_append_bytes": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 800,
+              "live_bytes_at_exit": 0
+            }
+          }
+        },
+        "status": "passed"
+      },
+      "optimized_debug": {
+        "compiler_sha256": "ec89910347476ceec8a50e4196292bfcb5a9206bb025423110b8fbae0a74a58d",
+        "source_sha256": "87f833318f1e84ffa20ef35ec152fa2875a4485dba72ecf0faf03c12494de570",
+        "binary_sha256": "1b15dabe1a349c7d0fe35cc5d675617953f8f1fe722b4f89228957ce9c506fee",
+        "llvm_sha256": "a3aa845f67b1595bb29ed1b73b9bf0dbdcd7aaa873c7a20e2397c6de9eba5549",
+        "build_ns": 252971344,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/.tmp/memory-closeout/A04/repetition/cursor-corrected-01/complete/optimized_debug/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1028593,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A04/repetition/cursor-corrected-01/complete/optimized_debug/counts-1.json",
+              "counter_sha256": "a18c50c7a5923d04a8549a1fece348756f984d52db4b80d3d2b400e878af31c7",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 29,
+              "memory": {
+                "allocs": 40,
+                "alloc_bytes": 2560,
+                "frees": 40,
+                "reallocs": 0,
+                "peak_live_bytes": 800,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 10,
+              "allocs": 40,
+              "alloc_bytes": 2560,
+              "frees": 40,
+              "free_bytes": 2560,
+              "list_grows": 2,
+              "list_grow_bytes": 32,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 16,
+              "text_copy_bytes": 28,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 0,
+              "buffer_grow_bytes": 0,
+              "text_grows": 3,
+              "text_grow_bytes": 3,
+              "text_appends": 3,
+              "text_append_bytes": 4,
+              "buffer_pushes": 0,
+              "buffer_appends": 0,
+              "buffer_append_bytes": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 800,
+              "live_bytes_at_exit": 0
+            }
+          }
+        },
+        "status": "passed"
+      },
+      "no_facts": {
+        "compiler_sha256": "ec89910347476ceec8a50e4196292bfcb5a9206bb025423110b8fbae0a74a58d",
+        "source_sha256": "87f833318f1e84ffa20ef35ec152fa2875a4485dba72ecf0faf03c12494de570",
+        "binary_sha256": "ba561b57472d17fbdbb3eabd5845c991b67dfbdd13fa18a3d8d634088c15e3e8",
+        "llvm_sha256": "e62f5f51c9de7dfe1904adb01a6e767415916193bfa0e7fd78aa0875d6637da0",
+        "build_ns": 215835893,
+        "runs": {
+          "1": {
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/.tmp/memory-closeout/A04/repetition/cursor-corrected-01/complete/no_facts/program"
+            ],
+            "status": 0,
+            "elapsed_ns": 1277891,
+            "stdout": "",
+            "stderr": "",
+            "audit": {
+              "counter_file": ".tmp/memory-closeout/A04/repetition/cursor-corrected-01/complete/no_facts/counts-1.json",
+              "counter_sha256": "f91a08a3ae033b88a69992fe6b2d991f970fb400a7943a53d9318c97ca124d00",
+              "observed_rc_free": true,
+              "managed_leak_free": true,
+              "emitted_rc": {
+                "retain": 0,
+                "release": 0,
+                "unique_test": 0
+              },
+              "runtime_rc": {
+                "runtime_retains": 0,
+                "runtime_releases": 0,
+                "shared_retains": 0,
+                "shared_releases": 0,
+                "share_marks": 0
+              },
+              "direct_frees": 33,
+              "memory": {
+                "allocs": 44,
+                "alloc_bytes": 2816,
+                "frees": 44,
+                "reallocs": 0,
+                "peak_live_bytes": 800,
+                "live_bytes_at_exit": 0
+              },
+              "executed_rc_sites": [],
+              "runtime_rc_functions": []
+            },
+            "memory": {
+              "calls": 10,
+              "allocs": 44,
+              "alloc_bytes": 2816,
+              "frees": 44,
+              "free_bytes": 2816,
+              "list_grows": 2,
+              "list_grow_bytes": 32,
+              "reallocs": 0,
+              "realloc_added_bytes": 0,
+              "realloc_moves": 0,
+              "realloc_moved_bytes": 0,
+              "list_copies": 0,
+              "list_copy_bytes": 0,
+              "dict_copies": 0,
+              "dict_copy_bytes": 0,
+              "buffer_copies": 0,
+              "buffer_copy_bytes": 0,
+              "text_copies": 16,
+              "text_copy_bytes": 28,
+              "runtime_retains": 0,
+              "runtime_releases": 0,
+              "dict_grows": 0,
+              "dict_grow_bytes": 0,
+              "buffer_grows": 0,
+              "buffer_grow_bytes": 0,
+              "text_grows": 3,
+              "text_grow_bytes": 3,
+              "text_appends": 3,
+              "text_append_bytes": 4,
+              "buffer_pushes": 0,
+              "buffer_appends": 0,
+              "buffer_append_bytes": 0,
+              "shared_retains": 0,
+              "shared_releases": 0,
+              "share_marks": 0,
+              "share_bytes": 0,
+              "peak_live_bytes": 800,
+              "live_bytes_at_exit": 0
+            }
+          }
+        },
+        "status": "passed"
+      }
+    }
+  },
+  "negative_cases": {
+    "unsupported_place": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/.tmp/memory-closeout/A04/text-cursor/install/focus/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/experiments/memory-closeout-20261012/A04/repetition/unsupported_place.my",
+        "--experimental-zero-rc"
+      ],
+      "status": "passed",
+      "exit_code": 1,
+      "expected": "E_TYPE",
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/experiments/memory-closeout-20261012/A04/repetition/unsupported_place.my:7:5: error[E_TYPE]: expected int[], found int\n      holder.values *= 2\n      ^\n",
+      "source_sha256": "9dbfbe81cc92ed2cb27361ec63b7db6cfbb50b548a156d6eacebec2cde0521e4"
+    },
+    "affine_resource": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/.tmp/memory-closeout/A04/text-cursor/install/focus/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/experiments/memory-closeout-20261012/A04/repetition/affine_resource.my",
+        "--experimental-zero-rc"
+      ],
+      "status": "passed",
+      "exit_code": 1,
+      "expected": "E_LIST_ELEMENT",
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/experiments/memory-closeout-20261012/A04/repetition/affine_resource.my:1:1: error[E_LIST_ELEMENT]: managed collection elements cannot own resources; pending Results require a list\n  resource File: filesystem\n  ^\n",
+      "source_sha256": "51cd61bacf0503411617441259ac0256be5c313c05a8fcad438747b11e1b90c8"
+    },
+    "overflow_signed": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/.tmp/memory-closeout/A04/text-cursor/install/focus/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/experiments/memory-closeout-20261012/A04/repetition/overflow_signed.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--max-memory",
+        "8M"
+      ],
+      "status": "passed",
+      "exit_code": 1,
+      "expected": "R_MEMORY_BUDGET",
+      "stdout": "",
+      "stderr": "error[R_MEMORY_BUDGET]: memory budget exhausted; raise it with --max-memory=SIZE\n",
+      "source_sha256": "b59b6b8b06cd2a5b46b2e188b8d32e07812aa787e80139da15d063421089bbe1"
+    },
+    "overflow_unsigned": {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/.tmp/memory-closeout/A04/text-cursor/install/focus/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A04-json/experiments/memory-closeout-20261012/A04/repetition/overflow_unsigned.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--max-memory",
+        "8M"
+      ],
+      "status": "passed",
+      "exit_code": 1,
+      "expected": "R_MEMORY_BUDGET",
+      "stdout": "",
+      "stderr": "error[R_MEMORY_BUDGET]: memory budget exhausted; raise it with --max-memory=SIZE\n",
+      "source_sha256": "880e176c2c95306f88620907fb1bf7b2994cc6737382524e5bc2ede0336dffec"
+    }
+  },
+  "scope": "full repetition contract",
+  "limitations": "Managed counters are not RSS. Build times include no admitted queue wait but are not controlled performance samples.",
+  "summary": {
+    "failed": 0,
+    "lanes": 10,
+    "negative_cases": 4
+  }
+}

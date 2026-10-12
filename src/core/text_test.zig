@@ -386,4 +386,25 @@ test "scalar lookups that move through non-ASCII text either way walk only the d
     // lookup that walked from the start of the text would walk hundreds of millions.
     try std.testing.expect(try movingScanWalk(arena, root, &.{}) < 4_000_000);
     try std.testing.expect(try movingScanWalk(arena, root, &.{"--release"}) < 4_000_000);
+    try std.testing.expect(try movingScanWalk(arena, root, &.{ "--experimental-zero-rc", "--unoptimized" }) < 4_000_000);
+    try std.testing.expect(try movingScanWalk(arena, root, &.{ "--experimental-zero-rc", "--release" }) < 4_000_000);
+}
+
+// spec-case: NEW-CORE-TEXT-CURSOR-1
+test "A04 repeated text retains cursor capacity and byte terminator storage" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
+    for ([_][]const u8{ "#define MYL_ZERO_RC 1\n", "" }) |prefix| {
+        const source = try std.mem.concat(a, u8, &.{ prefix, @embedFile("a04_repeat_cursor_fixture.c") });
+        var fixture = try @import("native_fixture.zig").Fixture.init(a, root, source, .{});
+        defer fixture.environment.deinit();
+        const ran = try fixture.run("boundaries", "1");
+        try std.testing.expectEqual(@as(u8, 0), ran.status);
+        try std.testing.expectEqualStrings("", ran.stdout);
+        try std.testing.expectEqualStrings("", ran.stderr);
+    }
 }
