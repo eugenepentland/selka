@@ -157,9 +157,18 @@ fn textOf(emitted: []const units.Unit, path: []const u8) ![]const u8 {
     return error.MissingUnit;
 }
 
-fn numericHelper(emitted: []const units.Unit) bool {
-    for (emitted) |unit| if (unit.kind == .helper and unit.dependencies.number) return true;
-    return false;
+fn expectRenderingNumberDependency(emitted: []const units.Unit, path: []const u8) !void {
+    var found = false;
+    for (emitted) |unit| {
+        const owns_render = unit.kind == .module and std.mem.eql(u8, unit.source_path, path);
+        try std.testing.expectEqual(owns_render, unit.dependencies.number);
+        if (!owns_render) continue;
+        found = true;
+        try std.testing.expect(std.mem.indexOf(u8, unit.llvm, "call ptr @myl_core_values_render(") != null);
+        try std.testing.expect(std.mem.indexOf(u8, unit.llvm, "= private constant %myl.value { i32 2,") != null);
+        try std.testing.expect(std.mem.indexOf(u8, unit.llvm, "declare ptr @myl_core_str_from_f64(") != null);
+    }
+    try std.testing.expect(found);
 }
 
 fn entryText(emitted: []const units.Unit) ![]const u8 {
@@ -239,6 +248,8 @@ fn nativeArgs(a: std.mem.Allocator, emitted: []const units.Unit, arguments: []co
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
     var environment = try std.testing.environ.createMap(a);
     try environment.put("MYL_CORE_LEAKCHECK", "1");
+    const counter_path = try std.fs.path.join(a, &.{ root, "counters.json" });
+    try environment.put("MYLANG_COUNTERS", counter_path);
     const output = try std.fs.path.join(a, &.{ root, "program" });
     var log: std.ArrayList(u8) = .empty;
     _ = driver.link(a, std.testing.io, &environment, .{ .zig = environment.get("ZIG") orelse "zig", .work = root, .output = output, .mode = .release, .links = &.{}, .units = emitted }, &log) catch |err| {
@@ -248,7 +259,16 @@ fn nativeArgs(a: std.mem.Allocator, emitted: []const units.Unit, arguments: []co
     const argv = try a.alloc([]const u8, arguments.len + 1);
     argv[0] = output;
     @memcpy(argv[1..], arguments);
-    return std.process.run(a, std.testing.io, .{ .argv = argv, .environ_map = &environment });
+    const result = try std.process.run(a, std.testing.io, .{ .argv = argv, .environ_map = &environment });
+    for (emitted) |unit| if (unit.dependencies.counting) {
+        const bytes = try dir.dir.readFileAlloc(std.testing.io, "counters.json", a, .limited(1 << 20));
+        const Exit = struct { totals: struct { live_bytes_at_exit: u64 } };
+        const counters = try std.json.parseFromSlice(Exit, a, bytes, .{ .ignore_unknown_fields = true });
+        defer counters.deinit();
+        try std.testing.expectEqual(@as(u64, 0), counters.value.totals.live_bytes_at_exit);
+        break;
+    };
+    return result;
 }
 
 // spec-case: NEW-CORE-S4-UNITS-1
@@ -388,17 +408,13 @@ test "S4 unrelated render graphs, types and literal IDs leave reached descriptor
 }
 
 // spec-case: NEW-CORE-S4-UNITS-1
-test "S4 a float renderer outside entry carries the formatter link dependency on its helper unit" {
+test "S4 a float renderer outside entry carries the formatter link dependency on its source unit" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
     const rendering = "\npublic func compute(x: int) -> int:\n    mut values = [1.25, 2.5]\n    return len(f\"{values}\") + x\n";
     const emitted = try snapshot(a, .{ app, rendering, other }, false);
-    var helper_number = false;
-    for (emitted) |unit| {
-        helper_number = helper_number or (unit.kind == .helper and unit.dependencies.number);
-    }
-    try std.testing.expect(helper_number);
+    try expectRenderingNumberDependency(emitted, "leaf.my");
     const result = try native(a, emitted);
     try std.testing.expect(result.term == .exited and result.term.exited == 0);
     try std.testing.expectEqualStrings("18 4\n", result.stdout);
@@ -667,6 +683,7 @@ test "S4 generated helper seeds and completed units survive scratch and cache hi
     const sine = try wave.emit(.{ .op = .float_unary, .ty = .f64, .a = try wave.param(0), .data = @backingInt(ir.FloatUnary.sin) });
     _ = try wave.emit(.{ .op = .ret, .ty = .void, .a = sine });
     _ = try wave.finish();
+    _ = try passes.ownership(a, &module);
     const context: u8 = 0;
     const options: emitter.Options = .{ .locator = .{ .context = &context, .locate = fixedLocation }, .source_path = "lifetime.my", .main = .{ .parameters = &.{"out"} }, .counters = true };
     const fresh = try units.emitWithScratch(a, std.testing.allocator, &module, options);
@@ -688,7 +705,7 @@ test "S4 generated helper seeds and completed units survive scratch and cache hi
     try std.testing.expectEqual(cold.seeds_rendered, warm.seeds_reused);
     try std.testing.expectEqual(@as(u32, 0), warm.seeds_rendered);
     try std.testing.expectEqual(@as(u32, 0), warm.rendered);
-    try std.testing.expect(numericHelper(repeated));
+    try expectRenderingNumberDependency(repeated, "lifetime.my");
     var math = false;
     var counting = false;
     for (repeated) |emitted| {
@@ -707,6 +724,12 @@ test "S4 generated helper seeds and completed units survive scratch and cache hi
     try sameNativeHandles(fresh, native_units);
     try std.testing.expectEqual(warm.seeds_reused, native_counts.seeds_reused);
     try std.testing.expectEqual(@as(u64, 0), native_counts.work.llvm_loaded_bytes);
+    // The cached native handles must carry the formatter object into the link,
+    // even though rendering now executes in its descriptor-owning source unit.
+    const result = try native(a, native_units);
+    try std.testing.expect(result.term == .exited and result.term.exited == 0);
+    try std.testing.expectEqualStrings("[1.25, 2.5]\n", result.stdout);
+    try std.testing.expectEqualStrings("", result.stderr);
 }
 
 // spec-case: NEW-CORE-STAGE-CACHE-5

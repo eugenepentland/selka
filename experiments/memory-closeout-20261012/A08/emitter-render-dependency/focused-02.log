@@ -1,0 +1,14 @@
+build-slot: FIFO ticket 1264, position 3; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 1264 after 15s
+7b4c57f91608bc8f73dbceca6f1ebdc421e248406ddefe13b02e72271c891b68
+162ef02f10e00f3837c5f79e1b4cc189eb40136652dd5f8fdcd606ceee17f8cf
+test-core
++- verification action core member 0 w
+guardian/test: 2 test(s) selected by filter: "S4 a float renderer", "S4 generated helper seeds"
+guardian/test: test wall 0.16s; slowest over 50ms:
+guardian/test:   0.10s  emit_units_test.test.S4 generated helper seeds and completed units survive scratch and cache hits
+guardian/test:   0.06s  emit_units_test.test.S4 a float renderer outside entry carries the formatter link dependency on its source unit
+guardian/test: PASS — 2 passed
+guardian/test: RESULT {"passed":2,"failed":0,"skipped":0}
+failed command: sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-memory-20261012-A08-memo/zig-out/libexec/mylang/components ./.zig-cache/o/a87035bf7b253b9b3afc6f0a7182abe3/test "--guardian-filter=S4 a float renderer" "--guardian-filter=S4 generated helper seeds" --cache-dir=./.zig-cache --seed=0x279671c7 --listen=-
+
