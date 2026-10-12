@@ -276,3 +276,21 @@ and an ordinary borrowed helper preserves the alias observation. Its three owned
 payload returns copy explicitly. `migrations.json` records the new source pair;
 qualification awaits the coordinator's aggregate-root implementation. Owning
 capability arrays/lists/dictionaries/variants/boxes remain outside this contract.
+
+The expanded managed-dictionary default contract is a separate blocking API:
+`get(key, default).copy()` passes source checking but native lowering rejects
+`E_ZERO_RC_LOWERING` on support4. Its fixture keeps eager fallback effects and
+independent result storage after both possible roots are replaced. The matching
+view invalidation reproducer currently passes checking, then refuses at lowering;
+it was never executed. A07 owns explicit-copy branch lowering and ambiguous-borrow
+source rejection. See `evidence/support4-dictionary-defaults.json` and
+`evidence/support4-get-view.json`; this failure is not hidden by the public
+standard-library export count, which excludes these builtin dictionary methods.
+
+`aggregate-providers.md` and its fixtures are prepared qualification inputs for
+the coordinator's bounded provider-root implementation. Three positives cover
+existing capability-field methods, nested record providers and tuple providers;
+six source-only negatives cover root invalidation, copying, partial moves,
+aggregate-parameter resource origin, and the exact original capability array.
+They have not yet qualified on that implementation. The harness records expected
+refusals separately from guest execution.

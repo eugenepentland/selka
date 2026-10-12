@@ -23,6 +23,14 @@ sys.dont_write_bytecode = True
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 MODES = {'release':['--release'], 'debug':['--unoptimized'], 'verified':['--release','--verify-facts'], 'optimized-debug':['--optimize-debug'], 'no-facts':['--release','--no-facts']}
+NEGATIVE_CASES = {
+    'capability_array_negative':('capability_array.my',('E_ZERO_RC_UNSUPPORTED',)),
+    'provider_root_move_negative':('provider_root_move.my',('E_SINGLE_OWNER_OVERLAP','E_ZERO_RC_RESOURCE_ESCAPE')),
+    'provider_root_replace_negative':('provider_root_replace.my',('E_SINGLE_OWNER_OVERLAP','E_ZERO_RC_RESOURCE_ESCAPE')),
+    'provider_copy_negative':('provider_copy.my',('E_ZERO_RC_UNSUPPORTED',)),
+    'provider_parameter_result_negative':('provider_parameter_result.my',('E_ZERO_RC_RESOURCE_ORIGIN',)),
+    'provider_field_move_negative':('provider_field_move.my',('E_SINGLE_OWNER_BORROW',)),
+}
 
 def digest(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
@@ -95,7 +103,8 @@ def main():
     env=dict(os.environ,ZIG=str(a.zig),MYLANG_ZIG=str(a.zig),MYL_CORE_LEAKCHECK='1')
     for key in ('MYLANG_COUNTERS','MYLANG_OPTIONS','MYLANG_CORE_SANITIZE'): env.pop(key,None)
     sources={p.stem:(p,0) for p in sorted((HERE/'samples').glob('*.my'))}
-    sources['capability_array_negative']=(HERE/'negative/capability_array.my',0)
+    for name,(filename,_) in NEGATIVE_CASES.items():
+        sources[name]=(HERE/'negative'/filename,0)
     for name in ('sort','math','integer_extrema'):
         sources[name]=(ROOT/f'src/stdlib/fixtures/{name}.my',42)
     for name in ('pool','time_random'):
@@ -116,7 +125,7 @@ def main():
     for name,(source,expected) in sources.items():
         if a.cases and name not in a.cases: continue
         report['cases'][name]={}
-        expected_refusal=name=='capability_array_negative'
+        expected_refusal=name in NEGATIVE_CASES
         for mode in a.modes:
             if expected_refusal and mode!=a.modes[0]: continue
             directory=a.output/name/mode; directory.mkdir(parents=True,exist_ok=True)
@@ -143,8 +152,8 @@ def main():
             (directory/'build.stdout').write_text(ran.stdout); (directory/'build.stderr').write_text(ran.stderr)
             result['source_files']={str(p.relative_to(project)):digest(p) for p in sorted(project.glob('*.my'))}
             if expected_refusal:
-                result['expected_refusal']='E_ZERO_RC_UNSUPPORTED'
-                result['passed']=ran.returncode!=0 and result['expected_refusal'] in ran.stderr
+                result['expected_refusal']=NEGATIVE_CASES[name][1]
+                result['passed']=ran.returncode!=0 and any(code in ran.stderr for code in result['expected_refusal'])
             elif ran.returncode==0 and a.check_only: result['passed']=True
             elif ran.returncode==0:
                 runtime=directory/'run'; runtime.mkdir(exist_ok=True)

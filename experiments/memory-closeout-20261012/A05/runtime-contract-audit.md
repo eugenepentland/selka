@@ -45,3 +45,26 @@ it. This differs from ordinary data-parameter borrowing. `network.my` therefore
 uses three distinct connections and checks peer EOF after read, write and close;
 reusing a consumed Connection is an existing source error. No borrowing API change
 was introduced by this closeout.
+
+## Dictionary insertion index for borrowed setdefault results
+
+A07's proposed zero-RC lowering reads `dict_entries(inserted) - 1` after a missing
+`setdefault` inserts its fallback. The runtime supports that invariant:
+
+- `myl_core_dict_remove_parts` zeros and marks a tombstone; it never reuses or
+  renumbers another physical entry.
+- `dict_room` grows storage while preserving physical order and metadata `elen`.
+- `myl_core_dict_insert` performs any indexed-table rebuild first, then appends at
+  `meta->elen`, then increments the physical entry count.
+- Crossing the small-table boundary can rebuild after the append. `dict_rebuild`
+  compacts live entries in stable forward order, so the newly appended live entry
+  remains last. Reading `elen` after insertion is essential; a pre-insert index
+  would be invalid across this compaction.
+
+The dictionary's live length is not interchangeable with physical entry count
+while tombstones exist. This audit covers small-table tombstones, indexed rebuild,
+storage growth, and remove/reinsert. It changes no runtime code. Managed
+`get(key, default)` remains a separate ownership case because its result can come
+from either the dictionary or a caller/temporary fallback; a dictionary-only view
+origin must not be inferred for it. A05's defaults and view-invalidation reproducers
+record the source-check and native-build outcomes separately.

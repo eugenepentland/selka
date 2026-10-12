@@ -1,0 +1,41 @@
+{
+  "compiler_source_revision": "66890fbc5135a771e6a423724d13c30018ab717f",
+  "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+  "source_sha256": "6264faa5e77b110325cabfa5ee006393295e91309c8fa6ef0426c6f47a710ad7",
+  "source": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/negative/dictionary_get_view.my",
+  "phases": {
+    "check": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/negative/dictionary_get_view.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support4-get-view/cache"
+      ],
+      "status": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "build": {
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support4-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/negative/dictionary_get_view.my",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support4-get-view/cache",
+        "--zig",
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "--release",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support4-get-view/program",
+        "--emit-llvm",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A05/.tmp/memory-closeout/A05/support4-get-view/program.ll"
+      ],
+      "status": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A05/experiments/memory-closeout-20261012/A05/negative/dictionary_get_view.my:11:18: error[E_ZERO_RC_LOWERING]: this lowering still requires reference counting; use an explicit owned copy or simplify the expression\n      const view = values.get(key, fallback).borrow(0, 3)\n                   ^\n"
+    }
+  }
+}

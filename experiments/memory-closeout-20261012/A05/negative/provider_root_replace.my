@@ -1,0 +1,12 @@
+# spec-case: CAPABILITY-FIELD-METHOD-1
+import filesystem
+
+record Store:
+    fs: Filesystem
+
+func main() -> int:
+    mut root = Store(fs=filesystem.memory())
+    with root.fs.open("note", "w") as file:
+        root = Store(fs=filesystem.memory())
+        _ = file.write("still live")
+    return 0

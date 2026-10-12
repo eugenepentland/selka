@@ -1,0 +1,14 @@
+# spec-case: CAPABILITY-FIELD-METHOD-1
+import filesystem
+
+record Store:
+    fs: Filesystem
+
+func opened(root: Store) -> Result[TextFile, str]:
+    return root.fs.open("note", "w")
+
+func main() -> Result[int, str]:
+    const root = Store(fs=filesystem.memory())
+    with try opened(root) as file:
+        _ = file.write("not inferred")
+    return Ok(0)

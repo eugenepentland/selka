@@ -1,0 +1,16 @@
+# spec-case: CAPABILITY-FIELD-METHOD-1
+import filesystem
+
+func providers() -> tuple[Filesystem, Filesystem]:
+    return (filesystem.memory(), filesystem.memory())
+
+func main() -> int:
+    const pair = providers()
+    _ = pair[0].write_text("note", "first")
+    _ = pair[1].write_text("note", "second")
+    with pair[0].open("note", "r") as first:
+        with pair[1].open("note", "r") as second:
+            assert first.read() == "first" and second.read() == "second"
+    const moved = pair
+    assert moved[0].exists("note") and moved[1].exists("note")
+    return 0
