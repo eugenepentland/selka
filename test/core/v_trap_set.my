@@ -4,7 +4,7 @@ record Cell:
 
 
 func write(cells0: Cell[], i: int, v: int) -> int:
-    mut cells = cells0
+    mut cells = cells0.copy()
     cells[i] = Cell(code=v, flag=True)
     return cells[i].code
 

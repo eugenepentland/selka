@@ -8,25 +8,25 @@ func make_ints(n: int) -> int[]:
 
 
 func grow_int(xs: int[], n: int) -> int[]:
-    mut ys = xs
+    mut ys = xs.copy()
     if n > 1:
-        return xs
+        return ys
     ys.append(n)
     return ys
 
 
 func grow_str(xs: str[], n: int) -> str[]:
-    mut ys = xs
+    mut ys = xs.copy()
     if n > 1:
-        return xs
+        return ys
     ys.append("a")
     return ys
 
 
 func grow_row(xs: int[][], n: int) -> int[][]:
-    mut ys = xs
+    mut ys = xs.copy()
     if n > 1:
-        return xs
+        return ys
     ys.append(make_ints(2))
     return ys
 
@@ -46,13 +46,13 @@ func body(seed: int, out: Stream) -> int:
             il1.append(i2)
             mut ig4 = grow_int(il1, 1)
             if len(rl3) > 0:
-                mut inner5 = rl3[0]
+                mut inner5 = rl3[0].copy()
                 inner5.append(5)
                 acc = acc + len(inner5) + len(rl3[0])
             acc = acc + len(rl3)
-        mut ra6 = rl3
-        mut ia7 = il1
-        mut sa8 = sl2
+        mut ra6 = rl3.copy()
+        mut ia7 = il1.copy()
+        mut sa8 = sl2.copy()
         for i1 in range(2):
             acc = acc + len(sa8)
             mut rg9 = grow_row(ra6, seed)

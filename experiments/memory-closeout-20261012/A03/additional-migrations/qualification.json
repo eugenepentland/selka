@@ -1,0 +1,19 @@
+{
+  "compiler_source_revision": "66890fbc5135a771e6a423724d13c30018ab717f",
+  "compiler_sha256": "4cc05e8799be27e86c5efa1083a24d53d36682e60358a9246d15596eb9aac375",
+  "assigned_files": 8,
+  "attempted_release_builds": 8,
+  "admitted": 7,
+  "refused": 1,
+  "executions": 11,
+  "contract_passed_executions": 11,
+  "fatal_trap_exits": 2,
+  "fatal_trap_cleanup_qualified": false,
+  "normal_and_result_exits_require_zero_exit_live": true,
+  "unresolved": {
+    "test/core/v_narrow.my": "A07: E_SINGLE_OWNER_MOVED after optional mutable parameter narrowing at line4"
+  },
+  "counter_oracle_owner": "A09",
+  "counter_matrix_raw": "/home/epentland/ai/canopy/mylang-memory-20261012-A09/.tmp/memory-closeout/A09/counter-oracle-support4/results.json",
+  "not_final_C1": true
+}

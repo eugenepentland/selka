@@ -37,7 +37,7 @@ func unions(rounds: int) -> int:
     mut total = 0
     for k in range(rounds):
         mut i = k % 4
-        match xs[i]:
+        match xs[i].copy():
             case Num.i(value=v):
                 xs[i] = Num.f(value=float(v) * 0.5)
                 total = total + v
@@ -112,9 +112,9 @@ func churn(rounds: int) -> int:
 # Nested lists that alias by value: writing one copy's row leaves the other's alone.
 func nested(n: int) -> int:
     mut a = [for i in range(n) yield [for j in range(n) yield float(i + j)]]
-    mut b = a
+    mut b = a.copy()
     b[0][0] = 1000.0
-    mut c = a
+    mut c = a.copy()
     for i in range(n):
         for j in range(n):
             c[i][j] = c[i][j] + a[j][i]

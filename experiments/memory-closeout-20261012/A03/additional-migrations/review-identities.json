@@ -1,0 +1,90 @@
+[
+  {
+    "source": "test/core/counters.my",
+    "original_sha256": "a2ce0c71dce95433aed04294c153ff8da1f29abc999d1d37b1f1c83655e5cb4f",
+    "migrated_sha256": "9cb46271d3c63063c96fa8209ad95b61e2e386c4aaf4578a2023f34fe56355fe",
+    "added_lines": 4,
+    "removed_lines": 4,
+    "explicit_copy_calls_before": 0,
+    "explicit_copy_calls_after": 2,
+    "public_test_signatures_preserved": true,
+    "source_changed": true
+  },
+  {
+    "source": "test/core/f1_tbaa.my",
+    "original_sha256": "065c187358ae8a9d7b5c4d101873baea20d04ef5cf5955738ab9e93e40ccf325",
+    "migrated_sha256": "0280f2f3ef2d70f40f6aad47bfe6b9485e6b9f3d14156d9cedcbe18a047297fc",
+    "added_lines": 3,
+    "removed_lines": 3,
+    "explicit_copy_calls_before": 0,
+    "explicit_copy_calls_after": 3,
+    "public_test_signatures_preserved": true,
+    "source_changed": true
+  },
+  {
+    "source": "test/core/i_live_place.my",
+    "original_sha256": "c18ac8fe2ac528e63baa38532cc0a65ca3820d664db8ba75471f5f33ac252c8d",
+    "migrated_sha256": "7caf7f0ba0e9e57a2707f984dbc29b7a2de2fcf0a80a0c677094df54e37a9a29",
+    "added_lines": 22,
+    "removed_lines": 9,
+    "explicit_copy_calls_before": 0,
+    "explicit_copy_calls_after": 5,
+    "public_test_signatures_preserved": true,
+    "source_changed": true
+  },
+  {
+    "source": "test/core/rc_alias_paths.my",
+    "original_sha256": "6ddfcfac6bfa2f4ab1a2af000e4ac25e0e641626b57319025e47b0de7bddb656",
+    "migrated_sha256": "6e9f10521d6d0af48fc5e5caab6218ca09d00ad399b8c7b6f77f4dc50a038f1d",
+    "added_lines": 10,
+    "removed_lines": 10,
+    "explicit_copy_calls_before": 0,
+    "explicit_copy_calls_after": 7,
+    "public_test_signatures_preserved": true,
+    "source_changed": true
+  },
+  {
+    "source": "test/core/v_inline_loops.my",
+    "original_sha256": "aa72b2bef873044660980f926cc15af9342c82682c4d04c0685d724724377b91",
+    "migrated_sha256": "48d4e5093edbcf6f3c3448ad6d0a8dae5b33bfa207a459a8156776728fd35a00",
+    "added_lines": 1,
+    "removed_lines": 1,
+    "explicit_copy_calls_before": 0,
+    "explicit_copy_calls_after": 1,
+    "public_test_signatures_preserved": true,
+    "source_changed": true
+  },
+  {
+    "source": "test/core/v_narrow.my",
+    "original_sha256": "f0a41855714a7a2c6719f160719a5e0cd0dcfbe6f87d71cfec2a79018d3d2c23",
+    "migrated_sha256": "f0a41855714a7a2c6719f160719a5e0cd0dcfbe6f87d71cfec2a79018d3d2c23",
+    "added_lines": 0,
+    "removed_lines": 0,
+    "explicit_copy_calls_before": 1,
+    "explicit_copy_calls_after": 1,
+    "public_test_signatures_preserved": true,
+    "source_changed": false
+  },
+  {
+    "source": "test/core/v_trace.my",
+    "original_sha256": "695f20bdb1ef22efa47c527d973500e0f524966c3a166f5fed9a1760dc40a81f",
+    "migrated_sha256": "fe5183d73acd5c041c715a495d394a0567527a244ba20d12f59cb14fc5bb2188",
+    "added_lines": 1,
+    "removed_lines": 1,
+    "explicit_copy_calls_before": 0,
+    "explicit_copy_calls_after": 1,
+    "public_test_signatures_preserved": true,
+    "source_changed": true
+  },
+  {
+    "source": "test/core/v_trap_set.my",
+    "original_sha256": "7976c63e3a3544987d39f8f63b9bf70f28e70b1117aa3f46bd0228659cd15411",
+    "migrated_sha256": "b7d7501a6934b1c91f774647abf7edf1d6fce75a2d0b2e419c1e113cb971f582",
+    "added_lines": 1,
+    "removed_lines": 1,
+    "explicit_copy_calls_before": 0,
+    "explicit_copy_calls_after": 1,
+    "public_test_signatures_preserved": true,
+    "source_changed": true
+  }
+]
