@@ -1431,9 +1431,31 @@ def row12_plan(ctx: Context) -> list:
             remove_worktree("row12-tree")]
 
 
+def row12_in_tree_plan(ctx: Context) -> list:
+    """The same projected, forced complete gate in the target tree itself, whose
+    path has an ordinary length (scratch trees under work/ nest deeper, and some
+    CLI tests are sensitive to that; see REPORT.md, row 12)."""
+    shared = ctx.row_work("12-projection-gate", "complete-in-tree")
+    return [reset_dir(lambda c: c.row_work("12-projection-gate", "complete-in-tree")),
+            *locate_build_env(ctx, ctx.tree, shared),
+            coordinator(ctx, "projected-complete", ctx.tree, "--force", "--shared-cache-dir", str(shared / "verification"),
+                        prefix=("{build_env}", "project", "--"))]
+
+
+def failed_tests(run: Run, name: str) -> list[str]:
+    """Zig test names the gate reported as failed, from the step's stderr."""
+    record = run.result(name)
+    try:
+        text = (run.dir / record["stderr"]).read_text(errors="replace")
+    except (KeyError, OSError):
+        return []
+    return sorted(set(re.findall(r"^error: '(.+)' failed:", text, re.MULTILINE)))
+
+
 def row12_judge(run: Run) -> list[dict]:
     report = run.report("projected-complete")
-    return [check("complete gate exits 0 under build-env project", 0, run.status("projected-complete"),
+    return [check("complete gate exits 0 under build-env project", 0,
+                  {"exit": run.status("projected-complete"), "failed_tests": failed_tests(run, "projected-complete")},
                   run.status("projected-complete") == 0),
             check("coordinator reports success", True, (report or {}).get("success"), (report or {}).get("success") is True)]
 
@@ -1578,7 +1600,8 @@ ROWS = [
          Subcase("own-compilers", True, row11_plan(True), row11_judge)]),
     Row(12, "projection-gate", "Projection safety of the whole gate",
         "The complete gate passes under `build-env project` before projection becomes the default",
-        [Subcase("complete", True, row12_plan, row12_judge, needs=("build_env",))]),
+        [Subcase("complete", True, row12_plan, row12_judge, needs=("build_env",)),
+         Subcase("complete-in-tree", True, row12_in_tree_plan, row12_judge, needs=("build_env",))]),
     Row(13, "namespace-bump", "Namespace bump",
         "Old v2 receipts are ignored, not misread; the first v3 gate is a full run and the second is a hit",
         [Subcase("test-receipts", True, row13_tests_plan, row13_tests_judge),
