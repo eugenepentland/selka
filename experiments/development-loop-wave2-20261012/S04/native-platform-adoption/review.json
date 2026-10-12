@@ -1,0 +1,80 @@
+{
+  "reviewed_at_utc": "2026-10-12T03:02:09.304516+00:00",
+  "frozen_source": "5e6180689b5b837aa60bd5a43f60b0981c58b638",
+  "owner_commit": "a9dc0edfe640b98a0869330fe6a19d21b6bbc255",
+  "lineage_commit": "a2160955e81572a794b915534d8a279eb9b1173a",
+  "evidence_sha256": {
+    "README.md": "efcddb4b7ce78c01f90265745b2419026dce21672dd8b1044d6394e2734bd936",
+    "qualification.json": "52a4c12ce6188ca4457618e5e86f05a7ff56c346037a3d5e9ee2bbe630513f22",
+    "qualify.py": "2b5aae3310b75665678224c3a7131057bcd85619ce3499b5628c28ee120b8d0d",
+    "platform-tests-first.log": "2bd056f634110aae20756ddf6b5d0662514505ba66670015496c5ffe3884b711",
+    "probe.c": "a40ad69d7cb1bb891e44db01477cb87445c6224b1cc4b824b8c98f1bfd4dbedc"
+  },
+  "patch_sha256": "de8cf647d67fd00e8be2fb416a499f0e304b2c190ccd3a98e3720e0aa7cd6f6a",
+  "current_files": [
+    {
+      "path": "/lib64/ld-linux-x86-64.so.2",
+      "resolved": "/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2",
+      "sha256": "bda779ea9e9ad234f60315477d7cfd0bdde861cd8ddd9df8cdaf62f18c4cec14",
+      "size": 254864,
+      "mtime_ns": 1788444579000000000,
+      "metadata_stable_during_read": true,
+      "owner_digest_matches": true,
+      "owner_resolved_matches": true
+    },
+    {
+      "path": "/lib/x86_64-linux-gnu/libc.so.6",
+      "resolved": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+      "sha256": "85e64f97e348786a8fb4d9f3d52fec289e2fb86bba20f0731dfe61990525e0f7",
+      "size": 2190608,
+      "mtime_ns": 1788444579000000000,
+      "metadata_stable_during_read": true,
+      "owner_digest_matches": true,
+      "owner_resolved_matches": true
+    },
+    {
+      "path": "/lib/x86_64-linux-gnu/libm.so.6",
+      "resolved": "/usr/lib/x86_64-linux-gnu/libm.so.6",
+      "sha256": "1c488db6f4fe8cecb72456bc018de000b7a9b539c2994864b0416b5e8371b3d8",
+      "size": 1198376,
+      "mtime_ns": 1788444579000000000,
+      "metadata_stable_during_read": true,
+      "owner_digest_matches": true,
+      "owner_resolved_matches": true
+    },
+    {
+      "path": "/lib/x86_64-linux-gnu/libgcc_s.so.1",
+      "resolved": "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1",
+      "sha256": "9d339ecb409578d6a5d587e6c537a8f9589b8a13fefba30d167433a4b5758bee",
+      "size": 187120,
+      "mtime_ns": 1774168304000000000,
+      "metadata_stable_during_read": true,
+      "owner_digest_matches": true,
+      "owner_resolved_matches": true
+    },
+    {
+      "path": "/lib/x86_64-linux-gnu/libpthread.so.0",
+      "resolved": "/usr/lib/x86_64-linux-gnu/libpthread.so.0",
+      "sha256": "1327fc40710691dbd94e88b6cf4efce27fefe8fbb93f7d1164a75b4dccaea696",
+      "size": 14408,
+      "mtime_ns": 1788444579000000000,
+      "metadata_stable_during_read": true,
+      "owner_digest_matches": true,
+      "owner_resolved_matches": true
+    },
+    {
+      "path": "/etc/ld.so.cache",
+      "resolved": "/etc/ld.so.cache",
+      "sha256": "d519185506fec90f5efbdc206f606f4c259891e83c4e98e48b9fa4694b64fbe6",
+      "size": 44227,
+      "mtime_ns": 1791769035622522408,
+      "metadata_stable_during_read": true,
+      "owner_digest_matches": true,
+      "owner_resolved_matches": true
+    }
+  ],
+  "preload_exists": false,
+  "review_process_ld_environment": {},
+  "recorded_command_count": 14,
+  "recorded_all_status_zero": true
+}
