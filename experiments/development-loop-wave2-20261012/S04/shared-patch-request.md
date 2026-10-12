@@ -17,8 +17,8 @@ producer source, selected-source authentication must retain whole artifacts.
 Add an omitted-closure fixture using a full source snapshot and narrowed group
 recipes, proving conservative fallback. Existing full source watches remain live.
 
-Measured actual 46-group/4,639-file union: baseline file-record copies213394,
-candidate14021, avoided199373 (93.4%). Projections and canonical digests are exact;
+Measured actual 46-group/4,639-file union: baseline file-record copies 213394,
+candidate 14021, avoided 199373 (93.4%). Projections and canonical digests are exact;
 selection generates no metadata/hashes/enumeration. This counts selection copies,
 not timing, and excludes two extra baseline full-union copies during native
 producer authentication. Raw actual-selection-profile.json.
@@ -33,10 +33,10 @@ resolution equality and every later global check unchanged. The result safely
 rejects a tool mutation later, before execution/success, rather than granting a
 longer lease or memoizing observations.
 
-Exact B0 lifecycle reconstruction matches 175816metadata/31calls/6retained reuse.
-Removing that single redundant tool scan yields154025metadata/30calls/6reuse;
-21791 observations avoided (12.4%), with0hash/enumeration preserved. Tool scope
-alone accounts130746/175816observations. Raw validation-scope-profile.json and
+Exact B0 lifecycle reconstruction matches 175816 metadata / 31 calls / 6 retained reuse.
+Removing that single redundant tool scan yields154025 metadata / 30 calls / 6 reuse;
+21791 observations avoided (12.4%), with 0 hash/enumeration preserved. Tool scope
+alone accounts130746 / 175816 observations. Raw validation-scope-profile.json and
 validation-scope-candidate.json. These reproduce snapshot work; no gate was run.
 
 Port three actor fixtures from verification_revalidation_test into existing
