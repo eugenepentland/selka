@@ -1,0 +1,7 @@
+func main(out: Stream) -> int:
+    out.print("before")
+    for part in "é😀".split(""):
+        out.print(part)
+        break
+    out.print("after")
+    return 0

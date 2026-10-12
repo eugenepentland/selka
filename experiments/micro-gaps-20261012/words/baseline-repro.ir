@@ -1,0 +1,62 @@
+fn main(cap) -> i64
+b0:
+  %2 = call dict[str, i64] words(str0)
+  %4 = dict_find i64 %2, str1
+  %6 = cmp.ge bool %4, 0:i64
+  branch %6, b1, b2
+b1: ; preds b0
+  %9 = dict_entry_value i64 %2, %4
+  print param0, %9
+  ret 0:i64
+b2: ; preds b0
+  unreachable
+fn words(str) -> dict[str, i64]
+b0:
+  %2 = dict_new dict[str, i64] 0:u64
+  %3 = call list[str] myl_core_str_split_whitespace(param0)
+  %5 = list_len u64 %3
+  %6 = convert.exact i64 %5
+  jump b1
+b1: ; preds b0 b3
+  %8 = phi i64 0:i64, %47
+  %14 = phi dict[str, i64] %2, %42
+  %10 = cmp.lt bool %8, %6
+  branch %10, b2, b4
+b2: ; preds b1
+  %13 = list_get.exact str %3, %8
+  %15 = dict_find i64 %14, %13
+  %17 = cmp.ge bool %15, 0:i64
+  branch %17, b5, b7
+b3: ; preds b12
+  %47 = add.exact i64 %8, 1:i64
+  jump b1
+b4: ; preds b1
+  ret %14
+b5: ; preds b2
+  %21 = cmp.ge bool %15, 0:i64
+  branch %21, b8, b9
+b6: ; preds b8 b7
+  %30 = phi i64 %26, 1:i64
+  %33 = call str myl_core_owned_octets_copy(%13)
+  %34 = dict_find i64 %14, %33
+  %36 = cmp.ge bool %34, 0:i64
+  branch %36, b10, b11
+b7: ; preds b2
+  jump b6
+b8: ; preds b5
+  %24 = dict_entry_value i64 %14, %15
+  %26 = add.exact i64 %24, 1:i64
+  jump b6
+b9: ; preds b5
+  unreachable
+b10: ; preds b6
+  %38 = dict_set_value dict[str, i64] %14, %34, %30
+  jump b12
+b11: ; preds b6
+  %40 = dict_insert dict[str, i64] %14, %34, %33, %30
+  jump b12
+b12: ; preds b10 b11
+  %42 = phi dict[str, i64] %38, %40
+  jump b3
+fn myl_core_str_split_whitespace(str) -> list[str] runtime
+fn myl_core_owned_octets_copy(str) -> str extern

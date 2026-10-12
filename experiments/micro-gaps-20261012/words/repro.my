@@ -1,0 +1,9 @@
+func words(s: str) -> dict[str, int]:
+    mut counts: dict[str, int] = {}
+    for word in s.split():
+        counts[word.copy()] = (if (word in counts) then (counts[word] + 1) else (1))
+    return counts
+func main(out: Stream) -> int:
+    mut counts = words("a b a")
+    out.print(counts["a"])
+    return 0

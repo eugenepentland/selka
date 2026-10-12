@@ -1,0 +1,45 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/install/bin/mylang",
+  "compiler_sha256": "c8f22c47593ea64a255295507d0cc8bd75d08615921aade67a0623c6a6fd500e",
+  "source": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/experiments/micro-gaps-20261012/words/text.my",
+  "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+  "entries": [
+    {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/experiments/micro-gaps-20261012/words/text.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+        "--release",
+        "--experimental-zero-rc",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/guest-cache"
+      ],
+      "status": 0,
+      "binary": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-runtime",
+      "sha256": "dd1ff73048e7c014c9102c58412e6d4e66cc3a18d29f0508e0d2ec9bcbbc5897"
+    },
+    {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/experiments/micro-gaps-20261012/words/text.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-counted",
+        "--release",
+        "--experimental-zero-rc",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/benchmarks/runtime/ports/native_clock.c",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/guest-cache",
+        "--counters"
+      ],
+      "status": 0,
+      "binary": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-words/.tmp/micro-gaps/words/text-counted",
+      "sha256": "e5c396c7e5799bd245ba305f8149c52c56e24d2b92da76070a3450c1ff3b6282"
+    }
+  ]
+}
