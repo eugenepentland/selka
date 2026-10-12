@@ -53,6 +53,12 @@ const patches = [_]Patch{
         .after = "    myl_count_list_grow((size_t)list->len * (size_t)element_size);\n",
     },
     .{ .anchor = "myl_block *myl_core_list_copy(myl_block *list, int64_t element_size) {\n", .after = "    myl_count_copy(MYL_COUNT_LIST_COPIES, (size_t)list->len * (size_t)element_size);\n" },
+    // Descriptor-driven copies bypass list_copy. Count only list element traffic;
+    // recursive box shells and dictionaries have different ownership/copy paths.
+    .{
+        .anchor = "    myl_block *copy = shape->kind == 6 ? myl_core_box_new(child->size) : block_new(MYL_KIND_LIST, count, child->size);\n",
+        .after = "    if (shape->kind == 7) myl_count_copy(MYL_COUNT_LIST_COPIES, (size_t)count * child->size);\n",
+    },
     .{
         .anchor = "static void count_retain(myl_block *block) {\n    if (!block) return;\n    uint32_t count = count_load(block);\n",
         .after = "    if (count != MYL_SATURATED) myl_count_event(MYL_COUNT_RUNTIME_RETAINS, 0);\n",

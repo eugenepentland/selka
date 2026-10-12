@@ -126,3 +126,31 @@ explicitly use shared gate admission. The initial 16-second process snapshot is
 only an observed envelope, not a full-run build RSS peak. Managed counters, child
 RSS high-water marks, sampled descendant RSS, allocation traffic and wall time
 are reported separately.
+
+
+## Counter audit follow-up (before C1)
+
+Coordinator reserved `src/core/count_runtime.zig`, `src/core/count_test.zig` and
+subsequently `src/core/ce_lists_test.zig` to A09. The migrated counter fixture is
+A03 commit `17a70623b` (copied temporarily for qualification, not owned or committed
+by A09). Driver dependency `38dc781a` was explicitly authorized and cherry-picked
+as `47d600345`; preserve coordinator registrations when integrating only the A09
+counter change.
+
+Eight Support4 configurations and sixteen normal/trap runs pass, with exact
+separate ordinary and checked counters in `raw/counters/README.md`. A missing
+runtime hook undercounted descriptor-driven recursive list-copy traffic; the
+list-only anchored hook fixes that count without instrumenting box shells or
+counting ordinary helper copies twice. Registered focused tests pass 2/2, including
+five checked pipelines and debug/release recursive-box copying. Command:
+`zig build test-core -Dtest-filter='zero RC count' -j4 --maxrss 8589934592`
+under shared build admission. `raw/counters/hook-build.json` pins source/compiler
+identities. This is a focused qualification, not the final integrated gate.
+
+`retirement/count-runtime-retirement.patch` is deliberately unapplied until C2
+qualifies and the coordinator dispatches A02 runtime retirement. It removes only
+five obsolete count-helper anchors, preserves all allocation/copy/growth/free
+instrumentation and retains zero-valued historical telemetry fields. A03 knows
+the v1 schema remains strict. `retirement/ce-lists-review.md` records necessary
+optimization oracle migrations; A06 source hashes and exact checked IR must guide
+that work. A prepared patch/review is not completed retirement.
