@@ -1,0 +1,80 @@
+{
+  "schema": "micro-gap-sort-install-v1",
+  "candidate_install": "/home/epentland/ai/canopy/mylang-micro-gaps-20261012-sort/.tmp/micro-gaps/sort/candidate-install",
+  "frozen_install": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/gate-4034-install",
+  "frozen_compiler_sha256": "8e58720cd72de8632aa48df373d18fc8238d46ec27010f8b182820a0eaaf10fa",
+  "compiler_build_command": [
+    "zig",
+    "build",
+    "seed-compiler",
+    "core-test-binary",
+    "-j4",
+    "-Doptimize=Debug",
+    "-Dtest-filter=keyed sorting"
+  ],
+  "runtime_sort_sha256": "296372f21bd56e5b537fbe183e048a6142fd07ad8b57e3be6f1b7905ee958712",
+  "runtime_source_exactly_embedded": true,
+  "files": [
+    {
+      "path": "bin/mylang",
+      "sha256": "748e378a3e4003410d1d65f5eff1cfad68513bbd39a0c7bbaec54209d6e0aaf4",
+      "bytes": 240963896,
+      "reused_from_frozen_install": false
+    },
+    {
+      "path": "libexec/mylang/components/cache-plan-a3433084f84ddfce28db22e7bb3e1b10bc7d5610bfff9abad0503b24de9b68a9",
+      "sha256": "a3433084f84ddfce28db22e7bb3e1b10bc7d5610bfff9abad0503b24de9b68a9",
+      "bytes": 373808,
+      "reused_from_frozen_install": true
+    },
+    {
+      "path": "libexec/mylang/components/cache-plan-d69b536c904f109ef2d292ac376ce3ecb811da91db6e051b2a49a176a1c31840",
+      "sha256": "d69b536c904f109ef2d292ac376ce3ecb811da91db6e051b2a49a176a1c31840",
+      "bytes": 606248,
+      "reused_from_frozen_install": true
+    },
+    {
+      "path": "libexec/mylang/components/cache-plan-f670f2a1520a585015eabc7b1481badb9b2317c6c2a264b533177e82a5e11929",
+      "sha256": "f670f2a1520a585015eabc7b1481badb9b2317c6c2a264b533177e82a5e11929",
+      "bytes": 613624,
+      "reused_from_frozen_install": true
+    },
+    {
+      "path": "libexec/mylang/components/cache-plan.json",
+      "sha256": "026c2156115c346d8e30e0ef11c967c0e14e358dd69b96aee465e0a6e00aaaac",
+      "bytes": 327,
+      "reused_from_frozen_install": true
+    },
+    {
+      "path": "libexec/mylang/components/test-index-421c25cd90ec028fefd5f3f428bb7f8811428ee0ab8196839350fcb1d69e67a6",
+      "sha256": "421c25cd90ec028fefd5f3f428bb7f8811428ee0ab8196839350fcb1d69e67a6",
+      "bytes": 323608,
+      "reused_from_frozen_install": true
+    },
+    {
+      "path": "libexec/mylang/components/test-index-aad4a3ec908f250f5cd68a365bc88d0d2efdab41bbf0c830c915c042828ed83b",
+      "sha256": "aad4a3ec908f250f5cd68a365bc88d0d2efdab41bbf0c830c915c042828ed83b",
+      "bytes": 308464,
+      "reused_from_frozen_install": true
+    },
+    {
+      "path": "libexec/mylang/components/test-index-dbd9fea31ee72550200d6f21c4a42dcfadf00321e9697eb9d4cc21cdbfa99a27",
+      "sha256": "dbd9fea31ee72550200d6f21c4a42dcfadf00321e9697eb9d4cc21cdbfa99a27",
+      "bytes": 323608,
+      "reused_from_frozen_install": true
+    },
+    {
+      "path": "libexec/mylang/components/test-index.json",
+      "sha256": "0b789102fa506551c00a13e1e98fceb518f8263e2171f36690ae12aec043d27b",
+      "bytes": 327,
+      "reused_from_frozen_install": true
+    },
+    {
+      "path": "tools/selka-components",
+      "sha256": "7861f4fba7df070b86f0c03dcc42c8231c609035a3f3c29f8df31c41792fa01b",
+      "bytes": 4526400,
+      "reused_from_frozen_install": true
+    }
+  ],
+  "limitation": "Component provisioning failed on missing native-link .o; complete qualified frozen component/tool package reused exactly, only host replaced. No seed repin."
+}
