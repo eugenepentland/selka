@@ -914,6 +914,7 @@ pub fn build(b: *std.Build) void {
     identity_run.addFileArg(b.path("tests/compiler_identity_cache.py"));
     identity_run.addArgs(&.{ "--zig", b.graph.zig_exe });
     identity_run.addFileInput(b.path("build_identity.zig"));
+    identity_run.addFileInput(b.path("src/build_identity_rules.zig"));
     identity_run.addFileInput(environment_manifest.?);
     identity_run.expectExitCode(0);
     verification_registry.?.register("identity-qualification", &identity_run.step, &.{}, false, "compiler identity qualification produces temporary compiler artifacts");

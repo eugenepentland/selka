@@ -205,3 +205,7 @@ test {
     _ = @import("sets_test.zig");
     _ = @import("retired_features_test.zig");
 }
+
+test {
+    _ = @import("build_identity_rules_test.zig");
+}

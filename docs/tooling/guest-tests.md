@@ -590,7 +590,10 @@ A receipt's identity (NEW-CORE-S4-TEST-3) is:
   property runs, the step, frame, memory and time budgets, the test's own
   cases-file entry and the cases file's bytes;
 - **the compiler, runtime and toolchain identity**, including the `zig` the run
-  uses, and the bytes of `mylang.json` and its import policy;
+  uses, and the bytes of `mylang.json` and its import policy. The build also
+  publishes a narrower `runner_identity` over the test runner, driver and
+  pipeline sources (RUNNER-IDENTITY-1), which the planned execution receipts
+  will bind; it is not yet part of any receipt key;
 - **the environment variables that can change an outcome**
   (NEW-CORE-S4-TEST-5): every `MYL_` and `MYLANG_` variable except
   `MYLANG_JOBS`, `MYLANG_CORE_RUNTIME_CACHE`, `MYLANG_TEST_ISOLATE` and

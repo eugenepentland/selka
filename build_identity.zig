@@ -1,11 +1,14 @@
 //! The compiler's build-time identity: a digest of every production source under
-//! `src`, the Zig toolchain and the optimize mode.
+//! `src`, the Zig toolchain and the optimize mode, and beside it the narrower
+//! `runner_identity` over the test runner, driver and pipeline sources.
 //!
 //! The file has two halves. `module` runs in `build.zig`'s configure phase and
 //! only wires steps: it reads no source contents. `main` is the same file compiled
 //! as a host tool and run in the make phase. It walks `src`, reads every
 //! production source, and writes a generated `identity.zig` holding
-//! `compiler_identity` and the sorted list of the sources it covers.
+//! `compiler_identity`, `runner_identity` and the sorted lists of the sources
+//! they cover. Which sources each covers, and the digest itself, live in
+//! `src/build_identity_rules.zig`, where unit tests reach them.
 //!
 //! The digest cannot be computed at configure time. Zig caches the configure
 //! phase under a key that ignores the build root, and it records a
@@ -16,9 +19,9 @@
 //! the contents of every file its depfile names, so the digest always describes
 //! the bytes of this tree.
 const std = @import("std");
-const Sha = std.crypto.hash.sha2.Sha256;
+const rules = @import("src/build_identity_rules.zig");
 /// Source bytes read once per tool run, keyed by path relative to `src`.
-const Sources = std.StringArrayHashMapUnmanaged([]const u8);
+const Sources = rules.Sources;
 /// Resident-memory ceilings for the identity tool's compilation and its run.
 pub const Budget = struct { compile: u64, run: u64 };
 /// Build the identity module. Its root is `identity.zig`, which a make-phase run
@@ -85,19 +88,24 @@ fn fail(comptime format: []const u8, arguments: anytype) noreturn {
     std.debug.print("build-identity: " ++ format ++ "\n", arguments);
     std.process.exit(1);
 }
-/// The toolchain and optimize mode the identity digest includes.
-const Toolchain = struct { zig_version: []const u8, optimize: []const u8 };
-/// The generated `identity.zig`: the covered sources and the compiler identity.
+/// The toolchain and optimize mode the identity digests include.
+const Toolchain = rules.Toolchain;
+/// The generated `identity.zig`: the covered sources, the compiler identity, and
+/// the runner sources with their identity.
 fn render(a: std.mem.Allocator, sources: Sources, toolchain: Toolchain) ![]const u8 {
-    const paths = try a.dupe([]const u8, sources.keys());
-    std.mem.sort([]const u8, paths, {}, order);
+    const paths = try rules.sortedPaths(a, sources, null);
+    const runner = try rules.sortedPaths(a, sources, &rules.isRunnerSource);
     var text: std.Io.Writer.Allocating = .init(a);
     const w = &text.writer;
     try w.print("/// The Zig toolchain this compiler was built with.\npub const zig_version = \"{s}\";\n", .{toolchain.zig_version});
     try w.writeAll("/// Every production source the identity covers, sorted, relative to `src`.\npub const identity_inputs = [_][]const u8{\n");
     for (paths) |path| try w.print("    \"{s}\",\n", .{path});
     try w.writeAll("};\n");
-    try w.print("/// SHA-256 over the sources above, the toolchain and the optimize mode.\npub const compiler_identity = \"{s}\";\n", .{&try identity(a, sources, paths, toolchain)});
+    try w.print("/// SHA-256 over the sources above, the toolchain and the optimize mode.\npub const compiler_identity = \"{s}\";\n", .{&try rules.digest(a, rules.compiler_domain, toolchain, sources, paths)});
+    try w.writeAll("/// The test runner, driver and pipeline sources `runner_identity` covers, sorted, relative to `src`.\npub const runner_inputs = [_][]const u8{\n");
+    for (runner) |path| try w.print("    \"{s}\",\n", .{path});
+    try w.writeAll("};\n");
+    try w.print("/// SHA-256 over the runner sources above, the toolchain and the optimize mode.\npub const runner_identity = \"{s}\";\n", .{&try rules.digest(a, rules.runner_domain, toolchain, sources, runner)});
     return text.written();
 }
 /// A Makefile-style dependency list naming every file the tool read, by absolute path.
@@ -114,17 +122,6 @@ fn depfile(a: std.mem.Allocator, src: []const u8, paths: []const []const u8) ![]
     try text.writer.writeByte('\n');
     return text.written();
 }
-/// True when a source path is consumed only by a test root. The production
-/// compiler never imports these, so they must not move `compiler_identity`; a
-/// Zig test root already tracks them directly.
-fn testOnly(path: []const u8) bool {
-    const name = std.fs.path.basename(path);
-    if (std.mem.endsWith(u8, name, "_test.zig")) return true;
-    return std.mem.eql(u8, name, "test_support.zig") or
-        std.mem.eql(u8, name, "unit_test.zig") or
-        std.mem.eql(u8, name, "nominal_provider_fixture.zig") or
-        std.mem.eql(u8, name, "stdlib_fixture.zig");
-}
 /// Read every production source once. A test-only file is compiled by its test
 /// root, which Zig tracks on its own, so it is neither read nor named in the
 /// depfile: editing it cannot rebuild the compiler.
@@ -133,25 +130,9 @@ fn read(a: std.mem.Allocator, io: std.Io, directory: std.Io.Dir) !Sources {
     defer walker.deinit();
     var sources: Sources = .empty;
     while (try walker.next(io)) |entry| {
-        if (entry.kind != .file or testOnly(entry.path)) continue;
+        if (entry.kind != .file or rules.isTestOnly(entry.path)) continue;
         const bytes = try directory.readFileAlloc(io, entry.path, a, .unlimited);
         try sources.put(a, try a.dupe(u8, entry.path), bytes);
     }
     return sources;
-}
-/// SHA-256, as lowercase hexadecimal, over a domain tag, the toolchain, the
-/// optimize mode and each source's path, length and content hash.
-fn identity(a: std.mem.Allocator, sources: Sources, paths: []const []const u8, toolchain: Toolchain) ![64]u8 {
-    var text: std.Io.Writer.Allocating = .init(a);
-    try text.writer.print("mylang-compiler-identity-v2\n{s}\n{s}\n", .{ toolchain.zig_version, toolchain.optimize });
-    for (paths) |path| {
-        const bytes = sources.get(path) orelse continue;
-        try text.writer.print("{s}\x00{d}\x00{x}\n", .{ path, bytes.len, std.hash.Wyhash.hash(0, bytes) });
-    }
-    var hash: [32]u8 = undefined;
-    Sha.hash(text.written(), &hash, .{});
-    return std.fmt.bytesToHex(hash, .lower);
-}
-fn order(_: void, a: []const u8, c: []const u8) bool {
-    return std.mem.lessThan(u8, a, c);
 }

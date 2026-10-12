@@ -7,6 +7,11 @@ const language = @import("mylang");
 /// Every production source, including core/runtime/property adapters, plus the
 /// Zig version and compiler build mode participates in this generated identity.
 pub const compiler_identity = @import("build_identity").compiler_identity;
+/// The narrower generated identity of the test runner, driver and pipeline
+/// sources (`src/build_identity_rules.zig` selects them), the Zig version and
+/// the compiler build mode: what forks trials, applies budgets and judges
+/// outcomes, which a linked test program's bytes do not cover.
+pub const runner_identity = @import("build_identity").runner_identity;
 
 /// Actual front-end work, available to checks and compiler profiling tools.
 pub const Statistics = struct {
