@@ -39,25 +39,26 @@ public func load(fs: Filesystem, project_dir: str, component: bytes) -> PartRole
     mut children = load_list(fs, project_dir, "components", component)
     if children is not None:
         for child in children:
-            mut cl = ast.as_list(child)
-            if cl is None:
-                continue
-            if len(cl) < 2:
-                continue
-            mut head = ast.as_atom(cl[0])
-            if head is None:
-                continue
-            if head == b"pinout":
-                mut p = ast.as_text(cl[1])
-                if p is not None:
-                    pinout_name = p.copy()
-            elif head == b"electrical":
-                mut decl = electrical.parse(cl)
-                if decl is None:
+            match child.tag:
+                case ast.Tag.list(value=cl):
+                    if len(cl) < 2:
+                        continue
+                    mut head = ast.as_atom(cl[0])
+                    if head is None:
+                        continue
+                    if head == b"pinout":
+                        mut p = ast.as_text(cl[1])
+                        if p is not None:
+                            pinout_name = p.copy()
+                    elif head == b"electrical":
+                        mut decl = electrical.parse(cl)
+                        if decl is None:
+                            continue
+                        mut t = decl.electrical_type
+                        if t is not None:
+                            elec[strs.text(decl.pin)] = t
+                case _:
                     continue
-                mut t = decl.electrical_type
-                if t is not None:
-                    elec[strs.text(decl.pin)] = t
     mut top = load_list(fs, project_dir, "pinouts", pinout_name)
     if top is None:
         return PartRoles(map={})
@@ -66,23 +67,26 @@ public func load(fs: Filesystem, project_dir: str, component: bytes) -> PartRole
     if ast.as_atom(top[0]).unwrap_or(b"") != b"pinout":
         return PartRoles(map={})
     mut roles = PartRoles(map={})
-    for child2 in top[2:]:
-        mut cl2 = ast.as_list(child2)
-        if cl2 is None:
+    for child_index_5 in range(len(top)):
+        if child_index_5 < 2:
             continue
-        if len(cl2) < 3:
-            continue
-        if ast.as_atom(cl2[0]).unwrap_or(b"") != b"pin":
-            continue
-        mut pad_id = node_text(cl2[1])
-        mut fn_name = ast.as_text(cl2[2])
-        if pad_id is None or fn_name is None:
-            continue
-        mut elec_type: env.ElectricalType? = None
-        mut fn_key = strs.text(fn_name)
-        if fn_key in elec:
-            elec_type = Some(elec[fn_key])
-        roles.map[strs.text(pad_id)] = classify(elec_type, fn_name)
+        match top[child_index_5].tag:
+            case ast.Tag.list(value=cl2):
+                if len(cl2) < 3:
+                    continue
+                if ast.as_atom(cl2[0]).unwrap_or(b"") != b"pin":
+                    continue
+                mut pad_id = node_text(cl2[1])
+                mut fn_name = ast.as_text(cl2[2])
+                if pad_id is None or fn_name is None:
+                    continue
+                mut elec_type: env.ElectricalType? = None
+                mut fn_key = strs.text(fn_name)
+                if fn_key in elec:
+                    elec_type = Some(elec[fn_key])
+                roles.map[strs.text(pad_id)] = classify(elec_type, fn_name)
+            case _:
+                continue
     return roles
 
 
@@ -101,25 +105,26 @@ public func pad_functions(fs: Filesystem, project_dir: str, component: bytes) ->
     mut children = load_list(fs, project_dir, "components", component)
     if children is not None:
         for child in children:
-            mut cl = ast.as_list(child)
-            if cl is None:
-                continue
-            if len(cl) < 2:
-                continue
-            mut head = ast.as_atom(cl[0])
-            if head is None:
-                continue
-            if head == b"pinout":
-                mut p = ast.as_text(cl[1])
-                if p is not None:
-                    pinout_name = p.copy()
-            elif head == b"electrical":
-                mut decl = electrical.parse(cl)
-                if decl is None:
+            match child.tag:
+                case ast.Tag.list(value=cl):
+                    if len(cl) < 2:
+                        continue
+                    mut head = ast.as_atom(cl[0])
+                    if head is None:
+                        continue
+                    if head == b"pinout":
+                        mut p = ast.as_text(cl[1])
+                        if p is not None:
+                            pinout_name = p.copy()
+                    elif head == b"electrical":
+                        mut decl = electrical.parse(cl)
+                        if decl is None:
+                            continue
+                        mut t = decl.electrical_type
+                        if t is not None:
+                            elec[strs.text(decl.pin)] = t
+                case _:
                     continue
-                mut t = decl.electrical_type
-                if t is not None:
-                    elec[strs.text(decl.pin)] = t
     mut top = load_list(fs, project_dir, "pinouts", pinout_name)
     if top is None:
         return []
@@ -128,23 +133,26 @@ public func pad_functions(fs: Filesystem, project_dir: str, component: bytes) ->
     if ast.as_atom(top[0]).unwrap_or(b"") != b"pinout":
         return []
     mut result: PadFunction[] = []
-    for child2 in top[2:]:
-        mut cl2 = ast.as_list(child2)
-        if cl2 is None:
+    for child_index_4 in range(len(top)):
+        if child_index_4 < 2:
             continue
-        if len(cl2) < 3:
-            continue
-        if ast.as_atom(cl2[0]).unwrap_or(b"") != b"pin":
-            continue
-        mut pad_id = node_text(cl2[1])
-        mut fn_name = ast.as_text(cl2[2])
-        if pad_id is None or fn_name is None:
-            continue
-        mut elec_type: env.ElectricalType? = None
-        mut fn_key = strs.text(fn_name)
-        if fn_key in elec:
-            elec_type = Some(elec[fn_key])
-        result.append(PadFunction(pad=pad_id.copy(), fn_name=fn_name.copy(), class_=function_class(elec_type, fn_name)))
+        match top[child_index_4].tag:
+            case ast.Tag.list(value=cl2):
+                if len(cl2) < 3:
+                    continue
+                if ast.as_atom(cl2[0]).unwrap_or(b"") != b"pin":
+                    continue
+                mut pad_id = node_text(cl2[1])
+                mut fn_name = ast.as_text(cl2[2])
+                if pad_id is None or fn_name is None:
+                    continue
+                mut elec_type: env.ElectricalType? = None
+                mut fn_key = strs.text(fn_name)
+                if fn_key in elec:
+                    elec_type = Some(elec[fn_key])
+                result.append(PadFunction(pad=pad_id.copy(), fn_name=fn_name.copy(), class_=function_class(elec_type, fn_name)))
+            case _:
+                continue
     return result
 
 
@@ -295,25 +303,26 @@ func load_component_elec(fs: Filesystem, project_dir: str, component: bytes) -> 
     mut children = load_list(fs, project_dir, "components", component)
     if children is not None:
         for child in children:
-            mut cl = ast.as_list(child)
-            if cl is None:
-                continue
-            if len(cl) < 2:
-                continue
-            mut head = ast.as_atom(cl[0])
-            if head is None:
-                continue
-            if head == b"pinout":
-                mut p = ast.as_text(cl[1])
-                if p is not None:
-                    pinout_name = p.copy()
-            elif head == b"electrical":
-                mut decl = electrical.parse(cl)
-                if decl is None:
+            match child.tag:
+                case ast.Tag.list(value=cl):
+                    if len(cl) < 2:
+                        continue
+                    mut head = ast.as_atom(cl[0])
+                    if head is None:
+                        continue
+                    if head == b"pinout":
+                        mut p = ast.as_text(cl[1])
+                        if p is not None:
+                            pinout_name = p.copy()
+                    elif head == b"electrical":
+                        mut decl = electrical.parse(cl)
+                        if decl is None:
+                            continue
+                        mut t = decl.electrical_type
+                        if t is not None:
+                            elec[strs.text(decl.pin)] = t
+                case _:
                     continue
-                mut t = decl.electrical_type
-                if t is not None:
-                    elec[strs.text(decl.pin)] = t
     return ComponentElec(elec=elec, pinout_name=pinout_name)
 
 
@@ -331,27 +340,30 @@ public func strap_pads(fs: Filesystem, project_dir: str, component: bytes) -> di
         return result
     if ast.as_atom(top[0]).unwrap_or(b"") != b"pinout":
         return result
-    for child in top[2:]:
-        mut cl = ast.as_list(child)
-        if cl is None:
+    for child_index_2 in range(len(top)):
+        if child_index_2 < 2:
             continue
-        if len(cl) < 3:
-            continue
-        if ast.as_atom(cl[0]).unwrap_or(b"") != b"pin":
-            continue
-        mut pad_id = node_text(cl[1])
-        mut fn_name = ast.as_text(cl[2])
-        if pad_id is None or fn_name is None:
-            continue
-        if is_positional_pin(pad_id, fn_name):
-            continue
-        mut elec_type: env.ElectricalType? = None
-        mut fn_key = strs.text(fn_name)
-        if fn_key in ce.elec:
-            elec_type = Some(ce.elec[fn_key])
-        mut strap = classify(elec_type, fn_name) == PinClass.strap or is_strap_fn(fn_name)
-        if strap:
-            result[strs.text(pad_id)] = fn_name.copy()
+        match top[child_index_2].tag:
+            case ast.Tag.list(value=cl):
+                if len(cl) < 3:
+                    continue
+                if ast.as_atom(cl[0]).unwrap_or(b"") != b"pin":
+                    continue
+                mut pad_id = node_text(cl[1])
+                mut fn_name = ast.as_text(cl[2])
+                if pad_id is None or fn_name is None:
+                    continue
+                if is_positional_pin(pad_id, fn_name):
+                    continue
+                mut elec_type: env.ElectricalType? = None
+                mut fn_key = strs.text(fn_name)
+                if fn_key in ce.elec:
+                    elec_type = Some(ce.elec[fn_key])
+                mut strap = classify(elec_type, fn_name) == PinClass.strap or is_strap_fn(fn_name)
+                if strap:
+                    result[strs.text(pad_id)] = fn_name.copy()
+            case _:
+                continue
     return result
 
 
@@ -417,38 +429,44 @@ public func pad_requirements(fs: Filesystem, project_dir: str, component: bytes)
         return result
     # A/B paired translator channels are benign data pins, not address straps.
     mut fn_set: set[str] = set()
-    for child in top[2:]:
-        mut cl = ast.as_list(child)
-        if cl is None:
+    for child_index_1 in range(len(top)):
+        if child_index_1 < 2:
             continue
-        if len(cl) < 3:
-            continue
-        if ast.as_atom(cl[0]).unwrap_or(b"") != b"pin":
-            continue
-        mut fnm = ast.as_text(cl[2])
-        if fnm is not None:
-            fn_set.add(strs.text(fnm))
-    for child2 in top[2:]:
-        mut cl2 = ast.as_list(child2)
-        if cl2 is None:
-            continue
-        if len(cl2) < 3:
-            continue
-        if ast.as_atom(cl2[0]).unwrap_or(b"") != b"pin":
-            continue
-        mut pad_id = node_text(cl2[1])
-        mut fn_name = ast.as_text(cl2[2])
-        if pad_id is None or fn_name is None:
-            continue
-        mut elec_type: env.ElectricalType? = None
-        mut fn_key = strs.text(fn_name)
-        if fn_key in ce.elec:
-            elec_type = Some(ce.elec[fn_key])
-        mut req = connection_requirement(elec_type, fn_name)
-        if req == NcRequirement.suspect or req == NcRequirement.required:
-            if is_translator_channel(fn_name, fn_set):
+        match top[child_index_1].tag:
+            case ast.Tag.list(value=cl):
+                if len(cl) < 3:
+                    continue
+                if ast.as_atom(cl[0]).unwrap_or(b"") != b"pin":
+                    continue
+                mut fnm = ast.as_text(cl[2])
+                if fnm is not None:
+                    fn_set.add(strs.text(fnm))
+            case _:
                 continue
-            result[strs.text(pad_id)] = PadReq(fn_name=fn_name.copy(), req=req)
+    for child_index_0 in range(len(top)):
+        if child_index_0 < 2:
+            continue
+        match top[child_index_0].tag:
+            case ast.Tag.list(value=cl2):
+                if len(cl2) < 3:
+                    continue
+                if ast.as_atom(cl2[0]).unwrap_or(b"") != b"pin":
+                    continue
+                mut pad_id = node_text(cl2[1])
+                mut fn_name = ast.as_text(cl2[2])
+                if pad_id is None or fn_name is None:
+                    continue
+                mut elec_type: env.ElectricalType? = None
+                mut fn_key = strs.text(fn_name)
+                if fn_key in ce.elec:
+                    elec_type = Some(ce.elec[fn_key])
+                mut req = connection_requirement(elec_type, fn_name)
+                if req == NcRequirement.suspect or req == NcRequirement.required:
+                    if is_translator_channel(fn_name, fn_set):
+                        continue
+                    result[strs.text(pad_id)] = PadReq(fn_name=fn_name.copy(), req=req)
+            case _:
+                continue
     return result
 
 

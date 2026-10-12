@@ -1656,35 +1656,41 @@ public func contains_string(haystack: bytes[], needle: bytes) -> bool:
 
 
 public func parse_note_ref(node: ast.Node) -> NoteRef?:
-    mut children = try ast.as_list(node)
-    if len(children) < 2:
-        return None
-    mut head = try ast.as_atom(children[0])
-    if head != b"ref":
-        return None
-    mut pdf = try ast.as_string(children[1])
-    mut page = 0
-    mut quote: bytes? = None
-    for child in children[2:]:
-        mut subs = ast.as_list(child)
-        if subs is None:
-            continue
-        if len(subs) < 2:
-            continue
-        mut sub_head = ast.as_atom(subs[0])
-        if sub_head is None:
-            continue
-        if sub_head == b"page":
-            mut n = ast.as_number(subs[1])
-            if n is not None:
-                mut p = numeric.checked_u32(n)
-                if p is not None:
-                    page = int(p)
-        elif sub_head == b"quote":
-            mut s = ast.as_string(subs[1])
-            if s is not None:
-                quote = Some(s.copy())
-    return Some(NoteRef(pdf=pdf, page=page, quote=quote))
+    match node.tag:
+        case ast.Tag.list(value=children):
+            if len(children) < 2:
+                return None
+            mut head = try ast.as_atom(children[0])
+            if head != b"ref":
+                return None
+            mut pdf = try ast.as_string(children[1])
+            mut page = 0
+            mut quote: bytes? = None
+            for child_index_0 in range(len(children)):
+                if child_index_0 < 2:
+                    continue
+                match children[child_index_0].tag:
+                    case ast.Tag.list(value=subs):
+                        if len(subs) < 2:
+                            continue
+                        mut sub_head = ast.as_atom(subs[0])
+                        if sub_head is None:
+                            continue
+                        if sub_head == b"page":
+                            mut n = ast.as_number(subs[1])
+                            if n is not None:
+                                mut p = numeric.checked_u32(n)
+                                if p is not None:
+                                    page = int(p)
+                        elif sub_head == b"quote":
+                            mut s = ast.as_string(subs[1])
+                            if s is not None:
+                                quote = Some(s.copy())
+                    case _:
+                        continue
+            return Some(NoteRef(pdf=pdf, page=page, quote=quote))
+        case _:
+            return None
 
 
 public func instance_variants_base_value(self: InstanceVariants, value: bytes) -> bytes:

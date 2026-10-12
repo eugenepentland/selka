@@ -10,49 +10,52 @@ public func parse(form_children: ast.Node[]) -> env_mod.ElectricalDecl?:
     if len(form_children) < 2:
         return None
     mut pin_name = try ast.as_string(form_children[1])
-    if not known_sub_forms_valid(form_children[2:]):
+    if not known_sub_forms_valid(form_children, 2):
         return None
     mut decl = env_mod.ElectricalDecl(pin=pin_name, domain_=b"")
-    parse_sub_forms(mut decl, form_children[2:])
+    parse_sub_forms_from(mut decl, form_children, 2)
     return Some(decl)
 
 
-func known_sub_forms_valid(subs: ast.Node[]) -> bool:
-    for sub in subs:
-        mut items = ast.as_list(sub)
-        if items is None:
+func known_sub_forms_valid(subs: ast.Node[], start: int) -> bool:
+    for child_index in range(len(subs)):
+        if child_index < start:
             continue
-        if len(items) == 0:
-            continue
-        mut head = ast.as_atom(items[0])
-        if head is None:
-            continue
-        if head == b"type":
-            if len(items) < 2:
-                return False
-            mut value = ast.as_atom(items[1])
-            if value is None:
-                return False
-            if parse_electrical_type(value).is_none():
-                return False
-        elif head == b"drive":
-            if len(items) < 2:
-                return False
-            mut drive_value = ast.as_atom(items[1])
-            if drive_value is None:
-                return False
-            if parse_drive(drive_value).is_none():
-                return False
-        elif is_numeric_field(head):
-            if len(items) < 2:
-                return False
-            if ast.as_number(items[1]).is_none():
-                return False
-        elif head == b"domain":
-            if len(items) < 2:
-                return False
-            if ast.as_atom(items[1]).is_none():
-                return False
+        match subs[child_index].tag:
+            case ast.Tag.list(value=items):
+                if len(items) == 0:
+                    continue
+                mut head = ast.as_atom(items[0])
+                if head is None:
+                    continue
+                if head == b"type":
+                    if len(items) < 2:
+                        return False
+                    mut value = ast.as_atom(items[1])
+                    if value is None:
+                        return False
+                    if parse_electrical_type(value).is_none():
+                        return False
+                elif head == b"drive":
+                    if len(items) < 2:
+                        return False
+                    mut drive_value = ast.as_atom(items[1])
+                    if drive_value is None:
+                        return False
+                    if parse_drive(drive_value).is_none():
+                        return False
+                elif is_numeric_field(head):
+                    if len(items) < 2:
+                        return False
+                    if ast.as_number(items[1]).is_none():
+                        return False
+                elif head == b"domain":
+                    if len(items) < 2:
+                        return False
+                    if ast.as_atom(items[1]).is_none():
+                        return False
+            case _:
+                continue
     return True
 
 
@@ -67,39 +70,46 @@ func is_numeric_field(head: bytes) -> bool:
 # Shared with inline electrical clauses on ports. The caller sets the pin
 # before passing sub-forms; this function only fills optional electrical slots.
 public func parse_sub_forms(mut decl: env_mod.ElectricalDecl, subs: ast.Node[]):
-    for sub in subs:
-        mut items = ast.as_list(sub)
-        if items is None:
-            continue
-        if len(items) < 2:
-            continue
-        mut head = ast.as_atom(items[0])
-        if head is None:
-            continue
-        if head == b"type":
-            mut v = ast.as_atom(items[1])
-            if v is not None:
-                decl.electrical_type = parse_electrical_type(v)
-        elif head == b"drive":
-            mut dv = ast.as_atom(items[1])
-            if dv is not None:
-                decl.drive = parse_drive(dv)
-        elif head == b"v-ih-min":
-            decl.v_ih_min = ast.as_number(items[1])
-        elif head == b"v-il-max":
-            decl.v_il_max = ast.as_number(items[1])
-        elif head == b"v-oh-typ":
-            decl.v_oh_typ = ast.as_number(items[1])
-        elif head == b"v-ol-typ":
-            decl.v_ol_typ = ast.as_number(items[1])
-        elif head == b"max-voltage":
-            decl.max_voltage = ast.as_number(items[1])
-        elif head == b"domain":
-            mut a = ast.as_atom(items[1])
-            if a is not None:
-                decl.domain_ = a.copy()
+    parse_sub_forms_from(mut decl, subs, 0)
 
 
+func parse_sub_forms_from(mut decl: env_mod.ElectricalDecl, subs: ast.Node[], start: int):
+    for child_index in range(len(subs)):
+        if child_index < start:
+            continue
+        match subs[child_index].tag:
+            case ast.Tag.list(value=items):
+                if len(items) < 2:
+                    continue
+                mut head = ast.as_atom(items[0])
+                if head is None:
+                    continue
+                if head == b"type":
+                    mut v = ast.as_atom(items[1])
+                    if v is not None:
+                        decl.electrical_type = parse_electrical_type(v)
+                elif head == b"drive":
+                    mut dv = ast.as_atom(items[1])
+                    if dv is not None:
+                        decl.drive = parse_drive(dv)
+                elif head == b"v-ih-min":
+                    decl.v_ih_min = ast.as_number(items[1])
+                elif head == b"v-il-max":
+                    decl.v_il_max = ast.as_number(items[1])
+                elif head == b"v-oh-typ":
+                    decl.v_oh_typ = ast.as_number(items[1])
+                elif head == b"v-ol-typ":
+                    decl.v_ol_typ = ast.as_number(items[1])
+                elif head == b"max-voltage":
+                    decl.max_voltage = ast.as_number(items[1])
+                elif head == b"domain":
+                    mut a = ast.as_atom(items[1])
+                    if a is not None:
+                        decl.domain_ = a.copy()
+
+
+            case _:
+                continue
 # Unknown sub-forms ignored.
 func parse_electrical_type(s: bytes) -> env_mod.ElectricalType?:
     if s == b"input":

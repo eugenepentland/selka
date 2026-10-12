@@ -382,13 +382,16 @@ func declared_pinout(fs: Filesystem, project_dir: str, component: bytes) -> byte
         return None
     mut children = try load_form(fs, project_dir, b"components", component)
     for child in children:
-        mut cl = ast.as_list(child)
-        if cl is None or len(cl) < 2:
-            continue
-        if ast.as_atom(cl[0]).unwrap_or(b"") == b"pinout":
-            mut value = ast.as_text(cl[1])
-            if value is not None:
-                return Some(value.copy())
+        match child.tag:
+            case ast.Tag.list(value=cl):
+                if len(cl) < 2:
+                    continue
+                if ast.as_atom(cl[0]).unwrap_or(b"") == b"pinout":
+                    mut value = ast.as_text(cl[1])
+                    if value is not None:
+                        return Some(value.copy())
+            case _:
+                continue
     return None
 
 
@@ -399,15 +402,20 @@ func read_pinout(fs: Filesystem, project_dir: str, key: bytes) -> PadName[]:
     if ast.as_atom(top[0]).unwrap_or(b"") != b"pinout":
         return []
     mut out: PadName[] = []
-    for child in top[2:]:
-        mut cl = ast.as_list(child)
-        if cl is None or len(cl) < 3:
+    for child_index_0 in range(len(top)):
+        if child_index_0 < 2:
             continue
-        if ast.as_atom(cl[0]).unwrap_or(b"") != b"pin":
-            continue
-        mut pad = ast.token_text(cl[1])
-        if pad is not None:
-            out.append(PadName(pad=pad.copy(), name=ast.as_text(cl[2]).unwrap_or(pad).copy()))
+        match top[child_index_0].tag:
+            case ast.Tag.list(value=cl):
+                if len(cl) < 3:
+                    continue
+                if ast.as_atom(cl[0]).unwrap_or(b"") != b"pin":
+                    continue
+                mut pad = ast.token_text(cl[1])
+                if pad is not None:
+                    out.append(PadName(pad=pad.copy(), name=ast.as_text(cl[2]).unwrap_or(pad).copy()))
+            case _:
+                continue
     return out
 
 
