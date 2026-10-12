@@ -70,8 +70,14 @@ test "CLI component bootstrap rebuilds and installs without an interpreter on PA
     var environment = try std.process.Environ.createMap(t.environ, t.allocator);
     defer environment.deinit();
     try environment.put("PATH", empty_path);
+    const options = @import("test_options");
+    var arguments: std.ArrayList([]const u8) = .empty;
+    defer arguments.deinit(t.allocator);
+    try arguments.appendSlice(t.allocator, &.{ options.component_builder_path, "--zig", options.zig_path, "--install-dir", installation, "--uncached" });
+    if (options.component_owned_compiler_pin.len != 0) try arguments.appendSlice(t.allocator, &.{ "--owned-compiler-pin", options.component_owned_compiler_pin });
+    if (options.component_seed_source.len != 0) try arguments.appendSlice(t.allocator, &.{ "--seed-source", options.component_seed_source });
     const result = try std.process.run(t.allocator, t.io, .{
-        .argv = &.{ @import("test_options").component_builder_path, "--zig", @import("test_options").zig_path, "--install-dir", installation, "--uncached" },
+        .argv = arguments.items,
         .environ_map = &environment,
     });
     defer release(result);
@@ -88,6 +94,7 @@ test "CLI component bootstrap rebuilds and installs without an interpreter on PA
         defer manifest.deinit();
         try t.expectEqualStrings(component, manifest.value.component);
         try t.expectEqual(@as(usize, 64), manifest.value.sha256.len);
+        if (options.component_owned_compiler_pin.len != 0) try t.expectEqualStrings("zero-rc-v1", manifest.value.memory_mode orelse return error.MissingOwnedComponentMarker);
     }
 }
 
@@ -137,6 +144,7 @@ const PackageManifest = struct {
     schema: u32,
     artifact: []const u8,
     sha256: []const u8,
+    memory_mode: ?[]const u8 = null,
 };
 
 /// Stage a relocatable bin/libexec installation from the build's component package.

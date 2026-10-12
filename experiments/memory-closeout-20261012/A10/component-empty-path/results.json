@@ -1,0 +1,25 @@
+{
+  "schema": "a10-empty-path-components-v1",
+  "base": "d7fb8c48c7a9a1d6d1914dfa9b922de2dc299dcb",
+  "source_sha256": {
+    "build.zig": "93d0ef4c8e43ab57cb8ad0ddec527462c1e7d6af51724967cad75f0465cc33ed",
+    "test/components.zig": "777b780ad1e1cae573a8e16706ae96004cc06663e0b8d9fa3a81066cad513d6d",
+    "selfhost/components.zig": "b8ab3db2e32da7c55c6ef4aab7d0e2e37556f419b3a0c1fc818cc9073a94cb56"
+  },
+  "pin": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+  "pin_sha256": "32f37baa2509b01c231a104d7e9ba224a7193399201d0f87ec8a5db8fa6f039b",
+  "archive_sha256": "0557a645579881d54d3f4c493c8b07be38d42b0a21622ab712b84589ee212c27",
+  "zig": "0.17.0-dev.1683+5ceec001b",
+  "build_slot_ticket": 1301,
+  "exit_status": 0,
+  "named_tests_passed": 1,
+  "unnamed_blocks_passed": 3,
+  "test_wall_seconds": 11.11,
+  "assertions": [
+    "PATH points at an empty directory",
+    "--uncached rebuild retained",
+    "selected --owned-compiler-pin and --seed-source forwarded",
+    "both component manifests marked zero-rc-v1"
+  ],
+  "qualification": "Focused regression only. Final complete verification remains coordinator-owned."
+}
