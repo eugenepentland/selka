@@ -10,9 +10,18 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 
 import verification_native_telemetry as native
 import verification_report as report
+
+
+def isolated_environment(**overrides):
+    """Nested collectors cannot publish into the invoking gate's namespace."""
+    environment = dict(os.environ)
+    environment.pop('MYLANG_TEST_TELEMETRY_DIR', None)
+    environment.update(overrides)
+    return environment
 
 
 def frame(tag, body=b''):
@@ -108,7 +117,7 @@ class NativeTelemetryTests(unittest.TestCase):
         payload = b'not-protocol\x00\xff'
         runner = "import os,sys; data=sys.stdin.buffer.read(); os.write(1,data); os.write(2,b'runner stderr\\n'); sys.exit(7)"
         with tempfile.TemporaryDirectory() as directory:
-            env = dict(os.environ, MYLANG_TEST_TELEMETRY_DIR=directory)
+            env = isolated_environment(MYLANG_TEST_TELEMETRY_DIR=directory)
             completed = subprocess.run([sys.executable, str(script), '--action-id', 'unit', '--member', '0',
                                         '--root-id', 'root', '--', sys.executable, '-c', runner],
                                        input=payload, capture_output=True, env=env, timeout=5)
@@ -126,18 +135,33 @@ class NativeTelemetryTests(unittest.TestCase):
             completed = subprocess.run([sys.executable, native.__file__, '--action-id', 'unit',
                                         '--member', '0', '--root-id', 'root', '--', sys.executable, '-c', runner],
                                        input=b'', capture_output=True, pass_fds=(writer,),
-                                       env=dict(os.environ, TELEMETRY_FIXTURE_FD=str(writer)), timeout=5)
+                                       env=isolated_environment(TELEMETRY_FIXTURE_FD=str(writer)), timeout=5)
             self.assertEqual(completed.returncode, 0)
             self.assertEqual(os.read(reader, 12), b'side-channel')
         finally:
             os.close(reader)
             os.close(writer)
 
+    def test_all_nested_proxies_preserve_parent_gate_sidecars(self):
+        with tempfile.TemporaryDirectory() as directory:
+            parent = Path(directory)
+            sidecar = parent / 'unit.member.0.json'
+            authentic = b'parent gate telemetry must remain byte-exact'
+            sidecar.write_bytes(authentic)
+            with patch.dict(os.environ, MYLANG_TEST_TELEMETRY_DIR=directory):
+                self.assertNotIn('MYLANG_TEST_TELEMETRY_DIR', isolated_environment())
+                self.test_byte_exact_transport_and_runner_status_with_unknown_protocol()
+                self.test_inherited_progress_and_other_descriptors_reach_original_runner()
+                self.test_cancellation_reaps_noncooperating_runner()
+            self.assertEqual(sidecar.read_bytes(), authentic)
+            self.assertEqual(sorted(path.name for path in parent.iterdir()), ['unit.member.0.json'])
+
     def test_cancellation_reaps_noncooperating_runner(self):
         runner = "import os,signal,time; signal.signal(signal.SIGTERM,signal.SIG_IGN); os.write(2,b'ready\\n'); time.sleep(60)"
         process = subprocess.Popen([sys.executable, native.__file__, '--action-id', 'unit', '--member', '0',
                                     '--root-id', 'root', '--', sys.executable, '-c', runner],
-                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                                   stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                   env=isolated_environment())
         try:
             self.assertEqual(process.stderr.readline(), b'ready\n')
             process.send_signal(signal.SIGTERM)
