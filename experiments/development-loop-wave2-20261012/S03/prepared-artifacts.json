@@ -1,0 +1,45 @@
+{
+  "scope": "actual replay artifacts; compile-only qualification does not prove guest execution",
+  "artifacts": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/C0-qualified/bin/s03-replayed-tests",
+      "bytes": 21028237,
+      "sha256": "f2900bf2ce4f1519185a0872acee60f3c933fe0ae7e1364e991c80d30d2d9c10"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/B0-qualified/bin/s03-replayed-tests",
+      "bytes": 21109922,
+      "sha256": "002974b37e7a8c49655546a78e79b835970f3dc497aa9100e329328d19d5baba"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/all-units-C0-qualified/install/bin/s03-replayed-tests",
+      "bytes": 222199394,
+      "sha256": "6ed92178448218db528a8defbfb9fb74f08aeedaa1d64c5d7e7853f05e8822f2"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/all-units-B0-qualified/install/bin/s03-replayed-scalar",
+      "bytes": 21114018,
+      "sha256": "a1ac6bf8987ac73dd188db3f8ab09d8c278ab867d702955c58625d031220bd31"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/all-units-B0-qualified/install/bin/s03-replayed-tests",
+      "bytes": 226790328,
+      "sha256": "a3bc794dc54e7d37d84527454728cb7bce9a5c6a831ecad8002a1c37952d7ed7"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/golden-C0-actual/install/bin/s03-replayed-tests",
+      "bytes": 20218061,
+      "sha256": "4cc96b5db39d5efb4e3699a1ad1e3cfb2aa8cea461dac84d2c08df969cbc7fcd"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/golden-C0-controlled/install/bin/s03-replayed-tests",
+      "bytes": 20213965,
+      "sha256": "fbc95a5444c028b2dcd45cc825c74ee8eda9f5bdeeb367f3b4b40f9cc612edca"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/.tmp/s03-paired/golden-B0-actual/install/bin/s03-replayed-tests",
+      "bytes": 20273122,
+      "sha256": "ae2e1adb86f7fb97a6a6f77e079f2bbbcf2d545fc0d99165b5813de7474c2e5a"
+    }
+  ]
+}

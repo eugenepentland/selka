@@ -1,0 +1,15 @@
+build-slot: FIFO ticket 25, position 1; draining active work (build1.lock); waiting (0s so far)
+build-slot: FIFO ticket 25, position 1; draining active work (build1.lock); waiting (60s so far)
+build-slot: FIFO ticket 25, position 1; draining active work (build1.lock); waiting (120s so far)
+build-slot: timing slot 1, FIFO ticket 25 after 140s
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/experiments/development-loop-wave2-20261012/S03/measure_boundaries.py", line 224, in <module>
+    rows = (build_pair(args.pair,args.timeout) if args.cohort=='build' else
+            ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/experiments/development-loop-wave2-20261012/S03/measure_boundaries.py", line 146, in build_pair
+    row, text = measure(command, ROOT, env, f'build-{index:02d}-{label}-{phase}', timeout)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/experiments/development-loop-wave2-20261012/S03/measure_boundaries.py", line 112, in measure
+    assert process.returncode == 0, (name, text[-3000:])
+           ^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('build-00-C0-cold', 'info: to access the help menu: zig build -h\nerror: unrecognized argument: --global-cache-dir\n')

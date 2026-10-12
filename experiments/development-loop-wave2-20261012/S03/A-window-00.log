@@ -1,0 +1,12 @@
+build-slot: FIFO ticket 26, position 1; waiting for memory-accounting settle delay or another measurement; waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 26 after 30s
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/experiments/development-loop-wave2-20261012/S03/measure_boundaries.py", line 227, in <module>
+    rows = (build_pair(args.pair,args.timeout) if args.cohort=='build' else
+            ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/experiments/development-loop-wave2-20261012/S03/measure_boundaries.py", line 149, in build_pair
+    row, text = measure(command, ROOT, env, f'build-{index:02d}-{label}-{phase}', timeout)
+                ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/experiments/development-loop-wave2-20261012/S03/measure_boundaries.py", line 92, in measure
+    raise TimeoutError(name)
+TimeoutError: build-00-B0-cold

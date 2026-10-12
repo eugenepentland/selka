@@ -1,0 +1,59 @@
+{
+  "schema": "s03-golden-controlled-closure-v1",
+  "functions_byte_identical": [
+    "invoke",
+    "checkAllGoldens",
+    "flattenOptions",
+    "signaturesMatch",
+    "retired",
+    "checkSourceCase",
+    "checkFixtureCase"
+  ],
+  "case_runner_change": "only lifetime of now-interned source path",
+  "corpora": [
+    {
+      "path": "tests/goldens/qbe_bytes.json",
+      "sha256": "805278a9b0e7691f5b71d61a56ffc34c8823e8069b970afcd1795523c70263d5"
+    },
+    {
+      "path": "tests/goldens/qbe_managed.json",
+      "sha256": "50ef585d89f60fb1025c4c3f8080bd4708bd6f18ecdbe1f05dafbf8f0cdc271a"
+    },
+    {
+      "path": "tests/goldens/qbe_arena.json",
+      "sha256": "82b3d54663fe52a420b58e6475fd0c10ae71e7947ec0799edf8a77b4b4ac39e0"
+    },
+    {
+      "path": "tests/goldens/qbe_resource_parity.json",
+      "sha256": "583c34044f3e79c5c499beab0747b31142158120f4aeb6a1525be1b2cccb25d2"
+    },
+    {
+      "path": "tests/goldens/qbe_io.json",
+      "sha256": "0468bd67bb876d26ac4f97c19c96ea2c07d91ec8345674394c9570b1417eb19e"
+    },
+    {
+      "path": "tests/goldens/qbe_parity.json",
+      "sha256": "a5ad4451093c5ff3a99c5f5f6fe0eb602ba3812c04d7177b0056815803a4eb2e"
+    },
+    {
+      "path": "tests/goldens/qbe_docs.json",
+      "sha256": "c01dd78e91b7d88613daccd1424ccee79f21125f3dda815d7b1c027c82557f86"
+    },
+    {
+      "path": "tests/goldens/qbe_files.json",
+      "sha256": "ef515d5c45c965d42ee21ec3b8188cba6f0935a571000b0b544deb58d60144fb"
+    },
+    {
+      "path": "tests/goldens/qbe_text.json",
+      "sha256": "333784881739b68be7e4541d0f3ddd87b289b9eb50dbcc79a0de354514f0ebda"
+    },
+    {
+      "path": "tests/goldens/qbe_native_cases.json",
+      "sha256": "93bb1460ee7b31ede8e7d67ebda9efb83cfcaa936c9348c2d5c782ebaa745695"
+    }
+  ],
+  "live_invokes_per_checked_case": 1,
+  "checked_cases": 222,
+  "mutable_work_directories": 222,
+  "case_selection_source": "prior S07 corpus-manifest/corpus-work unchanged exact checked corpora; runtime counters must agree"
+}
