@@ -260,32 +260,36 @@ def golden_pair(index, tier, compiler_mode, timeout):
         rows.append(row)
     return rows
 
-parser = argparse.ArgumentParser(description=__doc__)
-parser.add_argument('cohort', choices=('build','warm-edits','all-units','golden'))
-parser.add_argument('--pair', type=int, required=True)
-parser.add_argument('--tier', choices=('cold','warm'), default='warm')
-parser.add_argument('--compiler-mode', choices=('actual','controlled'), default='controlled')
-parser.add_argument('--label', choices=('C0','B0'))
-parser.add_argument('--edits', type=int, default=40)
-parser.add_argument('--timeout', type=float, default=240)
-args = parser.parse_args()
-def interrupted(signum, frame):
-    raise TimeoutError('measurement window interrupted')
-signal.signal(signal.SIGTERM, interrupted)
-authority = authenticate()
-started = time.perf_counter()
-rows = (build_pair(args.pair,args.timeout,args.label) if args.cohort=='build' else
-        warm_edits(args.pair,args.edits,args.timeout) if args.cohort=='warm-edits' else
-        all_units_pair(args.pair,args.timeout,args.label) if args.cohort=='all-units' else
-        golden_pair(args.pair,args.tier,args.compiler_mode,args.timeout))
-for path, expected in authority.items():
-    assert stamp(path) == expected, path
-report = {'schema':'s03-paired-boundary-measurement-v1','cohort':args.cohort,'pair':args.pair,'tier':args.tier,
-          'compiler_mode':args.compiler_mode,'label':args.label,'elapsed_s':time.perf_counter()-started,'rows':rows,
-          'cpu_affinity':sorted(os.sched_getaffinity(0)),
-          'harness_sha256':digest(__file__),'recipe_sha256':digest(OUT / 'replay_build.zig'),
-          'tool_authority_sha256':digest(OUT / 'tool-authority.json'),'estimator':'paired ratios and sample median/range; no stable p95 claim'}
-out = OUT / (f'{args.cohort}-pair-{args.pair:02d}' + (f'-{args.label}' if args.label else '') + '.json' if args.cohort!='golden' else f'golden-{args.tier}-{args.compiler_mode}-pair-{args.pair:02d}.json')
-assert not out.exists(), out
-out.write_text(json.dumps(report,indent=2)+'\n')
-print(json.dumps({'cohort':args.cohort,'pair':args.pair,'rows':len(rows),'elapsed_s':report['elapsed_s']}))
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('cohort', choices=('build','warm-edits','all-units','golden'))
+    parser.add_argument('--pair', type=int, required=True)
+    parser.add_argument('--tier', choices=('cold','warm'), default='warm')
+    parser.add_argument('--compiler-mode', choices=('actual','controlled'), default='controlled')
+    parser.add_argument('--label', choices=('C0','B0'))
+    parser.add_argument('--edits', type=int, default=40)
+    parser.add_argument('--timeout', type=float, default=240)
+    args = parser.parse_args()
+    def interrupted(signum, frame):
+        raise TimeoutError('measurement window interrupted')
+    signal.signal(signal.SIGTERM, interrupted)
+    authority = authenticate()
+    started = time.perf_counter()
+    rows = (build_pair(args.pair,args.timeout,args.label) if args.cohort=='build' else
+            warm_edits(args.pair,args.edits,args.timeout) if args.cohort=='warm-edits' else
+            all_units_pair(args.pair,args.timeout,args.label) if args.cohort=='all-units' else
+            golden_pair(args.pair,args.tier,args.compiler_mode,args.timeout))
+    for path, expected in authority.items():
+        assert stamp(path) == expected, path
+    report = {'schema':'s03-paired-boundary-measurement-v1','cohort':args.cohort,'pair':args.pair,'tier':args.tier,
+              'compiler_mode':args.compiler_mode,'label':args.label,'elapsed_s':time.perf_counter()-started,'rows':rows,
+              'cpu_affinity':sorted(os.sched_getaffinity(0)),
+              'harness_sha256':digest(__file__),'recipe_sha256':digest(OUT / 'replay_build.zig'),
+              'tool_authority_sha256':digest(OUT / 'tool-authority.json'),'estimator':'paired ratios and sample median/range; no stable p95 claim'}
+    out = OUT / (f'{args.cohort}-pair-{args.pair:02d}' + (f'-{args.label}' if args.label else '') + '.json' if args.cohort!='golden' else f'golden-{args.tier}-{args.compiler_mode}-pair-{args.pair:02d}.json')
+    assert not out.exists(), out
+    out.write_text(json.dumps(report,indent=2)+'\n')
+    print(json.dumps({'cohort':args.cohort,'pair':args.pair,'rows':len(rows),'elapsed_s':report['elapsed_s']}))
+
+if __name__ == "__main__":
+    main()

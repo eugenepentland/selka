@@ -1,0 +1,12 @@
+build-slot: FIFO ticket 642, position 3; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 642 after 20s
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/experiments/development-loop-wave2-20261012/S03/measure_repaired_goldens.py", line 54, in <module>
+    row, text = boundary.measure([artifact],boundary.SCRATCH/label,env,name,args.timeout)
+                ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/experiments/development-loop-wave2-20261012/S03/measure_boundaries.py", line 109, in measure
+    time.sleep(0.01)
+    ~~~~~~~~~~^^^^^^
+  File "/home/epentland/ai/canopy/mylang-dl-wave2-20261012-S03/experiments/development-loop-wave2-20261012/S03/measure_repaired_goldens.py", line 41, in interrupted
+    raise TimeoutError('golden window interrupted')
+TimeoutError: golden window interrupted
