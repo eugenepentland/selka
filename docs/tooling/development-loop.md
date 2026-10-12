@@ -187,8 +187,11 @@ followed by `mylang test tests/lang` took a median 14.15 s over five edits
 tests from execution receipts; it took 78 s with nothing reused on 5 October.
 The five that still run call `function_digest`, which binds the compiler
 identity. An unchanged complete verification then took 532 s because every
-request ran the original complete gate (`coverage.unknown_actions` names the
-unregistered `build-env` compile step), not the 34 to 37 s it took before. The
+request ran the original complete gate (`coverage.unknown_actions` named the
+unregistered `build-env` compile step), not the 34 to 37 s it took before. With
+the tool registered as infrastructure (`2ea257471`), two consecutive unchanged
+requests observed under load took 40.7 s and 23.1 s, gate occupancy 22.6 s and
+13.4 s, with the 11 always-fresh actions executed and 35 reused. The
 qualification and its findings are in
 `experiments/output-keyed-receipts-20261012/` and the
 [plan's outcome](../audits/output-keyed-shared-receipts-plan-2026-10-12.md#outcome-12-october).

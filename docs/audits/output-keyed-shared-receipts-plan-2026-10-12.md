@@ -429,9 +429,14 @@ name the entry's absolute path) and row 13's coordinator part (scratch-location
 gates failed; the receipt namespaces themselves behave as specified).
 
 **Findings for the owners** (diagnosed to file and line in the evidence):
-(F1) the unregistered `build-env` compile step makes every complete
+(F1) the unregistered `build-env` compile step made every complete
 verification run the original complete gate (unchanged request 532 s,
-gate 475 s); (F2) `function_digest` programs change with every compiler edit;
+gate 475 s); fixed the same day by Lane C2 (`de957e8de`, merged at
+`2ea257471`): the tool's compile step is registered as infrastructure,
+`test-verification-registry` fails every gate root while any required action is
+unregistered, and two consecutive unchanged complete verifications observed
+under load took 40.7 s then 23.1 s (gate 22.6 s and 13.4 s; 11 fresh, 35
+reused, 0 executed); (F2) `function_digest` programs change with every compiler edit;
 (F3) coordinator action keys include path-dependent loaded-code digests;
 (F4) the cache-plan component's bytes, and so every IR receipt key, differ per
 worktree; (F5) the gate fails when the shared-store variables are set;
@@ -450,7 +455,9 @@ samples), and the first windowed sample failed on F9 after 764 s (35 actions
 executed). Descriptive, unwindowed observations: unchanged repeat 532 s
 request and 475 s gate (row 1); cold verification in two fresh worktrees,
 gate occupancy 1,186 s and 854 s (row 7, both failing on F8). The fact/leak share of the warm floor is
-removed (row 1); the floor itself waits on F1, then audit change 7.
+removed (row 1); after the F1 fix the floor is 23.1 s request and 13.4 s gate
+(unwindowed, under load); C1, C3 and C4 still need their windowed samples, then
+audit change 7.
 
 **Integration gate.** `--integration` (Section 7) is implemented in
 `scripts/verify_cache.py` with eight tests in `scripts/verify_cache_test.py`.

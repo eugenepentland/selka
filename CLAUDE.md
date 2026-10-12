@@ -147,10 +147,13 @@ reads changes; those files are declared per step in
 `build_test_inputs.zig`, and `zig build test` fails (`test-inputs-coverage`) when a
 test names a repository path its step does not declare. An unchanged `zig build test`
 still reruns the core shards. An unchanged complete verification through the
-coordinator took 34 to 37 s before the 12 October merge; since then the
-unregistered `build-env` tool step sends every request to the original complete
-gate (about 530 s; `coverage.unknown_actions` in `zig-out/verification/inventory.json`
-names it) until it is registered. A `.my` or doc edit re-runs only what reads it,
+coordinator takes about 25 to 40 s (gate occupancy 13 to 23 s, observed on
+12 October under load; 34 to 37 s before that day's merge). Every gate root
+depends on `zig build test-verification-registry`, which fails while any required
+action is unregistered (`coverage.unknown_actions` in
+`zig-out/verification/inventory.json` names it), because an unregistered action
+sends every request to the original complete gate, about 530 s. A `.my` or doc
+edit re-runs only what reads it,
 and any `src/` edit reruns every step that runs the compiler. A cached step
 prints no test count, so the `Build Summary` total counts only what ran:
 `-Dtest-rerun=true` re-runs every test step (full counts, or to rule out a stale
