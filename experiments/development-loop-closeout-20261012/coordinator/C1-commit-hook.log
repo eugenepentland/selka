@@ -1,0 +1,19 @@
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10004 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/dl-closeout-20261012-integration a9a3208a4] Integrate qualified development-loop profiles, telemetry and native boundaries
+ 26 files changed, 2789 insertions(+), 73 deletions(-)
+ create mode 100644 .prune-keep
+ create mode 100644 experiments/development-loop-closeout-20261012/coordinator/candidate-inventory.json
+ create mode 100644 experiments/development-loop-closeout-20261012/coordinator/final-coordinator-tests.log
+ create mode 100644 experiments/development-loop-closeout-20261012/coordinator/final-followup-tests.log
+ create mode 100644 experiments/development-loop-closeout-20261012/coordinator/final-inventory.log
+ create mode 100644 experiments/development-loop-closeout-20261012/coordinator/final-prepare.log
+ create mode 100644 experiments/development-loop-closeout-20261012/coordinator/final-process-tests.log
+ create mode 100644 experiments/development-loop-closeout-20261012/coordinator/final-session-tests.log
+ create mode 100644 experiments/development-loop-closeout-20261012/coordinator/qualification.md
+ create mode 100644 experiments/development-loop-closeout-20261012/coordinator/scalar-filter-controls.log
+ create mode 100644 experiments/development-loop-closeout-20261012/coordinator/scalar-plan.log

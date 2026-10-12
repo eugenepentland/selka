@@ -28,14 +28,14 @@ docs and this ledger. Shared patch requests were applied serially.
 | --- | --- | --- | --- |
 | S01 | verification_report, telemetry helper/tests | c7ee0f716, ce3e72c8c, 0b2daa25d, 10d88952e | Python selected-test telemetry, bounded malformed-output handling; native/guest timing hooks remain unknown. [Handoff](S01/handoff.md) |
 | S02 | verification_budgets/process/policy and tests | 2da4d4f8f, 7466accc9 | Process-tree adversarial checks; policy remains report-only. Concurrent subscriber acceptance and calibrated enforcement open. [Handoff](S02/handoff.md) |
-| S03 | text_scalar_root_test and exact existing scalar tests/oracles | 45f7676ef, c246edc13 | Nine native tests pass; embedded semantic mutation fails. Root authored existing imports/build/Guardian changes. Paired cold/RSS cost open. [Handoff](S03/handoff.md) |
-| S04 | verification_artifacts/producers and tests | 8fd2eb10e, a0b515753, 3ab3bb15c, 2b61af2d8, 82bf79ce5, ec4aed4e1 | Two independent roots adopted; actual lowercase Zig mode fixed. Coordinator/S04 final configuration review required. [Review](S04/final-review.md) |
+| S03 | text_scalar_root_test and exact existing scalar tests/oracles | 45f7676ef, c246edc13, 548508300 | Nine native tests pass; embedded semantic mutation fails. Root authored existing imports/build/Guardian changes. Paired cold/RSS cost open. [Handoff](S03/handoff.md) |
+| S04 | verification_artifacts/producers and tests | 8fd2eb10e, a0b515753, 3ab3bb15c, 2b61af2d8, 82bf79ce5, ec4aed4e1 | Two independent roots adopted; actual lowercase Zig mode fixed. Coordinator/S04 final configuration review passed. [Review](S04/final-review.md) |
 | S05 | profiles, fuzz_campaign, juice_cache and adapter tests | 88a7a46bb, 3223f2735 | Explicit quick partial status; bounded fuzz work; long profile lists outstanding external obligations. Long orchestration/counter qualification open. [Handoff](S05/handoff.md) |
 | S06 | guest profiling/controls; discover candidate only after overlap review | b5919178a, f605f3bde | Eighteen mandatory cold/warm actions and eight controls pass; production indexing rejected, source and SPEC unchanged. [Profile](S06/PROFILE.md) |
 | S07 | test/golden_parity.zig | 0713e4a8e | All 222 compiler checks retained, 165 distinct source preparations; mutable cwd remains per case. Full golden passes. Paired latency/RSS open. [Handoff](S07/handoff.md) |
-| S08 | verification_snapshot and profiling helpers/tests | 05a9746e4, 79ec85e79 | Bounded sticky invalidation reasons; 74 tests. Cross-snapshot stat memoization rejected. Warm validation savings not claimed. [Handoff](S08/handoff.md) |
+| S08 | verification_snapshot and profiling helpers/tests | 05a9746e4, 79ec85e79, 7c5e326d6 | Bounded sticky invalidation reasons; 74 tests. Cross-snapshot stat memoization rejected. Warm validation savings not claimed. [Handoff](S08/handoff.md) |
 | S09 | bootstrap matrix and uniquely named bridge fixtures | 4c4833b54, a1bd6bef7 | Schema11 refreshed, component support checks pass; no port edits. Real stages/seeds/bootstrap and strict performance acceptance open. [Handoff](S09/handoff.md) |
-| S10 | frozen baseline/final harnesses, edit matrix and timing evidence | baseline capture complete; final candidate pending | C0 full gate passes, exact 45 groups/95 members; final qualification owns later acceptance. |
+| S10 | frozen baseline/final harnesses, edit matrix and timing evidence | 9dce60867, e692f5fee | C0 and C1 complete gates pass; C1 two unchanged requests pass with 35/46 reused. [Acceptance](S10/acceptance-report.md) |
 
 ## Integrated contracts
 
@@ -66,20 +66,42 @@ after the consumer audit, actual writer/caller checks and regression evidence.
 Current exported inventory has 46 groups, 101 required/registered members and no
 unknown members. Focused coordinator74/process33/session15 checks pass.
 
-The final integrated source candidate and final complete/retained qualification
-will be recorded here after focused checks and a normal commit hook. It stays
-frozen during S10 execution; evidence-only commits identify the tested source SHA.
+Frozen and tested C1: `a9a3208a4f3edbf17170cfc18d57f5f999af49c3`.
+The full forced complete gate and formatting passed, followed by two unchanged
+retained requests, all with stable inputs. The C1 normal commit hook separately
+passed all 88 whole-tree Guardian checks. Source stayed frozen through final
+Debug/ReleaseFast artifact preparation, pinning and qualification. Later commits
+contain only closeout evidence and this ledger; C1 remains the tested source SHA.
+
+| C1 request | Result | Groups executed / reused | Gate admission | Total coordinator elapsed |
+| --- | --- | --- | --- | --- |
+| Forced complete | Passed | 46 / 0 | 985.953 s | 1012.058 s |
+| Unchanged 1 | Passed | 11 / 35 | 65.862 s | 73.310 s |
+| Unchanged 2 | Passed | 11 / 35 | 91.618 s | 101.175 s |
+
+Both unchanged requests performed zero file hashing and zero directory enumeration,
+but still performed 175,816 metadata observations. These are operational samples,
+not isolated latency or a stable p95. They do not establish the warm latency goal.
+Per-test telemetry observed all 286 selected Python tests in 11 members; 90 other
+members explicitly have unknown supported per-test timing.
+
+C0 retained startup conservatively recomputed all groups and was canceled with
+status143; its warm acceptance is absent. S08 demonstrated reference-sensitive
+Python marshal serialization as a possible contributor to cross-process code
+identity drift; the actual startup contributors remain unproven. The follow-up
+requires canonical authentication of actual loaded code, not trusting current
+source bytes or suppressing source guards. See [diagnosis](S08/code-digest-followup.md).
 
 | Requirement | Current status | Concrete remaining work |
 | --- | --- | --- |
-| DL1 complete observability | Not fully qualified | Verify final inventory/report parity; obtain supported native and guest individual timing hooks from runner owners. |
+| DL1 complete observability | Not fully qualified | Final inventory/report parity passed; obtain supported native and guest individual timing hooks from runner owners. |
 | DL2 calibrated limits/cancellation | Partial implementation, acceptance open | Archive compatible headroom and concurrent subscriber lifecycle evidence before enforced action limits. |
-| DL3 independent boundaries | Implemented, final qualification pending | Complete candidate gate and paired warm/cold/RSS tradeoff for scalar split. |
-| DL4 real qualified producer | Implemented, final qualification pending | Reviewed pin and actual writer/caller checks passed; broader store and compatible-worktree matrix remains open. |
+| DL3 independent boundaries | Bounded checks passed; performance open | Native split, inventory and full gate passed; paired warm/cold/RSS tradeoff still required. |
+| DL4 real qualified producer | Adopted checks passed; broader acceptance open | Reviewed pin, real writer/caller, semantic mutation and full gate passed; broader store/live compatible-worktree matrix remains open. |
 | DL5 fresh execution cost | Partial implementation, target not qualified | Measure golden preparation end-to-end; obtain supported guest phase spans. Indexing and stat memo candidates rejected. |
 | DL6 supported profiles/work budgets | Partial implementation | Quick/complete contracts and work caps pass focused checks; authenticated long qualification orchestration/counters remain open. |
 | DL7 self-hosting integration | Open | Active port owner supplies qualified stage/ABI/seed milestones and full bootstrap/per-workload median and p95 at most 1.5× frozen Zig reference. |
-| DL8 final correctness/performance | In progress | S10 exact frozen candidate gate, retained/one-shot checks and edit/failure matrix; latency/p95 targets remain unqualified until sufficient samples. |
+| DL8 final correctness/performance | Complete correctness passed; performance open | Exact frozen complete gate and two retained requests passed; live one-shot/edit/cold matrix and latency/p95 targets remain unqualified. |
 
 The development-loop milestone is not declared closed while required acceptance
 remains open. The independent self-hosting milestone remains open. Useful checked
