@@ -1,0 +1,96 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "leakcheck": "0 for receipt eligibility; counted qualification is separate",
+  "default": false,
+  "source_sha256": "84024df21d4074fc5c9436f695e607c647642c2dc6402cfdba4db237aad81288",
+  "negative_source_sha256": "065419a3da7e11f6f2d073659497e3d91de5b5428374c28d267bb7e7d2f6cbde",
+  "results": [
+    {
+      "name": "lint-owned",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "lint",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-support5-tail/one/app.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-support5-tail/cache",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "expected": 0,
+      "stdout": "lint: 0 finding(s): 0 blocking, 0 report, 0 waived, 0 accepted\n",
+      "stderr": "",
+      "structural": {},
+      "passed": true
+    },
+    {
+      "name": "noalloc-invalid-check",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "check",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-support5-tail/one/app.my",
+        "--stats",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-support5-tail/cache",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "expected": 1,
+      "stdout": "",
+      "stderr": "app.my:14:16: error[E_SINGLE_OWNER_MOVED]: 'data' was moved or is unavailable on this path; use .copy() when both values are needed\n      return len(data)\n                 ^\n",
+      "structural": {},
+      "passed": true
+    },
+    {
+      "name": "noalloc-invalid-build",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-support5-tail/one/app.my",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-support5-tail/bad",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-support5-tail/cache",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "expected": 1,
+      "stdout": "",
+      "stderr": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-support5-tail/one/app.my:14:16: error[E_SINGLE_OWNER_MOVED]: 'data' was moved or is unavailable on this path; use .copy() when both values are needed\n      return len(data)\n                 ^\n",
+      "structural": {},
+      "passed": true
+    },
+    {
+      "name": "noalloc-invalid-lint",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "lint",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-support5-tail/one/app.my",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-support5-tail/cache",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "expected": 1,
+      "stdout": "",
+      "stderr": "app.my:14:16: error[E_SINGLE_OWNER_MOVED]: 'data' was moved or is unavailable on this path; use .copy() when both values are needed\n      return len(data)\n                 ^\n",
+      "structural": {},
+      "passed": true
+    },
+    {
+      "name": "coverage-ordinary-control",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "coverage",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/analysis-support5-tail/one/app.my"
+      ],
+      "status": 0,
+      "expected": 0,
+      "stdout": "refused borrowed views require --experimental-zero-rc\tprefix_length\nok test_view\tproven=0 exact=0 stack=0\nok main\tproven=0 exact=0 stack=0\n",
+      "stderr": "",
+      "structural": {},
+      "passed": true
+    }
+  ],
+  "success": true
+}

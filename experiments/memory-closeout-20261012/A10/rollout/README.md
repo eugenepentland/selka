@@ -96,3 +96,25 @@ statistics. The installed-component boundary remains explicit. The companion `ma
 independent copies and direct destruction, and makes the prior text-only examples
 executable doctests. Both pages still require actual integrated doctest execution
 and final source-contract review before publication.
+
+## Support5 draft qualification
+
+`support5/` pins refreshed code, documentation and API-inventory drafts to
+`a1f19edf255c8c0886731d8d7cce450d5f657720`. `prepare_docs.py` creates an eight-page
+unapplied patch from the exact draft/original hashes. `migrate_reference_docs.py`
+reproduces six newly reserved page migrations; `managed_docs.py` reproduces the
+managed-memory draft. Current production pages are unchanged.
+
+`qualify_docs.py` tests bounded block selections through the actual doctest
+command and preserves each source hash and raw unit result. Projects count all
+source blocks but share one execution/check unit; splitting a project across
+batches is refused. `summarize_support5.py` joins only evidence matching the
+current draft block hashes. The current result is 47/51 blocks (46/50 units)
+passing. Three tuple bindings and one round helper remain concrete compiler
+blockers. Copies and the current-length index-loop migration preserve their
+original output/assertions. The original foreach mutation remains a checked
+negative, not silently admitted by a relaxed borrow guard.
+
+These results use explicit opt-in Support5. Applying the C2 documentation still
+requires ordinary-command qualification on the actual default compiler, the
+remaining compiler fixes, and the complete documentation/registered gate.

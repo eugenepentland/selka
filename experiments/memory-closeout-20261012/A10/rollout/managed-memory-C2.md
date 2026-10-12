@@ -426,7 +426,7 @@ func main() -> int:
         return 2
     if 9 in left:
         return 3
-    mut nested: int[][] = [left]
+    mut nested: int[][] = [left.copy()]
     mut twin: int[][] = [right]
     if nested != twin:
         return 4

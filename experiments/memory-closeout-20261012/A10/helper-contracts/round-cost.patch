@@ -1,0 +1,44 @@
+diff --git a/src/core/cost.zig b/src/core/cost.zig
+--- a/src/core/cost.zig
++++ b/src/core/cost.zig
+@@ -61,7 +61,7 @@
+         "myl_core_span_starts",          "myl_core_span_ends",          "myl_core_span_contains",
+         "myl_core_octets_compare",       "myl_core_dict_ordinal",       "myl_core_view_slice",
+         "myl_core_view_chars",           "myl_core_view_index",         "myl_core_view_byte",
+-        "myl_core_owned_same_block",
++        "myl_core_owned_same_block",     "myl_core_round_float",
+     };
+     for (names) |name| if (std.mem.eql(u8, name, symbol)) return true;
+     return false;
+diff --git a/src/core/cost_command.zig b/src/core/cost_command.zig
+--- a/src/core/cost_command.zig
++++ b/src/core/cost_command.zig
+@@ -355,3 +355,28 @@
+     try std.testing.expectError(error.SourceError, foreign.checkLibraryProgram());
+     try std.testing.expectEqualStrings("E_EXTERN_SYMBOL", foreign.diagnostics.items[0].code);
+ }
++
++// spec-case: FRONTEND-CORE-NOALLOC-1
++test "zero RC allocation contracts audit scalar rounding" {
++    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
++    defer arena.deinit();
++    const a = arena.allocator();
++    var compilation = try @import("mylang").Compilation.init(a, "round.my",
++        \\func rounded(value: float, digits: int) -> float noalloc:
++        \\    return round(value, digits)
++    );
++    const program = try compilation.checkLibraryProgram();
++    const failures = try @import("allocation_contract.zig").collectProgramWithOwnership(a, program, compilation.src, .{ .single_owner = true, .zero_rc = true });
++    try std.testing.expectEqual(@as(usize, 0), failures.len);
++    var module: ir.Module = .{ .single_owner = true, .zero_rc = true };
++    try module.functions.append(a, .{ .name = "myl_core_round_float", .signature = .{ .params = &.{ .f64, .i64 }, .ret = .f64, .linkage = .runtime_c } });
++    const call: ir.Inst = .{ .op = .call, .a = @fromBackingInt(0), .ty = .f64 };
++    try std.testing.expectEqual(cost.Allocation.never, cost.allocation(&module, &module.functions.items[0], call));
++    module.functions.items[0].signature.linkage = .extern_c;
++    module.functions.items[0].span = 13;
++    try std.testing.expectEqual(cost.Allocation.unresolved, cost.allocation(&module, &module.functions.items[0], call));
++    module.functions.items[0].signature.linkage = .runtime_c;
++    module.functions.items[0].span = 0;
++    module.functions.items[0].name = "myl_core_round_float_unreviewed";
++    try std.testing.expectEqual(cost.Allocation.may, cost.allocation(&module, &module.functions.items[0], call));
++}

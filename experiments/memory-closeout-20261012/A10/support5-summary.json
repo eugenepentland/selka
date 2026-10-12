@@ -1,0 +1,912 @@
+{
+  "source_revision": "a1f19edf255c8c0886731d8d7cce450d5f657720",
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "selection": "explicit --experimental-zero-rc, default unchanged",
+  "command_rows": [
+    {
+      "report": "commands-support5-0.json",
+      "name": "test-debug",
+      "passed": true,
+      "qualification_scope": "guest-execution-or-receipt"
+    },
+    {
+      "report": "commands-support5-0.json",
+      "name": "test-release",
+      "passed": true,
+      "qualification_scope": "guest-execution-or-receipt"
+    },
+    {
+      "report": "commands-support5-0.json",
+      "name": "test-verified-release",
+      "passed": true,
+      "qualification_scope": "guest-execution-or-receipt"
+    },
+    {
+      "report": "commands-support5-0.json",
+      "name": "test-optimized-debug",
+      "passed": true,
+      "qualification_scope": "guest-execution-or-receipt"
+    },
+    {
+      "report": "commands-support5-0.json",
+      "name": "test-release-no-facts",
+      "passed": true,
+      "qualification_scope": "guest-execution-or-receipt"
+    },
+    {
+      "report": "commands-support5-0.json",
+      "name": "test-cold",
+      "passed": true,
+      "qualification_scope": "guest-execution-or-receipt"
+    },
+    {
+      "report": "commands-support5-0.json",
+      "name": "test-warm",
+      "passed": true,
+      "qualification_scope": "guest-execution-or-receipt"
+    },
+    {
+      "report": "commands-support5-0.json",
+      "name": "test-planner-reference",
+      "passed": true,
+      "qualification_scope": "guest-execution-or-receipt"
+    },
+    {
+      "report": "commands-support5-0.json",
+      "name": "test-planner-shadow",
+      "passed": true,
+      "qualification_scope": "guest-execution-or-receipt"
+    },
+    {
+      "report": "commands-support5-0.json",
+      "name": "check-library",
+      "passed": true,
+      "qualification_scope": "source-admission"
+    },
+    {
+      "report": "commands-support5-10.json",
+      "name": "check-library-invalid",
+      "passed": true,
+      "qualification_scope": "source-admission"
+    },
+    {
+      "report": "commands-support5-10.json",
+      "name": "check",
+      "passed": true,
+      "qualification_scope": "source-admission"
+    },
+    {
+      "report": "commands-support5-10.json",
+      "name": "dump-ir",
+      "passed": true,
+      "qualification_scope": "diagnostic-core"
+    },
+    {
+      "report": "commands-support5-10.json",
+      "name": "build",
+      "passed": true,
+      "qualification_scope": "executable-emission"
+    },
+    {
+      "report": "commands-support5-10.json",
+      "name": "run",
+      "passed": true,
+      "qualification_scope": "guest-execution-or-receipt"
+    },
+    {
+      "report": "commands-support5-10.json",
+      "name": "run-project",
+      "passed": true,
+      "qualification_scope": "guest-execution-or-receipt"
+    },
+    {
+      "report": "commands-support5-10.json",
+      "name": "result-ok",
+      "passed": true,
+      "qualification_scope": "guest-execution-or-receipt"
+    },
+    {
+      "report": "commands-support5-10.json",
+      "name": "result-error",
+      "passed": true,
+      "qualification_scope": "guest-execution-or-receipt"
+    },
+    {
+      "report": "commands-support5-10.json",
+      "name": "invalid-rc-control",
+      "passed": true,
+      "qualification_scope": "guest-execution-or-receipt"
+    },
+    {
+      "report": "commands-support5-10.json",
+      "name": "invalid-cold",
+      "passed": true,
+      "qualification_scope": "guest-execution-or-receipt"
+    },
+    {
+      "report": "commands-support5-20.json",
+      "name": "invalid-repeat",
+      "passed": true,
+      "qualification_scope": "guest-execution-or-receipt"
+    },
+    {
+      "report": "commands-support5-20.json",
+      "name": "directory",
+      "passed": true,
+      "qualification_scope": "guest-execution-or-receipt"
+    },
+    {
+      "report": "commands-support5-20.json",
+      "name": "directory-children",
+      "passed": true,
+      "qualification_scope": "guest-execution-or-receipt"
+    },
+    {
+      "report": "analysis-support5-0.json",
+      "name": "coverage-owned",
+      "passed": true,
+      "qualification_scope": "source-admission"
+    },
+    {
+      "report": "analysis-support5-0.json",
+      "name": "coverage-negative",
+      "passed": true,
+      "qualification_scope": "source-admission"
+    },
+    {
+      "report": "analysis-support5-0.json",
+      "name": "check-stats",
+      "passed": true,
+      "qualification_scope": "source-admission"
+    },
+    {
+      "report": "analysis-support5-0.json",
+      "name": "check-stats-warm",
+      "passed": true,
+      "qualification_scope": "source-admission"
+    },
+    {
+      "report": "analysis-support5-0.json",
+      "name": "dump-ir",
+      "passed": true,
+      "qualification_scope": "diagnostic-core"
+    },
+    {
+      "report": "analysis-support5-0.json",
+      "name": "build-owned",
+      "passed": true,
+      "qualification_scope": "executable-emission"
+    },
+    {
+      "report": "analysis-support5-0.json",
+      "name": "run-owned",
+      "passed": true,
+      "qualification_scope": "guest-execution-or-receipt"
+    },
+    {
+      "report": "analysis-support5-0.json",
+      "name": "test-shared-first",
+      "passed": true,
+      "qualification_scope": "guest-execution-or-receipt"
+    },
+    {
+      "report": "analysis-support5-0.json",
+      "name": "test-shared-relocated",
+      "passed": true,
+      "qualification_scope": "guest-execution-or-receipt"
+    },
+    {
+      "report": "analysis-support5-0.json",
+      "name": "test-shared-unreachable-invalid",
+      "passed": true,
+      "qualification_scope": "guest-execution-or-receipt"
+    },
+    {
+      "report": "analysis-support5-10.json",
+      "name": "lint-owned",
+      "passed": true,
+      "qualification_scope": "source-admission"
+    },
+    {
+      "report": "analysis-support5-10.json",
+      "name": "noalloc-invalid-check",
+      "passed": true,
+      "qualification_scope": "source-admission"
+    },
+    {
+      "report": "analysis-support5-10.json",
+      "name": "noalloc-invalid-build",
+      "passed": true,
+      "qualification_scope": "executable-emission"
+    },
+    {
+      "report": "analysis-support5-10.json",
+      "name": "noalloc-invalid-lint",
+      "passed": true,
+      "qualification_scope": "source-admission"
+    },
+    {
+      "report": "analysis-support5-10.json",
+      "name": "coverage-ordinary-control",
+      "passed": true,
+      "qualification_scope": "source-admission"
+    },
+    {
+      "report": "followup-support5.json",
+      "name": "check-module",
+      "passed": true,
+      "qualification_scope": "source-admission"
+    },
+    {
+      "report": "followup-support5.json",
+      "name": "check-project",
+      "passed": true,
+      "qualification_scope": "source-admission"
+    },
+    {
+      "report": "followup-support5.json",
+      "name": "session-guest_tests.my",
+      "passed": true,
+      "qualification_scope": "source-admission"
+    },
+    {
+      "report": "followup-support5.json",
+      "name": "session-invalid_move.my",
+      "passed": true,
+      "qualification_scope": "source-admission"
+    },
+    {
+      "report": "followup-support5.json",
+      "name": "doctest-first",
+      "passed": true,
+      "qualification_scope": "guest-execution-or-receipt"
+    },
+    {
+      "report": "followup-support5.json",
+      "name": "doctest-repeat",
+      "passed": true,
+      "qualification_scope": "guest-execution-or-receipt"
+    },
+    {
+      "report": "cost-support5.json",
+      "name": "debug",
+      "passed": true,
+      "qualification_scope": "source-admission"
+    },
+    {
+      "report": "cost-support5.json",
+      "name": "release",
+      "passed": true,
+      "qualification_scope": "source-admission"
+    },
+    {
+      "report": "cost-support5.json",
+      "name": "no-facts",
+      "passed": true,
+      "qualification_scope": "source-admission"
+    },
+    {
+      "report": "cost-support5.json",
+      "name": "verified",
+      "passed": true,
+      "qualification_scope": "source-admission"
+    },
+    {
+      "report": "cost-support5.json",
+      "name": "warm",
+      "passed": true,
+      "qualification_scope": "source-admission"
+    },
+    {
+      "report": "cost-support5.json",
+      "name": "prior-rc-control",
+      "passed": true,
+      "qualification_scope": "source-admission"
+    },
+    {
+      "report": "cost-support5.json",
+      "name": "invalid-cold",
+      "passed": true,
+      "qualification_scope": "source-admission"
+    },
+    {
+      "report": "cost-support5.json",
+      "name": "invalid-warm",
+      "passed": true,
+      "qualification_scope": "source-admission"
+    }
+  ],
+  "documents": {
+    "blocks": 51,
+    "execution_or_check_units": 50,
+    "passing_blocks": 47,
+    "passing_units": 46,
+    "statuses": {
+      "run": 35,
+      "checked": 12,
+      "failed": 4
+    },
+    "evidence": [
+      {
+        "path": "rollout/ownership-C2.md",
+        "line": 66,
+        "sha256": "b06b1215f7d623536f0f07291a7e7d7e2d24aee5d4d73cd5dd23662c3a192e09",
+        "report": "rollout/docs-support5-0.json",
+        "status": "run",
+        "detail": "stdout '21'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/managed-memory-C2.md",
+        "line": 8,
+        "sha256": "d6facbad150e02408f15d31a86861f09b389b197f295b0c3129d8ff789fd8c1c",
+        "report": "rollout/docs-support5-0.json",
+        "status": "run",
+        "detail": "stdout '1\n2'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/managed-memory-C2.md",
+        "line": 40,
+        "sha256": "57f1bac6002e7cd21d83b169b7620fa801b765159cb6da6ac015414401f23e31",
+        "report": "rollout/docs-support5-0.json",
+        "status": "checked",
+        "detail": "generated entry point",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/managed-memory-C2.md",
+        "line": 102,
+        "sha256": "afdeb3f07cb5d4945e922a76fb47f326e5fe9328d32295995e183d32b2b43205",
+        "report": "rollout/docs-support5-0.json",
+        "status": "run",
+        "detail": "stdout '1225'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/managed-memory-C2.md",
+        "line": 155,
+        "sha256": "bae27f9e8bb5220cb69fa69bde9c1a264be1fbf4628f5c28fa7dd261bdd4a908",
+        "report": "rollout/docs-support5-0.json",
+        "status": "checked",
+        "detail": "rejected with ['E_ARENA_REMOVED']",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/managed-memory-C2.md",
+        "line": 175,
+        "sha256": "7a68ab242bf21a025b28bb7f9f789d00150695e99f424ce1c290d1d34bed5596",
+        "report": "rollout/docs-support5-0.json",
+        "status": "run",
+        "detail": "stdout '42'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/managed-memory-C2.md",
+        "line": 217,
+        "sha256": "7cdca8de2bd78962fec4ee22d25ccecef8855c3b77f613cc0f83c06b98df4f1b",
+        "report": "rollout/docs-support5-0.json",
+        "status": "run",
+        "detail": "stdout '42'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/managed-memory-C2.md",
+        "line": 253,
+        "sha256": "5b785a6659b9f0dface6dee7a322406f7af30655b2c3a69acdbabfe490db27c5",
+        "report": "rollout/docs-support5-0.json",
+        "status": "run",
+        "detail": "stdout '42'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/managed-memory-C2.md",
+        "line": 314,
+        "sha256": "59df5ac424d8a8901c1d153b1830e2376849965da6ae31838f83d412c8b58cc7",
+        "report": "rollout/docs-support5-0.json",
+        "status": "failed",
+        "detail": "exit 1: {\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SINGLE_OWNER_BORROW\",\"severity\":\"error\",\"message\":\"an element read is borrowed; use .copy() or pop() to obtain an owned value\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-6cc33bf0045dd499/unit008/main.my\",\"start\":{\"line\":6,\"column\":5},\"end\":{\"line\":7,\"column\":23},\"bytes\":{\"start\":145,\"end\":202}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}",
+        "project": null,
+        "passed": false,
+        "owner": "A01/A07",
+        "classification": "dictionary tuple binding compiler refusal"
+      },
+      {
+        "path": "rollout/managed-memory-C2.md",
+        "line": 326,
+        "sha256": "3e39b3a2109bacf78879a1f7f6ad4a51b4accc54c16e44ad76f855cff51369d3",
+        "report": "rollout/docs-support5-0.json",
+        "status": "failed",
+        "detail": "exit 1: {\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SINGLE_OWNER_BORROW\",\"severity\":\"error\",\"message\":\"an element read is borrowed; use .copy() or pop() to obtain an owned value\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-6cc33bf0045dd499/unit009/main.my\",\"start\":{\"line\":23,\"column\":5},\"end\":{\"line\":25,\"column\":23},\"bytes\":{\"start\":596,\"end\":686}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}",
+        "project": null,
+        "passed": false,
+        "owner": "A01/A07",
+        "classification": "dictionary tuple binding compiler refusal"
+      },
+      {
+        "path": "rollout/managed-memory-C2.md",
+        "line": 375,
+        "sha256": "694a25299edc9ea1cda45f3e30942de6fcfd19e7581cf98a3b3fb45827f4bc27",
+        "report": "rollout/docs-support5-10.json",
+        "status": "run",
+        "detail": "stdout '19'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/managed-memory-C2.md",
+        "line": 418,
+        "sha256": "3a9ef0ba2879576ea255c72d616c351ee36845f4909bc537200d47a313f53420",
+        "report": "rollout/docs-support5-copy.json",
+        "status": "run",
+        "detail": "stdout '42'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/managed-memory-C2.md",
+        "line": 449,
+        "sha256": "6723535058e9334f96291310b76cdca2e61c5979bd10bf6dff2245b8e2952c1e",
+        "report": "rollout/docs-support5-10.json",
+        "status": "run",
+        "detail": "stdout '42'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/managed-memory-C2.md",
+        "line": 500,
+        "sha256": "bb44dfae6b7406c7868af918ae0afd2f49d15dc232080ad5c234e4b69226a2f2",
+        "report": "rollout/docs-support5-10.json",
+        "status": "run",
+        "detail": "stdout '20'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/managed-memory-C2.md",
+        "line": 510,
+        "sha256": "5eb9b7b8509fe313ab9f4173dd6ac91ea0f04435f369ed3cebd5e2b621e2c983",
+        "report": "rollout/docs-support5-10.json",
+        "status": "run",
+        "detail": "stdout '21'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/managed-memory-C2.md",
+        "line": 540,
+        "sha256": "f7976d2558317f583aae3f098a4c9ea6ca1f8a87a2b2c10f5a25c36ddde2de8c",
+        "report": "rollout/docs-support5-10.json",
+        "status": "run",
+        "detail": "stdout 'hello7\nhello7!'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/managed-memory-C2.md",
+        "line": 576,
+        "sha256": "7147c99881f8125ed690c5f689c0c96950bc9e22b135c66173b9ad2b64318853",
+        "report": "rollout/docs-support5-10.json",
+        "status": "run",
+        "detail": "stdout '\u03bbz7\n\u03bbz7'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/managed-memory-C2.md",
+        "line": 619,
+        "sha256": "619939bb44dc87d04e7a7fc6dc14790fd9f4d76db638217f7186a764bf69c7ad",
+        "report": "rollout/docs-support5-10.json",
+        "status": "run",
+        "detail": "stdout '1\nitem-1'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/performance.md",
+        "line": 27,
+        "sha256": "6931319f38c9dca883d1c695c3dd882e4cd051005d17c9cb3e610965648e51de",
+        "report": "rollout/docs-reference-support5-0.json",
+        "status": "run",
+        "detail": "stdout '42'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/performance.md",
+        "line": 103,
+        "sha256": "06438106c10706fc08aa5ba4c384bbc2928ee08d518e85fa18e52c7b6bb5f051",
+        "report": "rollout/docs-reference-support5-0.json",
+        "status": "run",
+        "detail": "stdout '45'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/performance.md",
+        "line": 181,
+        "sha256": "cb95930f60fa863337dda2c21ae6033c77566284ce11aaeacf6f404f85991a31",
+        "report": "rollout/docs-reference-support5-0.json",
+        "status": "run",
+        "detail": "stdout '42'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/performance.md",
+        "line": 245,
+        "sha256": "7a1c901925ce263780a37cd2d4dffee7e51150793eb86da0b0a58c3e0c8511e2",
+        "report": "rollout/docs-reference-support5-0.json",
+        "status": "run",
+        "detail": "stdout '14'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/performance.md",
+        "line": 268,
+        "sha256": "9cd3fb3707f5859852bdb7d48c3a9b7bb1d6bfdec673954ff9059f27698d6bbe",
+        "report": "rollout/docs-reference-support5-0.json",
+        "status": "run",
+        "detail": "stdout '63'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/performance.md",
+        "line": 344,
+        "sha256": "db653f12b5d87e4255d90872d55cb9e3ee813b623e790b24023c49906b483380",
+        "report": "rollout/docs-reference-support5-0.json",
+        "status": "run",
+        "detail": "stdout '46'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/python-syntax.md",
+        "line": 14,
+        "sha256": "a887f949469c164c3c0f94e83b83a793877683a7a11e92dd39c0144946562464",
+        "report": "rollout/docs-reference-support5-0.json",
+        "status": "run",
+        "detail": "stdout '42'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/python-syntax.md",
+        "line": 29,
+        "sha256": "becf06231a4c1bedac909b28caf004591f9bd38fd9e6246cf0a1d3e010ea62e8",
+        "report": "rollout/docs-reference-support5-0.json",
+        "status": "run",
+        "detail": "stdout '42'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/python-syntax.md",
+        "line": 70,
+        "sha256": "0dc167a4b37028c067b58be5616e5a96c0bef6863b9f3383537a5a2b6f4d9b1d",
+        "report": "rollout/docs-reference-support5-0.json",
+        "status": "checked",
+        "detail": "generated entry point",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/python-syntax.md",
+        "line": 99,
+        "sha256": "e60aceb58c168c25e6da7c3fbbecca4c0f1f4a320593df74563cc625d221856b",
+        "report": "rollout/docs-reference-support5-0.json",
+        "status": "run",
+        "detail": "stdout '42'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/python-syntax.md",
+        "line": 122,
+        "sha256": "bca101d670de341ed34c43962236bc86f71caf0dca544ad6ce1baff5bba04db1",
+        "report": "rollout/docs-reference-support5-10.json",
+        "status": "run",
+        "detail": "stdout '42'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/python-syntax.md",
+        "line": 132,
+        "sha256": "943f3b111672b8e92d7881b351db86c0713483262b51205a0292cea75354c3b9",
+        "report": "rollout/docs-reference-support5-10.json",
+        "status": "run",
+        "detail": "stdout '42'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/python-syntax.md",
+        "line": 171,
+        "sha256": "2c93bd40c23dc320b247fb9aabf422f0a9e64e0cb34d3834494c8b9f43d2a0aa",
+        "report": "rollout/docs-reference-support5-10.json",
+        "status": "run",
+        "detail": "stdout '42'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/python-syntax.md",
+        "line": 210,
+        "sha256": "4537d85d28c52e5b8b61f58239aa209ba0cf7c09cf86cc52ab333b2c83d3a3b9",
+        "report": "rollout/docs-reference-support5-10.json",
+        "status": "run",
+        "detail": "stdout '42'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/python-syntax.md",
+        "line": 232,
+        "sha256": "be7846daf52ee36100b5e4c7cca222a0f54e966cb95fd0a0918a1c508e8fa28a",
+        "report": "rollout/docs-reference-support5-10.json",
+        "status": "failed",
+        "detail": "exit 1: {\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SINGLE_OWNER_BORROW\",\"severity\":\"error\",\"message\":\"an element read is borrowed; use .copy() or pop() to obtain an owned value\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit004/main.my\",\"start\":{\"line\":3,\"column\":43},\"end\":{\"line\":3,\"column\":89},\"bytes\":{\"start\":112,\"end\":158}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}",
+        "project": null,
+        "passed": false,
+        "owner": "A01/A07",
+        "classification": "dictionary tuple binding compiler refusal"
+      },
+      {
+        "path": "rollout/reference-docs/python-syntax.md",
+        "line": 254,
+        "sha256": "47ce07782dd5038c7727aa6132cdf58ca13474e39463daf49d8208e7d7cc27dd",
+        "report": "rollout/docs-reference-support5-10.json",
+        "status": "run",
+        "detail": "stdout '42'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/python-syntax.md",
+        "line": 269,
+        "sha256": "0675c082deb3f2b21c7c163dfdd3cecdf9e38fc1e4a8a35904b9646ae9b43e01",
+        "report": "rollout/docs-reference-support5-10.json",
+        "status": "checked",
+        "detail": "rejected with ['E_GENERATOR']",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/python-syntax.md",
+        "line": 292,
+        "sha256": "d721de5a81fe07f19ecac413a9a2c8313f4440c29058ba6730b4c8fe7eed1353",
+        "report": "rollout/docs-reference-support5-live-index.json",
+        "status": "run",
+        "detail": "",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/python-syntax.md",
+        "line": 322,
+        "sha256": "047d5174f928eb780ae13e47a64a8fca54b2b000eb0c53c95b971fe609b47714",
+        "report": "rollout/docs-reference-support5-10.json",
+        "status": "run",
+        "detail": "stdout '42'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/python-syntax.md",
+        "line": 359,
+        "sha256": "a2d04744e6e82c8a2a22ac94850d85792bef071c4ccd3d1a3d05514cc847681e",
+        "report": "rollout/docs-reference-support5-10.json",
+        "status": "run",
+        "detail": "stdout '42'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/python-syntax.md",
+        "line": 391,
+        "sha256": "555402e443039e2eeb288bd11dde0a8c2be23fb17ed2f79bc637a3523e5c4681",
+        "report": "rollout/docs-reference-support5-20.json",
+        "status": "run",
+        "detail": "",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/python-syntax.md",
+        "line": 439,
+        "sha256": "aebb9244f39045e29c066b462c19a2b420149f42bb2b39842bda7bb0bcf7c166",
+        "report": "rollout/docs-reference-support5-20.json",
+        "status": "checked",
+        "detail": "rejected with ['E_SYNTAX']",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/python-syntax.md",
+        "line": 449,
+        "sha256": "a85893dd9441b20cf5efa6fdeb1bd62ec1a2c58a9fb62c394adf814aa737cab3",
+        "report": "rollout/docs-reference-support5-20.json",
+        "status": "checked",
+        "detail": "rejected with ['E_SYNTAX']",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/python-syntax.md",
+        "line": 462,
+        "sha256": "3ef8338d1d814c10b62dc68275a74b0752ffc19e2e819a200288bef0ff5ff2e0",
+        "report": "rollout/docs-reference-support5-20.json",
+        "status": "checked",
+        "detail": "rejected with ['E_SYNTAX']",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/python-syntax.md",
+        "line": 473,
+        "sha256": "6e50fc3240a0f39012ae092922034cc48f35dc4b1613f8ea4f1e8e99b46c952a",
+        "report": "rollout/docs-reference-support5-20.json",
+        "status": "checked",
+        "detail": "generated entry point",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/python-syntax.md",
+        "line": 497,
+        "sha256": "13e85f24cf34268764781fdfffd3236fc443ebf0d1de6af1d0c9600853d7ce8c",
+        "report": "rollout/docs-reference-support5-20.json",
+        "status": "run",
+        "detail": "stdout '42'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/python-syntax.md",
+        "line": 539,
+        "sha256": "bf7b7035338d79144666d5f662ef338991ed3e2580276805872a8cadd3672b36",
+        "report": "rollout/docs-reference-support5-20.json",
+        "status": "checked",
+        "detail": "rejected with ['E_SYNTAX']",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/python-syntax.md",
+        "line": 637,
+        "sha256": "85cbb3672838db713aa37871274e66c21e684088ff36ce16d947f1e7a7bddb2d",
+        "report": "rollout/docs-reference-support5-20.json",
+        "status": "failed",
+        "detail": "exit 1: {\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_CORE_UNSUPPORTED\",\"severity\":\"error\",\"message\":\"the new core does not support unaudited zero-RC runtime helper myl_core_round_float yet\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-97a86388273ea70b/unit007/main.my\",\"start\":{\"line\":1,\"column\":1},\"end\":{\"line\":1,\"column\":1},\"bytes\":{\"start\":0,\"end\":0}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}",
+        "project": null,
+        "passed": false,
+        "owner": "A04/A07",
+        "classification": "audited-helper contract pending"
+      },
+      {
+        "path": "rollout/reference-docs/python-syntax.md",
+        "line": 657,
+        "sha256": "698254efb6811c758fdbc1de52b5d31cd6c95c2f35fad82ff69c6a524f94be37",
+        "report": "rollout/docs-reference-support5-sort.json",
+        "status": "run",
+        "detail": "stdout '42'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/tooling/guest-tests.md",
+        "line": 178,
+        "sha256": "7cb00df470e782362a53da9132efbcde4d3a72a6d9dee10750d005933bbe6af8",
+        "report": "rollout/docs-reference-support5-20.json",
+        "status": "run",
+        "detail": "stdout 'True True'",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/tooling/guest-tests.md",
+        "line": 257,
+        "sha256": "eae1666b773a382165297159723715289ac3917146a42466303a1aaa6cc044d2",
+        "report": "rollout/docs-reference-support5-project.json",
+        "status": "checked",
+        "detail": "",
+        "project": null,
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/tooling/guest-tests.md",
+        "line": 802,
+        "sha256": "d528802131e02f3c7cbf49cfb18083c2a702dc71c529fc0ca184eb6ef368b172",
+        "report": "rollout/docs-reference-support5-project.json",
+        "status": "checked",
+        "detail": "generated entry point",
+        "project": "scanner-private",
+        "passed": true
+      },
+      {
+        "path": "rollout/reference-docs/tooling/guest-tests.md",
+        "line": 812,
+        "sha256": "3bff98898e89b6c6cd20260edaeb5eee25ed4bb30da93ed7dc3289f62f430b8f",
+        "report": "rollout/docs-reference-support5-project.json",
+        "status": "checked",
+        "detail": "generated entry point",
+        "project": "scanner-private",
+        "passed": true
+      }
+    ]
+  },
+  "blockers": [
+    {
+      "path": "rollout/managed-memory-C2.md",
+      "line": 314,
+      "sha256": "59df5ac424d8a8901c1d153b1830e2376849965da6ae31838f83d412c8b58cc7",
+      "report": "rollout/docs-support5-0.json",
+      "status": "failed",
+      "detail": "exit 1: {\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SINGLE_OWNER_BORROW\",\"severity\":\"error\",\"message\":\"an element read is borrowed; use .copy() or pop() to obtain an owned value\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-6cc33bf0045dd499/unit008/main.my\",\"start\":{\"line\":6,\"column\":5},\"end\":{\"line\":7,\"column\":23},\"bytes\":{\"start\":145,\"end\":202}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}",
+      "project": null,
+      "passed": false,
+      "owner": "A01/A07",
+      "classification": "dictionary tuple binding compiler refusal"
+    },
+    {
+      "path": "rollout/managed-memory-C2.md",
+      "line": 326,
+      "sha256": "3e39b3a2109bacf78879a1f7f6ad4a51b4accc54c16e44ad76f855cff51369d3",
+      "report": "rollout/docs-support5-0.json",
+      "status": "failed",
+      "detail": "exit 1: {\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SINGLE_OWNER_BORROW\",\"severity\":\"error\",\"message\":\"an element read is borrowed; use .copy() or pop() to obtain an owned value\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-6cc33bf0045dd499/unit009/main.my\",\"start\":{\"line\":23,\"column\":5},\"end\":{\"line\":25,\"column\":23},\"bytes\":{\"start\":596,\"end\":686}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}",
+      "project": null,
+      "passed": false,
+      "owner": "A01/A07",
+      "classification": "dictionary tuple binding compiler refusal"
+    },
+    {
+      "path": "rollout/reference-docs/python-syntax.md",
+      "line": 232,
+      "sha256": "be7846daf52ee36100b5e4c7cca222a0f54e966cb95fd0a0918a1c508e8fa28a",
+      "report": "rollout/docs-reference-support5-10.json",
+      "status": "failed",
+      "detail": "exit 1: {\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SINGLE_OWNER_BORROW\",\"severity\":\"error\",\"message\":\"an element read is borrowed; use .copy() or pop() to obtain an owned value\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e843e59a2eef95c8/unit004/main.my\",\"start\":{\"line\":3,\"column\":43},\"end\":{\"line\":3,\"column\":89},\"bytes\":{\"start\":112,\"end\":158}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}",
+      "project": null,
+      "passed": false,
+      "owner": "A01/A07",
+      "classification": "dictionary tuple binding compiler refusal"
+    },
+    {
+      "path": "rollout/reference-docs/python-syntax.md",
+      "line": 637,
+      "sha256": "85cbb3672838db713aa37871274e66c21e684088ff36ce16d947f1e7a7bddb2d",
+      "report": "rollout/docs-reference-support5-20.json",
+      "status": "failed",
+      "detail": "exit 1: {\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_CORE_UNSUPPORTED\",\"severity\":\"error\",\"message\":\"the new core does not support unaudited zero-RC runtime helper myl_core_round_float yet\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-97a86388273ea70b/unit007/main.my\",\"start\":{\"line\":1,\"column\":1},\"end\":{\"line\":1,\"column\":1},\"bytes\":{\"start\":0,\"end\":0}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}",
+      "project": null,
+      "passed": false,
+      "owner": "A04/A07",
+      "classification": "audited-helper contract pending"
+    }
+  ],
+  "package": "Support5 staged libexec still legacy RC; no package qualification",
+  "milestones": {
+    "qualified_implementation": false,
+    "zero_rc_default": false,
+    "legacy_rc_retired": false
+  },
+  "notes": [
+    "Original failing reports retained; explicit copy/index migrations qualify only their matching source hashes.",
+    "Initial final project batch harness incorrectly equated blocks with units; corrected rerun covers all3blocks as2checked units.",
+    "Source check and diagnostic Core dump success do not establish executable runtime admission.",
+    "Guest test status0 alone does not establish zero unsupported tests; command matrix checks JSON counts."
+  ]
+}

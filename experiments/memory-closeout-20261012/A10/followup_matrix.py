@@ -14,6 +14,7 @@ p.add_argument('--output', type=Path, required=True)
 p.add_argument('--default', action='store_true')
 a = p.parse_args()
 compiler = a.compiler.resolve()
+compiler_hash = hashlib.sha256(compiler.read_bytes()).hexdigest()
 scratch = a.scratch.resolve()
 scratch.mkdir(parents=True, exist_ok=True)
 root = Path(__file__).resolve().parent
@@ -25,6 +26,8 @@ flags = [] if a.default else ['--experimental-zero-rc']
 def run(name, args, expected=0, data=None):
     cmd = [str(compiler), *map(str,args)]
     r = subprocess.run(cmd, input=data, text=True, capture_output=True, env=env)
+    if hashlib.sha256(compiler.read_bytes()).hexdigest() != compiler_hash:
+        raise RuntimeError("compiler changed during qualification")
     row = dict(name=name, argv=cmd, status=r.returncode, expected=expected,
                passed=r.returncode == expected, stdout=r.stdout, stderr=r.stderr)
     rows.append(row)
@@ -66,7 +69,7 @@ func invalid() -> bool:
 for label in ['first','repeat']:
     row = run('doctest-'+label,['doctest',docs,*flags,'--jobs','1','--report',scratch/('doctest-'+label+'.json')])
     row['passed'] = row['passed'] and '1 run, 2 checked' in row['stdout'] and '0 failed' in row['stdout']
-result = dict(default=a.default, compiler=str(compiler), compiler_sha256=hashlib.sha256(compiler.read_bytes()).hexdigest(),
+result = dict(default=a.default, compiler=str(compiler), compiler_sha256=compiler_hash,
               results=rows, success=all(x['passed'] for x in rows))
 a.output.write_text(json.dumps(result,indent=2)+'\n')
 for row in rows: print(row['name'],row['status'],'PASS' if row['passed'] else 'FAIL',flush=True)

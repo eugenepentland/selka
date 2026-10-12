@@ -1,0 +1,71 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "default": false,
+  "total_blocks": 33,
+  "expected_units": 1,
+  "selected_blocks": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/reference-docs/python-syntax.md",
+      "line": 292,
+      "source": "func main() -> int:\n    mut items = [1, 2]\n    mut saved = items.copy()\n    mut total = 0\n    mut index = 0\n    while index < len(items):\n        const value = items[index]\n        total += value\n        items[1] = 9\n        if value == 9:\n            items.append(3)\n        index += 1\n    assert total == 13\n    assert saved == [1, 2]\n    return 0\n",
+      "sha256": "d721de5a81fe07f19ecac413a9a2c8313f4440c29058ba6730b4c8fe7eed1353"
+    }
+  ],
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+    "doctest",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/docs-reference-support5-live-index",
+    "--jobs",
+    "1",
+    "--report",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/docs-reference-support5-live-index/report.json",
+    "--experimental-zero-rc"
+  ],
+  "status": 0,
+  "stdout": "  README.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed\nDoc examples: 1 files scanned, 1 blocks found, 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed\n",
+  "stderr": "",
+  "doctest_report": {
+    "version": "doc-examples-v1",
+    "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+    "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+    "totals": {
+      "run": 1,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 0
+    },
+    "files": {
+      "README.md": {
+        "blocks": 1,
+        "run": 1,
+        "checked": 0,
+        "skipped": 0,
+        "mistagged": 0,
+        "failed": 0,
+        "skips": []
+      }
+    },
+    "units": [
+      {
+        "label": "README.md:1",
+        "kind": "block",
+        "document": "README.md",
+        "status": "run",
+        "detail": "",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "run",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e70c02853076eff0/unit000/main.my",
+          "--diagnostics=json",
+          "--print-result",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-e70c02853076eff0/unit000/objects"
+        ]
+      }
+    ],
+    "mistagged": []
+  },
+  "success": true
+}

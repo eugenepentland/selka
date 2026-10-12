@@ -1,0 +1,221 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "default": false,
+  "total_blocks": 18,
+  "selected_blocks": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/managed-memory-C2.md",
+      "line": 375,
+      "source": "# doc: expect 19\nfunc main() -> int:\n    mut words = [\"alpha\", \"beta\"]\n    mut letters = 0\n    for word in words:\n        for letter in word:\n            letters += 1\n    mut weighted = 0\n    for index, word in enumerate(words):\n        weighted += index * len(word)\n    mut octets = 0\n    for octet in b\"\\x01\\x02\":\n        octets += octet\n    mut counts: dict[str, int] = {\"a\": 1, \"b\": 2}\n    mut keyed = \"\"\n    for key in counts:\n        keyed = keyed + key\n    if keyed != \"ab\":\n        return 1\n    mut stepped = 0\n    for number in range(1, 5):\n        if number == 3:\n            continue\n        if number == 4:\n            break\n        stepped += number\n    return letters + weighted + octets + stepped\n",
+      "sha256": "694a25299edc9ea1cda45f3e30942de6fcfd19e7581cf98a3b3fb45827f4bc27"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/managed-memory-C2.md",
+      "line": 418,
+      "source": "# doc: expect 42\nfunc main() -> int:\n    mut left: int[] = [1, 2, 3]\n    mut right: int[] = [1, 2, 3]\n    if left != right:\n        return 1\n    if 2 not in left:\n        return 2\n    if 9 in left:\n        return 3\n    mut nested: int[][] = [left]\n    mut twin: int[][] = [right]\n    if nested != twin:\n        return 4\n    mut counts: dict[str, int] = {\"a\": 1, \"b\": 2}\n    mut other: dict[str, int] = {\"b\": 2, \"a\": 1}\n    if counts != other:\n        return 5\n    if \"a\" not in counts:\n        return 6\n    if \"ell\" not in \"hello\":\n        return 7\n    if \"zz\" in \"hello\":\n        return 8\n    return len(left) * 14\n",
+      "sha256": "02042e00d7f946f0ba84cd933118b3578ff3d38f0dbd58c5d0f55482aa896eea"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/managed-memory-C2.md",
+      "line": 449,
+      "source": "# doc: expect 42\nrecord Point:\n    x: int\n    y: int\n\n\nenum Shape:\n    empty\n    radius(value: int)\n    point(value: Point)\n\n\nrecord Node:\n    value: int\n\n\nfunc main() -> int:\n    if Point(x=1, y=2) != Point(x=1, y=2):\n        return 1\n    if Shape.radius(value=4) == Shape.point(value=Point(x=4, y=0)):\n        return 2\n    if Node(value=1) != Node(value=1):\n        return 3\n    mut first = Node(value=1)\n    if first != first:\n        return 4\n    return 42\n",
+      "sha256": "6723535058e9334f96291310b76cdca2e61c5979bd10bf6dff2245b8e2952c1e"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/managed-memory-C2.md",
+      "line": 500,
+      "source": "# doc: expect 20\nfunc main() -> int:\n    mut squares = [for i in range(5) yield i * i]\n    mut total = 0\n    for s in squares:\n        total = total + s\n    return total - 10\n",
+      "sha256": "bb44dfae6b7406c7868af918ae0afd2f49d15dc232080ad5c234e4b69226a2f2"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/managed-memory-C2.md",
+      "line": 510,
+      "source": "# doc: expect 21\nfunc main() -> int:\n    mut readings: int[] = [3, 12, 7, 20]\n    mut doubled = [for value in readings yield value * 2]\n    mut large = [for value in readings if value > 10 yield value]\n    mut labels = [for value in large yield str(value)]\n    mut initials = [for letter in \"mylang\" if letter != \"m\" yield letter]\n    mut counts: dict[str, int] = {\"a\": 1, \"bb\": 2}\n    mut widths = [for key in counts yield len(key)]\n    if len(doubled) != 4:\n        return 1\n    if labels[0] != \"12\":\n        return 2\n    if len(initials) != 5:\n        return 3\n    if len(readings) != 4:\n        return 4\n    return doubled[0] + large[0] + widths[0] + widths[1]\n",
+      "sha256": "5eb9b7b8509fe313ab9f4173dd6ac91ea0f04435f369ed3cebd5e2b621e2c983"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/managed-memory-C2.md",
+      "line": 540,
+      "source": "# doc: expect hello7\n# doc: expect hello7!\nfunc main(out: Stream) -> int:\n    mut text = \"hello\" + str(7)\n    const saved = text.copy()\n    text += \"!\"\n    out.print(saved)\n    out.print(text)\n    return 0\n",
+      "sha256": "f7976d2558317f583aae3f098a4c9ea6ca1f8a87a2b2c10f5a25c36ddde2de8c"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/managed-memory-C2.md",
+      "line": 576,
+      "source": "# doc: expect \u03bbz7\n# doc: expect \u03bbz7\nfunc segment(source: TextView, start: int) -> TextView:\n    return source.borrow(start, start + 3)\n\nfunc main(out: Stream) -> int:\n    mut text = \"a\u03bbz\" + str(7)\n    const full = text.borrow(0, len(text))\n    const part = segment(full, 1)\n    out.print(part)                  # \u03bbz7; no substring allocation\n    const saved = part.copy()       # independent owned str\n    text += \"!\"\n    out.print(saved)                # allowed\n    # out.print(part)               # compile error: owner changed\n    return 0\n",
+      "sha256": "7147c99881f8125ed690c5f689c0c96950bc9e22b135c66173b9ad2b64318853"
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/rollout/managed-memory-C2.md",
+      "line": 619,
+      "source": "# doc: expect 1\n# doc: expect item-1\nimport parallel\n\nfunc render(value: int) -> str:\n    return \"item-\" + str(value)\n\nfunc main(out: Stream) -> int:\n    const input = [1, 2, 3]\n    const output = parallel.map(input, render)\n    out.print(input[0])\n    out.print(output[0])\n    return 0\n",
+      "sha256": "619939bb44dc87d04e7a7fc6dc14790fd9f4d76db638217f7186a764bf69c7ad"
+    }
+  ],
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+    "doctest",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/docs-support5-10",
+    "--jobs",
+    "1",
+    "--report",
+    "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/docs-support5-10/report.json",
+    "--experimental-zero-rc"
+  ],
+  "status": 1,
+  "stdout": "  README.md: 7 run, 0 checked, 0 skipped, 0 mis-tagged, 1 failed\nFAILED README.md:31: exit 1: {\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SINGLE_OWNER_MOVED\",\"severity\":\"error\",\"message\":\"'left' was moved or is unavailable on this path; use .copy() when both values are needed\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-82207b419d74ec77/unit001/main.my\",\"start\":{\"line\":24,\"column\":16},\"end\":{\"line\":24,\"column\":20},\"bytes\":{\"start\":588,\"end\":592}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\nDoc examples: 1 files scanned, 8 blocks found, 7 run, 0 checked, 0 skipped, 0 mis-tagged, 1 failed\n",
+  "stderr": "",
+  "doctest_report": {
+    "version": "doc-examples-v1",
+    "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+    "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+    "totals": {
+      "run": 7,
+      "checked": 0,
+      "skipped": 0,
+      "mistagged": 0,
+      "failed": 1
+    },
+    "files": {
+      "README.md": {
+        "blocks": 8,
+        "run": 7,
+        "checked": 0,
+        "skipped": 0,
+        "mistagged": 0,
+        "failed": 1,
+        "skips": []
+      }
+    },
+    "units": [
+      {
+        "label": "README.md:1",
+        "kind": "block",
+        "document": "README.md",
+        "status": "run",
+        "detail": "stdout '19'",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "run",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-82207b419d74ec77/unit000/main.my",
+          "--diagnostics=json",
+          "--print-result",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-82207b419d74ec77/unit000/objects"
+        ]
+      },
+      {
+        "label": "README.md:31",
+        "kind": "block",
+        "document": "README.md",
+        "status": "failed",
+        "detail": "exit 1: {\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SINGLE_OWNER_MOVED\",\"severity\":\"error\",\"message\":\"'left' was moved or is unavailable on this path; use .copy() when both values are needed\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-82207b419d74ec77/unit001/main.my\",\"start\":{\"line\":24,\"column\":16},\"end\":{\"line\":24,\"column\":20},\"bytes\":{\"start\":588,\"end\":592}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "run",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-82207b419d74ec77/unit001/main.my",
+          "--diagnostics=json",
+          "--print-result",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-82207b419d74ec77/unit001/objects"
+        ]
+      },
+      {
+        "label": "README.md:59",
+        "kind": "block",
+        "document": "README.md",
+        "status": "run",
+        "detail": "stdout '42'",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "run",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-82207b419d74ec77/unit002/main.my",
+          "--diagnostics=json",
+          "--print-result",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-82207b419d74ec77/unit002/objects"
+        ]
+      },
+      {
+        "label": "README.md:89",
+        "kind": "block",
+        "document": "README.md",
+        "status": "run",
+        "detail": "stdout '20'",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "run",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-82207b419d74ec77/unit003/main.my",
+          "--diagnostics=json",
+          "--print-result",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-82207b419d74ec77/unit003/objects"
+        ]
+      },
+      {
+        "label": "README.md:99",
+        "kind": "block",
+        "document": "README.md",
+        "status": "run",
+        "detail": "stdout '21'",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "run",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-82207b419d74ec77/unit004/main.my",
+          "--diagnostics=json",
+          "--print-result",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-82207b419d74ec77/unit004/objects"
+        ]
+      },
+      {
+        "label": "README.md:120",
+        "kind": "block",
+        "document": "README.md",
+        "status": "run",
+        "detail": "stdout 'hello7\nhello7!'",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "run",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-82207b419d74ec77/unit005/main.my",
+          "--diagnostics=json",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-82207b419d74ec77/unit005/objects"
+        ]
+      },
+      {
+        "label": "README.md:132",
+        "kind": "block",
+        "document": "README.md",
+        "status": "run",
+        "detail": "stdout '\u03bbz7\n\u03bbz7'",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "run",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-82207b419d74ec77/unit006/main.my",
+          "--diagnostics=json",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-82207b419d74ec77/unit006/objects"
+        ]
+      },
+      {
+        "label": "README.md:150",
+        "kind": "block",
+        "document": "README.md",
+        "status": "run",
+        "detail": "stdout '1\nitem-1'",
+        "command": [
+          "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+          "run",
+          "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-82207b419d74ec77/unit007/main.my",
+          "--diagnostics=json",
+          "--experimental-zero-rc",
+          "--cache-dir=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/work/doctest-82207b419d74ec77/unit007/objects"
+        ]
+      }
+    ],
+    "mistagged": []
+  },
+  "success": false
+}

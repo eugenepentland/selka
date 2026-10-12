@@ -45,3 +45,10 @@ reuse an RC component cache manifest under a zero-RC claim.
 Command support commits are recorded in `handoff.md`. Default promotion and active
 RC removal wait for coordinator qualification approval; unapplied patches are
 under `rollout/`.
+
+Support5 diagnostic distinction: `check` success is source admission. `dump-ir`
+(and its `--facts` form) returns diagnostic intermediate Core, which can include a
+state later refused by native lowering. A08's cache-plan
+`cache-plan-support5-facts-v2.ir` exposes a retain while the matching owned build
+refuses `E_ZERO_RC_LOWERING`; dump status0 is not executable or RC-free runtime
+admission. The positive A10 dump row only qualifies dispatch/source checking.

@@ -13,6 +13,7 @@ p.add_argument('--output',type=Path,required=True)
 p.add_argument('--default',action='store_true')
 a=p.parse_args()
 compiler=a.compiler.resolve()
+compiler_hash = hashlib.sha256(compiler.read_bytes()).hexdigest()
 root=Path(__file__).resolve().parent
 cache=a.scratch.resolve()/'cache'
 rows=[]
@@ -20,6 +21,8 @@ def run(name, source, flags, expected=0, owned=True):
     args=[str(compiler),'cost',str(root/'fixtures'/source),'--json','--cache-dir',str(cache),*flags]
     if owned and not a.default: args.append('--experimental-zero-rc')
     r=subprocess.run(args,text=True,capture_output=True)
+    if hashlib.sha256(compiler.read_bytes()).hexdigest() != compiler_hash:
+        raise RuntimeError("compiler changed during qualification")
     passed=r.returncode==expected
     if expected==1: passed=passed and 'E_SINGLE_OWNER_MOVED' in r.stderr
     if expected==0:
@@ -32,7 +35,7 @@ run('warm','guest_tests.my',[])
 if not a.default: run('prior-rc-control','invalid_move.my',[],owned=False)
 run('invalid-cold','invalid_move.my',[],expected=1)
 run('invalid-warm','invalid_move.my',[],expected=1)
-result=dict(default=a.default,compiler=str(compiler),compiler_sha256=hashlib.sha256(compiler.read_bytes()).hexdigest(),results=rows,success=all(r['passed'] for r in rows))
+result=dict(default=a.default,compiler=str(compiler),compiler_sha256=compiler_hash,results=rows,success=all(r['passed'] for r in rows))
 a.output.write_text(json.dumps(result,indent=2)+'\n')
 for row in rows: print(row['name'],row['status'],'PASS' if row['passed'] else 'FAIL',flush=True)
 raise SystemExit(0 if result['success'] else 1)

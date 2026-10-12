@@ -197,3 +197,52 @@ execution waits for atomic integration of the actual utility. Rollout generation
 and API inventory now accept an immutable source revision and separate output
 path so support5/current-candidate drafts can be refreshed without editing another
 worker's tree or overwriting the previous evidence.
+
+Support5 rerun and eight-page draft preparation:
+
+- Exact integrated source `a1f19edf255c8c0886731d8d7cce450d5f657720`, compiler
+  SHA256 `8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789`.
+  `support5-summary.json` reconciles 52/52 command rows: main 23, analysis 15,
+  check-session/doctest 6 and cost 8. Each report checks compiler stability.
+  Matrices ran in bounded shared build leases; FIFO waits are not guest timings.
+- `rollout/support5/` refreshes unapplied C2 and C3 selector patches against that
+  immutable source. Both staged patches passed apply/fmt checks. The inventory
+  records 533 qualified API calls across 81 files plus wrapper/type/mode sites.
+- `rollout/support5/C2-docs.patch` contains eight unapplied replacement pages;
+  exact original and proposed hashes are in `docs-identities.json`. Production
+  docs remain unchanged. Draft code blocks qualify with explicit zero-RC only;
+  ordinary/default and final component-package qualification still must run.
+- Draft docs have 51 source blocks representing 50 execution/check units (a
+  two-file project shares one unit). 47 blocks / 46 units pass on Support5.
+  Three dictionary-item tuple-binding blocks remain `E_SINGLE_OWNER_BORROW`
+  (A01/A07); one round example lacks the exact audited `myl_core_round_float`
+  contract (A04/A07). No refused block was removed from the denominator.
+- Explicit `.copy()` repairs preserve the nested-list and sort-key examples'
+  results. The live foreach mutation remains a whole-root invalidation boundary;
+  its migrated index loop uses current length, visits the appended value and
+  preserves total13 and the independent saved list. The preserved foreach
+  version is `fixtures/live_foreach_refused.my`. The original draft failures and
+  all repaired source hashes remain in the raw reports.
+- The first final project-doc harness incorrectly compared units with blocks;
+  raw doctest passed two units for three blocks. Corrected project-aware coverage
+  checks all block identities, refuses split projects, and reruns the project.
+  `docs-reference-support5-project.json` passes. No skipped/mistagged blocks count
+  as qualification.
+- Per coordinator decision, `dump-ir --facts` remains diagnostic Core inspection.
+  Status0 there is not executable ABI admission; native emission must still
+  reject unsafe Core. Guest tests preserve SPEC NEW-CORE-TEST-4's unsupported-only
+  status0 contract; qualification explicitly requires JSON `unsupported == 0`.
+- `helper-contracts/round-cost.patch` is an approved unapplied companion for
+  atomic integration with A04's numeric ABI/ownership audit. Its exact scalar
+  helper classification and source noalloc regression passed apply/fmt only;
+  compilation depends on the new ownership contract. Source-spanned extern and
+  unaudited suffix lookalikes remain conservative. This is preparation, not a
+  passing runtime contract claim.
+
+Support5 still stages older RC `libexec` components. A08's test-index protocol
+qualification does not resolve its cache-plan lowering blocker or the installed
+packaging route. No default or RC-retirement milestone is claimed here.
+
+The isolated preserved foreach check passed its negative oracle on Support5:
+status1 with `E_SINGLE_OWNER_OVERLAP`, exact source/compiler hashes and output in
+`rollout/live-foreach-support5-negative.json`.

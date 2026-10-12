@@ -9,6 +9,7 @@ value, ordinary parameters borrow, and `.copy()` makes independent storage.
 
 '''+s[end:]
 s=s.replace('mut alias = values','mut alias = values.copy()')
+s=s.replace('mut nested: int[][] = [left]', 'mut nested: int[][] = [left.copy()]')
 start=s.index('A list assignment or function argument')
 end=s.index('Use `Node[]`',start)
 s=s[:start]+'''The explicit copy lets `alias` grow while `values` remains usable and unchanged.

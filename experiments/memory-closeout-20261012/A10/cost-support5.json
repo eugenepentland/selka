@@ -1,0 +1,146 @@
+{
+  "default": false,
+  "compiler": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+  "compiler_sha256": "8b1898be7ad2f95cf53bf709f9d468b3bcfbabcaab2aaa7b5aa48d0163b2a789",
+  "results": [
+    {
+      "name": "debug",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "cost",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/cost-support5/cache",
+        "--debug",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "expected": 0,
+      "passed": true,
+      "stdout": "{\"version\":\"cost-v1\",\"functions\":[{\"name\":\"main\",\"counts\":{\"checks\":{\"kept\":0,\"proved\":0},\"updates\":{\"in_place\":0,\"tested\":0,\"copied\":1},\"allocation\":{\"sites\":4,\"unresolved_calls\":2},\"rc\":{\"retains\":0,\"releases\":3,\"elided_pairs\":0,\"stack_lists\":0},\"inlined_calls\":0,\"loops\":{\"unswitched\":0,\"versioned\":0,\"vector_plans\":0,\"unknown\":0},\"llvm_vectorized_loops\":null}}],\"totals\":{\"checks\":{\"kept\":0,\"proved\":0},\"updates\":{\"in_place\":0,\"tested\":0,\"copied\":1},\"allocation\":{\"sites\":4,\"unresolved_calls\":2},\"rc\":{\"retains\":0,\"releases\":3,\"elided_pairs\":0,\"stack_lists\":0},\"inlined_calls\":0,\"loops\":{\"unswitched\":0,\"versioned\":0,\"vector_plans\":0,\"unknown\":0},\"llvm_vectorized_loops\":null}}\n",
+      "stderr": "mylang-core: LLVM vectorized unknown; 0 unknown loops; remarks available; 2 compiles in 42638464 ns; 0 remark queries reused\n"
+    },
+    {
+      "name": "release",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "cost",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/cost-support5/cache",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "expected": 0,
+      "passed": true,
+      "stdout": "{\"version\":\"cost-v1\",\"functions\":[{\"name\":\"main\",\"counts\":{\"checks\":{\"kept\":0,\"proved\":0},\"updates\":{\"in_place\":0,\"tested\":0,\"copied\":1},\"allocation\":{\"sites\":4,\"unresolved_calls\":2},\"rc\":{\"retains\":0,\"releases\":3,\"elided_pairs\":0,\"stack_lists\":0},\"inlined_calls\":0,\"loops\":{\"unswitched\":0,\"versioned\":0,\"vector_plans\":0,\"unknown\":0},\"llvm_vectorized_loops\":null}}],\"totals\":{\"checks\":{\"kept\":0,\"proved\":0},\"updates\":{\"in_place\":0,\"tested\":0,\"copied\":1},\"allocation\":{\"sites\":4,\"unresolved_calls\":2},\"rc\":{\"retains\":0,\"releases\":3,\"elided_pairs\":0,\"stack_lists\":0},\"inlined_calls\":0,\"loops\":{\"unswitched\":0,\"versioned\":0,\"vector_plans\":0,\"unknown\":0},\"llvm_vectorized_loops\":null}}\n",
+      "stderr": "mylang-core: LLVM vectorized unknown; 0 unknown loops; remarks available; 1 compiles in 23382347 ns; 0 remark queries reused\n"
+    },
+    {
+      "name": "no-facts",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "cost",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/cost-support5/cache",
+        "--no-facts",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "expected": 0,
+      "passed": true,
+      "stdout": "{\"version\":\"cost-v1\",\"functions\":[{\"name\":\"main\",\"counts\":{\"checks\":{\"kept\":0,\"proved\":0},\"updates\":{\"in_place\":0,\"tested\":0,\"copied\":1},\"allocation\":{\"sites\":4,\"unresolved_calls\":2},\"rc\":{\"retains\":0,\"releases\":3,\"elided_pairs\":0,\"stack_lists\":0},\"inlined_calls\":0,\"loops\":{\"unswitched\":0,\"versioned\":0,\"vector_plans\":0,\"unknown\":0},\"llvm_vectorized_loops\":null}}],\"totals\":{\"checks\":{\"kept\":0,\"proved\":0},\"updates\":{\"in_place\":0,\"tested\":0,\"copied\":1},\"allocation\":{\"sites\":4,\"unresolved_calls\":2},\"rc\":{\"retains\":0,\"releases\":3,\"elided_pairs\":0,\"stack_lists\":0},\"inlined_calls\":0,\"loops\":{\"unswitched\":0,\"versioned\":0,\"vector_plans\":0,\"unknown\":0},\"llvm_vectorized_loops\":null}}\n",
+      "stderr": "mylang-core: LLVM vectorized unknown; 0 unknown loops; remarks available; 0 compiles in 0 ns; 1 remark queries reused\n"
+    },
+    {
+      "name": "verified",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "cost",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/cost-support5/cache",
+        "--verify-facts",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "expected": 0,
+      "passed": true,
+      "stdout": "{\"version\":\"cost-v1\",\"functions\":[{\"name\":\"main\",\"counts\":{\"checks\":{\"kept\":0,\"proved\":0},\"updates\":{\"in_place\":0,\"tested\":0,\"copied\":1},\"allocation\":{\"sites\":4,\"unresolved_calls\":2},\"rc\":{\"retains\":0,\"releases\":3,\"elided_pairs\":0,\"stack_lists\":0},\"inlined_calls\":0,\"loops\":{\"unswitched\":0,\"versioned\":0,\"vector_plans\":0,\"unknown\":0},\"llvm_vectorized_loops\":null}}],\"totals\":{\"checks\":{\"kept\":0,\"proved\":0},\"updates\":{\"in_place\":0,\"tested\":0,\"copied\":1},\"allocation\":{\"sites\":4,\"unresolved_calls\":2},\"rc\":{\"retains\":0,\"releases\":3,\"elided_pairs\":0,\"stack_lists\":0},\"inlined_calls\":0,\"loops\":{\"unswitched\":0,\"versioned\":0,\"vector_plans\":0,\"unknown\":0},\"llvm_vectorized_loops\":null}}\n",
+      "stderr": "mylang-core: LLVM vectorized unknown; 0 unknown loops; remarks available; 0 compiles in 0 ns; 1 remark queries reused\n"
+    },
+    {
+      "name": "warm",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "cost",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/guest_tests.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/cost-support5/cache",
+        "--experimental-zero-rc"
+      ],
+      "status": 0,
+      "expected": 0,
+      "passed": true,
+      "stdout": "{\"version\":\"cost-v1\",\"functions\":[{\"name\":\"main\",\"counts\":{\"checks\":{\"kept\":0,\"proved\":0},\"updates\":{\"in_place\":0,\"tested\":0,\"copied\":1},\"allocation\":{\"sites\":4,\"unresolved_calls\":2},\"rc\":{\"retains\":0,\"releases\":3,\"elided_pairs\":0,\"stack_lists\":0},\"inlined_calls\":0,\"loops\":{\"unswitched\":0,\"versioned\":0,\"vector_plans\":0,\"unknown\":0},\"llvm_vectorized_loops\":null}}],\"totals\":{\"checks\":{\"kept\":0,\"proved\":0},\"updates\":{\"in_place\":0,\"tested\":0,\"copied\":1},\"allocation\":{\"sites\":4,\"unresolved_calls\":2},\"rc\":{\"retains\":0,\"releases\":3,\"elided_pairs\":0,\"stack_lists\":0},\"inlined_calls\":0,\"loops\":{\"unswitched\":0,\"versioned\":0,\"vector_plans\":0,\"unknown\":0},\"llvm_vectorized_loops\":null}}\n",
+      "stderr": "mylang-core: LLVM vectorized unknown; 0 unknown loops; remarks available; 0 compiles in 0 ns; 1 remark queries reused\n"
+    },
+    {
+      "name": "prior-rc-control",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "cost",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/invalid_move.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/cost-support5/cache"
+      ],
+      "status": 0,
+      "expected": 0,
+      "passed": true,
+      "stdout": "{\"version\":\"cost-v1\",\"functions\":[{\"name\":\"main\",\"counts\":{\"checks\":{\"kept\":0,\"proved\":0},\"updates\":{\"in_place\":0,\"tested\":0,\"copied\":0},\"allocation\":{\"sites\":0,\"unresolved_calls\":0},\"rc\":{\"retains\":0,\"releases\":0,\"elided_pairs\":0,\"stack_lists\":0},\"inlined_calls\":0,\"loops\":{\"unswitched\":0,\"versioned\":0,\"vector_plans\":0,\"unknown\":0},\"llvm_vectorized_loops\":null}}],\"totals\":{\"checks\":{\"kept\":0,\"proved\":0},\"updates\":{\"in_place\":0,\"tested\":0,\"copied\":0},\"allocation\":{\"sites\":0,\"unresolved_calls\":0},\"rc\":{\"retains\":0,\"releases\":0,\"elided_pairs\":0,\"stack_lists\":0},\"inlined_calls\":0,\"loops\":{\"unswitched\":0,\"versioned\":0,\"vector_plans\":0,\"unknown\":0},\"llvm_vectorized_loops\":null}}\n",
+      "stderr": "mylang-core: LLVM vectorized unknown; 0 unknown loops; remarks available; 1 compiles in 23054205 ns; 0 remark queries reused\n"
+    },
+    {
+      "name": "invalid-cold",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "cost",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/invalid_move.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/cost-support5/cache",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "expected": 1,
+      "passed": true,
+      "stdout": "",
+      "stderr": "invalid_move.my:4:12: error[E_SINGLE_OWNER_MOVED]: 'before' was moved or is unavailable on this path; use .copy() when both values are needed\n      return before == after\n             ^\n"
+    },
+    {
+      "name": "invalid-warm",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/memory-closeout/coordinator/support5-install/bin/mylang",
+        "cost",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/fixtures/invalid_move.my",
+        "--json",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/cost-support5/cache",
+        "--experimental-zero-rc"
+      ],
+      "status": 1,
+      "expected": 1,
+      "passed": true,
+      "stdout": "",
+      "stderr": "invalid_move.my:4:12: error[E_SINGLE_OWNER_MOVED]: 'before' was moved or is unavailable on this path; use .copy() when both values are needed\n      return before == after\n             ^\n"
+    }
+  ],
+  "success": true
+}

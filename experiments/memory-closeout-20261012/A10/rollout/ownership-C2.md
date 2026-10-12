@@ -97,8 +97,9 @@ lint, dump-ir, cost, coverage, test and doctest commands select checked ownershi
 Persistent checks validate each request. Tests apply the same source rules to
 properties, providers and directory workers. Cached successes cannot bypass
 ownership checking. `check` validates source contracts; a native build also
-qualifies backend and runtime support. There is no fallback after an ownership
-error.
+qualifies backend and runtime support. `dump-ir` displays intermediate Core for
+diagnosis; its successful output alone does not prove the backend can emit or run
+that program. There is no fallback after an ownership error.
 
 Guest LLVM uses the `mylang-zero-rc-v2` ABI marker with `kind` at header offset zero.
 Lowering, optimization, emission, native artifacts and test receipts bind their

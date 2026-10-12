@@ -13,17 +13,28 @@ p.add_argument("--compiler", type=Path, required=True)
 p.add_argument("--output", type=Path, required=True)
 p.add_argument("--scratch", type=Path, required=True)
 p.add_argument("--default", action="store_true")
+p.add_argument("--start", type=int, default=0)
+p.add_argument("--limit", type=int, default=1000)
 a = p.parse_args()
 compiler = a.compiler.resolve()
+compiler_hash = hashlib.sha256(compiler.read_bytes()).hexdigest()
 root = Path(__file__).resolve().parent
 scratch = a.scratch.resolve()
 scratch.mkdir(parents=True, exist_ok=True)
 env = dict(os.environ, MYL_CORE_LEAKCHECK="1")
 flag = [] if a.default else ["--experimental-zero-rc"]
 rows = []
+case_index = 0
 def run(name, args, expected=0, owned=True, extra=None):
+    global case_index
+    index = case_index
+    case_index += 1
+    if not a.start <= index < a.start + a.limit:
+        return subprocess.CompletedProcess([], 255, "", "")
     cmd = [str(compiler)] + args + (["--seed", "7"] if args[0] == "test" else []) + (flag if owned else [])
     result = subprocess.run(cmd, capture_output=True, text=True, env=dict(env, **(extra or {})))
+    if hashlib.sha256(compiler.read_bytes()).hexdigest() != compiler_hash:
+        raise RuntimeError("compiler changed during qualification")
     passed = result.returncode == expected
     if args[0] == "test" and expected == 0 and result.returncode == 0:
         report = json.loads(result.stdout)
@@ -34,7 +45,8 @@ def run(name, args, expected=0, owned=True, extra=None):
         passed = passed and "E_SINGLE_OWNER_MOVED" in result.stderr
     if name in {"run", "run-project"}:
         passed = passed and result.stdout == "value-7\n"
-    rows.append(dict(name=name, argv=cmd, expected=expected, status=result.returncode,
+    scope = 'diagnostic-core' if args[0] == 'dump-ir' else 'source-admission' if args[0] == 'check' else 'executable-emission' if args[0] == 'build' else 'guest-execution-or-receipt'
+    rows.append(dict(name=name, qualification_scope=scope, argv=cmd, expected=expected, status=result.returncode,
                      passed=passed, stdout=result.stdout, stderr=result.stderr))
     return result
 source = str(root / "fixtures/guest_tests.my")
@@ -73,9 +85,9 @@ for name in ["alpha_test", "beta_test"]:
     (suite / (name + ".my")).write_text(Path(source).read_text())
 run("directory", ["test", str(suite), "--json", "--cache-dir", cache, "--property-runs", "5"])
 run("directory-children", ["test", str(suite), "--json", "--cache-dir", cache, "--force", "--property-runs", "5"], extra={"MYLANG_TEST_CHILDREN": "1"})
-result = dict(compiler=str(compiler), compiler_sha256=hashlib.sha256(compiler.read_bytes()).hexdigest(),
+result = dict(compiler=str(compiler), compiler_sha256=compiler_hash, start=a.start, complete_matrix_cases=case_index,
               sources={str(x.relative_to(root)):hashlib.sha256(x.read_bytes()).hexdigest() for x in sorted((root / "fixtures").glob("*.my"))},
-              default=a.default, results=rows, success=all(row["passed"] for row in rows))
+              default=a.default, results=rows, success=bool(rows) and all(row["passed"] for row in rows))
 a.output.parent.mkdir(parents=True, exist_ok=True)
 a.output.write_text(json.dumps(result, indent=2) + "\n")
 for row in rows:
