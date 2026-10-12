@@ -1,0 +1,38 @@
+{
+  "evidence_root": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-bench/experiments/text-gaps-20261012/bench",
+  "commits": {
+    "05_07b_profile": "acd35bedd",
+    "08": "701230038",
+    "09": "eb792d416"
+  },
+  "reports": [
+    {
+      "relative_path": "reports/json-trial-005/REPORT.md",
+      "sha256": "3f7da0643ad7f571496e39b81825784d49f6b82ad1416f6b5d9b519eeb907ad0"
+    },
+    {
+      "relative_path": "reports/json-trial-005/report.json",
+      "sha256": "699523162e26a595bc5db0f4fa4c84dc5a90fed701692919fa783ef38d63a05e"
+    },
+    {
+      "relative_path": "reports/json-screen-007b.json",
+      "sha256": "f2636f15ae39ce004ecc6c04aa4038689eaad8248324441c76c51bb518b75a65"
+    },
+    {
+      "relative_path": "reports/json-screen-008.json",
+      "sha256": "ecc7cb9addf14bf398302daee33d6ae0c768748d0640f3234cf49ff895db2d0d"
+    },
+    {
+      "relative_path": "reports/json-screen-009.json",
+      "sha256": "cfc8f0f1d07c33021abab143fe6e41fe3e7c6f556ce80f80dfca82c72465f22b"
+    },
+    {
+      "relative_path": "profiles/json05/flat-report.txt",
+      "sha256": "113bba99e2450f4da3af368a745f53f1e99504ca80d6444dbc442787b1a70ddd"
+    },
+    {
+      "relative_path": "profiles/json05/identity.json",
+      "sha256": "c5b628ade6613f7518ccc5cf6a422d6d9f587f48d337faef4e2f3b1875cbefc9"
+    }
+  ]
+}

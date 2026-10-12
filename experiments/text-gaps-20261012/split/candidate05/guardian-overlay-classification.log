@@ -1,0 +1,26 @@
+build-slot: FIFO ticket 2258, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: FIFO ticket 2258, position 1; waiting for measurement or memory-accounting settle delay; waiting (60s so far)
+build-slot: FIFO ticket 2258, position 1; waiting for measurement or memory-accounting settle delay; waiting (121s so far)
+build-slot: FIFO ticket 2258, position 1; waiting for measurement or memory-accounting settle delay; waiting (181s so far)
+build-slot: FIFO ticket 2258, position 1; waiting for measurement or memory-accounting settle delay; waiting (241s so far)
+build-slot: FIFO ticket 2258, position 1; waiting for measurement or memory-accounting settle delay; waiting (301s so far)
+build-slot: FIFO ticket 2258, position 1; waiting for measurement or memory-accounting settle delay; waiting (361s so far)
+build-slot: FIFO ticket 2258, position 1; waiting for measurement or memory-accounting settle delay; waiting (421s so far)
+build-slot: FIFO ticket 2258, position 1; waiting for measurement or memory-accounting settle delay; waiting (482s so far)
+build-slot: FIFO ticket 2258, position 1; waiting for measurement or memory-accounting settle delay; waiting (542s so far)
+build-slot: FIFO ticket 2258, position 1; waiting for measurement or memory-accounting settle delay; waiting (602s so far)
+build-slot: FIFO ticket 2258, position 1; waiting for measurement or memory-accounting settle delay; waiting (662s so far)
+build-slot: build slot 1, FIFO ticket 2258 after 687s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 18 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10528 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 1/88 failed (change-classification)
+guardian: failures grouped by check (1):
+  change-classification (3 findings)
+    - src/core/inline_cfg.zig: 1 behavioral line(s) added
+      fix: commit these lines WITH a test — add or update a `// spec:`-tagged test, or add the behavior as a SPEC.md bullet, in this same change.
+    - src/core/inline.zig: 3 behavioral line(s) added
+    - src/core/root_test.zig: 1 behavioral line(s) added
+  caution: zig-out binaries predate this failed run (installs are gated on green) — rebuild green before running them

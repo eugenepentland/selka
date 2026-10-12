@@ -1,0 +1,1 @@
+{"version":"native-allocator-v1","malloc_calls":2,"calloc_calls":683,"realloc_calls":14,"free_calls":2059,"nonnull_frees":695,"malloc_bytes":3,"calloc_bytes":71224,"realloc_bytes":80320}

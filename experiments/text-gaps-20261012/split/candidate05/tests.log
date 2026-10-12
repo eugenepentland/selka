@@ -1,0 +1,13 @@
+build-slot: FIFO ticket 2245, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 2245 after 15s
+guardian/test: 5 test(s) selected
+guardian/test: SLOW  5.72s  textgap_split_test.test.textgap_split five native modes preserve lengths Unicode escapes and early traps
+All 5 tests passed.
+guardian/test: test wall 11.15s; slowest over 50ms:
+guardian/test:   5.72s  textgap_split_test.test.textgap_split five native modes preserve lengths Unicode escapes and early traps
+guardian/test:   4.84s  textgap_split_test.test.textgap_split bounded reserve clamps overflow inputs and sparse long spans
+guardian/test:   0.31s  textgap_split_test.test.textgap_split count observation retains private offsets and scalar readers
+guardian/test:   0.15s  textgap_split_test.test.textgap_split cold warm cached reader cleanup equals uncached LLVM
+guardian/test:   0.12s  textgap_split_test.test.textgap_split reader runtime signature authority and cloned module targets
+guardian/test: PASS — 5 passed
+guardian/test: RESULT {"passed":5,"failed":0,"skipped":0}

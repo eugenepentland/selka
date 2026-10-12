@@ -1,0 +1,7 @@
+build-slot: FIFO ticket 2168, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: FIFO ticket 2168, position 1; waiting for measurement or memory-accounting settle delay; waiting (60s so far)
+build-slot: FIFO ticket 2168, position 1; waiting for measurement or memory-accounting settle delay; waiting (120s so far)
+build-slot: FIFO ticket 2168, position 1; waiting for measurement or memory-accounting settle delay; waiting (181s so far)
+build-slot: FIFO ticket 2168, position 1; waiting for measurement or memory-accounting settle delay; waiting (241s so far)
+build-slot: FIFO ticket 2168, position 1; waiting for measurement or memory-accounting settle delay; waiting (301s so far)
+build-slot: build slot 1, FIFO ticket 2168 after 326s

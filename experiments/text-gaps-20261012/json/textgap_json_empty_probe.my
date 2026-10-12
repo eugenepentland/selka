@@ -1,0 +1,4 @@
+func main() -> int:
+    mut out: byte_buffer = []
+    _ = out.append_byte(65)
+    return len(out)

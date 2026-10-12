@@ -136,3 +136,76 @@ with native fixtures in all five modes and the strict warm-cache miss check.
 Guardian passed all 88 checks. All 100 runtime/counted probes passed with zero RC events, uniqueness tests and
 exit-live managed bytes. BENCH owns the pending paired timing. Exact candidate04
 host/guest hashes and commands are in build-receipt04.json.
+
+
+## Candidate05 and reproducible checks
+
+Candidate04's five-round screen was large28.073us/Rust27.909us (1.0059), with
+ranges overlapping; small0.48165us/Rust0.55277us (0.8713). Candidate05 adds a
+portable width2 search path inside offset construction. It bounds first-byte
+candidate checks to eight, verifies byte2 locally, and uses the existing libc
+linear fallback afterwards. Zero/one remaining bytes and multibyte width3+
+retain the generic search. The runtime differential oracle covers repeated
+first bytes with hit/nohit, leading/adjacent/trailing matches, binary NULs and
+Unicode, plus width3 to check the generic route.
+
+BENCH's source-backed profile is committed at acd35bedd:
+experiments/text-gaps-20261012/bench/profiles/split03/{identity.json,
+flat-report.txt,perf.data.gz}, in the benchmark worker tree. The compressed
+perf.data is lossless; no sample loss was reported.
+
+From this tree, source /home/epentland/.config/mylang/dev-env.sh, then run:
+
+```sh
+scripts/build-slot.sh build "$ZIG" build seed-compiler core-test-binary \
+  -Dtest-filter=textgap_split -p .tmp/text-gaps/split/install \
+  -j"$MYLANG_DEV_JOBS" --maxrss "$MYLANG_DEV_MAXRSS"
+MYLANG_COMPONENT_DIR="$PWD/.tmp/text-gaps/split/install/libexec/mylang/components" \
+  scripts/build-slot.sh build .tmp/text-gaps/split/install/focus/core-tests
+scripts/build-slot.sh build python3 experiments/text-gaps-20261012/split/build.py
+scripts/build-slot.sh build python3 experiments/text-gaps-20261012/split/qualify.py \
+  .tmp/text-gaps/split/candidate05/text-runtime \
+  experiments/text-gaps-20261012/split/candidate05/runtime
+scripts/build-slot.sh build python3 experiments/text-gaps-20261012/split/qualify.py \
+  .tmp/text-gaps/split/candidate05/text-counted \
+  experiments/text-gaps-20261012/split/candidate05/counted
+```
+
+Copy the new focus/mylang over the complete private installation's bin/mylang
+before guest compilation. The receipt records immutable outputs, source hash,
+exact guest commands and reused frozen component hashes. Admission and BENCH's
+exclusive timing are required; qualification elapsed fields are not timings.
+
+
+Candidate05 passed all 100 runtime/counted probes, with zero RC events,
+uniqueness tests and exit-live managed bytes. Frozen host/guest identities and
+commands are in build-receipt05.json; native focused test output is preserved in
+candidate05/tests.log. The paired screen is pending; no target claim is made.
+
+
+The candidate05 controlled screen passed both point targets: large28.556us
+versus Rust29.715us (0.9610), small0.4887us versus Rust0.5683us (0.8599).
+BENCH owns reports/split-screen-005.json and matching rawruns. These five-round
+screens establish preliminary point improvements; final fifteen paired rounds,
+confidence intervals and process RSS remain the coordinator's integrated gate.
+
+The first normal follow-up commit hook rejected change-classification only for
+the coordinator's three uncommitted shared overlays. Their reader tests were
+already in the previous owned checkpoint. The coordinator explicitly authorized
+preserving exact bytes/hashes of inline.zig, inline_cfg.zig and root_test.zig in
+private storage, restoring those paths from HEAD solely for the owned commit,
+then restoring and verifying their exact bytes in finally. No shared stash,
+Guardian bypass or feedback log is used. Overlay input hashes are recorded in
+overlay-preservation05.json; only owned files are committed.
+
+
+The authorized temporary restoration did restore all three exact overlay hashes,
+but Guardian rejected spec/orphan/test-reachability because the restored test
+root removed the only registration for the previously committed worker tests.
+Both rejection logs are retained in candidate05. The coordinator therefore
+instructed exporting the exact staged owned-only patch for its already registered
+integration tree, where it will make the normal Guardian-gated checkpoint
+commit. This avoids shared-file ownership changes and hook bypasses. The worker
+worktree retains the exact original coordinator overlays; no second attempt
+changes test registration. The coordinator's commit is the proposed final
+source checkpoint. No new optimization experiments run after the merge request.

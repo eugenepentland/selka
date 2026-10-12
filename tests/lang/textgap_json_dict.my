@@ -1,0 +1,53 @@
+# spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+public func test_textgap_json_dict_small_hashes_keep_independent_managed_snapshots() -> bool:
+    mut values: dict[str, str[]] = {}
+    for index in range(8):
+        values["key-" + str(index)] = ["value-" + str(index)]
+    const kept = values.copy()
+    values["key-3"][0] = "changed"
+    _ = values.pop("key-2")
+    values.clear()
+    for index in range(30):
+        mut churn: dict[str, str[]] = {"temporary": ["owner-" + str(index)]}
+        churn.clear()
+    return len(kept) == 8 and kept["key-3"][0] == "value-3" and kept["key-2"][0] == "value-2"
+
+
+# spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+public func test_textgap_json_dict_ninth_entry_growth_keeps_order_and_owners() -> bool:
+    mut values: dict[str, str[]] = {}
+    for index in range(8):
+        values["key-" + str(index)] = ["value-" + str(index)]
+    const kept = values.copy()
+    values["key-8"] = ["value-" + str(8)]
+    values["key-0"][0] = "changed"
+    if len(values) != 9 or len(kept) != 8 or kept["key-0"][0] != "value-0":
+        return False
+    mut keys = list(values.keys())
+    return keys[0] == "key-0" and keys[8] == "key-8" and values["key-8"][0] == "value-8"
+
+
+# spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+public func test_textgap_json_dict_deleted_small_entry_growth_and_reset_keep_storage() -> bool:
+    mut values: dict[str, str[]] = {}
+    for index in range(8):
+        values["key-" + str(index)] = ["value-" + str(index)]
+    _ = values.pop("key-3")
+    const before = values.copy()
+    values["key-3"] = ["replacement-" + str(3)]
+    mut keys = list(values.keys())
+    if keys[3] != "key-4" or keys[7] != "key-3" or "key-3" in before:
+        return False
+    values.clear()
+    values["after"] = ["reset-" + str(4)]
+    return len(before) == 7 and len(values) == 1 and values["after"][0] == "reset-4"
+
+
+# spec-case: NEW-CORE-ZERO-RC-CONTAINERS-1
+public func test_textgap_json_dict_large_initial_hint_keeps_copy_and_nested_cleanup() -> bool:
+    mut values: dict[str, str[]] = {"a": [str(1)], "b": [str(2)], "c": [str(3)], "d": [str(4)], "e": [str(5)], "f": [str(6)], "g": [str(7)], "h": [str(8)], "i": [str(9)]}
+    const kept = values.copy()
+    values["j"] = [str(10)]
+    _ = values.pop("b")
+    values.clear()
+    return len(kept) == 9 and kept["b"][0] == "2" and kept["i"][0] == "9"

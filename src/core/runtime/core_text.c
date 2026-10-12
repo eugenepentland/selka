@@ -533,6 +533,23 @@ myl_block *myl_core_span_split_offsets(const unsigned char *text, uint64_t len, 
                 const unsigned char *found = memchr(text + at, separator[0], (size_t)(len - (uint64_t)at));
                 if (found) hit = found - text;
             }
+        } else if (separator_len == 2 && len - (uint64_t)at >= 2) {
+            /* Verify the second byte locally; bound failed probes before libc's
+               linear fallback so repeated first bytes retain predictable work. */
+            uint64_t cursor = (uint64_t)at;
+            unsigned tried = 0;
+            for (; tried < 8 && cursor + 1 < len; ++tried) {
+                const unsigned char *found = memchr(text + cursor, separator[0], (size_t)(len - cursor - 1));
+                if (!found) break;
+                cursor = (uint64_t)(found - text);
+                if (found[1] == separator[1]) { hit = (int64_t)cursor; break; }
+                ++cursor;
+            }
+            if (hit < 0 && tried == 8 && cursor + 1 < len) {
+                extern void *memmem(const void *, size_t, const void *, size_t);
+                const unsigned char *found = memmem(text + cursor, (size_t)(len - cursor), separator, 2);
+                if (found) hit = found - text;
+            }
         } else {
             hit = core_span_find(text, (int64_t)len, separator, (int64_t)separator_len, at);
         }

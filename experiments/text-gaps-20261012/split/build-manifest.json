@@ -1,6 +1,6 @@
 {
   "compiler": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/install/bin/mylang",
-  "compiler_sha256": "ff1dc02b223dc9a0b14eb3168ee6b37041f4c0dd3f4bf394567848682b639371",
+  "compiler_sha256": "0acc47707e4f58ca6018e5f1ec52c0b50cf1fd57d1911edf4643107c703f7a9a",
   "source": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/experiments/text-gaps-20261012/split/text.my",
   "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
   "entries": [
@@ -22,7 +22,7 @@
       ],
       "status": 0,
       "binary": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/text-runtime",
-      "sha256": "07506845e5ce6d0c5e6bac8accd631fe77db761952862584b5af6ffbf12a08de"
+      "sha256": "06cb3406ff8a2bb3c377b18c84998ca6d9d09aebb0ba17340ba8951d0cfffa42"
     },
     {
       "command": [
@@ -41,7 +41,7 @@
       ],
       "status": 0,
       "binary": "/home/epentland/ai/canopy/mylang-text-gaps-20261012-split/.tmp/text-gaps/split/text-counted",
-      "sha256": "aa5e54ee2c3fc9c9136b52d1edfa842e83cec9324af09ce2fb8bb15cb99ba595"
+      "sha256": "d01a4440f629f5f6be8daf967500c6af25244f4b5e7e1868e6bc7f4714c893fe"
     }
   ]
 }
