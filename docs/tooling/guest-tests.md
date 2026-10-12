@@ -595,12 +595,18 @@ A receipt's identity (NEW-CORE-S4-TEST-3) is:
   pipeline sources (RUNNER-IDENTITY-1), which the planned execution receipts
   will bind; it is not yet part of any receipt key;
 - **the environment variables that can change an outcome**
-  (NEW-CORE-S4-TEST-5): every `MYL_` and `MYLANG_` variable except
-  `MYLANG_JOBS`, `MYLANG_CORE_RUNTIME_CACHE`, `MYLANG_TEST_ISOLATE` and
-  `MYLANG_TEST_CHILDREN`, `MYLANG_TEST_SHARED_CACHE`, and the C compiler and Zig
-  toolchain inputs (`CPATH`, `C_INCLUDE_PATH`, `LIBRARY_PATH`, `ZIG`,
-  `ZIG_LIB_DIR`, `SOURCE_DATE_EPOCH` and the like). A shell's `_` or `OLDPWD`,
-  a terminal's variables or a wrapper such as `time` leave receipts valid.
+  (NEW-CORE-S4-TEST-5): the keyed class of the
+  [environment identity contract](environment-identity.md) in
+  `src/environment_identity.zon` (ENV-IDENTITY-1). That is every `MYL_`,
+  `MYLANG_` and `SELKA_` variable except the placement ones (store locations such
+  as `MYLANG_CORE_RUNTIME_CACHE` and `MYLANG_TEST_SHARED_CACHE`, job counts such as
+  `MYLANG_JOBS`, `MYLANG_TEST_ISOLATE`, `MYLANG_TEST_CHILDREN` and the telemetry
+  directories), the C compiler and Zig toolchain inputs (`CPATH`,
+  `C_INCLUDE_PATH`, `LIBRARY_PATH`, `ZIG`, `ZIG_LIB_DIR`, `SOURCE_DATE_EPOCH` and
+  the like) and `LD_*`. The contract's host class (`PYTHON*`, the locale and
+  `TZ`) is keyed only by host tooling, never by a receipt. A shell's `_` or
+  `OLDPWD`, a terminal's variables or a wrapper such as `time` leave receipts
+  valid.
 
 A program discovers the functions needed by all its ready tests together and
 derives each test's key from their canonical facts (NEW-CORE-TEST-KEYS-1,
