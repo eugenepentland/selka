@@ -1,0 +1,1 @@
+{"arguments": ["--request", "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/work/tmp1_2d8doe/request.bin"], "request_sha256": "1eba488764e832f86f853950ff337c284f5e745e551628191fdf450dc6962b89", "status": 2, "stderr": "test-index: invalid request frame size\n"}

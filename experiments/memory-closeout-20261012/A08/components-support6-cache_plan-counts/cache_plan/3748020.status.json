@@ -1,0 +1,1 @@
+{"arguments": ["--request", "/home/epentland/ai/canopy/mylang-memory-20261012-A08/.tmp/work/cache-plan-oracle-gtgxfplo/request.bin"], "request_sha256": "f7562c1ad9fb80bc8786f38c0ee6eba8b1189bc178647b7805b111b5da4fe650", "status": 2, "stderr": "cache-plan: unsupported computation retention or admission contract\n"}

@@ -3,7 +3,10 @@
 Base: `fbfcaa7a923186a8e773c3760f81c10aa345a432`.
 Worktree: `/home/epentland/ai/canopy/mylang-memory-20261012-A08`.
 Branch: `codex/memory-closeout-20261012-A08`.
-Proposed commits: this commit contains the tested comprehension metadata fix, component source migrations, and baseline qualification harness/evidence. No final candidate has been measured.
+Proposed commits: the A08 sequence contains tested comprehension/copy fixes,
+component source migrations, bounded phi cleanup, and cache/scaling evidence.
+No final candidate has been measured. The latest Support6 cache-plan qualification
+resolves the earlier Support5 component blocker; historical failures remain intact.
 
 Owned production files: `src/core/{lowering_cache,optimization_cache,emission_cache}.zig`,
 `src/{semantic_store,semantic_copy}.zig`. No production cache changes required by
@@ -22,6 +25,70 @@ Compiler mode: Debug, for correctness only. A09 froze a complete ReleaseFast C0 
 SHA-256 `78ac31605c7505c7cb330d41bdf2d3a232043e032f487e599f454b3bc6f2bd37`.
 Matched final ReleaseFast candidate measurements remain pending; Debug harness
 elapsed times are not throughput claims.
+
+## Support6 component qualification
+
+Compiler source `5167c588be79dd43d21d5013c36db15110bf239b`, compiler SHA-256
+`bc6432a75fc1fa0dbcbd2048a5c8dbe2909d7590e90ae729688ed4f6e69978d4`.
+The exact installation boundary is recorded in `support6-compiler-identity.json`:
+its libexec artifacts are staged historical components, so this is not an
+installed-package qualification.
+
+The real migrated cache-plan source builds with checked ownership and passes its
+complete native protocol oracle: **560 counted executions**, comprising 523 normal
+returns, 36 handled error returns, and one expected hard output-error trap.
+Coverage includes 408 incremental cold/retained/warm batches, 102 independent
+graph oracles, 100,000-node chains, malformed frames, and bounded-work rejection.
+All observed RC events are zero. Every normal/handled-error return has zero managed
+bytes live at exit and no resource leakcheck report. LLVM and symbols contain no
+RC helper references. The hard trap remains in the denominator and is not used
+to claim return-path cleanup.
+
+The prior `close_group` ownership refusal is resolved by A07's scalar forwarding
+fix, integrated into this compiler. Binary SHA-256:
+`44cf164990de93468addf576e18af792ebcbd593f95748aa8059b388e1766f7f`.
+`components-support6-cache_plan.json` retains exact commands, source hashes,
+oracle identity and per-execution counts/statuses;
+`support6-cache-plan-summary.json` adds the LLVM hash and concise conclusions.
+The oracle's instrumented, nonexclusive elapsed times are correctness telemetry,
+not compiler or runtime performance comparisons.
+
+Test-index also passes all **128** counted protocol executions on this same
+compiler: 106 normal returns, 21 handled errors, and one expected output-error
+trap. Its binary SHA-256 is
+`1734efefa37d2f17678dca227d51401c269a5028b4e6867bf91535989e79c28a`.
+RC events, normal/error cleanup, and structural LLVM/symbol checks pass with the
+same scope as cache-plan. `components-support6-test_index.json` contains the full
+evidence; `support6-components-summary.json` records the paired **688-execution**
+result and exact LLVM/source/compiler/oracle identities. This completes the
+source/protocol prerequisite for a separate independently pinned owned component
+build; it does not qualify the install's historical staged libexec artifacts.
+
+The independent numeric-object cache probe passes **four builds** and every
+structural/behavioral check. It seeds a private store with the preserved C0 object,
+observes a distinct candidate object, verifies receipt/replay, and deliberately
+replaces only the private candidate object with C0 bytes. The compiler repairs
+those stale bytes before linking and retains the Unicode oracle
+`ééé1.25ééé\n10 é\n`. The original shared C0 object remains byte-identical.
+The candidate object is 409,160 bytes, SHA-256
+`0fa3619e922e68e6418d487417de4b127281abe2618947cc023277dc7746c03c`;
+its content-addressed filename uses digest
+`bd0241774a18a2a0902c60c1feb7b476c478ec9b2282fc23a4704160bb555cc9`.
+`support6-numeric-object/{results.json,object-audit.json}` retains exact source,
+compiler, object, command, cache-state and behavioral evidence. This proves
+candidate invalidation/repair, not old C0 execution of the Unicode fixture.
+
+`pending-contract-reviews.md` separately records A07's borrowed-selection marker
+review and A01's complete tuple-unpack cache review. They remain proposals under
+implementation; no semantic-cache schema change is included in this evidence
+commit. A07 has addressed the reported bounded traversal and always-on marker
+validation concerns in its working draft, with tests still pending.
+
+The command is `scripts/build-slot.sh build python3 -B
+experiments/memory-closeout-20261012/A08/component_qualify.py --compiler COMPILER
+--compiler-revision 5167c588be79dd43d21d5013c36db15110bf239b --zig "$ZIG"
+--work NEW --output NEW.json --components cache_plan --counted`. Final compiler
+and installed component builds must consume or repeat this evidence explicitly.
 
 ## Evidence
 
