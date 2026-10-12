@@ -140,7 +140,8 @@ public func test_option_narrowing_collection_methods_and_index_writes() -> bool:
     mut count = append_one(mut candidate, 2)
     if candidate is None:
         return False
-    candidate[0] = candidate[0] + candidate[1]
+    const sum = candidate[0] + candidate[1]
+    candidate[0] = sum
     return count == 2 and candidate[0] == 42 and items[0] == 40
 
 

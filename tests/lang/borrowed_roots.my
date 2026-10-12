@@ -23,7 +23,7 @@ public func test_a_loop_variable_survives_allocations_while_its_list_does() -> b
 
 public func test_an_element_removed_from_its_list_keeps_its_own_root() -> bool:
     mut rows = [fresh(0), fresh(10)]
-    mut row = rows[1]
+    mut row = rows[1].copy()
     rows.clear()
     mut scratch = fresh(5)
     for i in range(20):
@@ -38,7 +38,7 @@ func drop_all(mut rows: int[][]) -> int:
 
 public func test_an_element_a_callee_removes_keeps_its_own_root() -> bool:
     mut rows = [fresh(0), fresh(10)]
-    mut row = rows[0]
+    mut row = rows[0].copy()
     mut status = drop_all(mut rows)
     mut scratch = fresh(7)
     for i in range(20):
@@ -48,7 +48,7 @@ public func test_an_element_a_callee_removes_keeps_its_own_root() -> bool:
 
 public func test_an_element_overwritten_in_its_list_keeps_its_own_root() -> bool:
     mut rows = [fresh(0), fresh(10)]
-    mut row = rows[0]
+    mut row = rows[0].copy()
     rows[0] = fresh(100)
     mut scratch = fresh(1)
     return row[0] == 0 and rows[0][0] == 100 and scratch[0] == 1
@@ -56,7 +56,7 @@ public func test_an_element_overwritten_in_its_list_keeps_its_own_root() -> bool
 
 public func test_a_field_read_survives_while_the_instance_holds_it() -> bool:
     mut node = Node(items=fresh(3), next=None)
-    mut items = node.items
+    mut items = node.items.copy()
     mut total = 0
     for i in range(10):
         mut scratch = fresh(i)
@@ -68,7 +68,7 @@ public func test_a_field_read_survives_while_the_instance_holds_it() -> bool:
 
 public func test_a_dictionary_value_survives_until_it_is_replaced() -> bool:
     mut table = {"a": fresh(1), "b": fresh(2)}
-    mut held = table["a"]
+    mut held = table["a"].copy()
     mut scratch = fresh(9)
     table["a"] = fresh(40)
     mut after = fresh(8)
@@ -77,8 +77,8 @@ public func test_a_dictionary_value_survives_until_it_is_replaced() -> bool:
 
 public func test_a_chain_of_borrows_survives_through_dead_owners() -> bool:
     mut grid = [[fresh(1), fresh(2)], [fresh(3)]]
-    mut row = grid[0]
-    mut cell = row[1]
+    mut row = grid[0].copy()
+    mut cell = row[1].copy()
     mut total = 0
     for i in range(6):
         mut scratch = fresh(i)

@@ -1,8 +1,8 @@
 func replace_list(mut items: int[], other: int[]) -> int[]:
-    items = other
+    items = other.copy()
     items.append(7)
     items[0] = 9
-    return items
+    return items.copy()
 
 
 # spec-case: MUT-REBIND-CALLER-1
@@ -14,26 +14,26 @@ public func test_rebound_mut_list_does_not_mutate_its_readonly_source() -> bool:
 
 
 func replace_rows(mut items: int[][], other: int[][]) -> int[][]:
-    items = other
+    items = other.copy()
     for index in range(6):
         items[index % 2][0] = index
-    return items
+    return items.copy()
 
 
 # spec-case: MUT-REBIND-CALLER-1
 public func test_rebound_nested_list_keeps_parent_and_child_snapshots() -> bool:
     mut items = [[1]]
     mut row = [2]
-    mut source = [row, row]
+    mut source = [row.copy(), row.copy()]
     mut changed = replace_rows(mut items, source)
     return changed == [[4], [5]] and source == [[2], [2]] and row == [2] and items == [[4], [5]]
 
 
 func replace_mapping(mut items: dict[int, int[]], other: dict[int, int[]]) -> dict[int, int[]]:
-    items = other
+    items = other.copy()
     items[1].append(7)
     items[2] = [9]
-    return items
+    return items.copy()
 
 
 # spec-case: MUT-REBIND-CALLER-1
@@ -46,9 +46,9 @@ public func test_rebound_dictionary_keeps_nested_source_values_independent() -> 
 
 func conditional(mut items: int[], other: int[], use_other: bool) -> int[]:
     if use_other:
-        items = other
+        items = other.copy()
     items[0] = 7
-    return items
+    return items.copy()
 
 
 # spec-case: MUT-REBIND-CALLER-1

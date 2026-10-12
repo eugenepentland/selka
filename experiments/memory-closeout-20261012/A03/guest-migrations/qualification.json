@@ -1,0 +1,56 @@
+{
+  "base": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "status": "partial implementation; production compiler blockers remain",
+  "public_test_signatures": 356,
+  "explicit_copies_before": 7,
+  "explicit_copies_after": 250,
+  "added_lines": 331,
+  "removed_lines": 286,
+  "source_check_files": 36,
+  "source_check_failures": [
+    "tests/lang/array_negative_index.my/check/build",
+    "tests/lang/array_places.my/check/build",
+    "tests/lang/dict_comprehensions.my/check/build",
+    "tests/lang/dictionary_hash_index.my/check/build",
+    "tests/lang/dictionary_hashing.my/check/build",
+    "tests/lang/dictionary_range_keys.my/check/build",
+    "tests/lang/dictionary_views.my/check/build",
+    "tests/lang/element_access.my/check/build",
+    "tests/lang/field_augmented.my/check/build",
+    "tests/lang/keyed_sorting.my/check/build",
+    "tests/lang/loop_rebinding.my/check/build",
+    "tests/lang/mut_argument_places.my/check/build",
+    "tests/lang/mut_rebind_caller.my/check/build",
+    "tests/lang/option_narrowing.my/check/build"
+  ],
+  "runtime_files_attempted": 24,
+  "runtime_passed_files": 21,
+  "runtime_passed_boolean_tests": 118,
+  "runtime_failures": [
+    "tests/lang/mut_dictionary_arguments.my/release/build",
+    "tests/lang/operand_snapshots.my/release/build",
+    "tests/lang/array_negative_index.my/release/build"
+  ],
+  "compiler_source_revision": "245e892f8518943ee44a0cc6009ab4b4fa6bca43",
+  "compiler_sha256": "3e9f7f2cd7e1ff7dc13b342dc812cb64b340cddc02b8b2b4b1ae8008cb203c7c",
+  "boundary_test_file_sha256": "4555b065187eb77ebff18d5b782317a55cb658c23be588ccb142bd0863cd7ad1",
+  "boundary_tests": {
+    "tests": 5,
+    "negative_sources": 9,
+    "positive_source_debug_and_verified": true,
+    "exit": 0
+  },
+  "notes": [
+    "Source sweep and runtime subset are intermediate support2 qualification, not C1.",
+    "Each row keeps exact source/derived hashes; later source fixes do not relabel earlier results.",
+    "All original assertions/test signatures retained; explicit snapshots change the source ownership contract.",
+    "Final complete registered gate, full guest coverage and five-mode final census remain required."
+  ],
+  "guardian_first_attempt": {
+    "failed_checks": [
+      "allocator-hygiene",
+      "debug-print-ban"
+    ],
+    "fixed": "Thread allocator through test helpers and use file-scope report alias; focused five-test suite rerun passed."
+  }
+}

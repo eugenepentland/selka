@@ -82,7 +82,7 @@ public func test_an_enumerate_position_the_body_assigns_does_not_end_the_loop() 
     mut words: str[] = []
     for iteration_position, iteration_word in enumerate(values):
         mut position = iteration_position
-        mut word = iteration_word
+        mut word = iteration_word.copy()
         positions.append(position)
         position = 10
         word = word + "!"
@@ -153,13 +153,13 @@ public func test_element_variables_are_rebound_every_iteration() -> bool:
     mut words = [label(1), label(2), label(3)]
     mut kept: str[] = []
     for iteration_word in words:
-        mut word = iteration_word
+        mut word = iteration_word.copy()
         word = word + "?"
         _ = churn(2)
         kept.append(word)
     mut letters = ""
     for iteration_letter in "abc":
-        mut letter = iteration_letter
+        mut letter = iteration_letter.copy()
         letter = letter + letter
         letters += letter
     mut numbers: FixedArray[i64, 3] = FixedArray[i64, 3]([4, 5, 6])
@@ -180,7 +180,7 @@ public func test_element_variables_are_rebound_every_iteration() -> bool:
 public func test_reversed_and_zip_names_are_rebound() -> bool:
     mut backwards: str[] = []
     for iteration_word in reversed([label(1), label(2), label(3)]):
-        mut word = iteration_word
+        mut word = iteration_word.copy()
         backwards.append(word)
         word = "gone"
         _ = churn(2)
@@ -202,11 +202,11 @@ public func test_dictionary_and_tuple_names_are_rebound() -> bool:
     mut keys = ""
     mut total = 0
     for iteration_key in counts:
-        mut key = iteration_key
+        mut key = iteration_key.copy()
         keys += key
         key = "zz"
     for iteration_name, iteration_count in counts.items():
-        mut name = iteration_name
+        mut name = iteration_name.copy()
         mut count = iteration_count
         total += count
         name = "zz"

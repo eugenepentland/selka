@@ -10,9 +10,9 @@ public func test_a_dict_comprehension_over_a_range() -> bool:
 # spec-case: PY-GATHER-1
 public func test_a_dict_comprehension_over_items_keys_and_values() -> bool:
     mut prices = {"pear": 3, "fig": 5, "kiwi": 2}
-    mut doubled = {name: price * 2 for name, price in prices.items()}
-    mut cheap = {name: price for name, price in prices.items() if price < 4}
-    mut lengths = {name: len(name) for name in prices.keys()}
+    mut doubled = {name.copy(): price * 2 for name, price in prices.items()}
+    mut cheap = {name.copy(): price for name, price in prices.items() if price < 4}
+    mut lengths = {name.copy(): len(name) for name in prices.keys()}
     mut flags = {price: price > 2 for price in prices.values()}
     return doubled["fig"] == 10 and len(cheap) == 2 and "fig" not in cheap and lengths["kiwi"] == 4 and flags[5] and not flags[2]
 
@@ -20,24 +20,24 @@ public func test_a_dict_comprehension_over_items_keys_and_values() -> bool:
 # spec-case: PY-GATHER-1
 public func test_a_dict_comprehension_over_a_list_a_string_and_zip() -> bool:
     mut words = ["a", "bb", "ccc"]
-    mut by_length = {len(w): w for w in words}
-    mut positions = {c: i for i, c in enumerate("abc")}
-    mut paired = {k: v for k, v in zip(["x", "y"], [1, 2])}
+    mut by_length = {len(w): w.copy() for w in words}
+    mut positions = {c.copy(): i for i, c in enumerate("abc")}
+    mut paired = {k.copy(): v for k, v in zip(["x", "y"], [1, 2])}
     return by_length[2] == "bb" and positions["c"] == 2 and paired["y"] == 2
 
 
 # spec-case: PY-GATHER-1
 public func test_a_repeated_key_keeps_its_first_position_and_last_value() -> bool:
-    mut last = {w[0]: w for w in ["apple", "avocado", "banana"]}
+    mut last = {w[0]: w.copy() for w in ["apple", "avocado", "banana"]}
     mut order: str[] = []
     for key in last:
-        order.append(key)
+        order.append(key.copy())
     return last["a"] == "avocado" and order == ["a", "b"]
 
 
 # spec-case: PY-GATHER-1
 public func test_an_annotated_dict_comprehension_takes_its_value_type() -> bool:
-    mut small: dict[str, u8] = {name: 0 for name in ["a", "b"]}
+    mut small: dict[str, u8] = {name.copy(): 0 for name in ["a", "b"]}
     small["a"] = 200
     return int(small["a"]) + int(small["b"]) == 200
 
@@ -62,7 +62,7 @@ public func test_destructuring_loops_and_combined_comprehension_filter() -> bool
     mut names: str[] = []
     for name, price in prices.items():
         if price > 2:
-            names.append(name)
+            names.append(name.copy())
     mut odd_small = [for x in range(20) if (x % 2 == 1) and (x < 7) yield x]
     mut indexed: int[] = []
     for i, v in enumerate([5, 6, 7]):
@@ -85,7 +85,7 @@ public func test_a_filter_narrows_the_option_it_tests() -> bool:
 
 
 func histogram(words: str[]) -> dict[str, int]:
-    return {w: len([for v in words if v == w yield v]) for w in words}
+    return {w.copy(): len([for v in words if v == w yield v.copy()]) for w in words}
 
 
 # spec-case: PY-GATHER-1

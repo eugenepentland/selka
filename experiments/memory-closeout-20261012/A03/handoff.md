@@ -2,7 +2,11 @@
 
 - Base: `fbfcaa7a923186a8e773c3760f81c10aa345a432`.
 - Branch: `codex/memory-closeout-20261012-A03`.
-- Owned files: this directory only; no production changes.
+- Original scope: this directory only. The coordinator subsequently transferred
+  A01's 36 guest fixture reservations and reserved
+  `src/core/a03_migration_boundaries_test.zig`; the coordinator supplied its
+  `src/core/root_test.zig` registration. The exact guest file list is in
+  `guest-migrations/review-identities.json`.
 - Harness commit: `d23f84d0c`; the following evidence/admission commit is the
   current branch head when this handoff is delivered.
 - Implemented: isolated failure-preserving census adapter; 81-case pinned
@@ -27,13 +31,37 @@
 - Scheduling: coordinator-approved leases of at most ten compiler invocations,
   reacquired after 60 seconds at safe boundaries; separate queue-wait receipts.
   SIGUSR1 saves a checkpoint after the active lane. No nested admission.
-- Shared-file requests: none.
+- Shared-file request completed: coordinator added the new boundary-test root.
 - Known limitations: managed counters do not measure RSS/native overhead;
   source checks of the original unmigrated corpus are reported separately.
   LLVM/symbol audit does not replace A07's runtime ABI layout proof.
 
 The final compiler must run all five modes (405 builds / 655 executions) on the
 same 81-case manifest. Per coordinator direction, C0 was measured release-first;
-its result correctly marks `complete_matrix: false`. No remaining production
-defect was observed by A03; the integrated candidate dependency remains open.
+its result correctly marks `complete_matrix: false`. The pinned census found no
+production defect; the expanded guest migration work below found additional
+compiler blockers. The integrated candidate dependency remains open.
 A baseline-only success does not qualify default promotion or legacy retirement.
+
+The transferred migration preserves 356 public test signatures. Explicit source
+copy calls increase from 7 to 250; the migration changes 331 added/286 removed
+lines including comments. This is source migration, not a compiler-only win.
+Nine negative borrow/write cases preserve rejection of former implicit-snapshot
+call windows and mutable iteration; the positive snapshot case executes in
+debug and verified release. Five focused registered tests pass.
+
+Interim support2 (`245e892f8518943ee44a0cc6009ab4b4fa6bca43`, compiler SHA-256
+`3e9f7f2cd7e1ff7dc13b342dc812cb64b340cddc02b8b2b4b1ae8008cb203c7c`) source checks
+admitted 22/36 files, with all 14 failures retained. A later native release subset
+ran 21/24 files /118 Boolean tests successfully with RC0, no managed leaks and
+clean LLVM/symbols. Exact tested sources and receipts are archived in
+`guest-migrations/`; these results do not claim final C1 qualification.
+
+Open production reproducers include nested writes, distinct mutable collection
+places, dictionary-item iteration, fresh-value projections, optional narrowing,
+interior dictionary mutable lowering, and a managed-string destructuring swap
+(A07 and coordinator); aggregate render-helper ownership is assigned to A04.
+The snapshot scalar panic is fixed by the coordinator and awaits fresh recheck.
+See `guest-migrations/README.md` and `qualification.json` for source paths and
+limits. The smallest valid local copy/staging migrations are already applied;
+legitimate in-place operations remain intact for their compiler owners to fix.

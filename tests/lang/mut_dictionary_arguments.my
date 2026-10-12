@@ -7,10 +7,10 @@ func clone_during(mut target: dict[int, int], source: dict[int, dict[int, int]])
 # spec-case: COW-MUT-ARGUMENT-1
 public func test_dictionary_element_argument_keeps_pinned_copy_independent() -> bool:
     mut original = {0: {1: 7}}
-    mut copied = clone_during(mut original[0], original)
+    const source = original.copy()
+    mut copied = clone_during(mut original[0], source)
     mut live = list(copied[0].values())
     copied[0][1] = 13
-    # Readonly argument publication clones the pinned child before the call.
-    # source.copy() then shares that unpinned child; its later mutation detaches,
-    # so the explicit snapshot keeps the earlier child.
+    # The explicit source copy and returned copy own independent children.
+    # Materializing values takes another independent snapshot before mutation.
     return list(live) == [7] and copied[0][1] == 13 and original[0][1] == 7

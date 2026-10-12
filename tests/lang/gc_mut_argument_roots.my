@@ -10,5 +10,6 @@ func replace_first(mut xs: int[][]) -> int:
 
 public func test_snapshot_survives_mut_argument_clone() -> bool:
     mut rows = Rows(items=[[1, 2], [3]], other=[])
-    mut before = len(rows.items[replace_first(mut rows.items)])
+    const receiver = rows.items.copy()
+    mut before = len(receiver[replace_first(mut rows.items)])
     return before == 2 and rows.items == [[42], [3]]

@@ -8,6 +8,7 @@ comptime {
     _ = @import("single_owner_test.zig");
     _ = @import("zero_rc_test.zig");
     _ = @import("a08_zero_rc_test.zig");
+    _ = @import("a03_migration_boundaries_test.zig");
     _ = @import("owned_payload_test.zig");
     _ = @import("owned_record_test.zig");
     _ = @import("zero_rc_task_test.zig");

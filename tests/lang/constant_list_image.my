@@ -3,7 +3,7 @@ func image() -> int[]:
 
 
 func append(mut items: int[]) -> int:
-    mut before = items
+    mut before = items.copy()
     items.append(64)
     return len(before)
 
@@ -11,7 +11,7 @@ func append(mut items: int[]) -> int:
 public func test_constant_list_image_detaches_before_write_and_growth() -> bool:
     mut first = image()
     mut second = image()
-    mut saved = first
+    mut saved = first.copy()
     first[0] = -7
     first.append(64)
     return first[0] == -7 and len(first) == 65 and second[0] == 0 and len(second) == 64 and saved[0] == 0 and len(saved) == 64
@@ -19,7 +19,7 @@ public func test_constant_list_image_detaches_before_write_and_growth() -> bool:
 
 public func test_constant_list_image_mut_parameter_preserves_snapshot() -> bool:
     mut items = image()
-    mut before = items
+    mut before = items.copy()
     mut count = append(mut items)
     return count == 64 and len(items) == 65 and len(before) == 64 and len(image()) == 64
 
@@ -45,11 +45,11 @@ func bytes_image() -> bytes[]:
 
 public func test_immortal_list_elements_detach_and_preserve_empty_values() -> bool:
     mut texts = text_image()
-    mut saved_texts = texts
+    mut saved_texts = texts.copy()
     texts[1] = "changed"
     texts.append("tail")
     mut octets = bytes_image()
-    mut saved_octets = octets
+    mut saved_octets = octets.copy()
     octets[1] = b"changed"
     octets.append(b"tail")
     return (texts[1] == "changed" and len(texts) == 65 and saved_texts[0] == "" and saved_texts[1] == "é😀" and saved_octets[1] == b"\x00\xff" and octets[1] == b"changed" and len(octets) == 65 and bytes_image()[0] == b"")

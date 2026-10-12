@@ -46,7 +46,7 @@ func push(mut xs: int[]) -> int:
 
 func pushed_copy(mut xs: int[]) -> int[]:
     xs.append(9)
-    return xs
+    return xs.copy()
 
 
 func clear0(mut xs: int[]) -> int:
@@ -106,52 +106,52 @@ func arr_touch(mut a: FixedArray[int[], 2]) -> int:
 
 
 func via_value(f: func(int[], int) -> int effects(), mut xs: int[]) -> int:
-    return f(xs, push(mut xs))
+    return f(xs.copy(), push(mut xs))
 
 
 func mut_param_root(mut xs: int[]) -> int:
-    return lst(xs, push(mut xs))
+    return lst(xs.copy(), push(mut xs))
 
 
 # spec: VALUE-SEMANTICS-14
 public func test_call_positional_mut() -> bool:
     mut xs = [1, 2, 3]
-    mut v = lst(xs, push(mut xs))
+    mut v = lst(xs.copy(), push(mut xs))
     return v == 301 and len(xs) == 4
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_call_positional_pop() -> bool:
     mut xs = [1, 2, 3]
-    mut v = lst(xs, xs.pop())
+    mut v = lst(xs.copy(), xs.pop())
     return v == 303 and len(xs) == 2
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_call_positional_clear() -> bool:
     mut xs = [1, 2, 3]
-    mut v = lst(xs, clear0(mut xs))
+    mut v = lst(xs.copy(), clear0(mut xs))
     return v == 300 and len(xs) == 0
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_call_nested_later() -> bool:
     mut xs = [1, 2, 3]
-    mut v = lst(xs, 1 + ident(push(mut xs)))
+    mut v = lst(xs.copy(), 1 + ident(push(mut xs)))
     return v == 302
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_call_three_operands() -> bool:
     mut xs = [1, 2, 3]
-    mut v = lst3(xs, push(mut xs), xs)
+    mut v = lst3(xs.copy(), push(mut xs), xs)
     return v == 30104
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_call_keyword_source_order() -> bool:
     mut xs = [1, 2, 3]
-    mut v = lst(a=xs, b=push(mut xs))
+    mut v = lst(a=xs.copy(), b=push(mut xs))
     return v == 301
 
 
@@ -165,7 +165,7 @@ public func test_call_keyword_reversed() -> bool:
 # spec-case: VALUE-SEMANTICS-14
 public func test_call_module_qualified() -> bool:
     mut xs = [1, 2, 3]
-    mut v = operand_snapshot_helpers.weigh(xs, push(mut xs))
+    mut v = operand_snapshot_helpers.weigh(xs.copy(), push(mut xs))
     return v == 301
 
 
@@ -173,7 +173,7 @@ public func test_call_module_qualified() -> bool:
 public func test_call_function_value() -> bool:
     mut xs = [1, 2, 3]
     mut f = lst
-    mut v = f(xs, push(mut xs))
+    mut v = f(xs.copy(), push(mut xs))
     return v == 301
 
 
@@ -200,7 +200,7 @@ public func test_return_call() -> bool:
 # spec-case: VALUE-SEMANTICS-14
 public func test_call_borrowed_local() -> bool:
     mut xs = [1, 2, 3]
-    mut ys = xs
+    mut ys = xs.copy()
     mut v = lst(ys, push(mut xs))
     return v == 301
 
@@ -208,122 +208,122 @@ public func test_call_borrowed_local() -> bool:
 # spec-case: VALUE-SEMANTICS-14
 public func test_call_field_path_mut_record() -> bool:
     mut h = Holder(items=[1, 2, 3], tag=0)
-    mut v = lst(h.items, grow(mut h))
+    mut v = lst(h.items.copy(), grow(mut h))
     return v == 301
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_call_field_path_mut_field() -> bool:
     mut h = Holder(items=[1, 2, 3], tag=0)
-    mut v = lst(h.items, push(mut h.items))
+    mut v = lst(h.items.copy(), push(mut h.items))
     return v == 301
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_call_field_path_pop() -> bool:
     mut h = Holder(items=[1, 2, 3], tag=0)
-    mut v = lst(h.items, h.items.pop())
+    mut v = lst(h.items.copy(), h.items.pop())
     return v == 303
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_call_record_whole() -> bool:
     mut h = Holder(items=[1, 2, 3], tag=0)
-    mut v = hold(h, grow(mut h))
+    mut v = hold(h.copy(), grow(mut h))
     return v == 301
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_call_record_whole_field_mut() -> bool:
     mut h = Holder(items=[1, 2, 3], tag=0)
-    mut v = hold(h, push(mut h.items))
+    mut v = hold(h.copy(), push(mut h.items))
     return v == 301
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_call_element() -> bool:
     mut grid = [[1, 2, 3]]
-    mut v = lst(grid[0], push(mut grid[0]))
+    mut v = lst(grid[0].copy(), push(mut grid[0]))
     return v == 301
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_call_element_parent_mut() -> bool:
     mut grid = [[1, 2, 3]]
-    mut v = lst(grid[0], push_first(mut grid))
+    mut v = lst(grid[0].copy(), push_first(mut grid))
     return v == 301
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_call_dict() -> bool:
     mut d = {"a": 1}
-    mut v = dl(d, put(mut d))
+    mut v = dl(d.copy(), put(mut d))
     return v == 101
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_call_set() -> bool:
     mut s = {1, 2}
-    mut v = sl(s, add(mut s))
+    mut v = sl(s.copy(), add(mut s))
     return v == 201
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_method_index_receiver() -> bool:
     mut xs = [1, 2, 3]
-    mut v = xs.index(3 * clear0(mut xs) + 3)
+    mut v = xs.copy().index(3 * clear0(mut xs) + 3)
     return v == 2
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_dict_get_receiver() -> bool:
     mut d = {"a": 1}
-    mut v = d.get("z", put(mut d) + 40)
+    mut v = d.copy().get("z", put(mut d) + 40)
     return v == 41
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_eq_operator() -> bool:
     mut xs = [1, 2, 3]
-    return not (xs == pushed_copy(mut xs))
+    return not (xs.copy() == pushed_copy(mut xs))
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_ne_operator() -> bool:
     mut xs = [1, 2, 3]
-    return xs != pushed_copy(mut xs)
+    return xs.copy() != pushed_copy(mut xs)
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_in_operator() -> bool:
     mut xs = [1, 2, 3]
-    return not (xs in [pushed_copy(mut xs)])
+    return not (xs.copy() in [pushed_copy(mut xs)])
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_record_eq_operator() -> bool:
     mut h = Holder(items=[1, 2, 3], tag=0)
-    return h == Holder(items=[1, 2, 3], tag=grow(mut h) - 1) and len(h.items) == 4
+    return h.copy() == Holder(items=[1, 2, 3], tag=grow(mut h) - 1) and len(h.items) == 4
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_fstring() -> bool:
     mut xs = [1, 2, 3]
-    mut text = f"{xs} {push(mut xs)}"
+    mut text = f"{xs.copy()} {push(mut xs)}"
     return text == "[1, 2, 3] 1"
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_record_constructor() -> bool:
     mut xs = [1, 2, 3]
-    mut p = Pair(items=xs, n=push(mut xs))
+    mut p = Pair(items=xs.copy(), n=push(mut xs))
     return len(p.items) == 3
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_record_constructor_keyword() -> bool:
     mut xs = [1, 2, 3]
-    mut p = Pair(items=xs, n=push(mut xs))
+    mut p = Pair(items=xs.copy(), n=push(mut xs))
     return len(p.items) == 3
 
 
@@ -337,7 +337,7 @@ public func test_record_constructor_keyword_reversed() -> bool:
 # spec-case: VALUE-SEMANTICS-14
 public func test_union_constructor() -> bool:
     mut xs = [1, 2, 3]
-    mut s = Slot.pair(value=Pair(items=xs, n=push(mut xs)))
+    mut s = Slot.pair(value=Pair(items=xs.copy(), n=push(mut xs)))
     match s:
         case Slot.pair(value=p):
             return len(p.items) == 3
@@ -348,42 +348,42 @@ public func test_union_constructor() -> bool:
 # spec-case: VALUE-SEMANTICS-14
 public func test_record_update() -> bool:
     mut h = Holder(items=[1, 2, 3], tag=0)
-    mut r = replace(h, tag=grow(mut h))
+    mut r = replace(h.copy(), tag=grow(mut h))
     return len(r.items) == 3 and r.tag == 1
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_list_literal() -> bool:
     mut xs = [1, 2, 3]
-    mut rows = [xs, pushed_copy(mut xs)]
+    mut rows = [xs.copy(), pushed_copy(mut xs)]
     return len(rows[0]) == 3 and len(rows[1]) == 4
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_dict_literal() -> bool:
     mut xs = [1, 2, 3]
-    mut d = {"a": xs, "b": pushed_copy(mut xs)}
+    mut d = {"a": xs.copy(), "b": pushed_copy(mut xs)}
     return len(d["a"]) == 3
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_subscript_receiver() -> bool:
     mut xs = [1, 2, 3]
-    mut v = xs[clear0(mut xs)]
+    mut v = xs.copy()[clear0(mut xs)]
     return v == 1
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_subscript_field_receiver() -> bool:
     mut h = Holder(items=[1, 2, 3], tag=0)
-    mut v = h.items[clear0(mut h.items)]
+    mut v = h.items.copy()[clear0(mut h.items)]
     return v == 1
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_subscript_lent_into_call() -> bool:
     mut grid = [[1, 2, 3]]
-    mut v = lst(grid[0], clear0(mut grid[0]))
+    mut v = lst(grid[0].copy(), clear0(mut grid[0]))
     return v == 300
 
 
@@ -391,7 +391,7 @@ public func test_subscript_lent_into_call() -> bool:
 public func test_zip_sources() -> bool:
     mut xs = [1, 2, 3]
     mut count = 0
-    for a, b in zip(xs, pushed_copy(mut xs)):
+    for a, b in zip(xs.copy(), pushed_copy(mut xs)):
         count += a + b - a - b + 1
     return count == 3
 
@@ -401,21 +401,21 @@ public func test_conditional_operand() -> bool:
     mut xs = [1, 2, 3]
     mut ys = [5]
     mut flag = len(ys) == 1
-    mut v = lst(if (flag) then (xs) else (ys), push(mut xs))
+    mut v = lst(if (flag) then (xs.copy()) else (ys.copy()), push(mut xs))
     return v == 301
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_call_nested_consumer() -> bool:
     mut xs = [1, 2, 3]
-    mut v = lst(xs, lst(xs, push(mut xs)))
+    mut v = lst(xs.copy(), lst(xs.copy(), push(mut xs)))
     return v == 601 and len(xs) == 4
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_call_in_comprehension() -> bool:
     mut xs = [1, 2, 3]
-    mut vs = [for _ in range(2) yield lst(xs, push(mut xs))]
+    mut vs = [for _ in range(2) yield lst(xs.copy(), push(mut xs))]
     return vs[0] == 301 and vs[1] == 401
 
 
@@ -424,28 +424,28 @@ public func test_call_in_loop() -> bool:
     mut xs = [1, 2, 3]
     mut total = 0
     for _ in range(3):
-        total += lst(xs, push(mut xs))
+        total += lst(xs.copy(), push(mut xs))
     return total == 1203
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_call_fixed_array_of_lists() -> bool:
     mut arr: FixedArray[int[], 2] = FixedArray[int[], 2]([[1], [2]])
-    mut v = arr_len(arr, arr_push(mut arr))
+    mut v = arr_len(arr.copy(), arr_push(mut arr))
     return v == 101 and len(arr[0]) == 2
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_call_byte_buffer() -> bool:
     mut b = byte_buffer([1])
-    mut v = bb_len(b, bb_add(mut b))
+    mut v = bb_len(b.copy(), bb_add(mut b))
     return v == 101 and len(b) == 2
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_method_path_receiver() -> bool:
     mut h = Holder(items=[1, 2, 3], tag=0)
-    mut v = h.items.index(3 * clear0(mut h.items) + 3)
+    mut v = h.items.copy().index(3 * clear0(mut h.items) + 3)
     return v == 2 and len(h.items) == 0
 
 
@@ -453,21 +453,23 @@ public func test_method_path_receiver() -> bool:
 public func test_call_keyword_run_list() -> bool:
     mut xs = [1, 2, 3]
     mut ys = [1]
-    mut v = lst3(c=xs, a=ys, b=push(mut xs))
+    mut v = lst3(c=xs.copy(), a=ys, b=push(mut xs))
     return v == 10103
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_call_keyword_run_record() -> bool:
     mut h = Holder(items=[1, 2, 3], tag=0)
-    mut v = hold3(c=h, a=1, b=grow(mut h))
+    mut v = hold3(c=h.copy(), a=1, b=grow(mut h))
     return v == 10103 and len(h.items) == 4
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_fixed_array_index_base() -> bool:
     mut arr: FixedArray[int[], 2] = FixedArray[int[], 2]([[1], [2]])
-    mut v = len(arr[arr_touch(mut arr)])
+    const before = arr.copy()
+    const index = arr_touch(mut arr)
+    mut v = len(before[index])
     return v == 1 and len(arr[0]) == 2
 
 
@@ -478,14 +480,14 @@ func first[T](a: T[], b: int) -> int:
 # spec-case: VALUE-SEMANTICS-14
 public func test_generic_call() -> bool:
     mut xs = [1, 2, 3]
-    mut v = first(xs, push(mut xs))
+    mut v = first(xs.copy(), push(mut xs))
     return v == 301
 
 
 # spec-case: VALUE-SEMANTICS-14
 public func test_builtin_in_later_operand() -> bool:
     mut xs = [3, 1, 2]
-    mut v = lst(xs, len(sorted(pushed_copy(mut xs))))
+    mut v = lst(xs.copy(), len(sorted(pushed_copy(mut xs))))
     return v == 304
 
 
@@ -511,7 +513,7 @@ func bump_first(mut value: dict[str, FixedArray[int[], 1]]) -> int:
 # spec-case: VALUE-SEMANTICS-14
 public func test_a_write_through_a_fixed_array_read_keeps_the_pending_place() -> bool:
     mut original: dict[str, FixedArray[int[], 1]] = {"k": FixedArray[int[], 1]([[1]])}
-    mut changed = original
+    mut changed = original.copy()
     mut mutation_result_528 = bump_first(mut changed)
     changed["k"][mutation_result_528].append(2)
     return original["k"][0] == [1] and changed["k"][0] == [1, 7, 2]

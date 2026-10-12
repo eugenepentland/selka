@@ -20,8 +20,8 @@ enum Choice:
 public func test_record_array_list_and_variant_store_independent_snapshots() -> bool:
     mut mapping = {1: 7}
     mut record = Saved(values=list(mapping.values()))
-    mut array: FixedArray[Saved, 1] = FixedArray[Saved, 1]([record])
-    mut rows = [record]
+    mut array: FixedArray[Saved, 1] = FixedArray[Saved, 1]([record.copy()])
+    mut rows = [record.copy()]
     mut choice = Choice.values(value=list(mapping.values()))
     mapping[1] = 13
     rows[0].values.append(11)

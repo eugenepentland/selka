@@ -39,7 +39,7 @@ func by_value(v: int) -> int effects():
 
 
 func by_name(n: Named) -> str:
-    return n.name
+    return n.name.copy()
 
 
 func ids(entries: Entry[]) -> int[]:

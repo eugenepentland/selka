@@ -10,12 +10,12 @@
 func repeat(letter: str, count: i64) -> str:
     mut parts: str[] = []
     for _ in range(count):
-        parts.append(letter)
+        parts.append(letter.copy())
     return "".join(parts)
 
 
 func bump_by_get(mut counts: dict[i64, i64], key: i64) -> Unit:
-    counts[key] = counts.get(key, 0) + 1
+    counts[key.copy()] = counts.get(key, 0) + 1
 
 
 func bump_by_membership(mut counts: dict[i64, i64], key: i64) -> Unit:
@@ -30,7 +30,7 @@ func bump_by_setdefault(mut counts: dict[i64, i64], key: i64) -> Unit:
 
 
 func bump_text(mut counts: dict[str, i64], key: str) -> Unit:
-    counts[key] = counts.get(key, 0) + 1
+    counts[key.copy()] = counts.get(key, 0) + 1
 
 
 # spec: PY-DICT-3
@@ -76,7 +76,7 @@ public func test_empty_short_long_and_multi_octet_text_keys_each_keep_their_own_
     mut counts: dict[str, i64] = {}
     mut text = ""
     for i in range(70):
-        counts[text] = i
+        counts[text.copy()] = i
         text = text + chr(97 + i % 26)
     if len(counts) != 70:
         return False
@@ -227,7 +227,7 @@ public func test_every_get_then_set_spelling_counts_the_same_for_integer_keys() 
     if total != 3000 or by_get[-50] != 30 or by_get[50] != 30:
         return False
     # The augmented spelling reads and writes one present key.
-    for present in by_membership:
+    for present in list(by_membership.keys()):
         by_membership[present] += 1
     return by_membership[-50] == 31 and by_membership[0] == by_get[0] + 1
 

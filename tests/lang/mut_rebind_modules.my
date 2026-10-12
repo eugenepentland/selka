@@ -5,9 +5,9 @@ public func test_imported_mut_collection_rebinding_preserves_source_snapshots() 
     mut items = [1]
     mut mapping = {1: 1}
     mut flags = {1}
-    mut saved_items = items
-    mut saved_mapping = mapping
-    mut saved_flags = flags
+    mut saved_items = items.copy()
+    mut saved_mapping = mapping.copy()
+    mut saved_flags = flags.copy()
     helpers.replace_list(mut items)
     helpers.replace_dict(mut mapping)
     helpers.replace_set(mut flags)
@@ -18,7 +18,7 @@ public func test_imported_mut_collection_rebinding_preserves_source_snapshots() 
 public func test_imported_function_values_and_direct_calls_share_their_mut_abi() -> bool:
     mut action = helpers.append_only
     mut items = [1]
-    mut saved = items
+    mut saved = items.copy()
     action(mut items)
     helpers.append_only(mut items)
     mut reset = helpers.replace_list

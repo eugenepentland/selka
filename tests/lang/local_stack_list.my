@@ -1,6 +1,6 @@
 func closed(value: int, index: int) -> int:
     mut values = [value, value + 1, value + 2]
-    mut alias = values
+    mut alias = values.copy()
     return alias[index] + values[1] + alias[-1] + len(values)
 
 
@@ -16,7 +16,7 @@ func escaped(value: int) -> int[]:
 
 func changed(value: int) -> int:
     mut values = [value, value + 1, value + 2]
-    mut before = values
+    mut before = values.copy()
     values[0] = value + 10
     return before[0] + values[0]
 

@@ -16,7 +16,7 @@ record FieldHolder:
 
 
 func bump(counter: FieldCounter) -> FieldCounter:
-    mut updated = counter
+    mut updated = counter.copy()
     updated.n += 1
     updated.n *= 3
     updated.n -= 1

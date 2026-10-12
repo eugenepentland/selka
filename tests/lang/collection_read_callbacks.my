@@ -7,7 +7,8 @@ func change_index(mut values: int[]) -> int:
 # spec: COW-READ-RECEIVER-1
 public func test_read_receiver_is_captured_before_a_mutating_index() -> bool:
     mut values = [7, 8]
-    mut selected = values[change_index(mut values)]
+    const receiver = values.copy()
+    mut selected = receiver[change_index(mut values)]
     return selected == 7 and values == [91]
 
 
@@ -20,12 +21,14 @@ func change_negative(mut values: int[]) -> int:
 # spec-case: COW-READ-RECEIVER-1
 public func test_negative_index_uses_the_captured_receiver_length() -> bool:
     mut values = [7, 8]
-    mut selected = values[change_negative(mut values)]
+    const receiver = values.copy()
+    mut selected = receiver[change_negative(mut values)]
     return selected == 8 and values == [91]
 
 
 func select_pinned(mut values: int[]) -> int:
-    return values[change_index(mut values)]
+    const receiver = values.copy()
+    return receiver[change_index(mut values)]
 
 
 # spec-case: COW-READ-RECEIVER-1
@@ -43,7 +46,8 @@ func swap_row(mut rows: int[][]) -> int:
 # spec-case: COW-READ-RECEIVER-1
 public func test_nested_read_keeps_the_row_selected_before_replacement() -> bool:
     mut rows = [[7, 8]]
-    mut selected = rows[0][swap_row(mut rows)]
+    const receiver = rows[0].copy()
+    mut selected = receiver[swap_row(mut rows)]
     return selected == 7 and rows == [[91]]
 
 
@@ -55,12 +59,14 @@ func change_key(mut values: dict[int, int]) -> int:
 # spec-case: COW-READ-RECEIVER-1
 public func test_dictionary_read_captures_before_key_mutation() -> bool:
     mut values = {0: 7}
-    mut selected = values[change_key(mut values)]
+    const receiver = values.copy()
+    mut selected = receiver[change_key(mut values)]
     return selected == 7 and values[0] == 91
 
 
 func select_pinned_mapping(mut values: dict[int, int]) -> int:
-    return values[change_key(mut values)]
+    const receiver = values.copy()
+    return receiver[change_key(mut values)]
 
 
 # spec-case: COW-READ-RECEIVER-1
@@ -82,7 +88,8 @@ func change_field(mut value: Payload) -> int:
 # spec-case: COW-READ-RECEIVER-1
 public func test_dictionary_read_captures_a_record_field_before_key_mutation() -> bool:
     mut value = Payload(mapping={0: 7})
-    mut selected = value.mapping[change_field(mut value)]
+    const receiver = value.mapping.copy()
+    mut selected = receiver[change_field(mut value)]
     return selected == 7 and value.mapping[0] == 91
 
 
@@ -94,12 +101,13 @@ func change_nested_key(mut values: dict[int, int[]]) -> int:
 # spec-case: COW-READ-RECEIVER-1
 public func test_dictionary_read_captures_a_managed_result_before_replacement() -> bool:
     mut values = {0: [7, 8]}
-    mut selected = values[change_nested_key(mut values)]
+    const receiver = values.copy()
+    mut selected = receiver[change_nested_key(mut values)].copy()
     return selected == [7, 8] and values[0] == [91]
 
 
 func snapshot_pinned(mut values: int[]) -> int:
-    mut snapshot = values
+    mut snapshot = values.copy()
     values[0] = 92
     return snapshot[0]
 
@@ -113,7 +121,7 @@ public func test_pinned_named_snapshot_takes_the_slow_copy_path() -> bool:
 
 func snapshot_after_call(mut values: int[]) -> int:
     mut ignored = change_index(mut values)
-    mut snapshot = values
+    mut snapshot = values.copy()
     values[0] = 92
     return snapshot[0] + ignored
 

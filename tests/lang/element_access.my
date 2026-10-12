@@ -20,11 +20,11 @@ public record Outer:
 
 
 func bump(mut cells: Cell[], at: i64, by: i64):
-    cells[at] = Cell(name=cells[at].name, count=cells[at].count + by)
+    cells[at] = Cell(name=cells[at].name.copy(), count=cells[at].count + by)
 
 
 func relabel(mut cells: Cell[], at: i64, name: str):
-    cells[at] = Cell(name=name, count=cells[at].count)
+    cells[at] = Cell(name=name.copy(), count=cells[at].count)
 
 
 func count_at(cells: Cell[], at: i64) -> i64:
@@ -32,13 +32,13 @@ func count_at(cells: Cell[], at: i64) -> i64:
 
 
 func pick(cells: Cell[], at: i64) -> Cell:
-    return cells[at]
+    return cells[at].copy()
 
 
 func find(cells: Cell[], name: str) -> Cell:
     mut i = 0
     while i < len(cells):
-        mut cell = cells[i]
+        mut cell = cells[i].copy()
         if cell.name == name:
             return cell
         i += 1
@@ -50,11 +50,11 @@ func depth_of(outers: Outer[], at: i64) -> i64:
 
 
 func walk(cells: Cell[], at: i64) -> Cell:
-    mut head = cells[at]
+    mut head = cells[at].copy()
     if at + 1 >= len(cells):
-        return Cell(name=head.name, count=head.count)
+        return Cell(name=head.name.copy(), count=head.count)
     mut rest = walk(cells, at + 1)
-    return Cell(name=head.name, count=head.count + rest.count)
+    return Cell(name=head.name.copy(), count=head.count + rest.count)
 
 
 func total(cells: Cell[]) -> i64:
@@ -80,7 +80,7 @@ public func test_record_element_write_replaces_the_whole_element() -> bool:
 
 public func test_element_copy_taken_before_a_write_keeps_its_value() -> bool:
     mut cells = [Cell(name="a", count=1)]
-    mut taken = cells[0]
+    mut taken = cells[0].copy()
     cells[0] = Cell(name="b", count=2)
     return taken.name == "a" and taken.count == 1 and cells[0].name == "b" and cells[0].count == 2
 
@@ -138,7 +138,7 @@ public func test_call_result_local_is_a_value_of_its_own() -> bool:
 
 public func test_call_result_field_read_keeps_the_returned_value() -> bool:
     mut cells = [Cell(name="alpha", count=4)]
-    mut inner = pick(cells, 0).name
+    mut inner = pick(cells, 0).name.copy()
     cells[0] = Cell(name="beta", count=5)
     return inner == "alpha" and pick(cells, 0).name == "beta"
 
@@ -152,7 +152,7 @@ public func test_recursive_helper_returns_independent_records() -> bool:
 
 public func test_borrow_ends_when_the_receiver_is_written() -> bool:
     mut cells = [Cell(name="a", count=1), Cell(name="b", count=2)]
-    mut taken = cells[0]
+    mut taken = cells[0].copy()
     mut i = 0
     while i < 60:
         cells[0] = Cell(name="live", count=i)

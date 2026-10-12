@@ -138,19 +138,19 @@ public func test_repeated_probes_of_one_key_survive_a_shift_between_them() -> bo
     mut seen = counts.get(key, 0)
     counts["k39"] = 39
     _ = counts.pop("k1")
-    counts[key] = seen + 1
+    counts[key.copy()] = seen + 1
     if counts[key] != 8 or len(counts) != 39:
         return False
     mut equal_content = chr(107) + chr(55)
     seen = counts.get(equal_content, 0)
-    counts[equal_content] = seen + 1
+    counts[equal_content.copy()] = seen + 1
     if counts[key] != 9 or len(counts) != 39:
         return False
-    counts[equal_content] = counts.get(equal_content, 0) + 1
+    counts[equal_content.copy()] = counts.get(equal_content, 0) + 1
     if counts[key] != 10:
         return False
     counts.clear()
-    counts[key] = counts.get(key, 0) + 5
+    counts[key.copy()] = counts.get(key, 0) + 5
     if counts[key] != 5 or len(counts) != 1 or "k0" in counts:
         return False
     return True
