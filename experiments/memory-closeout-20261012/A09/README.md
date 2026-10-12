@@ -93,3 +93,11 @@ calibrate short runtime cases; run the full two-warmup/nine-pair runtime compari
 combine A03/A06/A08 evidence on that exact candidate; repeat affected measurements
 after default promotion and retirement. Earlier artifacts will not be relabeled
 as C1, C2 or C3 results. The prepared harness and baseline do not close those items.
+
+The [one-shot workload pilot](raw/workload-pilot.json) is solely for input sizing.
+It identifies short record/application/cheap-map cases needing more work.
+Expensive-map prototype samples were slower, but allowing all hybrid P/E cores
+is a material confound, especially at one worker. Final paired runs must pin
+comparable core topology and investigate any repeatable slowdown above 5%.
+A cancellation attempt did not prevent this already scripted pilot from running;
+the schedule and handoff reflect its actual completion.

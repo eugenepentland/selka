@@ -85,8 +85,16 @@ The broad-noise buffer median triggers review but does not establish a repeatabl
 regression; the list-capacity edit does not change the byte-buffer growth path.
 See `README.md` and machine-readable `results.json` for scope and precise metrics.
 
-An A01 prototype map binary was built only for future workload calibration.
-Optional calibration was stopped before admission (only a queued no-op barrier
-was canceled), to prioritize the coordinator's installed-component defect fix.
-No active compilation or measurement was interrupted and no data was lost.
-A09 has no timing lease while that critical fix is underway.
+An A01 prototype map binary was built only for workload calibration. An attempted
+cancellation of the queued no-op barrier did not prevent the shell's subsequent
+pilot command: it later admitted and completed all 21 one-shot rows. The earlier
+statement that calibration never ran was incorrect. `raw/workload-pilot.json`
+preserves those actual observations as calibration only, not paired performance
+results. No compilation was interrupted and no data was lost. No A09 timing lease
+or request remains while the coordinator's critical component fix is underway.
+
+The pilot identifies record unpack and several applications as too short, and
+prototype cheap-map cases need more repetitions. Expensive-map one-shot timings
+are slower in the prototype, but unrestricted hybrid P/E CPU selection is a
+material confound. Final qualification will pin the same comparable CPU topology
+on both arms and use the required alternating pairs before interpreting it.

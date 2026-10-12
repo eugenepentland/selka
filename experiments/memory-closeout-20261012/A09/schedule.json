@@ -78,6 +78,16 @@
       "raw_path": "experiments/memory-closeout-20261012/A09/raw/capacity-reserved-long.json",
       "status": "complete2warmup+9measured alternating pairs;200repeats",
       "scope": "C0 native-policy experiment; not integrated compiler"
+    },
+    {
+      "owner": "A09",
+      "id": "runtime-input-pilot",
+      "status": "complete21one-shotchecks after attempted no-op cancellation did not stop subsequent command",
+      "raw_path": "A09/raw/workload-pilot.json",
+      "scope": "input calibration only; no paired performance result",
+      "timing_admission_ticket": 13,
+      "queue_wait_s": 20,
+      "elapsed_s_approx": 7
     }
   ]
 }
