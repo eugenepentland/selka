@@ -1,0 +1,13 @@
+record Counter:
+    items: int[]
+    number: int
+func replace_items(mut counter: Counter) -> int[]:
+    counter.items = [50]
+    counter.number = 7
+    return [2]
+func main() -> int:
+    mut c = Counter(items=[1], number=1)
+    mut added = replace_items(mut c)
+    c.items.extend(added)
+    assert c.items == [50, 2] and c.number == 7
+    return 0

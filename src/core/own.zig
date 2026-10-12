@@ -1613,13 +1613,19 @@ fn mergeable(arena: std.mem.Allocator, f: *const ir.Function, group: ReadGroup, 
 ///   the write-back of a call with a result and `mut` parameters (or of its inlined body).
 fn takeFields(arena: std.mem.Allocator, module: *const ir.Module, f: *const ir.Function, marks: *Marks) Error!void {
     const graph = try UseGraph.of(arena, f);
-    for (f.insts.items, 0..) |record, i| {
+    var pending: std.ArrayList(ir.Ref) = .empty;
+    const queued = try arena.alloc(bool, f.insts.items.len);
+    @memset(queued, false);
+    const ctx: Taking = .{ .arena = arena, .module = module, .f = f, .graph = graph, .marks = marks, .pending = &pending, .queued = queued };
+    // Inlining can append a producer after its users in instruction storage. Seed
+    // owners once, then visit newly transferred aggregates as their reads gain ownership.
+    for (0..f.insts.items.len) |i| try ctx.enqueue(@fromBackingInt(@intCast(i)));
+    var next: usize = 0;
+    while (next < pending.items.len) : (next += 1) {
+        const ref = pending.items[next];
+        const i = ref.index();
+        const record = f.inst(ref);
         const kind = module.kind(record.ty);
-        if ((kind != .record and kind != .array) or !module.managed(record.ty)) continue;
-        if (marks.borrowed_selection.contains(@intCast(i))) continue;
-        if (!ownedRecord(module, f, record) and !marks.owned_get.contains(@intCast(i))) continue;
-        const ref: ir.Ref = @fromBackingInt(@intCast(i));
-        const ctx: Taking = .{ .arena = arena, .module = module, .f = f, .graph = graph, .marks = marks };
         if (kind == .array) {
             for (graph.uses[i].items) |user| {
                 const inst = f.inst(user);
@@ -1680,6 +1686,26 @@ const Taking = struct {
     f: *const ir.Function,
     graph: UseGraph,
     marks: *Marks,
+    pending: *std.ArrayList(ir.Ref),
+    queued: []bool,
+
+    /// An aggregate enters the worklist at most once, only after the existing
+    /// ownership and borrowed-selection checks admit it.
+    fn enqueue(self: Taking, ref: ir.Ref) Error!void {
+        if (self.queued[ref.index()]) return;
+        const record = self.f.inst(ref);
+        const kind = self.module.kind(record.ty);
+        if ((kind != .record and kind != .array) or !self.module.managed(record.ty)) return;
+        if (self.marks.borrowed_selection.contains(@backingInt(ref))) return;
+        if (!ownedRecord(self.module, self.f, record) and !self.marks.owned_get.contains(@backingInt(ref))) return;
+        try self.pending.append(self.arena, ref);
+        self.queued[ref.index()] = true;
+    }
+
+    fn markOwned(self: Taking, ref: ir.Ref) Error!void {
+        try self.marks.owned_get.put(self.arena, @backingInt(ref), {});
+        try self.enqueue(ref);
+    }
 
     /// `g = record_get(r, f)` then `update = record_set(r, f, v)`: `g` owns the field (the
     /// record's reference goes to it, and the set drops nothing) when it is the last read
@@ -1713,7 +1739,7 @@ const Taking = struct {
             if (self.borrowsFirst(record, get, user)) continue;
             return;
         }
-        try self.marks.owned_get.put(self.arena, @backingInt(get), {});
+        try self.markOwned(get);
         try self.marks.taken.put(self.arena, @backingInt(update), {});
     }
 
@@ -1734,7 +1760,7 @@ const Taking = struct {
             if (arrayIndex(f, index, f.inst(get).b) != .same) continue;
             if (!try self.takes(get, update, reads.items, def)) continue;
             if (!try self.arrayWindow(array, get, update, def)) continue;
-            try self.marks.owned_get.put(self.arena, @backingInt(get), {});
+            try self.markOwned(get);
             try self.marks.taken.put(self.arena, @backingInt(update), {});
             return;
         }
@@ -1785,7 +1811,7 @@ const Taking = struct {
             for (reads.items) |get| {
                 if (!try self.takes(get, update, reads.items, def_block)) continue;
                 if (!try self.clearThrough(.{ .earlier = earlier, .get = get, .update = update, .chain = chain[0..len] })) continue;
-                try self.marks.owned_get.put(self.arena, @backingInt(get), {});
+                try self.markOwned(get);
                 try self.marks.taken.put(self.arena, @backingInt(update), {});
                 return;
             }
@@ -1943,7 +1969,7 @@ const Taking = struct {
             if (self.module.managed(field) and n != 1) return;
         }
         for (self.graph.uses[record.index()].items) |user| {
-            if (self.module.managed(f.inst(user).ty)) try self.marks.owned_get.put(self.arena, @backingInt(user), {});
+            if (self.module.managed(f.inst(user).ty)) try self.markOwned(user);
         }
         try self.marks.emptied.put(self.arena, @backingInt(record), {});
     }

@@ -8,6 +8,15 @@ record AugmentedParent:
     rows: AugmentedOwner[]
     mapping: dict[int, AugmentedOwner]
 
+record InlinedCounter:
+    items: int[]
+    number: int
+
+func replace_counter_items(mut counter: InlinedCounter) -> int[]:
+    counter.items = [50]
+    counter.number = 7
+    return [2]
+
 func owner(seed: int) -> AugmentedOwner:
     return AugmentedOwner(items=["item-" + str(seed)], label="label-" + str(seed))
 
@@ -60,5 +69,15 @@ func main(args: str[], out: Stream) -> int:
     parent.rows.clear()
     assert independent == ["item-1", "extra-2"]
     assert parent.child.label == "label-0" and before.rows[0].label == "label-1"
+    # Inlining appends the result/writeback aggregate after its earlier-numbered
+    # projections. Ownership must propagate through both levels of those reads.
+    mut counter = InlinedCounter(items=[1], number=1)
+    mut added = replace_counter_items(mut counter)
+    counter.items += added
+    assert counter.items == [50, 2] and counter.number == 7
+    mut method_counter = InlinedCounter(items=[3], number=2)
+    mut method_added = replace_counter_items(mut method_counter)
+    method_counter.items.extend(method_added)
+    assert method_counter.items == [50, 2] and method_counter.number == 7
     out.print("field augmented preserved")
     return 0

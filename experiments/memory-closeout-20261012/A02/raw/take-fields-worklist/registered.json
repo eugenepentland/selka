@@ -1,0 +1,56 @@
+{
+  "base": "b6c480392732fcae8d0e67a071bea36a9e75ab77",
+  "source_sha256": {
+    "src/core/own.zig": "3d841ed9d39ef7a0aa5f42e4512854a96f09dda93342da1eab109fa6be38935a",
+    "src/core/build_list_methods.zig": "f8730a5d4a2e43ea65fe1ee1fd3b993e76392e99ba83fac8d1e323f16f3cb9c2",
+    "src/sema_places.zig": "ffbc3805c220fa45d89f5f9b1cf2de65178c8d7c48f20cec055f911206edda5e",
+    "src/core/a02_field_augmented_test.zig": "1b7310db0225a006433132a542f92e50021d078df3070c03b810589343caa25e",
+    "src/core/a02_field_augmented_fixture.my": "da351d33d68af6252a90fd3fe43fedcfa4dce8417d0a1203eb68a5a7cbcfacc4",
+    "src/core/root_test.zig": "65e958519bb7a3e5862dca5a1020e29b1eb646c2edbb7ed4286a5c6e451a21bf"
+  },
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "components": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/install/libexec/mylang/components",
+  "component_boundary": "Support6 independent owned pin supplies components; final default/retirement package qualification is separate",
+  "steps": [
+    {
+      "name": "build",
+      "argv": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "build",
+        "core-test-binary",
+        "-Dtest-filter=zero RC A02 field augmentation",
+        "-j4",
+        "--maxrss",
+        "8589934592",
+        "--prefix",
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/take-fields-worklist/install",
+        "-Dcomponent-owned-compiler-pin=/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+        "-Dcomponent-seed-source=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar"
+      ],
+      "status": 0,
+      "elapsed_admitted_seconds": 4.5905128470622,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "name": "test",
+      "argv": [
+        "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.tmp/memory-closeout/A02/take-fields-worklist/install/focus/core-tests",
+        "--guardian-filter=zero RC A02 field augmentation"
+      ],
+      "status": 0,
+      "elapsed_admitted_seconds": 2.520589595893398,
+      "stdout": "",
+      "stderr": "guardian/test: 2 test(s) selected by filter: \"zero RC A02 field augmentation\"\nAll 2 tests passed.\nguardian/test: test wall 2.51s; slowest over 50ms:\nguardian/test:   2.49s  a02_field_augmented_test.test.zero RC A02 field augmentation preserves receiver ownership after out-of-order inlining\nguardian/test: PASS \u2014 2 passed\nguardian/test: RESULT {\"passed\":2,\"failed\":0,\"skipped\":0}\n"
+    }
+  ],
+  "complete": true,
+  "compiler": {
+    "path": ".zig-cache/o/996ba6e9ee40f947c47a9f97fbc2ef69/mylang",
+    "sha256": "e3c9738d5bb63cfd1560cfbfe0873ee252dec1f1c8e6824b4ff8e0a6455a8b54",
+    "options": "/home/epentland/ai/canopy/mylang-memory-20261012-A02-validation/.zig-cache/o/02e0f01cb4af1ffe1ddfc60505cac574/options.zig"
+  },
+  "test_binary_sha256": "27be41a60d33c4929f8f3f0cc496417874cd84fa74f2a3fea8db5491c4207b84",
+  "pass": true
+}

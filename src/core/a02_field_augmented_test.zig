@@ -5,7 +5,7 @@ const zero = @import("zero_rc.zig");
 const fixture = @embedFile("a02_field_augmented_fixture.my");
 
 // spec-case: AUGMENTED-FIELD-1
-test "zero RC A02 field augmentation preserves exact receiver ownership" {
+test "zero RC A02 field augmentation preserves receiver ownership after out-of-order inlining" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
