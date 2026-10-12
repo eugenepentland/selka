@@ -1,0 +1,110 @@
+{
+  "C0": "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+  "origin": "git@github.com:eugenepentland/selka.git",
+  "base_ancestors_verified": [
+    "fbfcaa7a923186a8e773c3760f81c10aa345a432",
+    "441a96465"
+  ],
+  "source_line": "origin/development",
+  "initial_checkout_preserved": "/home/epentland/ai/canopy/mylang",
+  "integration": "/home/epentland/ai/canopy/mylang-memory-20261012",
+  "slots": {
+    "agents": 11,
+    "workers": 10,
+    "build": 1,
+    "gate": 1,
+    "jobs": 4,
+    "maxrss": 8589934592,
+    "directory": "/home/epentland/.cache/mylang/slots"
+  },
+  "host": {
+    "platform": "Linux-7.0.0-31-generic-x86_64-with-glibc2.43",
+    "allowed_cpus": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19
+    ]
+  },
+  "zig": {
+    "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "version": "0.17.0-dev.1683+5ceec001b",
+    "sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+  },
+  "guardian_commit": "ae1ae2899cc60b575e9e1b9212d73eddf9e2df72",
+  "workers": [
+    {
+      "id": "A01",
+      "worktree": "/home/epentland/ai/canopy/mylang-memory-20261012-A01",
+      "branch": "codex/memory-closeout-20261012-A01"
+    },
+    {
+      "id": "A02",
+      "worktree": "/home/epentland/ai/canopy/mylang-memory-20261012-A02",
+      "branch": "codex/memory-closeout-20261012-A02"
+    },
+    {
+      "id": "A03",
+      "worktree": "/home/epentland/ai/canopy/mylang-memory-20261012-A03",
+      "branch": "codex/memory-closeout-20261012-A03"
+    },
+    {
+      "id": "A04",
+      "worktree": "/home/epentland/ai/canopy/mylang-memory-20261012-A04",
+      "branch": "codex/memory-closeout-20261012-A04"
+    },
+    {
+      "id": "A05",
+      "worktree": "/home/epentland/ai/canopy/mylang-memory-20261012-A05",
+      "branch": "codex/memory-closeout-20261012-A05"
+    },
+    {
+      "id": "A06",
+      "worktree": "/home/epentland/ai/canopy/mylang-memory-20261012-A06",
+      "branch": "codex/memory-closeout-20261012-A06"
+    },
+    {
+      "id": "A07",
+      "worktree": "/home/epentland/ai/canopy/mylang-memory-20261012-A07",
+      "branch": "codex/memory-closeout-20261012-A07"
+    },
+    {
+      "id": "A08",
+      "worktree": "/home/epentland/ai/canopy/mylang-memory-20261012-A08",
+      "branch": "codex/memory-closeout-20261012-A08"
+    },
+    {
+      "id": "A09",
+      "worktree": "/home/epentland/ai/canopy/mylang-memory-20261012-A09",
+      "branch": "codex/memory-closeout-20261012-A09"
+    },
+    {
+      "id": "A10",
+      "worktree": "/home/epentland/ai/canopy/mylang-memory-20261012-A10",
+      "branch": "codex/memory-closeout-20261012-A10"
+    }
+  ],
+  "admission_update": {
+    "build_slots": 2,
+    "reason": "18 GiB available; observed lightweight active build processes and documented historical ~3 GiB ReleaseFast peak support conservative two-slot trial. 16-second sample is not a full-run peak.",
+    "jobs": 4,
+    "maxrss": 8589934592,
+    "evidence": "A09/build-memory-observation.json"
+  }
+}
