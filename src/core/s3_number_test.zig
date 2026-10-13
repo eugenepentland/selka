@@ -56,13 +56,13 @@ test "S3 numeric text and S4 nested values match at every core level" {
         var directory = std.testing.tmpDir(.{});
         defer directory.cleanup();
         const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
-        var environment = try std.testing.environ.createMap(a);
+        var environment = try options.privateEnvironment(a);
         try environment.put("MYL_CORE_LEAKCHECK", "1");
         const one = "1 passed";
         const fixtures = [_][]const u8{ "n_float_text.my", "b_buffer_values.my", "b_packet_decode.my", "n_scalar_parse_abi.my", "v_buffer_format.my", "v_dynamic_repeat.my", "v_nested_places.my", "v_nested_lengths.my" };
         for (fixtures, [_][]const u8{ "3 passed", "2 passed", one, "2 passed", one, one, one, one }) |fixture, expected| {
             var argv: std.ArrayList([]const u8) = .empty;
-            try argv.appendSlice(a, &.{ options.core_path, "test", try std.fs.path.join(a, &.{ options.fixtures, fixture }), "--cache-dir", root });
+            try argv.appendSlice(a, &.{ options.corePath(), "test", try std.fs.path.join(a, &.{ options.fixtures, fixture }), "--cache-dir", root });
             try argv.appendSlice(a, flags);
             const result = try std.process.run(a, std.testing.io, .{ .argv = argv.items, .environ_map = &environment });
             if (result.term != .exited or result.term.exited != 0) {

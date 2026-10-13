@@ -68,6 +68,10 @@ class ProducerTests(unittest.TestCase):
                 self.assertEqual(identity['mode'], mode)
         self.assertEqual(self.record['producers']['tooling-units']['mode'], 'debug')
 
+    def test_reviewed_closure_accepts_version_three_inventory_only(self):
+        self.assertEqual(self.qualify(dict(self.record, version=3)), self.qualify())
+        self.assertIsNone(self.qualify(dict(self.record, version=4)))
+
     def test_independent_compiler_edit_preserves_identity(self):
         before = self.qualify()
         (self.root / 'src/compiler.zig').write_text('unrelated compiler change')
@@ -183,17 +187,38 @@ class ProducerTests(unittest.TestCase):
         root.write_text(root.read_text() + '\nconst extra = @embedFile("new_oracle.txt");')
         self.assertIsNone(producers.producer_metadata(self.root, 'text-scalar-units', self.artifact, 'Debug'))
 
-    def test_writer_atomic_v2_inventory_and_invalid_labels(self):
+    def test_writer_atomic_v3_inventory_and_invalid_labels(self):
         output = self.root / 'artifacts.json'
         result = subprocess.run([sys.executable, str(ROOT / 'scripts/verification_artifacts.py'),
                                  str(output), '--qualify', 'tooling-units', 'Debug',
                                  'tooling-units', str(self.artifact)], cwd=self.root, capture_output=True)
         self.assertEqual(result.returncode, 0, result.stderr.decode())
         record = json.loads(output.read_text())
-        self.assertEqual(record['version'], 2)
+        self.assertEqual(record['version'], 3)
+        self.assertIsInstance(record['artifacts']['tooling-units'], str)
         self.assertIsNotNone(self.qualify(record))
         with self.assertRaises(SystemExit):
             verification_artifacts.main([str(output), 'bad', str(self.artifact), 'bad', str(self.artifact)])
+        self.assertEqual(json.loads(output.read_text()), record)
+
+    def test_writer_records_producer_recipes_for_exactly_the_artifacts(self):
+        output, recipes = self.root / 'artifacts.json', self.root / 'recipes.json'
+        producer = {'recipes': ['build.zig', 'src/'], 'optimize': 'Debug', 'zig_version': '0.17.0',
+                    'test_runner': {'kind': 'guardian', 'dependency': 'guardian', 'location': '../guardian-zig',
+                                    'runner': 'src/test_runner.zig'}}
+        recipes.write_text(json.dumps([{'label': 'units', 'producer': producer}]))
+        verification_artifacts.main([str(output), '--producers', str(recipes), 'units', str(self.artifact)])
+        record = json.loads(output.read_text())
+        self.assertEqual(record['version'], 3)
+        self.assertEqual(record['artifacts'], {'units': {'path': str(self.artifact.resolve()), 'producer': producer}})
+        self.assertEqual(record['producers'], {})
+        with self.assertRaises(SystemExit):
+            verification_artifacts.main([str(output), '--producers', str(recipes), 'cli', str(self.artifact)])
+        for change in ({'recipes': []}, {'recipes': ['src/', 'src/']}, {'recipes': ['/abs/src/']},
+                       {'optimize': ''}, {'test_runner': None}, {'extra': 1}):
+            recipes.write_text(json.dumps([{'label': 'units', 'producer': dict(producer, **change)}]))
+            with self.subTest(change=change), self.assertRaises(SystemExit):
+                verification_artifacts.main([str(output), '--producers', str(recipes), 'units', str(self.artifact)])
         self.assertEqual(json.loads(output.read_text()), record)
 
     def test_publication_mutation_cannot_publish_success_from_manifest_alone(self):
@@ -203,6 +228,81 @@ class ProducerTests(unittest.TestCase):
         self.assertIsNotNone(identity)
         self.artifact.write_bytes(b'replaced before publication')
         self.assertFalse(all(snapshot.unchanged() for snapshot in (binary, sources)))
+
+
+
+class NativeProducerTests(unittest.TestCase):
+    """Version-3 recipe producers for the native roots (mylang, units, core, cli)."""
+
+    PRODUCER = {'recipes': ['src/', 'build.zig'], 'optimize': 'Debug', 'zig_version': '0.16.0',
+                'test_runner': 'guardian-zig-test-runner-v1'}
+
+    def record(self, entry=None, producers=None):
+        entry = {'path': '/abs/units', 'producer': copy.deepcopy(self.PRODUCER)} if entry is None else entry
+        return {'version': 3, 'artifacts': {'units': entry}, 'producers': producers or {}}
+
+    def test_declared_beside_the_artifact_or_in_producers(self):
+        self.assertEqual(producers.native_producer(self.record(), 'units'), (self.PRODUCER, ''))
+        listed = self.record('/abs/units', {'units': copy.deepcopy(self.PRODUCER)})
+        self.assertEqual(producers.native_producer(listed, 'units'), (self.PRODUCER, ''))
+        twice = self.record(producers={'units': copy.deepcopy(self.PRODUCER)})
+        self.assertEqual(producers.native_producer(twice, 'units'), (None, 'producer declared twice'))
+
+    def test_missing_or_malformed_producers_fall_back(self):
+        self.assertEqual(producers.native_producer(dict(self.record(), version=2), 'units')[0], None)
+        self.assertEqual(producers.native_producer(self.record('/abs/units'), 'units'), (None, 'no producer declared'))
+        # A reviewed closure in producers (no recipes) is not a native producer.
+        closure = self.record('/abs/units', {'units': {'version': 2, 'label': 'units'}})
+        self.assertEqual(producers.native_producer(closure, 'units'), (None, 'no producer declared'))
+        for change in ({'recipes': []}, {'recipes': ['/abs/src/']}, {'recipes': ['src/', 'src/']},
+                       {'recipes': 'src/'}, {'optimize': ''}, {'zig_version': None}, {'test_runner': ''},
+                       {'extra': 1}):
+            producer = dict(self.PRODUCER, **change)
+            with self.subTest(change=change):
+                found, reason = producers.native_producer(self.record({'path': '/abs/units', 'producer': producer}), 'units')
+                self.assertIsNone(found)
+                self.assertTrue(reason)
+        without = {name: value for name, value in self.PRODUCER.items() if name != 'test_runner'}
+        self.assertIsNone(producers.native_producer(self.record({'path': '/abs/units', 'producer': without}), 'units')[0])
+
+    def files(self, root):
+        return {'src/': [{'path': 'src/a.zig', 'sha256': 'a' * 64, 'size': 1, 'mode': 0o644, 'uid': root, 'gid': root}],
+                'build.zig': [{'path': 'build.zig', 'sha256': 'b' * 64, 'size': 2, 'mode': 0o644, 'uid': root, 'gid': root}]}
+
+    def test_identity_binds_content_and_producer_fields_but_no_location_or_owner(self):
+        first = producers.native_identity('units', self.PRODUCER, self.files(1).__getitem__)
+        self.assertEqual(first, producers.native_identity('units', self.PRODUCER, self.files(2).__getitem__))
+        self.assertEqual([row['path'] for row in first['sources']], ['build.zig', 'src/a.zig'])
+        self.assertNotIn('uid', first['sources'][0])
+        for change in ({'optimize': 'ReleaseFast'}, {'zig_version': '0.17.0'}, {'test_runner': 'other'}):
+            with self.subTest(change=change):
+                self.assertNotEqual(producers.native_identity('units', dict(self.PRODUCER, **change),
+                                                              self.files(1).__getitem__), first)
+        changed = self.files(1)
+        changed['src/'][0]['sha256'] = 'c' * 64
+        self.assertNotEqual(producers.native_identity('units', self.PRODUCER, changed.__getitem__), first)
+
+    def test_components_producer_binds_the_seed_pin_and_component_sources(self):
+        producer = {'recipes': ['./*.zig', 'selfhost/*.zig', 'selfhost/components/', 'selfhost/component-seed.json'],
+                    'optimize': 'debug', 'zig_version': '0.17.0', 'test_runner': {'kind': 'none'}}
+        record = {'version': 3, 'producers': {},
+                  'artifacts': {'components': {'path': '/abs/components/test-index.json', 'producer': producer}}}
+        self.assertEqual(producers.native_producer(record, 'components'), (producer, ''))
+        def row(path, digest):
+            return {'path': path, 'sha256': digest * 64, 'size': 1, 'mode': 0o644}
+        files = {'./*.zig': [row('build.zig', 'a')], 'selfhost/*.zig': [row('selfhost/components.zig', 'b')],
+                 'selfhost/components/': [row('selfhost/components/test_index/main.my', 'c')],
+                 'selfhost/component-seed.json': [row('selfhost/component-seed.json', 'd')]}
+        first = producers.native_identity('components', producer, files.__getitem__)
+        self.assertEqual(len(first['sources']), 4)
+        files['selfhost/component-seed.json'] = [row('selfhost/component-seed.json', 'e')]
+        self.assertNotEqual(producers.native_identity('components', producer, files.__getitem__), first)
+
+    def test_a_recipe_selecting_nothing_is_an_error_not_an_empty_identity(self):
+        selections = dict(self.files(1), **{'build.zig': []})
+        with self.assertRaisesRegex(producers.ProducerError, 'selects no watched input: build.zig'):
+            producers.native_identity('units', self.PRODUCER, selections.__getitem__)
+
 
 
 if __name__ == '__main__':

@@ -147,6 +147,14 @@ build admission when needed. Valid unchanged preparation skips that admission.
 It then checks each registered action's inputs and successful receipt outside
 the gate slot. Missing and freshness-required actions share one normal FIFO
 gate invocation, retaining the build graph's dependency and memory scheduling.
+Once the gate slot is granted and the inputs are revalidated, the coordinator
+looks every missing action's key up again and reuses a success another request
+published while this one queued; the gate command then names only what is still
+missing, and a request whose every action was published meanwhile releases the
+slot without running anything. `reuse_lookups` in `last-run.json` counts the
+reuses found before the queue (`pre_queue`) and after admission
+(`post_admission`). A request does not wait for work another request is still
+running: an action that is unpublished when this request is admitted executes here.
 New unregistered checks force execution of the original complete gate.
 
 Optional admitted-command deadlines, advisory loop targets, bounded logs and
@@ -155,8 +163,15 @@ dependency explanations are described in [development loop measurements](develop
 The output distinguishes `reused`, `execute`, and `fresh`. Guardian, git-history
 checks, input-coverage membership checks, generated-output validation, and guest suites with execution-time effect
 decisions remain fresh. Guest suites retain their compiler-managed per-test
-receipts; fact/leak runs preserve their existing modes. `--force` discards prior
-action evidence and executes the full inventory. Filtered and explicit
+receipts (both receipt tiers of [guest tests](guest-tests.md#reusing-unaffected-results),
+so an unchanged request executes no guest test); fact/leak runs keep receipts
+under their own modes. `--force` discards prior action evidence and executes the
+full inventory. `--dry-run` prepares, computes every action key and reuse verdict,
+writes them with the full `common` identity to
+`.mylang-cache/verification-v3/dry-run.json` and runs no gate; comparing two
+worktrees' exports shows whether they would share evidence. `--integration` is the integration gate: the complete request,
+then one forced fact/leak run and a shared-store mismatch check
+([integration gate](development-loop.md#integration-gate)). Filtered and explicit
 `-Dtest-rerun=true` requests cannot supply ordinary full-gate receipts.
 
 Keys include declared file membership/content, native artifacts, toolchain and
@@ -170,7 +185,11 @@ empty templates; Python user-site loading and timestamp-bytecode reads are
 disabled. Shell startup hooks and exported Bash functions are removed, and PATH
 contains only the absolute, existing directories covered by the tool watches.
 These normalized
-settings are also the settings executed by workers.
+settings are also the settings executed by workers. Workers receive the launcher
+environment projected through the [environment identity contract](environment-identity.md)
+(keyed, host and placement variables only), and the key holds its host-scope
+digest and no checkout path, so another agent's session variables or a different
+`TMPDIR` share every receipt ([receipt identities](development-loop.md#receipt-identities-schema-3)).
 
 Reviewed cohorts can declare their own prepared artifact dependencies. A pure
 script check need not repeat because an unrelated native executable changed;
@@ -181,7 +200,7 @@ and the complete artifact snapshot remains watched through publication. The
 input-coverage checker stays fresh because it probes whether source-named paths
 exist, including paths outside its explicit source list.
 
-Evidence lives in `.mylang-cache/verification-v2/`. `last-run.json` records every
+Evidence lives in `.mylang-cache/verification-v3/`. `last-run.json` records every
 required cohort, the verdict, elapsed time, and admitted build/gate seconds.
 These durations include admission validation and are operational observations,
 not isolated performance benchmarks. Admission events separate wait/startup,
@@ -255,7 +274,20 @@ Developer verification, fuzz and Juice coordinators can share exact evidence
 through `--shared-cache-dir DIR`, separate from their private worktree caches.
 Use a dedicated directory outside checkouts. The shared store has process leases,
 retention pins and an explicit collector; see [cache retention](cache-retention.md).
-Path-sensitive action identities remain distinct across worktrees.
+The verification coordinator also reads `MYLANG_VERIFICATION_SHARED_CACHE` and has
+a per-user default that stays off until the rollout flips `DEFAULT_SHARING`
+([default store](cache-retention.md#the-verification-coordinators-default-store)).
+Its action keys hold no checkout path and ignore per-worktree placement such as
+`ZIG_LOCAL_CACHE_DIR` and `TMPDIR`; actions that depend on a native executable
+still identified by its bytes (whose debug information names the checkout) stay
+distinct across worktrees, and `last-run.json` marks them `path_free: false`.
+
+On the shared development machine, `source ~/.config/mylang/dev-env.sh` in the
+worktree sets all of this: the pinned Zig, the worktree's own
+`ZIG_LOCAL_CACHE_DIR` (`<worktree>/.zig-cache`) and `TMPDIR`
+(`<worktree>/.tmp/work`), and `MYLANG_SLOT_DIR=~/.cache/mylang/slots`, the one
+admission directory every agent shares. Elsewhere, set the two directories
+yourself:
 
 ```bash
 export ZIG_LOCAL_CACHE_DIR=$HOME/.cache/mylang/zig-local-cache-<lane>
@@ -263,8 +295,16 @@ export TMPDIR=$HOME/.cache/mylang-tmp/<lane>
 mkdir -p "$TMPDIR"
 ```
 
-- **One `ZIG_LOCAL_CACHE_DIR` per worktree.** Zig's configure cache ignores the
-  build root, so two trees sharing one cache once embedded the wrong runtime.
+- **One `ZIG_LOCAL_CACHE_DIR` per worktree.** The configure phase records the
+  build root's real path (`build_identity.zig`), so two trees sharing one cache
+  once embedded the wrong runtime.
+- **Test steps see a projected environment.** Every command `zig build` wraps
+  (test roots, shards, Python and guest drivers) runs through `build-env
+  project`, which passes only the keyed, host and placement variables of
+  `src/environment_identity.zon`; session variables such as `CODEX_THREAD_ID`,
+  `TERM` or `PWD` never reach a test and never invalidate a cached verdict.
+  A test that needs a new variable must have it classified first
+  ([environment identity](environment-identity.md#in-the-build-graph)).
 - **`TMPDIR` on disk, not the `/tmp` tmpfs.** `/tmp` has a per-user quota. When
   other sessions filled it, every command that writes scratch under `TMPDIR`
   failed with `DiskQuota`.

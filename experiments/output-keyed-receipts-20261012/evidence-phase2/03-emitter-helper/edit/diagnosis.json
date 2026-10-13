@@ -1,0 +1,9 @@
+{
+ "harness_note": "First phase-2 run invalid: Guardian (change-classification) refused to install the edited compiler and the harness used the stale one; the second run's edit (emit_text_split.zig) reached no tests/lang program and its key comparison used warm IR hits that carry no execution_key. Harness fixed (affected-compiler, dict_new edit, cold-run keys); the third run is the result.",
+ "observed": {
+  "changed_execution_keys": 624,
+  "executed": 621,
+  "mismatched": 0,
+  "verdict_differences_vs_force": 0
+ }
+}

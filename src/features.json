@@ -89,7 +89,7 @@
     },
     "affected-native-test-result-reuse": {
       "kind": "tooling",
-      "summary": "A native test run reuses receipts for cases whose sources and compiler identity did not change.",
+      "summary": "A native test run reuses receipts for cases whose sources and compiler identity did not change, and, after a compiler edit, for cases whose linked program and test runner did not change.",
       "doc": "docs/tooling/guest-tests.md#reusing-unaffected-results"
     },
     "shared-project-test-results": {
@@ -741,6 +741,41 @@
       "kind": "tooling",
       "summary": "A warm unchanged test run checks the project through the shared query cache and replays result receipts keyed by each test's Core IR before passes, so looking up a cached test emits and links no code.",
       "doc": "docs/tooling/guest-tests.md#reusing-unaffected-results"
+    },
+    "program-keyed-test-receipts": {
+      "kind": "tooling",
+      "summary": "After a compiler edit that leaves a test's linked program and the test runner unchanged, `mylang test` reports the test `cached` with `exec-receipt-hit` or `whole-exec-receipt-hit` and runs no trial; `--json` counts the tier as `exec_receipts {hits, saves}` and names each test's `cache.execution_key`.",
+      "doc": "docs/tooling/guest-tests.md#reusing-unaffected-results"
+    },
+    "fact-and-leak-test-receipts": {
+      "kind": "tooling",
+      "summary": "`--release --verify-facts` and `MYL_CORE_LEAKCHECK=1` runs keep receipts keyed on their mode, so a repeat of either is reused and neither reuses the other's.",
+      "doc": "docs/tooling/guest-tests.md#reusing-unaffected-results"
+    },
+    "root-relative-test-identities": {
+      "kind": "tooling",
+      "summary": "Test receipt keys name the entry, cases file and configuration relative to the project root, so one project checked out at two paths keys its IR receipts alike.",
+      "doc": "docs/tooling/guest-tests.md#reusing-unaffected-results"
+    },
+    "build-env-projection": {
+      "kind": "tooling",
+      "summary": "The build graph's `build-env` tool keys a cached test verdict on the keyed environment and runs the test command with only keyed, host and placement variables, so session variables never reach a test or invalidate its verdict.",
+      "doc": "docs/tooling/environment-identity.md#in-the-build-graph"
+    },
+    "shared-store-mismatch-counter": {
+      "kind": "tooling",
+      "summary": "A shared store record that holds different bytes under the same key is a miss: the build keeps its own output, publishes nothing, appends one line to the namespace's `mismatches.log` and counts `shared_mismatches` in `cache-report-v1`.",
+      "doc": "docs/tooling/native-build.md#shared-compiler-artifacts"
+    },
+    "path-free-verification-receipts": {
+      "kind": "tooling",
+      "summary": "Complete-verification action keys hold no checkout path and only the keyed and host environment, and identify native executables by their producer recipes, so two worktrees at one commit share every receipt; `last-run.json` reports `path_free` and `environment_variables` per action.",
+      "doc": "docs/tooling/development-loop.md#receipt-identities-schema-3"
+    },
+    "verification-integration-gate": {
+      "kind": "tooling",
+      "summary": "`verify_cache.py --integration` runs the complete verification, then one forced fact/leak run of the language suites, and fails with status 5 when a shared store it used logged a determinism mismatch.",
+      "doc": "docs/tooling/development-loop.md#integration-gate"
     },
     "selected-test-providers": {
       "kind": "tooling",

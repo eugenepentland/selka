@@ -118,7 +118,8 @@ zig-out/bin/mylang test path/to/main.my --cases cases.json --json
 
 Exported `test_` functions run as native code, each test in a fresh process under
 step, frame, byte and time budgets. Passed tests whose program (keyed by its Core
-IR) and settings are unchanged replay their receipts; `--force` reruns them, and
+IR, or after a compiler edit by the linked program and the test runner) and
+settings are unchanged replay their receipts; `--force` reruns them, and
 `--affected --against REF` runs only the tests an edit can reach. See
 [guest tests](docs/tooling/guest-tests.md).
 

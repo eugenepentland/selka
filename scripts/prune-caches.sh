@@ -25,6 +25,15 @@
 #   evidence Versioned evidence stores have leases and retention pins. They are
 #         collected explicitly with scripts/cache_retention.py. Never remove a
 #         worktree's whole .mylang-cache: it can contain protected evidence.
+#   shared The optional shared compiler-artifact and native test-receipt stores
+#         ($MYLANG_COMPILER_SHARED_CACHE and $MYLANG_TEST_SHARED_CACHE when set,
+#         else the defaults $XDG_CACHE_HOME/mylang/compiler-artifacts and
+#         .../native-tests, else the same under ~/.cache/mylang) are collected
+#         only by their own collector, `mylang cache gc --kind compiler|tests`,
+#         which honours their leases and LRU budgets and skips a busy store. This
+#         script runs it (a preview unless --apply) for each root holding an
+#         initialized v2 namespace, using --mylang PATH or the `mylang` on PATH,
+#         and touches nothing else in those stores.
 #   core  In every worktree that is not idle, `.mylang-cache/core` loses linked
 #         programs (`programs-v1`), `--link` objects (`foreign-v1`) and replay
 #         records (`replay-v1`) unread for --store-days, and staging directories
@@ -57,6 +66,8 @@ usage: scripts/prune-caches.sh [--apply] [--repo DIR] [--idle-days N] [--cap-gb 
   --include-primary  also prune the primary worktree
   --store-days N     store/core rules: unread for N days (default 14)
   --store-cap-gb N   store rule: per-user object store cap in GiB (default 10)
+  --mylang PATH      shared rule: the compiler whose `cache gc` collects the
+                     shared stores (default: `mylang` on PATH; skipped if none)
 USAGE
 }
 
@@ -69,6 +80,7 @@ include_primary=0
 store_days=14
 store_cap_gb=10
 excludes=()
+mylang_bin="$(command -v mylang 2>/dev/null || true)"
 while [ $# -gt 0 ]; do
     case "$1" in
         --apply) apply=1 ;;
@@ -80,6 +92,7 @@ while [ $# -gt 0 ]; do
         --include-primary) include_primary=1 ;;
         --store-days) store_days="$2"; shift ;;
         --store-cap-gb) store_cap_gb="$2"; shift ;;
+        --mylang) mylang_bin="$2"; shift ;;
         -h|--help) usage; exit 0 ;;
         *) usage >&2; exit 2 ;;
     esac
@@ -312,6 +325,30 @@ if [ -z "${MYLANG_CORE_RUNTIME_CACHE+set}" ]; then
     esac
 fi
 if [ -n "$store_root" ]; then prune_store "$store_root"; fi
+
+# One shared store, through its own lease-aware collector. An explicitly empty
+# variable disables that store; an unset one names its default root.
+collect_shared() {
+    local kind="$1" variable="$2" leaf="$3" namespace="$4" root report
+    root="${!variable-}"
+    if [ -z "${!variable+set}" ]; then
+        case "${XDG_CACHE_HOME:-}" in
+            /*) root="$XDG_CACHE_HOME/mylang/$leaf" ;;
+            *) if [ -n "${HOME:-}" ]; then root="$HOME/.cache/mylang/$leaf"; fi ;;
+        esac
+    fi
+    if [ -z "$root" ] || [ ! -f "$root/$namespace/format" ]; then return 0; fi
+    if [ -z "$mylang_bin" ]; then
+        echo "skipped   $root/$namespace  (shared store; pass --mylang PATH to collect it)"
+        return 0
+    fi
+    local args=(cache gc --shared-cache-dir "$root" --kind "$kind")
+    if [ "$apply" = 1 ]; then args+=(--apply); fi
+    report="$("$mylang_bin" "${args[@]}" 2>&1 | tr '\n' ' ')"
+    echo "shared    $root/$namespace  ($report)"
+}
+collect_shared compiler MYLANG_COMPILER_SHARED_CACHE compiler-artifacts compiler-artifacts-v2
+collect_shared tests MYLANG_TEST_SHARED_CACHE native-tests native-tests-v2
 
 primary=""
 while IFS= read -r line; do

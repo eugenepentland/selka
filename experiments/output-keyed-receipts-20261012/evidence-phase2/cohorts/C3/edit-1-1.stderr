@@ -1,0 +1,1416 @@
+build-slot: timing slot 1, FIFO ticket 717 after 0s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: diff-scoped vs 4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9: 76/693 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 3 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 1551 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9, 76 file(s) in scope
+Build Summary: 38/38 steps succeeded
+verification-prepare success
++- install success
+|  +- install mylang success
+|  |  +- compile exe mylang debug native success 7s MaxRSS:554M
+|  |  |  +- run exe build-identity (build_identity) success 82ms
+|  |  |  |  +- compile exe build-identity debug native cached 10ms MaxRSS:41M
+|  |  |  +- WriteFile cached
+|  |  |  +- compile obj juice_bytes_hash fast native cached 7ms MaxRSS:42M
+|  |  |  +- compile obj juice_bytes_hash fast native (reused)
+|  |  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 10ms MaxRSS:41M
+|  |  +- verification action guardian member 2 success 1s
+|  |     +- guardian-selfcheck success
+|  |        +- verification action guardian member 1 success 6ms
+|  +- install generated to selka-components cached
+|  |  +- compile exe selka-components safe native cached 11ms MaxRSS:42M
+|  +- verification action component-preparation member 0 success 684ms
+|  |  +- compile exe selka-components safe native (reused)
+|  +- verification action guardian member 2 (+1 more reused dependencies)
++- install generated to bin/mylang success
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- install generated to bin/units success
+|  +- compile test debug native success 5s MaxRSS:446M
+|     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+|     +- options cached
++- install generated to bin/tooling-units cached
+|  +- compile test tooling-unit-tests debug native cached 10ms MaxRSS:41M
++- install generated to bin/text-scalar-units cached
+|  +- compile test text-scalar-unit-tests debug native cached 9ms MaxRSS:41M
++- install generated to bin/cli cached
+|  +- compile test debug native cached 12ms MaxRSS:41M
+|     +- options cached
++- install generated to bin/core success
+|  +- compile test debug native success 7s MaxRSS:571M
+|     +- WriteFile (reused)
+|     +- compile obj juice_bytes_hash fast native (reused)
+|     +- compile obj juice_bytes_hash fast native (reused)
+|     +- run exe build-identity (build_identity) (+1 more reused dependencies)
+|     +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
++- install generated to bin/golden cached
+|  +- compile test debug native cached 10ms MaxRSS:41M
+|     +- options (reused)
++- install generated to bin/memory-budget cached
+|  +- compile test debug native cached 10ms MaxRSS:39M
++- install generated to bin/component-support cached
+|  +- compile test debug native cached 9ms MaxRSS:39M
++- install generated to bin/component-builder cached
+|  +- compile exe selka-components safe native (reused)
++- install generated to artifacts.json success
+   +- run python3 (artifacts.json) success 463ms
+      +- WriteFile artifact-producers.json cached
+      +- compile exe mylang debug native (+5 more reused dependencies)
+      +- compile test debug native (+2 more reused dependencies)
+      +- compile test tooling-unit-tests debug native (reused)
+      +- compile test text-scalar-unit-tests debug native (reused)
+      +- compile test debug native (+1 more reused dependencies)
+      +- compile test debug native (+5 more reused dependencies)
+      +- compile test debug native (+1 more reused dependencies)
+      +- compile test debug native (reused)
+      +- compile test debug native (reused)
+      +- compile exe selka-components safe native (reused)
+      +- verification action component-preparation member 0 (+1 more reused dependencies)
+
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: diff-scoped vs 4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9: 76/693 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 3 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 1551 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9, 76 file(s) in scope
+guardian: diff-scoped vs 4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9: 76/693 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 3 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 1551 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9, 76 file(s) in scope
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 0.239s
+
+OK
+verification-noalloc_lint
++- verification action noalloc_lint member 0 w
+noalloc lint: 14 live sources pass lint --gate; no unwaived allocation violations
+failed command: cd . && sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 scripts/check_noalloc.py --compiler ./zig-out/bin/mylang
+
+verification-verification_session
++- verification action verification_session member 0 w
+...............
+----------------------------------------------------------------------
+Ran 15 tests in 1.758s
+
+OK
+failed command: cd . && sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 scripts/cache_session_test.py
+
+verification-my_format
++- verification action my_format member 0 w
+.my format: 841 checked, 204 deliberate exclusions, 0 failures; experiments/ is historical and outside the live roots
+failed command: cd . && sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 scripts/check_my_format.py --compiler ./zig-out/bin/mylang
+
+verification-doctest
++- verification action doctest member 0 w
+  docs/audits/agent-usefulness-reports/baseline-2026-09-20.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: Historical pre-redesign syntax retained as audit evidence.
+  docs/audits/agent-usefulness-reports/interface-facts.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: Historical pre-redesign syntax retained as audit evidence.
+  docs/audits/agent-usefulness-reports/invoke-callee-selection.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: Historical pre-redesign syntax retained as audit evidence.
+  docs/audits/agent-usefulness-reports/typed-holes.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: Historical pre-redesign syntax retained as audit evidence.
+  docs/audits/concurrency-plan-2026-10-08.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: proposed P2 guest API; P1 implements the runtime only
+  docs/audits/d9-record-field-snapshots-2026-09-27.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: Historical pre-redesign syntax retained as audit evidence.
+  docs/audits/devspeed-collections-fidelity-2026-09-24.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: Historical pre-redesign syntax retained as audit evidence.
+  docs/audits/frontend-syntax-redesign-2026-10-09.md: 0 run, 6 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: frontend syntax and illustrative HTTP library proposal
+  docs/audits/interfaces-and-agent-development-2026-09-15.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: Historical pre-redesign syntax retained as audit evidence.
+  docs/audits/language-level-ssa-2026-09-19.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: Historical pre-redesign syntax retained as audit evidence.
+  docs/audits/language-simplicity-2026-09-12.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: removed feature
+  docs/audits/llvm-backend-qualification-2026-09-20.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: Historical pre-redesign syntax retained as audit evidence.
+  docs/audits/phase2-dir-notes.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: Historical pre-redesign syntax retained as audit evidence.
+  docs/audits/wave1-notes.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: Historical pre-redesign syntax retained as audit evidence.
+  docs/audits/wave2-notes.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: Historical pre-redesign syntax retained as audit evidence.
+  docs/audits/wave4-notes.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: Historical pre-redesign syntax retained as audit evidence.
+  docs/bytes.md: 15 run, 2 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/c-ffi.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/const-length-generics.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/contracts.md: 4 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/diagnostic-recovery.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/domains.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/effects.md: 9 run, 8 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/arrays.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/callbacks.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/doc-examples.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/module-discovery.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: fragment: header excerpt whose imported modules are not shown
+  docs/experiments/module-interfaces.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: fragment: the imported `shared.units` module is not shown
+  docs/experiments/nominal-template-checks.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/resource-io.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/source-codecs.md: 0 run, 0 checked, 1 skipped, 0 mis-tagged, 0 failed
+      skip: fragment: statements without the Positive domain and Wire declarations
+  docs/experiments/source-resources.md: 0 run, 2 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/structural-constraints.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/tables.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/unit-procedures.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/experiments/variants.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/floating-point.md: 6 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/functions.md: 13 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/generic-inference.md: 2 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/generics.md: 5 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/integer-operations.md: 5 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/io.md: 9 run, 7 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/lambdas.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/managed-memory.md: 12 run, 2 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/match-expressions.md: 1 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/module-constants.md: 3 run, 2 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/modules.md: 5 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/named-constraints-proposal.md: 0 run, 2 checked, 4 skipped, 0 mis-tagged, 0 failed
+      skip: proposed named-constraint syntax
+      skip: proposed named-constraint syntax
+      skip: proposed named-constraint syntax; contracts.my
+      skip: proposed named-constraint syntax; checkout.my
+  docs/performance.md: 6 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/plan.md: 2 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/primer.md: 7 run, 2 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/python-syntax.md: 16 run, 7 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/python-text-surface.md: 4 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/range-iteration.md: 3 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/records-and-unions.md: 14 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/reference.md: 6 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/results-and-options.md: 11 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/sets.md: 4 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/source-evaluation.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/standard-library.md: 23 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/standard-time-random.md: 3 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/statements.md: 6 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/structured-loop-exits.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/text.md: 10 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/tooling/guest-tests.md: 1 run, 2 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/tooling/import-policy.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/tooling/ownership.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/tooling/packages.md: 1 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/tooling/runtime-budgets.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/tuples.md: 4 run, 0 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/type-aliases.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/typed-holes.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/typed-json.md: 0 run, 1 checked, 0 skipped, 0 mis-tagged, 0 failed
+  docs/value-semantics.md: 8 run, 4 checked, 0 skipped, 0 mis-tagged, 0 failed
+Doc examples: 799 files scanned, 1179 blocks found, 230 run, 62 checked, 23 skipped, 0 mis-tagged, 0 failed
+failed command: cd . && sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver ./zig-out/bin/mylang doctest .
+
+verification-application_cache
++- verification action application_cache member 0 w
+{"complete": true, "calls": 12, "crashes": 1}
+failed command: cd . && sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 tests/application_cache.py --smoke --compiler ./zig-out/bin/mylang
+
+verification-core
++- verification action core member 2 w
+guardian/test: 131 test(s) selected [shard 2/8 of 1044]
+guardian/test: SLOW  6.63s  compiler_shared_cache_test.test.shared compiler artifacts restore frontend bodies and linked programs across independent roots
+error: cache-plan component: ComponentDigest
+guardian/test: test wall 55.44s; slowest over 50ms:
+guardian/test:   6.63s  compiler_shared_cache_test.test.shared compiler artifacts restore frontend bodies and linked programs across independent roots
+guardian/test:   4.55s  rows_test.test.the S1 row programs that build give the original benchmarks' checksums, and the built count does not shrink
+guardian/test:   4.17s  share_walk_test.test.share traversal matches destruction for every block kind and a hundred thousand levels
+guardian/test:   3.71s  runtime_threads_test.test.runtime threads preserve exact live counts at quiescent mid-flight and retirement checkpoints
+guardian/test:   3.62s  shared_counts_test.test.shared counts saturate permanently, update atomically and free shared children iteratively
+guardian/test:   2.96s  runner_property_campaign_test.test.indexed property campaign missing and corrupted prefix records fall back and repair
+guardian/test:   2.02s  cli_flags_test.test.default optimized debug aliases reuse caches while unoptimized and release stay distinct
+guardian/test:   1.58s  test_runner_project_test.test.localReplay invalidates provider edits and explicit expectations in successful test receipts
+guardian/test:   1.57s  u1_state_test.test.hoisted tests keep every answer: aliases made, kept or dropped in the loop, rows, rebinding, control flow, calls, text, dictionaries, buffers
+guardian/test:   1.36s  u1_state_test.test.appends with the length in slots keep every answer: exits, nested loops, managed elements, buffers, calls, traps
+guardian/test: PASS — 131 passed
+guardian/test: RESULT {"passed":131,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id core --member 2 --root-id src/core/root_test.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/3ed0600ce50070a366b914a15628e26a/test --guardian-shard=2/8 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+verification-core
++- verification action core member 0 w
+guardian/test: 131 test(s) selected [shard 0/8 of 1044]
+guardian/test: SLOW  8.12s  task_scheduler_test.test.scheduler runs million-submit deep nested and own-deque waits at 1 2 8 threads and prohibits fork
+guardian/test: SLOW  8.44s  runtime_threads_test.test.runtime threads report the worker stack floor on its alternate signal stack
+warning: shared compiler cache /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/tmp/NjlL_XwdSEdiIPI-/.cache/mylang/compiler-artifacts: WriteFailed; sharing disabled
+error: shared compiler cache: WriteFailed
+error: shared compiler cache: WriteFailed
+guardian/test: SLOW  6.95s  compiler_shared_cache_test.test.shared compiler artifacts honor opt out no-cache and verification suppression
+guardian/test: test wall 58.70s; slowest over 50ms:
+guardian/test:   8.44s  runtime_threads_test.test.runtime threads report the worker stack floor on its alternate signal stack
+guardian/test:   8.12s  task_scheduler_test.test.scheduler runs million-submit deep nested and own-deque waits at 1 2 8 threads and prohibits fork
+guardian/test:   6.95s  compiler_shared_cache_test.test.shared compiler artifacts honor opt out no-cache and verification suppression
+guardian/test:   3.11s  runner_property_campaign_test.test.indexed property campaign discard and refill matches the forced ordinal oracle
+guardian/test:   2.43s  test_runner_test.test.allocation warnings survive cold file and directory replay with a planner-only identity change
+guardian/test:   2.37s  test_runner_portable_test.test.portable shared receipts honor configuration and cases before trusting a foreign success
+guardian/test:   2.25s  ce2_results_test.test.results, arguments and pushes in place keep value semantics, debug, release and verify, leak-free
+guardian/test:   2.04s  test_runner_project_test.test.sharedKeys: a program's whole-file receipt alone replays every test, and an edit reruns only the tests that reach it
+guardian/test:   2.03s  s3_none_keys_test.test.None dictionary keys preserve evaluation storage hashing mutation snapshots and exact missing-key traps
+guardian/test:   1.71s  u1_state_test.test.a large byte buffer grows with realloc, and every append, reserve and shared append keeps its answer
+guardian/test: PASS — 131 passed
+guardian/test: RESULT {"passed":131,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id core --member 0 --root-id src/core/root_test.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/3ed0600ce50070a366b914a15628e26a/test --guardian-shard=0/8 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+verification-core
++- verification action core member 5 w
+guardian/test: 130 test(s) selected [shard 5/8 of 1044]
+guardian/test: SLOW  6.65s  runtime_threads_test.test.runtime threads aggregate counted allocations and cross-thread frees after worker retirement
+guardian/test: SLOW  7.47s  driver_cache_test.test.a cold build compiles the runtime without debug info, cache-line aligned, and links the prebuilt number object
+guardian/test: SLOW  10.16s  stage_store_test.test.stage store automatic sealing propagates allocation failure without losing published records
+guardian/test: SLOW  5.98s  compiler_shared_cache_test.test.shared compiler artifacts invalidate same-size embedded bytes and preserve exact path literals
+guardian/test: SLOW  11.80s  row_cow_test.test.every aliased-row shape prints the same at debug, release and verify-facts with no leak
+guardian/test: SLOW  8.45s  s3_number_test.test.S3 numeric text and S4 nested values match at every core level
+guardian/test: test wall 92.00s; slowest over 50ms:
+guardian/test:   11.80s  row_cow_test.test.every aliased-row shape prints the same at debug, release and verify-facts with no leak
+guardian/test:   10.16s  stage_store_test.test.stage store automatic sealing propagates allocation failure without losing published records
+guardian/test:   8.45s  s3_number_test.test.S3 numeric text and S4 nested values match at every core level
+guardian/test:   7.47s  driver_cache_test.test.a cold build compiles the runtime without debug info, cache-line aligned, and links the prebuilt number object
+guardian/test:   6.65s  runtime_threads_test.test.runtime threads aggregate counted allocations and cross-thread frees after worker retirement
+guardian/test:   5.98s  compiler_shared_cache_test.test.shared compiler artifacts invalidate same-size embedded bytes and preserve exact path literals
+guardian/test:   4.93s  shared_counts_test.test.shared count source guard permits only typed helper and initialization accesses
+guardian/test:   2.51s  own_test.test.the allocator reuses a freed small block for its class, fills small lists to their class and keeps the live count exact
+guardian/test:   1.94s  ce2_effects_test.test.an in-place update of one field goes ahead while a view of a disjoint field is live, across a call that writes only other fields
+guardian/test:   1.75s  u1_state_test.test.promoted record state keeps every answer: calls that read or write it, copies, break, continue, early return, traps
+guardian/test: PASS — 130 passed
+guardian/test: RESULT {"passed":130,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id core --member 5 --root-id src/core/root_test.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/3ed0600ce50070a366b914a15628e26a/test --guardian-shard=5/8 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+verification-core
++- verification action core member 7 w
+guardian/test: 130 test(s) selected [shard 7/8 of 1044]
+guardian/test: SLOW  6.13s  runtime_threads_test.test.runtime threads fall back to raw fatal output when another thread holds the stream lock
+guardian/test: SLOW  7.47s  driver_cache_test.test.verify-cache recompiles served units, damaged entries are rebuilt, and forged ones are refused
+guardian/test: SLOW  5.37s  test_runner_portable_test.test.portable shared receipts bind mode settings and keyed environment while force facts leak and no-cache execute
+guardian/test: SLOW  6.59s  compiler_shared_cache_test.test.shared compiler artifacts reject corruption and partial publication before verified refill
+guardian/test: SLOW  35.10s  conformance_test.test.the pinned S1 and Wave A conformance list passes at debug and release
+guardian/test: test wall 94.72s; slowest over 50ms:
+guardian/test:   35.10s  conformance_test.test.the pinned S1 and Wave A conformance list passes at debug and release
+guardian/test:   7.47s  driver_cache_test.test.verify-cache recompiles served units, damaged entries are rebuilt, and forged ones are refused
+guardian/test:   6.59s  compiler_shared_cache_test.test.shared compiler artifacts reject corruption and partial publication before verified refill
+guardian/test:   6.13s  runtime_threads_test.test.runtime threads fall back to raw fatal output when another thread holds the stream lock
+guardian/test:   5.37s  test_runner_portable_test.test.portable shared receipts bind mode settings and keyed environment while force facts leak and no-cache execute
+guardian/test:   2.19s  runner_property_campaign_test.test.indexed property campaign extends 32 to 64 after coarse receipts are deleted
+guardian/test:   1.95s  e2e_test.test.the S0 compute kernels give the old core's checksums at 4096 and 64 elements, debug and release
+guardian/test:   1.81s  test_runner_project_test.test.directory receipts account for orphan libraries and rerun only the edited reachable program
+guardian/test:   1.68s  u2_test.test.U2 generated release preserves nested union arms aliases and dictionary snapshots
+guardian/test:   1.62s  test_runner_test.test.bindPlan and sharedKeys ComponentUnavailable prevent warm file and directory replay with changed missing or corrupt cache planner
+guardian/test: PASS — 130 passed
+guardian/test: RESULT {"passed":130,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id core --member 7 --root-id src/core/root_test.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/3ed0600ce50070a366b914a15628e26a/test --guardian-shard=7/8 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+verification-core
++- verification action core member 4 w
+guardian/test: 130 test(s) selected [shard 4/8 of 1044]
+guardian/test: SLOW  5.23s  zero_rc_task_test.test.zero RC task captures and results are free from ThreadSanitizer reports
+guardian/test: SLOW  8.14s  runtime_threads_test.test.runtime threads isolate allocator traces and signal stacks and serialize providers and large print units
+guardian/test: SLOW  6.62s  driver_handles_test.test.native artifact handles verify objects recover LLVM and honor verify cache
+guardian/test: SLOW  6.59s  driver_cache_test.test.an unchanged build replays, a lost record reuses every object and the program, and an edit compiles one unit
+guardian/test: SLOW  6.54s  compiler_shared_cache_test.test.shared compiler artifacts bind native mode environment and enforce fresh project configuration
+guardian/test: test wall 68.24s; slowest over 50ms:
+guardian/test:   8.14s  runtime_threads_test.test.runtime threads isolate allocator traces and signal stacks and serialize providers and large print units
+guardian/test:   6.62s  driver_handles_test.test.native artifact handles verify objects recover LLVM and honor verify cache
+guardian/test:   6.59s  driver_cache_test.test.an unchanged build replays, a lost record reuses every object and the program, and an edit compiles one unit
+guardian/test:   6.54s  compiler_shared_cache_test.test.shared compiler artifacts bind native mode environment and enforce fresh project configuration
+guardian/test:   5.23s  zero_rc_task_test.test.zero RC task captures and results are free from ThreadSanitizer reports
+guardian/test:   3.55s  u2_test.test.U2 mixed generated and legacy layouts free shared deep chains iteratively
+guardian/test:   2.89s  test_runner_project_test.test.a directory run that checks its roots together in process reports what one child per root reports
+guardian/test:   2.37s  task_ir_test.test.emitted range tasks have no ThreadSanitizer reports
+guardian/test:   1.54s  tool_identity.test.approvedRuntime refuses substitution of each runtime input and unknown preload
+guardian/test:   1.37s  test_runner_portable_test.test.portable shared receipt Store.hit corruption misses and refills verified successes
+guardian/test: PASS — 130 passed
+guardian/test: RESULT {"passed":130,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id core --member 4 --root-id src/core/root_test.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/3ed0600ce50070a366b914a15628e26a/test --guardian-shard=4/8 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+verification-core
++- verification action core member 6 w
+guardian/test: 130 test(s) selected [shard 6/8 of 1044]
+guardian/test: SLOW  5.17s  runtime_threads_test.test.runtime threads report one fatal winner without entering locked IO cleanup
+guardian/test: SLOW  6.56s  compiler_shared_cache_test.test.shared compiler artifacts preserve receiving diagnostic and trap paths
+warning: shared test cache /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/tmp/bsnzZPJMuNd1Otq3/.cache/mylang/native-tests: WriteFailed; sharing disabled
+guardian/test: SLOW  5.13s  own_test.test.every test/core program ends with no block live under MYL_CORE_LEAKCHECK=1, debug and release
+guardian/test: test wall 60.62s; slowest over 50ms:
+guardian/test:   6.56s  compiler_shared_cache_test.test.shared compiler artifacts preserve receiving diagnostic and trap paths
+guardian/test:   5.17s  runtime_threads_test.test.runtime threads report one fatal winner without entering locked IO cleanup
+guardian/test:   5.13s  own_test.test.every test/core program ends with no block live under MYL_CORE_LEAKCHECK=1, debug and release
+guardian/test:   4.56s  value_e2e_test.test.the value fixtures end with no block live under MYL_CORE_LEAKCHECK=1, debug and release
+guardian/test:   3.18s  shared_counts_test.test.zero RC runtime ABI has no count member and forbids legacy helpers
+guardian/test:   2.72s  f2_index_test.test.F2 index: dominating checks keep every answer and trap where they must: a pop between reads, a field written between reads, a shorter list
+guardian/test:   2.63s  test_runner_portable_test.test.portable shared receipts cross roots and sharedKeys invalidate only reachable dependency edits
+guardian/test:   2.46s  ce_lists_test.test.a store into a field of a list element is one in-place field store after the list's uniqueness test
+guardian/test:   2.42s  zero_rc_task_test.test.zero RC source map borrows inputs until joining and owns each result
+guardian/test:   2.36s  test_runner_test.test.cache planner cacheExplanation reuses unrelated tests after a helper edit and explains current invocation
+guardian/test: PASS — 130 passed
+guardian/test: RESULT {"passed":130,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id core --member 6 --root-id src/core/root_test.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/3ed0600ce50070a366b914a15628e26a/test --guardian-shard=6/8 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+verification-core
++- verification action core member 1 w
+guardian/test: 131 test(s) selected [shard 1/8 of 1044]
+guardian/test: SLOW  12.00s  task_scheduler_test.test.native scheduler million-submit stress has no ThreadSanitizer reports at eight threads
+error: shared compiler cache: WriteFailed
+guardian/test: SLOW  6.74s  driver_native_cache_test.test.linkNative observes same-size foreign header edits with restored mtime in actual debug and release Core builds
+guardian/test: SLOW  5.52s  test_runner_test.test.sharedFacts eagerFacts and deriveLegacy qualify reference shadow and component modes with callback constants and discovery edits
+no_such_file_in_tests_lang (debug): mylang-core test did not finish cleanly:
+mylang test: cannot read 'tests/lang/no_such_file_in_tests_lang.my': no such file or directory
+
+guardian/test: test wall 62.96s; slowest over 50ms:
+guardian/test:   12.00s  task_scheduler_test.test.native scheduler million-submit stress has no ThreadSanitizer reports at eight threads
+guardian/test:   6.74s  driver_native_cache_test.test.linkNative observes same-size foreign header edits with restored mtime in actual debug and release Core builds
+guardian/test:   5.52s  test_runner_test.test.sharedFacts eagerFacts and deriveLegacy qualify reference shadow and component modes with callback constants and discovery edits
+guardian/test:   3.93s  compiler_shared_cache_test.test.shared compiler artifacts accept concurrent publishers and remain Python free under an empty PATH
+guardian/test:   3.07s  text_test.test.private split dictionary keys preserve whitespace, UTF8, source snapshots, insertion ownership and captured dictionaries
+guardian/test:   2.80s  f2_index_test.test.F2 index: written indexes keep every answer and trap where they must: negatives that wrap, one-path negatives, too-negative indexes
+guardian/test:   2.32s  test_runner_project_test.test.derived per-test keys rerun exactly the tests the per-test oracle reruns across body, string, type and interface edits
+guardian/test:   2.13s  s3_list_methods_test.test.list search splice and stepped slices preserve snapshots owned children and exact failures
+guardian/test:   2.04s  test_runner_portable_test.test.portable shared receipts share capability stand-ins but refuse introspection and unsupported Host input
+guardian/test:   1.89s  test_runner_project_test.test.a test's call depth is bounded by --max-frames, 1024 by default, on a stack mapped for the whole budget
+guardian/test: PASS — 131 passed
+guardian/test: RESULT {"passed":131,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id core --member 1 --root-id src/core/root_test.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/3ed0600ce50070a366b914a15628e26a/test --guardian-shard=1/8 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+.............................................
+----------------------------------------------------------------------
+Ran 45 tests in 3.448s
+
+OK
+verification-core
++- verification action core member 3 w
+guardian/test: 131 test(s) selected [shard 3/8 of 1044]
+guardian/test: SLOW  5.55s  share_walk_test.test.plain saturation shares descendants before future immortal publication
+guardian/test: SLOW  5.05s  durable_test.test.durable storage completes short writes refuses unsafe paths and recovers actual SIGKILL publication and ownership
+guardian/test: SLOW  13.61s  driver_cache_test.test.layout changes rebuild units and runtime and returning to a layout reuses objects programs and replay
+guardian/test: SLOW  9.70s  driver_cache_test.test.thread sanitizer separates runtime units foreign objects programs and replay from ordinary builds
+guardian/test: SLOW  6.72s  compiler_shared_cache_test.test.shared compiler artifacts follow dependency edits and recover an immutable reverted program
+guardian/test: SLOW  5.56s  compiler_shared_cache_test.test.a shared program mismatch is a counted logged miss and the build proceeds
+guardian/test: SLOW  7.54s  test_runner_project_test.test.runSelected and expectedResult malformed typed cases fail individually and never become cached successes
+no_such_row: the new core failed to build the row:
+mylang build: cannot read 'test/core/row_no_such_row.my': no such file or directory
+
+guardian/test: SLOW  5.56s  f1_facts_test.test.typed element tags keep every answer: records copied whole, unions, mixed lists, reused blocks, aliasing rows
+guardian/test: test wall 96.94s; slowest over 50ms:
+guardian/test:   13.61s  driver_cache_test.test.layout changes rebuild units and runtime and returning to a layout reuses objects programs and replay
+guardian/test:   9.70s  driver_cache_test.test.thread sanitizer separates runtime units foreign objects programs and replay from ordinary builds
+guardian/test:   7.54s  test_runner_project_test.test.runSelected and expectedResult malformed typed cases fail individually and never become cached successes
+guardian/test:   6.72s  compiler_shared_cache_test.test.shared compiler artifacts follow dependency edits and recover an immutable reverted program
+guardian/test:   5.56s  f1_facts_test.test.typed element tags keep every answer: records copied whole, unions, mixed lists, reused blocks, aliasing rows
+guardian/test:   5.56s  compiler_shared_cache_test.test.a shared program mismatch is a counted logged miss and the build proceeds
+guardian/test:   5.55s  share_walk_test.test.plain saturation shares descendants before future immortal publication
+guardian/test:   5.05s  durable_test.test.durable storage completes short writes refuses unsafe paths and recovers actual SIGKILL publication and ownership
+guardian/test:   4.98s  runner_property_campaign_test.test.indexed property campaign transitive helper changes invalidate the complete closure key
+guardian/test:   2.47s  f2_index_test.test.F2 index: a list read inside its own fill loop traps in every build mode
+guardian/test: PASS — 131 passed
+guardian/test: RESULT {"passed":131,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id core --member 3 --root-id src/core/root_test.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/3ed0600ce50070a366b914a15628e26a/test --guardian-shard=3/8 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+verification-coverage
++- verification action coverage member 0 w
+inputs coverage: every repository path the cached test roots name is declared
+failed command: cd . && sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 tests/test_inputs_coverage.py
+
+verification-juice
++- verification action juice member 0 w
+juice: quick (perf, 2 samples)
+juice: quick (perf, 2 samples)
+.juice: quick (perf, 2 samples)
+..juice: quick (perf, 2 samples)
+juice: quick (perf, 2 samples)
+.juice: quick (perf, 2 samples)
+.juice: quick (perf, 2 samples)
+juice: quick (perf, 2 samples)
+..juice: quick (perf, 2 samples)
+.juice: quick (perf, 2 samples)
+.
+----------------------------------------------------------------------
+Ran 9 tests in 1.031s
+
+OK
+failed command: cd . && sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 tests/test_juice.py --native
+
+verification-my_format_self
++- verification action my_format_self member 0 w
+......
+----------------------------------------------------------------------
+Ran 6 tests in 1.841s
+
+OK
+failed command: cd . && sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 tests/test_my_format.py --compiler ./zig-out/bin/mylang
+
+verification-selfhost_numeric
++- verification action selfhost_numeric member 0 w
+lexer diff: 31 fixtures, 450 token lines, 0 mismatches, 3 skipped
+failed command: cd . && sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 selfhost/tests/run_lexer_diff.py --compiler ./zig-out/bin/mylang
+
+verification-juice
++- verification action juice member 1 w
+......................
+----------------------------------------------------------------------
+Ran 22 tests in 3.369s
+
+OK
+failed command: cd . && sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 tests/test_juice_native.py ./zig-out/bin/mylang
+
+verification-incremental
++- verification action incremental member 0 w
+incremental-diff: 120 steps (seed 1), 0 mismatches; cold check clean 45, rejected 75
+failed command: cd . && sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 tests/incremental_diff.py --steps 120 ./zig-out/bin/mylang
+
+verification-incremental
++- verification action incremental member 1 w
+incremental-diff: 60 steps (seed 1), 0 mismatches; cold check clean 11, rejected 49
+failed command: cd . && sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 tests/incremental_diff.py --steps 60 --project tests/fixtures/module_projects ./zig-out/bin/mylang
+
+verification-cli
++- verification action cli member 1 w
+guardian/test: 45 test(s) selected [shard 1/6 of 271]
+guardian/test: test wall 10.26s; slowest over 50ms:
+guardian/test:   1.52s  integration.test.a frame-map trap names every logical frame an inlined callee, a callback, a runtime helper or recursion passes through
+guardian/test:   0.85s  integration.test.a directory run discovers project roots instead of every module
+guardian/test:   0.80s  integration.test.mylang test runs a module that embeds and reruns it when only the fixture changes
+guardian/test:   0.54s  integration.test.CLI provider replacements recapture embedded fixture edits with a warm test cache
+guardian/test:   0.50s  integration.test.P1 ignores an unselected production body type error while its declarations stay valid
+guardian/test:   0.50s  integration.test.CLI test carries sets, dictionaries with tuple keys, bytes and floats across the copied-value boundary
+guardian/test:   0.42s  integration.test.CLI exposes fs.read_only permission attenuation and rejects the removed spelling
+guardian/test:   0.41s  integration.test.CLI test reports a Result test's Err with its error return trace in text and JSON
+guardian/test:   0.39s  integration.test.run build --run and installed executables share the restricted capability diagnostic
+guardian/test:   0.37s  integration.test.versioned loops LLVM vectorizes compute and trap exactly as QBE does
+guardian/test: PASS — 45 passed
+guardian/test: RESULT {"passed":45,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id cli --member 1 --root-id test/integration.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=6 MYLANG_TEST_COMPONENT_BUILDER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/2ecd722ce01240aa65d48334d1933c23/selka-components MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/4e9e86b5bfdd5209b28b5f1f2d0c1940/test --guardian-shard=1/6 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+verification-cli
++- verification action cli member 2 w
+guardian/test: 45 test(s) selected [shard 2/6 of 271]
+guardian/test: test wall 11.24s; slowest over 50ms:
+guardian/test:   1.54s  integration.test.a trap through a halting failure path reports the same code, trace, record and status
+guardian/test:   1.23s  fix_cli_test.test.CLI fix migrates the pinned pre-marker Lox corpus with no hand edits
+guardian/test:   1.21s  integration.test.CLI test hands declared capabilities deterministic stand-ins and reuses their passes
+guardian/test:   0.75s  integration.test.CLI property test that fails with an Err reports the minimal input's error return trace
+guardian/test:   0.66s  integration.test.a directory run runs a main-less test library no root imports, and every test once
+guardian/test:   0.56s  integration.test.CLI test discovers a test_ function without an explicit export
+guardian/test:   0.53s  integration.test.CLI executes variants dumps dispatch and rejects newly incomplete matches
+guardian/test:   0.47s  integration.test.CLI checks runs and dumps records and declared complete conversions
+guardian/test:   0.45s  integration.test.CLI grants every capability by default and resolves paths against the working directory
+guardian/test:   0.41s  integration.test.CLI withholds Host under restrict and grants it with --allow-host
+guardian/test: PASS — 45 passed
+guardian/test: RESULT {"passed":45,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id cli --member 2 --root-id test/integration.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=6 MYLANG_TEST_COMPONENT_BUILDER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/2ecd722ce01240aa65d48334d1933c23/selka-components MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/4e9e86b5bfdd5209b28b5f1f2d0c1940/test --guardian-shard=2/6 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+verification-cli
++- verification action cli member 4 w
+guardian/test: 44 test(s) selected [shard 4/6 of 271]
+guardian/test: test wall 7.38s; slowest over 50ms:
+guardian/test:   1.30s  integration.test.guest print output stays off the test protocol and shows on failure
+guardian/test:   0.83s  integration.test.P1 selects a validated fake while the unfinished production body is never checked
+guardian/test:   0.54s  integration.test.CLI clock entropy and environment providers honour their grants
+guardian/test:   0.44s  integration.test.CLI maps Result main ok and err to status codes and one diagnostic
+guardian/test:   0.43s  integration.test.CLI managed constants import run build installed and invalidate warm caches
+guardian/test:   0.40s  integration.test.CLI frame budgets count main and reject invalid overrides
+guardian/test:   0.36s  integration.test.multiple missing capabilities report exactly one identical diagnostic
+guardian/test:   0.34s  integration.test.mylang test inside a build.zig project compiles its runner without a Zig cache there
+guardian/test:   0.31s  integration.test.CLI handles recoverable results and rejects silent error loss
+guardian/test:   0.29s  integration.test.CLI denies a Network entry point and an endpoint outside the grant under restrict
+guardian/test: PASS — 44 passed
+guardian/test: RESULT {"passed":44,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id cli --member 4 --root-id test/integration.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=6 MYLANG_TEST_COMPONENT_BUILDER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/2ecd722ce01240aa65d48334d1933c23/selka-components MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/4e9e86b5bfdd5209b28b5f1f2d0c1940/test --guardian-shard=4/6 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+verification-cli
++- verification action cli member 3 w
+guardian/test: 45 test(s) selected [shard 3/6 of 271]
+guardian/test: SLOW  47.96s  integration.test.boundary acceptance CLI runs through run build --run and installed paths
+guardian/test: test wall 64.59s; slowest over 50ms:
+guardian/test:   47.96s  integration.test.boundary acceptance CLI runs through run build --run and installed paths
+guardian/test:   2.72s  integration.test.run on the new core keeps the exit, argument, budget and grant contract
+guardian/test:   2.44s  integration.test.CLI property test shrinks a failing sum to the single-element list [100] and reports how to reproduce it
+guardian/test:   1.74s  integration.test.CLI refuses an ungranted entry capability only while --restrict is active
+guardian/test:   1.24s  integration.test.module by module, a trapping and a printing test report what the whole-program run reports
+guardian/test:   1.05s  integration.test.CLI executes the exact plan acceptance programs and recursive functions
+guardian/test:   0.56s  integration.test.R3 canonical descriptors compare provider scalar and nominal contracts
+guardian/test:   0.54s  integration.test.CLI executes control flow and preserves discarded traps
+guardian/test:   0.50s  integration.test.checked arithmetic at every width reports the same result and trap from a release build as from a debug build
+guardian/test:   0.45s  integration.test.test refuses a frame budget its per-test ceiling cannot back and accepts one it can
+guardian/test: PASS — 45 passed
+guardian/test: RESULT {"passed":45,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id cli --member 3 --root-id test/integration.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=6 MYLANG_TEST_COMPONENT_BUILDER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/2ecd722ce01240aa65d48334d1933c23/selka-components MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/4e9e86b5bfdd5209b28b5f1f2d0c1940/test --guardian-shard=3/6 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+verification-parser_hints
++- verification action parser_hints member 0 w
+hint table and classifier agree on 11 forms
+failed command: cd . && sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 tests/parser_hints.py
+
+verification-parser_hints
++- verification action parser_hints member 1 w
+hint table and classifier agree on 11 forms
+probes print the hinted message, span and accepted spelling
+failed command: cd . && sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 tests/parser_hints.py --compiler ./zig-out/bin/mylang
+
+verification-golden
++- verification action golden member 0 w
+guardian/test: 4 test(s) selected
+golden preparation: executions 222, source writes 165, source bytes 66752, fresh work directories 222
+golden parity: checked 222 (source 167, fixtures 55), skipped 382 (docs 27, unmatched fixtures 345, data-only 1, retired or old internals 9), mismatches 0
+guardian/test: SLOW  39.58s  golden_parity.test.checked-in golden corpora replay natively with explicit skip counts
+guardian/test: test wall 39.58s; slowest over 50ms:
+guardian/test:   39.58s  golden_parity.test.checked-in golden corpora replay natively with explicit skip counts
+guardian/test: PASS — 4 passed
+guardian/test: RESULT {"passed":4,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id golden --member 0 --root-id test/golden_parity.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/94a4251c08b3a06318547205ee2f2e34/test --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+verification-cli
++- verification action cli member 5 w
+guardian/test: 44 test(s) selected [shard 5/6 of 271]
+guardian/test: SLOW  25.16s  integration.test.CLI user commands need no interpreter: check, build, run, test, fmt, docs, navigation and the release build under an empty PATH
+guardian/test: test wall 41.07s; slowest over 50ms:
+guardian/test:   25.16s  integration.test.CLI user commands need no interpreter: check, build, run, test, fmt, docs, navigation and the release build under an empty PATH
+guardian/test:   4.26s  integration.test.CLI property test discards inputs that break a precondition or a record invariant
+guardian/test:   0.97s  integration.test.CLI budget traps name the flag that raises the budget
+guardian/test:   0.86s  integration.test.CLI directory grants scope the file surface and separate reading from writing
+guardian/test:   0.83s  integration.test.test, build, run and check write no cache into the working directory under --cache-dir
+guardian/test:   0.69s  integration.test.CLI reports main's Err and its error return trace the same from run, Debug, ReleaseFast and --release builds
+guardian/test:   0.67s  integration.test.CLI preserves integer width bounds and explicit casts
+guardian/test:   0.65s  integration.test.mylang.json limits set the run and test defaults and the command line still wins
+guardian/test:   0.59s  integration.test.P1 rejects stronger or malformed replacements and a bad production interface
+guardian/test:   0.50s  integration.test.CLI checks and runs module programs with private boundaries and cross-file traps
+guardian/test: PASS — 44 passed
+guardian/test: RESULT {"passed":44,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id cli --member 5 --root-id test/integration.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=6 MYLANG_TEST_COMPONENT_BUILDER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/2ecd722ce01240aa65d48334d1933c23/selka-components MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/4e9e86b5bfdd5209b28b5f1f2d0c1940/test --guardian-shard=5/6 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+verification-idioms
++- verification action idioms member 0 w
+idiom probes: 69 selected, 66 at target, 3 not yet
+  builtins        12/ 12 at target
+  collections     30/ 31 at target
+  dictionary       6/  6 at target
+  entry-command    1/  1 at target
+  expressions      5/  6 at target
+  program-edge     6/  7 at target
+  removals         6/  6 at target
+
+changed (neither baseline nor target — review these):
+  is_none: /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/tests/fixtures/idioms/is_none.my:2:13: error[E_NONE_CONTEXT]: None requires an expected optional type
+  edge_main_result: /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/tests/fixtures/idioms/edge_main_result.my:1:11: error[E_UNUSED_CAPABILITY]: `fs` is never used, so this signature claims an effect the body cannot have; remove the parameter or use it
+failed command: cd . && sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 tests/idiom_probes.py --compiler ./zig-out/bin/mylang
+
+verification-interfaces
++- verification action interfaces member 0 w
+{
+ "steps": 120,
+ "seed": 1,
+ "accepted": 81,
+ "rejected": 39,
+ "mutations": {
+  "body literal": 7,
+  "body no-op": 3,
+  "comment between declarations": 6,
+  "constant value": 5,
+  "deprecation reason": 2,
+  "evaluated body": 7,
+  "fact: allocation": 3,
+  "private addition": 4,
+  "private record edit": 1,
+  "public addition": 5,
+  "shape: enum case added": 2,
+  "shape: field added": 5,
+  "shape: field renamed": 7,
+  "shape: field retyped": 6,
+  "shape: union case payload retyped": 6,
+  "shape: union payload retyped": 7,
+  "signature: defaulted parameter": 2,
+  "signature: rename": 1,
+  "template body": 2
+ },
+ "violations": []
+}
+failed command: cd . && sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 tests/interface_diff.py --steps 120 ./zig-out/bin/mylang
+
+verification-interfaces
++- verification action interfaces member 1 w
+{
+ "steps": 40,
+ "seed": 1,
+ "accepted": 14,
+ "rejected": 26,
+ "mutations": {
+  "body literal": 3,
+  "body no-op": 1,
+  "private addition": 3,
+  "public addition": 5,
+  "template body": 2
+ },
+ "violations": []
+}
+failed command: cd . && sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 tests/interface_diff.py --steps 40 --project tests/fixtures/interfaces_generic ./zig-out/bin/mylang
+
+verification-tooling_isolation
++- verification action tooling_isolation member 0 w
+tooling isolation: no-cache test/build, doctest, frame advice and guest host-limit separation passed
+failed command: cd . && sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 tests/tooling_cache_isolation.py --compiler ./zig-out/bin/mylang
+
+verification-interface_oracle
++- verification action interface_oracle member 0 w
+{
+ "entries": 340,
+ "entries_equal": 340,
+ "entries_not_checked": 0,
+ "modules": 446,
+ "functions": 4496,
+ "contexts": 3575,
+ "stood_in": 146,
+ "whole_program_diagnostics": 34,
+ "mismatching_entries": []
+}
+failed command: cd . && sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 tests/interface_oracle.py ./zig-out/bin/mylang tests/lang tests/fixtures/interfaces/main.my tests/fixtures/interfaces_generic/main.my tests/fixtures/incremental/main.my
+
+verification-unit
++- verification action unit member 8 w
+guardian/test: 129 test(s) selected [shard 8/12 of 1559]
+guardian/test: test wall 16.41s; slowest over 50ms:
+guardian/test:   2.84s  integers_test.test.inlined multiplication keeps every width and traps past its bounds
+guardian/test:   1.55s  syntax_cache_large_test.test.default syntax retention survives 97 modules and matches fresh execution and errors after leaf edits
+guardian/test:   0.88s  generic_arrays_test.test.expanding generic array recursion stops at the specialization budget
+guardian/test:   0.62s  sets_test.test.a missing element, an empty pop and a resize during iteration trap like a dictionary
+guardian/test:   0.53s  io_files_test.test.IO-11 a with scope closes its file on every exit including traps and propagation
+guardian/test:   0.49s  semantic_cache_test.test.shared budget covers ordinary hash growth boundaries
+guardian/test:   0.47s  io_print_test.test.IO-3 print accepts sep and end keyword arguments and rejects other keywords
+guardian/test:   0.40s  tables_test.test.enum table construction follows names across enum and initializer reordering
+guardian/test:   0.40s  callbacks_test.test.function_digest identifies runtime-selected returned and stored generic callbacks in debug
+guardian/test:   0.38s  error_trace_test.test.a return on the Err's own line folds into it, and a broken contract is still a trap
+guardian/test: PASS — 129 passed
+guardian/test: RESULT {"passed":129,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id unit --member 8 --root-id src/root_test.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=12 MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/cb058ec00c7a9794b77e4a371e04fc62/test --guardian-shard=8/12 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+verification-cli
++- verification action cli member 0 w
+guardian/test: 48 test(s) selected [shard 0/6 of 271]
+guardian/test: SLOW  58.14s  integration.test.mylang packages builds two applications from one locked library without writing either tree
+guardian/test: SLOW  13.63s  components.test.CLI component bootstrap rebuilds and installs without an interpreter on PATH
+guardian/test: test wall 90.47s; slowest over 50ms:
+guardian/test:   58.14s  integration.test.mylang packages builds two applications from one locked library without writing either tree
+guardian/test:   13.63s  components.test.CLI component bootstrap rebuilds and installs without an interpreter on PATH
+guardian/test:   4.45s  integration.test.CLI property test runs in one process, reuses a pass until its seed or runs change, and survives a child that dies mid-batch
+guardian/test:   1.85s  integration.test.CLI an edit to one contract clause is never served from a warm cache
+guardian/test:   1.37s  integration.test.CLI directory test applies each entry's own cases file and lets a test file reach its module's privates
+guardian/test:   1.07s  integration.test.named constraints fake-only entry ignores an absent or invalid production module
+guardian/test:   0.96s  integration.test.element loops over lists, nested lists, records and bytes compute and trap the same from LLVM as from QBE
+guardian/test:   0.92s  integration.test.CLI checks array schemas dumps indexing and reports bounds traps
+guardian/test:   0.84s  integration.test.CLI execution timings preserve results and runtime diagnostics
+guardian/test:   0.84s  integration.test.CLI empty test selection names an unloaded sibling and preserves JSON
+guardian/test: PASS — 48 passed
+guardian/test: RESULT {"passed":48,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id cli --member 0 --root-id test/integration.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=6 MYLANG_TEST_COMPONENT_BUILDER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/2ecd722ce01240aa65d48334d1933c23/selka-components MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/4e9e86b5bfdd5209b28b5f1f2d0c1940/test --guardian-shard=0/6 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+verification-unit
++- verification action unit member 7 w
+guardian/test: 129 test(s) selected [shard 7/12 of 1559]
+guardian/test: test wall 16.10s; slowest over 50ms:
+guardian/test:   1.23s  io_print_test.test.IO-2 print renders records, enums, unions and checked results by name
+guardian/test:   1.17s  semantic_cache_test.test.generic publication rolls back cleanly on allocation failure
+guardian/test:   1.16s  contracts_test.test.contracts: an invariant traps R_INVARIANT where a value is built or changed
+guardian/test:   0.98s  stdlib_memo_test.test.standard memo reuses tagged arguments with bounded FIFO and independent value snapshots
+guardian/test:   0.93s  native_execute.test.unsigned overflow cast and division traps quote their operands unsigned and signed ones unchanged
+guardian/test:   0.81s  compiler_test.test.unary arithmetic and directly negated minimum literal
+guardian/test:   0.77s  domain_codecs_test.test.domain codec module relocation and public schemas preserve contracts and opaque backing under allocation failures
+guardian/test:   0.59s  semantic_cache_test.test.constant-length and nominal specializations stay on the fresh path
+guardian/test:   0.56s  tuples_test.test.a generic function takes, destructures and returns tuple[T, int]
+guardian/test:   0.50s  byte_builder_test.test.standard byte builder remains rooted when every managed allocation collects
+guardian/test: PASS — 129 passed
+guardian/test: RESULT {"passed":129,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id unit --member 7 --root-id src/root_test.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=12 MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/cb058ec00c7a9794b77e4a371e04fc62/test --guardian-shard=7/12 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+verification-unit
++- verification action unit member 1 w
+guardian/test: 130 test(s) selected [shard 1/12 of 1559]
+guardian/test: test wall 18.77s; slowest over 50ms:
+guardian/test:   1.97s  prelude_builtins_test.test.reversed, list and zip iterate or materialise without a new runtime
+guardian/test:   1.92s  integers_test.test.integer casts check narrowing signedness and retain operand traps
+guardian/test:   1.50s  domain_equality_test.test.domain equality compares every scalar backing by value
+guardian/test:   1.43s  stdlib_json_test.test.standard json parses renders navigates and rejects noncompliant documents
+guardian/test:   0.63s  python_surface_test.test.case _ covers every variant no earlier arm names
+guardian/test:   0.47s  prelude_builtins_test.test.sum adds a list of ints or floats and rejects other element types
+guardian/test:   0.47s  external_capabilities_test.test.every grant an entry point names is materialized before its body runs
+guardian/test:   0.43s  generic_concrete_test.test.generic record updates and array replacement preserve snapshots under allocation failures
+guardian/test:   0.42s  compiler_test.test.overflow traps at the responsible operator without folding during check
+guardian/test:   0.40s  structural_constraints_test.test.structural formatter lifecycle round trips and releases storage under allocation failure
+guardian/test: PASS — 130 passed
+guardian/test: RESULT {"passed":130,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id unit --member 1 --root-id src/root_test.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=12 MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/cb058ec00c7a9794b77e4a371e04fc62/test --guardian-shard=1/12 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+verification-unit
++- verification action unit member 11 w
+guardian/test: 129 test(s) selected [shard 11/12 of 1559]
+guardian/test: SLOW  22.90s  stdlib_math_test.test.standard integer extrema and clamp cover every width and full signed range
+guardian/test: SLOW  10.81s  semantic_cache_test.test.semantic cache reuses unchanged checked bodies after edits and preserves diagnostics and ownership under allocation failures
+guardian/test: test wall 62.29s; slowest over 50ms:
+guardian/test:   22.90s  stdlib_math_test.test.standard integer extrema and clamp cover every width and full signed range
+guardian/test:   10.81s  semantic_cache_test.test.semantic cache reuses unchanged checked bodies after edits and preserves diagnostics and ownership under allocation failures
+guardian/test:   4.57s  prelude_builtins_test.test.round returns the nearest integral float with halves away from zero
+guardian/test:   2.58s  integers_test.test.inlined negation traps only at each signed width's minimum
+guardian/test:   1.95s  nominal_type_syntax_test.test.unused nominal templates retain only unconditional concrete prelude schemas
+guardian/test:   1.55s  native_execute.test.a wall-clock timeout ends an unbounded native run with R_TIMEOUT
+guardian/test:   1.55s  syntax_cache_test.test.buildWithCache lookup remember and clone preserve changed results and independent storage under allocation failures
+guardian/test:   1.10s  python_collections_test.test.absent list and dictionary values trap instead of returning a sentinel
+guardian/test:   1.05s  generic_results_test.test.generic matches transfer nested payloads and merge outer obligations
+guardian/test:   1.01s  contracts_test.test.contracts: a test checks its parameters' invariants on entry and passes every value guest code built
+guardian/test: PASS — 129 passed
+guardian/test: RESULT {"passed":129,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id unit --member 11 --root-id src/root_test.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=12 MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/cb058ec00c7a9794b77e4a371e04fc62/test --guardian-shard=11/12 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+verification-unit
++- verification action unit member 0 w
+guardian/test: 137 test(s) selected [shard 0/12 of 1559]
+guardian/test: SLOW  23.76s  stdlib_strings_test.test.standard strings classify search trim pad and convert text at signed boundaries
+guardian/test: SLOW  8.39s  nominal_layouts_test.test.nominal layout expansion bounds distinct array identities
+guardian/test: SLOW  5.27s  integers_test.test.checked signed and unsigned operations retain each declared width
+guardian/test: test wall 65.54s; slowest over 50ms:
+guardian/test:   23.76s  stdlib_strings_test.test.standard strings classify search trim pad and convert text at signed boundaries
+guardian/test:   8.39s  nominal_layouts_test.test.nominal layout expansion bounds distinct array identities
+guardian/test:   5.27s  integers_test.test.checked signed and unsigned operations retain each declared width
+guardian/test:   3.57s  nominal_instances_test.test.nominal catalog interns each list type once however often the checker asks for it
+guardian/test:   2.74s  arrays_test.test.fixed arrays have structural types preserve copies and support every integer index width
+guardian/test:   2.38s  prelude_scalar_test.test.ord and chr trap R_TEXT_SCALAR on anything but one Unicode scalar
+guardian/test:   2.05s  prelude_builtins_test.test.any and all fold a list of conditions
+guardian/test:   1.69s  python_assert_test.test.assert checks a Boolean condition under any effect bound and inside loops
+guardian/test:   1.16s  python_variants_test.test.an imported generic variant takes its arguments from the expected type across modules
+guardian/test:   1.04s  generic_codecs_test.test.generic codecs execute concrete domain factories and accessors under allocation failures
+guardian/test: PASS — 137 passed
+guardian/test: RESULT {"passed":137,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id unit --member 0 --root-id src/root_test.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=12 MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/cb058ec00c7a9794b77e4a371e04fc62/test --guardian-shard=0/12 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+verification-unit
++- verification action unit member 10 w
+guardian/test: 129 test(s) selected [shard 10/12 of 1559]
+warning: shared compiler cache /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/tmp/0-VrF3_IBoCSR-5Y/.cache/mylang/compiler-artifacts: WriteFailed; sharing disabled
+F10 request 0: 19 record name visits, 19 records, 16 checked, 0 reused
+F10 request 1: 19 record name visits, 19 records, 0 checked, 16 reused
+guardian/test: SLOW  8.86s  semantic_cache_test.test.F10 specialization record name work is linear in each fresh catalog
+guardian/test: SLOW  26.54s  resource_io_test.test.source IO traps at every instruction boundary release or complete exactly once
+guardian/test: test wall 80.98s; slowest over 50ms:
+guardian/test:   26.54s  resource_io_test.test.source IO traps at every instruction boundary release or complete exactly once
+guardian/test:   8.86s  semantic_cache_test.test.F10 specialization record name work is linear in each fresh catalog
+guardian/test:   4.77s  generic_results_test.test.generic branches restore result state and merge only continuing paths
+guardian/test:   4.66s  integers_test.test.inlined shifts wrap within the width and reject out of range counts
+guardian/test:   3.83s  stdlib_path_test.test.standard path helpers need no capability and stay inside a noio ceiling
+guardian/test:   3.36s  generic_bodies_test.test.a generic body and its helpers sort concrete lists and reject a symbolic element
+guardian/test:   2.78s  compiler_test.test.short circuit skips traps while an explicit drop retains evaluation
+guardian/test:   2.45s  semantic_project_test.test.semantic project body reuse relocates module spans and invalidates changed imports exports signatures and types
+guardian/test:   2.15s  python_bytes_test.test.PY-BYTES-9 numeric parsing is accepted under noalloc and an explicit ceiling rejects a view
+guardian/test:   2.08s  domains_test.test.domain backing types require built-in scalars and exact wrapping types
+guardian/test: PASS — 129 passed
+guardian/test: RESULT {"passed":129,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id unit --member 10 --root-id src/root_test.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=12 MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/cb058ec00c7a9794b77e4a371e04fc62/test --guardian-shard=10/12 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+verification-unit
++- verification action unit member 5 w
+guardian/test: 129 test(s) selected [shard 5/12 of 1559]
+native_execute: `mylang run` refused a program the front end accepted:
+{"version":"diagnostic-v1","kind":"diagnostic","diagnostic":{"code":"E_INTERNAL_NAME","severity":"error","message":"`clock_now[...]` and `random_u64[...]` are reserved for compiler-internal standard-library sources; use the `time` or `random` standard module","location":{"path":"/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.mylang-cache/unit-tests/core/src/6fea23b5105778bfea9fbcbafa94f07b/trusted.my","start":{"line":7,"column":11},"end":{"line":7,"column":20},"bytes":{"start":79,"end":88}},"notes":[],"stack":{"frames":[],"omitted":0}}}
+
+native_execute: host failure: PathLeavesTree
+guardian/test: test wall 40.15s; slowest over 50ms:
+guardian/test:   3.55s  generic_execution_test.test.generic execution reuses instances and counts them per declaration, not per program
+guardian/test:   3.15s  contracts_test.test.contracts: old captures an entry value once and rejects a shared one
+guardian/test:   2.27s  collections_fidelity_test.test.min and max of a generator with no values trap with CPython's message
+guardian/test:   2.14s  loop_exit_test.test.break and continue target nearest loops and preserve generic flow and formatting
+guardian/test:   2.10s  semantic_cache_test.test.durable-hit promotion is bounded by the shared budget without changing acceptance
+guardian/test:   1.99s  type_aliases_test.test.transparent aliases compose scalar arrays nominal applications constants and generic functions
+guardian/test:   1.71s  prelude_builtins_test.test.prelude types are registered from syntax instead of raw source text
+guardian/test:   1.68s  prelude_builtins_test.test.a callback that allocates keeps the caller's managed locals alive
+guardian/test:   1.63s  nominal_providers_test.test.nominal providers propagate host failures and release acquired owners exactly once
+guardian/test:   1.60s  stdlib_sort_test.test.standard sort orders integers floats and text stably and searches the result
+guardian/test: PASS — 129 passed
+guardian/test: RESULT {"passed":129,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id unit --member 5 --root-id src/root_test.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=12 MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/cb058ec00c7a9794b77e4a371e04fc62/test --guardian-shard=5/12 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+verification-unit
++- verification action unit member 2 w
+guardian/test: 130 test(s) selected [shard 2/12 of 1559]
+guardian/test: SLOW  8.81s  prelude_builtins_test.test.min and max accept a list or two scalars and trap on an empty list
+guardian/test: SLOW  15.70s  float_operations_test.test.every fixed-width float conversion traps for NaN infinities and range violations
+retention: budget=6036 retained=3770 spec_bytes=3770 evictions=44 oldest_fresh_checks=+1
+guardian/test: SLOW  21.54s  semantic_cache_test.test.shared retention budget bounds distinct specializations and eviction forces fresh checks
+mylang: cache-plan create temporary directory failed: FileNotFound
+guardian/test: test wall 82.11s; slowest over 50ms:
+guardian/test:   21.54s  semantic_cache_test.test.shared retention budget bounds distinct specializations and eviction forces fresh checks
+guardian/test:   15.70s  float_operations_test.test.every fixed-width float conversion traps for NaN infinities and range violations
+guardian/test:   8.81s  prelude_builtins_test.test.min and max accept a list or two scalars and trap on an empty list
+guardian/test:   2.78s  io_print_test.test.QBE-BULK-TEXT-1 raw top-level text is encoded into the line buffer in one pass
+guardian/test:   1.71s  prelude_builtins_test.test.declared len and replace functions shadow their prelude operations
+guardian/test:   1.66s  generic_concrete_test.test.generic concrete variants construct and match with scoped payloads under allocation failures
+guardian/test:   1.65s  domains_test.test.nominal domains prevent mixing units and preserve validated factory values
+guardian/test:   1.47s  results_test.test.binding transfer and explicit release cannot silently drop results
+guardian/test:   1.40s  python_bytes_test.test.PY-BYTES-1 out-of-range indexes ranges and separators trap with located codes
+guardian/test:   1.37s  embed_test.test.embed_bytes and embed_str read a file as a constant, inline and where allocation is banned
+guardian/test: PASS — 130 passed
+guardian/test: RESULT {"passed":130,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id unit --member 2 --root-id src/root_test.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=12 MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/cb058ec00c7a9794b77e4a371e04fc62/test --guardian-shard=2/12 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+verification-unit
++- verification action unit member 3 w
+guardian/test: 130 test(s) selected [shard 3/12 of 1559]
+guardian/test: SLOW  5.40s  prelude_builtins_test.test.sorted returns a new ascending list for int, float and str
+guardian/test: test wall 44.57s; slowest over 50ms:
+guardian/test:   5.40s  prelude_builtins_test.test.sorted returns a new ascending list for int, float and str
+guardian/test:   3.72s  stdlib_json_test.test.standard json keeps parsed values rooted under collection stress
+guardian/test:   3.20s  prelude_builtins_test.test.len returns int for every supported receiver and dot len is removed
+guardian/test:   2.49s  native_execute.test.a batch runs its programs together and returns each run in job order
+guardian/test:   2.43s  semantic_cache_test.test.const-length specialization keys and resolved nominal generics reuse
+guardian/test:   2.41s  effects_test.test.effect bounds reject unknown and duplicate names and noio permits allocation
+guardian/test:   1.80s  domains_test.test.domain creation loops complete and factory traps name the failing frame
+guardian/test:   1.44s  contracts_test.test.contracts: a broken precondition traps R_REQUIRES at its clause and names the caller
+guardian/test:   1.35s  semantic_cache_test.test.a same-length declaration edit misses with the dependency reason it always did
+guardian/test:   1.25s  io_files_test.test.FILE-METHOD-1 with fs.open binds a direct handle and propagates through the method mark
+guardian/test: PASS — 130 passed
+guardian/test: RESULT {"passed":130,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id unit --member 3 --root-id src/root_test.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=12 MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/cb058ec00c7a9794b77e4a371e04fc62/test --guardian-shard=3/12 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+verification-unit
++- verification action unit member 6 w
+guardian/test: 129 test(s) selected [shard 6/12 of 1559]
+guardian/test: SLOW  9.67s  native_execute.test.native execution reports original bounds indexes for read write pop array text and bytes
+guardian/test: SLOW  54.97s  nominal_providers_test.test.nominal providers unwind traps at every instruction including failed completion ownership transfer
+symbolic retention: budget=5724 retained=5256 symbolic_bytes=5256 templates=10 evictions=4 warm_fresh=+2 warm_reused=+10
+guardian/test: SLOW  6.98s  integers_test.test.all integer widths accept their limits and reject one-past literals
+guardian/test: test wall 101.52s; slowest over 50ms:
+guardian/test:   54.97s  nominal_providers_test.test.nominal providers unwind traps at every instruction including failed completion ownership transfer
+guardian/test:   9.67s  native_execute.test.native execution reports original bounds indexes for read write pop array text and bytes
+guardian/test:   6.98s  integers_test.test.all integer widths accept their limits and reject one-past literals
+guardian/test:   4.21s  nominal_bodies_test.test.nominal bodies release shape catalogs and VM storage after every allocation failure
+guardian/test:   2.37s  io_print_test.test.IO-1 print renders scalars, text, bytes and containers with Python spellings
+guardian/test:   2.26s  surface_statements_test.test.newline suffixes end an expression outside parentheses and continue inside parentheses
+guardian/test:   2.06s  stdlib_time_random_test.test.standard time random boundary arithmetic and independent deterministic streams
+guardian/test:   1.86s  python_core_test.test.prelude containers results options and dictionary views keep one identity across modules
+guardian/test:   1.63s  python_format_test.test.a native build spells an interpolated aggregate exactly as print writes it
+guardian/test:   1.39s  error_trace_test.test.a runtime operation that answers Err starts the trace at its call
+guardian/test: PASS — 129 passed
+guardian/test: RESULT {"passed":129,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id unit --member 6 --root-id src/root_test.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=12 MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/cb058ec00c7a9794b77e4a371e04fc62/test --guardian-shard=6/12 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+verification-unit
++- verification action unit member 4 w
+guardian/test: 129 test(s) selected [shard 4/12 of 1559]
+guardian/test: SLOW  5.34s  stdlib_json_test.test.standard json error unions carry a matchable category and a message helper
+guardian/test: test wall 45.74s; slowest over 50ms:
+guardian/test:   5.34s  stdlib_json_test.test.standard json error unions carry a matchable category and a message helper
+guardian/test:   3.08s  for_range_test.test.half-open ranges evaluate bounds once and support generic nested exits
+guardian/test:   2.46s  semantic_cache_test.test.shared budget holds after an oversized-single-entry session without changing acceptance
+guardian/test:   1.96s  semantic_project_test.test.synthetic enum payload identities retain defining modules across warm replay and relocation
+guardian/test:   1.92s  semantic_cache_test.test.specialization preregistration validates provider shape and edited dependency bodies
+guardian/test:   1.86s  tuples_test.test.a tuple prints as its bracketed elements and compares structurally
+guardian/test:   1.86s  prelude_builtins_test.test.sorted key lambdas order records stably and diagnose invalid inputs
+guardian/test:   1.78s  array_places_test.test.an element write out of range traps like a fixed-array read
+guardian/test:   1.67s  surface_statements_test.test.newlines and dedents end statements without semicolon separators
+guardian/test:   1.40s  semantic_cache_test.test.portable nominal references reuse a type materialized by an earlier fresh body
+guardian/test: PASS — 129 passed
+guardian/test: RESULT {"passed":129,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id unit --member 4 --root-id src/root_test.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=12 MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/cb058ec00c7a9794b77e4a371e04fc62/test --guardian-shard=4/12 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+verification-unit
++- verification action unit member 9 w
+guardian/test: 129 test(s) selected [shard 9/12 of 1559]
+guardian/test: SLOW  5.34s  stdlib_math_test.test.standard math roots rounding classification and checked integer helpers
+guardian/test: SLOW  14.15s  compiler_test.test.all comparisons boolean operations and logical precedence have observable results
+guardian/test: SLOW  13.29s  integers_test.test.inlined division and remainder trap zero and narrow overflow only
+guardian/test: SLOW  28.18s  resource_source_test.test.nested resource wrappers release at scope exit and traps unwind every instruction
+expected 41, found 1
+guardian/test: test wall 86.46s; slowest over 50ms:
+guardian/test:   28.18s  resource_source_test.test.nested resource wrappers release at scope exit and traps unwind every instruction
+guardian/test:   14.15s  compiler_test.test.all comparisons boolean operations and logical precedence have observable results
+guardian/test:   13.29s  integers_test.test.inlined division and remainder trap zero and narrow overflow only
+guardian/test:   5.34s  stdlib_math_test.test.standard math roots rounding classification and checked integer helpers
+guardian/test:   1.86s  semantic_cache_test.test.symbolic template direct results reuse while changed templates miss
+guardian/test:   1.59s  prelude_builtins_test.test.keyed sorts keep text keys rooted and traps come from the first element in input order
+guardian/test:   1.54s  domain_codecs_test.test.source codec operations resolve declared methods and preserve formatting under allocation failures
+guardian/test:   1.33s  standard_library_test.test.standard fixture helpers report every assertion failure through declared errors
+guardian/test:   1.19s  managed_lists_test.test.managed bounds reads and writes produce located list bounds traps
+guardian/test:   1.11s  python_bytes_test.test.PY-BYTES-7 views require immutable bytes while text and buffers support copies
+guardian/test: PASS — 129 passed
+guardian/test: RESULT {"passed":129,"failed":0,"skipped":0}
+failed command: cd . && python3 scripts/verification_native_telemetry.py --action-id unit --member 9 --root-id src/root_test.zig -- sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_UNIT_SHARDS=12 MYLANG_TEST_COMPILER=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/82bfde918e65b1e7b76fa53ada56ab84/mylang MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components ./.zig-cache/o/cb058ec00c7a9794b77e4a371e04fc62/test --guardian-shard=9/12 --cache-dir=./.zig-cache --seed=0x0 --listen=-
+
+Build Summary: 115/115 steps succeeded; 2878/28690 tests passed (25812 skipped)
+verification-guardian success
++- verification action guardian member 0 success 1s
+|  +- guardian-selfcheck success
+|     +- verification action guardian member 2 success 4ms
++- verification action guardian member 1 success 1s
+|  +- guardian-selfcheck (+1 more reused dependencies)
++- verification action guardian member 2 (reused)
+verification-noalloc_lint success
++- verification action noalloc_lint member 0 success 863ms
+   +- compile exe build-env safe native cached 7ms MaxRSS:42M
+   +- install success
+   |  +- install mylang cached
+   |  |  +- compile exe mylang debug native cached 5ms MaxRSS:41M
+   |  |  |  +- run exe build-identity (build_identity) cached
+   |  |  |  |  +- compile exe build-identity debug native cached 6ms MaxRSS:41M
+   |  |  |  +- WriteFile cached
+   |  |  |  +- compile obj juice_bytes_hash fast native cached 4ms MaxRSS:41M
+   |  |  |  +- compile obj juice_bytes_hash fast native (reused)
+   |  |  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 5ms MaxRSS:41M
+   |  |  +- verification action guardian member 1 (+1 more reused dependencies)
+   |  +- install generated to selka-components cached
+   |  |  +- compile exe selka-components safe native cached 6ms MaxRSS:42M
+   |  +- verification action component-preparation member 0 success 405ms
+   |  |  +- compile exe selka-components safe native (reused)
+   |  +- verification action guardian member 1 (+1 more reused dependencies)
+   +- verification action input-discovery member 0 success 432ms
+   +- verification action environment-discovery member 0 success 175ms
+   |  +- compile exe build-env safe native (reused)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-my_format_self success
++- verification action my_format_self member 0 success 2s
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+   +- verification action input-discovery member 0 (reused)
+   +- verification action environment-discovery member 0 (+1 more reused dependencies)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-my_format success
++- verification action my_format member 0 success 2s
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+   +- verification action input-discovery member 0 (reused)
+   +- verification action environment-discovery member 0 (+1 more reused dependencies)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-zig-format success
++- verification action zig-format member 0 success
+verification-doctest success
++- verification action doctest member 0 success 5s
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+   +- verification action input-discovery member 0 (reused)
+   +- verification action environment-discovery member 0 (+1 more reused dependencies)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-language success
++- verification action language member 0 success 14s
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- install (+4 more reused dependencies)
++- verification action language member 1 success 7s
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- install (+4 more reused dependencies)
++- verification action language member 2 success 12s
+|  +- compile exe build-env safe native (reused)
+|  +- install (+4 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action language member 3 success 1s
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- install (+4 more reused dependencies)
++- verification action language member 4 success 1s
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- install (+4 more reused dependencies)
++- verification action language member 5 success 1s
+|  +- compile exe build-env safe native (reused)
+|  +- install (+4 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action language member 6 success 2s
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- install (+4 more reused dependencies)
++- verification action language member 7 success 2s
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- install (+4 more reused dependencies)
++- verification action language member 8 success 4s
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-guest success
++- verification action guest member 0 success 790ms
+   +- compile exe mylang debug native (+5 more reused dependencies)
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+verification-doc-coverage success
++- verification action doc-coverage member 0 success 55ms
+   +- compile exe mylang debug native (+5 more reused dependencies)
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+verification-verification_session success
++- verification action verification_session member 0 success 2s
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+   +- verification action input-discovery member 0 (reused)
+   +- verification action environment-discovery member 0 (+1 more reused dependencies)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-coverage success
++- verification action coverage member 0 success 273ms
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+   +- verification action input-discovery member 0 (reused)
+   +- verification action environment-discovery member 0 (+1 more reused dependencies)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-identity-qualification success
++- verification action identity-qualification member 0 cached
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+   +- verification action environment-discovery member 0 (+1 more reused dependencies)
+verification-juice-runtime success
++- verification action juice-runtime member 0 success 687ms
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+verification-juice success
++- verification action juice member 0 success 1s
+|  +- compile exe build-env safe native (reused)
+|  +- install (+4 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (+1 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action juice member 1 success 3s
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+   +- verification action input-discovery member 0 (reused)
+   +- verification action environment-discovery member 0 (+1 more reused dependencies)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-spec-history success
++- verification action spec-history member 0 success 3s
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+verification-selfhost_numeric success
++- verification action selfhost_numeric member 0 success 1s
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+   +- verification action input-discovery member 0 (reused)
+   +- verification action environment-discovery member 0 (+1 more reused dependencies)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-application_cache success
++- verification action application_cache member 0 success 8s
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+   +- verification action input-discovery member 0 (reused)
+   +- verification action environment-discovery member 0 (+1 more reused dependencies)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-tooling_isolation success
++- verification action tooling_isolation member 0 success 2s
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+   +- verification action input-discovery member 0 (reused)
+   +- verification action environment-discovery member 0 (+1 more reused dependencies)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-parser_hints success
++- verification action parser_hints member 0 success 375ms
+|  +- compile exe build-env safe native (reused)
+|  +- install (+4 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (+1 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action parser_hints member 1 success 696ms
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+   +- verification action input-discovery member 0 (reused)
+   +- verification action environment-discovery member 0 (+1 more reused dependencies)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-interface_oracle success
++- verification action interface_oracle member 0 success 12s
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+   +- verification action input-discovery member 0 (reused)
+   +- verification action environment-discovery member 0 (+1 more reused dependencies)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-interfaces success
++- verification action interfaces member 0 success 5s
+|  +- compile exe build-env safe native (reused)
+|  +- install (+4 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (+1 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action interfaces member 1 success 1s
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+   +- verification action input-discovery member 0 (reused)
+   +- verification action environment-discovery member 0 (+1 more reused dependencies)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-incremental success
++- verification action incremental member 0 success 3s
+|  +- compile exe build-env safe native (reused)
+|  +- install (+4 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (+1 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action incremental member 1 success 8s
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+   +- verification action input-discovery member 0 (reused)
+   +- verification action environment-discovery member 0 (+1 more reused dependencies)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-idioms success
++- verification action idioms member 0 success 9s
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+   +- verification action input-discovery member 0 (reused)
+   +- verification action environment-discovery member 0 (+1 more reused dependencies)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-golden success
++- verification action golden member 0 4 pass (4 total) 40s MaxRSS:71M
+   +- compile test debug native cached 5ms MaxRSS:41M
+   |  +- options cached
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+   +- verification action input-discovery member 0 (reused)
+   +- verification action environment-discovery member 0 (+1 more reused dependencies)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-cli success
++- verification action cli member 0 48 pass, 223 skip (271 total) 1m MaxRSS:293M
+|  +- compile test debug native cached 7ms MaxRSS:41M
+|  |  +- options (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- compile exe selka-components safe native (reused)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (+1 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action cli member 1 45 pass, 226 skip (271 total) 10s MaxRSS:66M
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- compile exe selka-components safe native (reused)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (+1 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action cli member 2 45 pass, 226 skip (271 total) 11s MaxRSS:64M
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- compile exe selka-components safe native (reused)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (+1 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action cli member 3 45 pass, 226 skip (271 total) 1m MaxRSS:165M
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- compile exe selka-components safe native (reused)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (+1 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action cli member 4 44 pass, 227 skip (271 total) 7s MaxRSS:62M
+|  +- compile test debug native (+1 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- compile exe selka-components safe native (reused)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (+1 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action cli member 5 44 pass, 227 skip (271 total) 41s MaxRSS:172M
+   +- compile test debug native (+1 more reused dependencies)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe build-env safe native (reused)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+   +- compile exe selka-components safe native (reused)
+   +- verification action input-discovery member 0 (reused)
+   +- verification action environment-discovery member 0 (+1 more reused dependencies)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-unit success
++- verification action unit member 0 137 pass, 1422 skip (1559 total) 1m MaxRSS:101M
+|  +- compile test debug native cached 7ms MaxRSS:41M
+|  |  +- run exe build-identity (build_identity) (+1 more reused dependencies)
+|  |  +- options cached
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (+1 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action unit member 1 130 pass, 1429 skip (1559 total) 20s MaxRSS:69M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (+1 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action unit member 2 130 pass, 1429 skip (1559 total) 1m MaxRSS:68M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (+1 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action unit member 3 130 pass, 1429 skip (1559 total) 46s MaxRSS:68M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (+1 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action unit member 4 129 pass, 1430 skip (1559 total) 47s MaxRSS:95M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (+1 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action unit member 5 129 pass, 1430 skip (1559 total) 42s MaxRSS:68M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (+1 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action unit member 6 129 pass, 1430 skip (1559 total) 1m MaxRSS:68M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (+1 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action unit member 7 129 pass, 1430 skip (1559 total) 17s MaxRSS:68M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (+1 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action unit member 8 129 pass, 1430 skip (1559 total) 18s MaxRSS:142M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (+1 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action unit member 9 129 pass, 1430 skip (1559 total) 1m MaxRSS:68M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (+1 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action unit member 10 129 pass, 1430 skip (1559 total) 1m MaxRSS:68M
+|  +- compile test debug native (+2 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (+1 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action unit member 11 129 pass, 1430 skip (1559 total) 1m MaxRSS:68M
+   +- compile test debug native (+2 more reused dependencies)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe build-env safe native (reused)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+   +- verification action input-discovery member 0 (reused)
+   +- verification action environment-discovery member 0 (+1 more reused dependencies)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-core success
++- verification action core member 0 131 pass, 913 skip (1044 total) 1m MaxRSS:280M
+|  +- compile test debug native cached 9ms MaxRSS:41M
+|  |  +- WriteFile (reused)
+|  |  +- compile obj juice_bytes_hash fast native (reused)
+|  |  +- compile obj juice_bytes_hash fast native (reused)
+|  |  +- run exe build-identity (build_identity) (+1 more reused dependencies)
+|  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 (reused)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action core member 1 131 pass, 913 skip (1044 total) 1m MaxRSS:574M
+|  +- compile test debug native (+5 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action core member 2 131 pass, 913 skip (1044 total) 56s MaxRSS:281M
+|  +- compile test debug native (+5 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action core member 3 131 pass, 913 skip (1044 total) 1m MaxRSS:292M
+|  +- compile test debug native (+5 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action core member 4 130 pass, 914 skip (1044 total) 1m MaxRSS:287M
+|  +- compile test debug native (+5 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action core member 5 130 pass, 914 skip (1044 total) 1m MaxRSS:278M
+|  +- compile test debug native (+5 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action core member 6 130 pass, 914 skip (1044 total) 1m MaxRSS:277M
+|  +- compile test debug native (+5 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action core member 7 130 pass, 914 skip (1044 total) 1m MaxRSS:280M
+   +- compile test debug native (+5 more reused dependencies)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe build-env safe native (reused)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-environment-discovery success
++- verification action environment-discovery member 0 (+1 more reused dependencies)
+verification-input-discovery success
++- verification action input-discovery member 0 (reused)
+verification-component-preparation success
++- verification action component-preparation member 0 (+1 more reused dependencies)
+

@@ -143,7 +143,7 @@ fn counted(parent: std.mem.Allocator, guest_source: []const u8, expected: []cons
         const binary = try std.fmt.allocPrint(a, "{s}/nested-{d}", .{ root, index });
         const llvm_path = try std.fmt.allocPrint(a, "{s}.ll", .{binary});
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(a, &.{ options.core_path, "build", source, "-o", binary, "--cache-dir", root, "--counters", "--emit-llvm", llvm_path });
+        try argv.appendSlice(a, &.{ options.corePath(), "build", source, "-o", binary, "--cache-dir", root, "--counters", "--emit-llvm", llvm_path });
         try argv.appendSlice(a, flags);
         const built = try std.process.run(a, std.testing.io, .{ .argv = argv.items });
         if (built.term != .exited or built.term.exited != 0) report("nested writeback build: {s}{s}\n", .{ built.stdout, built.stderr });

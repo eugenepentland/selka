@@ -5,8 +5,25 @@ const partial_suffix = ".partial";
 const lease_leaf = ".retention.lock";
 const policy_leaf = "retention-policy";
 const last_leaf = "retention-last";
+const mismatch_leaf = "mismatches.log";
 /// Native storage errors, including malformed policy or namespace metadata.
 pub const Error = storage.Error;
+/// How many times opening a store attempts namespace creation before a failure
+/// is final (SHARED-STORE-6).
+pub const initialization_attempts = 4;
+
+/// Run `step(context)` until it succeeds or `initialization_attempts` attempts
+/// have failed, returning the last failure; running out of memory is final at
+/// once. Concurrent first openers of one namespace use it so that an attempt
+/// that lost a race to a peer re-reads what the peer published.
+pub fn retried(context: anytype, comptime step: anytype) @typeInfo(@TypeOf(step)).@"fn".return_type.? {
+    var attempt: usize = 1;
+    while (true) : (attempt += 1) {
+        if (step(context)) |_| return else |err| {
+            if (err == error.OutOfMemory or attempt == initialization_attempts) return err;
+        }
+    }
+}
 /// Independent cooperative namespaces; legacy writers never enter these roots.
 pub const Kind = enum {
     compiler,
@@ -15,14 +32,14 @@ pub const Kind = enum {
     pub fn namespace(self: Kind) []const u8 {
         return switch (self) {
             .compiler => "compiler-artifacts-v2",
-            .tests => "native-tests-v2",
+            .tests => "native-tests-v3",
         };
     }
     /// Return the exact namespace marker accepted by retention.
     pub fn format(self: Kind) []const u8 {
         return switch (self) {
             .compiler => "selka-compiler-artifact-store-v2\n",
-            .tests => "selka-native-test-store-v2\n",
+            .tests => "selka-native-test-store-v3\n",
         };
     }
 };
@@ -41,6 +58,8 @@ pub const Policy = struct {
         if (self.max_age_seconds > std.math.maxInt(i64) or self.interval_seconds > std.math.maxInt(i64)) return error.ReadFailed;
     }
 };
+/// One determinism mismatch: a verified record and an attempted publication disagree.
+pub const Mismatch = struct { kind: []const u8, key: [32]u8, existing: [32]u8, attempted: [32]u8 };
 /// Counted artifact inventory; lock and policy overhead is excluded.
 pub const Counts = struct { entries: usize = 0, bytes: u64 = 0 };
 /// Collection evidence, including busy leases and deliberately incomplete inventories.
@@ -72,6 +91,34 @@ pub const Context = struct {
         errdefer file.close(self.io);
         file.lock(self.io, .shared) catch return error.WriteFailed;
         return file;
+    }
+    /// Take the shared lease only when no collection holds the namespace; null
+    /// means a sweep is running and the caller skips its write instead of waiting.
+    pub fn tryLease(self: Context) Error!?std.Io.File {
+        const file = try self.lockFile(true);
+        errdefer file.close(self.io);
+        if (!(file.tryLock(self.io, .shared) catch return error.WriteFailed)) {
+            file.close(self.io);
+            return null;
+        }
+        return file;
+    }
+    /// Append one line to `<root>/mismatches.log` with a single append write; no
+    /// timestamp. Best effort: a log failure never turns the miss into an error.
+    pub fn mismatch(self: Context, found: Mismatch) void {
+        var buffer: [384]u8 = undefined;
+        const hex = .{ std.fmt.bytesToHex(found.key, .lower), std.fmt.bytesToHex(found.existing, .lower), std.fmt.bytesToHex(found.attempted, .lower) };
+        const line = std.fmt.bufPrint(&buffer, "mismatch {s} {s} existing={s} attempted={s}\n", .{ found.kind, hex[0], hex[1], hex[2] }) catch return;
+        const path = self.joinPath(mismatch_leaf) catch return;
+        defer self.scratch.free(path);
+        const name = self.scratch.dupeSentinel(u8, path, 0) catch return;
+        defer self.scratch.free(name);
+        const linux = std.os.linux;
+        const fd = linux.open(name, .{ .ACCMODE = .WRONLY, .APPEND = true, .CREAT = true, .CLOEXEC = true, .NOFOLLOW = true, .NONBLOCK = true }, 0o600);
+        if (linux.errno(fd) != .SUCCESS) return;
+        const file: std.Io.File = .{ .handle = @intCast(fd), .flags = .{ .nonblocking = true } };
+        defer file.close(self.io);
+        file.writeStreamingAll(self.io, line) catch return;
     }
     /// Refresh verified-hit recency without affecting record validity.
     pub fn touch(self: Context, file: std.Io.File) void {
@@ -299,7 +346,7 @@ fn tier(kind: Kind, name: []const u8) bool {
     return if (kind == .tests) std.mem.eql(u8, name, "receipts") else std.mem.eql(u8, name, "syntax") or std.mem.eql(u8, name, "typed") or std.mem.eql(u8, name, "program");
 }
 fn control(name: []const u8) bool {
-    for ([_][]const u8{ "format", ".lock", lease_leaf, policy_leaf, last_leaf, "format.partial", "retention-policy.partial", "retention-last.partial" }) |item| {
+    for ([_][]const u8{ "format", ".lock", lease_leaf, policy_leaf, last_leaf, mismatch_leaf, "format.partial", "retention-policy.partial", "retention-last.partial" }) |item| {
         if (std.mem.eql(u8, name, item)) return true;
     }
     return false;
@@ -486,4 +533,54 @@ test "native retention reclaims idle exact work claim inodes" {
     const applied = try fixture.context.collect(Policy.defaults(.compiler), false);
     try std.testing.expectEqual(@as(usize, 1), applied.removed.entries);
     try std.testing.expect(!exists(fixture.temporary.dir, path));
+}
+// spec-case: SHARED-STORE-5
+test "native retention tryLease yields to collection and mismatch appends without following links" {
+    var fixture = try Fixture.init(std.testing.allocator);
+    defer fixture.deinit();
+    const io = std.testing.io;
+    const held = (try fixture.context.exclusive(true)).?;
+    try std.testing.expect((try fixture.context.tryLease()) == null);
+    held.close(io);
+    const lease = (try fixture.context.tryLease()).?;
+    try std.testing.expect((try fixture.context.collect(null, true)).skipped_active);
+    lease.close(io);
+    fixture.context.mismatch(.{ .kind = "syntax", .key = @splat(1), .existing = @splat(2), .attempted = @splat(3) });
+    fixture.context.mismatch(.{ .kind = "syntax", .key = @splat(1), .existing = @splat(2), .attempted = @splat(4) });
+    const log = try fixture.temporary.dir.readFileAlloc(io, mismatch_leaf, fixture.arena.allocator(), .limited(4096));
+    try std.testing.expectEqual(@as(usize, 2), std.mem.count(u8, log, "\n"));
+    try std.testing.expect(std.mem.startsWith(u8, log, "mismatch syntax 0101"));
+    try std.testing.expect(!(try fixture.context.collect(null, true)).unmet_budget);
+    try fixture.temporary.dir.deleteFile(io, mismatch_leaf);
+    try fixture.temporary.dir.symLink(io, "format", mismatch_leaf, .{});
+    fixture.context.mismatch(.{ .kind = "syntax", .key = @splat(1), .existing = @splat(2), .attempted = @splat(3) });
+    try std.testing.expectEqualStrings(Kind.compiler.format(), try fixture.temporary.dir.readFileAlloc(io, "format", fixture.arena.allocator(), .limited(128)));
+    try fixture.temporary.dir.deleteFile(io, lease_leaf);
+    try fixture.temporary.dir.symLink(io, "format", lease_leaf, .{});
+    try std.testing.expectError(error.WriteFailed, fixture.context.tryLease());
+}
+
+// Counts the attempts of a step that fails until `succeed_at`.
+const Attempts = struct {
+    made: usize = 0,
+    succeed_at: usize,
+    failure: Error = error.WriteFailed,
+
+    fn step(self: *Attempts) Error!void {
+        self.made += 1;
+        if (self.made < self.succeed_at) return self.failure;
+    }
+};
+
+// spec-case: SHARED-STORE-6
+test "namespace creation retries a lost race a bounded number of times and stops at once on exhaustion of memory" {
+    var recovers: Attempts = .{ .succeed_at = initialization_attempts };
+    try retried(&recovers, Attempts.step);
+    try std.testing.expectEqual(@as(usize, initialization_attempts), recovers.made);
+    var unusable: Attempts = .{ .succeed_at = initialization_attempts + 1, .failure = error.ReadFailed };
+    try std.testing.expectError(error.ReadFailed, retried(&unusable, Attempts.step));
+    try std.testing.expectEqual(@as(usize, initialization_attempts), unusable.made);
+    var exhausted: Attempts = .{ .succeed_at = initialization_attempts, .failure = error.OutOfMemory };
+    try std.testing.expectError(error.OutOfMemory, retried(&exhausted, Attempts.step));
+    try std.testing.expectEqual(@as(usize, 1), exhausted.made);
 }

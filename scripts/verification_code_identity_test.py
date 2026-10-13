@@ -52,7 +52,7 @@ class LoadedCodeIdentity(unittest.TestCase):
         self.assertIsInstance(identity._LOADED_CODE_OBJECT, CodeType)
         self.assertEqual(identity.LOADED_CODE_SHA256, loaded_code_sha256(identity._LOADED_CODE_OBJECT))
         self.assertEqual(len(identity.LOADED_CODE_SHA256), 64)
-        self.assertEqual(identity.FORMAT_VERSION, 1)
+        self.assertEqual(identity.FORMAT_VERSION, 2)
 
     def test_reference_aliases_change_marshal_but_not_canonical_identity(self):
         source = 'a = "some constant"\ndef f(x):\n    return x + 1\n'
@@ -99,6 +99,48 @@ class LoadedCodeIdentity(unittest.TestCase):
         for attribute, replacement in changes.items():
             with self.subTest(attribute=attribute):
                 self.assertNotEqual(loaded_code_sha256(code.replace(**replacement)), expected)
+
+    def test_relocated_copies_of_one_module_hash_identically(self):
+        # Two checkouts of one module: only the directory differs. A changed
+        # constant, statement or file base name still changes the identity.
+        module = 'LIMIT = 4\ndef f(x):\n    return [x + LIMIT for _ in range(2)]\n'
+        variants = {'first': ('one/scripts', 'loaded.py', module),
+                    'second': ('two/deeper/checkout/scripts', 'loaded.py', module),
+                    'constant': ('three/scripts', 'loaded.py', module.replace('LIMIT = 4', 'LIMIT = 5')),
+                    'statement': ('four/scripts', 'loaded.py', module.replace('x + LIMIT', 'x - LIMIT')),
+                    'renamed': ('five/scripts', 'other.py', module)}
+        paths = {}
+        for name, (directory, filename, text) in variants.items():
+            path = self.root / directory / filename
+            path.parent.mkdir(parents=True)
+            path.write_text(text)
+            paths[name] = path
+        source = '''import importlib.util,json,sys
+from verification_code_identity import loaded_code_sha256
+result={}
+for name,path in zip(sys.argv[1::2],sys.argv[2::2]):
+    loader=importlib.util.spec_from_file_location('loaded_'+name,path).loader
+    result[name]=loaded_code_sha256(loader.get_code('loaded_'+name))
+print(json.dumps(result))'''
+        digests = self.run_python(source, *[item for pair in paths.items() for item in pair])
+        self.assertEqual(digests['first'], digests['second'])
+        for changed in ('constant', 'statement', 'renamed'):
+            with self.subTest(changed=changed):
+                self.assertNotEqual(digests[changed], digests['first'])
+
+    def test_relocation_probe_moves_every_nested_file_name_and_detects_path_identities(self):
+        code = compile('def f():\n    def g():\n        return 1\n    return g\n', '/checkout/scripts/m.py', 'exec')
+        moved = identity.relocated(code, '/probe')
+        nested = [item for item in moved.co_consts if isinstance(item, CodeType)]
+        inner = [item for item in nested[0].co_consts if isinstance(item, CodeType)]
+        self.assertEqual([moved.co_filename, nested[0].co_filename, inner[0].co_filename],
+                         ['/probe/checkout/scripts/m.py'] * 3)
+        self.assertEqual(loaded_code_sha256(moved), loaded_code_sha256(code))
+        self.assertEqual(identity.relocated(compile('pass', 'relative.py', 'exec'), '/probe').co_filename, 'relative.py')
+        self.assertRaises(CodeIdentityError, identity.relocated, code, 'relative')
+        # A format-1 style identity (the whole file name significant) is caught.
+        with patch.object(identity, '_relocatable_filename', lambda filename: filename):
+            self.assertNotEqual(loaded_code_sha256(moved), loaded_code_sha256(code))
 
     def test_nested_function_semantics_and_defaults_invalidate(self):
         base = compile('def f(x=1):\n    return x+2\n', 'same.py', 'exec')
@@ -316,8 +358,8 @@ print(json.dumps([stale.co_consts[0],fresh.co_consts[0],loaded_code_sha256(stale
     def test_helper_implementation_changes_are_explicitly_bound(self):
         source = Path(identity.__file__).read_bytes()
         original = compile(source, identity._LOADED_CODE_OBJECT.co_filename, 'exec')
-        modified = compile(source.replace(b'mylang-verification-loaded-code-v1',
-                                          b'mylang-verification-loaded-code-x1'),
+        modified = compile(source.replace(b'mylang-verification-loaded-code-v2',
+                                          b'mylang-verification-loaded-code-x2'),
                            identity._LOADED_CODE_OBJECT.co_filename, 'exec')
         self.assertEqual(loaded_code_sha256(original), identity.LOADED_CODE_SHA256)
         self.assertNotEqual(loaded_code_sha256(modified), identity.LOADED_CODE_SHA256)

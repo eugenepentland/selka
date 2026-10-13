@@ -19,13 +19,31 @@ python3 scripts/juice_cache.py capture suite.json --compiler /path/to/mylang \
 These are developer commands. Building, installing and using the native compiler
 continues to require no Python.
 
+### The verification coordinator's default store
+
+`verify_cache.py` resolves its shared store in this order: `--shared-cache-dir DIR`,
+then `MYLANG_VERIFICATION_SHARED_CACHE=DIR` (a placement variable: its value never
+enters a key), then the per-user default `$XDG_CACHE_HOME/mylang/verification-shared`,
+else `~/.cache/mylang/verification-shared`. The default applies only while the
+module constant `DEFAULT_SHARING` in `scripts/verify_cache.py` is true; it is
+`False` until the week-3 rollout of the
+[output-keyed verification plan](../audits/output-keyed-shared-receipts-plan-2026-10-12.md),
+whose trust boundary is the same Unix user on the same machine. An explicitly
+empty flag or variable disables sharing. An unusable default store prints one
+warning and verification proceeds without sharing; an unusable store named by
+the flag or the variable is an error. `last-run.json` reports the choice as
+`evidence_store.source` (`flag`, `environment`, `default` or `none`).
+
 ## What can be shared
 
 Storage location is independent of action identity. Identical bytes deduplicate
 even when their producers have different action keys. A receipt authorizes reuse
-only for its exact existing dependency and execution contract. Workspace paths,
-debug paths, environment, host context and physical executable layout still
-invalidate actions that observe them. This does not normalize paths inside
+only for its exact existing dependency and execution contract. Verification action
+keys hold no checkout path and only the keyed and host environment classes, and
+identify native executables by their producer recipes where `artifacts.json`
+declares them ([receipt identities](development-loop.md#receipt-identities-schema-3));
+host context and any provider still identified by its bytes still invalidate
+actions that observe them. This does not normalize paths inside
 results or promise that two different checkout paths have interchangeable tests.
 An unchanged retained revision can recover its original receipts after an edit
 and revert.
@@ -42,7 +60,7 @@ environment variable, described below; revision indexes stay private.
 Each worktree still requires its own `ZIG_LOCAL_CACHE_DIR`.
 
 The native `mylang test --shared-cache-dir DIR` command accepts a shared root,
-using the independent `native-tests-v2` namespace for portable ordinary test
+using the independent `native-tests-v3` namespace for shareable test
 successes. It uses the native retention policy below, separately from the
 Python developer evidence store. See [guest tests](guest-tests.md#reusing-unaffected-results)
 for eligibility. Native tests, shared lookup and collection require no Python.
@@ -54,12 +72,20 @@ for eligibility. Native tests, shared lookup and collection require no Python.
 bodies and linked executables. Private mutable indexes and materialized
 executables remain in each worktree. See [compiler caches](caches.md#shared-compiler-artifacts)
 for eligibility and [native builds](native-build.md#shared-compiler-artifacts)
-for usage. The same root may hold `native-tests-v2`; budgets are per namespace.
+for usage. The same root may hold `native-tests-v3`; budgets are per namespace.
 
 Native compiler artifacts are bounded to 128 MiB per payload and protected by
-checksummed records and atomic rename. Staging/hashing precedes a per-key
-publication lock, which covers comparison and replacement. A conflicting valid
-same-key result raises `DeterminismMismatch` and preserves the existing record.
+checksummed records and atomic rename. A per-key publication lock covers
+comparison, staging and replacement. An existing verified record is compared by
+hashing the new bytes in place, so republishing identical bytes writes no
+staging copy and renames nothing. A conflicting valid same-key result is a miss:
+the existing record is preserved, nothing is published, and one line
+`mismatch <kind> <key> existing=<digest> attempted=<digest>` is appended to the
+namespace's `mismatches.log`. Builds count program mismatches as
+`shared_mismatches` in their cache report. Native test receipts follow the same
+rule with kind `receipt`. The integration gate (`verify_cache.py --integration`)
+fails with status 5 while any log of a store it used is non-empty
+([integration gate](development-loop.md#integration-gate)).
 Retention does not implement the developer evidence store's conflict poisoning
 or pins. These are disposable caches for trusted local producers, with no
 application-journal or power-loss durability guarantee.
@@ -86,12 +112,35 @@ records for eviction. Format, policy and permanent-lock overhead is outside the
 record budget. Abandoned staging files and unused per-key lock files can be
 reclaimed while the collector has exclusive access.
 
-Every storage operation owns a shared process lease before it reads or stages
-records, including while waiting for a publication lock. Collection acquires an
-exclusive nonblocking lease and skips active users. Compilation and test
-execution hold no exclusive retention lock. The collector requires no server
-build/gate slot. Process termination releases its lease automatically. Permanent
-`.lock` and `.retention.lock` files are never removed by collection.
+Every write owns a shared process lease before it stages records, including
+while waiting for a publication lock, and every work claim holds one through its
+work. Writers and claims take the lease without waiting: while a collection
+holds the namespace, a publication is skipped and a claim is not taken, so the
+build or test runs unclaimed and publishes nothing. Opening a namespace whose
+format marker exists takes no lock; the exclusive `.lock` is taken only while the
+marker is first created. Several processes may open and publish into one fresh
+store at once: each tolerates directories and a marker a peer created, and an
+open that fails retries namespace creation up to four times, re-reading what a
+peer published, before it reports the store unusable (SHARED-STORE-6). Lookups and restores hold no lease: records are
+immutable files replaced only by rename, so a record a collection evicts is
+either read whole through its open handle or missed. No open, lookup or restore
+waits on a collection. Collection acquires an exclusive nonblocking lease and
+skips active users. Compilation and test execution hold no exclusive retention
+lock. The collector requires no server build/gate slot. Process termination
+releases its lease automatically. Permanent `.lock` and `.retention.lock` files
+and `mismatches.log` are never removed by collection.
+
+The automatic collection runs in the opening process, at most once per interval,
+and only when it wins the exclusive lease at that moment. `scripts/prune-caches.sh`
+also runs `mylang cache gc` for the shared namespaces it finds (the configured
+`MYLANG_COMPILER_SHARED_CACHE` and `MYLANG_TEST_SHARED_CACHE` roots, else the
+default roots below), so busy stores are still collected.
+
+The default roots are `$XDG_CACHE_HOME/mylang/compiler-artifacts` and
+`$XDG_CACHE_HOME/mylang/native-tests` when `XDG_CACHE_HOME` is absolute, else
+the same names under `~/.cache/mylang`. They are used for an unset variable only
+when the `default_sharing` switch in `src/shared_cache_policy.zig` is on; it is
+off. Sharing is for the same user on the same machine.
 
 Inspect the installed native command without requiring Python:
 

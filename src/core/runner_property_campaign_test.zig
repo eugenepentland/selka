@@ -27,7 +27,7 @@ const Project = struct {
     environment: std.process.Environ.Map,
 
     fn init(a: std.mem.Allocator, root: []const u8, source: []const u8) !Project {
-        var environment = try std.testing.environ.createMap(a);
+        var environment = try options.privateEnvironment(a);
         errdefer environment.deinit();
         try environment.put("MYL_CORE_LEAKCHECK", "0");
         try environment.put("MYLANG_CACHE_PLAN_MODE", "shadow");
@@ -50,7 +50,7 @@ const Project = struct {
 
     fn runPath(self: *Project, relative: []const u8, budget: u32, extra: []const []const u8) !Value {
         var args: std.ArrayList([]const u8) = .empty;
-        try args.appendSlice(self.arena, &.{ options.core_path, "test", try self.path(relative), "--json", "--seed", "42" });
+        try args.appendSlice(self.arena, &.{ options.corePath(), "test", try self.path(relative), "--json", "--seed", "42" });
         try args.appendSlice(self.arena, &.{ "--property-policy", "indexed-v1", "--property-runs", try std.fmt.allocPrint(self.arena, "{d}", .{budget}) });
         try args.appendSlice(self.arena, &.{ "--cache-dir", try self.path("cache") });
         try args.appendSlice(self.arena, extra);
@@ -71,10 +71,10 @@ const Project = struct {
     }
 
     fn removeCoarse(self: Project) !void {
-        std.Io.Dir.cwd().deleteTree(std.testing.io, try self.path("cache/tests/receipts-v2")) catch |err| {
+        std.Io.Dir.cwd().deleteTree(std.testing.io, try self.path("cache/tests/receipts-v3")) catch |err| {
             if (err != error.FileNotFound) return err;
         };
-        std.Io.Dir.cwd().deleteTree(std.testing.io, try self.path("cache/tests/manifests-v2")) catch |err| {
+        std.Io.Dir.cwd().deleteTree(std.testing.io, try self.path("cache/tests/manifests-v3")) catch |err| {
             if (err != error.FileNotFound) return err;
         };
     }

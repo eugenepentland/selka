@@ -41,6 +41,8 @@ pub const syntax_cache = @import("syntax_cache.zig");
 pub const frontend_cache = @import("frontend_cache.zig");
 /// Optional immutable artifact transport across compatible local worktrees.
 pub const shared_artifact_store = @import("shared_artifact_store.zig");
+/// Where the shared compiler-artifact and test-receipt stores live, and the default-sharing switch.
+pub const shared_cache_policy = @import("shared_cache_policy.zig");
 /// Native shared-store leases, disk budgets and explicit collection.
 pub const native_cache_retention = @import("native_cache_retention.zig");
 /// Bounded plain-data encoding shared by frontend and Core stage artifacts.
@@ -80,6 +82,8 @@ pub const navigation_syntax = @import("navigation_syntax.zig");
 pub const component_adapter = @import("component_adapter.zig");
 /// Verified independently built planner used by every test receipt path.
 pub const cache_plan_adapter = @import("cache_plan_adapter.zig");
+/// Which environment variables enter identities and reach children (ENV-IDENTITY-1).
+pub const environment_identity = @import("environment_identity.zig");
 pub const quality = @import("quality.zig");
 pub const duplicates = @import("duplicates.zig");
 /// `mylang lint` driver, rule registry and profiles.

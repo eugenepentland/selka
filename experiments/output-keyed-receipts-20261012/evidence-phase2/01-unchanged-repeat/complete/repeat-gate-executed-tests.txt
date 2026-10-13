@@ -1,0 +1,3 @@
+      3 passed application_cache::test_durable_bounds_and_output_authority
+      3 passed application_cache::test_persistent_bounds_reject_before_storage
+      3 passed application_cache::test_zero_retention_needs_no_storage_and_snapshots_bytes

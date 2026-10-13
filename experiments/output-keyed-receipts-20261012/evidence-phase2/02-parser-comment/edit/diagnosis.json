@@ -1,0 +1,18 @@
+{
+ "diagnosis": "The five executed eligible tests are all in tests/lang/application_cache.my, whose program embeds function_digest values; src/core/callable_digest.zig:98 hashes compiler_identity into them (used by src/stdlib/persistent_memo.my:88 and src/stdlib/durable.my:154). Their program bytes change with any compiler edit, so the execution tier correctly misses. The plan's 100% expectation does not hold for such programs.",
+ "finding": "F2",
+ "observed": {
+  "eligible": 1549,
+  "exec_receipts": {
+   "hits": 1544,
+   "saves": 8
+  },
+  "executed": 5,
+  "new_programs": 3,
+  "new_unit_objects": 3,
+  "queue_seconds": 10,
+  "seconds_excluding_queue": 11.301,
+  "whole_exec_hits": 1544
+ },
+ "owner": "plan expectation (Lane B behaviour is correct)"
+}

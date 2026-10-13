@@ -12,11 +12,12 @@ fn qualified(arena: std.mem.Allocator) !bool {
     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", arena);
     const source = try std.fmt.allocPrint(arena, "{s}/t_text.my", .{options.fixtures});
     const cache = try std.fmt.allocPrint(arena, cache_pattern, .{root});
+    var environment = try options.privateEnvironment(arena);
     for ([_][]const []const u8{ &.{}, &.{"--release"}, &.{ "--release", "--verify-facts" } }) |mode| {
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(arena, &.{ options.core_path, "test", source, "--json", cache_argument, cache });
+        try argv.appendSlice(arena, &.{ options.corePath(), "test", source, "--json", cache_argument, cache });
         try argv.appendSlice(arena, mode);
-        const result = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
+        const result = try std.process.run(arena, std.testing.io, .{ .argv = argv.items, .environ_map = &environment });
         if (result.term != .exited or result.term.exited != 1) {
             report("text fixture failed: {s}{s}\n", .{ result.stdout, result.stderr });
             return false;
@@ -83,7 +84,7 @@ fn fastPathsOutput(arena: std.mem.Allocator, root: []const u8, mode: []const []c
     const output = try std.fmt.allocPrint(arena, "{s}/fast-{d}", .{ root, mode.len });
     const cache = try std.fmt.allocPrint(arena, cache_pattern, .{root});
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(arena, &.{ options.core_path, "build", source, "-o", output, cache_argument, cache });
+    try argv.appendSlice(arena, &.{ options.corePath(), "build", source, "-o", output, cache_argument, cache });
     try argv.appendSlice(arena, mode);
     const built = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
     if (built.term != .exited or built.term.exited != 0) report("text build failed: {s}{s}\n", .{ built.stdout, built.stderr });
@@ -116,11 +117,11 @@ fn methodsRun(allocator: std.mem.Allocator, mode: []const []const u8) !void {
     var directory = std.testing.tmpDir(.{});
     defer directory.cleanup();
     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", allocator);
-    var environment = try std.testing.environ.createMap(allocator);
+    var environment = try options.privateEnvironment(allocator);
     try environment.put(leak_check, "1");
     const source = try std.fs.path.join(allocator, &.{ options.fixtures, "t_methods.my" });
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(allocator, &.{ options.core_path, "test", source, "--json", cache_argument, root });
+    try argv.appendSlice(allocator, &.{ options.corePath(), "test", source, "--json", cache_argument, root });
     try argv.appendSlice(allocator, mode);
     const result = try std.process.run(allocator, std.testing.io, .{ .argv = argv.items, .environ_map = &environment });
     try std.testing.expect(result.term == .exited and result.term.exited == 1);
@@ -356,7 +357,7 @@ const moving_scans =
 fn movingScanWalk(arena: std.mem.Allocator, root: []const u8, mode: []const []const u8) !u64 {
     const output = try std.fmt.allocPrint(arena, "{s}/scan-{d}", .{ root, mode.len });
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(arena, &.{ options.core_path, "build", try std.fmt.allocPrint(arena, "{s}/scan.my", .{root}), "-o", output, cache_argument, try std.fmt.allocPrint(arena, cache_pattern, .{root}) });
+    try argv.appendSlice(arena, &.{ options.corePath(), "build", try std.fmt.allocPrint(arena, "{s}/scan.my", .{root}), "-o", output, cache_argument, try std.fmt.allocPrint(arena, cache_pattern, .{root}) });
     try argv.appendSlice(arena, mode);
     const built = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
     if (built.term != .exited or built.term.exited != 0) report("scan build failed: {s}{s}\n", .{ built.stdout, built.stderr });

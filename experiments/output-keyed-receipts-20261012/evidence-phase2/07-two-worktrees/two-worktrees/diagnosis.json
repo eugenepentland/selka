@@ -1,0 +1,23 @@
+{
+ "F3": "All 47 action_keys and budget_context differ between roots. common-facet-diff.json: only common.implementation (9 loaded-code digests) and common.loaded_code_format differ. scripts/verify_cache.py:1066-1072 hash LOADED_CODE_SHA256 of the coordinator modules; scripts/verification_code_identity.py:153 keeps filename/location metadata (co_filename) significant, so identical scripts at two paths hash differently. path_free (scripts/verify_cache.py:724) looks only for the root string and reports true.",
+ "F4": "IR receipts do not cross worktrees: 3 of 1552 IR keys equal; cache.component differs (src/cache_plan_adapter.zig:144-162 hashes the cache-plan component binary). The component build key includes coordinator_sha256 of the per-worktree selka-components builder (selfhost/components.zig:221); the build directory named by that key (~/.cache/mylang/components/artifacts/<key>.build, selfhost/components.zig:239) is embedded in the component binary (integration tree cache-plan-57659e72..., this tree cache-plan-ca96eae5..., 613 differing bytes).",
+ "F5": "First run set MYLANG_TEST_SHARED_CACHE and MYLANG_COMPILER_SHARED_CACHE for the coordinator: 13-15 Zig tests failed in each worktree (e.g. test_runner_project_test.zig:201 expected 2 found 6; 'shared compiler cache: WriteFailed' from concurrent first initialization, src/shared_artifact_store.zig:123-127). The gate is not hermetic against the placement store variables.",
+ "F7": "zig-out/verification/bin/{units,core,cli} contain the root 3-5 times and one .zig-cache/o/<hash> path each; all are DWARF directory entries, not the old core_path option string. Harness check stricter than the plan's claim.",
+ "F8": "Without the store variables only 'integration.test.CLI context keeps emitted bytes within the requested budget' fails in both scratch worktrees (test/integration.zig:5008, omissions.len > 0); it passes in the target tree (row 12 complete-in-tree), so it depends on the checkout path length/location.",
+ "findings": [
+  "F3",
+  "F4",
+  "F5",
+  "F7",
+  "F8"
+ ],
+ "observed": {
+  "actions": 47,
+  "differing_keys": 47,
+  "execution_keys_equal": 0,
+  "tests_b": {
+   "cached": 0,
+   "eligible": 1549
+  }
+ }
+}

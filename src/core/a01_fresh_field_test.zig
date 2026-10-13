@@ -200,7 +200,7 @@ test "A01 zero RC fresh field receivers retain whole owner until independent cop
         const binary = try std.fmt.allocPrint(a, "{s}/fresh-{d}", .{ root, index });
         const llvm_path = try std.fmt.allocPrint(a, "{s}.ll", .{binary});
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(a, &.{ options.core_path, "build", input, "-o", binary, "--cache-dir", root, "--counters", "--experimental-zero-rc", "--emit-llvm", llvm_path });
+        try argv.appendSlice(a, &.{ options.corePath(), "build", input, "-o", binary, "--cache-dir", root, "--counters", "--experimental-zero-rc", "--emit-llvm", llvm_path });
         try argv.appendSlice(a, flags);
         const built = try std.process.run(a, std.testing.io, .{ .argv = argv.items });
         if (built.term != .exited or built.term.exited != 0) report("fresh field build: {s}{s}\n", .{ built.stdout, built.stderr });

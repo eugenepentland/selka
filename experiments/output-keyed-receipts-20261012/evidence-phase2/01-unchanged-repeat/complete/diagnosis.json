@@ -1,0 +1,15 @@
+{
+ "diagnosis": "zig-out/verification/inventory.json coverage.unknown_actions = ['compile exe build-env safe native'] (108 required, 107 registered). build_env.zig:32 declares the tool, build.zig:552 wires it; build_verification.zig:360-380 registerInfrastructure recognises only guardian-check and build-identity, so exportPlan (build_verification.zig:119-140) adds the non-cacheable 'unclassified' group and every request runs verification-unclassified (all gate roots).",
+ "finding": "F1",
+ "observed": {
+  "baseline_gate_seconds": "23-28",
+  "baseline_request_seconds": "33.5-36.8",
+  "repeat_gate_admitted_seconds": 475.3,
+  "repeat_request_seconds": 532.0,
+  "states": {
+   "fresh": 12,
+   "reused": 35
+  }
+ },
+ "owner": "Lane C (build_verification.zig)"
+}

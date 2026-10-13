@@ -1,0 +1,851 @@
+{
+ "checks": [
+  {
+   "check": "repeat: success",
+   "expected": true,
+   "note": "",
+   "observed": {
+    "status": 0,
+    "success": true
+   },
+   "result": "pass"
+  },
+  {
+   "check": "repeat: every cacheable action reused",
+   "expected": "no action outside reused/fresh",
+   "note": "",
+   "observed": {
+    "not_reused": [],
+    "states": {
+     "fresh": 12,
+     "reused": 35
+    }
+   },
+   "result": "pass"
+  },
+  {
+   "check": "repeat: always-fresh actions listed",
+   "expected": "policy-fresh groups only",
+   "note": "informational: the plan expects only host-fresh collectors here",
+   "observed": [
+    "component-preparation",
+    "coverage",
+    "environment-discovery",
+    "guardian",
+    "guest",
+    "identity-qualification",
+    "input-discovery",
+    "juice",
+    "juice-runtime",
+    "language",
+    "spec-history",
+    "unclassified"
+   ],
+   "result": "pass"
+  },
+  {
+   "check": "repeat: action keys stable across the repeat",
+   "expected": "0 changed",
+   "note": "",
+   "observed": [],
+   "result": "pass"
+  },
+  {
+   "check": "repeat: language fact/leak members execute zero tests",
+   "expected": 0,
+   "note": "not judged: language member test telemetry is unknown on this tree",
+   "observed": {
+    "executed_tests": null,
+    "reason": "guest Host and external-effect eligibility requires execution-time admission",
+    "state": "fresh"
+   },
+   "result": "not-judged"
+  }
+ ],
+ "compilers_sha256": {},
+ "decision": "partial",
+ "finished": "2026-10-12T16:21:42.770+00:00",
+ "manifest": {
+  "compiler": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/bin/mylang",
+  "compiler_sha256": "27385c43a08071a5144529a376b7afdc7f93e575bb048785990124ac7395b134",
+  "environment": {
+   "launcher_sha256_16": {
+    "CODEX_THREAD_ID": null,
+    "PWD": "5ffa26a83103a9ee",
+    "TERM": "7f44899d0925ec2c"
+   },
+   "values": {
+    "HOME": "/home/epentland",
+    "LANG": "en_US.UTF-8",
+    "MYLANG_BUILD_MEM": "8G",
+    "MYLANG_BUILD_SLOTS": "3",
+    "MYLANG_DEV_JOBS": "4",
+    "MYLANG_DEV_MAXRSS": "8589934592",
+    "MYLANG_GATE_SLOTS": "2",
+    "MYLANG_SLOT_DIR": "/home/epentland/.cache/mylang/slots",
+    "MYLANG_ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.tmp/work",
+    "ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache"
+   }
+  },
+  "features": {
+   "build_env": true,
+   "coordinator_path_free": true,
+   "coordinator_v3": true,
+   "exec_receipts": true,
+   "exec_receipts_opt_in": false,
+   "execution_key_report": true,
+   "fact_leak_receipts": true,
+   "mismatch_counter": true,
+   "runner_identity": true,
+   "test_v3_namespaces": true
+  },
+  "harness_sha256": "764c6b321b2eb5015c1814fdda66e92f714ad48040a8d924fd4cb296e36ab179",
+  "options": {
+   "build_env": null,
+   "dry_run": false,
+   "evidence": "experiments/output-keyed-receipts-20261012/evidence-phase2",
+   "heavy": true,
+   "keep_work": false,
+   "lang_entry": null,
+   "manifest_only": null,
+   "old_ref": "f6971a623",
+   "rows": "1:complete,2,3,4,5,7,8:ld-preload,11:own-compilers,12,13",
+   "small_entry": "tests/lang/frontend_numbers.my",
+   "tree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+   "work": null
+  },
+  "plan": "docs/audits/output-keyed-shared-receipts-plan-2026-10-12.md",
+  "schema": "output-keyed-matrix-v1",
+  "slot_dir": "/home/epentland/.cache/mylang/slots",
+  "tree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+  "tree_dirty_sha256": "f3783a492a2fff38e27edbc49eb384d08c02a60dcc02f93866f595ea643a3949",
+  "tree_head": "54e3176820541dc1e2374eab3993c66e093ff78d",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+ },
+ "started": "2026-10-12T16:01:15.028+00:00",
+ "steps": {
+  "first": {
+   "argv": [
+    "python3",
+    "-B",
+    "scripts/verify_cache.py",
+    "--zig",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "--profile",
+    "complete"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+   "env_set": {
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache"
+   },
+   "env_unset": [],
+   "excerpt": [
+    {
+     "action_key": "67cbad4d02222ecd9f26036b1d84ea3bfc13740a192db4dea46e03a490ac52b0",
+     "id": "component-preparation",
+     "path_free": true,
+     "reason": "component manifests and installed outputs require validation",
+     "state": "fresh"
+    },
+    {
+     "action_key": "e34159d5729496498506c0dd4c5c288e86622520925a8028e285df8eeaac7285",
+     "id": "input-discovery",
+     "path_free": true,
+     "reason": "directory membership must be discovered at execution time",
+     "state": "fresh"
+    },
+    {
+     "action_key": "0458deb51edd1578d64b70db18436a6a5d4f0dc67fc75bc61528425b65fe39c6",
+     "id": "environment-discovery",
+     "path_free": true,
+     "reason": "live inherited environment must be discovered at execution time",
+     "state": "fresh"
+    },
+    {
+     "action_key": "77c51b8e1a5459388c192de3da71be511cbab8e21a1a6899d14d5f249b45b0db",
+     "id": "core",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "bba529690e7fdc1aea74a08ea6fe922ba6d7f39885ea6c237b7b2da073b2e0f0",
+     "id": "tooling_unit",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "2224cbca96ccc0b00b9bdd521eb8b1a0290257e08d57dd5b76b1193c626d1b25",
+     "id": "text_scalar_unit",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "d2d15a40afd588bf8378fbbadab9da4f71dba81a998e38c787dcc7d5edd8d7c7",
+     "id": "memory_budget",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "bb2e5a5e7c70111d5c788afd4d2999653b285345cc9d15c524af6dd4f154a00b",
+     "id": "unit",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "90e5456e9a36d90cb687c00887f15003a852b0a3d426ce0aeffe5a6f5ee12102",
+     "id": "cli",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "14d5ab876fb09d9da255635cef1cc3f6c756abddd1bae3f5f24c32c4349c043d",
+     "id": "golden",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "e8a953bff5f12d6b202f892c062307911d9977835277db98480da1eb780d91f6",
+     "id": "idioms_self",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "f44ce575a53458e0a70c3e390b3747cb097301c4671e5654222f8e4afcb3ee6c",
+     "id": "idioms",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "a897c1564aca4c51317d108753304cd54d1c0caa539847f55817599395d7f38a",
+     "id": "incremental",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "01d78fafffbe4dfef0b146f8e4551ff9981314da26f451239bc7da2579a6917d",
+     "id": "interfaces",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "233702192ffb83cf248224e431d8a806b0636c05b6a3dc4e609c7b97b4d64537",
+     "id": "interface_oracle",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "45bcf2a6ff8d2168fe7122031f73c7bd8b8a1ce54e8eb7aa9d92de3c346b03c5",
+     "id": "parser_hints",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "a98e222afcb667f300f6b831b2fd0ab1cf855950d4c8d3728233fe57ac5083b0",
+     "id": "friction",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "ac1c7a0ab7e8bc21d549f2e6f15a1b996a32b7cb47310e6cb33c79792a32477a",
+     "id": "tooling_isolation",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "1d4f555be12b6f4a704c9ec00c7012bbe37e2ffb69edb75090c12833e221106d",
+     "id": "application_cache",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "27050ee01660614e50301a6029fa74361b3037285a8fabce76a7fe5e6825b4b7",
+     "id": "component_builder",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "34585bafa225aa9317b578bbc32971b52437d6e6240d96cb6c12e4979fad7fd4",
+     "id": "component_native",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "fc6941c0e2a70e261446e98af6a78d015234cfac34460db48a16193c388d5dc3",
+     "id": "component-support",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "c4e5eb352edc72aeb6a0460a89966a38f8b1356b628c1277bce693a41c5527fd",
+     "id": "selfhost_numeric",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "0fc0e433fcc864c7e29374bd6418191a3d1cfbf5f1142235cf30da0d67520118",
+     "id": "spec-history",
+     "path_free": true,
+     "reason": "SPEC replay reads git history and creates repositories",
+     "state": "fresh"
+    },
+    {
+     "action_key": "7f4ea8ceedca54ab691ff6bea002f24a2f7ad2e94dfc8fe63a4fd00675f6700b",
+     "id": "juice_pure",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "f81666e9046a3346406b83905b53c7e0a5be6af87da8d3e77daa5ec99d73abe5",
+     "id": "juice",
+     "path_free": true,
+     "reason": "native performance collectors and host state require fresh execution",
+     "state": "fresh"
+    },
+    {
+     "action_key": "7cc03fcbd5078caedb4a5ff8674b637778df230f0912fe412bff9f0aadbbc4df",
+     "id": "juice-runtime",
+     "path_free": true,
+     "reason": "runtime collectors observe CPU, scheduler and current host state",
+     "state": "fresh"
+    },
+    {
+     "action_key": "49e4730190af7e71031145074645024a27892506c8d767592373c14a1c92f3ab",
+     "id": "identity-qualification",
+     "path_free": true,
+     "reason": "compiler identity qualification produces temporary compiler artifacts",
+     "state": "fresh"
+    },
+    {
+     "action_key": "0f0ddfcb58c6d26d59952e343d516628852d1a7f9a440d832d969d3c2fb651c3",
+     "id": "affected",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "ff010378ca930e2ded1767bcab985df627a5a9c2edbd6730915d91f010c97de3",
+     "id": "coverage_self",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "e9213ab5cee6b8ba5b25b402bf4f13be5e5f549b89d8277df9cf6f53e372c278",
+     "id": "coverage",
+     "path_free": true,
+     "reason": "fixture membership and negative path lookups outside source recipes require freshness",
+     "state": "fresh"
+    },
+    {
+     "action_key": "e52f8f71163b2e4e033f4b17fa0a7c467aa599192fce9277c74209ef6b7d31c0",
+     "id": "manifest_self",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "953ec362235253ab1e05135f03cd5d2c2775b7906d76644e51d90d42a7429abd",
+     "id": "verification_cache",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "0ad7fbdcea6ccb72b8c134c50103e0f931350fe55b441084e56ae0ec82111fe4",
+     "id": "verification_session",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "25bf102b00d508f224235a3ef87303672f817a3cb08a57113658eff3b81f2d68",
+     "id": "fuzz_campaign",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "b6cf16e3fab1821c44686ba67311830d98390db5d6b0f51761d767dd76dd55cc",
+     "id": "juice_cache",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "566ea26c18893866f2849546f2c8c2e4ce2feb3e0e67d25d7fe04a8979e6e540",
+     "id": "doc-coverage",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "3c5ec029f8c21172d841feb8877fa01f90ea9ba1b9892d5f3666eae21e29eb94",
+     "id": "guest",
+     "path_free": true,
+     "reason": "guest Host and external-effect eligibility remains compiler-authoritative",
+     "state": "fresh"
+    },
+    {
+     "action_key": "564114ee7c35456d9d2f4b99492d392a462f50dbabd1d5bb75eb120c8db33c6e",
+     "id": "language",
+     "path_free": true,
+     "reason": "guest Host and external-effect eligibility requires execution-time admission",
+     "state": "fresh"
+    },
+    {
+     "action_key": "1143ec60687495698b7522727de8cbb281937f43fdf679db3b23b9d2825c78f1",
+     "id": "doctest",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "66b15dfdcf1885bd148be7c139e0f907d5407597d8f8442a22b82ef241f3d77b",
+     "id": "zig-format",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "a77f09966da1591254fbdf30cff976763a06fc00dec625de83ccd31015f291cf",
+     "id": "my_format",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "279b8017b7ea0be762506a5ba1eefa2fcec018a9e719e50a93f8296ec7f4c9dd",
+     "id": "my_format_self",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "30efe59d55e62a13429650ba5e1e25bfd2e714809cc4f43f5e1c78d3aa5c0f3f",
+     "id": "noalloc_lint",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "63ea9eb90bed65ab15e712d0adbfc506062480f482d0a631687f6f1b3039a15e",
+     "id": "embedded_migration",
+     "path_free": true,
+     "reason": "no valid receipt",
+     "state": "execute"
+    },
+    {
+     "action_key": "773f335f2e931ff271e7548af696b24ddbd534c6218352c15cde331d93bf36a1",
+     "id": "guardian",
+     "path_free": true,
+     "reason": "Guardian source, git scope and mutable policy validation require freshness",
+     "state": "fresh"
+    },
+    {
+     "action_key": "dda77636bd6ef248b8587e66ae00680b843b67a5a54f7514c07c4e260f570d01",
+     "id": "unclassified",
+     "path_free": true,
+     "reason": "unknown actions require original complete gate execution",
+     "state": "fresh"
+    }
+   ],
+   "exit": 0,
+   "harness_seconds_including_queue": 695.449,
+   "kind": "command",
+   "queue_seconds": 0,
+   "report_copy": "00-first.last-run.json",
+   "seconds_excluding_queue": 695.449,
+   "started": "2026-10-12T16:01:15.028+00:00",
+   "stderr": "00-first.stderr",
+   "stderr_tail": "\n|  +- verification action input-discovery member 0 (reused)\n|  +- verification action environment-discovery member 0 (+1 more reused dependencies)\n|  +- verification action component-preparation member 0 (+1 more reused dependencies)\n|  +- compile exe mylang debug native (+5 more reused dependencies)\n|  +- compile exe mylang debug native (+5 more reused dependencies)\n+- verification action my_format member 0 (+7 more reused dependencies)\n+- verification action my_format_self member 0 (+7 more reused dependencies)\n+- verification action noalloc_lint member 0 success 806ms\n|  +- compile exe build-env safe native (reused)\n|  +- install (+4 more reused dependencies)\n|  +- verification action input-discovery member 0 (reused)\n|  +- verification action environment-discovery member 0 (+1 more reused dependencies)\n|  +- verification action component-preparation member 0 (+1 more reused dependencies)\n|  +- compile exe mylang debug native (+5 more reused dependencies)\n|  +- compile exe mylang debug native (+5 more reused dependencies)\n+- verification action embedded_migration member 0 success 2s\n   +- compile exe build-env safe native (reused)\n   +- install (+4 more reused dependencies)\n   +- verification action input-discovery member 0 (reused)\n   +- verification action environment-discovery member 0 (+1 more reused dependencies)\n   +- verification action component-preparation member 0 (+1 more reused dependencies)\n   +- compile exe mylang debug native (+5 more reused dependencies)\n\n",
+   "stdout": "00-first.stdout",
+   "step": "first"
+  },
+  "repeat": {
+   "argv": [
+    "python3",
+    "-B",
+    "scripts/verify_cache.py",
+    "--zig",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "--profile",
+    "complete"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+   "env_set": {
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache"
+   },
+   "env_unset": [],
+   "excerpt": [
+    {
+     "action_key": "67cbad4d02222ecd9f26036b1d84ea3bfc13740a192db4dea46e03a490ac52b0",
+     "id": "component-preparation",
+     "path_free": true,
+     "reason": "component manifests and installed outputs require validation",
+     "state": "fresh"
+    },
+    {
+     "action_key": "e34159d5729496498506c0dd4c5c288e86622520925a8028e285df8eeaac7285",
+     "id": "input-discovery",
+     "path_free": true,
+     "reason": "directory membership must be discovered at execution time",
+     "state": "fresh"
+    },
+    {
+     "action_key": "0458deb51edd1578d64b70db18436a6a5d4f0dc67fc75bc61528425b65fe39c6",
+     "id": "environment-discovery",
+     "path_free": true,
+     "reason": "live inherited environment must be discovered at execution time",
+     "state": "fresh"
+    },
+    {
+     "action_key": "77c51b8e1a5459388c192de3da71be511cbab8e21a1a6899d14d5f249b45b0db",
+     "id": "core",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "bba529690e7fdc1aea74a08ea6fe922ba6d7f39885ea6c237b7b2da073b2e0f0",
+     "id": "tooling_unit",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "2224cbca96ccc0b00b9bdd521eb8b1a0290257e08d57dd5b76b1193c626d1b25",
+     "id": "text_scalar_unit",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "d2d15a40afd588bf8378fbbadab9da4f71dba81a998e38c787dcc7d5edd8d7c7",
+     "id": "memory_budget",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "bb2e5a5e7c70111d5c788afd4d2999653b285345cc9d15c524af6dd4f154a00b",
+     "id": "unit",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "90e5456e9a36d90cb687c00887f15003a852b0a3d426ce0aeffe5a6f5ee12102",
+     "id": "cli",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "14d5ab876fb09d9da255635cef1cc3f6c756abddd1bae3f5f24c32c4349c043d",
+     "id": "golden",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "e8a953bff5f12d6b202f892c062307911d9977835277db98480da1eb780d91f6",
+     "id": "idioms_self",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "f44ce575a53458e0a70c3e390b3747cb097301c4671e5654222f8e4afcb3ee6c",
+     "id": "idioms",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "a897c1564aca4c51317d108753304cd54d1c0caa539847f55817599395d7f38a",
+     "id": "incremental",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "01d78fafffbe4dfef0b146f8e4551ff9981314da26f451239bc7da2579a6917d",
+     "id": "interfaces",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "233702192ffb83cf248224e431d8a806b0636c05b6a3dc4e609c7b97b4d64537",
+     "id": "interface_oracle",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "45bcf2a6ff8d2168fe7122031f73c7bd8b8a1ce54e8eb7aa9d92de3c346b03c5",
+     "id": "parser_hints",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "a98e222afcb667f300f6b831b2fd0ab1cf855950d4c8d3728233fe57ac5083b0",
+     "id": "friction",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "ac1c7a0ab7e8bc21d549f2e6f15a1b996a32b7cb47310e6cb33c79792a32477a",
+     "id": "tooling_isolation",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "1d4f555be12b6f4a704c9ec00c7012bbe37e2ffb69edb75090c12833e221106d",
+     "id": "application_cache",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "27050ee01660614e50301a6029fa74361b3037285a8fabce76a7fe5e6825b4b7",
+     "id": "component_builder",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "34585bafa225aa9317b578bbc32971b52437d6e6240d96cb6c12e4979fad7fd4",
+     "id": "component_native",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "fc6941c0e2a70e261446e98af6a78d015234cfac34460db48a16193c388d5dc3",
+     "id": "component-support",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "c4e5eb352edc72aeb6a0460a89966a38f8b1356b628c1277bce693a41c5527fd",
+     "id": "selfhost_numeric",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "0fc0e433fcc864c7e29374bd6418191a3d1cfbf5f1142235cf30da0d67520118",
+     "id": "spec-history",
+     "path_free": true,
+     "reason": "SPEC replay reads git history and creates repositories",
+     "state": "fresh"
+    },
+    {
+     "action_key": "7f4ea8ceedca54ab691ff6bea002f24a2f7ad2e94dfc8fe63a4fd00675f6700b",
+     "id": "juice_pure",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "f81666e9046a3346406b83905b53c7e0a5be6af87da8d3e77daa5ec99d73abe5",
+     "id": "juice",
+     "path_free": true,
+     "reason": "native performance collectors and host state require fresh execution",
+     "state": "fresh"
+    },
+    {
+     "action_key": "7cc03fcbd5078caedb4a5ff8674b637778df230f0912fe412bff9f0aadbbc4df",
+     "id": "juice-runtime",
+     "path_free": true,
+     "reason": "runtime collectors observe CPU, scheduler and current host state",
+     "state": "fresh"
+    },
+    {
+     "action_key": "49e4730190af7e71031145074645024a27892506c8d767592373c14a1c92f3ab",
+     "id": "identity-qualification",
+     "path_free": true,
+     "reason": "compiler identity qualification produces temporary compiler artifacts",
+     "state": "fresh"
+    },
+    {
+     "action_key": "0f0ddfcb58c6d26d59952e343d516628852d1a7f9a440d832d969d3c2fb651c3",
+     "id": "affected",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "ff010378ca930e2ded1767bcab985df627a5a9c2edbd6730915d91f010c97de3",
+     "id": "coverage_self",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "e9213ab5cee6b8ba5b25b402bf4f13be5e5f549b89d8277df9cf6f53e372c278",
+     "id": "coverage",
+     "path_free": true,
+     "reason": "fixture membership and negative path lookups outside source recipes require freshness",
+     "state": "fresh"
+    },
+    {
+     "action_key": "e52f8f71163b2e4e033f4b17fa0a7c467aa599192fce9277c74209ef6b7d31c0",
+     "id": "manifest_self",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "953ec362235253ab1e05135f03cd5d2c2775b7906d76644e51d90d42a7429abd",
+     "id": "verification_cache",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "0ad7fbdcea6ccb72b8c134c50103e0f931350fe55b441084e56ae0ec82111fe4",
+     "id": "verification_session",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "25bf102b00d508f224235a3ef87303672f817a3cb08a57113658eff3b81f2d68",
+     "id": "fuzz_campaign",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "b6cf16e3fab1821c44686ba67311830d98390db5d6b0f51761d767dd76dd55cc",
+     "id": "juice_cache",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "566ea26c18893866f2849546f2c8c2e4ce2feb3e0e67d25d7fe04a8979e6e540",
+     "id": "doc-coverage",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "3c5ec029f8c21172d841feb8877fa01f90ea9ba1b9892d5f3666eae21e29eb94",
+     "id": "guest",
+     "path_free": true,
+     "reason": "guest Host and external-effect eligibility remains compiler-authoritative",
+     "state": "fresh"
+    },
+    {
+     "action_key": "564114ee7c35456d9d2f4b99492d392a462f50dbabd1d5bb75eb120c8db33c6e",
+     "id": "language",
+     "path_free": true,
+     "reason": "guest Host and external-effect eligibility requires execution-time admission",
+     "state": "fresh"
+    },
+    {
+     "action_key": "1143ec60687495698b7522727de8cbb281937f43fdf679db3b23b9d2825c78f1",
+     "id": "doctest",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "66b15dfdcf1885bd148be7c139e0f907d5407597d8f8442a22b82ef241f3d77b",
+     "id": "zig-format",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "a77f09966da1591254fbdf30cff976763a06fc00dec625de83ccd31015f291cf",
+     "id": "my_format",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "279b8017b7ea0be762506a5ba1eefa2fcec018a9e719e50a93f8296ec7f4c9dd",
+     "id": "my_format_self",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "30efe59d55e62a13429650ba5e1e25bfd2e714809cc4f43f5e1c78d3aa5c0f3f",
+     "id": "noalloc_lint",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "63ea9eb90bed65ab15e712d0adbfc506062480f482d0a631687f6f1b3039a15e",
+     "id": "embedded_migration",
+     "path_free": true,
+     "reason": "valid prior success",
+     "state": "reused"
+    },
+    {
+     "action_key": "773f335f2e931ff271e7548af696b24ddbd534c6218352c15cde331d93bf36a1",
+     "id": "guardian",
+     "path_free": true,
+     "reason": "Guardian source, git scope and mutable policy validation require freshness",
+     "state": "fresh"
+    },
+    {
+     "action_key": "dda77636bd6ef248b8587e66ae00680b843b67a5a54f7514c07c4e260f570d01",
+     "id": "unclassified",
+     "path_free": true,
+     "reason": "unknown actions require original complete gate execution",
+     "state": "fresh"
+    }
+   ],
+   "exit": 0,
+   "harness_seconds_including_queue": 532.24,
+   "kind": "command",
+   "queue_seconds": 0,
+   "report_copy": "01-repeat.last-run.json",
+   "seconds_excluding_queue": 532.24,
+   "started": "2026-10-12T16:12:50.528+00:00",
+   "stderr": "01-repeat.stderr",
+   "stderr_tail": "ed dependencies)\n+- verification action language member 3 (+3 more reused dependencies)\n+- verification action language member 4 (+3 more reused dependencies)\n+- verification action language member 5 (+3 more reused dependencies)\n+- verification action language member 6 (+3 more reused dependencies)\n+- verification action language member 7 (+3 more reused dependencies)\n+- verification action language member 8 (+3 more reused dependencies)\nverification-guest success\n+- verification action guest member 0 (+3 more reused dependencies)\nverification-coverage success\n+- verification action coverage member 0 (+6 more reused dependencies)\nverification-identity-qualification success\n+- verification action identity-qualification member 0 (+3 more reused dependencies)\nverification-juice-runtime success\n+- verification action juice-runtime member 0 (+2 more reused dependencies)\nverification-juice success\n+- verification action juice member 0 (+6 more reused dependencies)\n+- verification action juice member 1 (+7 more reused dependencies)\nverification-spec-history success\n+- verification action spec-history member 0 (+2 more reused dependencies)\nverification-environment-discovery success\n+- verification action environment-discovery member 0 (+1 more reused dependencies)\nverification-input-discovery success\n+- verification action input-discovery member 0 (reused)\nverification-component-preparation success\n+- verification action component-preparation member 0 (+1 more reused dependencies)\n\n",
+   "stdout": "01-repeat.stdout",
+   "step": "repeat"
+  }
+ }
+}

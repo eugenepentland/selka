@@ -43,7 +43,9 @@ JOIN = re.compile(r'"(%s)"((?:\s*,\s*"[^"/\s{}]+")+)' % "|".join(TOP))
 ROOT_FILE = re.compile(r'"(SPEC\.md|README\.md)"')
 IMPORT = re.compile(r'@import\("([^"]+\.zig)"\)')
 TEST_BLOCK = re.compile(r'^test "(?:[^"\\]|\\.)*" \{$', re.M)
-DECL = re.compile(r'(?:pub )?const (\w+) = (?:\[_\]\[\]const u8\{(.*?)\};|"([^"]*)";)', re.S)
+# A list is array literals and earlier lists joined by `++`, or a string constant.
+LIST_TERM = r'(?:\[_\]\[\]const u8\{.*?\}|\w+)'
+DECL = re.compile(r'(?:pub )?const (\w+) = (?:(' + LIST_TERM + r'(?:\s*\+\+\s*' + LIST_TERM + r')*);|"([^"]*)";)', re.S)
 STRING = re.compile(r'"([^"]*)"|\b([a-z_]+)\b')
 # Paths a test spells out without opening them: compared as text, matched as a
 # glob, or printed in a message. (file, path) -> why it is not an input.
@@ -62,11 +64,15 @@ def declared_lists(text: str) -> dict[str, list[str]]:
             constants[name] = value
             continue
         entries = []
-        for literal, ident in STRING.findall(body):
-            if literal:
-                entries.append(literal)
-            elif ident in constants:
-                entries.append(constants[ident])
+        for term in re.finditer(LIST_TERM, body, re.S):
+            if not term.group().startswith("["):
+                entries.extend(lists.get(term.group(), []))
+                continue
+            for literal, ident in STRING.findall(term.group()):
+                if literal:
+                    entries.append(literal)
+                elif ident in constants:
+                    entries.append(constants[ident])
         lists[name] = entries
     return lists
 

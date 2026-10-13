@@ -4,7 +4,7 @@
 //! `tests/goldens/qbe_*.json` documents now hold the outcomes the old core
 //! recorded (`golden-outcomes-v1`).  This root discovers every checked-in
 //! `qbe_*.json` document, replays each reproducible case through the compiler
-//! selected by `test_options.compiler_path` — `mylang`, on the new core since
+//! named by `MYLANG_TEST_COMPILER` (`test_paths.corePath`) — `mylang`, on the new core since
 //! S5 — and compares the native result with the recorded outcomes. Source
 //! payloads migrate with the frontend; entry keys, outcome bytes and skip rules
 //! remain unchanged apart from approved named-variant rendering. It shells out
@@ -59,7 +59,10 @@ const testing = std.testing;
 const test_options = @import("test_options");
 
 /// The compiler built by this repository.
-const compiler_path = test_options.compiler_path;
+/// The `mylang` executable under test, which `zig build` names at run time (TEST-PATHS-1).
+fn compilerPath() []const u8 {
+    return @import("test_paths").corePath();
+}
 /// The pinned Zig executable this build used.
 const zig_path = test_options.zig_path;
 
@@ -640,7 +643,7 @@ fn makeCacheDir(allocator: std.mem.Allocator, temp: *testing.TmpDir) ![:0]u8 {
 /// Resolve the selected tools to absolute paths, since cases run elsewhere.
 fn resolveTools(allocator: std.mem.Allocator) !Tools {
     const cwd = std.Io.Dir.cwd();
-    const compiler = try cwd.realPathFileAlloc(testing.io, compiler_path, allocator);
+    const compiler = try cwd.realPathFileAlloc(testing.io, compilerPath(), allocator);
     errdefer allocator.free(compiler);
     const zig = try cwd.realPathFileAlloc(testing.io, zig_path, allocator);
     return .{ .compiler = compiler, .zig = zig };

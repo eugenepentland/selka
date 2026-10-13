@@ -1,0 +1,502 @@
+{
+ "checks": [
+  {
+   "check": "complete gate exits 0 under build-env project",
+   "expected": 0,
+   "note": "",
+   "observed": {
+    "exit": 0,
+    "failed_tests": []
+   },
+   "result": "pass"
+  },
+  {
+   "check": "coordinator reports success",
+   "expected": true,
+   "note": "",
+   "observed": true,
+   "result": "pass"
+  }
+ ],
+ "compilers_sha256": {},
+ "decision": "pass",
+ "finished": "2026-10-12T18:49:28.426+00:00",
+ "manifest": {
+  "compiler": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/bin/mylang",
+  "compiler_sha256": "27385c43a08071a5144529a376b7afdc7f93e575bb048785990124ac7395b134",
+  "environment": {
+   "launcher_sha256_16": {
+    "CODEX_THREAD_ID": null,
+    "PWD": "5ffa26a83103a9ee",
+    "TERM": "7f44899d0925ec2c"
+   },
+   "values": {
+    "HOME": "/home/epentland",
+    "LANG": "en_US.UTF-8",
+    "MYLANG_BUILD_MEM": "8G",
+    "MYLANG_BUILD_SLOTS": "3",
+    "MYLANG_DEV_JOBS": "4",
+    "MYLANG_DEV_MAXRSS": "8589934592",
+    "MYLANG_GATE_SLOTS": "2",
+    "MYLANG_SLOT_DIR": "/home/epentland/.cache/mylang/slots",
+    "MYLANG_ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.tmp/work",
+    "ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache"
+   }
+  },
+  "features": {
+   "build_env": true,
+   "coordinator_path_free": true,
+   "coordinator_v3": true,
+   "exec_receipts": true,
+   "exec_receipts_opt_in": false,
+   "execution_key_report": true,
+   "fact_leak_receipts": true,
+   "mismatch_counter": true,
+   "runner_identity": true,
+   "test_v3_namespaces": true
+  },
+  "harness_sha256": "dff952183b40132d560f36cee915694a32d59ccf7b01048fde24e81b4bffb3c6",
+  "options": {
+   "build_env": null,
+   "dry_run": false,
+   "evidence": "experiments/output-keyed-receipts-20261012/evidence-phase2",
+   "heavy": true,
+   "keep_work": false,
+   "lang_entry": null,
+   "manifest_only": null,
+   "old_ref": "f6971a623",
+   "rows": "3,7,12:complete-in-tree,13:test-receipts",
+   "small_entry": "tests/lang/frontend_numbers.my",
+   "tree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+   "work": null
+  },
+  "plan": "docs/audits/output-keyed-shared-receipts-plan-2026-10-12.md",
+  "schema": "output-keyed-matrix-v1",
+  "slot_dir": "/home/epentland/.cache/mylang/slots",
+  "tree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+  "tree_dirty_sha256": "f3783a492a2fff38e27edbc49eb384d08c02a60dcc02f93866f595ea643a3949",
+  "tree_head": "0073442242f0779e7299048e773f8e6f0ef2b27d",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+ },
+ "started": "2026-10-12T18:36:15.305+00:00",
+ "steps": {
+  "compile-build-env": {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "build-exe",
+    "build_env.zig",
+    "-OReleaseSafe",
+    "-femit-bin=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/12-projection-gate/complete-in-tree/build-env"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+   "env_set": {
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache"
+   },
+   "env_unset": [],
+   "exit": 0,
+   "harness_seconds_including_queue": 101.293,
+   "kind": "command",
+   "queue_seconds": 90,
+   "seconds_excluding_queue": 11.293,
+   "started": "2026-10-12T18:36:15.306+00:00",
+   "stderr": "01-compile-build-env.stderr",
+   "stderr_tail": "build-slot: FIFO ticket 2354, position 3; earlier build tickets must run first; waiting (0s so far)\nbuild-slot: FIFO ticket 2354, position 3; earlier build tickets must run first; waiting (60s so far)\nbuild-slot: build slot 1, FIFO ticket 2354 after 90s\n",
+   "stdout": "01-compile-build-env.stdout",
+   "step": "compile-build-env"
+  },
+  "locate-build-env": {
+   "description": "record the build-env host tool and its SHA-256",
+   "kind": "python",
+   "result": {
+    "build_env": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/12-projection-gate/complete-in-tree/build-env",
+    "sha256": "a923b76a0adc1acb2b4388922a1902283f96537f4583c499c49e376ce61e9579"
+   },
+   "seconds": 0.002,
+   "started": "2026-10-12T18:37:56.600+00:00",
+   "step": "locate-build-env"
+  },
+  "projected-complete": {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/12-projection-gate/complete-in-tree/build-env",
+    "project",
+    "--",
+    "python3",
+    "-B",
+    "scripts/verify_cache.py",
+    "--zig",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "--profile",
+    "complete",
+    "--force",
+    "--shared-cache-dir",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/12-projection-gate/complete-in-tree/verification"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+   "env_set": {
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache"
+   },
+   "env_unset": [],
+   "excerpt": [
+    {
+     "action_key": "9c00c7d45468b0ea39d3a395c36aeb8adeed981b828ff2d97e2f2ad771b607d2",
+     "id": "component-preparation",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "3b2cf1caf8556619f8742557d93b5c2ab65ee3f9164c022fb3b7c1bda8835e42",
+     "id": "input-discovery",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "c9e6c8f82fea3da87a9e97b0801e9474f878f479e12f0178512a741309475a69",
+     "id": "environment-discovery",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "6db0132bd07019ab83e60dfb7581246c8a8958b6b890c923f58fdae20b3e688e",
+     "id": "core",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "64955c2b814bedf5236acdd2aa8cd7616722b4164bd1d46dda4c3ba3be6f911c",
+     "id": "tooling_unit",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "7261742b515d900274872f8a55680a21819c2323bf7be799351e070d3b166e31",
+     "id": "text_scalar_unit",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "734ca1d29c124c6e857c3048e506c66197ccd6b55c4cc6a264e5b30b9ff07c47",
+     "id": "memory_budget",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "8cbbde8c4c51dc184f29e4e60b270bfa181759ae39c48ef2567360449133a519",
+     "id": "unit",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "cf7213a8343ce1d4e51339b2ea63a3e5427dd133c566fd56f8ce0bc2adbf5735",
+     "id": "cli",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "d7817b051bf4120abbb7f86840b2f919d6dd19efde2c2c5be0e94eecb4ba6cb2",
+     "id": "golden",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "9d3741d9d2e416e9968fa22725233890f17df059944c4548a9f7a43c51d30e29",
+     "id": "idioms_self",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "3b336e932f075f9d8407d7244fb67ac10b9f293f79aa76e5fea269f191ff59b7",
+     "id": "idioms",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "9e9200d3d1edcec88e290b134d9759301244186d8897803ac21eb35c9f9a588e",
+     "id": "incremental",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "3db4b2a08f444add5df4254cdf2ef782902d2bfe561187335204782aed4ba857",
+     "id": "interfaces",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "c9e935b9cafe4d8f8892b5ff750d7d0a4b0907fffa2148a60c03e3187e14a2e7",
+     "id": "interface_oracle",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "eeb5ec0980ed335a742d91e301b6138a8b382f2c4e45cf8f5814d90effe58b16",
+     "id": "parser_hints",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "22643077f0cc2f6e5ca46230931002c94582b28e59ee99f876f255e648d71929",
+     "id": "friction",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "fee6e9e737deafdc72603fed04c4428ddf1d0c5f3c8304610df46dd2008d4006",
+     "id": "tooling_isolation",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "da7c4eca1ef76910a41c57ccbdebef4685200196aa0cd5bf03b41d446e4b6e36",
+     "id": "application_cache",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "5f49c5ec56dac188876e78228d3431f72940490f84d3bb32654dcb00489bd04a",
+     "id": "component_builder",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "054c10798bdfbd10b387e073b5e2c8cc50ebcee22c6afd5b2b8e99bac8f3d3da",
+     "id": "component_native",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "d8ec2f35d69c1f5c211ab2f74351dfac4aeb4f14ba540dc43b087ce4f0ecdb43",
+     "id": "component-support",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "cced0b587acad53d4c9ca88771e93464ccc15ccd74eaa6da203e90ce3ee2587c",
+     "id": "selfhost_numeric",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "86e00a160f563c41f719cf6b482707dc675c1d7801f45c0325d9ca7bcfb76c55",
+     "id": "spec-history",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "5d5813d5aa19e19b42b17bb7013e18513183369f9b154ebf38d3816b3a118505",
+     "id": "juice_pure",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "256e0904e5cf97b42f13d721d4a83c530ce85deaa846d0122b6c645880dfde6f",
+     "id": "juice",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "fd18401060df38cc6c9d5869da677d380018b65f49d4a8b1fe9dec94b87829a9",
+     "id": "juice-runtime",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "3ba0dc7225a3dfd9661727e7da9e2c08eec2e0f639972bc93f385a2b2ff818c7",
+     "id": "identity-qualification",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "d4b9831033ff1fce22e89669c809b6a4600c971317890572c8ceae476b4af992",
+     "id": "affected",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "eb003183a6d9633a52e8e62a387b1f602051c056a17e82cdef5411fd1ab2742c",
+     "id": "coverage_self",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "44f0db461c6aa601a602ed2856fee2b2f8b631dcff376ee65f1bdf8150f746c0",
+     "id": "coverage",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "be734d5758c3f8329e012d7ddfa3946a5c324281691c11a45ebfec2885e7c54a",
+     "id": "manifest_self",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "40447ee5854b878796f16927875bc5397500e0dcce35ca625dbc02495bec77cb",
+     "id": "verification_cache",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "c4eee1c1e9079cda6e35a90d1a7ce95054f6280e9861e82edf96c41530899da1",
+     "id": "verification_session",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "32a63f8920c045e84efc0f19a93ed1b1b5d5456f52698d18f7c3276315855bd8",
+     "id": "fuzz_campaign",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "56fcddf954984e83bade00e97738db8acdd3a4887feaa663aa5af2d2b0c91dfa",
+     "id": "juice_cache",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "fd4452c797b139041acf4dcd471fddfd731e5746e338deeacb5d7fd9376668ac",
+     "id": "doc-coverage",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "47492c7bffd2c5e65999232bf8da7d05314d7a1fa8796a1dbe7de81e7e58339e",
+     "id": "guest",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "0925943cfac6919fbcb5279df8c23b4e9cc28bb316bb2fd514cdd462a68cf139",
+     "id": "language",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "af3b4e3ea22a36188349e8aa98d9473905bac1d9c01c5a4d817473ae8059d562",
+     "id": "doctest",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "e77a24d97dc0669fa5bcb04233daac39cdfece163c5fba6ea291f5bf1dbd9e6e",
+     "id": "zig-format",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "c94cdb8eaac08aa55b0304d1c9636564d6ec4d64cb0e3548a828ba75633626d5",
+     "id": "my_format",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "972bfa35fe843429940ff2268beda543e86475962643f46e6b34eb679a03302a",
+     "id": "my_format_self",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "2281c241f74575ba82ee1e2e5a91206ba8bb2bba593350e70ca1cafd4a1dc514",
+     "id": "noalloc_lint",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "d9ca79a90ef1d1a67a85ae718fce62f33f50b7949f54f19b36f674dc83511732",
+     "id": "embedded_migration",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "429799d0c932d2bee1afd2ddcf32bd26ff28d5cdeebb1b0a4272465575c78daa",
+     "id": "guardian",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    },
+    {
+     "action_key": "97cef363706636a77b4ec1150e9e7ab7f36ecb9aa0156b9bed0bd7b5f1e80216",
+     "id": "unclassified",
+     "path_free": true,
+     "reason": "explicit rerun or filtered request",
+     "state": "fresh"
+    }
+   ],
+   "exit": 0,
+   "harness_seconds_including_queue": 691.754,
+   "kind": "command",
+   "queue_seconds": 0,
+   "report_copy": "03-projected-complete.last-run.json",
+   "seconds_excluding_queue": 691.754,
+   "started": "2026-10-12T18:37:56.602+00:00",
+   "stderr": "03-projected-complete.stderr",
+   "stderr_tail": "\n|  +- verification action input-discovery member 0 (reused)\n|  +- verification action environment-discovery member 0 (+1 more reused dependencies)\n|  +- verification action component-preparation member 0 (+1 more reused dependencies)\n|  +- compile exe mylang debug native (+5 more reused dependencies)\n|  +- compile exe mylang debug native (+5 more reused dependencies)\n+- verification action my_format member 0 (+7 more reused dependencies)\n+- verification action my_format_self member 0 (+7 more reused dependencies)\n+- verification action noalloc_lint member 0 success 881ms\n|  +- compile exe build-env safe native (reused)\n|  +- install (+4 more reused dependencies)\n|  +- verification action input-discovery member 0 (reused)\n|  +- verification action environment-discovery member 0 (+1 more reused dependencies)\n|  +- verification action component-preparation member 0 (+1 more reused dependencies)\n|  +- compile exe mylang debug native (+5 more reused dependencies)\n|  +- compile exe mylang debug native (+5 more reused dependencies)\n+- verification action embedded_migration member 0 success 1s\n   +- compile exe build-env safe native (reused)\n   +- install (+4 more reused dependencies)\n   +- verification action input-discovery member 0 (reused)\n   +- verification action environment-discovery member 0 (+1 more reused dependencies)\n   +- verification action component-preparation member 0 (+1 more reused dependencies)\n   +- compile exe mylang debug native (+5 more reused dependencies)\n\n",
+   "stdout": "03-projected-complete.stdout",
+   "step": "projected-complete"
+  },
+  "reset-work": {
+   "description": "empty the row's private work directory",
+   "kind": "python",
+   "result": {
+    "directory": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/12-projection-gate/complete-in-tree"
+   },
+   "seconds": 0.001,
+   "started": "2026-10-12T18:36:15.305+00:00",
+   "step": "reset-work"
+  }
+ }
+}

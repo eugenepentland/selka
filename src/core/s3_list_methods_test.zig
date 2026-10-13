@@ -8,11 +8,11 @@ fn qualified(a: std.mem.Allocator) !void {
     defer directory.cleanup();
     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
     const source = try std.fs.path.join(a, &.{ options.fixtures, "m_list_methods.my" });
-    var environment = try std.testing.environ.createMap(a);
+    var environment = try options.privateEnvironment(a);
     try environment.put("MYL_CORE_LEAKCHECK", "1");
     for ([_][]const []const u8{ &.{"--unoptimized"}, &.{"--release"}, &.{ "--release", "--verify-facts" } }) |mode| {
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(a, &.{ options.core_path, "test", source, "--json", "--cache-dir", root });
+        try argv.appendSlice(a, &.{ options.corePath(), "test", source, "--json", "--cache-dir", root });
         try argv.appendSlice(a, mode);
         const result = try std.process.run(a, std.testing.io, .{ .argv = argv.items, .environ_map = &environment });
         if (result.term != .exited or result.term.exited != 1 or result.stderr.len != 0)
@@ -55,7 +55,7 @@ test "zero RC keyed sorting gathers wide managed records with stable independent
     const counts = try std.fs.path.join(a, &.{ root, "counts.json" });
     for ([_][]const []const u8{ &.{"--unoptimized"}, &.{"--release"}, &.{ "--release", "--verify-facts" }, &.{"--optimize-debug"}, &.{ "--release", "--no-facts" } }) |mode| {
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(a, &.{ options.core_path, "build", source, "--experimental-zero-rc", "--counters", "--cache-dir", root, "--emit-llvm", llvm, "-o", binary });
+        try argv.appendSlice(a, &.{ options.corePath(), "build", source, "--experimental-zero-rc", "--counters", "--cache-dir", root, "--emit-llvm", llvm, "-o", binary });
         try argv.appendSlice(a, mode);
         const built = try std.process.run(a, io, .{ .argv = argv.items });
         if (built.term != .exited or built.term.exited != 0) report("owned keyed sort build: {s}{s}\n", .{ built.stdout, built.stderr });

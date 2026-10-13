@@ -193,7 +193,7 @@ test "cost query loadValue rejects damaged missing and foreign row records and p
 const Cli = struct { stdout: []const u8, work: std.json.Value };
 fn cli(a: std.mem.Allocator, root: []const u8, extra: []const []const u8) !Cli {
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(a, &.{ tools.core_path, "cost", try std.fs.path.join(a, &.{ root, "main.my" }), "--json", "--cache-dir", try std.fs.path.join(a, &.{ root, "cli-cache" }), "--cache-report" });
+    try argv.appendSlice(a, &.{ tools.corePath(), "cost", try std.fs.path.join(a, &.{ root, "main.my" }), "--json", "--cache-dir", try std.fs.path.join(a, &.{ root, "cli-cache" }), "--cache-report" });
     try argv.appendSlice(a, extra);
     const child = try std.process.run(a, io, .{ .argv = argv.items });
     if (child.term != .exited or child.term.exited != 0) try std.testing.expectEqualStrings("", child.stderr);

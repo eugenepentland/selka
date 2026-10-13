@@ -281,13 +281,16 @@ fn materializationMetrics(stages: *stage_metrics.Report, lazy: ?*lowering_cache.
     }
 }
 
-/// Report the new core's refusal of a construct at `refusal`, as text or as a
-/// `diagnostic-v1` record.
 /// Entry metadata shared by ordinary builds and cost's identical LLVM emission.
-pub fn unitFor(a: std.mem.Allocator, checked: frontend.Checked, absolute: []const u8, single: bool) std.mem.Allocator.Error!Unit {
+/// The unit's `source_path` never names the checkout: a header-less `entry` file
+/// goes by its basename, its path relative to its own directory (the root its
+/// receipts key it under), and a module-headed entry by its module-root-relative
+/// path (`shownPath`), so the program's bytes do not depend on where the tree sits
+/// (ENTRY-PATH-1).
+pub fn unitFor(a: std.mem.Allocator, checked: frontend.Checked, entry: []const u8, single: bool) std.mem.Allocator.Error!Unit {
     return .{
         .src = checked.src,
-        .source_path = if (single) absolute else shownPath(checked.src, checked.program),
+        .source_path = if (single) std.fs.path.basename(entry) else shownPath(checked.src, checked.program),
         .main = .{
             .parameters = try mainParameters(a, checked.program),
             .result = mainResult(checked.program),
@@ -297,6 +300,8 @@ pub fn unitFor(a: std.mem.Allocator, checked: frontend.Checked, absolute: []cons
     };
 }
 
+/// Report the new core's refusal of a construct at `refusal`, as text or as a
+/// `diagnostic-v1` record.
 fn refused(allocator: std.mem.Allocator, src: language.source.Source, refusal: build_ir.Refusal, diagnostics: Diagnostics, report: *std.ArrayList(u8)) Error!void {
     const message = try std.fmt.allocPrint(allocator, "the new core does not support {s} yet", .{refusal.reason});
     if (diagnostics == .json) {
@@ -330,7 +335,9 @@ fn flags(init: std.process.Init, options: Options, budget: ?run_budget.RunBudget
 
 /// Say what the caches served: for a replayed build (`outcome` null) that it replayed,
 /// else the units linked, reused, compiled and verified, whether the program store
-/// served the executable, and the tool processes started.
+/// served the executable, and the tool processes started. `shared_mismatches`
+/// counts shared program records that disagreed with this build's bytes; the
+/// text line names it only when it is not zero.
 fn cacheReport(allocator: std.mem.Allocator, form: CacheReport, outcome: ?driver.Outcome, stages: ?*const stage_metrics.Report, storage: ?*const stage_metrics.Storage, report: *std.ArrayList(u8)) Error!void {
     const c = if (outcome) |built| built.counts else driver.Counts{};
     const program = if (outcome) |built| (if (built.program_reused) "reused" else "linked") else "replayed";
@@ -346,21 +353,23 @@ fn cacheReport(allocator: std.mem.Allocator, form: CacheReport, outcome: ?driver
             .stages = stages,
             .storage = storage,
             .program_shared = if (outcome) |built| built.program_shared else false,
+            .shared_mismatches = c.shared_mismatches,
         }, .{}) catch return error.OutOfMemory;
         try report.print(allocator, "{s}\n", .{record});
         return;
     }
     if (outcome == null) return report.appendSlice(allocator, "mylang-core: cache: replayed the last identical build\n");
-    const format = "mylang-core: cache: {d} units, {d} reused, {d} compiled, {d} verified; program {s}; {d} processes\n";
-    try report.print(allocator, format, .{ c.units, c.reused, c.compiled, c.verified, program, c.processes });
+    const format = "mylang-core: cache: {d} units, {d} reused, {d} compiled, {d} verified; program {s}; {d} processes{s}\n";
+    const mismatches = if (c.shared_mismatches == 0) "" else try std.fmt.allocPrint(allocator, "; {d} shared mismatches", .{c.shared_mismatches});
+    try report.print(allocator, format, .{ c.units, c.reused, c.compiled, c.verified, program, c.processes, mismatches });
 }
 
 /// What the back half of a build needs to know about the checked source.
 pub const Unit = struct {
     /// The merged source trap positions are located in.
     src: language.source.Source,
-    /// The path traps and error traces report: the entry file's, as the old core shows it
-    /// (`shownPath`).
+    /// The entry file's path as LLVM's `source_filename` and the entry's `DIFile`
+    /// name it: root-relative, never absolute (`unitFor`, ENTRY-PATH-1).
     source_path: []const u8,
     /// The entry function's parameter names (which pick stdout or stderr for a
     /// `Stream`) and, when it returns a `Result`, its case tags.
@@ -381,10 +390,12 @@ pub fn retainUnit(arena: std.mem.Allocator, module: *ir.Module, given: Unit) std
 }
 
 /// The back half of `build`: run the selected passes on `module`, emit LLVM IR, and
-/// link the executable. `mylang-core test` reaches it with a module of its own making.
-pub fn finish(init: std.process.Init, module: *ir.Module, unit: Unit, options: Options, report: *std.ArrayList(u8)) Error!u8 {
-    _ = try linkEmitted(init, module, unit, options, report);
-    return 0;
+/// link the executable. `mylang-core test` reaches it with a module of its own making
+/// and keys its execution receipts by the answer, the linked program's exact key
+/// (`driver.Outcome.program_key`, EXEC-RECEIPT-1).
+pub fn finish(init: std.process.Init, module: *ir.Module, unit: Unit, options: Options, report: *std.ArrayList(u8)) Error!?[32]u8 {
+    const outcome = try linkEmitted(init, module, unit, options, report);
+    return outcome.program_key;
 }
 
 fn linkEmitted(init: std.process.Init, module: *ir.Module, unit: Unit, options: Options, report: *std.ArrayList(u8)) Error!driver.Outcome {
@@ -707,4 +718,25 @@ test "prepareCallables function_digest refuses missing native tool authority and
     changed.generation = @splat(4);
     try std.testing.expect(sameIdentityTool(expected, expected));
     try std.testing.expect(!sameIdentityTool(expected, changed));
+}
+
+// spec-case: SHARED-STORE-3
+test "cache reports carry shared program mismatches and name them in text only when present" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var outcome: driver.Outcome = .{ .tool = .{ .path = "zig", .digest = @splat(1), .generation = @splat(2), .native_target = @splat(3), .inputs = 0, .memo_hit = false } };
+    outcome.counts = .{ .units = 2, .reused = 2, .processes = 0 };
+    var clean: std.ArrayList(u8) = .empty;
+    try cacheReport(a, .text, outcome, null, null, &clean);
+    try std.testing.expectEqualStrings("mylang-core: cache: 2 units, 2 reused, 0 compiled, 0 verified; program linked; 0 processes\n", clean.items);
+    outcome.counts.shared_mismatches = 1;
+    var text: std.ArrayList(u8) = .empty;
+    try cacheReport(a, .text, outcome, null, null, &text);
+    try std.testing.expectEqualStrings("mylang-core: cache: 2 units, 2 reused, 0 compiled, 0 verified; program linked; 0 processes; 1 shared mismatches\n", text.items);
+    var json: std.ArrayList(u8) = .empty;
+    try cacheReport(a, .json, outcome, null, null, &json);
+    const parsed = try std.json.parseFromSliceLeaky(std.json.Value, a, json.items, .{});
+    try std.testing.expectEqual(@as(i64, 1), parsed.object.get("shared_mismatches").?.integer);
+    try std.testing.expectEqualStrings("cache-report-v1", parsed.object.get("version").?.string);
 }

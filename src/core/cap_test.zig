@@ -131,7 +131,7 @@ fn builtinEnvironmentDenial(a: std.mem.Allocator) !void {
     try environment.put("KEEP", "visible");
     for ([_][]const []const u8{ &.{}, &.{ "--release", "--verify-facts" } }) |mode| {
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(a, &.{ options.core_path, "build", source, "-o", binary, "--cache-dir", root });
+        try argv.appendSlice(a, &.{ options.corePath(), "build", source, "-o", binary, "--cache-dir", root });
         try argv.appendSlice(a, mode);
         const built = try std.process.run(a, std.testing.io, .{ .argv = argv.items });
         try std.testing.expect(built.term == .exited and built.term.exited == 0);

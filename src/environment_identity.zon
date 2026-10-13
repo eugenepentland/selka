@@ -1,0 +1,121 @@
+// The environment identity contract (ENV-IDENTITY-1, ENV-IDENTITY-2): the one
+// definition of which environment variables enter an identity and which ones a
+// child process receives. `src/environment_identity.zig` imports it at compile
+// time; `scripts/verification_environment.py` reads it with a strict parser.
+//
+//   keyed      NAME=VALUE enters every identity, guest and host, and the
+//              variable is passed on.
+//   host       NAME=VALUE enters host-tool identities only (the build graph's
+//              verdicts, Python drivers, the coordinator), never a guest test
+//              receipt; the variable is passed on.
+//   placement  passed on, never keyed: where content-addressed storage or
+//              diagnostics live, how many jobs run, which process runs a test.
+//   dropped    removed from children and absent from every key. A name that
+//              no entry matches is dropped too; these entries document the
+//              usual ones and override a shorter prefix of another class.
+//
+// An entry is an exact name or a prefix ending in `*`. Precedence: an exact
+// name beats every prefix, and among prefixes the longest wins. Each spelling
+// appears once across all four lists. Read docs/tooling/environment-identity.md
+// before adding a variable; the Python reader accepts only this subset of ZON
+// (comments, `.name = .{ "string", ... }`, trailing commas, no escapes).
+.{
+    .keyed = .{
+        // The compiler, the core runtime and the verification tools.
+        "MYL_*",
+        "MYLANG_*",
+        "SELKA_*",
+        // Reproducible-output switches of the C toolchain and archivers.
+        "SOURCE_DATE_EPOCH",
+        "ZERO_AR_DATE",
+        // Dynamic-loader overrides; a non-empty one also refuses receipts.
+        "LD_*",
+        // The C compiler and Zig toolchain inputs.
+        "CCC_OVERRIDE_OPTIONS",
+        "COMPILER_PATH",
+        "CPATH",
+        "C_INCLUDE_PATH",
+        "CPLUS_INCLUDE_PATH",
+        "GCC_EXEC_PREFIX",
+        "LIBRARY_PATH",
+        "OBJC_INCLUDE_PATH",
+        "ZIG",
+        "ZIG_LIB_DIR",
+        "ZIG_LIBC",
+    },
+    .host = .{
+        // Host tooling only: locale, time zone and Python interpreter settings
+        // change Python drivers and host tools, never a guest build or test.
+        "PYTHON*",
+        "LANG",
+        "LANGUAGE",
+        "LC_*",
+        "TZ",
+    },
+    .placement = .{
+        // Homes, scratch and the search path (tools are keyed by content).
+        "HOME",
+        "XDG_CACHE_HOME",
+        "XDG_RUNTIME_DIR",
+        "TMPDIR",
+        "PATH",
+        // Content-addressed stores.
+        "ZIG_LOCAL_CACHE_DIR",
+        "ZIG_GLOBAL_CACHE_DIR",
+        "MYLANG_CORE_RUNTIME_CACHE",
+        "MYLANG_COMPILER_SHARED_CACHE",
+        "MYLANG_TEST_SHARED_CACHE",
+        // The coordinator's shared verification evidence store.
+        "MYLANG_VERIFICATION_SHARED_CACHE",
+        "MYLANG_FRONTEND_CACHE",
+        "MYLANG_COMPONENT_DIR",
+        // Parallelism and the process that runs a test.
+        "MYLANG_JOBS",
+        "MYLANG_UNIT_JOBS",
+        "MYLANG_UNIT_SHARDS",
+        "MYLANG_TEST_ISOLATE",
+        "MYLANG_TEST_CHILDREN",
+        "MYL_CORE_PARENT_TOOL_TICKET",
+        "MYLANG_TEST_COMPILER",
+        "MYLANG_TEST_COMPONENT_BUILDER",
+        // Build-slot admission and developer job sizing.
+        "MYLANG_SLOT_DIR",
+        "MYLANG_ADMISSION_*",
+        "MYLANG_BUILD_SLOTS",
+        "MYLANG_BUILD_MEM",
+        "MYLANG_GATE_SLOTS",
+        "MYLANG_GATE_MEM",
+        "MYLANG_TIMING_MEM",
+        "MYLANG_TIMING_CPUS",
+        "MYLANG_SLOT_SETTLE",
+        "MYLANG_SLOT_POLL",
+        "MYLANG_DEV_JOBS",
+        "MYLANG_DEV_MAXRSS",
+        // Diagnostics and scratch directories.
+        "MYLANG_TEST_TELEMETRY_DIR",
+        "SELKA_VERIFICATION_TELEMETRY_DIR",
+        "MYLANG_FRICTION_LOG",
+        "MYLANG_S1_WORKDIR",
+    },
+    .dropped = .{
+        "PWD",
+        "OLDPWD",
+        "SHLVL",
+        "_",
+        "TERM*",
+        "COLUMNS",
+        "LINES",
+        "USER",
+        "LOGNAME",
+        "DISPLAY",
+        "SSH_*",
+        "CODEX_*",
+        "CLAUDE*",
+        "ANTHROPIC*",
+        "OPENAI*",
+        "GIT_*",
+        "BASH_ENV",
+        "ENV",
+        "BASH_FUNC_*",
+    },
+}

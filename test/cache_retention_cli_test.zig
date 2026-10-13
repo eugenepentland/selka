@@ -1,7 +1,10 @@
 //! Retention runs through the installed native command, including an empty PATH.
 const std = @import("std");
 const testing = std.testing;
-const compiler_path = @import("test_options").compiler_path;
+/// The `mylang` executable under test, which `zig build` names at run time (TEST-PATHS-1).
+fn compilerPath() []const u8 {
+    return @import("test_paths").corePath();
+}
 const key = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 
 const Fixture = struct {
@@ -12,11 +15,11 @@ const Fixture = struct {
         var temp = testing.tmpDir(.{});
         errdefer temp.cleanup();
         try temp.dir.createDirPath(testing.io, "shared/compiler-artifacts-v2/syntax");
-        try temp.dir.createDirPath(testing.io, "shared/native-tests-v2/receipts");
+        try temp.dir.createDirPath(testing.io, "shared/native-tests-v3/receipts");
         try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/compiler-artifacts-v2/.retention.lock", .data = "" });
-        try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/native-tests-v2/.retention.lock", .data = "" });
+        try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/native-tests-v3/.retention.lock", .data = "" });
         try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/compiler-artifacts-v2/format", .data = "selka-compiler-artifact-store-v2\n" });
-        try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/native-tests-v2/format", .data = "selka-native-test-store-v2\n" });
+        try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/native-tests-v3/format", .data = "selka-native-test-store-v3\n" });
         try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/compiler-artifacts-v2/syntax/" ++ key ++ ".blob", .data = "disposable artifact" });
         return .{ .temp = temp, .arena = std.heap.ArenaAllocator.init(testing.allocator) };
     }
@@ -28,7 +31,7 @@ const Fixture = struct {
 
     fn run(self: *Fixture, command: []const u8, kind: []const u8, flags: []const []const u8) !std.process.RunResult {
         const a = self.arena.allocator();
-        const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, a);
+        const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compilerPath(), a);
         const root = try self.temp.dir.realPathFileAlloc(testing.io, "shared", a);
         var environment = try std.process.Environ.createMap(testing.environ, a);
         try environment.put("PATH", "");
@@ -92,10 +95,10 @@ test "native retention CLI invalid limits and missing namespaces are explicit re
     const invalid = try fixture.run("gc", "compiler", &.{ "--max-bytes", "-1" });
     try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, invalid.term);
     try testing.expect(contains(invalid.stderr, "usage: mylang cache"));
-    try fixture.temp.dir.deleteTree(testing.io, "shared/native-tests-v2");
+    try fixture.temp.dir.deleteTree(testing.io, "shared/native-tests-v3");
     const missing = try fixture.run("gc", "tests", &.{});
     try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, missing.term);
-    try testing.expect(!fixture.exists("shared/native-tests-v2"));
+    try testing.expect(!fixture.exists("shared/native-tests-v3"));
 }
 
 // spec-case: NATIVE-CACHE-RETENTION-1
@@ -154,7 +157,7 @@ test "native retention CLI refuses preview without a lock without creating one" 
 
 fn checkFresh(fixture: *Fixture) !std.process.RunResult {
     const a = fixture.arena.allocator();
-    const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, a);
+    const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compilerPath(), a);
     const root = try fixture.temp.dir.realPathFileAlloc(testing.io, ".", a);
     const source = try std.fs.path.join(a, &.{ root, "program.my" });
     const cache = try std.fs.path.join(a, &.{ root, "private" });

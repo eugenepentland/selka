@@ -9,6 +9,8 @@ const reuse = @import("frontend_reuse.zig");
 
 /// Identity of all production compiler/runtime/property sources and toolchain.
 pub const compiler_identity = reuse.compiler_identity;
+/// Identity of the test runner, driver and pipeline sources and toolchain.
+pub const runner_identity = reuse.runner_identity;
 /// Actual front-end cache work observed during this session.
 pub const Statistics = reuse.Statistics;
 /// One module source supplied by the project test runner, borrowed until deinit.

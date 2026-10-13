@@ -99,6 +99,75 @@ def producer_metadata(root: Path, label: str, artifact: Path, mode: str) -> dict
         return result
 
 
+NATIVE_DOMAIN = 'selka-native-producer-recipes-v1'
+NATIVE_FIELDS = frozenset({'recipes', 'optimize', 'zig_version', 'test_runner'})
+
+
+class ProducerError(ValueError):
+    """A declared producer cannot be identified soundly; never an empty identity."""
+
+
+def native_producer(record: dict | None, label: str) -> tuple[dict | None, str]:
+    """Return the version-3 recipe producer of `label`, or None and why not.
+
+    `artifacts.json` version 3 declares it beside the artifact, as
+    `artifacts[label] = {"path": ..., "producer": {...}}`, or in
+    `producers[label]` when that object has `recipes`. The producer must hold
+    exactly `recipes` (relative, nonempty, unique), `optimize`, `zig_version`
+    and `test_runner`; anything else falls back to the artifact's bytes.
+    """
+    if not isinstance(record, dict) or type(record.get('version')) is not int or record['version'] != 3:
+        return None, 'artifact inventory is not version 3'
+    entry = record.get('artifacts', {}).get(label) if isinstance(record.get('artifacts'), dict) else None
+    beside = entry.get('producer') if isinstance(entry, dict) else None
+    listed = record.get('producers', {}).get(label) if isinstance(record.get('producers'), dict) else None
+    if not (isinstance(listed, dict) and 'recipes' in listed):
+        listed = None
+    if beside is not None and listed is not None:
+        return None, 'producer declared twice'
+    producer = beside if beside is not None else listed
+    if producer is None:
+        return None, 'no producer declared'
+    if not isinstance(producer, dict) or set(producer) != NATIVE_FIELDS:
+        return None, 'producer fields are not exactly ' + ', '.join(sorted(NATIVE_FIELDS))
+    recipes = producer['recipes']
+    if (not isinstance(recipes, list) or not recipes or len(set(map(str, recipes))) != len(recipes)
+            or not all(isinstance(recipe, str) and recipe and not recipe.startswith('/') for recipe in recipes)):
+        return None, 'producer recipes must be unique nonempty relative strings'
+    if not all(isinstance(producer[field], str) and producer[field] for field in ('optimize', 'zig_version')):
+        return None, 'producer optimize and zig_version must be nonempty strings'
+    if producer['test_runner'] in (None, '', [], {}):
+        return None, 'producer test_runner is empty'
+    return producer, ''
+
+
+def native_identity(label: str, producer: dict, select) -> dict:
+    """Identify a native artifact by what produced it instead of its bytes.
+
+    `select(recipe)` returns the watched, hashed records (preparation sources
+    and build configuration) that one recipe selects. The identity binds each
+    selected file's content and permissions, the recipes themselves and the
+    producer's optimize mode, Zig version and test-runner identity; it holds no
+    location. A recipe that selects nothing is an error: the recipe is wrong or
+    lies outside the watched inputs, and an incomplete closure must not
+    silently identify the artifact.
+    """
+    sources = {}
+    for recipe in producer['recipes']:
+        selected = select(recipe)
+        if not selected:
+            raise ProducerError('producer recipe of %s selects no watched input: %s' % (label, recipe))
+        for item in selected:
+            row = dict(path=item['path'], **content(item))
+            if 'resolved' in item:
+                row['resolved'] = item['resolved']
+            sources[item['path']] = row
+    return {'domain': NATIVE_DOMAIN, 'label': label, 'recipes': list(producer['recipes']),
+            'optimize': producer['optimize'], 'zig_version': producer['zig_version'],
+            'test_runner': producer['test_runner'],
+            'sources': [sources[path] for path in sorted(sources)]}
+
+
 def qualified_identity(record: dict, label: str, artifact_files: list[dict],
                        source_files: list[dict], context: dict) -> dict | None:
     """Authorize projection only when exact metadata agrees with watched bytes.
@@ -109,7 +178,7 @@ unknown new narrowing still needs proof. Inherited context includes all arbitrar
 build code, Guardian runner/diagnostic source and pinned Zig tools/library bytes.
 """
     try:
-        if type(record.get('version')) is not int or record['version'] != 2:
+        if type(record.get('version')) is not int or record['version'] not in (2, 3):
             return None
         metadata = record['producers'][label]
         fields = {'version', 'domain', 'label', 'implementation', 'sources',

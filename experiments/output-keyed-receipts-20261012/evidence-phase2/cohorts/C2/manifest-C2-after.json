@@ -1,0 +1,59 @@
+{
+ "compiler": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/c2-tree/zig-out/bin/mylang",
+ "compiler_sha256": "2bc8ccadd35622215e0408b0262f1c31ba1024a9906b3889569385ae28fa201e",
+ "environment": {
+  "launcher_sha256_16": {
+   "CODEX_THREAD_ID": null,
+   "PWD": "5ffa26a83103a9ee",
+   "TERM": "7f44899d0925ec2c"
+  },
+  "values": {
+   "HOME": "/home/epentland",
+   "LANG": "en_US.UTF-8",
+   "MYLANG_BUILD_MEM": "8G",
+   "MYLANG_BUILD_SLOTS": "3",
+   "MYLANG_DEV_JOBS": "4",
+   "MYLANG_DEV_MAXRSS": "8589934592",
+   "MYLANG_GATE_SLOTS": "2",
+   "MYLANG_SLOT_DIR": "/home/epentland/.cache/mylang/slots",
+   "MYLANG_ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+   "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.tmp/work",
+   "ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+   "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+   "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache"
+  }
+ },
+ "features": {
+  "build_env": true,
+  "coordinator_path_free": true,
+  "coordinator_v3": true,
+  "exec_receipts": true,
+  "exec_receipts_opt_in": false,
+  "execution_key_report": true,
+  "fact_leak_receipts": true,
+  "mismatch_counter": true,
+  "runner_identity": true,
+  "test_v3_namespaces": true
+ },
+ "harness_sha256": "73901f9dd8a030bbf8de20e9a11ae9f3d586197ab7dd2c6e4946dbf5d05c1264",
+ "label": "C2-after",
+ "options": {
+  "build_env": null,
+  "dry_run": false,
+  "evidence": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/evidence-phase2/cohorts/C2",
+  "keep_work": false,
+  "lang_entry": null,
+  "old_ref": "f6971a623",
+  "small_entry": "tests/lang/frontend_numbers.my",
+  "tree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/c2-tree",
+  "work": null
+ },
+ "plan": "docs/audits/output-keyed-shared-receipts-plan-2026-10-12.md",
+ "schema": "output-keyed-matrix-v1",
+ "slot_dir": "/home/epentland/.cache/mylang/slots",
+ "tree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/c2-tree",
+ "tree_dirty_sha256": "770808a64da2da7f8aad27f9679134f4c1ef2a3986046a82ccda75aabccf0dac",
+ "tree_head": "a55aeb50431b38f26c221fb8e22fb3a6f7c34e41",
+ "written": "2026-10-12T19:26:22.149+00:00",
+ "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+}

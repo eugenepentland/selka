@@ -11,7 +11,9 @@ probe program in place of the compiler. It builds them with ``zig build`` exactl
 the way the hazard was found: two trees that share one ``ZIG_LOCAL_CACHE_DIR``,
 then edits in place. After every build it checks the identity the probe embeds
 and the source list it covers, and that sharing one Zig cache between trees fails
-loudly instead of reusing the other tree's configuration.
+loudly instead of reusing the other tree's configuration. The narrower
+``runner_identity`` (RUNNER-IDENTITY-1) rides along: a front-end edit leaves it
+unchanged and a runner edit moves it.
 """
 import argparse
 import os
@@ -46,24 +48,31 @@ pub fn main(init: std.process.Init) !void {
     _ = init;
     std.debug.print("compiler_identity {s}\\n", .{built.compiler_identity});
     for (built.identity_inputs) |path| std.debug.print("input {s}\\n", .{path});
+    std.debug.print("runner_identity {s}\\n", .{built.runner_identity});
+    for (built.runner_inputs) |path| std.debug.print("runner {s}\\n", .{path});
 }
 """
 
-# Production sources (a front-end file, a core file and a runtime C unit) and
-# two test-only files.
+# Production sources (a front-end file, a core file, a test runner file and a
+# runtime C unit) and two test-only files. `build_identity_rules.zig`, which the
+# tool imports, is copied in beside them and is a production source too.
+RULES = 'build_identity_rules.zig'
 SOURCES = {
     'sema.zig': 'pub const checked = true;\n',
     'core/emit.zig': 'pub const units = 1;\n',
+    'core/test_runner_execute.zig': 'pub const trials = 1;\n',
     'core/runtime/rt.c': 'int myl_rt(void) { return 1; }\n',
     'sema_test.zig': 'test { }\n',
     'test_support.zig': 'pub const fixture = 1;\n',
 }
-PRODUCTION = sorted(['sema.zig', 'core/emit.zig', 'core/runtime/rt.c'])
+PRODUCTION = sorted(['sema.zig', 'core/emit.zig', 'core/test_runner_execute.zig', 'core/runtime/rt.c', RULES])
+RUNNER = ['core/test_runner_execute.zig']
 
 
 def make_tree(path: Path) -> None:
     (path / 'src').mkdir(parents=True)
     shutil.copy(ROOT / 'build_identity.zig', path / 'build_identity.zig')
+    shutil.copy(ROOT / 'src' / RULES, path / 'src' / RULES)
     (path / 'build.zig').write_text(BUILD_ZIG)
     (path / 'probe.zig').write_text(PROBE_ZIG)
     for name, text in SOURCES.items():
@@ -81,22 +90,34 @@ def zig_build(zig: str, tree: Path, cache: Path) -> subprocess.CompletedProcess:
 
 def build(zig: str, tree: Path, cache: Path) -> str:
     """Build `tree`, run its probe, check the sources it covers, return its identity."""
+    return build_both(zig, tree, cache)[0]
+
+
+def build_both(zig: str, tree: Path, cache: Path) -> tuple[str, str]:
+    """Build `tree`, check the sources both identities cover, and return both."""
     result = zig_build(zig, tree, cache)
     if result.returncode != 0:
         raise AssertionError(f'zig build failed in {tree}:\n{result.stderr}')
     probe = subprocess.run([str(tree / 'zig-out' / 'bin' / 'probe')], capture_output=True,
                            text=True, timeout=TIMEOUT, check=True)
-    identity, inputs = '', []
+    identity, runner, inputs, runner_inputs = '', '', [], []
     for line in probe.stderr.splitlines():
         key, _, value = line.partition(' ')
         if key == 'input':
             inputs.append(value)
+        elif key == 'runner':
+            runner_inputs.append(value)
         elif key == 'compiler_identity':
             identity = value
+        elif key == 'runner_identity':
+            runner = value
     expect(len(identity) == 64, f'{tree}: compiler_identity is not a SHA-256: {identity!r}')
+    expect(len(runner) == 64, f'{tree}: runner_identity is not a SHA-256: {runner!r}')
     expect(inputs == PRODUCTION, f'{tree}: the identity covers {inputs}, not the production '
            f'sources {PRODUCTION}')
-    return identity
+    expect(runner_inputs == RUNNER, f'{tree}: the runner identity covers {runner_inputs}, '
+           f'not {RUNNER}')
+    return identity, runner
 
 
 def expect(condition: bool, message: str) -> None:
@@ -133,9 +154,11 @@ def run(zig: str, scratch: Path) -> None:
     print('ok   the second tree, with its own cache, embeds its own identity')
 
     # In-place edits in one tree, all through the same warm cache.
+    first_runner = build_both(zig, base, shared)[1]
     edit(base, 'sema.zig', '// edited\n')
-    frontend = build(zig, base, shared)
+    frontend, frontend_runner = build_both(zig, base, shared)
     expect(frontend != first, 'a front-end edit left compiler_identity unchanged')
+    expect(frontend_runner == first_runner, 'a front-end edit moved runner_identity')
     edit(base, 'core/emit.zig', '// edited\n')
     core = build(zig, base, shared)
     expect(core != frontend, 'a new-core edit left compiler_identity unchanged')
@@ -143,11 +166,17 @@ def run(zig: str, scratch: Path) -> None:
     runtime = build(zig, base, shared)
     expect(runtime != core, 'a runtime C edit left compiler_identity unchanged')
     print('ok   front-end, core and runtime edits move compiler_identity')
+    print('ok   a front-end edit leaves runner_identity unchanged')
+    edit(base, 'core/test_runner_execute.zig', '// edited\n')
+    runner, runner_runner = build_both(zig, base, shared)
+    expect(runner != runtime, 'a runner edit left compiler_identity unchanged')
+    expect(runner_runner != frontend_runner, 'a runner edit left runner_identity unchanged')
+    print('ok   a runner edit moves compiler_identity and runner_identity')
 
     edit(base, 'sema_test.zig', '// edited\n')
     edit(base, 'test_support.zig', '// edited\n')
     test_only = build(zig, base, shared)
-    expect(test_only == runtime, 'a test-only edit moved compiler_identity')
+    expect(test_only == runner, 'a test-only edit moved compiler_identity')
     print('ok   test-only edits leave compiler_identity unchanged')
 
 

@@ -8,11 +8,11 @@ fn qualified(arena: std.mem.Allocator) !void {
     defer directory.cleanup();
     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", arena);
     const source = try std.fs.path.join(arena, &.{ options.fixtures, "d_scalar_stores.my" });
-    var environment = try std.testing.environ.createMap(arena);
+    var environment = try options.privateEnvironment(arena);
     try environment.put("MYL_CORE_LEAKCHECK", "1");
     for ([_][]const []const u8{ &.{"--unoptimized"}, &.{"--release"}, &.{ "--release", "--verify-facts" } }) |mode| {
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(arena, &.{ options.core_path, "test", source, "--json", "--cache-dir", root });
+        try argv.appendSlice(arena, &.{ options.corePath(), "test", source, "--json", "--cache-dir", root });
         try argv.appendSlice(arena, mode);
         const result = try std.process.run(arena, std.testing.io, .{ .argv = argv.items, .environ_map = &environment });
         if (result.term != .exited or result.term.exited != 0) report("scalar store fixture: {s}{s}\n", .{ result.stdout, result.stderr });

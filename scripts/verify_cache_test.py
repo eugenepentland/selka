@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path
 import py_compile
+import re
 import shutil
 import signal
 import subprocess
@@ -38,11 +39,20 @@ if phase=='plan':
 elif phase=='prepare':
     artifacts={{}}
     values=json.loads((root/'.artifact-values.json').read_text()) if (root/'.artifact-values.json').exists() else {{}}
+    # .embed-root models DWARF: the bytes name the checkout. .producer holds a
+    # version-3 producer declared for every native root.
+    embedded=str(root).encode() if (root/'.embed-root').exists() else b''
     for name in ['mylang','units','cli','core']:
         path=root/'zig-out/bin'/name; path.parent.mkdir(parents=True,exist_ok=True)
-        path.write_bytes(b'fake-native-'+name.encode()+values.get(name,'').encode()); artifacts[name]=str(path)
-    (root/'zig-out/verification/artifacts.json').write_text(json.dumps({{'version':1,'artifacts':artifacts}}))
+        path.write_bytes(b'fake-native-'+name.encode()+values.get(name,'').encode()+embedded); artifacts[name]=str(path)
+    producer=json.loads((root/'.producer').read_text()) if (root/'.producer').exists() else None
+    record={{'version':1,'artifacts':artifacts}} if producer is None else {{'version':3,'producers':{{}},
+        'artifacts':{{name:{{'path':path,'producer':producer}} for name,path in artifacts.items()}}}}
     package=root/'zig-out/libexec/mylang/components'; package.mkdir(parents=True,exist_ok=True)
+    # .component-producer declares the components provider beside the others.
+    if producer is not None and (root/'.component-producer').exists():
+        record['artifacts']['components']={{'path':str(package/'test-index.json'),'producer':producer}}
+    (root/'zig-out/verification/artifacts.json').write_text(json.dumps(record))
     for name in ['test-index','cache-plan']:
         (package/name).write_bytes(b'fake-component'+values.get('component:'+name,'').encode())
         (package/(name+'.json')).write_text(json.dumps({{'artifact':name}}))
@@ -86,6 +96,7 @@ class VerificationCoordinator(unittest.TestCase):
         self.after_gate = None
         self.gate_status = None
         self.admissions = []
+        self.revised = []
         self.stack = contextlib.ExitStack()
         self.addCleanup(self.stack.close)
         self.stack.enter_context(patch.object(coordinator, 'CONFIG_INPUTS', ['config.zig', 'build_test_inputs.zig']))
@@ -95,9 +106,8 @@ class VerificationCoordinator(unittest.TestCase):
         self.stack.enter_context(patch.object(coordinator, 'run_admitted', side_effect=self.admit))
         with Snapshot(self.root, coordinator.CONFIG_INPUTS) as configuration:
             self.qualified_configuration = copy.deepcopy(configuration.identity)
-        candidate = dict(self.qualified_configuration, files=[item for item in self.qualified_configuration['files']
-                                                              if item['path'] != 'build_test_inputs.zig'])
-        self.stack.enter_context(patch.object(coordinator, 'DECLARATIVE_CONFIG_SHA256', coordinator.key(candidate)))
+        # The fixture configuration consumes the lists nowhere: no reviewed sites.
+        self.stack.enter_context(patch.object(coordinator, 'DECLARATIVE_CONSUMERS', ()))
 
     def write(self, relative, data):
         path = self.root / relative
@@ -134,6 +144,12 @@ class VerificationCoordinator(unittest.TestCase):
             self.before_gate()
         if not unchanged():
             return coordinator.RETRY, 0.0
+        if controls.get('revise') is not None:
+            # As the real handshake does: after revalidation, before any work.
+            argv = controls['revise']()
+            self.revised.append(argv)
+            if argv is None:
+                return 0, 0.0
         if kind == 'gate' and self.gate_status is not None:
             return self.gate_status, 0.0
         status = subprocess.run(argv, cwd=root, env=env, stdout=subprocess.PIPE,
@@ -336,6 +352,77 @@ class VerificationCoordinator(unittest.TestCase):
         self.assertEqual(self.execute(shared=shared), 0)
         self.assertIn('gate', [kind for kind, _ in self.admissions])
 
+    def unpublish(self, shared, names):
+        """Remove the named actions' successes from both stores, keeping their keys."""
+        keys = self.keys()
+        store = coordinator.fuzz_campaign_store.Store(shared)
+        for name in names:
+            store.discard_success(keys[name])
+            (self.cache / 'actions' / (keys[name] + '.json')).unlink()
+        return keys
+
+    def publish(self, shared, action_key):
+        """Publish a success the way another request's coordinator does."""
+        value = {'version': coordinator.VERSION, 'kind': 'verification-success', 'key': action_key}
+        self.assertTrue(coordinator.fuzz_campaign_store.Store(shared).publish_success(action_key, value, [], lambda: True))
+
+    def test_success_published_while_queued_is_reused_after_admission(self):
+        shared = self.root / '.shared-evidence'
+        self.assertEqual(self.execute(shared=shared), 0)
+        keys = self.unpublish(shared, ['unit', 'docs'])
+        # Another request finishes `unit` while this one waits for its gate slot.
+        self.before_gate = lambda: self.publish(shared, keys['unit'])
+        self.admissions.clear()
+        self.assertEqual(self.execute(shared=shared), 0)
+        self.assertEqual(self.states(), {'unit': 'reused', 'docs': 'execute'})
+        gate = self.events('gate')[-1]['argv']
+        self.assertIn('verification-docs', gate)
+        self.assertNotIn('verification-unit', gate)
+        self.assertNotIn('test', gate)
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertEqual(report['reuse_lookups'], {'pre_queue': 0, 'post_admission': 1})
+        self.assertTrue(report['success'])
+        self.assertEqual(report['profile_coverage']['counts'], {'required': 2, 'reused': 1, 'executed': 1, 'outstanding': 0})
+        self.assertEqual(report['profile_plan']['selected'], ['docs'])
+        unit = next(row for row in report['actions'] if row['id'] == 'unit')
+        self.assertEqual(unit['reason'], 'valid prior success published while queued')
+        self.assertEqual(self.keys(), keys)
+
+    def test_every_action_published_while_queued_withdraws_the_gate(self):
+        shared = self.root / '.shared-evidence'
+        self.assertEqual(self.execute(shared=shared), 0)
+        keys = self.unpublish(shared, ['unit', 'docs'])
+        gates = len(self.events('gate'))
+        self.before_gate = lambda: [self.publish(shared, keys[name]) for name in ('unit', 'docs')]
+        self.revised.clear()
+        self.assertEqual(self.execute(shared=shared), 0)
+        self.assertEqual(self.revised, [None])
+        self.assertEqual(len(self.events('gate')), gates)
+        self.assertEqual(self.states(), {'unit': 'reused', 'docs': 'reused'})
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertEqual(report['reuse_lookups'], {'pre_queue': 0, 'post_admission': 2})
+        self.assertTrue(report['profile_coverage']['complete_verification'])
+
+    def test_success_for_inputs_changed_while_queued_is_not_reused_after_admission(self):
+        shared = self.root / '.shared-evidence'
+        self.input.write_text('changed')
+        self.assertEqual(self.execute(shared=shared), 0)
+        changed = self.keys()['unit']
+        self.input.write_text('original')
+        self.assertEqual(self.execute(shared=shared), 0)
+        self.unpublish(shared, ['unit'])
+        # While this request queues, its input becomes the content another
+        # request already verified: that success names other inputs than the
+        # ones this request keyed, and the request must not take it.
+        self.before_gate = lambda: self.input.write_text('changed')
+        gates = len(self.events('gate'))
+        self.revised.clear()
+        self.assertEqual(self.execute(shared=shared), coordinator.RETRY)
+        self.assertEqual(self.revised, [])
+        self.assertEqual(len(self.events('gate')), gates)
+        self.assertNotEqual(self.states()['unit'], 'reused')
+        self.assertTrue(coordinator.prior_success(coordinator.fuzz_campaign_store.Store(shared), self.cache, changed))
+
     def test_shared_rejected_publication_is_not_success(self):
         shared = self.root / '.shared-evidence'
         with patch.object(coordinator.fuzz_campaign_store.Store, 'publish_success', return_value=False):
@@ -490,6 +577,58 @@ class VerificationCoordinator(unittest.TestCase):
             fallback = coordinator.action_payload(pure, sources, common, self.root, providers, producer_manifest=record)
             self.assertEqual(fallback['common']['artifacts'], 'whole-artifact-fallback')
 
+    def test_narrowed_identity_binding_located_artifact_bytes_is_not_path_free(self):
+        # A qualified producer identity also binds the artifact's own bytes; a
+        # test binary's debug information names the checkout, which no search
+        # of the key can see.
+        helper = coordinator.verification_producers
+        label = 'text-scalar-units'
+        for name in helper.CLOSURES[label]:
+            self.write(name, 'reviewed source fixture')
+        pure = dict(group('text_scalar_unit', list(helper.CLOSURES[label])), artifacts=[label])
+        common = {'artifacts': 'whole-artifact-fallback', 'build_configuration': 'a' * 64,
+                  'tools': 'b' * 64, 'options': [], 'action_controls': {'optimize': 'Debug'}}
+        verdicts = []
+        for contents in ('binary fixture', 'binary fixture naming ' + str(self.root) + '/src'):
+            binary = self.write('native-scalar', contents)
+            record = {'version': 2, 'producers': {label: helper.producer_metadata(self.root, label, binary, 'Debug')}}
+            with Snapshot(self.root, pure['inputs']) as sources, Snapshot(self.root, [], [binary]) as artifact:
+                providers = {label: artifact.identity['files']}
+                payload = coordinator.action_payload(pure, sources, common, self.root, providers, producer_manifest=record)
+            self.assertIn('producer', payload['common']['artifacts'][label])
+            report = {label: {'identity': 'producer'}}
+            coordinator.located_bytes(providers, self.root, report)
+            verdicts.append((report[label]['bytes_name_root'], coordinator.path_free(payload, self.root, True, report)))
+        self.assertEqual(verdicts, [(False, True), (True, False)])
+
+    def test_timing_window_neither_enters_keys_nor_blocks_reuse(self):
+        # F14: a window schedules the request; receipts cross it both ways.
+        environment = dict(os.environ, MYLANG_SLOT_DIR=str(self.root / 'measurement-slots'), MYLANG_SLOT_SETTLE='0',
+                           MYLANG_SLOT_POLL='1', MYLANG_TIMING_MEM='0')
+        environment.pop('MYLANG_ADMISSION_DIR', None)
+        environment.pop('MYLANG_ADMISSION_KIND', None)
+
+        def windowed(seconds):
+            with patch.dict(os.environ, environment, clear=True):
+                with coordinator.verification_measurement.timing_window(seconds):
+                    self.assertEqual(self.execute(), 0)
+            return coordinator.read_record(self.cache / 'last-run.json')
+
+        self.assertEqual(self.execute(), 0)
+        plain_keys = {row['id']: row['action_key'] for row in coordinator.read_record(self.cache / 'last-run.json')['actions']}
+        report = windowed(20)
+        self.assertEqual(self.states(), {'unit': 'reused', 'docs': 'reused'})
+        self.assertEqual({row['id']: row['action_key'] for row in report['actions']}, plain_keys)
+        self.assertEqual(report['measurement_window_seconds'], 20)
+        self.input.write_text('changed under a window')
+        windowed(20)
+        self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'reused'})
+        self.assertEqual(self.execute(), 0)
+        self.assertEqual(self.states(), {'unit': 'reused', 'docs': 'reused'})
+        self.assertIsNone(coordinator.read_record(self.cache / 'last-run.json')['measurement_window_seconds'])
+        windowed(30)
+        self.assertEqual(self.states(), {'unit': 'reused', 'docs': 'reused'})
+
     def test_execution_deadline_change_invalidates_success_and_is_explained(self):
         self.assertEqual(self.execute(gate_timeout=60), 0)
         self.admissions.clear()
@@ -620,12 +759,45 @@ class VerificationCoordinator(unittest.TestCase):
 
     def test_consumer_qualification_is_explicit_and_complete(self):
         identity = {'files': [{'path': 'build_test_inputs.zig', 'sha256': 'lists'}]}
-        changed = copy.deepcopy(self.qualified_configuration)
-        changed['files'].append({'path': 'new-consumer.zig', 'sha256': 'changed'})
-        self.assertEqual(coordinator.action_configuration(identity, self.plan, self.root, changed), identity)
-        with patch.object(coordinator, 'DECLARATIVE_CONFIG_SHA256', None):
+        notes = {}
+        self.assertEqual(coordinator.action_configuration(identity, self.plan, self.root, self.qualified_configuration, notes),
+                         {'files': []})
+        self.assertEqual(notes, {'declarative_configuration': 'excluded'})
+        # A new consumer, wrapped across lines, is one unreviewed site.
+        self.write('consumer.zig', 'const lists = @import("build_test_inputs.zig"); // the lists\n'
+                                   'const unit = pick(\n    &lists.unit, // wrapped\n    "(",\n);\nconst other = 1;\n')
+        with Snapshot(self.root, ['config.zig', 'build_test_inputs.zig', 'consumer.zig']) as configuration:
+            changed = copy.deepcopy(configuration.identity)
+        sites = [('consumer.zig', 'const lists = @import("build_test_inputs.zig");'),
+                 ('consumer.zig', 'const unit = pick( &lists.unit, "(", );')]
+        self.assertEqual(coordinator.declarative_consumers(self.root, changed), sites)
+        self.assertEqual(coordinator.action_configuration(identity, self.plan, self.root, changed, notes), identity)
+        self.assertEqual(notes, {'declarative_configuration': 'unreviewed consumer sites of build_test_inputs.zig'})
+        with patch.object(coordinator, 'DECLARATIVE_CONSUMERS', tuple(sites)):
+            self.assertEqual(coordinator.action_configuration(identity, self.plan, self.root, changed), {'files': []})
+            # An edited reviewed site, and bytes that changed since the snapshot, stay broad.
+            self.write('consumer.zig', 'const lists = @import("build_test_inputs.zig");\nconst unit = pick(&lists.docs, "(");\n')
+            self.assertEqual(coordinator.action_configuration(identity, self.plan, self.root, changed, notes), identity)
+            self.assertEqual(notes, {'declarative_configuration': 'configuration changed while its consumers were read'})
+            with Snapshot(self.root, ['config.zig', 'build_test_inputs.zig', 'consumer.zig']) as configuration:
+                self.assertEqual(coordinator.action_configuration(identity, self.plan, self.root, configuration.identity), identity)
+        with patch.object(coordinator, 'DECLARATIVE_CONSUMERS', None):
             self.assertEqual(coordinator.action_configuration(identity, self.plan, self.root, self.qualified_configuration), identity)
         self.assertEqual(coordinator.action_configuration(identity, self.plan, self.root), identity)
+
+    def test_declarative_exclusion_is_reported_and_keeps_unrelated_actions_reused(self):
+        self.assertEqual(self.execute(), 0)
+        self.assertEqual(coordinator.read_record(self.cache / 'last-run.json')['declarative_configuration'], 'excluded')
+        self.write('inputs/more/fixture.txt', 'more')
+        self.plan['groups'][0]['inputs'].append('inputs/more/')
+        self.save_plan()
+        self.assertEqual(self.execute(), 0)
+        self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'reused'})
+        self.write('config.zig', 'const lists = @import("build_test_inputs.zig");\n')
+        self.assertEqual(self.execute(), 0)
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertEqual(report['declarative_configuration'], 'unreviewed consumer sites of build_test_inputs.zig')
+        self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'execute'})
 
     def test_configuration_controls_remain_identity_inputs(self):
         self.assertEqual(self.execute(), 0)
@@ -1399,6 +1571,406 @@ class VerificationCoordinator(unittest.TestCase):
 
 
 
+    def test_real_handshake_runs_the_revised_command_or_nothing(self):
+        slots = self.root / '.slots'
+        slots.mkdir()
+        environment = dict(os.environ, MYLANG_SLOT_DIR=str(slots), MYLANG_GATE_SLOTS='1',
+                           MYLANG_GATE_MEM='0', MYLANG_SLOT_POLL='1', MYLANG_SLOT_SETTLE='0',
+                           MYLANG_TIMING_CPUS='')
+        planned, revised = self.root / '.planned', self.root / '.revised'
+        def touch(path):
+            return [sys.executable, '-c', 'from pathlib import Path; Path(__import__("sys").argv[1]).touch()', str(path)]
+        timings = []
+        with Snapshot(self.root, ['inputs/unit/fixture.txt']) as snapshot:
+            ran = REAL_ADMISSION(self.root, 'gate', touch(planned), environment, snapshot.unchanged,
+                                 timings=timings, revise=lambda: touch(revised))
+            withdrawn = REAL_ADMISSION(self.root, 'gate', touch(planned), environment, snapshot.unchanged,
+                                       timings=timings, revise=lambda: None)
+        self.assertEqual((ran[0], withdrawn[0]), (0, 0))
+        self.assertTrue(revised.exists())
+        self.assertFalse(planned.exists())
+        self.assertEqual([timing['withdrawn'] for timing in timings], [False, True])
+        self.assertEqual(timings[1]['worker_seconds'], 0)
+
+    # Path- and environment-free identities (output-keyed verification plan, Lane D).
+
+    def keys(self, root=None):
+        report = coordinator.read_record((root or self.root) / '.receipts/last-run.json')
+        return {row['id']: row['action_key'] for row in report['actions']}
+
+    def launcher(self, **values):
+        """A launcher environment differing from the current one only in `values`."""
+        return patch.dict(os.environ, values)
+
+    def test_dropped_launcher_variables_leave_every_key_unchanged(self):
+        self.assertEqual(self.execute(), 0)
+        before = self.keys()
+        other_tmp = self.root / 'other-tmp'
+        other_tmp.mkdir()
+        seen = []
+
+        def admit(root, kind, argv, env, unchanged, **controls):
+            seen.append(env)
+            return self.admit(root, kind, argv, env, unchanged, **controls)
+        with self.launcher(CODEX_THREAD_ID='thread-b', TERM='xterm-kitty', PWD='/somewhere/else',
+                           TMPDIR=str(other_tmp)), patch.object(coordinator, 'run_admitted', side_effect=admit):
+            self.admissions.clear()
+            self.assertEqual(self.execute(), 0)
+            self.assertEqual(self.keys(), before)
+            self.assertEqual(self.states(), {'unit': 'reused', 'docs': 'reused'})
+            self.assertEqual(self.admissions, [])
+            self.assertEqual(self.execute(force=True), 0)
+        self.assertTrue(seen)
+        for env in seen:
+            self.assertNotIn('CODEX_THREAD_ID', env)
+            self.assertNotIn('TERM', env)
+            self.assertNotIn('PWD', env)
+            self.assertEqual(env['TMPDIR'], str(other_tmp))
+
+    def test_keyed_memory_limit_changes_every_key(self):
+        self.assertEqual(self.execute(), 0)
+        before = self.keys()
+        with self.launcher(MYLANG_MEMORY_LIMIT='512M'):
+            self.assertEqual(self.execute(), 0)
+        after = self.keys()
+        self.assertTrue(all(before[name] != after[name] for name in before))
+        self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'execute'})
+
+    def test_common_identity_holds_no_root_and_a_host_scope_environment_digest(self):
+        env = coordinator.normalized_environment(self.root, {'PATH': os.environ['PATH'], 'PWD': str(self.root),
+                                                             'CODEX_THREAD_ID': 'a', 'LANG': 'C.UTF-8',
+                                                             'MYLANG_VERIFICATION_SHARED_CACHE': '/elsewhere'})
+        self.assertNotIn('PWD', env)
+        self.assertNotIn('SHLVL', env)
+        self.assertNotIn('CODEX_THREAD_ID', env)
+        self.assertEqual(env['MYLANG_VERIFICATION_SHARED_CACHE'], '/elsewhere')
+        self.assertEqual(coordinator.identity_variables(env),
+                         ['LANG', 'PYTHONDONTWRITEBYTECODE', 'PYTHONNOUSERSITE', 'PYTHONPYCACHEPREFIX'])
+        moved = dict(env, MYLANG_VERIFICATION_SHARED_CACHE='/other', TMPDIR='/tmp/x')
+        self.assertEqual(coordinator.environment_identity(env, None, [], self.root),
+                         coordinator.environment_identity(moved, None, [], self.root))
+        self.assertNotEqual(coordinator.environment_identity(env, None, [], self.root),
+                            coordinator.environment_identity(dict(env, LANG='C'), None, [], self.root))
+        self.assertEqual(self.execute(), 0)
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        for row in report['actions']:
+            self.assertIn('ZIG', row['environment_variables'])
+            self.assertIn('PYTHONNOUSERSITE', row['environment_variables'])
+            self.assertNotIn('PATH', row['environment_variables'])
+            self.assertNotIn('TMPDIR', row['environment_variables'])
+            # The fixture's Zig lives inside the checkout, so ZIG names the root.
+            self.assertFalse(row['path_free'])
+
+    def test_tool_content_enters_the_environment_digest_by_snapshot_digest(self):
+        with Snapshot(self.root, [], [self.zig, self.tool]) as tools:
+            env = {'MYLANG_ZIG': 'zig'}
+            first = coordinator.environment_identity(env, tools, [self.zig, self.tool], self.root)
+            only_zig = coordinator.environment_identity(env, tools, [self.zig], self.root)
+        self.assertNotEqual(first, only_zig)
+        self.tool.write_text('changed tool')
+        with Snapshot(self.root, [], [self.zig, self.tool]) as tools:
+            self.assertNotEqual(coordinator.environment_identity(env, tools, [self.zig, self.tool], self.root), first)
+
+    def two_roots(self, producer):
+        """Two checkouts with identical contents at different absolute paths, sharing one Zig."""
+        self.plan['groups'].extend([dict(group('pure', ['inputs/docs/']), artifacts=[]),
+                                    dict(group('native', ['inputs/unit/']), artifacts=['units'])])
+        self.plan['coverage'].update(required_actions=4, registered_actions=4)
+        self.save_plan()
+        self.write('.embed-root', '')
+        if producer is not None:
+            self.write('.producer', json.dumps(producer))
+        shared = Path(self.stack.enter_context(tempfile.TemporaryDirectory(prefix='verification-tools-', dir=REPOSITORY / '.tmp')))
+        zig = shared / 'zig'
+        shutil.copy2(self.zig, zig)
+        other = Path(self.stack.enter_context(tempfile.TemporaryDirectory(prefix='verification-twin-', dir=REPOSITORY / '.tmp'))) / 'checkout'
+        shutil.copytree(self.root, other, symlinks=True)
+        self.stack.enter_context(patch.object(coordinator, 'tool_contract', return_value=([], [zig])))
+        reports = []
+        for root in (self.root, other):
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(coordinator.execute(root, root / '.receipts', zig, ['-j3']), 0)
+            reports.append(coordinator.read_record(root / '.receipts/last-run.json'))
+        return reports
+
+    def producer(self, recipes=('sources/', 'config.zig')):
+        return {'recipes': list(recipes), 'optimize': 'Debug', 'zig_version': '0.16.0',
+                'test_runner': 'guardian-zig-test-runner-v1'}
+
+    def test_two_roots_with_producers_share_every_action_key(self):
+        first, second = self.two_roots(self.producer())
+        self.assertNotEqual((self.root / 'zig-out/bin/units').read_bytes(),
+                            (Path(second['evidence_store']['root']).parent.parent / 'zig-out/bin/units').read_bytes())
+        self.assertEqual({row['id']: row['action_key'] for row in first['actions']},
+                         {row['id']: row['action_key'] for row in second['actions']})
+        identities = first['artifact_identities']
+        for label in ('mylang', 'units', 'cli', 'core'):
+            self.assertEqual(identities[label]['identity'], 'producer')
+            self.assertGreaterEqual(identities[label]['sources'], 2)
+        self.assertEqual(identities['components']['identity'], 'bytes')
+        self.assertEqual({row['id']: row['path_free'] for row in first['actions']},
+                         {'unit': False, 'docs': False, 'pure': True, 'native': True})
+
+    def test_a_components_producer_makes_every_action_path_free_across_roots(self):
+        self.write('.component-producer', '')
+        first, second = self.two_roots(self.producer())
+        self.assertEqual({row['id']: row['action_key'] for row in first['actions']},
+                         {row['id']: row['action_key'] for row in second['actions']})
+        self.assertEqual(first['artifact_identities']['components']['identity'], 'producer')
+        self.assertEqual({row['id']: row['path_free'] for row in first['actions']},
+                         {'unit': True, 'docs': True, 'pure': True, 'native': True})
+
+    def test_relocated_loaded_code_digests_make_every_action_location_dependent(self):
+        # Format 1 bound each code object's absolute file name. The root search
+        # cannot see that inside a digest; the relocation probe does.
+        self.write('.component-producer', '')
+        with patch.object(coordinator.code_identity, '_relocatable_filename', lambda filename: filename):
+            self.assertIn('verify_cache', coordinator.location_dependent_code())
+            first, _ = self.two_roots(self.producer())
+        self.assertEqual(first['relocation_dependent_code'],
+                         [name for name, _, _ in coordinator.implementation_code()] + ['verification_code_identity'])
+        self.assertEqual({row['id']: row['path_free'] for row in first['actions']},
+                         {'unit': False, 'docs': False, 'pure': False, 'native': False})
+        self.assertEqual(coordinator.location_dependent_code(), [])
+
+    def test_unclassified_common_facet_or_located_inventory_is_not_path_free(self):
+        self.write('.component-producer', '')
+        with patch.dict(coordinator.COMMON_FACETS):
+            del coordinator.COMMON_FACETS['action_controls']
+            first, _ = self.two_roots(self.producer())
+        self.assertFalse(any(row['path_free'] for row in first['actions']))
+        contract = json.loads((self.root / 'gate-contract.json').read_text())
+        contract['input_lists'].append({'name': 'located', 'inputs': [str(self.root) + '/fixture']})
+        self.write('gate-contract.json', json.dumps(contract))
+        self.assertEqual(self.execute(), 0)
+        self.assertFalse(any(row['path_free'] for row in coordinator.read_record(self.cache / 'last-run.json')['actions']))
+
+    def test_dry_run_exports_keys_without_gate_or_publication(self):
+        self.assertEqual(self.execute(dry_run=True), 0)
+        self.assertEqual([kind for kind, _ in self.admissions], ['build', 'build'])
+        export = coordinator.read_record(self.cache / 'dry-run.json')
+        self.assertFalse((self.cache / 'last-run.json').exists())
+        self.assertEqual(list((self.cache / 'actions').glob('*.json')) if (self.cache / 'actions').exists() else [], [])
+        self.assertEqual({row['state'] for row in export['actions']}, {'execute'})
+        self.assertEqual(export['declarative_configuration'], 'excluded')
+        self.assertEqual(set(export['common']) - set(coordinator.COMMON_FACETS), set())
+        self.assertEqual(self.execute(), 0)
+        keys = {row['id']: row['action_key'] for row in coordinator.read_record(self.cache / 'last-run.json')['actions']}
+        self.assertEqual({row['id']: row['action_key'] for row in export['actions']}, keys)
+        self.assertEqual(self.execute(dry_run=True), 0)
+        self.assertEqual({row['state'] for row in coordinator.read_record(self.cache / 'dry-run.json')['actions']}, {'reused'})
+        self.assertRaises(ValueError, self.execute, force=True, dry_run=True)
+
+    def test_missing_producer_falls_back_to_reported_byte_identity(self):
+        first, second = self.two_roots(None)
+        first_keys = {row['id']: row['action_key'] for row in first['actions']}
+        second_keys = {row['id']: row['action_key'] for row in second['actions']}
+        self.assertEqual(first_keys['pure'], second_keys['pure'])
+        for name in ('unit', 'docs', 'native'):
+            self.assertNotEqual(first_keys[name], second_keys[name])
+        for label in ('mylang', 'units', 'cli', 'core', 'components'):
+            self.assertEqual(first['artifact_identities'][label],
+                             {'identity': 'bytes', 'reason': 'artifact inventory is not version 3'})
+        self.assertEqual({row['id']: row['path_free'] for row in first['actions']},
+                         {'unit': False, 'docs': False, 'pure': True, 'native': False})
+
+    def test_producer_recipe_selecting_nothing_is_a_hard_error(self):
+        self.write('.producer', json.dumps(self.producer(('sources/', 'missing/'))))
+        with self.assertRaisesRegex(coordinator.VerificationError, 'selects no watched input: missing/'):
+            self.execute()
+        self.assertEqual(self.events('gate'), [])
+        self.assertEqual(self.receipts(), [])
+
+    def test_producer_source_change_invalidates_and_bytes_alone_do_not(self):
+        self.write('.producer', json.dumps(self.producer()))
+        self.plan['groups'].append(dict(group('native', ['inputs/unit/']), artifacts=['units']))
+        self.plan['coverage'].update(required_actions=3, registered_actions=3)
+        self.save_plan()
+        self.assertEqual(self.execute(), 0)
+        before = self.keys()
+        self.write('sources/compiler.txt', 'changed compiler source')
+        self.assertEqual(self.execute(), 0)
+        self.assertNotEqual(self.keys()['native'], before['native'])
+        self.assertEqual(self.states()['native'], 'execute')
+
+    def test_schema_two_receipts_are_never_read(self):
+        self.assertEqual(coordinator.CACHE_DIRECTORY, Path('.mylang-cache/verification-v3'))
+        self.assertEqual(self.execute(), 0)
+        for path in self.receipts():
+            path.write_text(json.dumps({'version': 2, 'kind': 'verification-success', 'key': path.stem}))
+        self.admissions.clear()
+        self.assertEqual(self.execute(), 0)
+        self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'execute'})
+        self.assertEqual(json.loads(self.receipts()[0].read_text())['version'], 3)
+
+    def test_shared_cache_location_switch_and_precedence(self):
+        home = {'HOME': '/home/agent'}
+        for switch in (False, True):
+            with self.subTest(default_sharing=switch), patch.object(coordinator, 'DEFAULT_SHARING', switch):
+                expected = (Path('/home/agent/.cache/mylang/verification-shared'), 'default') if switch else (None, 'none')
+                self.assertEqual(coordinator.shared_cache_location(None, home), expected)
+                xdg = dict(home, XDG_CACHE_HOME='/var/cache/agent')
+                self.assertEqual(coordinator.shared_cache_location(None, xdg),
+                                 (Path('/var/cache/agent/mylang/verification-shared'), 'default') if switch else (None, 'none'))
+                relative = dict(home, XDG_CACHE_HOME='relative')
+                self.assertEqual(coordinator.shared_cache_location(None, relative), expected)
+                named = dict(home, MYLANG_VERIFICATION_SHARED_CACHE='/srv/evidence')
+                self.assertEqual(coordinator.shared_cache_location(None, named), (Path('/srv/evidence'), 'environment'))
+                self.assertEqual(coordinator.shared_cache_location(None, dict(home, MYLANG_VERIFICATION_SHARED_CACHE='')),
+                                 (None, 'environment'))
+                self.assertEqual(coordinator.shared_cache_location('/flag', named), (Path('/flag'), 'flag'))
+                self.assertEqual(coordinator.shared_cache_location('', named), (None, 'flag'))
+        self.assertFalse(coordinator.DEFAULT_SHARING)
+
+    def test_unusable_default_store_warns_and_explicit_store_fails(self):
+        blocked = self.write('not-a-directory', 'file')
+        stderr = io.StringIO()
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(stderr):
+            status = coordinator.execute(self.root, self.cache, self.zig, ['-j3'], False, blocked,
+                                         shared_cache_source='default')
+        self.assertEqual(status, 0)
+        self.assertEqual(stderr.getvalue().count('default shared evidence store'), 1)
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertEqual(report['evidence_store']['shared'], False)
+        self.assertEqual(report['evidence_store']['source'], 'default')
+        for source in ('flag', 'environment'):
+            with self.subTest(source=source), self.assertRaises(OSError):
+                with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                    coordinator.execute(self.root, self.cache, self.zig, ['-j3'], False, blocked,
+                                        shared_cache_source=source)
+        shared = self.root / '.default-evidence'
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(coordinator.execute(self.root, self.cache, self.zig, ['-j3'], True, shared,
+                                                 shared_cache_source='default'), 0)
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertEqual(report['evidence_store']['shared'], True)
+        self.assertEqual(report['evidence_store']['source'], 'default')
+
+    def test_retained_session_reuses_across_launchers_differing_in_dropped_variables(self):
+        with RetainedSession() as session, session.activate():
+            self.assertEqual(self.execute(), 0)
+            before = self.keys()
+            self.admissions.clear()
+            with self.launcher(CODEX_THREAD_ID='another-agent', TERM='screen', SSH_CONNECTION='x', OLDPWD='/'):
+                self.assertEqual(self.execute(), 0)
+            report = coordinator.read_record(self.cache / 'last-run.json')
+            self.assertEqual(self.keys(), before)
+            self.assertEqual(self.admissions, [])
+            self.assertEqual(report['snapshot_statistics']['files_hashed'], 0)
+            with self.launcher(MYL_CORE_LEAKCHECK='1'):
+                self.assertEqual(self.execute(), 0)
+            self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'execute'})
+
+
+class IntegrationGate(unittest.TestCase):
+    """`--integration`: D1 forced fact/leak run and D3 mismatch failure."""
+
+    METADATA = [{'id': 'language', 'steps': [
+        {'kind': 'run', 'original_label': 'mylang test tests/lang'},
+        {'kind': 'run', 'original_label': 'mylang test tests/lang --release --verify-facts (leak check)'},
+        {'kind': 'run', 'original_label': 'mylang test tests/ported --unoptimized'},
+        {'kind': 'run', 'original_label': 'mylang test tests/ported --release --verify-facts (leak check)'}]},
+        {'id': 'unit', 'steps': [{'kind': 'run', 'original_label': 'mylang test tests/x --release --verify-facts (leak check)'}]}]
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory(prefix='integration-', dir=REPOSITORY / '.tmp')
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name)
+        self.cache = self.root / 'cache'
+        self.cache.mkdir()
+        self.store = self.root / 'store'
+        (self.store / 'compiler-artifacts-v2').mkdir(parents=True)
+        self.env = {'MYLANG_COMPILER_SHARED_CACHE': str(self.store), 'MYLANG_TEST_SHARED_CACHE': ''}
+        self.calls, self.admissions = [], []
+
+    @contextlib.contextmanager
+    def admission(self, kind):
+        self.admissions.append(kind)
+        yield
+
+    def run_suite(self, cached=0, failed=0, status=0):
+        def run(argv, **options):
+            self.calls.append((argv, options))
+            report = {'passed': 3 - cached - failed, 'failed': failed, 'cached': cached, 'skipped': 0, 'unsupported': 0}
+            return subprocess.CompletedProcess(argv, status, json.dumps(report) + '\n', '')
+        return run
+
+    def log(self, lines):
+        (self.store / 'compiler-artifacts-v2' / 'mismatches.log').write_text(
+            ''.join('mismatch program %064x existing=%064x attempted=%064x\n' % (n, n, n + 1) for n in range(lines)))
+
+    def write_report(self):
+        coordinator.atomic_record(self.cache / 'last-run.json',
+                                  {'version': 1, 'success': True, 'status': 0, 'action_metadata': self.METADATA})
+
+    def test_fact_leak_suites_come_from_the_language_inventory(self):
+        self.assertEqual(coordinator.fact_leak_suites(self.METADATA), ['tests/lang', 'tests/ported'])
+        self.assertEqual(coordinator.fact_leak_suites([]), [])
+
+    def test_forced_run_is_fresh_private_and_admitted_once(self):
+        self.write_report()
+        status = coordinator.integrate(self.root, self.cache, 0, {}, self.env, run=self.run_suite(), admission=self.admission)
+        self.assertEqual(status, 0)
+        self.assertEqual(self.admissions, ['gate'])
+        self.assertEqual([call[0][2] for call in self.calls], ['tests/lang', 'tests/ported'])
+        for argv, options in self.calls:
+            self.assertIn('--force', argv)
+            self.assertIn('--verify-facts', argv)
+            self.assertEqual(options['env']['MYL_CORE_LEAKCHECK'], '1')
+            private = Path(argv[argv.index('--cache-dir') + 1])
+            self.assertTrue(private.is_relative_to(self.cache / 'integration'))
+            self.assertFalse(private.exists())
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertTrue(report['success'])
+        self.assertTrue(report['integration']['forced_fact_leak']['passed'])
+
+    def test_a_cached_or_failing_forced_run_fails_the_integration(self):
+        for run in (self.run_suite(cached=1), self.run_suite(failed=1, status=1)):
+            self.write_report()
+            self.assertEqual(coordinator.integrate(self.root, self.cache, 0, {}, self.env, run=run, admission=self.admission), 1)
+            self.assertFalse(coordinator.read_record(self.cache / 'last-run.json')['success'])
+
+    def test_mismatch_fails_with_a_distinct_status(self):
+        self.write_report()
+        before = coordinator.mismatch_counts(self.env)
+        self.assertEqual(before, {})
+        self.log(1)
+        status = coordinator.integrate(self.root, self.cache, 0, before, self.env, run=self.run_suite(), admission=self.admission)
+        self.assertEqual(status, coordinator.INTEGRATION_MISMATCH_STATUS)
+        integration = coordinator.read_record(self.cache / 'integration-last-run.json')
+        log = str(self.store / 'compiler-artifacts-v2' / 'mismatches.log')
+        self.assertEqual(integration['shared_mismatches']['grew'], {log: 1})
+        self.assertFalse(coordinator.read_record(self.cache / 'last-run.json')['success'])
+
+    def test_a_pre_existing_mismatch_still_fails_and_unused_stores_are_ignored(self):
+        self.log(2)
+        before = coordinator.mismatch_counts(self.env)
+        verdict = coordinator.mismatch_verdict(before, coordinator.mismatch_counts(self.env))
+        self.assertEqual((verdict['grew'], verdict['passed']), ({}, False))
+        self.assertEqual(coordinator.mismatch_counts({'MYLANG_COMPILER_SHARED_CACHE': ''}), {})
+        self.assertEqual(coordinator.mismatch_verdict({}, {})['passed'], True)
+
+    def test_store_roots_follow_the_compiler_resolution(self):
+        home = {'HOME': '/home/agent'}
+        self.assertEqual(coordinator.native_store_roots(home, False), [])
+        self.assertEqual(coordinator.native_store_roots(home, True),
+                         [Path('/home/agent/.cache/mylang/compiler-artifacts'), Path('/home/agent/.cache/mylang/native-tests')])
+        self.assertEqual(coordinator.native_store_roots(dict(home, XDG_CACHE_HOME='/x', MYLANG_TEST_SHARED_CACHE=''), True),
+                         [Path('/x/mylang/compiler-artifacts')])
+        self.assertEqual(coordinator.native_store_roots({'MYLANG_COMPILER_SHARED_CACHE': '/s'}, False), [Path('/s')])
+        self.assertIs(coordinator.native_default_sharing(REPOSITORY), False)
+
+    def test_a_failed_request_skips_the_forced_run_but_keeps_its_status(self):
+        self.write_report()
+        status = coordinator.integrate(self.root, self.cache, 1, {}, self.env, run=self.run_suite(), admission=self.admission)
+        self.assertEqual((status, self.calls), (1, []))
+
+    def test_integration_rejects_other_profiles_and_timing_windows(self):
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(coordinator.main(['--integration', '--profile', 'quick']), 2)
+            self.assertEqual(coordinator.main(['--integration', '--timing-window-seconds', '10']), 2)
+
+
 class CallerAuthentication(unittest.TestCase):
     def setUp(self):
         temporary = tempfile.TemporaryDirectory(prefix='helper-auth-', dir=REPOSITORY / '.tmp')
@@ -1494,6 +2066,109 @@ class CallerAuthentication(unittest.TestCase):
         self.assertRaises(SnapshotError, self.authenticate, self.root, watched, [watched], contextlib.ExitStack())
 
 REAL_ADMISSION = coordinator.run_admitted
+
+
+class BuildToolIdentity(unittest.TestCase):
+    """The build runner and the tools it compiles for the graph (`build-env`,
+    the build identity) are prepared infrastructure, not actions, so no action
+    key holds their bytes; the coordinator's configuration identity must cover
+    every file `build.zig` compiles from, transitively, instead."""
+
+    # Package imports `build.zig` may name: the toolchain's own and the
+    # `build.zig.zon` dependency whose sources CONFIG_INPUTS lists.
+    PACKAGES = {'std', 'builtin', 'guardian'}
+
+    @staticmethod
+    def closure(start):
+        pending, files, packages = [start], set(), set()
+        while pending:
+            path = pending.pop()
+            if path in files:
+                continue
+            files.add(path)
+            text = (REPOSITORY / path).read_text()
+            for name in re.findall(r'@(?:import|embedFile)\(\s*"([^"]+)"\s*\)', text):
+                if name.endswith(('.zig', '.zon')) or '/' in name or name.startswith('.'):
+                    pending.append(os.path.normpath(os.path.join(os.path.dirname(path), name)))
+                else:
+                    packages.add((path, name))
+        return files, packages
+
+    def test_build_runner_import_closure_is_in_every_action_configuration(self):
+        recipes = coordinator.CONFIG_INPUTS + coordinator.COORDINATOR_INPUTS
+        files, packages = self.closure('build.zig')
+        for expected in ('build_env.zig', 'src/build_env_rules.zig', 'build_identity.zig',
+                         'src/build_identity_rules.zig', 'src/semantic_cache_format.zig'):
+            self.assertIn(expected, files)
+        uncovered = sorted(path for path in files
+                           if not any(coordinator.matches_recipe(path, recipe, REPOSITORY) for recipe in recipes))
+        self.assertEqual(uncovered, [], 'build.zig compiles these files, which no action configuration identity '
+                                        'covers; add them to CONFIG_INPUTS in scripts/verify_cache.py')
+        unknown = sorted(entry for entry in packages if entry[1] not in self.PACKAGES)
+        self.assertEqual(unknown, [], 'unreviewed package imports in the build runner closure')
+
+    def test_build_runner_closure_stays_out_of_the_compiler_sources(self):
+        # Every file here re-keys every action when it changes. Pulling a
+        # compiler module into build.zig would make each edit of its closure do so.
+        files, _ = self.closure('build.zig')
+        self.assertLess(len([path for path in files if path.startswith('src/')]), 12, sorted(files))
+
+
+class DeclarativeConsumers(unittest.TestCase):
+    """The declarative list exclusion (F12) must hold on the real tree, and any
+    change to how the build consumes `build_test_inputs.zig` must be reviewed."""
+
+    def configuration(self):
+        with Snapshot(REPOSITORY, coordinator.CONFIG_INPUTS) as configuration:
+            return copy.deepcopy(configuration.identity)
+
+    def test_reviewed_consumer_sites_are_exactly_the_build_configuration_uses(self):
+        found = coordinator.declarative_consumers(REPOSITORY, self.configuration())
+        self.assertIsNotNone(found)
+        reviewed = list(coordinator.DECLARATIVE_CONSUMERS)
+        added = [site for site in found if site not in reviewed]
+        removed = [site for site in reviewed if site not in found]
+        self.assertEqual((added, removed), ([], []),
+                         'review these build_test_inputs.zig consumer sites and update DECLARATIVE_CONSUMERS')
+        self.assertEqual(sorted(found), sorted(reviewed))
+
+    def test_exclusion_applies_to_the_real_configuration(self):
+        configuration = self.configuration()
+        lists = coordinator.declared_input_lists(REPOSITORY / coordinator.DECLARATIVE_INPUTS)
+        self.assertIsNotNone(lists, 'build_test_inputs.zig is no longer data-only')
+        plan = {'input_lists': [{'name': name, 'inputs': inputs} for name, inputs in lists.items()]}
+        notes = {}
+        narrowed = coordinator.action_configuration(configuration, plan, REPOSITORY, configuration, notes)
+        self.assertEqual(notes, {'declarative_configuration': 'excluded'})
+        self.assertNotIn(coordinator.DECLARATIVE_INPUTS, [item['path'] for item in narrowed['files']])
+        self.assertEqual(len(narrowed['files']), len(configuration['files']) - 1)
+
+
+class CoordinatorRelocation(unittest.TestCase):
+    """F3: one commit checked out twice binds one coordinator implementation."""
+
+    def test_two_copies_of_the_coordinator_bind_identical_loaded_code(self):
+        scratch = REPOSITORY / '.tmp'
+        scratch.mkdir(exist_ok=True)
+        base = Path(self.enterContext(tempfile.TemporaryDirectory(prefix='relocation-', dir=scratch)))
+        program = ('import json,verify_cache as c\n'
+                   'print(json.dumps([[d for _,d,_ in c.implementation_code()],'
+                   'c.code_identity.LOADED_CODE_SHA256,c.location_dependent_code()]))')
+        results = []
+        for copy_root in (base / 'one', base / 'a' / 'much' / 'longer' / 'two'):
+            shutil.copytree(REPOSITORY / 'scripts', copy_root / 'scripts',
+                            ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
+            (copy_root / 'src').mkdir()
+            shutil.copy2(REPOSITORY / 'src/environment_identity.zon', copy_root / 'src/environment_identity.zon')
+            environment = dict(os.environ, PYTHONPATH=str(copy_root / 'scripts'),
+                               PYTHONDONTWRITEBYTECODE='1', PYTHONPYCACHEPREFIX='/dev/null')
+            process = subprocess.run([sys.executable, '-B', '-c', program], cwd=copy_root, env=environment,
+                                     capture_output=True, text=True, timeout=60)
+            self.assertEqual(process.returncode, 0, process.stderr)
+            results.append(json.loads(process.stdout))
+        self.assertEqual(results[0], results[1])
+        self.assertEqual(results[0][2], [])
+        self.assertEqual(len(results[0][0]), 9)
 
 
 if __name__ == '__main__':
