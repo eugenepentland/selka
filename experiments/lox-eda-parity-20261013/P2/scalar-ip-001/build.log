@@ -1,0 +1,7 @@
+build-slot: FIFO ticket 2891, position 10; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 2891, position 10; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 2891, position 10; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 2891, position 10; earlier build tickets must run first; waiting (180s so far)
+build-slot: FIFO ticket 2891, position 10; earlier build tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 2891, position 2; earlier build tickets must run first; waiting (301s so far)
+build-slot: build slot 1, FIFO ticket 2891 after 316s

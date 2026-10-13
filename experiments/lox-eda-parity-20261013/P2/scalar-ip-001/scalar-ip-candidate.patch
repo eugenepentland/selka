@@ -1,0 +1,214 @@
+--- a/experiments/lox-eda-parity-20261013/source/lox/vm.my
++++ b/experiments/lox-eda-parity-20261013/source/lox/vm.my
+@@ -249,29 +249,29 @@
+     heap.push(mut rt, value.Value.obj(value=result))
+ 
+ 
+-func read_byte(rt: heap.Runtime, mut frame: heap.CallFrame) -> int:
+-    mut byte = heap.function_instruction(rt, frame.function, frame.ip)
+-    frame.ip = frame.ip + 1
++func read_byte(rt: heap.Runtime, function: value.ObjRef, mut ip: int) -> int:
++    mut byte = heap.function_instruction(rt, function, ip)
++    ip = ip + 1
+     return byte
+ 
+ 
+-func read_short(rt: heap.Runtime, mut frame: heap.CallFrame) -> int:
+-    frame.ip = frame.ip + 2
+-    return heap.function_instruction(rt, frame.function, frame.ip - 2) * 256 + heap.function_instruction(rt, frame.function, frame.ip - 1)
+-
+-
+-func read_constant(rt: heap.Runtime, mut frame: heap.CallFrame) -> value.Value:
+-    const selected = vm_queries.constant_operand(rt, frame.function, frame.ip)
+-    frame.ip = frame.ip + 1
++func read_short(rt: heap.Runtime, function: value.ObjRef, mut ip: int) -> int:
++    ip = ip + 2
++    return heap.function_instruction(rt, function, ip - 2) * 256 + heap.function_instruction(rt, function, ip - 1)
++
++
++func read_constant(rt: heap.Runtime, function: value.ObjRef, mut ip: int) -> value.Value:
++    const selected = vm_queries.constant_operand(rt, function, ip)
++    ip = ip + 1
+     return selected
+ 
+ 
+-func read_string(rt: heap.Runtime, mut frame: heap.CallFrame) -> value.ObjRef:
+-    return as_obj(read_constant(rt, mut frame))
++func read_string(rt: heap.Runtime, function: value.ObjRef, mut ip: int) -> value.ObjRef:
++    return as_obj(read_constant(rt, function, mut ip))
+ 
+ 
+ func get_global(mut rt: heap.Runtime, mut o: output.Output, mut frame: heap.CallFrame) -> bool:
+-    mut name = read_string(rt, mut frame)
++    mut name = read_string(rt, frame.function, mut frame.ip)
+     match table.get(rt.globals, name, heap.string_hash(rt, name)):
+         case Some(found):
+             heap.push(mut rt, found)
+@@ -284,7 +284,7 @@
+ # Assigning an undefined global is an error; the entry the failed `set`
+ # just made is deleted again, leaving a tombstone as clox does.
+ func set_global(mut rt: heap.Runtime, mut o: output.Output, mut frame: heap.CallFrame) -> bool:
+-    mut name = read_string(rt, mut frame)
++    mut name = read_string(rt, frame.function, mut frame.ip)
+     const __owned_arg_4 = heap.peek(rt, 0)
+     if heap.set_global(mut rt, name, __owned_arg_4):
+         const __owned_arg_5 = heap.string_hash(rt, name)
+@@ -295,7 +295,7 @@
+ 
+ 
+ func get_upvalue(mut rt: heap.Runtime, mut frame: heap.CallFrame):
+-    const upvalue_index = read_byte(rt, mut frame)
++    const upvalue_index = read_byte(rt, frame.function, mut frame.ip)
+     mut upvalue = heap.upvalue_obj(rt, heap.closure_upvalue(rt, frame.closure, upvalue_index))
+     if upvalue.slot != object.NO_SLOT:
+         const __owned_arg_7 = rt.stack[upvalue.slot]
+@@ -305,7 +305,7 @@
+ 
+ 
+ func set_upvalue(mut rt: heap.Runtime, mut frame: heap.CallFrame):
+-    const upvalue_index = read_byte(rt, mut frame)
++    const upvalue_index = read_byte(rt, frame.function, mut frame.ip)
+     mut ref = heap.closure_upvalue(rt, frame.closure, upvalue_index)
+     mut upvalue = heap.upvalue_obj(rt, ref)
+     if upvalue.slot != object.NO_SLOT:
+@@ -320,7 +320,7 @@
+     match receiver:
+         case value.Value.obj(value=ref):
+             if heap.is_instance(rt, ref):
+-                mut name = read_string(rt, mut frame)
++                mut name = read_string(rt, frame.function, mut frame.ip)
+                 match heap.instance_field(rt, ref, name, heap.string_hash(rt, name)):
+                     case Some(field):
+                         _ = heap.pop(mut rt)
+@@ -339,7 +339,7 @@
+         case value.Value.obj(value=instance_ref):
+             if not heap.is_instance(rt, instance_ref):
+                 return runtime_error(mut rt, mut o, b"Only instances have fields.")
+-            mut name = read_string(rt, mut frame)
++            mut name = read_string(rt, frame.function, mut frame.ip)
+             const hash = heap.string_hash(rt, name)
+             const assigned_value = heap.peek(rt, 0)
+             heap.set_instance_field(mut rt, instance_ref, name, hash, assigned_value)
+@@ -393,7 +393,7 @@
+ # Allocates the closure, pushes it (rooting it while upvalues are
+ # captured), then fills its upvalues from the (is_local, index) pairs.
+ func make_closure(mut rt: heap.Runtime, mut frame: heap.CallFrame):
+-    mut function_ref = read_string(rt, mut frame)
++    mut function_ref = read_string(rt, frame.function, mut frame.ip)
+     mut upvalue_count = heap.function_upvalue_count(rt, function_ref)
+     mut closure = object.new_closure(function_ref, upvalue_count)
+     mut closure_ref = heap.allocate(mut rt, object.Obj.closure(value=closure.copy()))
+@@ -401,8 +401,8 @@
+     mut captured = closure.upvalues.copy()
+     mut i = 0
+     while i < upvalue_count:
+-        mut is_local = read_byte(rt, mut frame)
+-        mut index = read_byte(rt, mut frame)
++        mut is_local = read_byte(rt, frame.function, mut frame.ip)
++        mut index = read_byte(rt, frame.function, mut frame.ip)
+         if is_local == 1:
+             captured[i] = capture_upvalue(mut rt, frame.base + index)
+         else:
+@@ -423,7 +423,7 @@
+ 
+ 
+ func define_method(mut rt: heap.Runtime, mut frame: heap.CallFrame):
+-    mut name = read_string(rt, mut frame)
++    mut name = read_string(rt, frame.function, mut frame.ip)
+     mut class_ref = as_obj(heap.peek(rt, 1))
+     const hash = heap.string_hash(rt, name)
+     const method = heap.peek(rt, 0)
+@@ -438,11 +438,11 @@
+ func run(mut rt: heap.Runtime, mut o: output.Output, clock: Clock?) -> InterpretResult:
+     mut frame = rt.frames[rt.frame_count - 1].copy()
+     while True:
+-        mut instruction = read_byte(rt, mut frame)
++        mut instruction = read_byte(rt, frame.function, mut frame.ip)
+         rt.frames[rt.frame_count - 1] = frame.copy()
+         mut ok = True
+         if instruction == chunk.OP_CONSTANT:
+-            const selected_constant = read_constant(rt, mut frame)
++            const selected_constant = read_constant(rt, frame.function, mut frame.ip)
+             heap.push(mut rt, selected_constant)
+         elif instruction == chunk.OP_NIL:
+             heap.push(mut rt, value.Value.nil)
+@@ -453,17 +453,17 @@
+         elif instruction == chunk.OP_POP:
+             _ = heap.pop(mut rt)
+         elif instruction == chunk.OP_GET_LOCAL:
+-            const local_offset = read_byte(rt, mut frame)
++            const local_offset = read_byte(rt, frame.function, mut frame.ip)
+             const __owned_arg_10 = rt.stack[frame.base + local_offset]
+             heap.push(mut rt, __owned_arg_10)
+         elif instruction == chunk.OP_SET_LOCAL:
+-            const local_offset = read_byte(rt, mut frame)
++            const local_offset = read_byte(rt, frame.function, mut frame.ip)
+             rt.stack[frame.base + local_offset] = heap.peek(rt, 0)
+         elif instruction == chunk.OP_GET_GLOBAL:
+             ok = get_global(mut rt, mut o, mut frame)
+         elif instruction == chunk.OP_DEFINE_GLOBAL:
+             const __owned_arg_11 = heap.peek(rt, 0)
+-            const defined_name = read_string(rt, mut frame)
++            const defined_name = read_string(rt, frame.function, mut frame.ip)
+             _ = heap.set_global(mut rt, defined_name, __owned_arg_11)
+             _ = heap.pop(mut rt)
+         elif instruction == chunk.OP_SET_GLOBAL:
+@@ -477,7 +477,7 @@
+         elif instruction == chunk.OP_SET_PROPERTY:
+             ok = set_property(mut rt, mut o, mut frame)
+         elif instruction == chunk.OP_GET_SUPER:
+-            mut name = read_string(rt, mut frame)
++            mut name = read_string(rt, frame.function, mut frame.ip)
+             const __owned_arg_12 = as_obj(heap.pop(mut rt))
+             ok = bind_method(mut rt, mut o, __owned_arg_12, name)
+         elif instruction == chunk.OP_EQUAL:
+@@ -497,32 +497,32 @@
+             const printed_value = heap.pop(mut rt)
+             output.print_value(rt, mut o, printed_value)
+         elif instruction == chunk.OP_JUMP:
+-            mut offset = read_short(rt, mut frame)
++            mut offset = read_short(rt, frame.function, mut frame.ip)
+             frame.ip = frame.ip + offset
+         elif instruction == chunk.OP_JUMP_IF_FALSE:
+-            mut offset = read_short(rt, mut frame)
++            mut offset = read_short(rt, frame.function, mut frame.ip)
+             if value.is_falsey(heap.peek(rt, 0)):
+                 frame.ip = frame.ip + offset
+         elif instruction == chunk.OP_LOOP:
+-            mut offset = read_short(rt, mut frame)
++            mut offset = read_short(rt, frame.function, mut frame.ip)
+             frame.ip = frame.ip - offset
+         elif instruction == chunk.OP_CALL:
+-            mut count = read_byte(rt, mut frame)
++            mut count = read_byte(rt, frame.function, mut frame.ip)
+             rt.frames[rt.frame_count - 1] = frame.copy()
+             const __owned_arg_14 = heap.peek(rt, count)
+             ok = call_value(mut rt, mut o, __owned_arg_14, count, clock)
+             if ok:
+                 frame = rt.frames[rt.frame_count - 1].copy()
+         elif instruction == chunk.OP_INVOKE:
+-            mut method = read_string(rt, mut frame)
+-            mut count = read_byte(rt, mut frame)
++            mut method = read_string(rt, frame.function, mut frame.ip)
++            mut count = read_byte(rt, frame.function, mut frame.ip)
+             rt.frames[rt.frame_count - 1] = frame.copy()
+             ok = invoke(mut rt, mut o, method, count, clock)
+             if ok:
+                 frame = rt.frames[rt.frame_count - 1].copy()
+         elif instruction == chunk.OP_SUPER_INVOKE:
+-            mut method = read_string(rt, mut frame)
+-            mut count = read_byte(rt, mut frame)
++            mut method = read_string(rt, frame.function, mut frame.ip)
++            mut count = read_byte(rt, frame.function, mut frame.ip)
+             rt.frames[rt.frame_count - 1] = frame.copy()
+             const __owned_arg_15 = as_obj(heap.pop(mut rt))
+             ok = invoke_from_class(mut rt, mut o, __owned_arg_15, method, count)
+@@ -545,7 +545,7 @@
+             heap.push(mut rt, result)
+             frame = rt.frames[rt.frame_count - 1].copy()
+         elif instruction == chunk.OP_CLASS:
+-            mut name = read_string(rt, mut frame)
++            mut name = read_string(rt, frame.function, mut frame.ip)
+             mut klass = heap.allocate_class(mut rt, name)
+             heap.push(mut rt, value.Value.obj(value=klass))
+         elif instruction == chunk.OP_INHERIT:

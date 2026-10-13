@@ -1,0 +1,18 @@
+define internal fastcc { i64, i64 } @"my.vm::read_byte"(ptr noalias readonly align 8 %p0, i64 %p1, i64 %p2) nounwind uwtable !dbg !1000881 {
+entry:
+  %slot = alloca i64, align 8
+  br label %b0
+b0:
+  %v3 = notail call fastcc i64 @"my.heap::function_instruction"(ptr %p0, i64 %p1, i64 %p2), !dbg !1000883
+  %p.1 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %p2, i64 1)
+  %v5 = extractvalue { i64, i1 } %p.1, 0
+  %o.2 = extractvalue { i64, i1 } %p.1, 1
+  br i1 %o.2, label %trap.3, label %b0.4, !prof !0
+trap.3:
+  call void @myl_core_trap(ptr @myl.site.174, i64 %p2, i64 1) #2, !dbg !1000885
+  unreachable
+b0.4:
+  %rm.5 = insertvalue { i64, i64 } poison, i64 %v3, 0
+  %v6 = insertvalue { i64, i64 } %rm.5, i64 %v5, 1
+  ret { i64, i64 } %v6
+}

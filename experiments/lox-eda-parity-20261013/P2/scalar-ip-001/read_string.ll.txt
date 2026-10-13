@@ -1,0 +1,13 @@
+define internal fastcc { i64, i64 } @"my.vm::read_string"(ptr noalias readonly align 8 %p0, i64 %p1, i64 %p2) nounwind uwtable !dbg !1000918 {
+entry:
+  %slot = alloca i64, align 8
+  br label %b0
+b0:
+  %v3 = notail call fastcc { { i8, [1 x i64] }, i64 } @"my.vm::read_constant"(ptr %p0, i64 %p1, i64 %p2), !dbg !1000920
+  %v4 = extractvalue { { i8, [1 x i64] }, i64 } %v3, 0
+  %v5 = extractvalue { { i8, [1 x i64] }, i64 } %v3, 1
+  %v6 = notail call fastcc i64 @"my.vm::as_obj"({ i8, [1 x i64] } %v4), !dbg !1000922
+  %rm.1 = insertvalue { i64, i64 } poison, i64 %v6, 0
+  %v7 = insertvalue { i64, i64 } %rm.1, i64 %v5, 1
+  ret { i64, i64 } %v7
+}

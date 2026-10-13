@@ -1,0 +1,1 @@
+class A { init(x){ this.x=x; } value(){ return this.x; } } class B < A { value(){ return super.value()+1; } } fun wrap(x){ fun get(){ return x; } return get; } var get=wrap(B(41)); print get().value();

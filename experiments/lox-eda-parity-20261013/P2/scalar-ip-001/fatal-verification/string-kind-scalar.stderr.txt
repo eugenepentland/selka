@@ -1,0 +1,5 @@
+main.my:14:20: error[R_ASSERT]: native execution failed: value is not an object
+  in main::as_obj at main.my:14:20
+  in main::scalar_read_string at main.my:57:12
+  in main::main at main.my:108:22
+MYLANG-TRAP {"version":1,"operation":"value is not an object"}

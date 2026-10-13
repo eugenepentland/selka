@@ -1,0 +1,120 @@
+import chunk
+import heap
+import object
+import table
+import value
+import vm_queries
+
+
+func as_obj(item: value.Value) -> value.ObjRef:
+    match item:
+        case value.Value.obj(value=ref):
+            return ref
+        case _:
+            assert False, "value is not an object"
+            return value.NO_OBJ
+
+
+func legacy_read_byte(rt: heap.Runtime, mut frame: heap.CallFrame) -> int:
+    mut byte = heap.function_instruction(rt, frame.function, frame.ip)
+    frame.ip = frame.ip + 1
+    return byte
+
+
+func legacy_read_short(rt: heap.Runtime, mut frame: heap.CallFrame) -> int:
+    frame.ip = frame.ip + 2
+    return heap.function_instruction(rt, frame.function, frame.ip - 2) * 256 + heap.function_instruction(rt, frame.function, frame.ip - 1)
+
+
+func legacy_read_constant(rt: heap.Runtime, mut frame: heap.CallFrame) -> value.Value:
+    const selected = vm_queries.constant_operand(rt, frame.function, frame.ip)
+    frame.ip = frame.ip + 1
+    return selected
+
+
+func legacy_read_string(rt: heap.Runtime, mut frame: heap.CallFrame) -> value.ObjRef:
+    return as_obj(legacy_read_constant(rt, mut frame))
+
+
+func scalar_read_byte(rt: heap.Runtime, function: value.ObjRef, mut ip: int) -> int:
+    mut byte = heap.function_instruction(rt, function, ip)
+    ip = ip + 1
+    return byte
+
+
+func scalar_read_short(rt: heap.Runtime, function: value.ObjRef, mut ip: int) -> int:
+    ip = ip + 2
+    return heap.function_instruction(rt, function, ip - 2) * 256 + heap.function_instruction(rt, function, ip - 1)
+
+
+func scalar_read_constant(rt: heap.Runtime, function: value.ObjRef, mut ip: int) -> value.Value:
+    const selected = vm_queries.constant_operand(rt, function, ip)
+    ip = ip + 1
+    return selected
+
+
+func scalar_read_string(rt: heap.Runtime, function: value.ObjRef, mut ip: int) -> value.ObjRef:
+    return as_obj(scalar_read_constant(rt, function, mut ip))
+
+
+func main(args: str[], out: Stream) -> int:
+    const mode = args[0].copy()
+    const scenario = args[1].copy()
+    mut rt = heap.new_runtime(False)
+    mut function = object.new_function()
+    mut code = chunk.new_chunk()
+    mut ip = 0
+    if scenario == "byte-bounds" or scenario == "constant-code-bounds":
+        pass
+    elif scenario == "constant-pool-bounds":
+        chunk.write_byte(mut code, 1, 1)
+    elif scenario == "string-kind":
+        chunk.write_byte(mut code, 0, 1)
+        _ = chunk.add_constant(mut code, value.Value.number(value=42.0))
+    elif scenario.startswith("constant"):
+        chunk.write_byte(mut code, 0, 1)
+        _ = chunk.add_constant(mut code, value.Value.number(value=42.0))
+    elif scenario == "short-low-bounds":
+        chunk.write_byte(mut code, 1, 1)
+    elif scenario == "short-multiply-first":
+        chunk.write_byte(mut code, 9223372036854775807, 1)
+    else:
+        chunk.write_byte(mut code, 18, 1)
+        chunk.write_byte(mut code, 52, 1)
+    if scenario.endswith("max-ip"):
+        ip = 9223372036854775807
+    elif scenario == "byte-negative":
+        ip = -1
+    function.code = code
+    const ref = heap.allocate(mut rt, object.Obj.function(value=function))
+    mut frame = heap.CallFrame(closure=value.NO_OBJ, function=ref, ip=ip, base=0)
+    mut result = 0
+    if scenario.startswith("constant"):
+        mut selected = value.Value.nil
+        if mode == "legacy":
+            selected = legacy_read_constant(rt, mut frame)
+        else:
+            selected = scalar_read_constant(rt, frame.function, mut frame.ip)
+        match selected:
+            case value.Value.number(value=number):
+                if number == 42.0:
+                    result = 42
+            case _:
+                pass
+    elif scenario.startswith("string"):
+        if mode == "legacy":
+            result = legacy_read_string(rt, mut frame)
+        else:
+            result = scalar_read_string(rt, frame.function, mut frame.ip)
+    elif scenario.startswith("short"):
+        if mode == "legacy":
+            result = legacy_read_short(rt, mut frame)
+        else:
+            result = scalar_read_short(rt, frame.function, mut frame.ip)
+    else:
+        if mode == "legacy":
+            result = legacy_read_byte(rt, mut frame)
+        else:
+            result = scalar_read_byte(rt, frame.function, mut frame.ip)
+    _ = out.write(str(result).encode() + b"/" + str(frame.ip).encode() + b"\n")
+    return 0

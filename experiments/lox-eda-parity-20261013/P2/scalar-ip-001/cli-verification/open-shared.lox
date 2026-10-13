@@ -1,0 +1,1 @@
+fun outer(){ var x=1; fun inc(){ x=x+1; } fun get(){ return x; } inc(); print get(); return get; } var get=outer(); print get();

@@ -1,0 +1,6 @@
+build-slot: build slot 2, FIFO ticket 2910 after 0s
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/scalar-ip-001/verify_fatal.py", line 16, in <module>
+    if case in ['byte-max-ip','constant-max-ip']:assert a['category']=='R_INDEX',(case,arms)
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('byte-max-ip', {'legacy': {'status': 1, 'stdout': '', 'category': 'R_LIST_BOUNDS', 'detail': 'native execution failed (index 9223372036854775807, length 2)', 'stderr_sha256': 'de9a807a33ebe14cb8b424b68d6c95c1dc0a82ee0e5314b5def83442cd0b7058', 'stderr_file': '/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/scalar-ip-001/fatal-verification/byte-max-ip-legacy.stderr.txt'}, 'scalar': {'status': 1, 'stdout': '', 'category': 'R_LIST_BOUNDS', 'detail': 'native execution failed (index 9223372036854775807, length 2)', 'stderr_sha256': 'db883cfc6babbb8e76dec18eba9a54a80d318d1a5ecf6341d681f120c16c3a7e', 'stderr_file': '/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/scalar-ip-001/fatal-verification/byte-max-ip-scalar.stderr.txt'}})

@@ -1,0 +1,9 @@
+{
+  "read_byte": "define internal fastcc { i64, i64 } @\"my.vm::read_byte\"(ptr noalias readonly align 8 %p0, i64 %p1, i64 %p2) nounwind uwtable !dbg !1000881 {",
+  "read_constant": "define internal fastcc { { i8, [1 x i64] }, i64 } @\"my.vm::read_constant\"(ptr noalias readonly align 8 %p0, i64 %p1, i64 %p2) nounwind uwtable !dbg !1000886 {",
+  "read_string": "define internal fastcc { i64, i64 } @\"my.vm::read_string\"(ptr noalias readonly align 8 %p0, i64 %p1, i64 %p2) nounwind uwtable !dbg !1000918 {",
+  "read_short": "define internal fastcc { i64, i64 } @\"my.vm::read_short\"(ptr noalias readonly align 8 %p0, i64 %p1, i64 %p2) nounwind uwtable !dbg !1001202 {",
+  "candidate_sha256": "c98e80fddbcc78f6c8f94cfa4b97f392d4ef938b9befd1b92a7e8ac11360cd92",
+  "llvm_sha256": "794a1cbe5824a7e524eb92dc24bbff2ef9a284dc8af85f830b37432c71681a9e",
+  "performance": "not measured; register returns alone are not a benefit claim"
+}

@@ -1,0 +1,37 @@
+define internal fastcc { i64, i64 } @"my.vm::read_short"(ptr noalias readonly align 8 %p0, i64 %p1, i64 %p2) nounwind uwtable !dbg !1001202 {
+entry:
+  %slot = alloca i64, align 8
+  br label %b0
+b0:
+  %p.1 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %p2, i64 2)
+  %v4 = extractvalue { i64, i1 } %p.1, 0
+  %o.2 = extractvalue { i64, i1 } %p.1, 1
+  br i1 %o.2, label %trap.3, label %b0.4, !prof !0
+trap.3:
+  call void @myl_core_trap(ptr @myl.site.234, i64 %p2, i64 2) #2, !dbg !1001204
+  unreachable
+b0.4:
+  %v6 = sub nsw i64 %v4, 2
+  %v7 = notail call fastcc i64 @"my.heap::function_instruction"(ptr %p0, i64 %p1, i64 %v6), !dbg !1001206
+  %p.5 = call { i64, i1 } @llvm.smul.with.overflow.i64(i64 %v7, i64 256)
+  %v9 = extractvalue { i64, i1 } %p.5, 0
+  %o.6 = extractvalue { i64, i1 } %p.5, 1
+  br i1 %o.6, label %trap.7, label %b0.8, !prof !0
+trap.7:
+  call void @myl_core_trap(ptr @myl.site.235, i64 %v7, i64 256) #2, !dbg !1001208
+  unreachable
+b0.8:
+  %v11 = sub nsw i64 %v4, 1
+  %v12 = notail call fastcc i64 @"my.heap::function_instruction"(ptr %p0, i64 %p1, i64 %v11), !dbg !1001210
+  %p.9 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v9, i64 %v12)
+  %v13 = extractvalue { i64, i1 } %p.9, 0
+  %o.10 = extractvalue { i64, i1 } %p.9, 1
+  br i1 %o.10, label %trap.11, label %b0.12, !prof !0
+trap.11:
+  call void @myl_core_trap(ptr @myl.site.236, i64 %v9, i64 %v12) #2, !dbg !1001212
+  unreachable
+b0.12:
+  %rm.13 = insertvalue { i64, i64 } poison, i64 %v13, 0
+  %v14 = insertvalue { i64, i64 } %rm.13, i64 %v4, 1
+  ret { i64, i64 } %v14
+}
