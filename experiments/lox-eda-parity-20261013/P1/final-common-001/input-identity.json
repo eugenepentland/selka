@@ -1,0 +1,50 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-001/install/bin/mylang",
+  "compiler_sha256": "955f311e1dbf65b55f4c148ab03cdcb4881bc5668289aea93336dbfd7985206a",
+  "integrated_commit": "be33ce79b5b58c3e254e73709c9dd7eb97e5a849",
+  "production_equality_assertions": [
+    "heap.my",
+    "object.my",
+    "table.my"
+  ],
+  "sources": {
+    "heap.my": {
+      "integrated_sha256": "0fee35652bf52adeb179705f1f27d63bc899fe0d0ff5e3116121732fde8c6639",
+      "local_sha256": "0fee35652bf52adeb179705f1f27d63bc899fe0d0ff5e3116121732fde8c6639"
+    },
+    "object.my": {
+      "integrated_sha256": "d7676af7b94ffecfa563e2aa1cbdda39f9dc15934e0268aa168cb8630a111f93",
+      "local_sha256": "d7676af7b94ffecfa563e2aa1cbdda39f9dc15934e0268aa168cb8630a111f93"
+    },
+    "table.my": {
+      "integrated_sha256": "09997c3fbc7461e5698c16de1b186ba755f98b94951b54dadfad0dc7268dfa98",
+      "local_sha256": "09997c3fbc7461e5698c16de1b186ba755f98b94951b54dadfad0dc7268dfa98"
+    },
+    "value.my": {
+      "integrated_sha256": "be66ac3375e327f4bdf1759177519fd95a45bcd1f60070af0bf70047e8bb8c41",
+      "local_sha256": "be66ac3375e327f4bdf1759177519fd95a45bcd1f60070af0bf70047e8bb8c41"
+    },
+    "chunk.my": {
+      "integrated_sha256": "d78b6babd52503e76abcd88fe858d11e44ad43cdb45f7a436aa0adabdbf5b731",
+      "local_sha256": "d78b6babd52503e76abcd88fe858d11e44ad43cdb45f7a436aa0adabdbf5b731"
+    },
+    "lox_strings.my": {
+      "integrated_sha256": "277c69c5abf81d3db8a51b4d64858bd2eb7ccd1a406b3cfe3eeb949567cdb843",
+      "local_sha256": "277c69c5abf81d3db8a51b4d64858bd2eb7ccd1a406b3cfe3eeb949567cdb843"
+    },
+    "allocation-probe.my": {
+      "sha256": "464fe242c352b07f819ae39761b0a7a5ee80de68d7ce5c733424fe19f84df6dc"
+    },
+    "mutation-probe.my": {
+      "sha256": "dfc1d7e2e9a072901d646524bbbd38c831e59223b3d05f4cbc7a684a4aa20539"
+    },
+    "mutation-failure-probe.my": {
+      "sha256": "32066caf9d3c3853d94aa96c516cf10e0c545deb34d4cba38d14466bb10f031d"
+    }
+  },
+  "binaries": {
+    "allocation": "16d628baabc1347f5d2f4ada61c01e40483400a317569c056ec887205694e942",
+    "mutation": "6f4c0e10ad522ace849b237ab146d9d8bb0aae6e32b69fb6b70874da94c0f19a",
+    "failure": "0228e90cf83a162759bdd728862640cfb87b57ba3ced2adf109d5db6111363ac"
+  }
+}

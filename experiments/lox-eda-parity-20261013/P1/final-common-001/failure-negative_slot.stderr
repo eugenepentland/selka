@@ -1,0 +1,5 @@
+heap.my:219:20: error[R_ASSERT]: native execution failed: environment slot index out of bounds
+  in heap::require_env_slot at heap.my:219:20
+  in heap::set_env_slot at heap.my:289:5
+  in p1_mutation_failure_probe::main at p1_mutation_failure_probe.my:28:9
+MYLANG-TRAP {"version":1,"operation":"environment slot index out of bounds"}

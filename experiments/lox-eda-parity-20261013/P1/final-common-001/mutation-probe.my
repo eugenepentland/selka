@@ -1,0 +1,67 @@
+# Reduced 100-write counters at payload width1024, not a timing benchmark.
+import heap
+import lox_strings
+import object
+import table
+import value
+
+func instance_snapshot(rt: heap.Runtime, ref: value.ObjRef) -> object.InstanceObj:
+    match rt.objects[ref]:
+        case object.Obj.instance(value=payload):
+            return payload.copy()
+        case _:
+            assert False
+            return object.InstanceObj(klass=value.NO_OBJ, fields=table.new_table())
+
+func snapshot_set_instance(mut rt: heap.Runtime, ref: value.ObjRef, key: value.ObjRef, hash: u32, item: value.Value):
+    mut updated = instance_snapshot(rt, ref)
+    _ = table.set(mut updated.fields, key, hash, item)
+    rt.objects[ref] = object.Obj.instance(value=updated)
+
+func snapshot_set_class(mut rt: heap.Runtime, ref: value.ObjRef, key: value.ObjRef, hash: u32, item: value.Value):
+    mut updated = heap.class_obj(rt, ref)
+    _ = table.set(mut updated.methods, key, hash, item)
+    rt.objects[ref] = object.Obj.klass(value=updated)
+
+func snapshot_set_env(mut rt: heap.Runtime, ref: value.ObjRef, index: int, item: value.Value):
+    mut updated = heap.env_obj(rt, ref)
+    updated.slots[index] = item
+    rt.objects[ref] = object.Obj.env(value=updated)
+
+func main(args: str[], out: Stream) -> int:
+    mut rt = heap.new_runtime(False)
+    const name = lox_strings.copy_string(mut rt, b"P1")
+    heap.push(mut rt, value.Value.obj(value=name))
+    const klass = heap.allocate_class(mut rt, name)
+    heap.push(mut rt, value.Value.obj(value=klass))
+    const instance = heap.allocate_instance(mut rt, klass)
+    heap.push(mut rt, value.Value.obj(value=instance))
+    const env = heap.allocate_env(mut rt, value.NO_OBJ, 1024)
+    rt.current_env = env
+    mut first = value.NO_OBJ
+    mut first_hash = 0u32
+    mut i = 0
+    while i < 1024:
+        const key = lox_strings.copy_string(mut rt, str(i).encode())
+        heap.push(mut rt, value.Value.obj(value=key))
+        const hash = heap.string_hash(rt, key)
+        if i == 0:
+            first = key
+            first_hash = hash
+        heap.set_instance_field(mut rt, instance, key, hash, value.Value.nil)
+        heap.set_class_method(mut rt, klass, key, hash, value.Value.nil)
+        i += 1
+    i = 0
+    while i < 100:
+        const item = value.Value.number(value=float(i))
+        if len(args) > 0:
+            snapshot_set_instance(mut rt, instance, first, first_hash, item)
+            snapshot_set_class(mut rt, klass, first, first_hash, item)
+            snapshot_set_env(mut rt, env, 0, item)
+        else:
+            heap.set_instance_field(mut rt, instance, first, first_hash, item)
+            heap.set_class_method(mut rt, klass, first, first_hash, item)
+            heap.set_env_slot(mut rt, env, 0, item)
+        i += 1
+    out.print(heap.instance_field(rt, instance, first, first_hash) == Some(value.Value.number(value=99.0)), heap.class_method(rt, klass, first, first_hash) == Some(value.Value.number(value=99.0)), heap.env_slot(rt, env, 0) == value.Value.number(value=99.0))
+    return 0
