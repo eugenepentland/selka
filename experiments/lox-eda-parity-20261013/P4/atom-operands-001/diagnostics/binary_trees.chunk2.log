@@ -1,0 +1,69 @@
+build-slot: timing slot 1, FIFO ticket 1395 after 0s
+{
+  "zig-fast": {
+    "seconds": {
+      "median": 0.119837081,
+      "min": 0.119179412,
+      "max": 0.123639978,
+      "samples": [
+        0.119179412,
+        0.119837081,
+        0.123639978
+      ]
+    },
+    "child_peak_rss_kib": {
+      "median": 3744,
+      "min": 3744,
+      "max": 3744,
+      "samples": [
+        3744,
+        3744,
+        3744
+      ]
+    }
+  },
+  "baseline": {
+    "seconds": {
+      "median": 0.156162493,
+      "min": 0.155702084,
+      "max": 0.157941242,
+      "samples": [
+        0.155702084,
+        0.156162493,
+        0.157941242
+      ]
+    },
+    "child_peak_rss_kib": {
+      "median": 6916,
+      "min": 6916,
+      "max": 6916,
+      "samples": [
+        6916,
+        6916,
+        6916
+      ]
+    }
+  },
+  "candidate": {
+    "seconds": {
+      "median": 0.16355233,
+      "min": 0.161244174,
+      "max": 0.164113815,
+      "samples": [
+        0.161244174,
+        0.16355233,
+        0.164113815
+      ]
+    },
+    "child_peak_rss_kib": {
+      "median": 7048,
+      "min": 7048,
+      "max": 7052,
+      "samples": [
+        7052,
+        7048,
+        7048
+      ]
+    }
+  }
+}

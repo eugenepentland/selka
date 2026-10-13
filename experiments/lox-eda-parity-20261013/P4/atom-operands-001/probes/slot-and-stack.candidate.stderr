@@ -1,0 +1,8 @@
+heap.my:436:20: error[R_LIST_BOUNDS]: native execution failed (index 1, length 1)
+  in heap::env_slot at heap.my:436:20
+  in interpreter::try_push_atom at interpreter.my:167:28
+  in interpreter::binary at interpreter.my:179:12
+  in interpreter::evaluate at interpreter.my:325:20
+  in interpreter::p4_atom_probe at interpreter.my:664:11
+  in atom_probe::main at atom_probe.my:35:12
+MYLANG-TRAP {"version":1,"operation":"index","index":1,"length":1}

@@ -1,0 +1,199 @@
+{
+  "cwd": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4",
+  "environment": [
+    "source /home/epentland/.config/mylang/dev-env.sh",
+    "TMPDIR=$PWD/.tmp/lox-eda-parity/P4/atom-operands-001/tmp",
+    "MYLANG_COMPONENT_DIR=common-002/install/libexec/mylang/components for tests"
+  ],
+  "commands": [
+    {
+      "name": "baseline-build",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+        "build",
+        "experiments/lox-eda-parity-20261013/P4/atom-operands-001/baseline/lox/main.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--cache-dir",
+        ".tmp/lox-eda-parity/P4/atom-operands-001/baseline/cache",
+        "-o",
+        ".tmp/lox-eda-parity/P4/atom-operands-001/baseline/lox",
+        "--emit-llvm",
+        ".tmp/lox-eda-parity/P4/atom-operands-001/baseline/lox.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "baseline-verified-tests",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+        "test",
+        "experiments/lox-eda-parity-20261013/P4/atom-operands-001/baseline/lox",
+        "--experimental-zero-rc",
+        "--release",
+        "--verify-facts",
+        "--jobs",
+        "4",
+        "--max-steps",
+        "1000000000",
+        "--max-frames",
+        "40000",
+        "--max-memory",
+        "2G",
+        "--timeout-ms",
+        "120000",
+        "--cache-dir",
+        ".tmp/lox-eda-parity/P4/atom-operands-001/baseline/test-cache",
+        "--json"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "baseline-first-fixture-probe-build",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+        "build",
+        "experiments/lox-eda-parity-20261013/P4/atom-operands-001/probe-sources/baseline/lox/atom_probe.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--cache-dir",
+        ".tmp/lox-eda-parity/P4/atom-operands-001/probe-baseline/cache",
+        "-o",
+        ".tmp/lox-eda-parity/P4/atom-operands-001/probe-baseline/atom-probe"
+      ],
+      "returncode": 1,
+      "log": "probe-baseline-first-fixture-build.log",
+      "source_wrapper": "probe-first-fixture-wrapper.my.txt"
+    },
+    {
+      "name": "baseline-fixed-fixture-probe-build",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+        "build",
+        "experiments/lox-eda-parity-20261013/P4/atom-operands-001/probe-sources/baseline/lox/atom_probe.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--cache-dir",
+        ".tmp/lox-eda-parity/P4/atom-operands-001/probe-baseline/cache",
+        "-o",
+        ".tmp/lox-eda-parity/P4/atom-operands-001/probe-baseline/atom-probe"
+      ],
+      "returncode": 0,
+      "log": "probe-baseline-build.log"
+    },
+    {
+      "name": "candidate-build",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+        "build",
+        "experiments/lox-eda-parity-20261013/P4/atom-operands-001/candidate/lox/main.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--cache-dir",
+        ".tmp/lox-eda-parity/P4/atom-operands-001/candidate/cache",
+        "-o",
+        ".tmp/lox-eda-parity/P4/atom-operands-001/candidate/lox",
+        "--emit-llvm",
+        ".tmp/lox-eda-parity/P4/atom-operands-001/candidate/lox.ll"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "candidate-verified-tests",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+        "test",
+        "experiments/lox-eda-parity-20261013/P4/atom-operands-001/candidate/lox",
+        "--experimental-zero-rc",
+        "--release",
+        "--verify-facts",
+        "--jobs",
+        "4",
+        "--max-steps",
+        "1000000000",
+        "--max-frames",
+        "40000",
+        "--max-memory",
+        "2G",
+        "--timeout-ms",
+        "120000",
+        "--cache-dir",
+        ".tmp/lox-eda-parity/P4/atom-operands-001/candidate/test-cache",
+        "--json"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "candidate-first-fixture-probe-build",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+        "build",
+        "experiments/lox-eda-parity-20261013/P4/atom-operands-001/probe-sources/candidate/lox/atom_probe.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--cache-dir",
+        ".tmp/lox-eda-parity/P4/atom-operands-001/probe-candidate/cache",
+        "-o",
+        ".tmp/lox-eda-parity/P4/atom-operands-001/probe-candidate/atom-probe"
+      ],
+      "returncode": 1,
+      "log": "probe-candidate-first-fixture-build.log",
+      "source_wrapper": "probe-first-fixture-wrapper.my.txt"
+    },
+    {
+      "name": "candidate-fixed-fixture-probe-build",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+        "build",
+        "experiments/lox-eda-parity-20261013/P4/atom-operands-001/probe-sources/candidate/lox/atom_probe.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--cache-dir",
+        ".tmp/lox-eda-parity/P4/atom-operands-001/probe-candidate/cache",
+        "-o",
+        ".tmp/lox-eda-parity/P4/atom-operands-001/probe-candidate/atom-probe"
+      ],
+      "returncode": 0,
+      "log": "probe-candidate-build.log"
+    },
+    {
+      "name": "controls",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "python3",
+        "-B",
+        "experiments/lox-eda-parity-20261013/P4/atom-operands-001/run-controls.py"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "probes",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "python3",
+        "-B",
+        "experiments/lox-eda-parity-20261013/P4/atom-operands-001/run-probes.py"
+      ],
+      "returncode": 0
+    }
+  ],
+  "timing_receipt": "timing-commands.json"
+}

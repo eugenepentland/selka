@@ -1,0 +1,17 @@
+# Printing a union value whose payload is a class shows garbage fields.
+#
+#   mylang run print_union_class_payload.my
+#   => Item.box(Box(n=906571952))        (expected Item.box(Box(n=1)))
+#
+# With larger payloads (a union of several classes held in a list) the same
+# `out.print` segfaulted the process (exit 139).
+class Box:
+    n: int
+
+union Item:
+    empty,
+    box: Box
+
+def main(out: Stream) -> int:
+    out.print(Item.box(Box(n=1)))
+    return 0

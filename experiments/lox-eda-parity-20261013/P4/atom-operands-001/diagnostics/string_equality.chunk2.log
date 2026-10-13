@@ -1,0 +1,70 @@
+build-slot: FIFO ticket 1399, position 2; earlier timing tickets must run first; waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 1399 after 5s
+{
+  "zig-fast": {
+    "seconds": {
+      "median": 0.14141781,
+      "min": 0.140607345,
+      "max": 0.143608133,
+      "samples": [
+        0.140607345,
+        0.14141781,
+        0.143608133
+      ]
+    },
+    "child_peak_rss_kib": {
+      "median": 2304,
+      "min": 2304,
+      "max": 2304,
+      "samples": [
+        2304,
+        2304,
+        2304
+      ]
+    }
+  },
+  "baseline": {
+    "seconds": {
+      "median": 0.203312888,
+      "min": 0.202325702,
+      "max": 0.207825012,
+      "samples": [
+        0.202325702,
+        0.203312888,
+        0.207825012
+      ]
+    },
+    "child_peak_rss_kib": {
+      "median": 6268,
+      "min": 6264,
+      "max": 6268,
+      "samples": [
+        6264,
+        6268,
+        6268
+      ]
+    }
+  },
+  "candidate": {
+    "seconds": {
+      "median": 0.201626599,
+      "min": 0.197986701,
+      "max": 0.206198453,
+      "samples": [
+        0.197986701,
+        0.206198453,
+        0.201626599
+      ]
+    },
+    "child_peak_rss_kib": {
+      "median": 6400,
+      "min": 6396,
+      "max": 6400,
+      "samples": [
+        6400,
+        6400,
+        6396
+      ]
+    }
+  }
+}

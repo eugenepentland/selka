@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 3032, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 3032 after 5s
+output.my:5:8: warning[W_UNUSED_IMPORT]: import `object` is never referenced in this module; remove it or use it
+  import object
+         ^

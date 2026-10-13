@@ -1,0 +1,1 @@
+fun deep(n) { if (n < 1) return "b" + "c"; var x = "x" + "y"; return deep(n - 1); } fun join(a) { return a + deep(40); } print join("a" + "d"); print "q" + deep(40);

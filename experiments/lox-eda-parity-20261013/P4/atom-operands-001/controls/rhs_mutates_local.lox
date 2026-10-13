@@ -1,0 +1,1 @@
+fun f() { var n = 1; fun change() { n = 5; return n; } print n + change(); print n; var a = "a"; fun other() { a = "z"; return "b" + "c"; } print a + other(); print a; } f();

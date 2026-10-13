@@ -1,0 +1,22 @@
+# Fresh construction and scoped mutation regressions, paired with GC stress.
+import driver
+
+func tree_prints(source: bytes, expected: bytes, out: Stream) -> bool:
+    mut normal = driver.run_source(source, driver.Engine.TREE, False, out, None)
+    mut stress = driver.run_source(source, driver.Engine.TREE, True, out, None)
+    return normal.status == 0 and stress.status == 0 and normal.stdout == expected and stress.stdout == expected and stress.collections == stress.allocations
+
+public func test_p4_fresh_env_closure_identity(out: Stream) -> bool:
+    return tree_prints(b"fun make(n) { fun add(v) { n = n + v; return n; } return add; } var a = make(1); var b = make(100); print a(2); print b(3); print a(4); { var n = 9; fun get() { return n; } a = get; } print a();", b"3\n103\n7\n9\n", out)
+
+public func test_p4_instance_rhs_alias_growth(out: Stream) -> bool:
+    return tree_prints(b"class Box {} var box = Box(); var alias = box; fun rhs() { alias.a = 1; alias.b = 2; alias.c = 3; alias.d = 4; alias.e = 5; alias.f = 6; alias.g = 7; alias.h = 8; return box; } box.self = rhs(); print box == alias; print box.self == box; print alias.a + alias.h; alias.a = 20; print box.a;", b"true\ntrue\n9\n20\n", out)
+
+public func test_p4_inherited_methods_override(out: Stream) -> bool:
+    return tree_prints(b"class A { init(n) { this.n = n; } a() { return this.n; } b() { return 2; } c() { return 3; } d() { return 4; } e() { return 5; } f() { return 6; } g() { return 7; } h() { return 8; } } class B < A { a() { return super.a() + 10; } extra() { return 9; } } var b = B(1); var bound = b.a; print bound(); print b.b() + b.h() + b.extra(); print A(4).a();", b"11\n19\n4\n", out)
+
+public func test_p4_set_checks_before_rhs(out: Stream) -> bool:
+    mut source = b"fun rhs() { print 99; return 1; }\n123.field = rhs();"
+    mut normal = driver.run_source(source, driver.Engine.TREE, False, out, None)
+    mut stress = driver.run_source(source, driver.Engine.TREE, True, out, None)
+    return normal.status == 70 and stress.status == 70 and normal.stdout == b"" and stress.stdout == b"" and normal.stderr == b"Only instances have fields.\n[line 2]\n" and stress.stderr == normal.stderr

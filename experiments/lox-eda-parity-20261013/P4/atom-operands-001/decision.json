@@ -1,0 +1,9 @@
+{
+  "status": "rejected for app adoption",
+  "reason": "2.18%string improvement accompanied by consistent1.96%fib and4.37%binary-tree regressions andlarger RSS in allthree cases",
+  "coordinator_decision": "Agreed: reject atom shape; preserve evidence and decision, no adoption. Its lower string-equality time does not justify the consistent fib/tree regressions and larger RSS.",
+  "production_changed": false,
+  "arithmetic_snapshots_changed": false,
+  "samples_excluded": 0,
+  "repetitions_added": 0
+}

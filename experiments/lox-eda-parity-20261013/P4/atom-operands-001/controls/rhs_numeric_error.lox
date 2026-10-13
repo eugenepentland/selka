@@ -1,0 +1,4 @@
+fun f(n) {
+ print n - "bad";
+}
+f(3);

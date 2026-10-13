@@ -1,0 +1,194 @@
+# QBE register allocator failure on a mid-sized dispatch loop.
+#
+#   mylang build qbe_pm_slots.my -o /tmp/pm --mode Debug     (also --backend qbe)
+#   => vendor/qbe/rega.c: dying: no more pm slots
+#      mylang: host failure: NativeToolFailed
+#
+# The default ReleaseFast (LLVM) build of the same file succeeds. With 8
+# branches instead of 10 QBE succeeds too; with 40 it succeeds again, with
+# 20 or 80 it fails. rega.c caps one parallel move at NPm = 64 copies. The
+# lox VM's first `run` (one function holding the whole dispatch loop, 2.2 MB
+# of IL) hit this; the port now dispatches to one handler per opcode.
+union Value:
+    nil,
+    number: float,
+    obj: int
+
+
+class Fn:
+    code: list[int]
+    constants: list[Value]
+    arity: int
+
+
+record Frame:
+    closure: int
+    function: Fn
+    ip: int
+    base: int
+
+
+class Machine:
+    stack: list[Value]
+    top: int
+    frames: list[Frame]
+
+
+def push(m: mut Machine, v: Value):
+    m.stack[m.top] = v
+    m.top = m.top + 1
+
+
+def pop(m: mut Machine) -> Value:
+    m.top = m.top - 1
+    return m.stack[m.top]
+
+
+def run(m: mut Machine) -> int:
+    frame = m.frames[len(m.frames) - 1]
+    code = frame.function.code
+    constants = frame.function.constants
+    base = frame.base
+    ip = frame.ip
+    while True:
+        op = code[ip]
+        ip += 1
+        if op == 0:
+            f0 = m.frames[len(m.frames) - 1]
+            v0 = constants[code[ip]]
+            ip += 1
+            if f0.base > 0:
+                push(mut m, v0)
+                frame = f0
+                code = frame.function.code
+                constants = frame.function.constants
+                base = frame.base
+                ip = frame.ip
+            else:
+                push(mut m, m.stack[base + 0])
+        elif op == 1:
+            f1 = m.frames[len(m.frames) - 1]
+            v1 = constants[code[ip]]
+            ip += 1
+            if f1.base > 1:
+                push(mut m, v1)
+                frame = f1
+                code = frame.function.code
+                constants = frame.function.constants
+                base = frame.base
+                ip = frame.ip
+            else:
+                push(mut m, m.stack[base + 1])
+        elif op == 2:
+            f2 = m.frames[len(m.frames) - 1]
+            v2 = constants[code[ip]]
+            ip += 1
+            if f2.base > 2:
+                push(mut m, v2)
+                frame = f2
+                code = frame.function.code
+                constants = frame.function.constants
+                base = frame.base
+                ip = frame.ip
+            else:
+                push(mut m, m.stack[base + 2])
+        elif op == 3:
+            f3 = m.frames[len(m.frames) - 1]
+            v3 = constants[code[ip]]
+            ip += 1
+            if f3.base > 3:
+                push(mut m, v3)
+                frame = f3
+                code = frame.function.code
+                constants = frame.function.constants
+                base = frame.base
+                ip = frame.ip
+            else:
+                push(mut m, m.stack[base + 3])
+        elif op == 4:
+            f4 = m.frames[len(m.frames) - 1]
+            v4 = constants[code[ip]]
+            ip += 1
+            if f4.base > 4:
+                push(mut m, v4)
+                frame = f4
+                code = frame.function.code
+                constants = frame.function.constants
+                base = frame.base
+                ip = frame.ip
+            else:
+                push(mut m, m.stack[base + 4])
+        elif op == 5:
+            f5 = m.frames[len(m.frames) - 1]
+            v5 = constants[code[ip]]
+            ip += 1
+            if f5.base > 5:
+                push(mut m, v5)
+                frame = f5
+                code = frame.function.code
+                constants = frame.function.constants
+                base = frame.base
+                ip = frame.ip
+            else:
+                push(mut m, m.stack[base + 5])
+        elif op == 6:
+            f6 = m.frames[len(m.frames) - 1]
+            v6 = constants[code[ip]]
+            ip += 1
+            if f6.base > 6:
+                push(mut m, v6)
+                frame = f6
+                code = frame.function.code
+                constants = frame.function.constants
+                base = frame.base
+                ip = frame.ip
+            else:
+                push(mut m, m.stack[base + 6])
+        elif op == 7:
+            f7 = m.frames[len(m.frames) - 1]
+            v7 = constants[code[ip]]
+            ip += 1
+            if f7.base > 7:
+                push(mut m, v7)
+                frame = f7
+                code = frame.function.code
+                constants = frame.function.constants
+                base = frame.base
+                ip = frame.ip
+            else:
+                push(mut m, m.stack[base + 7])
+        elif op == 8:
+            f8 = m.frames[len(m.frames) - 1]
+            v8 = constants[code[ip]]
+            ip += 1
+            if f8.base > 8:
+                push(mut m, v8)
+                frame = f8
+                code = frame.function.code
+                constants = frame.function.constants
+                base = frame.base
+                ip = frame.ip
+            else:
+                push(mut m, m.stack[base + 8])
+        elif op == 9:
+            f9 = m.frames[len(m.frames) - 1]
+            v9 = constants[code[ip]]
+            ip += 1
+            if f9.base > 9:
+                push(mut m, v9)
+                frame = f9
+                code = frame.function.code
+                constants = frame.function.constants
+                base = frame.base
+                ip = frame.ip
+            else:
+                push(mut m, m.stack[base + 9])
+        else:
+            return base
+
+
+def main() -> int:
+    stack: list[Value] = [Value.nil, Value.nil, Value.nil, Value.nil]
+    fn = Fn(code=[0, 0, 99], constants=[Value.number(1.0)], arity=0)
+    m = Machine(stack=stack, top=0, frames=[Frame(closure=0, function=fn, ip=0, base=0)])
+    return run(mut m)

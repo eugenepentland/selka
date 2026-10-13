@@ -1,0 +1,30 @@
+{
+  "status": "coordinator approved; waiting for P3 six leases to finish before enqueue",
+  "cases": [
+    "fib.tree.28",
+    "binary_trees.tree.10",
+    "string_equality.tree.10000"
+  ],
+  "arms": [
+    "pinned zig-fast",
+    "untouched C2 baseline",
+    "atom-only candidate"
+  ],
+  "protocol": {
+    "cpu": 8,
+    "warmups": 2,
+    "runtime_rounds": 9,
+    "chunks": 3,
+    "rounds_per_chunk": 3,
+    "arm_order": "forward on even runtime rounds, reversed on odd",
+    "fresh_zig_calibration_warmups": 2,
+    "fresh_zig_calibration_rounds": 5,
+    "zig_factor": 3,
+    "absolute_timeout_seconds": 120,
+    "rss_rounds_per_arm": 3,
+    "rss_phase": "third chunk of each case after its9runtimepairs, uninstrumented /usr/bin/time observations separate from wall_samples; RSS uses120absolute deadline"
+  },
+  "risk": "helper fast atom paths remove recursive large-frame setup, but evaluator frame grows1208->1752bytes and binary is newly outlined with1208byte frame; related code grows8861->10123B",
+  "decision_rule": "no adoption without consistent runtime evidence and no repeatable>5%control slowdown; full app RSS required if adopted; no compound benefit multiplication",
+  "authorization": "Root approved9leases after P3six and additionally requested3separateRSS samples/case after9runtimepairs. Sharedqueue only, no bypass, microheld."
+}

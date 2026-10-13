@@ -1,0 +1,41 @@
+
+# Probe-only public entry: construct malformed/negative-index atom operands.
+public func p4_atom_probe(mut rt: heap.Runtime, out: Stream, mode: str, hops: int, slot: int) -> int:
+    mut program = ast.new_program()
+    mut token = ast.Token(kind=ast.TokenKind.IDENTIFIER, start=0, length=1, line=7, message=b"")
+    mut literal = mode == "literal" or mode == "literal-stack-end"
+    if literal:
+        program.exprs.append(ast.Expr.literal(value=ast.LiteralExpr(constant=value.Value.number(value=42.0), token=token.copy())))
+    else:
+        program.exprs.append(ast.Expr.variable(value=ast.VariableExpr(name=token.copy(), name_ref=rt.init_string, hops=hops, slot=slot)))
+    program.exprs.append(ast.Expr.literal(value=ast.LiteralExpr(constant=value.Value.number(value=3.0), token=token.copy())))
+    mut left = 0
+    mut right = 1
+    if mode == "expr-negative":
+        left = -1
+    if mode == "expr-end" or mode == "expr-and-stack":
+        left = 4
+    if mode == "logical-short-invalid-rhs":
+        right = 4
+    if mode == "logical" or mode == "logical-short-invalid-rhs":
+        mut op = ast.Token(kind=ast.TokenKind.OR, start=0, length=1, line=7, message=b"")
+        program.exprs.append(ast.Expr.logical(value=ast.LogicalExpr(left=left, operator=op, right=right)))
+    else:
+        mut op = ast.Token(kind=ast.TokenKind.PLUS, start=0, length=1, line=7, message=b"")
+        program.exprs.append(ast.Expr.binary(value=ast.BinaryExpr(left=left, operator=op, right=right)))
+    program.exprs.append(ast.Expr.literal(value=ast.LiteralExpr(constant=value.Value.number(value=42.0), token=token.copy())))
+    mut o = output.capture(out)
+    mut it = Interpreter(depth=0, returned=value.Value.nil)
+    match evaluate(program, mut rt, mut o, mut it, 2, None):
+        case Ok(_):
+            out.print(rt.stack_top)
+            match heap.peek(rt, 0):
+                case value.Value.number(value=number):
+                    out.print(number)
+                case _:
+                    out.print(b"non-number")
+            return 0
+        case Err(error):
+            out.print(error.message)
+            out.print(error.line)
+            return 70

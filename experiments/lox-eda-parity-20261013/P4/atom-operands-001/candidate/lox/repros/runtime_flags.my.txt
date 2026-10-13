@@ -1,0 +1,19 @@
+# A native executable's runtime reads its own controls from the arguments
+# before the first `--`, so a program cannot receive `--gc-stress` (or
+# `--print-result`, `--max-steps=N`, `--max-frames=N`, `--timeout=N`) as an
+# ordinary argument, and receiving one silently switches that control on.
+#
+#   mylang build runtime_flags.my -o /tmp/flags
+#   /tmp/flags --engine=vm --gc-stress --stats x.lox
+#   => count 3 / --engine=vm / --stats / x.lox       (--gc-stress is gone,
+#      and mylang's collector now runs in stress mode)
+#   /tmp/flags -- --gc-stress x.lox
+#   => count 2 / --gc-stress / x.lox
+#
+# `lox --gc-stress` is part of the benchmark's command line, so the port's
+# bench.json installs lox.sh, which execs the real binary with a leading `--`.
+def main(args: list[str], out: Stream) -> int:
+    out.print("count", len(args))
+    for arg in args:
+        out.print(arg)
+    return 0

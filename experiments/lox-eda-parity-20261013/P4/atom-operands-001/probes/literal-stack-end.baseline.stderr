@@ -1,0 +1,8 @@
+heap.my:77:5: error[R_LIST_BOUNDS]: native execution failed (index 16384, length 16384)
+  in heap::push at heap.my:77:5
+  in interpreter::evaluate at interpreter.my:310:13
+  in interpreter::binary at interpreter.my:161:9
+  in interpreter::evaluate at interpreter.my:302:20
+  in interpreter::p4_atom_probe at interpreter.my:641:11
+  in atom_probe::main at atom_probe.my:35:12
+MYLANG-TRAP {"version":1,"operation":"index","index":16384,"length":16384}

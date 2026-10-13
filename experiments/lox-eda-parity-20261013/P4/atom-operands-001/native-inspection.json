@@ -1,0 +1,128 @@
+{
+  "baseline": {
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "symbols": {
+      "my.interpreter::arithmetic": {
+        "address": "000000000106f3d0",
+        "bytes": 90
+      },
+      "my.interpreter::as_obj": {
+        "address": "000000000106bd00",
+        "bytes": 61
+      },
+      "my.interpreter::bind": {
+        "address": "0000000001070190",
+        "bytes": 471
+      },
+      "my.interpreter::call_value": {
+        "address": "000000000106f430",
+        "bytes": 3411
+      },
+      "my.interpreter::define": {
+        "address": "0000000001067190",
+        "bytes": 289
+      },
+      "my.interpreter::enter_function": {
+        "address": "0000000001072b00",
+        "bytes": 1332
+      },
+      "my.interpreter::evaluate": {
+        "address": "0000000001064fd0",
+        "bytes": 8636
+      },
+      "my.interpreter::execute": {
+        "address": "000000000105ddd0",
+        "bytes": 6019
+      },
+      "my.interpreter::is_string": {
+        "address": "000000000106f380",
+        "bytes": 74
+      },
+      "my.interpreter::new_env": {
+        "address": "000000000106bbb0",
+        "bytes": 333
+      },
+      "my.interpreter::run_function": {
+        "address": "0000000001073040",
+        "bytes": 979
+      }
+    },
+    "try_push_atom_calls": [],
+    "recursive_evaluate_calls": [
+      "106509d:\te8 2e ff ff ff       \tcall   1064fd0 <my.interpreter::evaluate>",
+      "106516a:\te8 61 fe ff ff       \tcall   1064fd0 <my.interpreter::evaluate>",
+      "1065287:\te8 44 fd ff ff       \tcall   1064fd0 <my.interpreter::evaluate>",
+      "1065332:\te8 99 fc ff ff       \tcall   1064fd0 <my.interpreter::evaluate>",
+      "10653b6:\te8 15 fc ff ff       \tcall   1064fd0 <my.interpreter::evaluate>",
+      "10654f9:\te8 d2 fa ff ff       \tcall   1064fd0 <my.interpreter::evaluate>",
+      "10655c2:\te8 09 fa ff ff       \tcall   1064fd0 <my.interpreter::evaluate>",
+      "106575a:\te8 71 f8 ff ff       \tcall   1064fd0 <my.interpreter::evaluate>",
+      "10657b1:\te8 1a f8 ff ff       \tcall   1064fd0 <my.interpreter::evaluate>",
+      "1065929:\te8 a2 f6 ff ff       \tcall   1064fd0 <my.interpreter::evaluate>",
+      "10659e0:\te8 eb f5 ff ff       \tcall   1064fd0 <my.interpreter::evaluate>",
+      "1065a6d:\te8 5e f5 ff ff       \tcall   1064fd0 <my.interpreter::evaluate>"
+    ]
+  },
+  "candidate": {
+    "binary_sha256": "91a83e0fb30447cbef40d150134a557bee57497de7645f7a436e9ed69112616c",
+    "symbols": {
+      "my.interpreter::binary": {
+        "address": "000000000106bb70",
+        "bytes": 1792
+      },
+      "my.interpreter::bind": {
+        "address": "0000000001070760",
+        "bytes": 471
+      },
+      "my.interpreter::call_value": {
+        "address": "000000000106fa00",
+        "bytes": 3411
+      },
+      "my.interpreter::define": {
+        "address": "0000000001066ee0",
+        "bytes": 289
+      },
+      "my.interpreter::enter_function": {
+        "address": "00000000010730c0",
+        "bytes": 1332
+      },
+      "my.interpreter::evaluate": {
+        "address": "00000000010650d0",
+        "bytes": 7693
+      },
+      "my.interpreter::execute": {
+        "address": "000000000105ded0",
+        "bytes": 6019
+      },
+      "my.interpreter::new_env": {
+        "address": "000000000106b8f0",
+        "bytes": 333
+      },
+      "my.interpreter::run_function": {
+        "address": "0000000001073600",
+        "bytes": 979
+      },
+      "my.interpreter::try_push_atom": {
+        "address": "000000000106f780",
+        "bytes": 638
+      }
+    },
+    "try_push_atom_calls": [
+      "106595d:\te8 1e 9e 00 00       \tcall   106f780 <my.interpreter::try_push_atom>",
+      "10662d9:\te8 a2 94 00 00       \tcall   106f780 <my.interpreter::try_push_atom>"
+    ],
+    "recursive_evaluate_calls": [
+      "10651a1:\te8 2a ff ff ff       \tcall   10650d0 <my.interpreter::evaluate>",
+      "106526f:\te8 5c fe ff ff       \tcall   10650d0 <my.interpreter::evaluate>",
+      "106538a:\te8 41 fd ff ff       \tcall   10650d0 <my.interpreter::evaluate>",
+      "1065432:\te8 99 fc ff ff       \tcall   10650d0 <my.interpreter::evaluate>",
+      "10654ba:\te8 11 fc ff ff       \tcall   10650d0 <my.interpreter::evaluate>",
+      "10655fa:\te8 d1 fa ff ff       \tcall   10650d0 <my.interpreter::evaluate>",
+      "10656b6:\te8 15 fa ff ff       \tcall   10650d0 <my.interpreter::evaluate>",
+      "10659c7:\te8 04 f7 ff ff       \tcall   10650d0 <my.interpreter::evaluate>",
+      "1065f27:\te8 a4 f1 ff ff       \tcall   10650d0 <my.interpreter::evaluate>",
+      "106632f:\te8 9c ed ff ff       \tcall   10650d0 <my.interpreter::evaluate>"
+    ]
+  },
+  "native_criterion": "Coordinator clarified: recursive evaluate calls must be absent on proven atom path, reducing large frame/setup; small helper calls allowed, evaluator->binary outline risk measured separately."
+}

@@ -1,0 +1,2 @@
+fun side() { print 99; return 2; }
+print missing + side();

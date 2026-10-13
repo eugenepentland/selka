@@ -1,0 +1,51 @@
+[
+  {
+    "name": "atom_and_fallback_order",
+    "source": "experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/atom_and_fallback_order.lox",
+    "status": 0,
+    "stdout": "2\n4\n3\n3\n8\n",
+    "stderr": ""
+  },
+  {
+    "name": "logical_short_circuit",
+    "source": "experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/logical_short_circuit.lox",
+    "status": 0,
+    "stdout": "42\nfalse\n7\n42\n",
+    "stderr": ""
+  },
+  {
+    "name": "rhs_global_error",
+    "source": "experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/rhs_global_error.lox",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'missing'.\n[line 2]\n"
+  },
+  {
+    "name": "left_global_error",
+    "source": "experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/left_global_error.lox",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Undefined variable 'missing'.\n[line 2]\n"
+  },
+  {
+    "name": "rhs_gc_string_root",
+    "source": "experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/rhs_gc_string_root.lox",
+    "status": 0,
+    "stdout": "adbc\nqbc\n",
+    "stderr": ""
+  },
+  {
+    "name": "rhs_mutates_local",
+    "source": "experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/rhs_mutates_local.lox",
+    "status": 0,
+    "stdout": "6\n5\nabc\nz\n",
+    "stderr": ""
+  },
+  {
+    "name": "rhs_numeric_error",
+    "source": "experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/rhs_numeric_error.lox",
+    "status": 70,
+    "stdout": "",
+    "stderr": "Operands must be numbers.\n[line 2]\n"
+  }
+]

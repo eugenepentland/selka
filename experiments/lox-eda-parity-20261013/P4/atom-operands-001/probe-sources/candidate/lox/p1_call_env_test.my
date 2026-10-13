@@ -1,0 +1,41 @@
+import heap
+import lox_strings
+import value
+import driver
+
+public func test_call_env_fills_owned_args_preserves_roots_and_accounting() -> bool:
+    mut rt = heap.new_runtime(True)
+    const outer = heap.allocate_env(mut rt, value.NO_OBJ, 1)
+    rt.current_env = outer
+    const text = lox_strings.copy_string(mut rt, b"argument")
+    heap.push(mut rt, value.Value.obj(value=text))
+    heap.push(mut rt, value.Value.number(value=7.0))
+    const before = rt.bytes_allocated
+    const env = heap.allocate_call_env(mut rt, outer, 4, 0, 2)
+    const charged = rt.bytes_allocated == before + 96
+    rt.current_env = env
+    rt.stack_top = 0
+    heap.collect(mut rt)
+    return charged and rt.allocations == 3 and rt.collections == 4 and rt.freed == 0 and heap.env_enclosing(rt, env) == outer and heap.env_slot(rt, env, 0) == value.Value.obj(value=text) and heap.env_slot(rt, env, 1) == value.Value.number(value=7.0) and heap.env_slot(rt, env, 2) == value.Value.nil and heap.env_slot(rt, env, 3) == value.Value.nil and heap.string_matches(rt, text, b"argument")
+
+public func test_call_env_empty_args_and_collected_slot_reuse() -> bool:
+    mut rt = heap.new_runtime(True)
+    const discarded = heap.allocate_env(mut rt, value.NO_OBJ, 2)
+    const env = heap.allocate_call_env(mut rt, value.NO_OBJ, 0, 0, 0)
+    rt.current_env = env
+    heap.collect(mut rt)
+    return env == discarded and rt.allocations == 2 and rt.freed == 1 and rt.bytes_allocated == 32 and len(heap.env_obj(rt, env).slots) == 0
+
+public func test_call_env_closure_method_initializer_args_stress(out: Stream) -> bool:
+    const source = b"fun make(a) { fun read(b) { return a + b; } return read; } var f = make(10); print f(7); class Box { init(x,y) { this.x=x; this.y=y; } sum(z) { return this.x+this.y+z; } } var box=Box(2,3); print box.sum(4);"
+    const normal = driver.run_source(source, driver.Engine.TREE, False, out, None)
+    const stress = driver.run_source(source, driver.Engine.TREE, True, out, None)
+    return normal.status == 0 and stress.status == 0 and normal.stdout == b"17\n9\n" and stress.stdout == normal.stdout
+
+public func test_call_env_wrong_arity_keeps_error_order(out: Stream) -> bool:
+    const result = driver.run_source(b"fun f(a,b) { return a+b; } f(1);", driver.Engine.TREE, True, out, None)
+    return result.status == 70 and result.stdout == b"" and result.stderr.startswith(b"Expected 2 arguments but got 1.")
+
+public func test_call_env_arity_error_precedes_depth_error(out: Stream) -> bool:
+    const result = driver.run_source(b"fun f(n) { if (n == 0) f(); else f(n - 1); } f(62);", driver.Engine.TREE, True, out, None)
+    return result.status == 70 and result.stdout == b"" and result.stderr.startswith(b"Expected 1 arguments but got 0.")

@@ -1,0 +1,14 @@
+{
+  "baseline_evaluator_explicit_stack_bytes": 1208,
+  "candidate_evaluator_explicit_stack_bytes": 1752,
+  "candidate_binary_explicit_stack_bytes": 1208,
+  "candidate_atom_helper_explicit_stack_bytes": 8,
+  "baseline_evaluator_saved_registers": 6,
+  "candidate_evaluator_saved_registers": 6,
+  "candidate_binary_saved_registers": 6,
+  "candidate_atom_helper_saved_registers": 0,
+  "related_baseline_code_bytes": 8861,
+  "related_candidate_code_bytes": 10123,
+  "native_branch_evidence": "candidate binary helper true branches bypass recursive evaluate callsites0x106bc2b and0x106bce4; helper contains no interpreter calls; logical follows equivalent conditional fallback",
+  "limitation": "frames/code/layout observed; these alone do not establish the cause of measured regression"
+}

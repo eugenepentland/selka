@@ -1,0 +1,56 @@
+--- a/interpreter.my
++++ b/interpreter.my
+@@ -154,12 +154,32 @@
+     return Ok(())
+ 
+ 
++# Operand atoms keep the ordinary checked read and push sequence. Complex and
++# global expressions return False so the caller retains full evaluation.
++func try_push_atom(program: ast.Program, mut rt: heap.Runtime, id: int) -> bool:
++    match program.exprs[id]:
++        case ast.Expr.literal(value=node):
++            heap.push(mut rt, node.constant)
++            return True
++        case ast.Expr.variable(value=node):
++            if node.hops != ast.GLOBAL:
++                mut env = env_at(rt, node.hops)
++                mut item = heap.env_slot(rt, env, node.slot)
++                heap.push(mut rt, item)
++                return True
++        case _:
++            pass
++    return False
++
++
+ # Computes a binary operator with both operands still on the stack, then
+ # pops them and pushes the result. `+` on strings concatenates before the
+ # operands are popped.
+ func binary(program: ast.Program, mut rt: heap.Runtime, mut o: output.Output, mut it: Interpreter, node: ast.BinaryExpr, clock: Clock?) -> Result[Unit, RuntimeError]:
+-    try evaluate(program, mut rt, mut o, mut it, node.left, clock)
+-    try evaluate(program, mut rt, mut o, mut it, node.right, clock)
++    if not try_push_atom(program, mut rt, node.left):
++        try evaluate(program, mut rt, mut o, mut it, node.left, clock)
++    if not try_push_atom(program, mut rt, node.right):
++        try evaluate(program, mut rt, mut o, mut it, node.right, clock)
+     mut left = heap.peek(rt, 1)
+     mut right = heap.peek(rt, 0)
+     mut kind = node.operator.kind
+@@ -220,7 +240,8 @@
+ 
+ 
+ func logical(program: ast.Program, mut rt: heap.Runtime, mut o: output.Output, mut it: Interpreter, node: ast.LogicalExpr, clock: Clock?) -> Result[Unit, RuntimeError]:
+-    try evaluate(program, mut rt, mut o, mut it, node.left, clock)
++    if not try_push_atom(program, mut rt, node.left):
++        try evaluate(program, mut rt, mut o, mut it, node.left, clock)
+     mut falsey = value.is_falsey(heap.peek(rt, 0))
+     if node.operator.kind == ast.TokenKind.OR:
+         if not falsey:
+@@ -228,6 +249,8 @@
+     elif falsey:
+         return Ok(())
+     _ = heap.pop(mut rt)
++    if try_push_atom(program, mut rt, node.right):
++        return Ok(())
+     return evaluate(program, mut rt, mut o, mut it, node.right, clock)
+ 
+ 

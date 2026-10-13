@@ -1,0 +1,1 @@
+var g = 1; fun right() { print 2; return 3; } print g + right(); fun f(n) { print n - 1; print 7 - n; print n + n; } f(4);

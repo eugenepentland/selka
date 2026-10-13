@@ -1,0 +1,380 @@
+[
+  {
+    "arm": "baseline",
+    "control": "atom_and_fallback_order",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/baseline/lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/atom_and_fallback_order.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "source_sha256": "fc4653a43d19329ad77695849f925810d3a2c117e113312639e37a235a1e3b2f",
+    "passed": true
+  },
+  {
+    "arm": "baseline",
+    "control": "atom_and_fallback_order-stress",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/baseline/lox",
+      "--engine=tree",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/atom_and_fallback_order.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "source_sha256": "fc4653a43d19329ad77695849f925810d3a2c117e113312639e37a235a1e3b2f",
+    "passed": true
+  },
+  {
+    "arm": "baseline",
+    "control": "logical_short_circuit",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/baseline/lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/logical_short_circuit.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "source_sha256": "93118848c5c4feab3ef0aa551d5022252d9021158d386f422a94cf8703e9e733",
+    "passed": true
+  },
+  {
+    "arm": "baseline",
+    "control": "logical_short_circuit-stress",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/baseline/lox",
+      "--engine=tree",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/logical_short_circuit.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "source_sha256": "93118848c5c4feab3ef0aa551d5022252d9021158d386f422a94cf8703e9e733",
+    "passed": true
+  },
+  {
+    "arm": "baseline",
+    "control": "rhs_global_error",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/baseline/lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/rhs_global_error.lox"
+    ],
+    "returncode": 70,
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "source_sha256": "21f64f8d5f5d0f9192a95c1e7be3181c3fad15910903e642184de3481f83b07e",
+    "passed": true
+  },
+  {
+    "arm": "baseline",
+    "control": "rhs_global_error-stress",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/baseline/lox",
+      "--engine=tree",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/rhs_global_error.lox"
+    ],
+    "returncode": 70,
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "source_sha256": "21f64f8d5f5d0f9192a95c1e7be3181c3fad15910903e642184de3481f83b07e",
+    "passed": true
+  },
+  {
+    "arm": "baseline",
+    "control": "left_global_error",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/baseline/lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/left_global_error.lox"
+    ],
+    "returncode": 70,
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "source_sha256": "262a3eeb917d63efb337f3949184ca0f316930085b2144af8b3b8c9b14a5200f",
+    "passed": true
+  },
+  {
+    "arm": "baseline",
+    "control": "left_global_error-stress",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/baseline/lox",
+      "--engine=tree",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/left_global_error.lox"
+    ],
+    "returncode": 70,
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "source_sha256": "262a3eeb917d63efb337f3949184ca0f316930085b2144af8b3b8c9b14a5200f",
+    "passed": true
+  },
+  {
+    "arm": "baseline",
+    "control": "rhs_gc_string_root",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/baseline/lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/rhs_gc_string_root.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "source_sha256": "42a34d2eb04b40548174f61b08551d38948ff6aecea142f5206a744db3ce5e9d",
+    "passed": true
+  },
+  {
+    "arm": "baseline",
+    "control": "rhs_gc_string_root-stress",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/baseline/lox",
+      "--engine=tree",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/rhs_gc_string_root.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "source_sha256": "42a34d2eb04b40548174f61b08551d38948ff6aecea142f5206a744db3ce5e9d",
+    "passed": true
+  },
+  {
+    "arm": "baseline",
+    "control": "rhs_mutates_local",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/baseline/lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/rhs_mutates_local.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "source_sha256": "32c601f2bad71e530d79be109380d249c9d9125facb26d355b0c599911b4284f",
+    "passed": true
+  },
+  {
+    "arm": "baseline",
+    "control": "rhs_mutates_local-stress",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/baseline/lox",
+      "--engine=tree",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/rhs_mutates_local.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "source_sha256": "32c601f2bad71e530d79be109380d249c9d9125facb26d355b0c599911b4284f",
+    "passed": true
+  },
+  {
+    "arm": "baseline",
+    "control": "rhs_numeric_error",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/baseline/lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/rhs_numeric_error.lox"
+    ],
+    "returncode": 70,
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "source_sha256": "34b129fdaea1fbc49e63f4b6c8c61542437d15275bacd91422adc370502f9baf",
+    "passed": true
+  },
+  {
+    "arm": "baseline",
+    "control": "rhs_numeric_error-stress",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/baseline/lox",
+      "--engine=tree",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/rhs_numeric_error.lox"
+    ],
+    "returncode": 70,
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "source_sha256": "34b129fdaea1fbc49e63f4b6c8c61542437d15275bacd91422adc370502f9baf",
+    "passed": true
+  },
+  {
+    "arm": "candidate",
+    "control": "atom_and_fallback_order",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/candidate/lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/atom_and_fallback_order.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "91a83e0fb30447cbef40d150134a557bee57497de7645f7a436e9ed69112616c",
+    "source_sha256": "fc4653a43d19329ad77695849f925810d3a2c117e113312639e37a235a1e3b2f",
+    "passed": true
+  },
+  {
+    "arm": "candidate",
+    "control": "atom_and_fallback_order-stress",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/candidate/lox",
+      "--engine=tree",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/atom_and_fallback_order.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "91a83e0fb30447cbef40d150134a557bee57497de7645f7a436e9ed69112616c",
+    "source_sha256": "fc4653a43d19329ad77695849f925810d3a2c117e113312639e37a235a1e3b2f",
+    "passed": true
+  },
+  {
+    "arm": "candidate",
+    "control": "logical_short_circuit",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/candidate/lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/logical_short_circuit.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "91a83e0fb30447cbef40d150134a557bee57497de7645f7a436e9ed69112616c",
+    "source_sha256": "93118848c5c4feab3ef0aa551d5022252d9021158d386f422a94cf8703e9e733",
+    "passed": true
+  },
+  {
+    "arm": "candidate",
+    "control": "logical_short_circuit-stress",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/candidate/lox",
+      "--engine=tree",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/logical_short_circuit.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "91a83e0fb30447cbef40d150134a557bee57497de7645f7a436e9ed69112616c",
+    "source_sha256": "93118848c5c4feab3ef0aa551d5022252d9021158d386f422a94cf8703e9e733",
+    "passed": true
+  },
+  {
+    "arm": "candidate",
+    "control": "rhs_global_error",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/candidate/lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/rhs_global_error.lox"
+    ],
+    "returncode": 70,
+    "binary_sha256": "91a83e0fb30447cbef40d150134a557bee57497de7645f7a436e9ed69112616c",
+    "source_sha256": "21f64f8d5f5d0f9192a95c1e7be3181c3fad15910903e642184de3481f83b07e",
+    "passed": true
+  },
+  {
+    "arm": "candidate",
+    "control": "rhs_global_error-stress",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/candidate/lox",
+      "--engine=tree",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/rhs_global_error.lox"
+    ],
+    "returncode": 70,
+    "binary_sha256": "91a83e0fb30447cbef40d150134a557bee57497de7645f7a436e9ed69112616c",
+    "source_sha256": "21f64f8d5f5d0f9192a95c1e7be3181c3fad15910903e642184de3481f83b07e",
+    "passed": true
+  },
+  {
+    "arm": "candidate",
+    "control": "left_global_error",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/candidate/lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/left_global_error.lox"
+    ],
+    "returncode": 70,
+    "binary_sha256": "91a83e0fb30447cbef40d150134a557bee57497de7645f7a436e9ed69112616c",
+    "source_sha256": "262a3eeb917d63efb337f3949184ca0f316930085b2144af8b3b8c9b14a5200f",
+    "passed": true
+  },
+  {
+    "arm": "candidate",
+    "control": "left_global_error-stress",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/candidate/lox",
+      "--engine=tree",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/left_global_error.lox"
+    ],
+    "returncode": 70,
+    "binary_sha256": "91a83e0fb30447cbef40d150134a557bee57497de7645f7a436e9ed69112616c",
+    "source_sha256": "262a3eeb917d63efb337f3949184ca0f316930085b2144af8b3b8c9b14a5200f",
+    "passed": true
+  },
+  {
+    "arm": "candidate",
+    "control": "rhs_gc_string_root",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/candidate/lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/rhs_gc_string_root.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "91a83e0fb30447cbef40d150134a557bee57497de7645f7a436e9ed69112616c",
+    "source_sha256": "42a34d2eb04b40548174f61b08551d38948ff6aecea142f5206a744db3ce5e9d",
+    "passed": true
+  },
+  {
+    "arm": "candidate",
+    "control": "rhs_gc_string_root-stress",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/candidate/lox",
+      "--engine=tree",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/rhs_gc_string_root.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "91a83e0fb30447cbef40d150134a557bee57497de7645f7a436e9ed69112616c",
+    "source_sha256": "42a34d2eb04b40548174f61b08551d38948ff6aecea142f5206a744db3ce5e9d",
+    "passed": true
+  },
+  {
+    "arm": "candidate",
+    "control": "rhs_mutates_local",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/candidate/lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/rhs_mutates_local.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "91a83e0fb30447cbef40d150134a557bee57497de7645f7a436e9ed69112616c",
+    "source_sha256": "32c601f2bad71e530d79be109380d249c9d9125facb26d355b0c599911b4284f",
+    "passed": true
+  },
+  {
+    "arm": "candidate",
+    "control": "rhs_mutates_local-stress",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/candidate/lox",
+      "--engine=tree",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/rhs_mutates_local.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "91a83e0fb30447cbef40d150134a557bee57497de7645f7a436e9ed69112616c",
+    "source_sha256": "32c601f2bad71e530d79be109380d249c9d9125facb26d355b0c599911b4284f",
+    "passed": true
+  },
+  {
+    "arm": "candidate",
+    "control": "rhs_numeric_error",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/candidate/lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/rhs_numeric_error.lox"
+    ],
+    "returncode": 70,
+    "binary_sha256": "91a83e0fb30447cbef40d150134a557bee57497de7645f7a436e9ed69112616c",
+    "source_sha256": "34b129fdaea1fbc49e63f4b6c8c61542437d15275bacd91422adc370502f9baf",
+    "passed": true
+  },
+  {
+    "arm": "candidate",
+    "control": "rhs_numeric_error-stress",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/candidate/lox",
+      "--engine=tree",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/controls/rhs_numeric_error.lox"
+    ],
+    "returncode": 70,
+    "binary_sha256": "91a83e0fb30447cbef40d150134a557bee57497de7645f7a436e9ed69112616c",
+    "source_sha256": "34b129fdaea1fbc49e63f4b6c8c61542437d15275bacd91422adc370502f9baf",
+    "passed": true
+  }
+]

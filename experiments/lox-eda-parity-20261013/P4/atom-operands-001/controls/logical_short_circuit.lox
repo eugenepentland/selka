@@ -1,0 +1,1 @@
+fun bad() { print 99; return missing; } fun f(a) { print a or bad(); print false and bad(); print nil or 7; print true and a; } f(42);

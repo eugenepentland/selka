@@ -1,0 +1,13 @@
+{
+  "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/identity.json": "b5734fff96267a2c1a8b6fbbd2cd316ac452430ba59f5511c0128e85038198e8",
+  "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/native-inspection.json": "10f846420f98eceaf943d1f5415d8a0c92f2c41f8f2d596a50ae3541d83c1b9d",
+  "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/timing-plan.json": "501e39e565bc3e08603afffbb446287922c91afab8c5861b48d6964056dadee6",
+  "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/baseline-tests.json": "610453aad853748a37d25f1279bf14b6f7acbd1487f33227e327233a201af956",
+  "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/candidate-tests.json": "fde23f4f16787f4bc232787f8d94b9b00f68923779faf42acee3d3405136eecc",
+  "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/control-results.json": "7c0263d173d135af9fca726a9c34480f2723ad65420430c6fbb504f8b1917538",
+  "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/probe-results.json": "857a26a2a8bac6722e954d17adc92d7a16ece40abdcece4eba9ce7fc1537bf7e",
+  "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/interpreter.my.patch": "ae176ed206410f325358fc31ef281ae39e6812bcfe13f7d08fc5fb37a7b3d000",
+  "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/diagnostic-specs/string_equality.json": "f113648f40d6c6055a2dd8e490a3744bc0f83c42c7c3a4534eedef4e934700dc",
+  "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/diagnostic-specs/fib.json": "daf7f2f2cf1cf4d36ab13bdf3f6bdf98438df2baae0f0863e04a39f8dd22bc4e",
+  "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/atom-operands-001/diagnostic-specs/binary_trees.json": "b54d0408b3f6094e8a4aba0492022938ef203ef01998ee5d60875994da469a1a"
+}

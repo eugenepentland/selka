@@ -1,0 +1,740 @@
+[
+  {
+    "mode": "valid",
+    "passed": true,
+    "arms": {
+      "baseline": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-baseline/atom-probe",
+          "valid"
+        ],
+        "returncode": 0,
+        "stdout": "1\n45.0\n",
+        "normalized_stderr": {
+          "category": null,
+          "message": null,
+          "trap": null
+        },
+        "binary_sha256": "410058d72b3a5c8be84a65c3919c46f2fadab52c030f3cfdc7fbce48d686cac5"
+      },
+      "candidate": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-candidate/atom-probe",
+          "valid"
+        ],
+        "returncode": 0,
+        "stdout": "1\n45.0\n",
+        "normalized_stderr": {
+          "category": null,
+          "message": null,
+          "trap": null
+        },
+        "binary_sha256": "1708511cf5c4a0a42d4d3e0d2cc247565df53dc53d896b4cda005c89fcdbfaf0"
+      }
+    }
+  },
+  {
+    "mode": "literal",
+    "passed": true,
+    "arms": {
+      "baseline": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-baseline/atom-probe",
+          "literal"
+        ],
+        "returncode": 0,
+        "stdout": "1\n45.0\n",
+        "normalized_stderr": {
+          "category": null,
+          "message": null,
+          "trap": null
+        },
+        "binary_sha256": "410058d72b3a5c8be84a65c3919c46f2fadab52c030f3cfdc7fbce48d686cac5"
+      },
+      "candidate": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-candidate/atom-probe",
+          "literal"
+        ],
+        "returncode": 0,
+        "stdout": "1\n45.0\n",
+        "normalized_stderr": {
+          "category": null,
+          "message": null,
+          "trap": null
+        },
+        "binary_sha256": "1708511cf5c4a0a42d4d3e0d2cc247565df53dc53d896b4cda005c89fcdbfaf0"
+      }
+    }
+  },
+  {
+    "mode": "logical",
+    "passed": true,
+    "arms": {
+      "baseline": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-baseline/atom-probe",
+          "logical"
+        ],
+        "returncode": 0,
+        "stdout": "1\n42.0\n",
+        "normalized_stderr": {
+          "category": null,
+          "message": null,
+          "trap": null
+        },
+        "binary_sha256": "410058d72b3a5c8be84a65c3919c46f2fadab52c030f3cfdc7fbce48d686cac5"
+      },
+      "candidate": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-candidate/atom-probe",
+          "logical"
+        ],
+        "returncode": 0,
+        "stdout": "1\n42.0\n",
+        "normalized_stderr": {
+          "category": null,
+          "message": null,
+          "trap": null
+        },
+        "binary_sha256": "1708511cf5c4a0a42d4d3e0d2cc247565df53dc53d896b4cda005c89fcdbfaf0"
+      }
+    }
+  },
+  {
+    "mode": "logical-short-invalid-rhs",
+    "passed": true,
+    "arms": {
+      "baseline": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-baseline/atom-probe",
+          "logical-short-invalid-rhs"
+        ],
+        "returncode": 0,
+        "stdout": "1\n42.0\n",
+        "normalized_stderr": {
+          "category": null,
+          "message": null,
+          "trap": null
+        },
+        "binary_sha256": "410058d72b3a5c8be84a65c3919c46f2fadab52c030f3cfdc7fbce48d686cac5"
+      },
+      "candidate": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-candidate/atom-probe",
+          "logical-short-invalid-rhs"
+        ],
+        "returncode": 0,
+        "stdout": "1\n42.0\n",
+        "normalized_stderr": {
+          "category": null,
+          "message": null,
+          "trap": null
+        },
+        "binary_sha256": "1708511cf5c4a0a42d4d3e0d2cc247565df53dc53d896b4cda005c89fcdbfaf0"
+      }
+    }
+  },
+  {
+    "mode": "expr-negative",
+    "passed": true,
+    "arms": {
+      "baseline": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-baseline/atom-probe",
+          "expr-negative"
+        ],
+        "returncode": 0,
+        "stdout": "1\n45.0\n",
+        "normalized_stderr": {
+          "category": null,
+          "message": null,
+          "trap": null
+        },
+        "binary_sha256": "410058d72b3a5c8be84a65c3919c46f2fadab52c030f3cfdc7fbce48d686cac5"
+      },
+      "candidate": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-candidate/atom-probe",
+          "expr-negative"
+        ],
+        "returncode": 0,
+        "stdout": "1\n45.0\n",
+        "normalized_stderr": {
+          "category": null,
+          "message": null,
+          "trap": null
+        },
+        "binary_sha256": "1708511cf5c4a0a42d4d3e0d2cc247565df53dc53d896b4cda005c89fcdbfaf0"
+      }
+    }
+  },
+  {
+    "mode": "expr-end",
+    "passed": true,
+    "arms": {
+      "baseline": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-baseline/atom-probe",
+          "expr-end"
+        ],
+        "returncode": 1,
+        "stdout": "",
+        "normalized_stderr": {
+          "category": "R_LIST_BOUNDS",
+          "message": "native execution failed (index 4, length 4)",
+          "trap": {
+            "version": 1,
+            "operation": "index",
+            "index": 4,
+            "length": 4
+          }
+        },
+        "binary_sha256": "410058d72b3a5c8be84a65c3919c46f2fadab52c030f3cfdc7fbce48d686cac5"
+      },
+      "candidate": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-candidate/atom-probe",
+          "expr-end"
+        ],
+        "returncode": 1,
+        "stdout": "",
+        "normalized_stderr": {
+          "category": "R_LIST_BOUNDS",
+          "message": "native execution failed (index 4, length 4)",
+          "trap": {
+            "version": 1,
+            "operation": "index",
+            "index": 4,
+            "length": 4
+          }
+        },
+        "binary_sha256": "1708511cf5c4a0a42d4d3e0d2cc247565df53dc53d896b4cda005c89fcdbfaf0"
+      }
+    }
+  },
+  {
+    "mode": "expr-and-stack",
+    "passed": true,
+    "arms": {
+      "baseline": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-baseline/atom-probe",
+          "expr-and-stack"
+        ],
+        "returncode": 1,
+        "stdout": "",
+        "normalized_stderr": {
+          "category": "R_LIST_BOUNDS",
+          "message": "native execution failed (index 4, length 4)",
+          "trap": {
+            "version": 1,
+            "operation": "index",
+            "index": 4,
+            "length": 4
+          }
+        },
+        "binary_sha256": "410058d72b3a5c8be84a65c3919c46f2fadab52c030f3cfdc7fbce48d686cac5"
+      },
+      "candidate": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-candidate/atom-probe",
+          "expr-and-stack"
+        ],
+        "returncode": 1,
+        "stdout": "",
+        "normalized_stderr": {
+          "category": "R_LIST_BOUNDS",
+          "message": "native execution failed (index 4, length 4)",
+          "trap": {
+            "version": 1,
+            "operation": "index",
+            "index": 4,
+            "length": 4
+          }
+        },
+        "binary_sha256": "1708511cf5c4a0a42d4d3e0d2cc247565df53dc53d896b4cda005c89fcdbfaf0"
+      }
+    }
+  },
+  {
+    "mode": "stack-end",
+    "passed": true,
+    "arms": {
+      "baseline": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-baseline/atom-probe",
+          "stack-end"
+        ],
+        "returncode": 1,
+        "stdout": "",
+        "normalized_stderr": {
+          "category": "R_LIST_BOUNDS",
+          "message": "native execution failed (index 16384, length 16384)",
+          "trap": {
+            "version": 1,
+            "operation": "index",
+            "index": 16384,
+            "length": 16384
+          }
+        },
+        "binary_sha256": "410058d72b3a5c8be84a65c3919c46f2fadab52c030f3cfdc7fbce48d686cac5"
+      },
+      "candidate": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-candidate/atom-probe",
+          "stack-end"
+        ],
+        "returncode": 1,
+        "stdout": "",
+        "normalized_stderr": {
+          "category": "R_LIST_BOUNDS",
+          "message": "native execution failed (index 16384, length 16384)",
+          "trap": {
+            "version": 1,
+            "operation": "index",
+            "index": 16384,
+            "length": 16384
+          }
+        },
+        "binary_sha256": "1708511cf5c4a0a42d4d3e0d2cc247565df53dc53d896b4cda005c89fcdbfaf0"
+      }
+    }
+  },
+  {
+    "mode": "literal-stack-end",
+    "passed": true,
+    "arms": {
+      "baseline": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-baseline/atom-probe",
+          "literal-stack-end"
+        ],
+        "returncode": 1,
+        "stdout": "",
+        "normalized_stderr": {
+          "category": "R_LIST_BOUNDS",
+          "message": "native execution failed (index 16384, length 16384)",
+          "trap": {
+            "version": 1,
+            "operation": "index",
+            "index": 16384,
+            "length": 16384
+          }
+        },
+        "binary_sha256": "410058d72b3a5c8be84a65c3919c46f2fadab52c030f3cfdc7fbce48d686cac5"
+      },
+      "candidate": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-candidate/atom-probe",
+          "literal-stack-end"
+        ],
+        "returncode": 1,
+        "stdout": "",
+        "normalized_stderr": {
+          "category": "R_LIST_BOUNDS",
+          "message": "native execution failed (index 16384, length 16384)",
+          "trap": {
+            "version": 1,
+            "operation": "index",
+            "index": 16384,
+            "length": 16384
+          }
+        },
+        "binary_sha256": "1708511cf5c4a0a42d4d3e0d2cc247565df53dc53d896b4cda005c89fcdbfaf0"
+      }
+    }
+  },
+  {
+    "mode": "stack-negative",
+    "passed": true,
+    "arms": {
+      "baseline": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-baseline/atom-probe",
+          "stack-negative"
+        ],
+        "returncode": 0,
+        "stdout": "0\n45.0\n",
+        "normalized_stderr": {
+          "category": null,
+          "message": null,
+          "trap": null
+        },
+        "binary_sha256": "410058d72b3a5c8be84a65c3919c46f2fadab52c030f3cfdc7fbce48d686cac5"
+      },
+      "candidate": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-candidate/atom-probe",
+          "stack-negative"
+        ],
+        "returncode": 0,
+        "stdout": "0\n45.0\n",
+        "normalized_stderr": {
+          "category": null,
+          "message": null,
+          "trap": null
+        },
+        "binary_sha256": "1708511cf5c4a0a42d4d3e0d2cc247565df53dc53d896b4cda005c89fcdbfaf0"
+      }
+    }
+  },
+  {
+    "mode": "stack-empty",
+    "passed": true,
+    "arms": {
+      "baseline": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-baseline/atom-probe",
+          "stack-empty"
+        ],
+        "returncode": 1,
+        "stdout": "",
+        "normalized_stderr": {
+          "category": "R_LIST_BOUNDS",
+          "message": "native execution failed (index 0, length 0)",
+          "trap": {
+            "version": 1,
+            "operation": "index",
+            "index": 0,
+            "length": 0
+          }
+        },
+        "binary_sha256": "410058d72b3a5c8be84a65c3919c46f2fadab52c030f3cfdc7fbce48d686cac5"
+      },
+      "candidate": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-candidate/atom-probe",
+          "stack-empty"
+        ],
+        "returncode": 1,
+        "stdout": "",
+        "normalized_stderr": {
+          "category": "R_LIST_BOUNDS",
+          "message": "native execution failed (index 0, length 0)",
+          "trap": {
+            "version": 1,
+            "operation": "index",
+            "index": 0,
+            "length": 0
+          }
+        },
+        "binary_sha256": "1708511cf5c4a0a42d4d3e0d2cc247565df53dc53d896b4cda005c89fcdbfaf0"
+      }
+    }
+  },
+  {
+    "mode": "slot-negative",
+    "passed": true,
+    "arms": {
+      "baseline": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-baseline/atom-probe",
+          "slot-negative"
+        ],
+        "returncode": 0,
+        "stdout": "1\n45.0\n",
+        "normalized_stderr": {
+          "category": null,
+          "message": null,
+          "trap": null
+        },
+        "binary_sha256": "410058d72b3a5c8be84a65c3919c46f2fadab52c030f3cfdc7fbce48d686cac5"
+      },
+      "candidate": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-candidate/atom-probe",
+          "slot-negative"
+        ],
+        "returncode": 0,
+        "stdout": "1\n45.0\n",
+        "normalized_stderr": {
+          "category": null,
+          "message": null,
+          "trap": null
+        },
+        "binary_sha256": "1708511cf5c4a0a42d4d3e0d2cc247565df53dc53d896b4cda005c89fcdbfaf0"
+      }
+    }
+  },
+  {
+    "mode": "slot-end",
+    "passed": true,
+    "arms": {
+      "baseline": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-baseline/atom-probe",
+          "slot-end"
+        ],
+        "returncode": 1,
+        "stdout": "",
+        "normalized_stderr": {
+          "category": "R_LIST_BOUNDS",
+          "message": "native execution failed (index 1, length 1)",
+          "trap": {
+            "version": 1,
+            "operation": "index",
+            "index": 1,
+            "length": 1
+          }
+        },
+        "binary_sha256": "410058d72b3a5c8be84a65c3919c46f2fadab52c030f3cfdc7fbce48d686cac5"
+      },
+      "candidate": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-candidate/atom-probe",
+          "slot-end"
+        ],
+        "returncode": 1,
+        "stdout": "",
+        "normalized_stderr": {
+          "category": "R_LIST_BOUNDS",
+          "message": "native execution failed (index 1, length 1)",
+          "trap": {
+            "version": 1,
+            "operation": "index",
+            "index": 1,
+            "length": 1
+          }
+        },
+        "binary_sha256": "1708511cf5c4a0a42d4d3e0d2cc247565df53dc53d896b4cda005c89fcdbfaf0"
+      }
+    }
+  },
+  {
+    "mode": "slot-and-stack",
+    "passed": true,
+    "arms": {
+      "baseline": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-baseline/atom-probe",
+          "slot-and-stack"
+        ],
+        "returncode": 1,
+        "stdout": "",
+        "normalized_stderr": {
+          "category": "R_LIST_BOUNDS",
+          "message": "native execution failed (index 1, length 1)",
+          "trap": {
+            "version": 1,
+            "operation": "index",
+            "index": 1,
+            "length": 1
+          }
+        },
+        "binary_sha256": "410058d72b3a5c8be84a65c3919c46f2fadab52c030f3cfdc7fbce48d686cac5"
+      },
+      "candidate": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-candidate/atom-probe",
+          "slot-and-stack"
+        ],
+        "returncode": 1,
+        "stdout": "",
+        "normalized_stderr": {
+          "category": "R_LIST_BOUNDS",
+          "message": "native execution failed (index 1, length 1)",
+          "trap": {
+            "version": 1,
+            "operation": "index",
+            "index": 1,
+            "length": 1
+          }
+        },
+        "binary_sha256": "1708511cf5c4a0a42d4d3e0d2cc247565df53dc53d896b4cda005c89fcdbfaf0"
+      }
+    }
+  },
+  {
+    "mode": "hops-negative",
+    "passed": true,
+    "arms": {
+      "baseline": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-baseline/atom-probe",
+          "hops-negative"
+        ],
+        "returncode": 0,
+        "stdout": "1\n45.0\n",
+        "normalized_stderr": {
+          "category": null,
+          "message": null,
+          "trap": null
+        },
+        "binary_sha256": "410058d72b3a5c8be84a65c3919c46f2fadab52c030f3cfdc7fbce48d686cac5"
+      },
+      "candidate": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-candidate/atom-probe",
+          "hops-negative"
+        ],
+        "returncode": 0,
+        "stdout": "1\n45.0\n",
+        "normalized_stderr": {
+          "category": null,
+          "message": null,
+          "trap": null
+        },
+        "binary_sha256": "1708511cf5c4a0a42d4d3e0d2cc247565df53dc53d896b4cda005c89fcdbfaf0"
+      }
+    }
+  },
+  {
+    "mode": "invalid-handle",
+    "passed": true,
+    "arms": {
+      "baseline": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-baseline/atom-probe",
+          "invalid-handle"
+        ],
+        "returncode": 1,
+        "stdout": "",
+        "normalized_stderr": {
+          "category": "R_LIST_BOUNDS",
+          "message": "native execution failed (index 2, length 2)",
+          "trap": {
+            "version": 1,
+            "operation": "index",
+            "index": 2,
+            "length": 2
+          }
+        },
+        "binary_sha256": "410058d72b3a5c8be84a65c3919c46f2fadab52c030f3cfdc7fbce48d686cac5"
+      },
+      "candidate": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-candidate/atom-probe",
+          "invalid-handle"
+        ],
+        "returncode": 1,
+        "stdout": "",
+        "normalized_stderr": {
+          "category": "R_LIST_BOUNDS",
+          "message": "native execution failed (index 2, length 2)",
+          "trap": {
+            "version": 1,
+            "operation": "index",
+            "index": 2,
+            "length": 2
+          }
+        },
+        "binary_sha256": "1708511cf5c4a0a42d4d3e0d2cc247565df53dc53d896b4cda005c89fcdbfaf0"
+      }
+    }
+  },
+  {
+    "mode": "invalid-kind",
+    "passed": true,
+    "arms": {
+      "baseline": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-baseline/atom-probe",
+          "invalid-kind"
+        ],
+        "returncode": 1,
+        "stdout": "",
+        "normalized_stderr": {
+          "category": "R_ASSERT",
+          "message": "native execution failed: object is not a env",
+          "trap": {
+            "version": 1,
+            "operation": "object is not a env"
+          }
+        },
+        "binary_sha256": "410058d72b3a5c8be84a65c3919c46f2fadab52c030f3cfdc7fbce48d686cac5"
+      },
+      "candidate": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-candidate/atom-probe",
+          "invalid-kind"
+        ],
+        "returncode": 1,
+        "stdout": "",
+        "normalized_stderr": {
+          "category": "R_ASSERT",
+          "message": "native execution failed: object is not a env",
+          "trap": {
+            "version": 1,
+            "operation": "object is not a env"
+          }
+        },
+        "binary_sha256": "1708511cf5c4a0a42d4d3e0d2cc247565df53dc53d896b4cda005c89fcdbfaf0"
+      }
+    }
+  },
+  {
+    "mode": "kind-and-stack",
+    "passed": true,
+    "arms": {
+      "baseline": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-baseline/atom-probe",
+          "kind-and-stack"
+        ],
+        "returncode": 1,
+        "stdout": "",
+        "normalized_stderr": {
+          "category": "R_ASSERT",
+          "message": "native execution failed: object is not a env",
+          "trap": {
+            "version": 1,
+            "operation": "object is not a env"
+          }
+        },
+        "binary_sha256": "410058d72b3a5c8be84a65c3919c46f2fadab52c030f3cfdc7fbce48d686cac5"
+      },
+      "candidate": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-candidate/atom-probe",
+          "kind-and-stack"
+        ],
+        "returncode": 1,
+        "stdout": "",
+        "normalized_stderr": {
+          "category": "R_ASSERT",
+          "message": "native execution failed: object is not a env",
+          "trap": {
+            "version": 1,
+            "operation": "object is not a env"
+          }
+        },
+        "binary_sha256": "1708511cf5c4a0a42d4d3e0d2cc247565df53dc53d896b4cda005c89fcdbfaf0"
+      }
+    }
+  },
+  {
+    "mode": "global-missing",
+    "passed": true,
+    "arms": {
+      "baseline": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-baseline/atom-probe",
+          "global-missing"
+        ],
+        "returncode": 70,
+        "stdout": "b'Undefined variable \\'missing\\'.'\n7\n",
+        "normalized_stderr": {
+          "category": null,
+          "message": null,
+          "trap": null
+        },
+        "binary_sha256": "410058d72b3a5c8be84a65c3919c46f2fadab52c030f3cfdc7fbce48d686cac5"
+      },
+      "candidate": {
+        "command": [
+          "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/atom-operands-001/probe-candidate/atom-probe",
+          "global-missing"
+        ],
+        "returncode": 70,
+        "stdout": "b'Undefined variable \\'missing\\'.'\n7\n",
+        "normalized_stderr": {
+          "category": null,
+          "message": null,
+          "trap": null
+        },
+        "binary_sha256": "1708511cf5c4a0a42d4d3e0d2cc247565df53dc53d896b4cda005c89fcdbfaf0"
+      }
+    }
+  }
+]
