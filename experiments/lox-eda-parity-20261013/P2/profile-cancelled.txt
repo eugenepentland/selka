@@ -13,3 +13,14 @@ build-slot: FIFO ticket 933, position 1; draining active work (gate1.lock); wait
 build-slot: FIFO ticket 933, position 1; draining active work (gate1.lock); waiting (482s so far)
 
 Coordinator requested cancellation to unblock ordinary build admissions. Sent TERM only to owned wrapper PID447117. Wrapper exited143. No external gate was interrupted; perf.data was not created and no CPU/timing result is claimed.
+
+Second coordinator-approved diagnostic attempt (queued only; never executed):
+MYLANG_SLOT_DIR=/home/epentland/.cache/mylang/slots scripts/build-slot.sh timing timeout 58 taskset -c 8 bash .tmp/lox-eda-parity/P2/profile-baseline.sh
+Wrapper PID1220232, timing ticket937. Script prepared cycles:u -F499 -g profiles of qualified baseline VM fib/equality, each workload timeout25, outer58seconds. Queued output:
+build-slot: FIFO ticket 937, position 1; draining active work (build1.lock); waiting (0s so far)
+build-slot: FIFO ticket 937, position 1; draining active work (gate1.lock); waiting (60s so far)
+build-slot: FIFO ticket 937, position 1; draining active work (gate1.lock); waiting (120s so far)
+build-slot: FIFO ticket 937, position 1; draining active work (gate1.lock); waiting (180s so far)
+build-slot: FIFO ticket 937, position 1; draining active work (gate1.lock); waiting (240s so far)
+build-slot: FIFO ticket 937, position 1; draining active work (gate1.lock); waiting (301s so far)
+Coordinator requested cancellation after readonly audit showed external gate rather than active timing. Sent TERM to own wrapper only; exit143. No perf invocation/data/logs occurred. Perf availability is still untested; no CPU or timing claim is made.
