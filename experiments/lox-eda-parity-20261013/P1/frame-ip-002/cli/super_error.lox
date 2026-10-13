@@ -1,0 +1,7 @@
+class A {
+ value() { clock(); print -"bad"; }
+}
+class B < A {
+ value() { return super.value(); }
+}
+B().value();

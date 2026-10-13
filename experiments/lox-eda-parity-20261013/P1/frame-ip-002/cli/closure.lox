@@ -1,0 +1,1 @@
+fun make(n) { fun add(v) { n = n + v; return n; } return add; } var f = make(2); print f(3); print f(4);

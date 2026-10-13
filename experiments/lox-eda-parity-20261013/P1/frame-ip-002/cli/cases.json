@@ -1,0 +1,22 @@
+{
+  "closure": {
+    "source": "fun make(n) { fun add(v) { n = n + v; return n; } return add; } var f = make(2); print f(3); print f(4);",
+    "exit": 0,
+    "stdout": "5\n9\n"
+  },
+  "super_native": {
+    "source": "class A { init(n) { this.n = n; } value() { clock(); return this.n; } } class B < A { value() { return super.value() + 1; } } var b = B(6); var bound = b.value; print bound();",
+    "exit": 0,
+    "stdout": "7\n"
+  },
+  "native_error": {
+    "source": "fun identity(x) { return x; }\nfun fail() {\n var x = identity(1);\n print clock() >= 0;\n if (x == 1) x = x + 2;\n print -\"bad\";\n}\nfail();",
+    "exit": 70,
+    "stdout": "true\n"
+  },
+  "super_error": {
+    "source": "class A {\n value() { clock(); print -\"bad\"; }\n}\nclass B < A {\n value() { return super.value(); }\n}\nB().value();",
+    "exit": 70,
+    "stdout": ""
+  }
+}

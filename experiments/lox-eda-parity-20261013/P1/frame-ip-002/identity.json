@@ -1,0 +1,77 @@
+{
+  "compiler": {
+    "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+    "sha256": "9bedb835438615d79ed8f2985352877a8c844eebeb74cd95a1d276332b6b0c6a"
+  },
+  "baseline": {
+    "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/lox/zero-rc",
+    "sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef"
+  },
+  "candidate": {
+    "path": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/frame-ip-002/candidate-lox",
+    "sha256": "845a0901eb792858ae70effeb03412712fe1d95db4a2589f9658674be85edf89"
+  },
+  "probe": {
+    "path": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/frame-ip-002/scalar-frame-probe",
+    "sha256": "756815f6db9b04ec82242995df1aaacadc85190890fb78e95a6ef668f08604bf"
+  },
+  "candidate_llvm": {
+    "path": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/frame-ip-002/candidate-lox.ll",
+    "sha256": "b53fdf588003ac066565a09df4d271db57b57a5bbf979334c6d2c1c9a7ee9da2"
+  },
+  "c2_receipt": {
+    "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/native-002/build/lox/build-receipt.json",
+    "sha256": "67262b31f83866602441128dc3ac5945d87c678285621798b51f864842615b9c"
+  },
+  "source_changes": [
+    "vm.my"
+  ],
+  "candidate_source_hashes": {
+    "NOTES.md": "f2d18bfa0845c2f022d39ceb52de5cf86c21d891124196b39c41d509a00b3247",
+    "ast.my": "1fb65ed5a17d23d337b822e263e974886f06386365e869b07fc418d96afe3e46",
+    "bench.json": "915ce6f25effd651a3fe3ce38997719a7cd2a26a307dbbb365a6d33a82c52a87",
+    "chunk.my": "d78b6babd52503e76abcd88fe858d11e44ad43cdb45f7a436aa0adabdbf5b731",
+    "compiler.my": "92f20efd56d2976bc8abf6e349dfb2dd00d7cd6db5a788a87cf054fd99e2ed90",
+    "compiler_test.my": "57ef31985f79ddd7f36420430847c94bf3fda79b1bc1bc7fff56859ea3310e60",
+    "driver.my": "7fc1224dd3e5b42a488a92f4f7282c198ec03fb0eccaa6516b63ca6d75be6c9c",
+    "driver_cases.json": "da7be595d0c9ef93fe12fd6e7b732eb8bc6b955a796e43d7e375b52be45cc37a",
+    "driver_tests.my": "7de9d76e841420434c3ee6195cd31cb3acfebd23d45c290b6ef49077bd87e99a",
+    "heap.my": "4e50d96e91ffe3bef0df4f9f32a9d3b0a931b9dbc2c1ad75b77463367389974a",
+    "heap_test.my": "163e84ed66b8b77248337b0a04789993a63f87ccb4beda704dc14fbe2c346cc5",
+    "interpreter.my": "d897b98e03618105257059d5b8d0672a1a64837387a638f0a0cfb424f462d01e",
+    "lox_strings.my": "277c69c5abf81d3db8a51b4d64858bd2eb7ccd1a406b3cfe3eeb949567cdb843",
+    "lox_strings_test.my": "ef5d217fe56c99212cd02b137f8bd75e458a6ddf89df07d7f4c10df0d85b51ae",
+    "main.my": "641f72b214650751a3799292bb9f9900c0ee191a4ee9b51cd6c5d47da731dc3f",
+    "natives.my": "275a01cc19f99e51ed04ca2c45fb997e9df1a61ac83bfbcb71e3344ccb5a8bc8",
+    "object.my": "d7676af7b94ffecfa563e2aa1cbdda39f9dc15934e0268aa168cb8630a111f93",
+    "output.my": "2a4760acf26f0ce8eaa585d7d69afe521120fbe90c6bdd2f35d8500e79648798",
+    "p1_call_env_test.my": "8a8647d809412a694917f28fff49cebc31f14761c7ef4ec17a6a1f77ea6e5dac",
+    "p1_discard_local_test.my": "fe1555b353c0ded7869063681418a128ad2133cfefeea4a3acfb29b956f2e90a",
+    "p1_heap_test.my": "03f78adc8a7c65d1ca24432d73709d8e40d3c8f2fad978902b367c84c727bd90",
+    "p2_scalar_reader_test.my": "9608acda0a354e3206b7e1070e7378679806c62dd727fd81d0317e8eb2c0f6f9",
+    "p2_tree_tests.my": "851b12836dc599b8431e4ba05b804422ba9961113fbda80b0ec12a2d4743f52d",
+    "p2_vm_execution_test.my": "35305397d19b76355d64b0d09133069e4db1260b713d6947306737ebd749d2ff",
+    "p2_vm_operand_test.my": "614ed30ffa03b1a590258a5f1e84eb99687dfab2d2501f18e775541d4f4c475e",
+    "p3_queries_test.my": "9557e1afc80b6bba743d2ff82adf8bdf4eb17cc4908552eaf5696ea036ddaab6",
+    "p4_tree_tests.my": "a8486ca90348ec7014887f07181a9c6b96ac319c23abb197d867b439b9eff12a",
+    "parser.my": "9d240b7def5f585ad3571f1d6f78f079a32c5b1133569bee8de08c002ea70ddd",
+    "parser_test.my": "7b87e451fc84c6f745246b5b716c2f49d4c994b75ac0149f28e3efdcf6115567",
+    "repros/overlap_proof_blowup.my.txt": "5c510f5d5e2d441cb5397a7d6097e3689a040751373d2c9594db6754812b4dfb",
+    "repros/print_long_float.my.txt": "0767918284593321e9589f14e3b90d9dc41239321d355be89aed055eef5cb132",
+    "repros/print_union_class_payload.my.txt": "c03c987b6bf03db950bb8e98c238a76c0e7ea9c4c98c29c3e5748cd2c3a4ce8d",
+    "repros/qbe_pm_slots.my.txt": "3560079c67785824971ae6f10c3f04e49e87e5e5dbd20afdd7f1c0a1b258dbe9",
+    "repros/read_fifo.my.txt": "2a3b1658eb6e4c9a0f40cfed13c0db92989e9c78de69150197df247a18e5becd",
+    "repros/runtime_flags.my.txt": "2d314b6501ea5be517e904e0791461f5900745a77e386c8403f6d15fefdd67eb",
+    "repros/stream_field_method.my.txt": "b551e742a030b770cc3861bebacbbc76beab0fc38aef78a54be7a3af4ee9eb97",
+    "resolver.my": "f06d3b559ee224b9c32fc3e48de932b7b151c15b93d97bde0bf92bc0f47cf8de",
+    "resolver_test.my": "764c6cf4042cab6ffbad624a724268f20d353adc08f38094ebbb0feed1503974",
+    "scanner.my": "62e0ead93c58c83b4dee2473991df12778e432e2404122d9c59bc1be2bdf30df",
+    "scanner_test.my": "c725372b79a947e38f4ca71e3db8c2cf4a06207536eda84d7089613145639a43",
+    "table.my": "09997c3fbc7461e5698c16de1b186ba755f98b94951b54dadfad0dc7268dfa98",
+    "table_test.my": "5cb9baaebaf11aa301faacbeabd777af4a460eb0f0c6e9a67ff8f0e276b0cccc",
+    "value.my": "be66ac3375e327f4bdf1759177519fd95a45bcd1f60070af0bf70047e8bb8c41",
+    "value_test.my": "e08b23815ec0b80060b56168648514c35d2103ab09444b0bd16532ac63caa560",
+    "vm.my": "55ccd40020a63b6ff574980af0c5bfcc2ad495815b89704b7eb90d62a67a25ff",
+    "vm_queries.my": "d8a03a571c8056fbd8330f42fe81ef36502ec2fd16754da6ce3d8dd773ad2e57"
+  }
+}

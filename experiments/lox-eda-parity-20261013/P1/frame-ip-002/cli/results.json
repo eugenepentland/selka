@@ -1,0 +1,218 @@
+[
+  {
+    "case": "closure",
+    "arm": "baseline",
+    "stress": false,
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/lox/zero-rc",
+      "--engine=vm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/frame-ip-002/cli/closure.lox"
+    ],
+    "exit": 0,
+    "stdout": "5\n9\n",
+    "stderr": ""
+  },
+  {
+    "case": "closure",
+    "arm": "candidate",
+    "stress": false,
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/frame-ip-002/candidate-lox",
+      "--engine=vm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/frame-ip-002/cli/closure.lox"
+    ],
+    "exit": 0,
+    "stdout": "5\n9\n",
+    "stderr": ""
+  },
+  {
+    "case": "closure",
+    "arm": "baseline",
+    "stress": true,
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/lox/zero-rc",
+      "--engine=vm",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/frame-ip-002/cli/closure.lox"
+    ],
+    "exit": 0,
+    "stdout": "5\n9\n",
+    "stderr": ""
+  },
+  {
+    "case": "closure",
+    "arm": "candidate",
+    "stress": true,
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/frame-ip-002/candidate-lox",
+      "--engine=vm",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/frame-ip-002/cli/closure.lox"
+    ],
+    "exit": 0,
+    "stdout": "5\n9\n",
+    "stderr": ""
+  },
+  {
+    "case": "super_native",
+    "arm": "baseline",
+    "stress": false,
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/lox/zero-rc",
+      "--engine=vm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/frame-ip-002/cli/super_native.lox"
+    ],
+    "exit": 0,
+    "stdout": "7\n",
+    "stderr": ""
+  },
+  {
+    "case": "super_native",
+    "arm": "candidate",
+    "stress": false,
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/frame-ip-002/candidate-lox",
+      "--engine=vm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/frame-ip-002/cli/super_native.lox"
+    ],
+    "exit": 0,
+    "stdout": "7\n",
+    "stderr": ""
+  },
+  {
+    "case": "super_native",
+    "arm": "baseline",
+    "stress": true,
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/lox/zero-rc",
+      "--engine=vm",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/frame-ip-002/cli/super_native.lox"
+    ],
+    "exit": 0,
+    "stdout": "7\n",
+    "stderr": ""
+  },
+  {
+    "case": "super_native",
+    "arm": "candidate",
+    "stress": true,
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/frame-ip-002/candidate-lox",
+      "--engine=vm",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/frame-ip-002/cli/super_native.lox"
+    ],
+    "exit": 0,
+    "stdout": "7\n",
+    "stderr": ""
+  },
+  {
+    "case": "native_error",
+    "arm": "baseline",
+    "stress": false,
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/lox/zero-rc",
+      "--engine=vm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/frame-ip-002/cli/native_error.lox"
+    ],
+    "exit": 70,
+    "stdout": "true\n",
+    "stderr": "Operand must be a number.\n[line 6] in fail()\n[line 8] in script\n"
+  },
+  {
+    "case": "native_error",
+    "arm": "candidate",
+    "stress": false,
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/frame-ip-002/candidate-lox",
+      "--engine=vm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/frame-ip-002/cli/native_error.lox"
+    ],
+    "exit": 70,
+    "stdout": "true\n",
+    "stderr": "Operand must be a number.\n[line 6] in fail()\n[line 8] in script\n"
+  },
+  {
+    "case": "native_error",
+    "arm": "baseline",
+    "stress": true,
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/lox/zero-rc",
+      "--engine=vm",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/frame-ip-002/cli/native_error.lox"
+    ],
+    "exit": 70,
+    "stdout": "true\n",
+    "stderr": "Operand must be a number.\n[line 6] in fail()\n[line 8] in script\n"
+  },
+  {
+    "case": "native_error",
+    "arm": "candidate",
+    "stress": true,
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/frame-ip-002/candidate-lox",
+      "--engine=vm",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/frame-ip-002/cli/native_error.lox"
+    ],
+    "exit": 70,
+    "stdout": "true\n",
+    "stderr": "Operand must be a number.\n[line 6] in fail()\n[line 8] in script\n"
+  },
+  {
+    "case": "super_error",
+    "arm": "baseline",
+    "stress": false,
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/lox/zero-rc",
+      "--engine=vm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/frame-ip-002/cli/super_error.lox"
+    ],
+    "exit": 70,
+    "stdout": "",
+    "stderr": "Operand must be a number.\n[line 2] in value()\n[line 5] in value()\n[line 7] in script\n"
+  },
+  {
+    "case": "super_error",
+    "arm": "candidate",
+    "stress": false,
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/frame-ip-002/candidate-lox",
+      "--engine=vm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/frame-ip-002/cli/super_error.lox"
+    ],
+    "exit": 70,
+    "stdout": "",
+    "stderr": "Operand must be a number.\n[line 2] in value()\n[line 5] in value()\n[line 7] in script\n"
+  },
+  {
+    "case": "super_error",
+    "arm": "baseline",
+    "stress": true,
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/lox/zero-rc",
+      "--engine=vm",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/frame-ip-002/cli/super_error.lox"
+    ],
+    "exit": 70,
+    "stdout": "",
+    "stderr": "Operand must be a number.\n[line 2] in value()\n[line 5] in value()\n[line 7] in script\n"
+  },
+  {
+    "case": "super_error",
+    "arm": "candidate",
+    "stress": true,
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/frame-ip-002/candidate-lox",
+      "--engine=vm",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/frame-ip-002/cli/super_error.lox"
+    ],
+    "exit": 70,
+    "stdout": "",
+    "stderr": "Operand must be a number.\n[line 2] in value()\n[line 5] in value()\n[line 7] in script\n"
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "arguments": 0,
+    "exit": 0,
+    "stdout": "11 22 40 33\n",
+    "stderr": ""
+  },
+  {
+    "arguments": 1,
+    "exit": 0,
+    "stdout": "11 22 41 33\n",
+    "stderr": ""
+  },
+  {
+    "arguments": 2,
+    "exit": 1,
+    "stdout": "",
+    "stderr": "experiments/lox-eda-parity-20261013/P1/frame-ip-002/scalar_frame_probe.my:9:5: error[R_LIST_BOUNDS]: native execution failed (index 1, length 1)\n  in publish at experiments/lox-eda-parity-20261013/P1/frame-ip-002/scalar_frame_probe.my:9:5\n  in main at experiments/lox-eda-parity-20261013/P1/frame-ip-002/scalar_frame_probe.my:22:5\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":1,\"length\":1}\n"
+  },
+  {
+    "arguments": 3,
+    "exit": 1,
+    "stdout": "",
+    "stderr": "experiments/lox-eda-parity-20261013/P1/frame-ip-002/scalar_frame_probe.my:9:5: error[R_LIST_BOUNDS]: native execution failed (index -2, length 1)\n  in publish at experiments/lox-eda-parity-20261013/P1/frame-ip-002/scalar_frame_probe.my:9:5\n  in main at experiments/lox-eda-parity-20261013/P1/frame-ip-002/scalar_frame_probe.my:22:5\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-2,\"length\":1}\n"
+  },
+  {
+    "arguments": 4,
+    "exit": 1,
+    "stdout": "",
+    "stderr": "experiments/lox-eda-parity-20261013/P1/frame-ip-002/scalar_frame_probe.my:9:5: error[R_LIST_BOUNDS]: native execution failed (index 0, length 0)\n  in publish at experiments/lox-eda-parity-20261013/P1/frame-ip-002/scalar_frame_probe.my:9:5\n  in main at experiments/lox-eda-parity-20261013/P1/frame-ip-002/scalar_frame_probe.my:22:5\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":0,\"length\":0}\n"
+  }
+]

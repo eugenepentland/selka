@@ -1,0 +1,1 @@
+class A { init(n) { this.n = n; } value() { clock(); return this.n; } } class B < A { value() { return super.value() + 1; } } var b = B(6); var bound = b.value; print bound();

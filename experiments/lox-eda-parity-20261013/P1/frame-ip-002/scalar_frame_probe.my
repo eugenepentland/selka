@@ -1,0 +1,24 @@
+# Isolated checked record-list scalar field writeback, not production VM.
+record Frame:
+    closure: int
+    function: int
+    ip: int
+    base: int
+
+func publish(mut frames: Frame[], index: int, ip: int):
+    frames[index].ip = ip
+
+func main(args: str[], out: Stream) -> int:
+    mut frames: Frame[] = [Frame(closure=11, function=22, ip=0, base=33)]
+    mut index = 0
+    if len(args) == 1:
+        index = -1
+    if len(args) == 2:
+        index = 1
+    if len(args) == 3:
+        index = -2
+    if len(args) == 4:
+        frames = []
+    publish(mut frames, index, len(args) + 40)
+    out.print(frames[0].closure, frames[0].function, frames[0].ip, frames[0].base)
+    return 0

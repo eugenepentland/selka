@@ -1,0 +1,4 @@
+experiments/lox-eda-parity-20261013/P1/frame-ip-002/scalar_frame_probe.my:9:5: error[R_LIST_BOUNDS]: native execution failed (index -2, length 1)
+  in publish at experiments/lox-eda-parity-20261013/P1/frame-ip-002/scalar_frame_probe.my:9:5
+  in main at experiments/lox-eda-parity-20261013/P1/frame-ip-002/scalar_frame_probe.my:22:5
+MYLANG-TRAP {"version":1,"operation":"index","index":-2,"length":1}

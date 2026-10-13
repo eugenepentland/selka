@@ -1,0 +1,8 @@
+fun identity(x) { return x; }
+fun fail() {
+ var x = identity(1);
+ print clock() >= 0;
+ if (x == 1) x = x + 2;
+ print -"bad";
+}
+fail();
