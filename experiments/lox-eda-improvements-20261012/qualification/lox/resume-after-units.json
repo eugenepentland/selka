@@ -1,0 +1,9 @@
+{
+  "reason": "Harness expected 69 Lox tests; all 75 passed, including six new P2 tests.",
+  "manifest_sha256": "dccb0b797a78ab4f6eb34c2dfefe7a095f6e1650c3ad6cca2291e6668467d535",
+  "preserved_evidence": {
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/qualification/lox/checked-tests.stdout": "e7bf9dc6c5596a0bf11c4a3c1333eb648d3a687d4002cf82fad9302932f0e717",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/qualification/lox/checked-tests.stderr": "2285c18c5a85510a003f9fce7b3029881a39f43a1f869d36f16f7f8d147aaab3",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/qualification/lox/commands-before-resume.json": "404b3f9e33855f918e6ff72e5ce372f3a1bca9f81ef5459d97c258142debaa61"
+  }
+}

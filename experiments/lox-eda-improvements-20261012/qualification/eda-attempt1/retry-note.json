@@ -1,0 +1,10 @@
+{
+  "status": "failed attempt preserved",
+  "passed": 184,
+  "failed": 133,
+  "skipped": 0,
+  "unsupported": 0,
+  "cached": 0,
+  "reason": "All133 failures reported NativeTestProcessFailed exit70. Exactcause unproven. Board module original and candidate fresh cache bothpass10/10; same integratedcachedbinary direct10rowprotocol passes. Diskspace scarce, new full317 run usesprivate/tmp workdir, samecompiler/source/flags/leakcheck. Noapplicationedits or testexclusions.",
+  "failed_work_cache": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/qualification/eda"
+}

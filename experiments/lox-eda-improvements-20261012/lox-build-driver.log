@@ -1,0 +1,7 @@
+lox original-rc reused identical pinned control
+lox original-rc-counted reused identical pinned control
+lox migrated-rc ok
+lox migrated-rc-counted ok
+lox zero-rc ok
+lox zero-rc-counted ok
+/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/build/lox/build-receipt.json

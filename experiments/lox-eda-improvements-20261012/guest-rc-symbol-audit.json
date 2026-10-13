@@ -1,0 +1,26 @@
+{
+  "lox": {
+    "binary": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/lox/zero-rc",
+    "binary_sha256": "0312b0302c1084c1102fbb89aa8a2035b4a09596c439aa134916e78642ad9f51",
+    "llvm": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/lox/zero-rc.ll",
+    "llvm_sha256": "b7333543af6ad2f800dc329d5809333f740df84c5780904a52cb04302938d4ab",
+    "build_receipt": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/build/lox/build-receipt.json",
+    "build_receipt_sha256": "dccb0b797a78ab4f6eb34c2dfefe7a095f6e1650c3ad6cca2291e6668467d535",
+    "legacy_rc_call_names": [],
+    "legacy_rc_native_symbols": [],
+    "direct_drop_call_sites": 1234,
+    "scope": "Selected checked guest LLVM calls and defined native symbols. Compiler/runtime sources are unchanged; this does not establish RC retirement from the complete installed package."
+  },
+  "eda": {
+    "binary": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/eda/zero-rc",
+    "binary_sha256": "1a7967a2fb1d79d2a01feb42cd5b36ea8bc677bc937f1994358a76a0f3c3a100",
+    "llvm": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/eda/zero-rc.ll",
+    "llvm_sha256": "6d022e29f80874405ab0c219fbc99a81d07bdab440635bb94816fcbec7ea7ac7",
+    "build_receipt": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/build/eda/build-receipt.json",
+    "build_receipt_sha256": "67aaa3e1efe1b56a6bc939cac70f46b44b631f6f47143c679c925550de150419",
+    "legacy_rc_call_names": [],
+    "legacy_rc_native_symbols": [],
+    "direct_drop_call_sites": 35974,
+    "scope": "Selected checked guest LLVM calls and defined native symbols. Compiler/runtime sources are unchanged; this does not establish RC retirement from the complete installed package."
+  }
+}

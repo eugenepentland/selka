@@ -1,0 +1,12 @@
+eda checked-tests 1
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/qualify.py", line 83, in <module>
+    *[arm + '=' + manifest['binaries'][arm]['path'] for arm in ('original-rc', 'migrated-rc', 'zero-rc')]])
+    
+  File "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/qualify.py", line 45, in main
+    '--jobs', '4', '--max-steps', '1000000000', '--max-frames', '40000',
+    ^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/qualify.py", line 37, in run
+    (dest / 'commands.json').write_text(json.dumps(commands, indent=2) + '\n')
+           ^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: checked-tests

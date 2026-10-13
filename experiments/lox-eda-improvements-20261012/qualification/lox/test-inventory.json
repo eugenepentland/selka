@@ -1,0 +1,20 @@
+{
+  "previous_count": 65,
+  "integrated_count": 75,
+  "missing": [],
+  "added": [
+    "p2_tree_tests::test_p2_error_unwinds_blocks",
+    "p2_tree_tests::test_p2_inheritance_and_receiver_rhs",
+    "p2_tree_tests::test_p2_nested_closure_printing",
+    "p2_tree_tests::test_p2_recursion_depth_error",
+    "p2_tree_tests::test_p2_recursive_repeated_body",
+    "p2_tree_tests::test_p2_short_circuit_and_return",
+    "p3_queries_test::test_p3_environment_snapshot_and_alias",
+    "p3_queries_test::test_p3_function_closure_selected_reads",
+    "p3_queries_test::test_p3_string_owned_snapshot_stress_and_reuse",
+    "p3_queries_test::test_p3_tables_growth_missing_and_alias"
+  ],
+  "previous_result_sha256": "476246c47b83eeeb81ebb975ebd6be4df057a3f5b29edc53e761a7b801c1d01e",
+  "integrated_result_sha256": "e7bf9dc6c5596a0bf11c4a3c1333eb648d3a687d4002cf82fad9302932f0e717",
+  "cached": 0
+}

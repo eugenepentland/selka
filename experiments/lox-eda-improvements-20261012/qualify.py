@@ -17,6 +17,7 @@ HERE = Path(__file__).resolve().parent
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('manifest', type=Path)
+    p.add_argument('--work-root', type=Path, help='Fresh private work directory; permits another filesystem when disk space is scarce.')
     p.add_argument('--resume-after-units', action='store_true',
                    help='Continue an exactly matching successful unit command after a harness-only stop; preserve its output.')
     a = p.parse_args()
@@ -24,7 +25,7 @@ def main():
     app = manifest['application']
     dest = HERE / 'qualification' / app
     dest.mkdir(parents=True, exist_ok=a.resume_after_units)
-    work = ROOT / '.tmp/lox-eda-improvements-20261012/qualification' / app
+    work = a.work_root.resolve() if a.work_root else ROOT / '.tmp/lox-eda-improvements-20261012/qualification' / app
     work.mkdir(parents=True, exist_ok=a.resume_after_units)
     common = json.loads(Path(manifest['common_receipt']).read_text())
     env = dict(os.environ, MYL_CORE_LEAKCHECK='1', TMPDIR=str(work),

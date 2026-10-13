@@ -1,0 +1,9 @@
+lox checked-tests 0
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/qualify.py", line 83, in <module>
+    main()
+    ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/qualify.py", line 47, in main
+    assert tests['passed'] == (69 if app == 'lox' else 317), 'integrated unit-test denominator changed'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: integrated unit-test denominator changed

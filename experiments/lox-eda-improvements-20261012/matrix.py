@@ -22,6 +22,7 @@ def sha(path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('application', choices=('lox', 'eda'))
+    parser.add_argument('--work-root', type=Path, help='Fresh private work directory on a filesystem with adequate space.')
     args = parser.parse_args()
     assert os.environ.get('MYLANG_SLOT_DIR')
     app = args.application
@@ -34,7 +35,7 @@ def main():
     for name, identity in source['files'].items():
         assert sha(Path(source['root']) / name) == identity
     dest = HERE / 'matrix' / app
-    work = ROOT / '.tmp/lox-eda-improvements-20261012/matrix' / app
+    work = args.work_root.resolve() if args.work_root else ROOT / '.tmp/lox-eda-improvements-20261012/matrix' / app
     dest.mkdir(parents=True, exist_ok=False)
     work.mkdir(parents=True, exist_ok=False)
     common = json.loads(Path(build['common_receipt']).read_text())

@@ -1,0 +1,4 @@
+build-slot: FIFO ticket 2585, position 7; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 2585, position 1; all 3 build slot(s) busy; waiting (60s so far)
+build-slot: build slot 1, FIFO ticket 2585 after 85s
+Both selected guests have no audited RC calls or symbols; direct destruction remains allowed.
