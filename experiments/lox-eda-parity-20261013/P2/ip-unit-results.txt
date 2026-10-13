@@ -1,0 +1,5 @@
+build-slot: build slot 1, FIFO ticket 2731 after 857s
+passed p2_vm_execution_test::test_field_assignment_and_inherited_method
+passed p2_vm_execution_test::test_invalid_field_target_trace
+passed p2_vm_execution_test::test_resumed_trace
+3 passed, 0 cached, 0 failed, 0 skipped

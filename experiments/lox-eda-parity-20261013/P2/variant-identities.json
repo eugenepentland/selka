@@ -1,0 +1,20 @@
+{
+  "api": {
+    "binary": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/.tmp/lox-eda-parity/P2/api",
+    "sha256": "36342f2ea494b9523c678bb1c916a41cbd77bea07c530ff43912c297e43c7482",
+    "llvm_sha256": "1262d192c4054a8cb2985123b7042790081e1dc5a0d59a0cdb735017beb2068c",
+    "native_run_bytes": 15983
+  },
+  "ip": {
+    "binary": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/.tmp/lox-eda-parity/P2/ip",
+    "sha256": "f890a116fa93c52c877e8047e8bbd9ed801ead593e59ad94135ffafbe960521d",
+    "llvm_sha256": "cb2296b6f7dcf3a1bdc24168a95bb47178ea5298822fdc2c69f558db819cdce0",
+    "native_run_bytes": 16617
+  },
+  "direct": {
+    "binary": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/.tmp/lox-eda-parity/P2/direct",
+    "sha256": "6f6ed3e98d6c0cd2c8c475749501b109e87baf9a301967aaec74846e2107fac0",
+    "llvm_sha256": "37d658c129c8a88099702c3e27827cac829fbfc24c4051c53e52d4551a30d1ce",
+    "native_run_bytes": 16067
+  }
+}

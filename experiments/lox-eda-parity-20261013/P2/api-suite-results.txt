@@ -1,0 +1,5 @@
+Command: mylang test experiments/lox-eda-parity-20261013/source/lox --experimental-zero-rc --release --cache-dir .tmp/lox-eda-parity/P2/suite-cache
+build-slot: build slot 1, FIFO ticket 2720 after 91s
+Final runner output (individual passing lines omitted here):
+78 passed, 0 cached, 0 failed, 0 skipped
+The output included all 13 driver_tests public tests and all three new p2_vm_execution_test tests.

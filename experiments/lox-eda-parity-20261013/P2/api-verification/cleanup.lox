@@ -1,0 +1,1 @@
+fun f(){ { var x=1; fun get(){ return x; } return get; } } var get=f(); print get(); print 2;

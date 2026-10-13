@@ -1,0 +1,46 @@
+--- a/experiments/lox-eda-parity-20261013/source/lox/vm.my
++++ b/experiments/lox-eda-parity-20261013/source/lox/vm.my
+@@ -438,7 +438,7 @@
+     mut frame = rt.frames[rt.frame_count - 1].copy()
+     while True:
+         mut instruction = read_byte(rt, mut frame)
+-        rt.frames[rt.frame_count - 1] = frame.copy()
++        rt.frames[rt.frame_count - 1].ip = frame.ip
+         mut ok = True
+         if instruction == chunk.OP_CONSTANT:
+             const selected_constant = read_constant(rt, mut frame)
+@@ -507,7 +507,7 @@
+             frame.ip = frame.ip - offset
+         elif instruction == chunk.OP_CALL:
+             mut count = read_byte(rt, mut frame)
+-            rt.frames[rt.frame_count - 1] = frame.copy()
++            rt.frames[rt.frame_count - 1].ip = frame.ip
+             const __owned_arg_14 = heap.peek(rt, count)
+             ok = call_value(mut rt, mut o, __owned_arg_14, count, clock)
+             if ok:
+@@ -515,14 +515,14 @@
+         elif instruction == chunk.OP_INVOKE:
+             mut method = read_string(rt, mut frame)
+             mut count = read_byte(rt, mut frame)
+-            rt.frames[rt.frame_count - 1] = frame.copy()
++            rt.frames[rt.frame_count - 1].ip = frame.ip
+             ok = invoke(mut rt, mut o, method, count, clock)
+             if ok:
+                 frame = rt.frames[rt.frame_count - 1].copy()
+         elif instruction == chunk.OP_SUPER_INVOKE:
+             mut method = read_string(rt, mut frame)
+             mut count = read_byte(rt, mut frame)
+-            rt.frames[rt.frame_count - 1] = frame.copy()
++            rt.frames[rt.frame_count - 1].ip = frame.ip
+             const __owned_arg_15 = as_obj(heap.pop(mut rt))
+             ok = invoke_from_class(mut rt, mut o, __owned_arg_15, method, count)
+             if ok:
+@@ -553,7 +553,7 @@
+             define_method(mut rt, mut frame)
+         if not ok:
+             return InterpretResult.RUNTIME_ERROR
+-        rt.frames[rt.frame_count - 1] = frame.copy()
++        rt.frames[rt.frame_count - 1].ip = frame.ip
+ 
+ 
+ # Runs a script on a fresh runtime (SPEC §8.5): the startup allocations,

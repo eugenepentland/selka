@@ -1,0 +1,12 @@
+--- a/experiments/lox-eda-parity-20261013/source/lox/vm.my
++++ b/experiments/lox-eda-parity-20261013/source/lox/vm.my
+@@ -437,7 +437,8 @@
+ func run(mut rt: heap.Runtime, mut o: output.Output, clock: Clock?) -> InterpretResult:
+     mut frame = rt.frames[rt.frame_count - 1].copy()
+     while True:
+-        mut instruction = read_byte(rt, mut frame)
++        mut instruction = heap.function_instruction(rt, frame.function, frame.ip)
++        frame.ip = frame.ip + 1
+         rt.frames[rt.frame_count - 1] = frame.copy()
+         mut ok = True
+         if instruction == chunk.OP_CONSTANT:
