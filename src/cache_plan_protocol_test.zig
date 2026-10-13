@@ -91,6 +91,7 @@ test "incremental component transport binds correlated v2 replies and rejects fa
     const directory = buffer[0..try temporary.dir.realPath(io, &buffer)];
     var environ: std.process.Environ.Map = .init(a);
     defer environ.deinit();
+    try environ.put("TMPDIR", directory);
     try environ.put("MYLANG_COMPONENT_DIR", directory);
     const script =
         \\#!/usr/bin/python3
@@ -136,6 +137,7 @@ test "planner retained snapshot supports borrowed bindings and rejects same-leng
     defer a.free(directory);
     var environ: std.process.Environ.Map = .init(a);
     defer environ.deinit();
+    try environ.put("TMPDIR", directory);
     try environ.put("MYLANG_COMPONENT_DIR", directory);
     const script =
         \\#!/usr/bin/python3
@@ -176,6 +178,7 @@ test "planner retained snapshot post-validation detects same-size mutation with 
     defer a.free(directory);
     var environ: std.process.Environ.Map = .init(a);
     defer environ.deinit();
+    try environ.put("TMPDIR", directory);
     try environ.put("MYLANG_COMPONENT_DIR", directory);
     const deployment = try std.fs.path.join(a, &.{ directory, component_name });
     defer a.free(deployment);
@@ -208,6 +211,7 @@ test "planner artifactSnapshot and bind release owned bytes on every allocation 
     defer a.free(directory);
     var environ: std.process.Environ.Map = .init(a);
     defer environ.deinit();
+    try environ.put("TMPDIR", directory);
     try environ.put("MYLANG_COMPONENT_DIR", directory);
     try fixture(a, temporary.dir, "#!/bin/sh\nexit 0\n");
     try std.testing.checkAllAllocationFailures(a, snapshotAllocations, .{ directory, &environ });
@@ -234,6 +238,7 @@ test "verified planner binds mode and implementation; corrupt or changed deploym
     const directory = buffer[0..try temporary.dir.realPath(io, &buffer)];
     var environ: std.process.Environ.Map = .init(a);
     defer environ.deinit();
+    try environ.put("TMPDIR", directory);
     try environ.put("MYLANG_COMPONENT_DIR", directory);
     const script =
         \\#!/usr/bin/python3

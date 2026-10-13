@@ -62,6 +62,7 @@ test "component verifies artifact and bounds child failures and deadlines" {
     const directory = path_buffer[0..try temporary.dir.realPath(std.testing.io, &path_buffer)];
     var environ: std.process.Environ.Map = .init(a);
     defer environ.deinit();
+    try environ.put("TMPDIR", directory);
     var runtime: adapter.Runtime = .{ .io = std.testing.io, .environ = &environ, .component_dir = directory, .timeout_ms = 10 };
     try fixture(a, temporary.dir, "#!/bin/sh\nexit 7\n");
     try std.testing.expectError(error.ComponentFailed, (adapter.Adapter{ .component = runtime }).buildNamed(a, &.{"test"}, &.{&.{}}, &.{id}));
@@ -119,6 +120,7 @@ test "component private request directories are concurrent and cleaned; shadow c
     defer a.free(log);
     var environ: std.process.Environ.Map = .init(a);
     defer environ.deinit();
+    try environ.put("TMPDIR", directory);
     try environ.put("COMPONENT_TEST_LOG", log);
     const script =
         \\#!/usr/bin/python3
@@ -232,6 +234,7 @@ test "component runChild deadline includes wait after both output streams close"
     const directory = buffer[0..try temporary.dir.realPath(io, &buffer)];
     var environ: std.process.Environ.Map = .init(a);
     defer environ.deinit();
+    try environ.put("TMPDIR", directory);
     const pid_path = try std.fs.path.join(a, &.{ directory, "child.pid" });
     defer a.free(pid_path);
     try environ.put("COMPONENT_PID_PATH", pid_path);
