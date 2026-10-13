@@ -6,7 +6,10 @@ see [summary](verification-summary.json) and the [full receipt](verification-rec
 Both integrated applications passed the primary qualification: 75 Lox and 317 EDA
 unit tests with leak checking, three 974-case Lox conformance runs plus smoke/GC
 checks, 102 EDA golden comparisons and nine error cases across three arms.
-The remaining build-mode matrix and full-workload measurements are in progress.
+Both applications also pass all five ownership build modes (verified release,
+release, unoptimized debug, optimized debug and release without facts), with
+zero cached unit outcomes. See [matrix summary](matrix-summary.json). Full-workload
+measurements remain in progress.
 
 Implements the [audited plan](../../docs/audits/lox-eda-improvement-plan-2026-10-12.md)
 from audit commit `b854dbcd895bf81061b33bebc30328ceaa986972`.
@@ -56,3 +59,14 @@ unproven. The unchanged board module passed baseline, candidate and exact cached
 protocol replays ([diagnosis](P4/diagnosis/README.md)); a fresh full run using a
 private cache on `/tmp` passed all 317 tests with the same compiler, sources,
 flags and leak checking. No tests were removed or assertions weakened.
+
+The EDA no-facts matrix initially failed before test execution because `/tmp`
+enforces a per-user quota despite ample global free space. The failure and
+original journal are preserved under `matrix/eda/no-facts-attempt1/`. The same
+317 tests passed using a fresh cache and temporary directory on the main disk;
+compiler, sources, flags and leak checking stayed unchanged.
+
+The first compile-timing attempt is preserved in `compilation-polling-attempt1/`
+and excluded from final ratios. Python's timed wait quantized short warm builds;
+the corrected harness uses a blocking wait with a separate deadline timer. All
+six cold/warm pairs were repeated, with fresh caches and unchanged sources.

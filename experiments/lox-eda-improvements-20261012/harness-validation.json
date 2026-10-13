@@ -16,7 +16,8 @@
     "experiments/lox-eda-improvements-20261012/schedule.py": "7b4f3a3ac569125663e05418e58bf123caea3929ee03622f3510aca77b5880bd",
     "experiments/lox-eda-improvements-20261012/test_timeout.py": "47c3aa74e7693be6b0683cdb9b6e84e941803ababe24d23477752215367c8d78",
     "experiments/lox-eda-improvements-20261012/archive_evidence.py": "d654f4b20fce3b0ee35fb0a853e3fe4d4af7fab7ae2f2e6366505c7a321c8ea0",
-    "experiments/lox-eda-improvements-20261012/audit_guests.py": "479721c379c73c65b209fb0f5a9a773491443bbb463e99cd877498bac4ce8116"
+    "experiments/lox-eda-improvements-20261012/audit_guests.py": "479721c379c73c65b209fb0f5a9a773491443bbb463e99cd877498bac4ce8116",
+    "experiments/lox-eda-improvements-20261012/retry_eda_no_facts.py": "842fceeb815cc08632c3d4b67e63df0a1f3f9f2d1648d930c50b69ed995b10fe"
   },
   "deadline_tests": {
     "passed": 8,

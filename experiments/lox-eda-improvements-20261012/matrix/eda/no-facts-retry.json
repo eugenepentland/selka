@@ -1,0 +1,55 @@
+{
+  "reason": "Cache-plan request write failed with DiskQuota before guest test results. Retry changes only temporary directory and fresh cache location; same compiler, source, flags and leak check.",
+  "manifest_sha256": "67aaa3e1efe1b56a6bc939cac70f46b44b631f6f47143c679c925550de150419",
+  "previous": {
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+      "test",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/source/eda",
+      "--experimental-zero-rc",
+      "--release",
+      "--no-facts",
+      "--jobs",
+      "4",
+      "--max-steps",
+      "1000000000",
+      "--max-frames",
+      "40000",
+      "--max-memory",
+      "2G",
+      "--timeout-ms",
+      "120000",
+      "--cache-dir",
+      "/tmp/mylang-lox-eda-improvements-20261012-eda-matrix/no-facts/tests",
+      "--json"
+    ],
+    "returncode": 2
+  },
+  "retry_command": [
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+    "test",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/source/eda",
+    "--experimental-zero-rc",
+    "--release",
+    "--no-facts",
+    "--jobs",
+    "4",
+    "--max-steps",
+    "1000000000",
+    "--max-frames",
+    "40000",
+    "--max-memory",
+    "2G",
+    "--timeout-ms",
+    "120000",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/matrix-eda-no-facts-retry/tests",
+    "--json"
+  ],
+  "retry_tmpdir": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/matrix-eda-no-facts-retry",
+  "preserved": {
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/matrix/eda/no-facts-attempt1/no-facts-units.stderr": "72108b208b56a422fa63e14adfd75b9ebc9dd3c67ec6b1e32ed59079351b1d14",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/matrix/eda/no-facts-attempt1/no-facts-units.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/matrix/eda/no-facts-attempt1/results.json": "224b638e560e1d69f8133875e7e26de3916413445430610d21904013f878468f"
+  }
+}

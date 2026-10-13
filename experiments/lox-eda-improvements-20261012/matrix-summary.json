@@ -1,0 +1,74 @@
+{
+  "lox": {
+    "modes": {
+      "verified-release": {
+        "passed": 75,
+        "failed": 0,
+        "cached": 0,
+        "primary_qualification_reused": true
+      },
+      "release": {
+        "passed": 75,
+        "failed": 0,
+        "cached": 0,
+        "primary_qualification_reused": false
+      },
+      "debug": {
+        "passed": 75,
+        "failed": 0,
+        "cached": 0,
+        "primary_qualification_reused": false
+      },
+      "optimized-debug": {
+        "passed": 75,
+        "failed": 0,
+        "cached": 0,
+        "primary_qualification_reused": false
+      },
+      "no-facts": {
+        "passed": 75,
+        "failed": 0,
+        "cached": 0,
+        "primary_qualification_reused": false
+      }
+    },
+    "results_path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/matrix/lox/results.json",
+    "sha256": "63a847718469a0ff17f7d225a5617cfb1b2d607f21d2b1aaa45de9115c3bfe5a"
+  },
+  "eda": {
+    "modes": {
+      "verified-release": {
+        "passed": 317,
+        "failed": 0,
+        "cached": 0,
+        "primary_qualification_reused": true
+      },
+      "release": {
+        "passed": 317,
+        "failed": 0,
+        "cached": 0,
+        "primary_qualification_reused": false
+      },
+      "debug": {
+        "passed": 317,
+        "failed": 0,
+        "cached": 0,
+        "primary_qualification_reused": false
+      },
+      "optimized-debug": {
+        "passed": 317,
+        "failed": 0,
+        "cached": 0,
+        "primary_qualification_reused": false
+      },
+      "no-facts": {
+        "passed": 317,
+        "failed": 0,
+        "cached": 0,
+        "primary_qualification_reused": false
+      }
+    },
+    "results_path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/matrix/eda/results.json",
+    "sha256": "13a1369d029321811a6a5ed7bb4df9e848c8fa72b229a5b8a7770b3cff1ea3a7"
+  }
+}

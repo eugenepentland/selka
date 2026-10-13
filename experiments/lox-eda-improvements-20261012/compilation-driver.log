@@ -1,0 +1,21 @@
+build-slot: FIFO ticket 739, position 2; earlier timing tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 739, position 2; earlier timing tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 739, position 2; earlier timing tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 739, position 2; earlier timing tickets must run first; waiting (180s so far)
+build-slot: timing slot 1, FIFO ticket 739 after 220s
+lox 0 [('before', 'cold-guest-cache', 6.559), ('before', 'warm-guest-cache', 0.026), ('after', 'cold-guest-cache', 6.383), ('after', 'warm-guest-cache', 0.021)]
+build-slot: FIFO ticket 741, position 2; earlier timing tickets must run first; waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 741 after 15s
+lox 1 [('after', 'cold-guest-cache', 6.336), ('after', 'warm-guest-cache', 0.027), ('before', 'cold-guest-cache', 4.966), ('before', 'warm-guest-cache', 0.026)]
+build-slot: FIFO ticket 743, position 2; earlier timing tickets must run first; waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 743 after 15s
+lox 2 [('before', 'cold-guest-cache', 6.636), ('before', 'warm-guest-cache', 0.023), ('after', 'cold-guest-cache', 6.309), ('after', 'warm-guest-cache', 0.026)]
+build-slot: FIFO ticket 745, position 2; earlier timing tickets must run first; waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 745 after 10s
+eda 0 [('before', 'cold-guest-cache', 28.791), ('before', 'warm-guest-cache', 0.041), ('after', 'cold-guest-cache', 22.239), ('after', 'warm-guest-cache', 0.019)]
+build-slot: FIFO ticket 747, position 2; earlier timing tickets must run first; waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 747 after 10s
+eda 1 [('after', 'cold-guest-cache', 21.63), ('after', 'warm-guest-cache', 0.036), ('before', 'cold-guest-cache', 24.599), ('before', 'warm-guest-cache', 0.028)]
+build-slot: FIFO ticket 749, position 2; earlier timing tickets must run first; waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 749 after 15s
+eda 2 [('before', 'cold-guest-cache', 23.898), ('before', 'warm-guest-cache', 0.043), ('after', 'cold-guest-cache', 20.594), ('after', 'warm-guest-cache', 0.02)]

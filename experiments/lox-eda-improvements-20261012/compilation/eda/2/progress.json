@@ -1,0 +1,78 @@
+[
+  {
+    "arm": "before",
+    "cache_state": "cold-guest-cache",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-zero-rc-20261012/eda/source/src/main.my",
+      "--release",
+      "--experimental-zero-rc",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/compilation-precise/eda/2/cache-before",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/compilation-precise/eda/2/before"
+    ],
+    "elapsed_seconds": 23.897919957060367,
+    "gnu_time_seconds": 23.89,
+    "gnu_time_maxrss_kib": 507708,
+    "binary_sha256": "6605dded3ff15363aada4de52abdbce79a69aa0faafbc4396794a1a1b5773549"
+  },
+  {
+    "arm": "before",
+    "cache_state": "warm-guest-cache",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-zero-rc-20261012/eda/source/src/main.my",
+      "--release",
+      "--experimental-zero-rc",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/compilation-precise/eda/2/cache-before",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/compilation-precise/eda/2/before"
+    ],
+    "elapsed_seconds": 0.042551040882244706,
+    "gnu_time_seconds": 0.03,
+    "gnu_time_maxrss_kib": 9144,
+    "binary_sha256": "6605dded3ff15363aada4de52abdbce79a69aa0faafbc4396794a1a1b5773549"
+  },
+  {
+    "arm": "after",
+    "cache_state": "cold-guest-cache",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/source/eda/main.my",
+      "--release",
+      "--experimental-zero-rc",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/compilation-precise/eda/2/cache-after",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/compilation-precise/eda/2/after"
+    ],
+    "elapsed_seconds": 20.593780655879527,
+    "gnu_time_seconds": 20.59,
+    "gnu_time_maxrss_kib": 498756,
+    "binary_sha256": "1a7967a2fb1d79d2a01feb42cd5b36ea8bc677bc937f1994358a76a0f3c3a100"
+  },
+  {
+    "arm": "after",
+    "cache_state": "warm-guest-cache",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/source/eda/main.my",
+      "--release",
+      "--experimental-zero-rc",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/compilation-precise/eda/2/cache-after",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/compilation-precise/eda/2/after"
+    ],
+    "elapsed_seconds": 0.020025254925712943,
+    "gnu_time_seconds": 0.01,
+    "gnu_time_maxrss_kib": 9016,
+    "binary_sha256": "1a7967a2fb1d79d2a01feb42cd5b36ea8bc677bc937f1994358a76a0f3c3a100"
+  }
+]

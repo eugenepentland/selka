@@ -1,0 +1,14 @@
+eda release-units passed
+eda debug-units passed
+eda optimized-debug-units passed
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/matrix.py", line 97, in <module>
+    main()
+    ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/matrix.py", line 77, in main
+    run(mode + '-units', [compiler, 'test', source['root'], *options], expected=75 if app == 'lox' else 317)
+    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/matrix.py", line 55, in run
+    assert result.returncode == 0, (app, label)
+           ^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ('eda', 'no-facts-units')

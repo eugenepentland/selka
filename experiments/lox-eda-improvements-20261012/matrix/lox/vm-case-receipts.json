@@ -1,0 +1,37 @@
+{
+  "verified-release": {
+    "source": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/matrix/lox/verified-release-vm-cases/verification.json",
+    "archived": "experiments/lox-eda-improvements-20261012/matrix/lox/verified-release-vm-verification.json",
+    "sha256": "e77b9cbccb9a2434ef6f335502dce155293b0e7b589f2e61ce69cf7fba1d2014",
+    "candidate_checks": 16,
+    "baseline_checks": 16
+  },
+  "release": {
+    "source": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/matrix/lox/release-vm-cases/verification.json",
+    "archived": "experiments/lox-eda-improvements-20261012/matrix/lox/release-vm-verification.json",
+    "sha256": "93a705d8d8c2d48252f540e81964e0c1d415f697dd3d6606c54a0341fdb26abe",
+    "candidate_checks": 16,
+    "baseline_checks": 16
+  },
+  "debug": {
+    "source": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/matrix/lox/debug-vm-cases/verification.json",
+    "archived": "experiments/lox-eda-improvements-20261012/matrix/lox/debug-vm-verification.json",
+    "sha256": "6ec0900e1bae3f3d775b06e319ccb1e7a9a650023f2042da10e99f2792352f1d",
+    "candidate_checks": 16,
+    "baseline_checks": 16
+  },
+  "optimized-debug": {
+    "source": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/matrix/lox/optimized-debug-vm-cases/verification.json",
+    "archived": "experiments/lox-eda-improvements-20261012/matrix/lox/optimized-debug-vm-verification.json",
+    "sha256": "4f3c56671ea9850b6578da78f2529dcb44df9d02f71fa2ab9995533bc9466431",
+    "candidate_checks": 16,
+    "baseline_checks": 16
+  },
+  "no-facts": {
+    "source": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/matrix/lox/no-facts-vm-cases/verification.json",
+    "archived": "experiments/lox-eda-improvements-20261012/matrix/lox/no-facts-vm-verification.json",
+    "sha256": "48e64a1fa1d7fded1de775a4bdc1ad58dd4488bb89482a741ffb166c46e953a0",
+    "candidate_checks": 16,
+    "baseline_checks": 16
+  }
+}

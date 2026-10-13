@@ -1,0 +1,14 @@
+lox verified-release-build passed
+lox verified-release-vm-regressions passed
+lox release-units passed
+lox release-vm-regressions passed
+lox debug-units passed
+lox debug-build passed
+lox debug-vm-regressions passed
+lox optimized-debug-units passed
+lox optimized-debug-build passed
+lox optimized-debug-vm-regressions passed
+lox no-facts-units passed
+lox no-facts-build passed
+lox no-facts-vm-regressions passed
+PASS lox all five checked ownership modes
