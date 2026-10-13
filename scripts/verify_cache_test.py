@@ -96,6 +96,7 @@ class VerificationCoordinator(unittest.TestCase):
         self.after_gate = None
         self.gate_status = None
         self.admissions = []
+        self.revised = []
         self.stack = contextlib.ExitStack()
         self.addCleanup(self.stack.close)
         self.stack.enter_context(patch.object(coordinator, 'CONFIG_INPUTS', ['config.zig', 'build_test_inputs.zig']))
@@ -143,6 +144,12 @@ class VerificationCoordinator(unittest.TestCase):
             self.before_gate()
         if not unchanged():
             return coordinator.RETRY, 0.0
+        if controls.get('revise') is not None:
+            # As the real handshake does: after revalidation, before any work.
+            argv = controls['revise']()
+            self.revised.append(argv)
+            if argv is None:
+                return 0, 0.0
         if kind == 'gate' and self.gate_status is not None:
             return self.gate_status, 0.0
         status = subprocess.run(argv, cwd=root, env=env, stdout=subprocess.PIPE,
@@ -344,6 +351,77 @@ class VerificationCoordinator(unittest.TestCase):
         self.admissions.clear()
         self.assertEqual(self.execute(shared=shared), 0)
         self.assertIn('gate', [kind for kind, _ in self.admissions])
+
+    def unpublish(self, shared, names):
+        """Remove the named actions' successes from both stores, keeping their keys."""
+        keys = self.keys()
+        store = coordinator.fuzz_campaign_store.Store(shared)
+        for name in names:
+            store.discard_success(keys[name])
+            (self.cache / 'actions' / (keys[name] + '.json')).unlink()
+        return keys
+
+    def publish(self, shared, action_key):
+        """Publish a success the way another request's coordinator does."""
+        value = {'version': coordinator.VERSION, 'kind': 'verification-success', 'key': action_key}
+        self.assertTrue(coordinator.fuzz_campaign_store.Store(shared).publish_success(action_key, value, [], lambda: True))
+
+    def test_success_published_while_queued_is_reused_after_admission(self):
+        shared = self.root / '.shared-evidence'
+        self.assertEqual(self.execute(shared=shared), 0)
+        keys = self.unpublish(shared, ['unit', 'docs'])
+        # Another request finishes `unit` while this one waits for its gate slot.
+        self.before_gate = lambda: self.publish(shared, keys['unit'])
+        self.admissions.clear()
+        self.assertEqual(self.execute(shared=shared), 0)
+        self.assertEqual(self.states(), {'unit': 'reused', 'docs': 'execute'})
+        gate = self.events('gate')[-1]['argv']
+        self.assertIn('verification-docs', gate)
+        self.assertNotIn('verification-unit', gate)
+        self.assertNotIn('test', gate)
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertEqual(report['reuse_lookups'], {'pre_queue': 0, 'post_admission': 1})
+        self.assertTrue(report['success'])
+        self.assertEqual(report['profile_coverage']['counts'], {'required': 2, 'reused': 1, 'executed': 1, 'outstanding': 0})
+        self.assertEqual(report['profile_plan']['selected'], ['docs'])
+        unit = next(row for row in report['actions'] if row['id'] == 'unit')
+        self.assertEqual(unit['reason'], 'valid prior success published while queued')
+        self.assertEqual(self.keys(), keys)
+
+    def test_every_action_published_while_queued_withdraws_the_gate(self):
+        shared = self.root / '.shared-evidence'
+        self.assertEqual(self.execute(shared=shared), 0)
+        keys = self.unpublish(shared, ['unit', 'docs'])
+        gates = len(self.events('gate'))
+        self.before_gate = lambda: [self.publish(shared, keys[name]) for name in ('unit', 'docs')]
+        self.revised.clear()
+        self.assertEqual(self.execute(shared=shared), 0)
+        self.assertEqual(self.revised, [None])
+        self.assertEqual(len(self.events('gate')), gates)
+        self.assertEqual(self.states(), {'unit': 'reused', 'docs': 'reused'})
+        report = coordinator.read_record(self.cache / 'last-run.json')
+        self.assertEqual(report['reuse_lookups'], {'pre_queue': 0, 'post_admission': 2})
+        self.assertTrue(report['profile_coverage']['complete_verification'])
+
+    def test_success_for_inputs_changed_while_queued_is_not_reused_after_admission(self):
+        shared = self.root / '.shared-evidence'
+        self.input.write_text('changed')
+        self.assertEqual(self.execute(shared=shared), 0)
+        changed = self.keys()['unit']
+        self.input.write_text('original')
+        self.assertEqual(self.execute(shared=shared), 0)
+        self.unpublish(shared, ['unit'])
+        # While this request queues, its input becomes the content another
+        # request already verified: that success names other inputs than the
+        # ones this request keyed, and the request must not take it.
+        self.before_gate = lambda: self.input.write_text('changed')
+        gates = len(self.events('gate'))
+        self.revised.clear()
+        self.assertEqual(self.execute(shared=shared), coordinator.RETRY)
+        self.assertEqual(self.revised, [])
+        self.assertEqual(len(self.events('gate')), gates)
+        self.assertNotEqual(self.states()['unit'], 'reused')
+        self.assertTrue(coordinator.prior_success(coordinator.fuzz_campaign_store.Store(shared), self.cache, changed))
 
     def test_shared_rejected_publication_is_not_success(self):
         shared = self.root / '.shared-evidence'
@@ -1492,6 +1570,27 @@ class VerificationCoordinator(unittest.TestCase):
         self.assertEqual(list((slots / 'queue-gate').glob('*.wait')), [])
 
 
+
+    def test_real_handshake_runs_the_revised_command_or_nothing(self):
+        slots = self.root / '.slots'
+        slots.mkdir()
+        environment = dict(os.environ, MYLANG_SLOT_DIR=str(slots), MYLANG_GATE_SLOTS='1',
+                           MYLANG_GATE_MEM='0', MYLANG_SLOT_POLL='1', MYLANG_SLOT_SETTLE='0',
+                           MYLANG_TIMING_CPUS='')
+        planned, revised = self.root / '.planned', self.root / '.revised'
+        def touch(path):
+            return [sys.executable, '-c', 'from pathlib import Path; Path(__import__("sys").argv[1]).touch()', str(path)]
+        timings = []
+        with Snapshot(self.root, ['inputs/unit/fixture.txt']) as snapshot:
+            ran = REAL_ADMISSION(self.root, 'gate', touch(planned), environment, snapshot.unchanged,
+                                 timings=timings, revise=lambda: touch(revised))
+            withdrawn = REAL_ADMISSION(self.root, 'gate', touch(planned), environment, snapshot.unchanged,
+                                       timings=timings, revise=lambda: None)
+        self.assertEqual((ran[0], withdrawn[0]), (0, 0))
+        self.assertTrue(revised.exists())
+        self.assertFalse(planned.exists())
+        self.assertEqual([timing['withdrawn'] for timing in timings], [False, True])
+        self.assertEqual(timings[1]['worker_seconds'], 0)
 
     # Path- and environment-free identities (output-keyed verification plan, Lane D).
 

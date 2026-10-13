@@ -217,6 +217,17 @@ def valid_receipt(path: Path, action_key: str) -> bool:
             record == {"version": VERSION, "kind": "verification-success", "key": action_key})
 
 
+def prior_success(shared, cache: Path, action_key: str) -> bool:
+    """Whether a valid success for exactly this action key exists.
+
+    With a shared evidence store open, only its validated success counts (an
+    invalidation marker or a conflict is a miss); without one, the local receipt.
+    """
+    if shared is not None:
+        return shared.load_success(action_key) == {"version": VERSION, "kind": "verification-success", "key": action_key}
+    return valid_receipt(cache / "actions" / (action_key + ".json"), action_key)
+
+
 def save_receipt(path: Path, action_key: str) -> None:
     atomic_record(path, {"version": VERSION, "kind": "verification-success", "key": action_key})
 
@@ -625,8 +636,14 @@ def admitted_child(fd: int) -> int:
 
 def run_admitted(root: Path, kind: str, argv: list[str], env: dict[str, str], unchanged,
                  timings: list[dict] | None = None, *, limits: ProcessLimits | None = None,
-                 log_dir: Path | None = None) -> tuple[int, float]:
-    """Hold the normal slot only for selected work, checking again after queueing."""
+                 log_dir: Path | None = None, revise=None) -> tuple[int, float]:
+    """Hold the normal slot only for selected work, checking again after queueing.
+
+    `revise`, when given, runs once admission is granted and the inputs are
+    revalidated; it returns the command to run instead of `argv`, or None when
+    no work remains (evidence published while queueing covers it), which
+    releases the slot with status 0 and runs nothing.
+    """
     measurement = verification_measurement.current()
     if measurement is not None:
         env = verification_measurement.worker_environment(env)
@@ -664,6 +681,7 @@ def run_admitted(root: Path, kind: str, argv: list[str], env: dict[str, str], un
     admitted_at = None
     validation_seconds = 0.0
     worker_at = None
+    withdrawn = False
     try:
         if logs is not None:
             logs.start(process)
@@ -682,14 +700,19 @@ def run_admitted(root: Path, kind: str, argv: list[str], env: dict[str, str], un
             admitted_at = time.monotonic()
             valid = unchanged()
             validation_seconds = time.monotonic() - admitted_at
-            if valid:
+            if valid and revise is not None:
+                argv = revise()
+                withdrawn = argv is None
+            if valid and not withdrawn:
                 parent.sendall(encoded({"argv": argv, "env": env, "cwd": str(root)}))
                 worker_at = time.monotonic()
             parent.shutdown(socket.SHUT_WR)
         parent.close()
         outcome = wait_owned(process, limits=limits if worker_at is not None else ProcessLimits(),
                              execution_started=worker_at, logs=logs)
-        status = outcome.returncode
+        # A withdrawn request sent the admitted child nothing to run; its
+        # empty-handshake exit status describes no work.
+        status = 0 if withdrawn else outcome.returncode
         ended_at = time.monotonic()
         held = 0.0 if admitted_at is None else ended_at - admitted_at
         if timings is not None:
@@ -699,6 +722,7 @@ def run_admitted(root: Path, kind: str, argv: list[str], env: dict[str, str], un
                             "validation_seconds": validation_seconds,
                             "worker_seconds": 0.0 if worker_at is None else ended_at - worker_at,
                             "observed_held_seconds": held, "elapsed_seconds": ended_at - submitted_at,
+                            "withdrawn": withdrawn,
                             "timed_out": outcome.timed_out, "cancelled": outcome.cancelled,
                             "incomplete": outcome.incomplete,
                             "execution_limits": limits.execution_identity(),
@@ -1357,10 +1381,7 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
             previous = verification_report.read_summary(summary_path)
             summaries[group["id"]] = (summary_path, summary)
             reusable = group["cacheable"] and not force and not unsupported
-            expected_receipt = {"version": VERSION, "kind": "verification-success", "key": action_key}
-            saved = shared.load_success(action_key) if reusable and shared is not None else None
-            hit = reusable and (saved == expected_receipt if shared is not None else
-                                valid_receipt(cache / "actions" / (action_key + ".json"), action_key))
+            hit = reusable and prior_success(shared, cache, action_key)
             state = "reused" if hit else "execute" if reusable else "fresh"
             reason = "valid prior success" if hit else "no valid receipt" if reusable else group["reason"]
             if unsupported:
@@ -1386,6 +1407,9 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
         for row in results:
             if row["state"] != "reused" and row["id"] not in selected_ids:
                 row.update(state="skipped", reason="deferred by partial feedback profile")
+        # Where each reuse was found: before the gate queue, or after admission
+        # (evidence another request published while this one queued).
+        reuse_lookups = {"pre_queue": sum(row["state"] == "reused" for row in results), "post_admission": 0}
         print("verification: profile %s; %d pending, %d selected, %d deferred%s" %
               (profile, len(profile_plan["pending"]), len(selected), len(profile_plan["deferred"]),
                "; heuristic partial selection" if profile_plan["heuristic"] else ""), flush=True)
@@ -1421,14 +1445,36 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                 gate_environment["SELKA_VERIFICATION_TELEMETRY_DIR"] = str(telemetry_directory)
             except OSError:
                 pass  # Diagnostic storage cannot change test selection or verdict.
-            # Force chosen Run steps: an outer miss (tool/environment/ABA) must not
-            # be accidentally satisfied by a weaker, older inner Zig verdict.
-            targets = (plan["required_targets"] if len(selected) == len(groups)
-                       else [group["target"] for group in selected])
-            status, gate_seconds = run_admitted(root, "gate",
-                zig_command(zig, targets, options, rerun=True),
+            rows = {row["id"]: row for row in results}
+
+            def gate_command():
+                # Force chosen Run steps: an outer miss (tool/environment/ABA) must not
+                # be accidentally satisfied by a weaker, older inner Zig verdict.
+                targets = (plan["required_targets"] if len(selected) == len(groups)
+                           else [group["target"] for group in selected])
+                return zig_command(zig, targets, options, rerun=True)
+
+            def recheck_after_admission():
+                # The inputs were revalidated just now, so every key still names
+                # this request's inputs: a success another request published for
+                # one of them while this one queued is this action's evidence.
+                late = {group["id"] for group in selected if rows[group["id"]]["state"] == "execute"
+                        and prior_success(shared, cache, keys[group["id"]])}
+                for name in sorted(late):
+                    rows[name].update(state="reused", reason="valid prior success published while queued",
+                                      invalidation={"status": "policy", "reason": "valid prior success published while queued",
+                                                    "changes": [], "truncated": False,
+                                                    "comparison_scope": rows[name]["invalidation"]["comparison_scope"]})
+                    print("verification: reused %s (published while queued)" % name, flush=True)
+                reuse_lookups["post_admission"] = len(late)
+                selected[:] = [group for group in selected if group["id"] not in late]
+                for field in ("selected", "pending"):
+                    profile_plan[field] = [name for name in profile_plan[field] if name not in late]
+                return gate_command() if selected else None
+
+            status, gate_seconds = run_admitted(root, "gate", gate_command(),
                 gate_environment, lambda: check_all(snapshots), timings=admissions,
-                limits=gate_limits, log_dir=cache / "last-logs/gate")
+                limits=gate_limits, log_dir=cache / "last-logs/gate", revise=recheck_after_admission)
         validation_started = time.monotonic()
         stable = check_all(snapshots)
         phases["final_validation_seconds"] = time.monotonic() - validation_started
@@ -1517,7 +1563,7 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
         report = {"version": REPORT_VERSION, "success": report_status == 0, "status": report_status,
                   "long_qualification": None if qualification_run is None else qualification_run.report(),
                   "selected_success": status == 0, "profile_plan": profile_plan, "profile_coverage": profile_coverage,
-                  "actions": results, "inputs_stable": stable,
+                  "actions": results, "inputs_stable": stable, "reuse_lookups": reuse_lookups,
                   "stability_diagnostics": stability_diagnostics(snapshots) if not stable or status == RETRY else None,
                   "component_sources": common.get("component_sources"),
                   "action_metadata": plan["action_metadata"],
