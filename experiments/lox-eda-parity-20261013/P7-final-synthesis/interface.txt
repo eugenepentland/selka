@@ -1,0 +1,14 @@
+usage: synthesize.py [-h] --root ROOT [--attempt ATTEMPT] --output OUTPUT
+                     [--manifest MANIFEST]
+                     [--compilation-receipt COMPILATION_RECEIPT]
+
+Read-only synthesis of a completed parity report; outputs belong to this
+worker.
+
+options:
+  -h, --help            show this help message and exit
+  --root ROOT
+  --attempt ATTEMPT
+  --output OUTPUT
+  --manifest MANIFEST
+  --compilation-receipt COMPILATION_RECEIPT
