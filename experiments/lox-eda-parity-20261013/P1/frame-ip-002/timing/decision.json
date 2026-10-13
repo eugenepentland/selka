@@ -1,0 +1,8 @@
+{
+  "selection": "reject for adoption in this round; C2 unchanged",
+  "reason": "modest fib improvement; noisy subpercent invocation; targeted equality both censored, no exact relative result; broader VM cells unmeasured",
+  "completed_measured_runs": 63,
+  "actual_censor_events": 2,
+  "source_adopted": false,
+  "extra_experiments": false
+}

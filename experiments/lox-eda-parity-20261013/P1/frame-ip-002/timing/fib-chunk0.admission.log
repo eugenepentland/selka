@@ -1,0 +1,45 @@
+build-slot: FIFO ticket 1458, position 1; draining active work (build1.lock); waiting (0s so far)
+build-slot: FIFO ticket 1458, position 1; draining active work (build1.lock); waiting (61s so far)
+build-slot: FIFO ticket 1458, position 1; draining active work (gate1.lock); waiting (121s so far)
+build-slot: FIFO ticket 1458, position 1; draining active work (gate1.lock); waiting (181s so far)
+build-slot: FIFO ticket 1458, position 1; draining active work (gate1.lock); waiting (241s so far)
+build-slot: FIFO ticket 1458, position 1; draining active work (gate1.lock); waiting (301s so far)
+build-slot: timing slot 1, FIFO ticket 1458 after 347s
+{
+  "zig-fast": {
+    "seconds": {
+      "median": 0.623354938,
+      "min": 0.617986858,
+      "max": 0.635016079,
+      "samples": [
+        0.623354938,
+        0.617986858,
+        0.635016079
+      ]
+    }
+  },
+  "c2": {
+    "seconds": {
+      "median": 1.285560234,
+      "min": 1.281839737,
+      "max": 1.300030175,
+      "samples": [
+        1.300030175,
+        1.281839737,
+        1.285560234
+      ]
+    }
+  },
+  "ip-only": {
+    "seconds": {
+      "median": 1.258438345,
+      "min": 1.255580931,
+      "max": 1.268393012,
+      "samples": [
+        1.268393012,
+        1.258438345,
+        1.255580931
+      ]
+    }
+  }
+}

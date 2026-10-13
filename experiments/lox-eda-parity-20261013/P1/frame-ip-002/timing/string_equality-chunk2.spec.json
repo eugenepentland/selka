@@ -1,0 +1,38 @@
+{
+  "case": "vm-string_equality-frame-ip-only",
+  "oracle": "zig-fast",
+  "arms": {
+    "zig-fast": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-fast",
+      "--engine=vm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+    ],
+    "c2": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/lox/zero-rc",
+      "--engine=vm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+    ],
+    "ip-only": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/frame-ip-002/candidate-lox",
+      "--engine=vm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+    ]
+  },
+  "files": [
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/expected/string_equality.vm.out",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/measure.py",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/frame-ip-002/identity.json"
+  ],
+  "expected_stdout": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/expected/string_equality.vm.out",
+  "relative_timeout_arms": [
+    "c2",
+    "ip-only"
+  ],
+  "identity_dirs": [
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/frame-ip-002/baseline/lox",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/frame-ip-002/candidate/lox"
+  ],
+  "variant": "C2-only checked scalar-IP publication; older rejected IP trial kept separate",
+  "prior_receipt": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/frame-ip-002/diagnostic-results/string_equality-chunk1.json"
+}
