@@ -1,0 +1,60 @@
+build-slot: FIFO ticket 1302, position 2; earlier timing tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 1302, position 2; earlier timing tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 1302, position 2; earlier timing tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 1302, position 2; earlier timing tickets must run first; waiting (180s so far)
+build-slot: FIFO ticket 1302, position 2; earlier timing tickets must run first; waiting (240s so far)
+build-slot: FIFO ticket 1302, position 2; earlier timing tickets must run first; waiting (301s so far)
+build-slot: FIFO ticket 1302, position 2; earlier timing tickets must run first; waiting (361s so far)
+build-slot: FIFO ticket 1302, position 2; earlier timing tickets must run first; waiting (421s so far)
+build-slot: FIFO ticket 1302, position 1; waiting for memory-accounting settle delay or another measurement; waiting (481s so far)
+build-slot: timing slot 1, FIFO ticket 1302 after 506s
+{
+  "zig-fast": {
+    "seconds": {
+      "median": 0.097120944,
+      "min": 0.096785762,
+      "max": 0.098374669,
+      "samples": [
+        0.097120944,
+        0.098374669,
+        0.096785762
+      ]
+    }
+  },
+  "c1": {
+    "seconds": {
+      "median": 0.118837594,
+      "min": 0.118405657,
+      "max": 0.119252042,
+      "samples": [
+        0.118405657,
+        0.119252042,
+        0.118837594
+      ]
+    }
+  },
+  "call-env-only": {
+    "seconds": {
+      "median": 0.116243741,
+      "min": 0.115379611,
+      "max": 0.117737218,
+      "samples": [
+        0.115379611,
+        0.117737218,
+        0.116243741
+      ]
+    }
+  },
+  "getter-only": {
+    "seconds": {
+      "median": 0.113905878,
+      "min": 0.113317635,
+      "max": 0.11495579,
+      "samples": [
+        0.11495579,
+        0.113905878,
+        0.113317635
+      ]
+    }
+  }
+}
