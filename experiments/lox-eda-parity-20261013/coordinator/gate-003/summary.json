@@ -1,0 +1,13 @@
+{
+  "status": "passed",
+  "inputs_stable": true,
+  "compiler_source_commit": "42a93ae15b0990778379066475d3b803a596cf07",
+  "compiler_sha256": "6c3e20ff94dcfdbe6c47e8d8bd5ec14b6a32cf3d35e9c3be17c253db1626d9df",
+  "reused_actions": 12,
+  "selected_actions": 34,
+  "build_steps_passed": 127,
+  "tests_passed": 3140,
+  "shard_skips": 27250,
+  "tests_failed": 0,
+  "note": "Full verification coordinator ran directly and owned admission. Shard skips are test partitioning, not omitted supported cases. Full action receipts remain in last-run.json."
+}

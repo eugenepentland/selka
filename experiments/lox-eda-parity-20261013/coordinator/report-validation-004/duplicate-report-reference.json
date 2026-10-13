@@ -1,0 +1,10 @@
+{
+  "local_raw_report_retained": true,
+  "sha256": "5f069e3f1532fc6151df0ccc565555b05a128ee1f0011279e3d0f396c4fbedf6",
+  "bytes": 172853748,
+  "archive": "../../archives/runtime-004.tar.xz",
+  "archive_sha256": "37880c8af762b3470f810cdd927bc1ebe37567d1fdc80c0a531d33251b624ce6",
+  "member": "parity-report.json",
+  "verification_receipt": "../../archives/runtime-004.json",
+  "reason": "Avoid committing a duplicate 172853748-byte generated report. Its full content is in the verified archive, and the plain local copy remains available. No evidence is discarded."
+}

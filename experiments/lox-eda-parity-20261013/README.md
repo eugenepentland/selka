@@ -1,10 +1,59 @@
 # Lox/EDA individual Zig parity work
 
-Implementation and qualification are in progress. The caller-destination
-regression found by the C3 full gate is corrected, with all 16 focused
-regressions passing. The fourth compiler candidate must now pass the combined
-application matrices and full gate before final measurement. C3 timing requests
-were cancelled before admission. Individual parity remains unestablished.
+The implementation passes the complete verification gate and both application
+qualification matrices. The final 60-case comparison is validated. Runtime is
+19.2% lower for EDA, 26.7% lower for tree Lox and 23.8% lower for VM Lox than
+the freshly measured previous checked version, using completed matched cases.
+Individual Zig parity remains open: one of 60 application cases reaches parity,
+58 finish above Zig and VM string equality reaches the three-times-Zig cutoff.
+All six text microbenchmarks remain below Zig ReleaseFast.
+
+| Group | Complete / total | Runtime / Zig | Runtime change from previous | RSS / Zig | RSS change from previous |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| EDA | 34/34 | 1.336× | −19.2% | 0.444× | −0.4% |
+| Tree Lox | 13/13 | 1.175× | −26.7% | 2.225× | −7.1% |
+| VM Lox | 12/13 | 1.806× | −23.8% | 3.025× | −2.1% |
+
+These are geometric means of ratios of per-case medians, with nine alternating
+runtime rounds and three separate RSS rounds. They describe the combined compiler
+and application changes. The censored case has no invented runtime ratio.
+Tree invocation is the sole application parity pass. All 59 candidate and 59
+previous-version counted executions have zero RC events and zero exit-live
+managed bytes. RSS is process memory; it is not managed peak memory.
+
+[Every application case](coordinator/runtime-004-summary/cases.md),
+[machine-readable results](coordinator/runtime-004-summary/cases.csv),
+[microbenchmarks versus Zig/Rust/Go](P7-micro-final-004/REPORT.md), and
+[validation receipt](coordinator/report-validation-004/validation.json)
+preserve the individual results and their identities. Background analysis and
+filesystem work overlapped some application measurements; the explicit bounds
+are recorded in [measurement context](coordinator/measurement-context-004.json).
+These are observations from one host, not a claim of a completely quiescent system.
+The [paired regression review](P1/runtime-004-regression-screen/handoff.md)
+finds that all 531 completed candidate/previous pairs favor the candidate.
+Five cases have possible background-work overlap; exact effect sizes remain
+subject to the recorded sample ranges. No sample was excluded or rerun.
+The complete 4,002-file runtime attempt is preserved and verified in
+`archives/runtime-004.tar.xz`; `archives/runtime-004.json` pins every member.
+
+Separate instrumented managed-memory changes from the previous checked version:
+
+| Group | Matched cases | Allocation count | Cumulative allocated bytes | Peak live managed bytes |
+| --- | ---: | ---: | ---: | ---: |
+| EDA | 34 | −43.3% | −30.8% | −1.8% |
+| Tree Lox | 13 | −59.3% | −66.8% | −8.1% |
+| VM Lox | 12 | −62.9% | −62.5% | −2.4% |
+
+These are geometric means of positive per-case ratios, not total-byte savings.
+The [final evidence synthesis](P7-final-synthesis/handoff-004.md) retains copy
+traffic, allocator movement, raw counters and compilation observations separately.
+Three cold/warm compilation pairs were collected for each application. Median
+cold build times were about 2.95 seconds for Lox and 12.13 seconds for EDA,
+against 2.88 and 12.22 seconds previously. Warm replay was about 10–22 ms and
+is too small and noisy for a speedup claim. Compilation RSS is GNU time's maximum
+for the command and its waited children, not a summed simultaneous process-tree
+peak. The production changes, qualification and evidence remain on the local
+integration branch; this batch does not advance or push main/development.
 
 The target is each of the existing 60 cases at or below Zig ReleaseFast runtime:
 13 Lox tree cases, 13 Lox VM cases and 34 EDA cases. A favorable aggregate does
@@ -26,8 +75,8 @@ separate worktrees, shared build admission and the requested Sol 6.1 low effort.
 
 `run.json` records current milestone status. Worker handoffs preserve exact
 source/compiler identities, commands, successful and failed checks, and pending
-measurements. The integrated compiler still requires qualification; worker
-passes do not replace the combined application matrices or full gate.
+measurements. C4 has passed the combined application matrices and full gate;
+the final performance results above show the remaining parity gaps.
 
 Integrated source changes include borrowed EDA parsing and routing inputs,
 fresh Lox constructors, and owned payload exchange in the heap setters. The
@@ -45,7 +94,7 @@ conformance executions across three source/mode controls, 102 EDA golden output
 sets and nine error cases. Its selected guest LLVM and native symbol audits
 also passed. Its full verification run failed on fixture formatting, a diagnostic
 oracle spelling list and a counted-test output escaping its temporary directory.
-Those fixes are integrated; a fresh complete gate remains required.
+Those fixes are integrated and covered by the passing C4 gate.
 
 The second frozen source snapshot is `source-002/`. It adds scalar-IP VM readers,
 fresh call-environment construction, simpler checked getter control flow,
@@ -66,8 +115,8 @@ Each uses nine matched pairs against its recorded control. These results are
 not added together or relabeled as measurements of the combined second candidate.
 The third source snapshot, `source-003/`, is now frozen with additional borrowed
 EDA decision and construction helpers. The bounded VM inliner, compact aligned
-return transport and worklist initialization changes are integrated; their
-combined compiler and application qualification remain pending. The numeric
+return transport and worklist initialization changes are integrated and qualified
+on C4, including the return-construction correction described below. The numeric
 dispatch prototype removed a native helper call but showed no reliable runtime
 benefit in nine matched pairs on each of three workloads; it is not adopted.
 The scalar scanner prototype also remains out: despite passing differential
@@ -109,7 +158,7 @@ Both C2 applications have passed primary qualification. EDA additionally passed
 all five build modes with 328 tests each, 102 golden output sets and nine error
 cases. Lox has 103 passing tests, all three conformance controls and the GC/CLI
 checks; all five modes also passed with 103 tests each. The selected C2 guest LLVM and
-native symbol audits pass. The full compiler verification gate remains open.
+native symbol audits pass. C4 subsequently passed the full compiler verification gate.
 
 ## Reproduction and measurement
 
@@ -182,3 +231,42 @@ failed steps: fixture formatting and one CE2 zero-copy return-construction
 regression. The latter is a real preservation requirement, not an assertion to
 weaken. No C3 runtime or compilation measurement started; the queued requests
 were cancelled and their preparation is retained under `attempts/runtime-003/`.
+
+## Qualified C4 implementation
+
+The measured compiler source revision is
+`42a93ae15b0990778379066475d3b803a596cf07`; its binary SHA-256 is
+`6c3e20ff94dcfdbe6c47e8d8bd5ec14b6a32cf3d35e9c3be17c253db1626d9df`.
+Application sources are the unchanged `source-003/` snapshot. The complete
+installed compiler and component identities are recorded in
+`coordinator/common-004/build-receipt.json`.
+
+The C3 return-construction regression is fixed by retaining nominal return
+layout when a transported field needs a memory home. Small eligible returns
+still use compact transport. The original CE2 zero-copy assertions are preserved;
+the three affected helpers return to zero intermediate copies. Direct, indirect,
+non-fused, narrow and managed return paths have focused regression coverage.
+
+The complete registered verification gate passed: 127/127 steps, 3,140 tests
+passed and zero failed, with 12 reused and 34 selected actions. Its 27,250 shard
+skips are test partitioning. Inputs remained stable. Gate and Guardian evidence
+is in `coordinator/gate-003/`.
+
+Both applications passed again on this exact compiler: 103 Lox tests and 328
+EDA tests in each of five modes, all three Lox conformance controls, GC/CLI
+checks, 102 EDA golden output sets, nine EDA error cases and 50 additional
+fresh EDA helper checks. The selected guest LLVM/native/counting audits also
+passed. See `coordinator/native-004/` and the verified
+`archives/native-004.tar.xz`. These guest audits do not claim that the entire
+installed package or its historical bootstrap boundary is RC-free.
+
+The final campaign uses `attempts/runtime-004/`: all 60 application cases, separate
+instrumented counters, three cold/warm compilation pairs per application and
+six text microbenchmarks. Report validation passed all 5,340,213 expected identity
+checks across 1,882 distinct artifacts. The wrapper intentionally published its
+report into its own output directory; the coordinator corrected a summary-path
+assumption by copying that validated report byte for byte into the attempt.
+The initial failed summary command and successful recovery are preserved in
+`coordinator/runtime-004-finalization/`; no measurement was rerun or replaced.
+The earlier C1 and isolated experiment results below the final table
+remain historical comparisons and are never relabeled as C4 measurements.

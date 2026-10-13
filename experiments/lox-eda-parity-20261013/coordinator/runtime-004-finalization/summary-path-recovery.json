@@ -1,0 +1,8 @@
+{
+  "reason": "The validation wrapper deliberately publishes into its output directory, preserving the attempt. The finalization driver incorrectly expected automatic publication into the attempt. No measurement or validation rerun was needed.",
+  "source": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/coordinator/report-validation-004/parity-report.json",
+  "destination": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-004/parity-report.json",
+  "sha256": "5f069e3f1532fc6151df0ccc565555b05a128ee1f0011279e3d0f396c4fbedf6",
+  "validation_receipt": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/coordinator/report-validation-004/validation.json",
+  "byte_identical": true
+}

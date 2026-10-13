@@ -1,0 +1,27 @@
+{
+  "status": "passed",
+  "compiler_source_commit": "42a93ae15b0990778379066475d3b803a596cf07",
+  "compiler_sha256": "6c3e20ff94dcfdbe6c47e8d8bd5ec14b6a32cf3d35e9c3be17c253db1626d9df",
+  "source_snapshot": "source-003",
+  "five_mode_unit_counts": {
+    "lox": 103,
+    "eda": 328
+  },
+  "mode_names": [
+    "verified-release",
+    "release",
+    "debug",
+    "optimized-debug",
+    "no-facts"
+  ],
+  "Lox_conformance_controls": 3,
+  "Lox_conformance_executions_per_control": 974,
+  "Lox_GC_and_CLI": "passed",
+  "EDA_golden_output_sets": 102,
+  "EDA_error_cases": 9,
+  "private_EDA_contract_executions": 50,
+  "selected_guest_ABI_audit": "passed",
+  "full_gate": "coordinator/gate-003/summary.json",
+  "archive": "archives/native-004.json",
+  "measurement_status": "runtime004, compile004 and six micros in progress; no parity completion claim"
+}

@@ -1,0 +1,66 @@
+# All-case comparison
+
+Ratios of per-arm medians. Negative percent changes mean less time or RSS. Group geometric means use only completed matched pairs; denominators and incomplete cases remain explicit. Managed metrics are separate instrumented observations. RSS is process maximum, not managed peak.
+
+| Case | Status | Runtime / Zig | Runtime change from previous | RSS / Zig |
+| --- | --- | ---: | ---: | ---: |
+| eda-Cyclops-Flex | ok | 1.117× | -21.182% | 0.502× |
+| eda-adf5901 | ok | 1.222× | -21.947% | 0.489× |
+| eda-barracuda | ok | 1.365× | -19.267% | 0.316× |
+| eda-barracuda-base | ok | 1.399× | -19.012% | 0.331× |
+| eda-barracuda-via-fence | ok | 1.387× | -19.070% | 0.342× |
+| eda-black-canyon | ok | 1.173× | -20.691% | 0.321× |
+| eda-black-canyon+flat | ok | 1.217× | -20.790% | 0.451× |
+| eda-blinky-breakout | ok | 1.466× | -8.045% | 1.462× |
+| eda-cyclops-analog | ok | 1.404× | -20.868% | 0.378× |
+| eda-cyclops-analog+no-vendor-symbols | ok | 1.541× | -18.149% | 0.448× |
+| eda-cyclops-breakout | ok | 1.221× | -22.343% | 0.464× |
+| eda-cyclops-digital-pcb | ok | 1.582× | -18.601% | 0.724× |
+| eda-cyclops-interposer | ok | 1.226× | -20.229% | 0.355× |
+| eda-cyclops-kband | ok | 1.429× | -18.901% | 0.379× |
+| eda-cyclops-kband-breakout | ok | 1.236× | -19.990% | 0.341× |
+| eda-cyclops-kband-pcb | ok | 1.380× | -16.556% | 0.566× |
+| eda-cyclops-xband-sip | ok | 1.278× | -21.350% | 0.401× |
+| eda-dual-flash | ok | 1.203× | -20.776% | 0.503× |
+| eda-labstation | ok | 1.403× | -18.775% | 0.318× |
+| eda-labstation+no-vendor-symbols | ok | 1.480× | -15.736% | 0.390× |
+| eda-lmk05318b-clock | ok | 1.322× | -19.690% | 0.482× |
+| eda-max860-inverter | ok | 1.169× | -21.218% | 0.539× |
+| eda-poe-pd-flyback-tps23757 | ok | 1.193× | -20.788% | 0.429× |
+| eda-rds3 | ok | 1.491× | -18.157% | 0.271× |
+| eda-rds3+flat | ok | 1.567× | -15.217% | 0.796× |
+| eda-rds3-rf-selector | ok | 1.156× | -21.123% | 0.496× |
+| eda-remora-base | ok | 1.393× | -19.401% | 0.393× |
+| eda-remora-rf | ok | 1.375× | -18.100% | 0.377× |
+| eda-rf-switch-8way | ok | 1.259× | -20.100% | 0.491× |
+| eda-rf-switch-eval | ok | 1.253× | -20.806% | 0.469× |
+| eda-stm32n6 | ok | 1.559× | -18.036% | 0.397× |
+| eda-straps | ok | 1.373× | -18.762% | 0.367× |
+| eda-straps-base | ok | 1.535× | -17.354% | 0.563× |
+| eda-w55rp20 | ok | 1.284× | -19.534% | 0.457× |
+| tree-binary_trees | ok | 1.278× | -33.052% | 1.839× |
+| tree-closures | ok | 1.213× | -30.997% | 2.276× |
+| tree-equality | ok | 1.272× | -6.768% | 2.273× |
+| tree-fib | ok | 1.086× | -27.002% | 2.511× |
+| tree-instantiation | ok | 1.059× | -35.659% | 2.446× |
+| tree-invocation | ok | 0.989× | -29.202% | 2.300× |
+| tree-method_call | ok | 1.219× | -29.887% | 2.313× |
+| tree-properties | ok | 1.103× | -28.869% | 2.317× |
+| tree-string_equality | ok | 1.437× | -26.125% | 2.759× |
+| tree-strings | ok | 1.277× | -13.810% | 2.358× |
+| tree-trees | ok | 1.257× | -22.288% | 1.304× |
+| tree-zoo | ok | 1.083× | -28.364% | 2.313× |
+| tree-zoo_batch | ok | 1.080× | -30.433% | 2.319× |
+| vm-binary_trees | ok | 1.658× | -40.373% | 1.269× |
+| vm-closures | ok | 1.634× | -13.432% | 2.366× |
+| vm-equality | ok | 1.836× | -24.074% | 4.000× |
+| vm-fib | ok | 1.818× | -21.640% | 3.773× |
+| vm-instantiation | ok | 1.702× | -26.907% | 2.564× |
+| vm-invocation | ok | 2.178× | -15.525% | 4.097× |
+| vm-method_call | ok | 1.873× | -32.945% | 4.097× |
+| vm-properties | ok | 1.847× | -19.258% | 4.102× |
+| vm-string_equality | relative_timeout | — | — | — |
+| vm-strings | ok | 1.689× | -19.787% | 4.000× |
+| vm-trees | ok | 1.738× | -27.966% | 1.151× |
+| vm-zoo | ok | 1.889× | -18.962% | 3.994× |
+| vm-zoo_batch | ok | 1.877× | -20.253% | 4.000× |

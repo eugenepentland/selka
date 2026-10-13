@@ -1,7 +1,7 @@
 {
   "baseline_commit": "53dd221c3ccd6f1b69fae75a08873fc381fe0012",
   "scope": "All 60 Lox tree/VM and EDA cases; individual runtime target <= Zig ReleaseFast",
-  "status": "C4 caller-destination correction integrated; common004 build and qualification pending",
+  "status": "Implementation integrated and qualified; all measurements validated; individual Zig parity remains open (1/60 passes).",
   "constraints": [
     "checked ownership",
     "same outputs and inputs",
@@ -21,9 +21,10 @@
   },
   "seed_commit": "2525a66f61838086f5327d74db7412926ce4a221",
   "milestones": {
-    "implementation": "All planned changes integrated with compact-return eligibility corrected to retain CE2 caller-destination wins. Sixteen focused regressions and Guardian pass; combined C4 qualification pending.",
-    "individual_parity": "C1:0/60. C3 runtime/compile003 cancelled while queued before any measurement; no C3 parity result.",
-    "verification": "C3 application matrices/ABI audit passed. Full registered gate002 failed two steps: formatting (fixed) and CE2 no-copy return construction (P4 fix in progress). Inputs stable;12reused/34selected."
+    "implementation": "Implemented and integrated; both applications qualified in all five modes, private helper contracts and selected guest ABI checks passed.",
+    "individual_parity": "Not achieved: 1/60 application cases at or below Zig ReleaseFast; 59 completed and VM string equality censored. All six text microbenchmarks remain below Zig ReleaseFast.",
+    "verification": "PASS: complete registered gate003, stable inputs, 127/127 steps, 3,140 passed and 0 failed, 12 reused and 34 selected actions; normal Guardian requirements passed.",
+    "performance_evidence": "Complete: all 60 cases retained, 59 complete matched runtime/RSS pairs, 118 clean counted executions, six microbenchmarks and 36 compilation observations. Individual parity is 1/60 and remains unmet."
   },
   "harness_checks": {
     "timeout_tests": 8,
@@ -31,23 +32,24 @@
     "recovered_identical_lox_corpus_files": 254,
     "profile_status": "P2 native CPU profile and P5 leaf profile completed; attribution limitations recorded in their evidence"
   },
-  "updated_utc": "2026-10-13T09:15:08.503449+00:00",
+  "updated_utc": "2026-10-13T10:26:41.508898+00:00",
   "candidate": {
     "source_root": "source-003",
-    "compiler_source_commit": "91f5b5d3010893e7642a8fbee90fa910aa7fabab",
-    "compiler_sha256": "6842cc711ca6f6eadf2967a76ca60f57044ec06e0c9c2cf15b2834fd3cdebbaf",
-    "native_attempt": "native-003",
-    "next_compiler": "common-004 build pending"
+    "compiler_source_commit": "42a93ae15b0990778379066475d3b803a596cf07",
+    "compiler_sha256": "6c3e20ff94dcfdbe6c47e8d8bd5ec14b6a32cf3d35e9c3be17c253db1626d9df",
+    "native_attempt": "native-004",
+    "runtime_attempt": "runtime-004"
   },
-  "current_followups": {
-    "coordinator": "Freeze common004, native004/five-mode/fullgate qualification, all60 comparisons and compilation metrics.",
-    "P3/P5": "Requalify private EDA helpers on exact common004.",
-    "P4/P6": "Fresh common004 six-micro build/qualification; reviewed bounded timing wrapper; no timing until finalgate passes."
-  },
+  "current_followups": {},
   "evidence_archives": {
     "native-001": "archives/native-001.json",
     "native-002": "archives/native-002.json",
     "runtime-001": "archives/runtime-001.json",
-    "native-003": "archives/native-003.json"
-  }
+    "native-003": "archives/native-003.json",
+    "native-004": "archives/native-004.json",
+    "runtime-004": "archives/runtime-004.json"
+  },
+  "final_summary": "coordinator/runtime-004-summary/summary.json",
+  "final_report_sha256": "5f069e3f1532fc6151df0ccc565555b05a128ee1f0011279e3d0f396c4fbedf6",
+  "results": "results.json"
 }

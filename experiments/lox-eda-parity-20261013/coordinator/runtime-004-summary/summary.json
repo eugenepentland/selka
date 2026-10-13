@@ -1,0 +1,137 @@
+{
+  "report": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-004/parity-report.json",
+  "report_sha256": "5f069e3f1532fc6151df0ccc565555b05a128ee1f0011279e3d0f396c4fbedf6",
+  "harness_sha256": "7adc02acc09ae9f320784dcd2c6574f49df9b74f615913a4c15d18a74f5db40d",
+  "all_cases_pass": false,
+  "groups": {
+    "eda": {
+      "denominator": 34,
+      "parity_pass": 0,
+      "candidate_incomplete": [],
+      "before_incomplete": [],
+      "wall_seconds_over_zig": {
+        "pairs": 34,
+        "ratio": 1.3363185229363184
+      },
+      "wall_seconds_over_before": {
+        "pairs": 34,
+        "ratio": 0.8082756212772485
+      },
+      "rss_kib_over_zig": {
+        "pairs": 34,
+        "ratio": 0.4442863650933986
+      },
+      "rss_kib_over_before": {
+        "pairs": 34,
+        "ratio": 0.9955575305550982
+      },
+      "compiler_change_ratio": {
+        "pairs": 34,
+        "ratio": 0.9737268588476313
+      },
+      "application_source_change_ratio": {
+        "pairs": 34,
+        "ratio": 0.8300845498231525
+      }
+    },
+    "tree": {
+      "denominator": 13,
+      "parity_pass": 1,
+      "candidate_incomplete": [],
+      "before_incomplete": [],
+      "wall_seconds_over_zig": {
+        "pairs": 13,
+        "ratio": 1.1748903079838802
+      },
+      "wall_seconds_over_before": {
+        "pairs": 13,
+        "ratio": 0.732932102692379
+      },
+      "rss_kib_over_zig": {
+        "pairs": 13,
+        "ratio": 2.2250828694749667
+      },
+      "rss_kib_over_before": {
+        "pairs": 13,
+        "ratio": 0.9291864787098183
+      },
+      "compiler_change_ratio": {
+        "pairs": 13,
+        "ratio": 0.9552872243957281
+      },
+      "application_source_change_ratio": {
+        "pairs": 13,
+        "ratio": 0.7672374171611046
+      }
+    },
+    "vm": {
+      "denominator": 13,
+      "parity_pass": 0,
+      "candidate_incomplete": [
+        "vm-string_equality"
+      ],
+      "before_incomplete": [
+        "vm-string_equality"
+      ],
+      "wall_seconds_over_zig": {
+        "pairs": 12,
+        "ratio": 1.806439566078112
+      },
+      "wall_seconds_over_before": {
+        "pairs": 12,
+        "ratio": 0.7620205199505853
+      },
+      "rss_kib_over_zig": {
+        "pairs": 12,
+        "ratio": 3.0253508364614925
+      },
+      "rss_kib_over_before": {
+        "pairs": 12,
+        "ratio": 0.9787459332828722
+      },
+      "compiler_change_ratio": {
+        "pairs": 12,
+        "ratio": 1.0096843236276194
+      },
+      "application_source_change_ratio": {
+        "pairs": 12,
+        "ratio": 0.7547116481048044
+      }
+    },
+    "all": {
+      "denominator": 60,
+      "parity_pass": 1,
+      "candidate_incomplete": [
+        "vm-string_equality"
+      ],
+      "before_incomplete": [
+        "vm-string_equality"
+      ],
+      "wall_seconds_over_zig": {
+        "pairs": 59,
+        "ratio": 1.3810732458956052
+      },
+      "wall_seconds_over_before": {
+        "pairs": 59,
+        "ratio": 0.7816110576532315
+      },
+      "rss_kib_over_zig": {
+        "pairs": 59,
+        "ratio": 0.936002770170455
+      },
+      "rss_kib_over_before": {
+        "pairs": 59,
+        "ratio": 0.9771469667623104
+      },
+      "compiler_change_ratio": {
+        "pairs": 59,
+        "ratio": 0.9768113849346456
+      },
+      "application_source_change_ratio": {
+        "pairs": 59,
+        "ratio": 0.8001657942444291
+      }
+    }
+  },
+  "method": "Ratios of per-arm medians. Negative percent changes mean less time or RSS. Group geometric means use only completed matched pairs; denominators and incomplete cases remain explicit. Managed metrics are separate instrumented observations. RSS is process maximum, not managed peak."
+}

@@ -1,0 +1,11 @@
+{
+  "count_returncode": 0,
+  "report_validation_returncode": 0,
+  "initial_summary_returncode": 1,
+  "initial_summary_failure": "Expected report in attempt; validator intentionally published to its output directory.",
+  "recovery": "Copied validated report byte for byte to attempt, then reran only summary rendering.",
+  "summary_returncode_after_recovery": 0,
+  "report_sha256": "5f069e3f1532fc6151df0ccc565555b05a128ee1f0011279e3d0f396c4fbedf6",
+  "summary_sha256": "28c8d3d1941a3b0da3b7761ce27820cd297004b76b8baae546751050cbf58ad4",
+  "all_measurement_and_validation_steps_complete": true
+}

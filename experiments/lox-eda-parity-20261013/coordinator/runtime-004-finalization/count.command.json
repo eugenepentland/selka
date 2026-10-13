@@ -1,0 +1,20 @@
+[
+  "/usr/bin/python3",
+  "-B",
+  "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/pipeline.py",
+  "count",
+  "--root",
+  "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012",
+  "--compiler",
+  "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-004/install/bin/mylang",
+  "--install",
+  "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-004/install",
+  "--attempt",
+  "runtime-004",
+  "--prior-root",
+  "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012",
+  "--lox-build",
+  "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/native-004/build/lox/build-receipt.json",
+  "--eda-build",
+  "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/native-004/build/eda/build-receipt.json"
+]

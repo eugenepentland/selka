@@ -1,0 +1,21 @@
+{
+  "scope": "Final C4 application runtime measurement limitations",
+  "admission": "Native builds, gates and benchmark jobs use shared admission. This is not isolation from every host process or read-only analysis.",
+  "coordinator_search": {
+    "activity": "Broad read-only rg file search across sibling worktrees, subsequently terminated",
+    "admitted": false,
+    "cpu_affinity": "Default process affinity; not separately pinned",
+    "conservative_start_utc": "2026-10-13T09:35:01Z",
+    "conservative_end_utc": "2026-10-13T09:36:06Z",
+    "bounds_source": "Adjacent coordinator clock observations; exact process timestamps were not logged"
+  },
+  "worker_analysis_and_archive": {
+    "evidence": "../P7-micro-final-004/concurrent-analysis-context.json",
+    "admitted": false,
+    "cpu_affinity": [0],
+    "own_micro_measurements_finished_first": true,
+    "application_overlap_possible": true
+  },
+  "other_activity": "Lightweight coordinator progress polling and report preparation occurred during collection.",
+  "interpretation": "CPU affinity does not eliminate shared cache, memory or filesystem effects. Preserve all samples and censors. Review matched ranges and overlap in the final regression screen; do not describe these observations as a completely quiescent host or attribute small differences to one implementation change."
+}

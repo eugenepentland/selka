@@ -1,0 +1,7 @@
+{
+  "source_archive": "../../archives/runtime-004.tar.xz",
+  "source_member": "summary/cases.csv",
+  "raw_sha256": "e4a72be86f8b471fde6fb75ab929cd429143f9c1820dfc3951534f072c8ae4b9",
+  "view_sha256": "947b009737e3aef06e799caf24e43d126869f715c208b96f2f4ff81c9447c5ad",
+  "transformation": "CRLF to LF in the readable coordinator CSV copy only; parsed cells are identical. Archived source CSV is unchanged."
+}

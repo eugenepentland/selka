@@ -1,0 +1,7 @@
+{
+  "initial_error": "Guardian GitSpawnFailed while analyzing the staged diff",
+  "cause": "The staged duplicate generated report alone exceeded Guardian's 64 MiB Git-output read ceiling.",
+  "recovery": "Retain the complete raw report in its verified archive and local ignored copy; track the SHA-256/archive reference. Retry the unchanged normal Guardian hook.",
+  "guardian_rules_changed": false,
+  "compiler_inputs_changed": false
+}

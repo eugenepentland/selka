@@ -1,0 +1,13 @@
+build-slot: gate slot 1, FIFO ticket 526 after 0s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 18 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10675 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: git-dependent analysis failed for ./.guardian/benchmarks.txt (GitSpawnFailed) — see the git diagnostic above
+Traceback (most recent call last):
+  File "<stdin>", line 10, in <module>
+  File "/usr/lib/python3.14/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['git', 'commit', '-m', 'Record qualified parity implementation and complete C4 comparisons']' returned non-zero exit status 1.

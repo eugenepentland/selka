@@ -1,9 +1,9 @@
 {
-  "updated_utc": "2026-10-13T09:15:08.503449+00:00",
+  "updated_utc": "2026-10-13T10:26:41.508898+00:00",
   "items": [
     {
       "id": "P1-payload-exchange-and-construction",
-      "status": "integrated; C2 application qualification passed",
+      "status": "integrated, qualified and measured on C4",
       "owner": "P1",
       "source": "source-002/lox",
       "evidence": [
@@ -12,32 +12,32 @@
         "P1/discard-local-001",
         "P1/frame-ip-002"
       ],
-      "remaining": "Combined C3 application qualification, final registered gate and full performance comparison pending; isolated decisions in coordinator/integration-003/decisions.json."
+      "remaining": "Individual Zig parity remains open; see final per-case results. No correctness blocker remains in this batch."
     },
     {
       "id": "P2-vm-readers",
-      "status": "bounded compiler reader inliner and complete query cache dependencies integrated; isolated correctness/timing passed",
+      "status": "integrated, qualified and measured on C4",
       "owner": "P1 finishing P2 isolated compiler worktree",
       "evidence": [
         "P2/scalar-ip-001"
       ],
-      "remaining": "Combined C3 application qualification, final registered gate and full performance comparison pending; isolated decisions in coordinator/integration-003/decisions.json."
+      "remaining": "Individual Zig parity remains open; see final per-case results. No correctness blocker remains in this batch."
     },
     {
       "id": "P3-eda-parser",
-      "status": "borrowed parser and diagram decisions integrated; scalar scanner rejected",
+      "status": "integrated, qualified and measured on C4",
       "owner": "P3",
       "source": "source-002/eda",
-      "remaining": "Combined C3 application qualification, final registered gate and full performance comparison pending; isolated decisions in coordinator/integration-003/decisions.json.",
+      "remaining": "Individual Zig parity remains open; see final per-case results. No correctness blocker remains in this batch.",
       "evidence": [
         "P3/c2-001"
       ]
     },
     {
       "id": "P4-tree-execution",
-      "status": "fresh environments and compact aligned sret v2 integrated; arithmetic/atom experiments rejected; v1 alignment failure preserved",
+      "status": "integrated, qualified and measured on C4",
       "owner": "P4",
-      "remaining": "Combined C3 application qualification, final registered gate and full performance comparison pending; isolated decisions in coordinator/integration-003/decisions.json.",
+      "remaining": "Individual Zig parity remains open; see final per-case results. No correctness blocker remains in this batch.",
       "evidence": [
         "P4/arithmetic-inline-001",
         "P4/atom-operands-001"
@@ -45,9 +45,9 @@
     },
     {
       "id": "P5-eda-composition",
-      "status": "borrowed geometry/textbox, gangable and component input changes integrated in frozen source-003",
+      "status": "integrated, qualified and measured on C4",
       "owner": "P5",
-      "remaining": "Combined C3 application qualification, final registered gate and full performance comparison pending; isolated decisions in coordinator/integration-003/decisions.json.",
+      "remaining": "Individual Zig parity remains open; see final per-case results. No correctness blocker remains in this batch.",
       "evidence": [
         "P5/followup-004",
         "P5/followup-005"
@@ -55,9 +55,9 @@
     },
     {
       "id": "runtime-scalar-copy",
-      "status": "scalar-copy skip and initialized worklist metadata integrated; isolated tests and diagnostics passed",
+      "status": "integrated, qualified and measured on C4",
       "owner": "P7",
-      "remaining": "Combined C3 application qualification, final registered gate and full performance comparison pending; isolated decisions in coordinator/integration-003/decisions.json."
+      "remaining": "Individual Zig parity remains open; see final per-case results. No correctness blocker remains in this batch."
     },
     {
       "id": "C1-runtime",
@@ -81,19 +81,28 @@
     },
     {
       "id": "final-verification",
-      "status": "C3blocker corrected and focused16pass; C4fullgate pending",
+      "status": "passed",
       "owner": "coordinator",
       "evidence": [
-        "coordinator/gate-002/failure-analysis.json",
-        "coordinator/integration-004/decision.json"
+        "coordinator/gate-003/summary.json",
+        "coordinator/gate-003/last-run.json"
       ],
-      "remaining": "Build common004 and run complete registered verification on frozen sources; do not relabel C3 qualification."
+      "remaining": "No compiler correctness gate work remains for source 42a93ae15; all 894 source inputs still match, as recorded in final-source-check.json."
     },
     {
       "id": "final-performance",
-      "status": "open",
-      "owner": "coordinator/P4",
-      "remaining": "Timing held before any C3 measurement because full gate exposed CE2 regression. Rebuild final compiler after fix, then all60 comparisons,3xZig censors, separate metrics and six micros."
+      "status": "measurement, validation, archive and regression review complete",
+      "owner": "coordinator/P6/P1",
+      "remaining": "Individual Zig parity is not achieved: 1/60 passes, 58 complete above Zig and VM string equality is censored. No further optimization is included in this batch.",
+      "evidence": [
+        "coordinator/runtime-004-summary",
+        "coordinator/report-validation-004",
+        "P7-micro-final-004",
+        "coordinator/measurement-context-004.json",
+        "P7-final-synthesis/handoff-004.md",
+        "P1/runtime-004-regression-screen/handoff.md",
+        "archives/runtime-004.json"
+      ]
     },
     {
       "id": "C3-applications",
@@ -103,7 +112,17 @@
         "coordinator/native-003/qualification-summary.json",
         "archives/native-003.json"
       ],
-      "remaining": "Requalify after production fix; do not relabel this compiler as later revision."
+      "remaining": "Superseded by fresh C4 qualification after the production correction; C3 evidence is not relabeled."
+    },
+    {
+      "id": "C4-applications",
+      "status": "passed complete primary and five-mode qualification plus selected ABI audit",
+      "owner": "coordinator",
+      "evidence": [
+        "coordinator/native-004/qualification-summary.json",
+        "archives/native-004.json"
+      ],
+      "remaining": "No qualification work remains for this compiler and source snapshot."
     }
   ],
   "publication": "Integration branch only; no push or main advancement in this batch."

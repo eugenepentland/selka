@@ -1,0 +1,10 @@
+{
+  "checked_utc": "2026-10-13T10:19:41.057975+00:00",
+  "head_at_check": "9ddee694cedbf2515d21c29835c40dd947824218",
+  "compiler_source_commit": "42a93ae15b0990778379066475d3b803a596cf07",
+  "source_manifest": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/coordinator/common-004/inputs.json",
+  "source_manifest_sha256": "42cbadeef5255eaa852309c458a9ac074445b7f3441ed6f30e2a8f7e9c0746ea",
+  "compiler_source_files_checked": 894,
+  "all_match_qualified_compiler": true,
+  "scope": "Compiler build inputs. Subsequent evidence-only commits do not change these sources."
+}
