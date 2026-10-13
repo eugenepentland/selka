@@ -1,0 +1,68 @@
+{
+  "base_source_commit": "be33ce79b5b58c3e254e73709c9dd7eb97e5a849",
+  "base_source_root": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/source",
+  "source_root": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/source-002",
+  "status": "source frozen; both application builds complete; combined qualification in progress",
+  "overlays": [
+    {
+      "name": "P2 scalar-IP readers",
+      "proposed_commit": "d8e943027da39f55e4cb6289a0430a492d628bf0",
+      "patch": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/P2/scalar-ip-001/scalar-ip-candidate.patch",
+      "patch_sha256": "383c1f392fc5507b7b80850e328ef1bd76744f3be80de016a79455bc8470aca6"
+    },
+    {
+      "name": "P5 borrowed compose/textbox inputs",
+      "proposed_commit": "2ba3d475775e3430febba9a6b614aa37eec828f2",
+      "patch": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/P5/followup-001/production.patch",
+      "patch_sha256": "42e68c3ca339f222166f96fd45af0789b8ac70f98b04694b0255889c9c05b74c"
+    },
+    {
+      "name": "P1 fresh owned call environments",
+      "proposed_commit": "e340f9d5e95946793b5d1afaf6e813c9cb3a606f",
+      "patch": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/P1/call-env-001/heap.my.patch",
+      "patch_sha256": "549b78bddb6193996db8ff68e295ad6471a9fe6f5cf2828e661a5c30b6f4eb7d"
+    },
+    {
+      "name": "P1 call environment migration",
+      "proposed_commit": "e340f9d5e95946793b5d1afaf6e813c9cb3a606f",
+      "patch": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/P1/call-env-001/interpreter.my.patch",
+      "patch_sha256": "e466fd711562bf42c886a6c126b04907ae56d4ce5db0c2a9ceef245412387ee9"
+    },
+    {
+      "name": "P1 scalar getter control flow",
+      "proposed_commit": "e340f9d5e95946793b5d1afaf6e813c9cb3a606f",
+      "patch": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/P1/call-env-001/getters-only-heap.my.patch",
+      "patch_sha256": "2270fbae55218a21ab9daac680df1f3fe970f04176a618a7eb1170a4fd7872dc"
+    },
+    {
+      "name": "P1 discarded resolved local expressions",
+      "proposed_commit": "e4747427c",
+      "patch": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/P1/discard-local-001/interpreter.my.patch",
+      "patch_sha256": "d163459e461a3ceea2e87a2ee7869a3005ea450772dff5c59c32a909fdd7aa7f",
+      "diagnostic_evidence_commit": "d756bce5ab883e32c5ac921657034cd3db3367ba",
+      "decision": "consistent14.77% isolated string-equality improvement; control changes below1%; combined qualification pending"
+    }
+  ],
+  "new_tests": {
+    "lox/p2_scalar_reader_test.my": "9608acda0a354e3206b7e1070e7378679806c62dd727fd81d0317e8eb2c0f6f9",
+    "eda/p5_followup_001_textbox_tests.my": "970d99c8d1cff649f130cfb90cd63b4fb3b110d2f616765cb6b3759a218efda3",
+    "lox/p1_call_env_test.my": "8a8647d809412a694917f28fff49cebc31f14761c7ef4ec17a6a1f77ea6e5dac",
+    "lox/p1_discard_local_test.my": "fe1555b353c0ded7869063681418a128ad2133cfefeea4a3acfb29b956f2e90a"
+  },
+  "runtime_selection": {
+    "adopt": "ee0509f45bedeb0dffe942f5ada5d354d78acdde",
+    "reason": "skip already initialized primitive fields after aggregate copy; isolated diagnostic paired ratios .958/.972 on two small EDA cases; fullqualification required",
+    "not_adopted": [
+      "a84df0175141cffbdbc17b241ea74c56dd29add4",
+      "e49e284bb6d3373b2a946ff8f06b5a796255a790"
+    ],
+    "compiler": "coordinator/common-002/build-receipt.json"
+  },
+  "source_freeze_commit": "f38645222",
+  "compiler_source_commit": "fbeba4eed7b549a3feef14c8b8dd620e41494139",
+  "compiler_sha256": "9bedb835438615d79ed8f2985352877a8c844eebeb74cd95a1d276332b6b0c6a",
+  "build_receipts": [
+    "attempts/native-002/build/lox/build-receipt.json",
+    "attempts/native-002/build/eda/build-receipt.json"
+  ]
+}
