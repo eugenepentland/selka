@@ -1,0 +1,65 @@
+{
+  "recorded_utc": "2026-10-13T02:27:34.205572+00:00",
+  "status": "Five application optimizations implemented and qualified; performance recorded for review.",
+  "branch": "codex/lox-eda-improvements-20261012",
+  "review_parent_commit": "19c7349c520058c6d943290c38881367d9a9abbf",
+  "application_source_commit": "fcca1c13f92b4ef02b8ad2dcd7349cc45ec273eb",
+  "registered_verification_commit": "639d359d1c0f161eb90184d78b7c4a11c0511f76",
+  "compiler_source_commit": "8b7d59eba868775b1b8d7f64c54b07abdd23d470",
+  "compiler_sha256": "2dcba1cb1a98846bb8c1319575da1b3564e60af70162e195c2fbb6ec3af0f329",
+  "compiler_runtime_build_and_application_sources_unchanged_since_gate": true,
+  "registered_actions": {
+    "passed": 46,
+    "reused": 0,
+    "inputs_stable": true
+  },
+  "ownership_modes": 5,
+  "unit_tests_per_mode": {
+    "lox": 75,
+    "eda": 317
+  },
+  "runtime": {
+    "total_cases": 60,
+    "candidate_completed": 50,
+    "previous_checked_completed": 1,
+    "candidate_censored": 10,
+    "receipts": 138
+  },
+  "counters": {
+    "coverage": 60,
+    "candidate_completed": 50,
+    "candidate_rc_events": 0,
+    "candidate_exit_live_bytes": 0
+  },
+  "raw_archive": {
+    "members": 1359,
+    "sha256": "040f21612c40e8cc6daa85bb3e45b5602d19a9a407b97ab16fce30069b028ff3",
+    "validated_readback": true
+  },
+  "final_verified_input_identities": 1725,
+  "harness_syntax_files": 21,
+  "deadline_tests_passed": 8,
+  "artifacts": {
+    "README.md": "c2489febc78531f62c168b4e17eb2ef643096ca27351c7710063722fdc36e6dd",
+    "COMPARISON.md": "710d2297d41dbb60e99ef021b418c7890b8126e74ab5bc08dbd28eeb6a28a0dd",
+    "ZIG-PERCENTAGES.md": "7b2866bdf6bee4e18245980ca5c1b91f3cbc67895eda2f17eac9bfafd2bd510f",
+    "results.json": "6731245aa0747ac7952e5438056b1b517db9b340e75ef87a1de6b28d5315211c",
+    "per-cell.csv": "518fc5e4f49343d1335019f90bb0b32e1972baa12329f56e470217b895c5f2c6",
+    "runtime-summary.json.gz": "2043452c8d78437580c67df78336bdea231688980962087f637ac2e77bad7783",
+    "raw-evidence.tar.gz": "040f21612c40e8cc6daa85bb3e45b5602d19a9a407b97ab16fce30069b028ff3",
+    "raw-evidence-manifest.json": "f827848510122ce096d5cae1721df63137ca78ec985a7b8925b39bd5371beeda",
+    "verification-summary.json": "48a761858f8c00e2d805cd02619d9c3e92d5f0ebdedbeacd4e1db5d23ac30b52",
+    "verification-receipt.json.gz": "9f3ca3e3def33e0bc3a85de1a80b49a4e814f070af17c2d1287e8be76472dd3e",
+    "matrix-summary.json": "f60e251c66519eb0608d1b19c0b570a24c540f8c8c7720fe94d11af1937472b1",
+    "harness-validation.json": "56107465b77394d05cdb4a6c395c4783750c7bd1e999c38a71019b13a9e1058d",
+    "item-ledger.json": "b18a59fe0c149b19bd9806c5de221d3ce851e316972cf5f2041019fca665ee87",
+    "handoff.md": "e95356a0d9cb6f23d6d7bdaf4f855d9a00dd4fda9762db1cbe607d5bb35315b4",
+    "code-input-proof.json": "cb8d8a0f74c4a1a502fb6bbfceb9609943e67986ca61e89bd00395daf87f5c21",
+    "input-recovery/manifest.json": "5b99864637e9c1fe82e42dbaf68acc98353a643080d6b2ee2fbc6c0f801dc0ee",
+    "input-recovery/README.md": "33b5e9b3e8bc5740924e82459cba769d58b54ab88daca778006c6bcf4a7c40c1",
+    "final-report-driver.log": "7ed775548a85c3537d27b9be9ef20dddc47dafe6599d3b57b41040a99c5d4c6d",
+    "final-report-review.log": "d64af083ea32faf76661e1e840f2d30e11f50bcedb3276815e9cbf3930fa9ef1"
+  },
+  "remaining_work": "Performance tuning after user review, including ten cutoff cases, the P4 capacity tradeoff and VM RC source-control slowdown. This batch does not claim default promotion or legacy guest/package RC retirement.",
+  "publication": "Integration branch only; no push or local-main advance."
+}

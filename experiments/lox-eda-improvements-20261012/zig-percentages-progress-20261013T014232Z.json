@@ -1,0 +1,316 @@
+{
+  "recorded_utc": "2026-10-13T01:42:32.044771+00:00",
+  "note": "Interim snapshot. 100% equals Zig Fast runtime; higher is slower. Only complete nine-wall/three-RSS cases receive ratios.",
+  "groups": {
+    "lox/tree/": {
+      "total": 13,
+      "completed": 12,
+      "censored": 1,
+      "pending": 0,
+      "runtime_percent_of_zig": 163.42306198635862
+    },
+    "lox/vm/": {
+      "total": 13,
+      "completed": 8,
+      "censored": 2,
+      "pending": 3,
+      "runtime_percent_of_zig": 234.82384064253446
+    },
+    "eda/": {
+      "total": 34,
+      "completed": 27,
+      "censored": 7,
+      "pending": 0,
+      "runtime_percent_of_zig": 180.0052349350109
+    }
+  },
+  "cases": {
+    "eda/Cyclops-Flex": {
+      "status": "relative_timeout",
+      "runtime_percent_of_zig": null
+    },
+    "eda/adf5901": {
+      "status": "complete",
+      "runtime_percent_of_zig": 172.35530129840063,
+      "slower_percent": 72.35530129840062
+    },
+    "eda/barracuda": {
+      "status": "complete",
+      "runtime_percent_of_zig": 198.44185834127194,
+      "slower_percent": 98.44185834127192
+    },
+    "eda/barracuda-base": {
+      "status": "relative_timeout",
+      "runtime_percent_of_zig": null
+    },
+    "eda/barracuda-via-fence": {
+      "status": "complete",
+      "runtime_percent_of_zig": 195.0940412893792,
+      "slower_percent": 95.09404128937919
+    },
+    "eda/black-canyon": {
+      "status": "complete",
+      "runtime_percent_of_zig": 166.13401927413958,
+      "slower_percent": 66.13401927413958
+    },
+    "eda/black-canyon+flat": {
+      "status": "complete",
+      "runtime_percent_of_zig": 172.38142883604772,
+      "slower_percent": 72.38142883604772
+    },
+    "eda/blinky-breakout": {
+      "status": "complete",
+      "runtime_percent_of_zig": 174.1180995500837,
+      "slower_percent": 74.1180995500837
+    },
+    "eda/cyclops-analog": {
+      "status": "relative_timeout",
+      "runtime_percent_of_zig": null
+    },
+    "eda/cyclops-analog+no-vendor-symbols": {
+      "status": "complete",
+      "runtime_percent_of_zig": 213.025443876062,
+      "slower_percent": 113.02544387606201
+    },
+    "eda/cyclops-breakout": {
+      "status": "complete",
+      "runtime_percent_of_zig": 182.9102333535122,
+      "slower_percent": 82.91023335351223
+    },
+    "eda/cyclops-digital-pcb": {
+      "status": "complete",
+      "runtime_percent_of_zig": 217.6890075554359,
+      "slower_percent": 117.6890075554359
+    },
+    "eda/cyclops-interposer": {
+      "status": "complete",
+      "runtime_percent_of_zig": 176.36927838748184,
+      "slower_percent": 76.36927838748184
+    },
+    "eda/cyclops-kband": {
+      "status": "relative_timeout",
+      "runtime_percent_of_zig": null
+    },
+    "eda/cyclops-kband-breakout": {
+      "status": "complete",
+      "runtime_percent_of_zig": 174.7278886917098,
+      "slower_percent": 74.72788869170981
+    },
+    "eda/cyclops-kband-pcb": {
+      "status": "complete",
+      "runtime_percent_of_zig": 173.72371238043303,
+      "slower_percent": 73.72371238043303
+    },
+    "eda/cyclops-xband-sip": {
+      "status": "relative_timeout",
+      "runtime_percent_of_zig": null
+    },
+    "eda/dual-flash": {
+      "status": "complete",
+      "runtime_percent_of_zig": 149.3324928408671,
+      "slower_percent": 49.33249284086712
+    },
+    "eda/labstation": {
+      "status": "relative_timeout",
+      "runtime_percent_of_zig": null
+    },
+    "eda/labstation+no-vendor-symbols": {
+      "status": "relative_timeout",
+      "runtime_percent_of_zig": null
+    },
+    "eda/lmk05318b-clock": {
+      "status": "complete",
+      "runtime_percent_of_zig": 195.80506707900525,
+      "slower_percent": 95.80506707900524
+    },
+    "eda/max860-inverter": {
+      "status": "complete",
+      "runtime_percent_of_zig": 164.13017767637567,
+      "slower_percent": 64.13017767637565
+    },
+    "eda/poe-pd-flyback-tps23757": {
+      "status": "complete",
+      "runtime_percent_of_zig": 170.01712179226638,
+      "slower_percent": 70.01712179226638
+    },
+    "eda/rds3": {
+      "status": "complete",
+      "runtime_percent_of_zig": 200.91542789321414,
+      "slower_percent": 100.91542789321414
+    },
+    "eda/rds3+flat": {
+      "status": "complete",
+      "runtime_percent_of_zig": 191.65183341996848,
+      "slower_percent": 91.65183341996848
+    },
+    "eda/rds3-rf-selector": {
+      "status": "complete",
+      "runtime_percent_of_zig": 163.10726651732418,
+      "slower_percent": 63.10726651732419
+    },
+    "eda/remora-base": {
+      "status": "complete",
+      "runtime_percent_of_zig": 171.19774499456304,
+      "slower_percent": 71.19774499456304
+    },
+    "eda/remora-rf": {
+      "status": "complete",
+      "runtime_percent_of_zig": 176.22120240209063,
+      "slower_percent": 76.22120240209063
+    },
+    "eda/rf-switch-8way": {
+      "status": "complete",
+      "runtime_percent_of_zig": 179.03511335671465,
+      "slower_percent": 79.03511335671465
+    },
+    "eda/rf-switch-eval": {
+      "status": "complete",
+      "runtime_percent_of_zig": 164.46235692300374,
+      "slower_percent": 64.46235692300372
+    },
+    "eda/stm32n6": {
+      "status": "complete",
+      "runtime_percent_of_zig": 207.32904349876725,
+      "slower_percent": 107.32904349876726
+    },
+    "eda/straps": {
+      "status": "complete",
+      "runtime_percent_of_zig": 173.42887752923835,
+      "slower_percent": 73.42887752923835
+    },
+    "eda/straps-base": {
+      "status": "complete",
+      "runtime_percent_of_zig": 196.30173344751412,
+      "slower_percent": 96.30173344751411
+    },
+    "eda/w55rp20": {
+      "status": "complete",
+      "runtime_percent_of_zig": 160.88960000422856,
+      "slower_percent": 60.88960000422856
+    },
+    "lox/tree/binary_trees": {
+      "status": "complete",
+      "runtime_percent_of_zig": 195.50334707745301,
+      "slower_percent": 95.50334707745303
+    },
+    "lox/tree/closures": {
+      "status": "complete",
+      "runtime_percent_of_zig": 178.18001516195073,
+      "slower_percent": 78.18001516195072
+    },
+    "lox/tree/equality": {
+      "status": "complete",
+      "runtime_percent_of_zig": 128.8596240566158,
+      "slower_percent": 28.859624056615797
+    },
+    "lox/tree/fib": {
+      "status": "complete",
+      "runtime_percent_of_zig": 152.147062961215,
+      "slower_percent": 52.147062961214985
+    },
+    "lox/tree/instantiation": {
+      "status": "complete",
+      "runtime_percent_of_zig": 178.50084751697472,
+      "slower_percent": 78.50084751697473
+    },
+    "lox/tree/invocation": {
+      "status": "complete",
+      "runtime_percent_of_zig": 102.34930239800131,
+      "slower_percent": 2.3493023980013072
+    },
+    "lox/tree/method_call": {
+      "status": "complete",
+      "runtime_percent_of_zig": 184.4567478815599,
+      "slower_percent": 84.45674788155988
+    },
+    "lox/tree/properties": {
+      "status": "complete",
+      "runtime_percent_of_zig": 169.42290742697054,
+      "slower_percent": 69.42290742697055
+    },
+    "lox/tree/string_equality": {
+      "status": "complete",
+      "runtime_percent_of_zig": 191.2358401224175,
+      "slower_percent": 91.2358401224175
+    },
+    "lox/tree/strings": {
+      "status": "complete",
+      "runtime_percent_of_zig": 176.63376480072588,
+      "slower_percent": 76.63376480072588
+    },
+    "lox/tree/trees": {
+      "status": "complete",
+      "runtime_percent_of_zig": 166.93287173941863,
+      "slower_percent": 66.93287173941862
+    },
+    "lox/tree/zoo": {
+      "status": "complete",
+      "runtime_percent_of_zig": 165.04021240991176,
+      "slower_percent": 65.04021240991176
+    },
+    "lox/tree/zoo_batch": {
+      "status": "relative_timeout",
+      "runtime_percent_of_zig": null
+    },
+    "lox/vm/binary_trees": {
+      "status": "relative_timeout",
+      "runtime_percent_of_zig": null
+    },
+    "lox/vm/closures": {
+      "status": "complete",
+      "runtime_percent_of_zig": 193.38952563502673,
+      "slower_percent": 93.38952563502671
+    },
+    "lox/vm/equality": {
+      "status": "complete",
+      "runtime_percent_of_zig": 245.4847883710032,
+      "slower_percent": 145.4847883710032
+    },
+    "lox/vm/fib": {
+      "status": "complete",
+      "runtime_percent_of_zig": 232.88990696001778,
+      "slower_percent": 132.88990696001778
+    },
+    "lox/vm/instantiation": {
+      "status": "complete",
+      "runtime_percent_of_zig": 234.08276067924382,
+      "slower_percent": 134.08276067924382
+    },
+    "lox/vm/invocation": {
+      "status": "complete",
+      "runtime_percent_of_zig": 260.7466465680492,
+      "slower_percent": 160.7466465680492
+    },
+    "lox/vm/method_call": {
+      "status": "complete",
+      "runtime_percent_of_zig": 282.1339008519835,
+      "slower_percent": 182.13390085198355
+    },
+    "lox/vm/properties": {
+      "status": "complete",
+      "runtime_percent_of_zig": 230.20142645298537,
+      "slower_percent": 130.20142645298537
+    },
+    "lox/vm/string_equality": {
+      "status": "relative_timeout",
+      "runtime_percent_of_zig": null
+    },
+    "lox/vm/strings": {
+      "status": "complete",
+      "runtime_percent_of_zig": 210.94918258974383,
+      "slower_percent": 110.94918258974383
+    },
+    "lox/vm/trees": {
+      "status": "pending",
+      "runtime_percent_of_zig": null
+    },
+    "lox/vm/zoo": {
+      "status": "pending",
+      "runtime_percent_of_zig": null
+    },
+    "lox/vm/zoo_batch": {
+      "status": "pending",
+      "runtime_percent_of_zig": null
+    }
+  }
+}

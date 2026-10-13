@@ -1,0 +1,44 @@
+{
+  "schema": "text-gap-host-before-v1",
+  "utc": "2026-10-13T01:42:10.511863+00:00",
+  "cpu": 8,
+  "allowed_cpus": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "loadavg": [
+    1.599609375,
+    1.2939453125,
+    3.32080078125
+  ],
+  "topology_frequency": {
+    "topology/thread_siblings_list": "8-9",
+    "topology/core_id": "16",
+    "topology/physical_package_id": "0",
+    "cpufreq/scaling_governor": "powersave",
+    "cpufreq/scaling_cur_freq": "4142259",
+    "cpufreq/scaling_min_freq": "400000",
+    "cpufreq/scaling_max_freq": "4600000",
+    "cpufreq/cpuinfo_max_freq": "4600000"
+  },
+  "process_names_cpu": "    PID    PPID PSR %CPU COMMAND\n2682910 1545578  10 40.0 python3\n2682590 2681635   2 30.0 du\n2682904 2682903   8 14.8 find\n2677378       1  14  2.6 netdata\n2678065 2677477   6  2.0 apps.plugin\n2116142 2115650   4  1.9 claude\n 754507       1   8  1.9 codex\n3047625 3037180   4  1.7 2.1.295-8b2928c\n2649216 1777629   6  1.2 python3\n1764181    3611   0  0.6 uvicorn\n2678011 2677477   0  0.5 go.d.plugin\n3334921 3037180   6  0.5 2.1.295-8b2928c\n   3595       1   5  0.3 cloudflared\n2729514    3611  17  0.3 cloudflared\n2729402    3611  19  0.3 cloudflared\n2671955 2671953  17  0.3 claude\n    147       2   6  0.3 kcompactd0\n    166       2   5  0.2 kswapd0\n2676540 2677477  17  0.2 debugfs.plugin\n   1556       1   1  0.2 tailscaled\n   1169       2   8  0.2 irq/188-iwlwifi:default_queue\n     15       2   7  0.2 rcu_preempt\n2729400    3611   6  0.1 python\n2681632 2681628  15  0.1 bash",
+  "limitation": "Single read-only snapshot before cell calibration/warmup. ps CPU is a process-lifetime average. No arguments inspected, no processes/affinity/governor altered. Observation does not prove causal interference during samples."
+}

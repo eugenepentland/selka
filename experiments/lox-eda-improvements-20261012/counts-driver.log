@@ -1,0 +1,27 @@
+counting vm-binary_trees
+counted lox/vm/binary_trees {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'skipped_runtime_failure', 'mylang-before': 'skipped_runtime_failure'}
+counting vm-closures
+counted lox/vm/closures {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting vm-equality
+counted lox/vm/equality {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting vm-fib
+counted lox/vm/fib {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting vm-instantiation
+counted lox/vm/instantiation {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting vm-invocation
+counted lox/vm/invocation {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting vm-method_call
+counted lox/vm/method_call {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting vm-properties
+counted lox/vm/properties {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting vm-string_equality
+counted lox/vm/string_equality {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'skipped_runtime_failure', 'mylang-before': 'skipped_runtime_failure'}
+counting vm-strings
+counted lox/vm/strings {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting vm-trees
+counted lox/vm/trees {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting vm-zoo
+counted lox/vm/zoo {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting vm-zoo_batch
+counted lox/vm/zoo_batch {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+FINISHED VM counters; EDA and tree records preserved.

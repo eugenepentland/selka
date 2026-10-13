@@ -8,6 +8,7 @@ from pathlib import Path
 import subprocess
 import sys
 from receipts import build_path, validate_build
+from input_recovery import relocated_spec
 
 ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
@@ -52,7 +53,7 @@ def main():
                        '--cpu', '8', '--guest-timeout', '120']
             for name in included:
                 command += ['--arm', name + '=' + entries[name]['path']]
-            command.append(str(spec))
+            command.append(str(relocated_spec(spec)))
             print('counting', spec.stem, flush=True)
             with (output / (spec.stem + '.log')).open('w') as log:
                 subprocess.run(command, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT, check=True)

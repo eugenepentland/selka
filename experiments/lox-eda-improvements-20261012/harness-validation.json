@@ -1,10 +1,10 @@
 {
-  "status": "harness-only checks passed; application qualification pending",
+  "status": "Harness syntax checks passed; application qualification and all five modes passed (matrix-summary.json).",
   "syntax_files": {
     "experiments/lox-eda-improvements-20261012/build.py": "1a67e18a3ff00beef5937693e1503db07517c75593b5387d5912cb7f3c2ad373",
     "experiments/lox-eda-improvements-20261012/check-error-paths.py": "224084b978b2c8a15cf03f15f363dec9bfc6558d0fb5d3b4c7a6f97a06ffbafd",
     "experiments/lox-eda-improvements-20261012/compile_measure.py": "8cb2bb3fd7fb76c2d5696bbfd8ff08a477365b809977357410fcfca98577c575",
-    "experiments/lox-eda-improvements-20261012/count.py": "b6bee547985c2e7661621d90a3b036b2176776a5d0f7893f6cb47f5dcaa2e981",
+    "experiments/lox-eda-improvements-20261012/count.py": "b3f49114ac7388f7f813016bd8c28bd6c4ce027c0c76e67f706346e9b6507e79",
     "experiments/lox-eda-improvements-20261012/matrix.py": "418cad29a2c9ace45de669955d8fa91d82e4ac22c05e6e224d5a1d989e500838",
     "experiments/lox-eda-improvements-20261012/measure.py": "ebead08898b4eba7885e41451378be14e8d53dc5cf213d66d4230f33130e8c7d",
     "experiments/lox-eda-improvements-20261012/measure_cell.py": "53cee8419a09cb46049c11c6f58cf468a5281e6e31573021f11afd3a0d036f33",
@@ -12,26 +12,35 @@
     "experiments/lox-eda-improvements-20261012/qualify.py": "96e44bab9979603dd5dd065d2effa977313903d1115bb9f96f970b7ab808d8d6",
     "experiments/lox-eda-improvements-20261012/qualify_goldens.py": "36fbb9b8a689251bf15ebf0871acce982c880768beaabdcefe10ec17b4f42a58",
     "experiments/lox-eda-improvements-20261012/receipts.py": "4ff6d82305f86478ea6791fe93ac19efcdab40cc9805d5276c37593c9f5de983",
-    "experiments/lox-eda-improvements-20261012/report.py": "abf228adcfcb91f2a58b47bde80936d7ab342972bfa018e849b3e29590cdbe6a",
-    "experiments/lox-eda-improvements-20261012/schedule.py": "7b4f3a3ac569125663e05418e58bf123caea3929ee03622f3510aca77b5880bd",
+    "experiments/lox-eda-improvements-20261012/report.py": "11080937ad4759b501ea9b327fa59f194226234012360335a244e04bbaa38675",
+    "experiments/lox-eda-improvements-20261012/schedule.py": "afcec9910b3aeff5a2bf486b09aa65370de39dde737eac8f5de06a59f6bfeee7",
     "experiments/lox-eda-improvements-20261012/test_timeout.py": "47c3aa74e7693be6b0683cdb9b6e84e941803ababe24d23477752215367c8d78",
     "experiments/lox-eda-improvements-20261012/archive_evidence.py": "d654f4b20fce3b0ee35fb0a853e3fe4d4af7fab7ae2f2e6366505c7a321c8ea0",
     "experiments/lox-eda-improvements-20261012/audit_guests.py": "479721c379c73c65b209fb0f5a9a773491443bbb463e99cd877498bac4ce8116",
-    "experiments/lox-eda-improvements-20261012/retry_eda_no_facts.py": "842fceeb815cc08632c3d4b67e63df0a1f3f9f2d1648d930c50b69ed995b10fe"
+    "experiments/lox-eda-improvements-20261012/retry_eda_no_facts.py": "842fceeb815cc08632c3d4b67e63df0a1f3f9f2d1648d930c50b69ed995b10fe",
+    "experiments/lox-eda-improvements-20261012/input_recovery.py": "1fe70a638cca8b343b1ebdb389978990360f9d1087aff9c92142532bb2224736",
+    "experiments/lox-eda-improvements-20261012/measure_recovered.py": "f6eb25a5f832e70fc8fa8a05ffb3869ab7ee101954b22cb9be5942e1ff82e783",
+    "experiments/lox-eda-improvements-20261012/measure_cell_recovered.py": "c720d57ada1a71aa0a732640c74611eb02f9e74e22c650d5b357fe96486167ed",
+    "experiments/lox-eda-improvements-20261012/input-recovery/test_recovered_timeout.py": "effa555d47d317cc2ec5455b4e5cea051d86de1e65f57badeed057303ab85547"
   },
   "deadline_tests": {
     "passed": 8,
     "returncode": 0,
-    "seconds": 9.623,
+    "seconds": 9.518,
     "command": [
       "scripts/build-slot.sh",
       "build",
       "python3",
       "-B",
-      "experiments/lox-eda-improvements-20261012/test_timeout.py"
+      "experiments/lox-eda-improvements-20261012/input-recovery/test_recovered_timeout.py"
     ],
-    "log": "experiments/lox-eda-improvements-20261012/timeout-tests.log",
-    "log_sha256": "96f8cded2e624cf906f2614937706c562e2848a8edd9c3050d7ac35f7c1a71b0",
-    "reuse_note": "Eight passing deadline tests retained; measure.py and test_timeout.py identities unchanged."
+    "log": "experiments/lox-eda-improvements-20261012/input-recovery/recovered-deadline-tests.log",
+    "log_sha256": "01a4600c727155e1fd63561bf63057d94112db7425ccb6ef0d7f4cafcf6edfc6",
+    "note": "Rerun against measure_recovered.py; frozen original measure.py, wrapper and earlier deadline evidence remain unchanged."
+  },
+  "summary_csv": {
+    "rows_including_header": 481,
+    "line_endings": "LF",
+    "parsed_values_unchanged_by_line_ending_normalization": true
   }
 }

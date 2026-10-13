@@ -1,0 +1,106 @@
+{
+  "lox": {
+    "cold-guest-cache": {
+      "before_seconds": [
+        6.558879647869617,
+        4.966473693028092,
+        6.63627929193899
+      ],
+      "after_seconds": [
+        6.382714319974184,
+        6.335928792133927,
+        6.308844601036981
+      ],
+      "before_median_seconds": 6.558879647869617,
+      "after_median_seconds": 6.335928792133927,
+      "paired_ratio_geomean": 1.0567875524540595,
+      "before_gnu_time_maxrss_kib": [
+        125408,
+        125776,
+        125468
+      ],
+      "after_gnu_time_maxrss_kib": [
+        116924,
+        117140,
+        116628
+      ]
+    },
+    "warm-guest-cache": {
+      "before_seconds": [
+        0.02607729099690914,
+        0.02607992780394852,
+        0.02304837596602738
+      ],
+      "after_seconds": [
+        0.02145707607269287,
+        0.026820054976269603,
+        0.025923317996785045
+      ],
+      "before_median_seconds": 0.02607729099690914,
+      "after_median_seconds": 0.025923317996785045,
+      "paired_ratio_geomean": 0.9836423108681653,
+      "before_gnu_time_maxrss_kib": [
+        9396,
+        9272,
+        9112
+      ],
+      "after_gnu_time_maxrss_kib": [
+        9396,
+        9336,
+        9204
+      ]
+    }
+  },
+  "eda": {
+    "cold-guest-cache": {
+      "before_seconds": [
+        28.790807257872075,
+        24.598934350069612,
+        23.897919957060367
+      ],
+      "after_seconds": [
+        22.239437404088676,
+        21.6297370409593,
+        20.593780655879527
+      ],
+      "before_median_seconds": 24.598934350069612,
+      "after_median_seconds": 21.6297370409593,
+      "paired_ratio_geomean": 0.83648911455205,
+      "before_gnu_time_maxrss_kib": [
+        507452,
+        507800,
+        507708
+      ],
+      "after_gnu_time_maxrss_kib": [
+        498308,
+        498084,
+        498756
+      ]
+    },
+    "warm-guest-cache": {
+      "before_seconds": [
+        0.04115668614394963,
+        0.02826955495402217,
+        0.042551040882244706
+      ],
+      "after_seconds": [
+        0.019115713890641928,
+        0.03571268497034907,
+        0.020025254925712943
+      ],
+      "before_median_seconds": 0.04115668614394963,
+      "after_median_seconds": 0.020025254925712943,
+      "paired_ratio_geomean": 0.6511891759218257,
+      "before_gnu_time_maxrss_kib": [
+        9144,
+        8856,
+        9144
+      ],
+      "after_gnu_time_maxrss_kib": [
+        9080,
+        9144,
+        9016
+      ]
+    }
+  }
+}

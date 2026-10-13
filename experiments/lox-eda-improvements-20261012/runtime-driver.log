@@ -1,0 +1,19 @@
+measuring lox/vm/trees vm-trees.r9-9.w0.rss3
+completed lox/vm/trees vm-trees.r9-9.w0.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/zoo vm-zoo.r0-3.w2.rss0
+completed lox/vm/zoo vm-zoo.r0-3.w2.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/zoo vm-zoo.r3-6.w0.rss0
+completed lox/vm/zoo vm-zoo.r3-6.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/zoo vm-zoo.r6-9.w0.rss0
+completed lox/vm/zoo vm-zoo.r6-9.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/zoo vm-zoo.r9-9.w0.rss3
+completed lox/vm/zoo vm-zoo.r9-9.w0.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/zoo_batch vm-zoo_batch.r0-3.w2.rss0
+completed lox/vm/zoo_batch vm-zoo_batch.r0-3.w2.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/zoo_batch vm-zoo_batch.r3-6.w0.rss0
+completed lox/vm/zoo_batch vm-zoo_batch.r3-6.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/zoo_batch vm-zoo_batch.r6-9.w0.rss0
+completed lox/vm/zoo_batch vm-zoo_batch.r6-9.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/zoo_batch vm-zoo_batch.r9-9.w0.rss3
+completed lox/vm/zoo_batch vm-zoo_batch.r9-9.w0.rss3 failures {'mylang-before': 'relative_timeout'}
+FINISHED all

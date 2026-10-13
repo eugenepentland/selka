@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+from input_recovery import read_bytes
 
 ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
@@ -40,7 +41,7 @@ def main():
                     existing = json.loads(receipt.read_text())
                     assert existing['spec']['cell'] == base['cell'] and existing['spec']['arms'] == base['arms']
                     for path, identity in existing['identities'].items():
-                        assert hashlib.sha256(Path(path).read_bytes()).hexdigest() == identity
+                        assert hashlib.sha256(read_bytes(path)).hexdigest() == identity
                     previous = receipt
                     continue
                 spec = dict(base)
@@ -51,7 +52,7 @@ def main():
                     raise RuntimeError(f'Interrupted chunk preserved at {generated}. Inspect its progress journal before recovery; '
                                        'automatic retry could conceal a recorded cutoff or selectively replace samples.')
                 generated.write_text(json.dumps(spec, indent=2) + '\n')
-                command = [str(ROOT / 'scripts/build-slot.sh'), 'timing', sys.executable, '-B', str(HERE / 'measure_cell.py'),
+                command = [str(ROOT / 'scripts/build-slot.sh'), 'timing', sys.executable, '-B', str(HERE / 'measure_cell_recovered.py'),
                            str(generated), str(receipt), '--cpu', '8', '--round-start', str(start), '--rounds', str(rounds),
                            '--warmups', str(warmups), '--rss-rounds', str(rss), '--guest-timeout', '120']
                 print('measuring', base['cell'], name, flush=True)

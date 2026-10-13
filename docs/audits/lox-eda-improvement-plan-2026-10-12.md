@@ -3,9 +3,13 @@
 Status: all five fixes are integrated in the
 [implementation run](../../experiments/lox-eda-improvements-20261012/README.md).
 The complete registered verification gate passed all 46 selected actions.
-Combined application qualification and both five-mode matrices pass. Full-workload
-comparisons remain in progress; the performance acceptance criteria below are
-not yet a completed-results claim.
+Combined application qualification and both five-mode matrices pass. The fixed
+60-case runtime corpus has been processed: 50 candidate cases complete within the
+requested cutoff, versus one previous checked case. Ten candidate cutoffs remain
+visible in the [comparison](../../experiments/lox-eda-improvements-20261012/COMPARISON.md).
+Further tuning is deferred to user review; the below-1 parity target is not achieved.
+The original acceptance criteria and historical attribution below remain the audit
+record, rather than a claim that every performance target was reached.
 Audit base: `5f1701b13f243ca1fcc05c0b38ce73b8c9c3cd4d` on the development lineage.
 
 Repeated independent copies in the application migrations are the strongest

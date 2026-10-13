@@ -1,0 +1,270 @@
+measuring eda/Cyclops-Flex eda-Cyclops-Flex.r0-9.w2.rss3
+completed eda/Cyclops-Flex eda-Cyclops-Flex.r0-9.w2.rss3 failures {'mylang-zero-rc': 'relative_timeout', 'mylang-before': 'relative_timeout'}
+measuring eda/adf5901 eda-adf5901.r0-9.w2.rss3
+completed eda/adf5901 eda-adf5901.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/barracuda-base eda-barracuda-base.r0-9.w2.rss3
+completed eda/barracuda-base eda-barracuda-base.r0-9.w2.rss3 failures {'mylang-zero-rc': 'relative_timeout', 'mylang-before': 'relative_timeout'}
+measuring eda/barracuda-via-fence eda-barracuda-via-fence.r0-9.w2.rss3
+completed eda/barracuda-via-fence eda-barracuda-via-fence.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/barracuda eda-barracuda.r0-9.w2.rss3
+completed eda/barracuda eda-barracuda.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/black-canyon+flat eda-black-canyon+flat.r0-9.w2.rss3
+completed eda/black-canyon+flat eda-black-canyon+flat.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/black-canyon eda-black-canyon.r0-9.w2.rss3
+completed eda/black-canyon eda-black-canyon.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/blinky-breakout eda-blinky-breakout.r0-9.w2.rss3
+completed eda/blinky-breakout eda-blinky-breakout.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/cyclops-analog+no-vendor-symbols eda-cyclops-analog+no-vendor-symbols.r0-9.w2.rss3
+completed eda/cyclops-analog+no-vendor-symbols eda-cyclops-analog+no-vendor-symbols.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/cyclops-analog eda-cyclops-analog.r0-9.w2.rss3
+completed eda/cyclops-analog eda-cyclops-analog.r0-9.w2.rss3 failures {'mylang-zero-rc': 'relative_timeout', 'mylang-before': 'relative_timeout'}
+measuring eda/cyclops-breakout eda-cyclops-breakout.r0-9.w2.rss3
+completed eda/cyclops-breakout eda-cyclops-breakout.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/cyclops-digital-pcb eda-cyclops-digital-pcb.r0-9.w2.rss3
+completed eda/cyclops-digital-pcb eda-cyclops-digital-pcb.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/cyclops-interposer eda-cyclops-interposer.r0-9.w2.rss3
+completed eda/cyclops-interposer eda-cyclops-interposer.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/cyclops-kband-breakout eda-cyclops-kband-breakout.r0-9.w2.rss3
+completed eda/cyclops-kband-breakout eda-cyclops-kband-breakout.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/cyclops-kband-pcb eda-cyclops-kband-pcb.r0-9.w2.rss3
+completed eda/cyclops-kband-pcb eda-cyclops-kband-pcb.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/cyclops-kband eda-cyclops-kband.r0-9.w2.rss3
+completed eda/cyclops-kband eda-cyclops-kband.r0-9.w2.rss3 failures {'mylang-zero-rc': 'relative_timeout', 'mylang-before': 'relative_timeout'}
+measuring eda/cyclops-xband-sip eda-cyclops-xband-sip.r0-9.w2.rss3
+completed eda/cyclops-xband-sip eda-cyclops-xband-sip.r0-9.w2.rss3 failures {'mylang-zero-rc': 'relative_timeout', 'mylang-before': 'relative_timeout'}
+measuring eda/dual-flash eda-dual-flash.r0-9.w2.rss3
+completed eda/dual-flash eda-dual-flash.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/labstation+no-vendor-symbols eda-labstation+no-vendor-symbols.r0-9.w2.rss3
+completed eda/labstation+no-vendor-symbols eda-labstation+no-vendor-symbols.r0-9.w2.rss3 failures {'mylang-zero-rc': 'relative_timeout', 'mylang-before': 'relative_timeout'}
+measuring eda/labstation eda-labstation.r0-9.w2.rss3
+completed eda/labstation eda-labstation.r0-9.w2.rss3 failures {'mylang-zero-rc': 'relative_timeout', 'mylang-before': 'relative_timeout'}
+measuring eda/lmk05318b-clock eda-lmk05318b-clock.r0-9.w2.rss3
+completed eda/lmk05318b-clock eda-lmk05318b-clock.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/max860-inverter eda-max860-inverter.r0-9.w2.rss3
+completed eda/max860-inverter eda-max860-inverter.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/poe-pd-flyback-tps23757 eda-poe-pd-flyback-tps23757.r0-9.w2.rss3
+completed eda/poe-pd-flyback-tps23757 eda-poe-pd-flyback-tps23757.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/rds3+flat eda-rds3+flat.r0-9.w2.rss3
+completed eda/rds3+flat eda-rds3+flat.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/rds3-rf-selector eda-rds3-rf-selector.r0-9.w2.rss3
+completed eda/rds3-rf-selector eda-rds3-rf-selector.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/rds3 eda-rds3.r0-9.w2.rss3
+completed eda/rds3 eda-rds3.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/remora-base eda-remora-base.r0-9.w2.rss3
+completed eda/remora-base eda-remora-base.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/remora-rf eda-remora-rf.r0-9.w2.rss3
+completed eda/remora-rf eda-remora-rf.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/rf-switch-8way eda-rf-switch-8way.r0-9.w2.rss3
+completed eda/rf-switch-8way eda-rf-switch-8way.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/rf-switch-eval eda-rf-switch-eval.r0-9.w2.rss3
+completed eda/rf-switch-eval eda-rf-switch-eval.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/stm32n6 eda-stm32n6.r0-9.w2.rss3
+completed eda/stm32n6 eda-stm32n6.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/straps-base eda-straps-base.r0-9.w2.rss3
+completed eda/straps-base eda-straps-base.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/straps eda-straps.r0-9.w2.rss3
+completed eda/straps eda-straps.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring eda/w55rp20 eda-w55rp20.r0-9.w2.rss3
+completed eda/w55rp20 eda-w55rp20.r0-9.w2.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/binary_trees tree-binary_trees.r0-3.w2.rss0
+completed lox/tree/binary_trees tree-binary_trees.r0-3.w2.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/binary_trees tree-binary_trees.r3-6.w0.rss0
+completed lox/tree/binary_trees tree-binary_trees.r3-6.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/binary_trees tree-binary_trees.r6-9.w0.rss0
+completed lox/tree/binary_trees tree-binary_trees.r6-9.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/binary_trees tree-binary_trees.r9-9.w0.rss3
+completed lox/tree/binary_trees tree-binary_trees.r9-9.w0.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/closures tree-closures.r0-3.w2.rss0
+completed lox/tree/closures tree-closures.r0-3.w2.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/closures tree-closures.r3-6.w0.rss0
+completed lox/tree/closures tree-closures.r3-6.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/closures tree-closures.r6-9.w0.rss0
+completed lox/tree/closures tree-closures.r6-9.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/closures tree-closures.r9-9.w0.rss3
+completed lox/tree/closures tree-closures.r9-9.w0.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/equality tree-equality.r0-3.w2.rss0
+completed lox/tree/equality tree-equality.r0-3.w2.rss0 failures {}
+measuring lox/tree/equality tree-equality.r3-6.w0.rss0
+completed lox/tree/equality tree-equality.r3-6.w0.rss0 failures {}
+measuring lox/tree/equality tree-equality.r6-9.w0.rss0
+completed lox/tree/equality tree-equality.r6-9.w0.rss0 failures {}
+measuring lox/tree/equality tree-equality.r9-9.w0.rss3
+completed lox/tree/equality tree-equality.r9-9.w0.rss3 failures {}
+measuring lox/tree/fib tree-fib.r0-3.w2.rss0
+completed lox/tree/fib tree-fib.r0-3.w2.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/fib tree-fib.r3-6.w0.rss0
+completed lox/tree/fib tree-fib.r3-6.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/fib tree-fib.r6-9.w0.rss0
+completed lox/tree/fib tree-fib.r6-9.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/fib tree-fib.r9-9.w0.rss3
+completed lox/tree/fib tree-fib.r9-9.w0.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/instantiation tree-instantiation.r0-3.w2.rss0
+completed lox/tree/instantiation tree-instantiation.r0-3.w2.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/instantiation tree-instantiation.r3-6.w0.rss0
+completed lox/tree/instantiation tree-instantiation.r3-6.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/instantiation tree-instantiation.r6-9.w0.rss0
+completed lox/tree/instantiation tree-instantiation.r6-9.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/instantiation tree-instantiation.r9-9.w0.rss3
+completed lox/tree/instantiation tree-instantiation.r9-9.w0.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/invocation tree-invocation.r0-3.w2.rss0
+completed lox/tree/invocation tree-invocation.r0-3.w2.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/invocation tree-invocation.r3-6.w0.rss0
+completed lox/tree/invocation tree-invocation.r3-6.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/invocation tree-invocation.r6-9.w0.rss0
+completed lox/tree/invocation tree-invocation.r6-9.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/invocation tree-invocation.r9-9.w0.rss3
+completed lox/tree/invocation tree-invocation.r9-9.w0.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/method_call tree-method_call.r0-3.w2.rss0
+completed lox/tree/method_call tree-method_call.r0-3.w2.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/method_call tree-method_call.r3-6.w0.rss0
+completed lox/tree/method_call tree-method_call.r3-6.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/method_call tree-method_call.r6-9.w0.rss0
+completed lox/tree/method_call tree-method_call.r6-9.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/method_call tree-method_call.r9-9.w0.rss3
+completed lox/tree/method_call tree-method_call.r9-9.w0.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/properties tree-properties.r0-3.w2.rss0
+completed lox/tree/properties tree-properties.r0-3.w2.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/properties tree-properties.r3-6.w0.rss0
+completed lox/tree/properties tree-properties.r3-6.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/properties tree-properties.r6-9.w0.rss0
+completed lox/tree/properties tree-properties.r6-9.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/properties tree-properties.r9-9.w0.rss3
+completed lox/tree/properties tree-properties.r9-9.w0.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/string_equality tree-string_equality.r0-3.w2.rss0
+completed lox/tree/string_equality tree-string_equality.r0-3.w2.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/string_equality tree-string_equality.r3-6.w0.rss0
+completed lox/tree/string_equality tree-string_equality.r3-6.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/string_equality tree-string_equality.r6-9.w0.rss0
+completed lox/tree/string_equality tree-string_equality.r6-9.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/string_equality tree-string_equality.r9-9.w0.rss3
+completed lox/tree/string_equality tree-string_equality.r9-9.w0.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/strings tree-strings.r0-3.w2.rss0
+completed lox/tree/strings tree-strings.r0-3.w2.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/strings tree-strings.r3-6.w0.rss0
+completed lox/tree/strings tree-strings.r3-6.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/strings tree-strings.r6-9.w0.rss0
+completed lox/tree/strings tree-strings.r6-9.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/strings tree-strings.r9-9.w0.rss3
+completed lox/tree/strings tree-strings.r9-9.w0.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/trees tree-trees.r0-3.w2.rss0
+completed lox/tree/trees tree-trees.r0-3.w2.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/trees tree-trees.r3-6.w0.rss0
+completed lox/tree/trees tree-trees.r3-6.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/trees tree-trees.r6-9.w0.rss0
+completed lox/tree/trees tree-trees.r6-9.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/trees tree-trees.r9-9.w0.rss3
+completed lox/tree/trees tree-trees.r9-9.w0.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/zoo tree-zoo.r0-3.w2.rss0
+completed lox/tree/zoo tree-zoo.r0-3.w2.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/zoo tree-zoo.r3-6.w0.rss0
+completed lox/tree/zoo tree-zoo.r3-6.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/zoo tree-zoo.r6-9.w0.rss0
+completed lox/tree/zoo tree-zoo.r6-9.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/zoo tree-zoo.r9-9.w0.rss3
+completed lox/tree/zoo tree-zoo.r9-9.w0.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/zoo_batch tree-zoo_batch.r0-3.w2.rss0
+completed lox/tree/zoo_batch tree-zoo_batch.r0-3.w2.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/tree/zoo_batch tree-zoo_batch.r3-6.w0.rss0
+completed lox/tree/zoo_batch tree-zoo_batch.r3-6.w0.rss0 failures {'mylang-zero-rc': 'relative_timeout', 'mylang-before': 'relative_timeout'}
+measuring lox/tree/zoo_batch tree-zoo_batch.r6-9.w0.rss0
+completed lox/tree/zoo_batch tree-zoo_batch.r6-9.w0.rss0 failures {'mylang-zero-rc': 'relative_timeout', 'mylang-before': 'relative_timeout'}
+measuring lox/tree/zoo_batch tree-zoo_batch.r9-9.w0.rss3
+completed lox/tree/zoo_batch tree-zoo_batch.r9-9.w0.rss3 failures {'mylang-zero-rc': 'relative_timeout', 'mylang-before': 'relative_timeout'}
+measuring lox/vm/binary_trees vm-binary_trees.r0-3.w2.rss0
+completed lox/vm/binary_trees vm-binary_trees.r0-3.w2.rss0 failures {'mylang-zero-rc': 'relative_timeout', 'mylang-before': 'relative_timeout'}
+measuring lox/vm/binary_trees vm-binary_trees.r3-6.w0.rss0
+completed lox/vm/binary_trees vm-binary_trees.r3-6.w0.rss0 failures {'mylang-zero-rc': 'relative_timeout', 'mylang-before': 'relative_timeout'}
+measuring lox/vm/binary_trees vm-binary_trees.r6-9.w0.rss0
+completed lox/vm/binary_trees vm-binary_trees.r6-9.w0.rss0 failures {'mylang-zero-rc': 'relative_timeout', 'mylang-before': 'relative_timeout'}
+measuring lox/vm/binary_trees vm-binary_trees.r9-9.w0.rss3
+completed lox/vm/binary_trees vm-binary_trees.r9-9.w0.rss3 failures {'mylang-zero-rc': 'relative_timeout', 'mylang-before': 'relative_timeout'}
+measuring lox/vm/closures vm-closures.r0-3.w2.rss0
+completed lox/vm/closures vm-closures.r0-3.w2.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/closures vm-closures.r3-6.w0.rss0
+completed lox/vm/closures vm-closures.r3-6.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/closures vm-closures.r6-9.w0.rss0
+completed lox/vm/closures vm-closures.r6-9.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/closures vm-closures.r9-9.w0.rss3
+completed lox/vm/closures vm-closures.r9-9.w0.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/equality vm-equality.r0-3.w2.rss0
+completed lox/vm/equality vm-equality.r0-3.w2.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/equality vm-equality.r3-6.w0.rss0
+completed lox/vm/equality vm-equality.r3-6.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/equality vm-equality.r6-9.w0.rss0
+completed lox/vm/equality vm-equality.r6-9.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/equality vm-equality.r9-9.w0.rss3
+completed lox/vm/equality vm-equality.r9-9.w0.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/fib vm-fib.r0-3.w2.rss0
+completed lox/vm/fib vm-fib.r0-3.w2.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/fib vm-fib.r3-6.w0.rss0
+completed lox/vm/fib vm-fib.r3-6.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/fib vm-fib.r6-9.w0.rss0
+completed lox/vm/fib vm-fib.r6-9.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/fib vm-fib.r9-9.w0.rss3
+completed lox/vm/fib vm-fib.r9-9.w0.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/instantiation vm-instantiation.r0-3.w2.rss0
+completed lox/vm/instantiation vm-instantiation.r0-3.w2.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/instantiation vm-instantiation.r3-6.w0.rss0
+completed lox/vm/instantiation vm-instantiation.r3-6.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/instantiation vm-instantiation.r6-9.w0.rss0
+completed lox/vm/instantiation vm-instantiation.r6-9.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/instantiation vm-instantiation.r9-9.w0.rss3
+completed lox/vm/instantiation vm-instantiation.r9-9.w0.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/invocation vm-invocation.r0-3.w2.rss0
+completed lox/vm/invocation vm-invocation.r0-3.w2.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/invocation vm-invocation.r3-6.w0.rss0
+completed lox/vm/invocation vm-invocation.r3-6.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/invocation vm-invocation.r6-9.w0.rss0
+completed lox/vm/invocation vm-invocation.r6-9.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/invocation vm-invocation.r9-9.w0.rss3
+completed lox/vm/invocation vm-invocation.r9-9.w0.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/method_call vm-method_call.r0-3.w2.rss0
+completed lox/vm/method_call vm-method_call.r0-3.w2.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/method_call vm-method_call.r3-6.w0.rss0
+completed lox/vm/method_call vm-method_call.r3-6.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/method_call vm-method_call.r6-9.w0.rss0
+completed lox/vm/method_call vm-method_call.r6-9.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/method_call vm-method_call.r9-9.w0.rss3
+completed lox/vm/method_call vm-method_call.r9-9.w0.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/properties vm-properties.r0-3.w2.rss0
+completed lox/vm/properties vm-properties.r0-3.w2.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/properties vm-properties.r3-6.w0.rss0
+completed lox/vm/properties vm-properties.r3-6.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/properties vm-properties.r6-9.w0.rss0
+completed lox/vm/properties vm-properties.r6-9.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/properties vm-properties.r9-9.w0.rss3
+completed lox/vm/properties vm-properties.r9-9.w0.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/string_equality vm-string_equality.r0-3.w2.rss0
+completed lox/vm/string_equality vm-string_equality.r0-3.w2.rss0 failures {'mylang-zero-rc': 'relative_timeout', 'mylang-before': 'relative_timeout'}
+measuring lox/vm/string_equality vm-string_equality.r3-6.w0.rss0
+completed lox/vm/string_equality vm-string_equality.r3-6.w0.rss0 failures {'mylang-zero-rc': 'relative_timeout', 'mylang-before': 'relative_timeout'}
+measuring lox/vm/string_equality vm-string_equality.r6-9.w0.rss0
+completed lox/vm/string_equality vm-string_equality.r6-9.w0.rss0 failures {'mylang-zero-rc': 'relative_timeout', 'mylang-before': 'relative_timeout'}
+measuring lox/vm/string_equality vm-string_equality.r9-9.w0.rss3
+completed lox/vm/string_equality vm-string_equality.r9-9.w0.rss3 failures {'mylang-zero-rc': 'relative_timeout', 'mylang-before': 'relative_timeout'}
+measuring lox/vm/strings vm-strings.r0-3.w2.rss0
+completed lox/vm/strings vm-strings.r0-3.w2.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/strings vm-strings.r3-6.w0.rss0
+completed lox/vm/strings vm-strings.r3-6.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/strings vm-strings.r6-9.w0.rss0
+completed lox/vm/strings vm-strings.r6-9.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/strings vm-strings.r9-9.w0.rss3
+completed lox/vm/strings vm-strings.r9-9.w0.rss3 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/trees vm-trees.r0-3.w2.rss0
+completed lox/vm/trees vm-trees.r0-3.w2.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/trees vm-trees.r3-6.w0.rss0
+completed lox/vm/trees vm-trees.r3-6.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/trees vm-trees.r6-9.w0.rss0
+completed lox/vm/trees vm-trees.r6-9.w0.rss0 failures {'mylang-before': 'relative_timeout'}
+measuring lox/vm/trees vm-trees.r9-9.w0.rss3
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/schedule.py", line 68, in <module>
+    main()
+    ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/schedule.py", line 59, in main
+    subprocess.run(command, cwd=ROOT, env=env, stdout=stream, stderr=subprocess.STDOUT, check=True)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/scripts/build-slot.sh', 'timing', '/usr/bin/python3', '-B', '/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/measure_cell.py', '/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/runtime/vm-trees.r9-9.w0.rss3.spec.json', '/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/runtime/vm-trees.r9-9.w0.rss3.json', '--cpu', '8', '--round-start', '9', '--rounds', '0', '--warmups', '0', '--rss-rounds', '3', '--guest-timeout', '120']' returned non-zero exit status 1.

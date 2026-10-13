@@ -1,0 +1,26 @@
+{
+  "utc": "2026-10-13T01:12:01Z",
+  "reason": "Both application mode matrices complete and committed; release own tmpfs user quota. Qualification evidence, frozen compilers/application binaries and failed-attempt evidence retained.",
+  "removed_private_caches": [
+    {
+      "path": "/tmp/mylang-lox-eda-improvements-20261012-eda-matrix/release/tests",
+      "file_bytes": 49504264
+    },
+    {
+      "path": "/tmp/mylang-lox-eda-improvements-20261012-eda-matrix/debug/tests",
+      "file_bytes": 55164264
+    },
+    {
+      "path": "/tmp/mylang-lox-eda-improvements-20261012-eda-matrix/optimized-debug/tests",
+      "file_bytes": 50144765
+    },
+    {
+      "path": "/tmp/mylang-lox-eda-improvements-20261012-eda-matrix/no-facts/tests",
+      "file_bytes": 1117958
+    },
+    {
+      "path": "/tmp/mylang-lox-eda-improvements-20261012-eda-qualification-2/cache",
+      "file_bytes": 52659234
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "passed": [
+    "26 pinned input hashes",
+    "missing original resolves only pinned replacement",
+    "tampered replacement refused",
+    "changed original refused",
+    "unlisted missing file refused"
+  ],
+  "resolver_sha256": "1fe70a638cca8b343b1ebdb389978990360f9d1087aff9c92142532bb2224736"
+}

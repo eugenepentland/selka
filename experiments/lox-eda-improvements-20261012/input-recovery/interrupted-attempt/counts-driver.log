@@ -1,0 +1,102 @@
+waiting for complete runtime group eda
+starting counted group eda
+counting eda-Cyclops-Flex
+counted eda/Cyclops-Flex {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'skipped_runtime_failure', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-adf5901
+counted eda/adf5901 {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-barracuda-base
+counted eda/barracuda-base {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'skipped_runtime_failure', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-barracuda-via-fence
+counted eda/barracuda-via-fence {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-barracuda
+counted eda/barracuda {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-black-canyon+flat
+counted eda/black-canyon+flat {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-black-canyon
+counted eda/black-canyon {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-blinky-breakout
+counted eda/blinky-breakout {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-cyclops-analog+no-vendor-symbols
+counted eda/cyclops-analog+no-vendor-symbols {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-cyclops-analog
+counted eda/cyclops-analog {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'skipped_runtime_failure', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-cyclops-breakout
+counted eda/cyclops-breakout {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-cyclops-digital-pcb
+counted eda/cyclops-digital-pcb {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-cyclops-interposer
+counted eda/cyclops-interposer {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-cyclops-kband-breakout
+counted eda/cyclops-kband-breakout {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-cyclops-kband-pcb
+counted eda/cyclops-kband-pcb {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-cyclops-kband
+counted eda/cyclops-kband {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'skipped_runtime_failure', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-cyclops-xband-sip
+counted eda/cyclops-xband-sip {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'skipped_runtime_failure', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-dual-flash
+counted eda/dual-flash {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-labstation+no-vendor-symbols
+counted eda/labstation+no-vendor-symbols {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'skipped_runtime_failure', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-labstation
+counted eda/labstation {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'skipped_runtime_failure', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-lmk05318b-clock
+counted eda/lmk05318b-clock {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-max860-inverter
+counted eda/max860-inverter {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-poe-pd-flyback-tps23757
+counted eda/poe-pd-flyback-tps23757 {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-rds3+flat
+counted eda/rds3+flat {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-rds3-rf-selector
+counted eda/rds3-rf-selector {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-rds3
+counted eda/rds3 {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-remora-base
+counted eda/remora-base {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-remora-rf
+counted eda/remora-rf {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-rf-switch-8way
+counted eda/rf-switch-8way {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-rf-switch-eval
+counted eda/rf-switch-eval {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-stm32n6
+counted eda/stm32n6 {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-straps-base
+counted eda/straps-base {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-straps
+counted eda/straps {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting eda-w55rp20
+counted eda/w55rp20 {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+waiting for complete runtime group tree
+starting counted group tree
+counting tree-binary_trees
+counted lox/tree/binary_trees {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting tree-closures
+counted lox/tree/closures {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting tree-equality
+counted lox/tree/equality {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'ok'}
+counting tree-fib
+counted lox/tree/fib {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting tree-instantiation
+counted lox/tree/instantiation {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting tree-invocation
+counted lox/tree/invocation {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting tree-method_call
+counted lox/tree/method_call {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting tree-properties
+counted lox/tree/properties {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting tree-string_equality
+counted lox/tree/string_equality {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting tree-strings
+counted lox/tree/strings {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting tree-trees
+counted lox/tree/trees {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting tree-zoo
+counted lox/tree/zoo {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'ok', 'mylang-before': 'skipped_runtime_failure'}
+counting tree-zoo_batch
+counted lox/tree/zoo_batch {'mylang-original-rc': 'ok', 'mylang-migrated-rc': 'ok', 'mylang-zero-rc': 'skipped_runtime_failure', 'mylang-before': 'skipped_runtime_failure'}
+waiting for complete runtime group vm
+Traceback (most recent call last):
+  File "<stdin>", line 7, in <module>
+RuntimeError: Runtime driver failed; counter group remains incomplete.

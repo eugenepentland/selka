@@ -1,0 +1,121 @@
+{
+  "scope": "Five application source optimizations; no compiler/runtime change, default rollout or legacy RC retirement.",
+  "application_source_commit": "fcca1c13f92b4ef02b8ad2dcd7349cc45ec273eb",
+  "gate_commit": "639d359d1c0f161eb90184d78b7c4a11c0511f76",
+  "items": [
+    {
+      "id": "P1",
+      "status": "shipped",
+      "title": "Scalar VM frames and scoped bytecode queries",
+      "result": "Per-instruction frame/code copies removed; frame error writeback fixed.",
+      "evidence": "P1/handoff.md",
+      "files": [
+        "source/lox/vm.my",
+        "source/lox/vm_queries.my",
+        "source/lox/heap.my"
+      ]
+    },
+    {
+      "id": "P2",
+      "status": "shipped",
+      "title": "Borrowed tree AST with separate mutable state",
+      "result": "Expression, statement and function body traversal no longer clones the immutable program.",
+      "evidence": "P2/handoff.md",
+      "files": [
+        "source/lox/interpreter.my"
+      ]
+    },
+    {
+      "id": "P3",
+      "status": "shipped",
+      "title": "Scoped object field queries",
+      "result": "Scalar queries do not copy unselected managed payloads; owned snapshot accessors and unsupported mutation paths remain.",
+      "evidence": "P3/handoff.md",
+      "files": [
+        "source/lox/heap.my",
+        "source/lox/lox_strings.my",
+        "source/lox/output.my"
+      ]
+    },
+    {
+      "id": "P4",
+      "status": "shipped",
+      "title": "Borrowed EDA traversal and fresh parser child transfer",
+      "result": "Read visitors avoid copied subtrees; public independent-copy APIs retain their semantics.",
+      "evidence": "P4/handoff.md",
+      "files": [
+        "source/eda"
+      ]
+    },
+    {
+      "id": "P5",
+      "status": "shipped",
+      "title": "Indexed overlap scanning and stable index sorting",
+      "result": "No copied suffix per candidate; auxiliary ordering stores integer indices. Dense comparisons remain quadratic.",
+      "evidence": "P5/handoff.md",
+      "files": [
+        "source/eda/kicad_sch_textbox.my"
+      ]
+    },
+    {
+      "id": "P4-capacity",
+      "status": "measured tradeoff",
+      "title": "Fresh child transfer retains spare capacity",
+      "result": "Depth-24 probe: cumulative traffic 45,472 to 15,136 bytes; managed peak 5,536 to 10,880 bytes. No capacity tuning in this batch.",
+      "evidence": "P4/handoff.md",
+      "files": []
+    },
+    {
+      "id": "RC-source-control",
+      "status": "measured tradeoff",
+      "title": "VM source costs in RC control",
+      "result": "Rewritten VM source / original RC source geometric mean 1.15557688 over 13 cases; eight case medians are over 5% slower. Tree is 0.83333281 and EDA 0.99969452. This compares sources, not an isolated memory-mode effect. The exact VM hot-spot cause is unprofiled; further tuning is deferred.",
+      "evidence": "COMPARISON.md",
+      "files": []
+    }
+  ],
+  "qualification": {
+    "registered_actions_passed": 46,
+    "registered_actions_reused": 0,
+    "inputs_stable": true,
+    "modes_per_application": 5,
+    "lox_tests_per_mode": 75,
+    "eda_tests_per_mode": 317,
+    "summary": "matrix-summary.json"
+  },
+  "performance": "COMPARISON.md and results.json retain the full 60-case denominator, measured differences and cutoff cases. Remaining tuning is deferred to user review.",
+  "publication": "No push, local-main advancement or bootstrap merge in this batch.",
+  "measurement_recovery": {
+    "status": "Byte-identical expected inputs recovered; runtime protocol completed with original wall samples.",
+    "evidence": "input-recovery/README.md",
+    "source_and_compiler_unchanged": true,
+    "runtime_samples_replaced": 0,
+    "rss_block_repeated": "VM trees only; incomplete initial journal preserved"
+  },
+  "runtime_summary": {
+    "cases": 60,
+    "candidate_completed": 50,
+    "previous_checked_completed": 1,
+    "candidate_censored": 10,
+    "candidate_incomplete_cases": [
+      "eda/Cyclops-Flex",
+      "eda/barracuda-base",
+      "eda/cyclops-analog",
+      "eda/cyclops-kband",
+      "eda/cyclops-xband-sip",
+      "eda/labstation+no-vendor-symbols",
+      "eda/labstation",
+      "lox/tree/zoo_batch",
+      "lox/vm/binary_trees",
+      "lox/vm/string_equality"
+    ]
+  },
+  "counter_summary": {
+    "coverage_records": 60,
+    "candidate_completed": 50,
+    "candidate_skipped_after_runtime_cutoff": 10,
+    "candidate_runtime_rc_events": 0,
+    "candidate_compiler_rc_events": 0,
+    "candidate_managed_exit_live_bytes": 0
+  }
+}

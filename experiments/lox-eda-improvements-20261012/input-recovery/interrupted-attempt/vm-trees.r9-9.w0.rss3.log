@@ -1,0 +1,32 @@
+build-slot: timing slot 1, FIFO ticket 910 after 0s
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/measure.py", line 169, in <module>
+    if __name__=='__main__':main()
+                            ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/measure.py", line 164, in main
+    assert identities==identities_now()
+                       ~~~~~~~~~~~~~~^^
+  File "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/measure.py", line 38, in identities_now
+    result={f:digest(f) for f in sorted(paths)}
+              ~~~~~~^^^
+  File "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/measure.py", line 10, in digest
+    return hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
+                          ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 778, in read_bytes
+    with self.open(mode='rb', buffering=0) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 772, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/bench/expected/trees.vm.out'
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/measure_cell.py", line 37, in <module>
+    main()
+    ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/measure_cell.py", line 25, in main
+    subprocess.run([sys.executable, '-B', str(HERE / 'measure.py'), *sys.argv[1:]], check=True)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['/usr/bin/python3', '-B', '/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/measure.py', '/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/runtime/vm-trees.r9-9.w0.rss3.spec.json', '/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/runtime/vm-trees.r9-9.w0.rss3.json', '--cpu', '8', '--round-start', '9', '--rounds', '0', '--warmups', '0', '--rss-rounds', '3', '--guest-timeout', '120']' returned non-zero exit status 1.

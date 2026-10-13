@@ -1,0 +1,30 @@
+build-slot: build slot 1, FIFO ticket 2661 after 0s
+test_before_and_candidate_have_independent_deadline_statuses (__main__.DeadlineTests.test_before_and_candidate_have_independent_deadline_statuses) ... ok
+test_changed_absolute_ceiling_cannot_inherit_calibration (__main__.DeadlineTests.test_changed_absolute_ceiling_cannot_inherit_calibration) ... Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/measure_recovered.py", line 170, in <module>
+    if __name__=='__main__':main()
+                            ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/measure_recovered.py", line 58, in main
+    assert relative_policy['absolute_ceiling_seconds']==a.guest_timeout, 'absolute deadline changed between chunks'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: absolute deadline changed between chunks
+ok
+test_changed_environment_cannot_inherit_calibration (__main__.DeadlineTests.test_changed_environment_cannot_inherit_calibration) ... Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/measure_recovered.py", line 170, in <module>
+    if __name__=='__main__':main()
+                            ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/measure_recovered.py", line 50, in main
+    assert normalized(prior['spec'])==normalized(spec), 'execution spec changed between chunks'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: execution spec changed between chunks
+ok
+test_failed_calibration_skips_both_checked_sources (__main__.DeadlineTests.test_failed_calibration_skips_both_checked_sources) ... ok
+test_failed_reference_does_not_launch_checked_guest (__main__.DeadlineTests.test_failed_reference_does_not_launch_checked_guest) ... ok
+test_fast_guest_completes_with_wall_and_rss (__main__.DeadlineTests.test_fast_guest_completes_with_wall_and_rss) ... ok
+test_slow_guest_is_censored_once_and_not_retried_in_later_chunk (__main__.DeadlineTests.test_slow_guest_is_censored_once_and_not_retried_in_later_chunk) ... ok
+test_timeout_kills_descendant_process (__main__.DeadlineTests.test_timeout_kills_descendant_process) ... ok
+
+----------------------------------------------------------------------
+Ran 8 tests in 9.518s
+
+OK
