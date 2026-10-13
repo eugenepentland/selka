@@ -1,0 +1,7 @@
+{
+  "document": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/docs/managed-memory.md",
+  "document_sha256": "e4eeb5ca8c6b959a20ce144058b22804e6b835b53b1c674b0c3e350e98dfffc3",
+  "source": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/docs/exchange.my",
+  "source_sha256": "b904abd81d11fd92966a4b3944a6968c130f42293dfb42c252cb6594a9b23570",
+  "expected_exit": 42
+}

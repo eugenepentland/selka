@@ -1,0 +1,11 @@
+{
+  "status": "failed_guardian",
+  "log": "experiments/lox-eda-parity-20261013/P7/install-5.log",
+  "log_sha256": "5ec4e271be5c7a4a4686d41c2b57aa2d1577a6b6acd4b5ee164279bffa601953",
+  "checks": [
+    "imports: flags/facts cycle",
+    "repeated-string-literal: facts.zig"
+  ],
+  "installation_usable": false,
+  "repair": "Separate transfers.zig CFG token analysis; no import of facts"
+}

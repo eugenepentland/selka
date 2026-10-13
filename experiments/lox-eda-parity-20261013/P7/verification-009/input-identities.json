@@ -1,0 +1,37 @@
+{
+  "installation": {
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-009/bin/mylang": "8c8a87b66f68f401948eb1b23685d82220152b27fe71510f9de85ddfa3b140eb",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-009/libexec/mylang/components/cache-plan-22271c9d612d0ac6913d2d42a316a5a793a828e2a7a292e9f18801df277fddeb": "22271c9d612d0ac6913d2d42a316a5a793a828e2a7a292e9f18801df277fddeb",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-009/libexec/mylang/components/cache-plan-f7848b0f937de77cfecc5fc3b59d6d509ad20c6430e9cfdca20094353b008100": "f7848b0f937de77cfecc5fc3b59d6d509ad20c6430e9cfdca20094353b008100",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-009/libexec/mylang/components/cache-plan.json": "8820360070f456ae6657fe5d358734eb13ecf743e3c31501f96acbef68de2fe6",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-009/libexec/mylang/components/test-index-1c8c5fd0f690f6e7f2baab964e3c184868e3771d9c1809210297949cac695cae": "1c8c5fd0f690f6e7f2baab964e3c184868e3771d9c1809210297949cac695cae",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-009/libexec/mylang/components/test-index-7cf9a0d075c8d9f68d3fe98cd672698aefad930aa67eb6ca139d749ef109856c": "7cf9a0d075c8d9f68d3fe98cd672698aefad930aa67eb6ca139d749ef109856c",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-009/libexec/mylang/components/test-index.json": "ee20e23818458ba32fc226fcad7cbcc7fc49304aabaff85adbd812929c15e420",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-009/tools/selka-components": "e23f6be1bf3a9b409c7955dd2dce5164c7715b1033d975703bec4832fe3eb611"
+  },
+  "sources": {
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-009/generic-remaining-result-refusal.my": "fcd3a1f8f8eebf66763d3a4117d95d80a9ef4abc6248ecd1907f5447bc4d3a9c",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-009/list_exchange_sibling_fixture.my": "0e75d3274efa5490c5361796ca32b1c8f661c2950fd6d8c021213873fd94a77a",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-009/list_exchange_sibling_zero_fixture.my": "b2d8283e4a1010c0a2b629c74bc83ea829fb1efe24cc9a3f0b3002c79351c44f",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-009/list_exchange_wide_discard_fixture.my": "c3e86943fcb6f5b5f7c913df7d4c637c8a1aeca29867e94ec668eb1d21dafa2c",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-009/local-old-result-refusal.my": "7dad810a1f08784b32174e34eaddc90ac7b6876a7920193356cdf216b3ee7c91",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-009/rc-snapshot.my": "46e9dd52c3f478cd1f5ec3d0fbb52d5115209830de06248a571053bda4a7bde1",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-009/refusal-arity.my": "ce244aa317973e4107006537091feeb9badebaf6f9ba4d509d63c496c815766a",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-009/refusal-borrow.my": "9f8ff24a4ca1b03a688b5edd42e781fe13b2d25d4681feb0b53b5c51b8c943df",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-009/refusal-generic-pending-overwrite.my": "9ade008c09d8545168e2ef784207f02f42635e7734d31fb8e3a8913042449341",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-009/refusal-index-relocation.my": "309db8b8f59a1499c2bb56274419356e28c5bb77e39e272b97a6ec8a7422f67d",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-009/refusal-moved.my": "f5286f0132466b767635d46b4168ff336b0e44724bd4ca03e4bde791c6a6624c",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-009/refusal-mut-pending-overwrite.my": "2a7a3af496a667233f588668590b12ebbd13c3617be7899e31cd84740d1b80ce",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-009/refusal-pending.my": "ab2810539a5b90e55d4869dfaddf29e26c258b87b1ac5732d98e23afe0b64a64",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-009/refusal-replacement-relocation.my": "a7f28ef5690700a6ee5ac397c12cbb792b4afee91cc1e0a8e310d3f6bfbf9756",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-009/refusal-type.my": "2cd3bbb2154670df2abfac2d214e65909cda6662863d5d42759a143c7c00255f",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-009/remaining-result-refusal.my": "5fa5cdd52f4ef447e3779d3b6244441325be7f7e8d9a906f28ce725bd3ac5809",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-009/slope.my": "88d189830a0690a9c2f763106bddd12255b4669ce5d6ade18fc88288c0cdf5ed",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-009/ssa-protocol.my": "4eaf939ad6d69c8577af2e8187b74d0e1185f0361fc06bb02f3c01e367d4fdd8",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_fixture.my": "69d39c2a1aeb73fefda5ed6a9a818b74e0a881afa89d40050394ecd223cd2b93",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_sibling_fixture.my": "0e75d3274efa5490c5361796ca32b1c8f661c2950fd6d8c021213873fd94a77a",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_sibling_zero_fixture.my": "b2d8283e4a1010c0a2b629c74bc83ea829fb1efe24cc9a3f0b3002c79351c44f",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_wide_discard_fixture.my": "c3e86943fcb6f5b5f7c913df7d4c637c8a1aeca29867e94ec668eb1d21dafa2c"
+  },
+  "verifier_sha256": "fee80d6505ba2ef5c584a01cc10631eb23189c9f06abd78c0d6d86647c79fd9a"
+}

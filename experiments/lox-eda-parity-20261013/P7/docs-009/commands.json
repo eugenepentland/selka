@@ -1,0 +1,45 @@
+[
+  {
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-009/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/docs-009/exchange.my",
+      "--release",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/docs-009/cache-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/docs-009/rc"
+    ],
+    "returncode": 0,
+    "expected_exit": 0
+  },
+  {
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/docs-009/rc"
+    ],
+    "returncode": 42,
+    "expected_exit": 42
+  },
+  {
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-009/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/docs-009/exchange.my",
+      "--release",
+      "--experimental-zero-rc",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/docs-009/cache-zero-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/docs-009/zero-rc"
+    ],
+    "returncode": 0,
+    "expected_exit": 0
+  },
+  {
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/docs-009/zero-rc"
+    ],
+    "returncode": 42,
+    "expected_exit": 42
+  }
+]

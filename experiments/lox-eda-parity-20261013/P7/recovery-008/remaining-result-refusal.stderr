@@ -1,0 +1,4 @@
+/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/recovery-008/remaining-result-refusal.my:9:5: error[E_RESULT_UNHANDLED]: result-bearing value leaves scope without being handled, returned, transferred, or explicitly discarded
+      return 0
+      ^
+  note: /home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/recovery-008/remaining-result-refusal.my:7:9: unhandled result-bearing binding

@@ -1,0 +1,9 @@
+# Expected E_RESULT_UNHANDLED: callee's mut-list exemption must not acknowledge
+# pending elements still owned by the caller.
+func inspect(mut values: Result[int, int][]):
+    _ = len(values)
+
+func main() -> int:
+    mut values: Result[int, int][] = [Err(7)]
+    inspect(mut values)
+    return 0

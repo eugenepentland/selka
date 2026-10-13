@@ -1,0 +1,10 @@
+{
+  "returncode": 0,
+  "observed_by": "functions.write_stdin(session_id=34400) returned exit_code0",
+  "log_sha256": "2452314577491c5f1f3669122cdbe4e6472ee4480fef6ba6382a703841376198",
+  "parsed_guardian_result": {
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0
+  }
+}

@@ -1,0 +1,3 @@
+/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_fixture.my:50:17: error[R_LIST_BOUNDS]: native execution failed (index -1, length 2)
+  in main at /home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_fixture.my:50:17
+MYLANG-TRAP {"version":1,"operation":"index","index":-1,"length":2}

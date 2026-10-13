@@ -1,0 +1,4 @@
+/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/recovery-008/type.my:3:24: error[E_TYPE]: expected int, found str
+      _ = xs.exchange(0, "wrong")
+                         ^
+  alternative: int[].exchange(index: int, replacement: int) -> int

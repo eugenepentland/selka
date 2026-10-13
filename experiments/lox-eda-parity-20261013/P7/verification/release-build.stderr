@@ -1,0 +1,10 @@
+build-slot: FIFO ticket 2739, position 4; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 2739, position 3; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 1, FIFO ticket 2739 after 85s
+/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_fixture.my:21:5: error[E_RESULT_UNHANDLED]: result-bearing binding leaves scope without handling or transfer
+      return values.exchange(index, value)
+      ^
+  note: /home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_fixture.my:20:31: unhandled result-bearing binding
+/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_fixture.my:41:30: error[E_MAIN]: entry parameters must be `args: str[]` followed by capabilities
+  func main(out: Stream, args: str[]) -> int:
+                               ^

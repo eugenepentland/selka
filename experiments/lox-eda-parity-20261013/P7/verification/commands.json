@@ -1,0 +1,21 @@
+[
+  {
+    "name": "release-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_fixture.my",
+      "--experimental-zero-rc",
+      "--counters",
+      "--release",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification/cache-release",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification/release.ll",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification/release"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 85.34859826392494
+  }
+]

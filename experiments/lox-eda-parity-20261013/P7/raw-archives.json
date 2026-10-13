@@ -1,0 +1,158 @@
+{
+  "install-7.log": {
+    "uncompressed_sha256": "545ef9064f34721a7243a58a57076e8f4ef17ed04f86635d5f25b7f898b5255f",
+    "archive": "install-7.log.gz",
+    "archive_sha256": "2371357caf443acb52662d19c6ba3b0dd60e9d6e5a0e07d2a2fa5c37181b212d",
+    "bytes": 972
+  },
+  "audit-siblings.log": {
+    "uncompressed_sha256": "cc1ecd515103d66666a791d703c266d8b2480971467ec77e23588fcab7925ecb",
+    "archive": "audit-siblings.log.gz",
+    "archive_sha256": "85a87bb9d772f97d36c15f2ac397f7ca13c9ad747a8ad45458da70921f66b818",
+    "bytes": 561
+  },
+  "install-4.log": {
+    "uncompressed_sha256": "b452634aaaafcf8e83e71fb5ff5899d2b7cc8dc9a7f1fc50ac61ee8de0e2f88c",
+    "archive": "install-4.log.gz",
+    "archive_sha256": "598f75d01eafc9aab71dc2e289111cbd912c5a76a2818b8529357639d1a234b4",
+    "bytes": 752
+  },
+  "core-exchange-4.log": {
+    "uncompressed_sha256": "b01df7ed1df3b81ce216e52dfa05479c6c2463afef80c4587e306afb066b7ad4",
+    "archive": "core-exchange-4.log.gz",
+    "archive_sha256": "109139851d429c09133c099df1f1613c5788f9f43e3c4357d7c00452ae15a16e",
+    "bytes": 3906
+  },
+  "install-6.log": {
+    "uncompressed_sha256": "a530b3841f94d4b9be2fa42c0aeb44356cbf7638fbfc18f21b718be4dec014c7",
+    "archive": "install-6.log.gz",
+    "archive_sha256": "dae70df1de4992b1532c12e6797317b1a1f93f953b52829429aaab4f9f9ed9fa",
+    "bytes": 2421
+  },
+  "verify-docs.log": {
+    "uncompressed_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "archive": "verify-docs.log.gz",
+    "archive_sha256": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bytes": 0
+  },
+  "verify-008.log": {
+    "uncompressed_sha256": "d8601a72033d6692f3745996218c5ce32de175c6760b8e1fd2d043dbc695f1b2",
+    "archive": "verify-008.log.gz",
+    "archive_sha256": "3ae20b22e5acabdfebdfe4272de706900991af82b3fb5826f5875720cd169998",
+    "bytes": 743
+  },
+  "recover-008.log": {
+    "uncompressed_sha256": "751a49d6f55190a0adb956df63a757c904381e7fa9d465e2a173456042f1d9da",
+    "archive": "recover-008.log.gz",
+    "archive_sha256": "af2fdfe0d2d3925f4b7cc23c3af0b6ca4e15eb8404330970ff4f4f2cba63e0c2",
+    "bytes": 346
+  },
+  "core-exchange-2.log": {
+    "uncompressed_sha256": "bf5cf94a1832f07d83f28c5d218e271ad43c9996a24519fd499cd249d6b6d4de",
+    "archive": "core-exchange-2.log.gz",
+    "archive_sha256": "1249a7992d01e9a579e4042a3a12b6419ae98c3f73d7abfef4c466773e47d94f",
+    "bytes": 2134
+  },
+  "core-exchange-9.log": {
+    "uncompressed_sha256": "2452314577491c5f1f3669122cdbe4e6472ee4480fef6ba6382a703841376198",
+    "archive": "core-exchange-9.log.gz",
+    "archive_sha256": "fdd7ff30c9099c14e9e280f7203a8d21c12d50ce3ac679eb72eeb59570f8b47f",
+    "bytes": 2794
+  },
+  "verify.log": {
+    "uncompressed_sha256": "b759c3339921d6da4057225c79beda226551a765c13e7899960d280cc41c8fe5",
+    "archive": "verify.log.gz",
+    "archive_sha256": "a5e36b221fb654c83027a54a9a7b59f0219bfcadd8b20f77351b2c0c77b00079",
+    "bytes": 1690
+  },
+  "install-2.log": {
+    "uncompressed_sha256": "f79a1b7ff418fa3b5db0c3b87e0c9ec163d2e28a9763b812cff922ddee05606f",
+    "archive": "install-2.log.gz",
+    "archive_sha256": "5a64a6703b2fdacfcdc33e5829bc7e8b69f5264550d470d187435c7b1e50828b",
+    "bytes": 2400
+  },
+  "core-exchange-3.log": {
+    "uncompressed_sha256": "e0b8d239d5586894543510c7f5579b5c56fbdd79b6ec7be53625d62085122ed8",
+    "archive": "core-exchange-3.log.gz",
+    "archive_sha256": "a51245c07d233ba7def696135cc255af8368e900013379d0a5c5a06bde8dbecf",
+    "bytes": 4753
+  },
+  "install-8.log": {
+    "uncompressed_sha256": "f175b2936e8e255dfc850e3e82fdba4c7ca1ae2193bc1285d420d5b3b293c32f",
+    "archive": "install-8.log.gz",
+    "archive_sha256": "39e40ce28bd3f39cc866ba79659b9ce82694435ae2b768f59d75b85cf3125fc2",
+    "bytes": 1115
+  },
+  "core-exchange-6.log": {
+    "uncompressed_sha256": "6e06555f6a10802d88d9d7a33effee113584703c9cc26d4ee346f67042b9fd56",
+    "archive": "core-exchange-6.log.gz",
+    "archive_sha256": "ea2bbbc935bdddd3eef3aaaecfb804ea747646f2cc3b00e25685c471fa9a2465",
+    "bytes": 2832
+  },
+  "verify-docs-008.log": {
+    "uncompressed_sha256": "f676505769f96efca281cb85918edc7e063efe96e8e76927ce176070b56172d3",
+    "archive": "verify-docs-008.log.gz",
+    "archive_sha256": "8fdac90eb8ac0a1f319ea28c971f86a821d9616ccba3bf94addf95378860ed08",
+    "bytes": 52
+  },
+  "audit-rc.log": {
+    "uncompressed_sha256": "38d46dc702e9c3688b8fcfb441fc6813a332bc4595232a97790bad73e0b35656",
+    "archive": "audit-rc.log.gz",
+    "archive_sha256": "6b72045f39f66343b44c49ecb71154b4cfc29b97bb693d48887b38cc11126f1d",
+    "bytes": 319
+  },
+  "core-exchange.log": {
+    "uncompressed_sha256": "3f2491b79da2537dfe7e0e0ec49e12652e1ea67db63097ab1ee76d3ad9243310",
+    "archive": "core-exchange.log.gz",
+    "archive_sha256": "811b3a541d00612e1d4bbaf7e9a495e2e95852ee06928f3ce84770edbd101abe",
+    "bytes": 7343
+  },
+  "core-exchange-5.log": {
+    "uncompressed_sha256": "d862ca2435c3f9e88d579e04f86f26392ce5c09d88db33b8a5e6c2948d7d8215",
+    "archive": "core-exchange-5.log.gz",
+    "archive_sha256": "c693dcc6f521c5b899e0cff833bf34006a81d4a44cffb459064881b4352acc12",
+    "bytes": 4192
+  },
+  "install.log": {
+    "uncompressed_sha256": "2f80ae817b3c891b682ed65330095324f09901428e208dfac31a6fc5a2ba2a2e",
+    "archive": "install.log.gz",
+    "archive_sha256": "aed60a91a6e82bef26f950c200f0bf7c89d808b3b59815d9bc98a3940978c225",
+    "bytes": 3245
+  },
+  "install-5.log": {
+    "uncompressed_sha256": "5ec4e271be5c7a4a4686d41c2b57aa2d1577a6b6acd4b5ee164279bffa601953",
+    "archive": "install-5.log.gz",
+    "archive_sha256": "9faa125b68e89265c8529ec9ed861253e138be95e1a1d606f8ca27c2baa8249b",
+    "bytes": 2817
+  },
+  "verify-009.log": {
+    "uncompressed_sha256": "a35c4e9e0770c59de47aec999433df8e756152cf4cc293aa770908c42c6e42bf",
+    "archive": "verify-009.log.gz",
+    "archive_sha256": "10cfdceeac029adaf244e185a5988c223443ee1b23607909bfaea145967ab961",
+    "bytes": 141
+  },
+  "verify-docs-009.log": {
+    "uncompressed_sha256": "9a72ef6e6b86464709eb06f83c41648271893503ff3d679c7ca242a35ecf0c9d",
+    "archive": "verify-docs-009.log.gz",
+    "archive_sha256": "1f72a042956378b93f7152e277ed3f398d14baa8e342470c91d02f87956cb6b1",
+    "bytes": 140
+  },
+  "install-3.log": {
+    "uncompressed_sha256": "4f19cb8e0c30b2bae0311af48c1cd5e2012964a344181d8256d616fa30e51b47",
+    "archive": "install-3.log.gz",
+    "archive_sha256": "376f65f3a46730ae79000227e7d3b67951557ddd3f0a9fa769081205786e7e6b",
+    "bytes": 2167
+  },
+  "install-9.log": {
+    "uncompressed_sha256": "4f622c0cb8c22e44dfcaddec271d0d39bf0c44af6b53330d2a166015b2f07ee4",
+    "archive": "install-9.log.gz",
+    "archive_sha256": "f8a85564a9f8b073638cb6282cf0a58954e41a710224c4a054dc9853fce571dd",
+    "bytes": 1164
+  },
+  "compiler-source.patch": {
+    "uncompressed_sha256": "cdb05fe45d66a5f8f61c90c8d39b4a2961e2a7ad61f942519dc58ced645b3c4b",
+    "archive": "compiler-source.patch.gz",
+    "archive_sha256": "eca7bfe5645bb1565c2af1303370508576be81e375b797c31afb2f2a76ac321d",
+    "bytes": 67514
+  }
+}

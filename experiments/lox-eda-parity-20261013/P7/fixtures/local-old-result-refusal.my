@@ -1,0 +1,11 @@
+# Expected E_RESULT_UNHANDLED: the parameter exemption must not extend to
+# an old element moved into an ordinary local.
+func take(mut values: Result[int, int][]) -> int:
+    const old = values.exchange(0, Ok(8))
+    return 0
+
+func main() -> int:
+    mut values: Result[int, int][] = [Err(7)]
+    const number = take(mut values)
+    _ = values
+    return number

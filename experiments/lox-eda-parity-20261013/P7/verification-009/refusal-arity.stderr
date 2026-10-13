@@ -1,0 +1,3 @@
+/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-009/refusal-arity.my:3:9: error[E_ARITY]: `int[].exchange(index: int, replacement: int) -> int` takes 2 arguments, but this call passes 1
+      _ = xs.exchange(0)
+          ^

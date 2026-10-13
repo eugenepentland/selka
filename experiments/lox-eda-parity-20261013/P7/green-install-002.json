@@ -1,0 +1,15 @@
+{
+  "installation": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-002",
+  "compiler": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-002/bin/mylang",
+  "compiler_sha256": "d51abcb0b2cefc6922e4a90afbf0822ecfe01151f8c7e1b89fdb82481b0b3273",
+  "installation_files": {
+    "bin/mylang": "d51abcb0b2cefc6922e4a90afbf0822ecfe01151f8c7e1b89fdb82481b0b3273",
+    "libexec/mylang/components/cache-plan-22271c9d612d0ac6913d2d42a316a5a793a828e2a7a292e9f18801df277fddeb": "22271c9d612d0ac6913d2d42a316a5a793a828e2a7a292e9f18801df277fddeb",
+    "libexec/mylang/components/cache-plan.json": "faf6300a81472ec93a5709fee57883ee29b2719e1cdae9451bd904a5b90cdff1",
+    "libexec/mylang/components/test-index-7cf9a0d075c8d9f68d3fe98cd672698aefad930aa67eb6ca139d749ef109856c": "7cf9a0d075c8d9f68d3fe98cd672698aefad930aa67eb6ca139d749ef109856c",
+    "libexec/mylang/components/test-index.json": "f064d58b44c7e9c44a442b04585ae7e0f6a27c7ba01991800ef368dc56e60d38",
+    "tools/selka-components": "e23f6be1bf3a9b409c7955dd2dce5164c7715b1033d975703bec4832fe3eb611"
+  },
+  "source_install_log": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/experiments/lox-eda-parity-20261013/P7/install-2.log",
+  "source_install_log_sha256": "f79a1b7ff418fa3b5db0c3b87e0c9ec163d2e28a9763b812cff922ddee05606f"
+}

@@ -1,0 +1,20 @@
+# Distinct dynamic index parameters alias; both branches return an old owner.
+# Every exchange consumes its read before the join. Subsequent writes use the
+# receiver returned by the preceding mutation, rather than its consumed SSA ref.
+func selected(mut rows: int[][], first: u64, second: u64, take: bool) -> int[]:
+    mut previous: int[] = []
+    if take:
+        previous = rows.exchange(first, [2])
+    else:
+        previous = rows.exchange(second, [3])
+    rows[first] = [4]
+    rows[second] = [5]
+    return previous
+
+func main(args: str[], out: Stream) -> int:
+    mut rows = [[1], [9]]
+    const old = selected(mut rows, 0, 0, len(args) > 0)
+    assert old == [1]
+    assert rows == [[5], [9]]
+    out.print("exchange protocol passed")
+    return 0

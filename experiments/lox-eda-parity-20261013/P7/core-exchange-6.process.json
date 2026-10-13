@@ -1,0 +1,11 @@
+{
+  "returncode": 0,
+  "observed_by": "functions.write_stdin(session_id=29392) returned exit_code0",
+  "log_sha256": "6e06555f6a10802d88d9d7a33effee113584703c9cc26d4ee346f67042b9fd56",
+  "parsed_guardian_result": {
+    "passed": 12,
+    "failed": 0,
+    "skipped": 0
+  },
+  "warning": "Zig warning step w renders native command; test runner slow-test diagnostics printed to stderr. The enclosing build-slot/zig process exited0."
+}

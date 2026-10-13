@@ -1,0 +1,6 @@
+{
+  "status": "cancelled_while_awaiting_RC_run_admission",
+  "utc": "2026-10-13T03:55:29.685926+00:00",
+  "process_group": 1225404,
+  "reason": "Preserve completed RC build; rerun both ownership modes under one outer build lease with frozen final compiler. No runtime sample or success claimed."
+}

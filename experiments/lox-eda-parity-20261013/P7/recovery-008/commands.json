@@ -1,0 +1,70 @@
+[
+  {
+    "name": "type",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/recovery-008/type.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/recovery-008/cache-type",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/recovery-008/type"
+    ],
+    "returncode": 1,
+    "required_code": "E_TYPE",
+    "source_sha256": "2cd3bbb2154670df2abfac2d214e65909cda6662863d5d42759a143c7c00255f"
+  },
+  {
+    "name": "remaining-result-refusal",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/recovery-008/remaining-result-refusal.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/recovery-008/cache-remaining-result-refusal",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/recovery-008/remaining-result-refusal"
+    ],
+    "returncode": 1,
+    "required_code": "E_RESULT_UNHANDLED",
+    "source_sha256": "5fa5cdd52f4ef447e3779d3b6244441325be7f7e8d9a906f28ce725bd3ac5809"
+  },
+  {
+    "name": "generic-remaining-result-refusal",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/recovery-008/generic-remaining-result-refusal.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/recovery-008/cache-generic-remaining-result-refusal",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/recovery-008/generic-remaining-result-refusal"
+    ],
+    "returncode": 1,
+    "required_code": "E_RESULT_UNHANDLED",
+    "source_sha256": "fcd3a1f8f8eebf66763d3a4117d95d80a9ef4abc6248ecd1907f5447bc4d3a9c"
+  },
+  {
+    "name": "local-old-result-refusal",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/recovery-008/local-old-result-refusal.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/recovery-008/cache-local-old-result-refusal",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/recovery-008/local-old-result-refusal"
+    ],
+    "returncode": 1,
+    "required_code": "E_RESULT_UNHANDLED",
+    "source_sha256": "7dad810a1f08784b32174e34eaddc90ac7b6876a7920193356cdf216b3ee7c91"
+  }
+]

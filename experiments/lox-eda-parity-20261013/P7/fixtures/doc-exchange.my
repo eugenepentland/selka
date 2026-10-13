@@ -1,0 +1,8 @@
+# doc: expect 42
+func main() -> int:
+    mut rows = [[1], [2, 3]]
+    mut old = rows.exchange(-1, [8])
+    old.append(4)
+    assert rows == [[1], [8]]
+    assert old == [2, 3, 4]
+    return 42

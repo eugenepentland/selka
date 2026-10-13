@@ -1,0 +1,3 @@
+/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/refusal-pending.my:3:5: error[E_EXPLICIT_DISCARD_REQUIRED]: a standalone non-unit value requires `_ =` or result handling
+      pending.exchange(0, Ok(2))
+      ^

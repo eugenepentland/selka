@@ -1,0 +1,1637 @@
+[
+  {
+    "name": "release-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_fixture.my",
+      "--experimental-zero-rc",
+      "--counters",
+      "--release",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-release",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/release.ll",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/release"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 2.5088993629906327
+  },
+  {
+    "name": "release-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/release"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0014080619439482689
+  },
+  {
+    "name": "release-negative",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/release",
+      "negative"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.3652170898858458
+  },
+  {
+    "name": "release-positive",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/release",
+      "positive"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.12949492898769677
+  },
+  {
+    "name": "release-empty",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/release",
+      "empty"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.052865891018882394
+  },
+  {
+    "name": "release-unsigned-max",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/release",
+      "unsigned-max"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.1564673490356654
+  },
+  {
+    "name": "debug-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_fixture.my",
+      "--experimental-zero-rc",
+      "--counters",
+      "--unoptimized",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-debug",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/debug.ll",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/debug"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.40342269092798233
+  },
+  {
+    "name": "debug-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/debug"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0011732520069926977
+  },
+  {
+    "name": "debug-negative",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/debug",
+      "negative"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.001701052999123931
+  },
+  {
+    "name": "debug-positive",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/debug",
+      "positive"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.004201448056846857
+  },
+  {
+    "name": "debug-empty",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/debug",
+      "empty"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.0014631729573011398
+  },
+  {
+    "name": "debug-unsigned-max",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/debug",
+      "unsigned-max"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.2209872449748218
+  },
+  {
+    "name": "verified-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_fixture.my",
+      "--experimental-zero-rc",
+      "--counters",
+      "--release",
+      "--verify-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-verified",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/verified.ll",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/verified"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.7070730519481003
+  },
+  {
+    "name": "verified-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/verified"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0019321488216519356
+  },
+  {
+    "name": "verified-negative",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/verified",
+      "negative"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.04737614677287638
+  },
+  {
+    "name": "verified-positive",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/verified",
+      "positive"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.17265833914279938
+  },
+  {
+    "name": "verified-empty",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/verified",
+      "empty"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.001541034085676074
+  },
+  {
+    "name": "verified-unsigned-max",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/verified",
+      "unsigned-max"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.28406664403155446
+  },
+  {
+    "name": "optimized-debug-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_fixture.my",
+      "--experimental-zero-rc",
+      "--counters",
+      "--optimize-debug",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-optimized-debug",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/optimized-debug.ll",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/optimized-debug"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.40448621194809675
+  },
+  {
+    "name": "optimized-debug-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/optimized-debug"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.001416131854057312
+  },
+  {
+    "name": "optimized-debug-negative",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/optimized-debug",
+      "negative"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.20550407515838742
+  },
+  {
+    "name": "optimized-debug-positive",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/optimized-debug",
+      "positive"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.32819745084270835
+  },
+  {
+    "name": "optimized-debug-empty",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/optimized-debug",
+      "empty"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.42610572185367346
+  },
+  {
+    "name": "optimized-debug-unsigned-max",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/optimized-debug",
+      "unsigned-max"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.08605400403030217
+  },
+  {
+    "name": "no-facts-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_fixture.my",
+      "--experimental-zero-rc",
+      "--counters",
+      "--release",
+      "--no-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-no-facts",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/no-facts.ll",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/no-facts"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.668008463922888
+  },
+  {
+    "name": "no-facts-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/no-facts"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.7189912188332528
+  },
+  {
+    "name": "no-facts-negative",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/no-facts",
+      "negative"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.006279894150793552
+  },
+  {
+    "name": "no-facts-positive",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/no-facts",
+      "positive"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.8632868079002947
+  },
+  {
+    "name": "no-facts-empty",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/no-facts",
+      "empty"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.19518903619609773
+  },
+  {
+    "name": "no-facts-unsigned-max",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/no-facts",
+      "unsigned-max"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.2066364970523864
+  },
+  {
+    "name": "rc-snapshot-release-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/rc-snapshot.my",
+      "--counters",
+      "--release",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-rc-snapshot-release",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/rc-snapshot-release"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.15173982619307935
+  },
+  {
+    "name": "rc-snapshot-release-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/rc-snapshot-release"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0015157810412347317
+  },
+  {
+    "name": "rc-snapshot-debug-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/rc-snapshot.my",
+      "--counters",
+      "--unoptimized",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-rc-snapshot-debug",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/rc-snapshot-debug"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.5227657379582524
+  },
+  {
+    "name": "rc-snapshot-debug-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/rc-snapshot-debug"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012819960247725248
+  },
+  {
+    "name": "rc-snapshot-verified-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/rc-snapshot.my",
+      "--counters",
+      "--release",
+      "--verify-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-rc-snapshot-verified",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/rc-snapshot-verified"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.19454016792587936
+  },
+  {
+    "name": "rc-snapshot-verified-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/rc-snapshot-verified"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0013704069424420595
+  },
+  {
+    "name": "rc-snapshot-optimized-debug-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/rc-snapshot.my",
+      "--counters",
+      "--optimize-debug",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-rc-snapshot-optimized-debug",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/rc-snapshot-optimized-debug"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 2.0610245869029313
+  },
+  {
+    "name": "rc-snapshot-optimized-debug-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/rc-snapshot-optimized-debug"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012468458153307438
+  },
+  {
+    "name": "rc-snapshot-no-facts-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/rc-snapshot.my",
+      "--counters",
+      "--release",
+      "--no-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-rc-snapshot-no-facts",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/rc-snapshot-no-facts"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.14047454809769988
+  },
+  {
+    "name": "rc-snapshot-no-facts-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/rc-snapshot-no-facts"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012851748615503311
+  },
+  {
+    "name": "list_exchange_sibling_fixture-release-zero-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_sibling_fixture.my",
+      "--experimental-zero-rc",
+      "--counters",
+      "--release",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_sibling_fixture-release-zero-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-release-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.32635582494549453
+  },
+  {
+    "name": "list_exchange_sibling_fixture-release-zero-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-release-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.001212029019370675
+  },
+  {
+    "name": "list_exchange_sibling_fixture-release-zero-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-release-zero-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012059290893375874
+  },
+  {
+    "name": "list_exchange_sibling_fixture-release-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_sibling_fixture.my",
+      "--counters",
+      "--release",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_sibling_fixture-release-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-release-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.44243330298922956
+  },
+  {
+    "name": "list_exchange_sibling_fixture-release-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-release-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0013900930061936378
+  },
+  {
+    "name": "list_exchange_sibling_fixture-release-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-release-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0014935981016606092
+  },
+  {
+    "name": "list_exchange_sibling_fixture-debug-zero-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_sibling_fixture.my",
+      "--experimental-zero-rc",
+      "--counters",
+      "--unoptimized",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_sibling_fixture-debug-zero-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-debug-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 1.1356669880915433
+  },
+  {
+    "name": "list_exchange_sibling_fixture-debug-zero-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-debug-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012317260261625051
+  },
+  {
+    "name": "list_exchange_sibling_fixture-debug-zero-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-debug-zero-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012401468120515347
+  },
+  {
+    "name": "list_exchange_sibling_fixture-debug-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_sibling_fixture.my",
+      "--counters",
+      "--unoptimized",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_sibling_fixture-debug-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-debug-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 1.189207053044811
+  },
+  {
+    "name": "list_exchange_sibling_fixture-debug-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-debug-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0014403131790459156
+  },
+  {
+    "name": "list_exchange_sibling_fixture-debug-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-debug-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012867699842900038
+  },
+  {
+    "name": "list_exchange_sibling_fixture-verified-zero-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_sibling_fixture.my",
+      "--experimental-zero-rc",
+      "--counters",
+      "--release",
+      "--verify-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_sibling_fixture-verified-zero-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-verified-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.1610932240728289
+  },
+  {
+    "name": "list_exchange_sibling_fixture-verified-zero-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-verified-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012642019428312778
+  },
+  {
+    "name": "list_exchange_sibling_fixture-verified-zero-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-verified-zero-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.001135110156610608
+  },
+  {
+    "name": "list_exchange_sibling_fixture-verified-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_sibling_fixture.my",
+      "--counters",
+      "--release",
+      "--verify-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_sibling_fixture-verified-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-verified-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 2.2959406359586865
+  },
+  {
+    "name": "list_exchange_sibling_fixture-verified-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-verified-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.001362944021821022
+  },
+  {
+    "name": "list_exchange_sibling_fixture-verified-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-verified-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0013006890658289194
+  },
+  {
+    "name": "list_exchange_sibling_fixture-optimized-debug-zero-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_sibling_fixture.my",
+      "--experimental-zero-rc",
+      "--counters",
+      "--optimize-debug",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_sibling_fixture-optimized-debug-zero-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-optimized-debug-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.15010780398733914
+  },
+  {
+    "name": "list_exchange_sibling_fixture-optimized-debug-zero-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-optimized-debug-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012754029594361782
+  },
+  {
+    "name": "list_exchange_sibling_fixture-optimized-debug-zero-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-optimized-debug-zero-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012645090464502573
+  },
+  {
+    "name": "list_exchange_sibling_fixture-optimized-debug-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_sibling_fixture.my",
+      "--counters",
+      "--optimize-debug",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_sibling_fixture-optimized-debug-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-optimized-debug-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.17025796114467084
+  },
+  {
+    "name": "list_exchange_sibling_fixture-optimized-debug-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-optimized-debug-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.001370210899040103
+  },
+  {
+    "name": "list_exchange_sibling_fixture-optimized-debug-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-optimized-debug-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012495380360633135
+  },
+  {
+    "name": "list_exchange_sibling_fixture-no-facts-zero-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_sibling_fixture.my",
+      "--experimental-zero-rc",
+      "--counters",
+      "--release",
+      "--no-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_sibling_fixture-no-facts-zero-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-no-facts-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.1540784549433738
+  },
+  {
+    "name": "list_exchange_sibling_fixture-no-facts-zero-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-no-facts-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0011623101308941841
+  },
+  {
+    "name": "list_exchange_sibling_fixture-no-facts-zero-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-no-facts-zero-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0013093920424580574
+  },
+  {
+    "name": "list_exchange_sibling_fixture-no-facts-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_sibling_fixture.my",
+      "--counters",
+      "--release",
+      "--no-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_sibling_fixture-no-facts-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-no-facts-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.17226913291960955
+  },
+  {
+    "name": "list_exchange_sibling_fixture-no-facts-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-no-facts-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0011219610460102558
+  },
+  {
+    "name": "list_exchange_sibling_fixture-no-facts-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_fixture-no-facts-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0013685361482203007
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-release-zero-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_sibling_zero_fixture.my",
+      "--experimental-zero-rc",
+      "--counters",
+      "--release",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_sibling_zero_fixture-release-zero-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-release-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.20748495403677225
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-release-zero-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-release-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012993179261684418
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-release-zero-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-release-zero-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012430239003151655
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-release-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_sibling_zero_fixture.my",
+      "--counters",
+      "--release",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_sibling_zero_fixture-release-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-release-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 1.2289698410313576
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-release-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-release-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0013185960706323385
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-release-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-release-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0013436342123895884
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-debug-zero-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_sibling_zero_fixture.my",
+      "--experimental-zero-rc",
+      "--counters",
+      "--unoptimized",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_sibling_zero_fixture-debug-zero-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-debug-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.22228494193404913
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-debug-zero-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-debug-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0013907591346651316
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-debug-zero-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-debug-zero-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0013199818786233664
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-debug-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_sibling_zero_fixture.my",
+      "--counters",
+      "--unoptimized",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_sibling_zero_fixture-debug-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-debug-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.15297820512205362
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-debug-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-debug-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0013117038179188967
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-debug-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-debug-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0013305030297487974
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-verified-zero-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_sibling_zero_fixture.my",
+      "--experimental-zero-rc",
+      "--counters",
+      "--release",
+      "--verify-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_sibling_zero_fixture-verified-zero-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-verified-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.20781060215085745
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-verified-zero-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-verified-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0013652229681611061
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-verified-zero-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-verified-zero-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012809277977794409
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-verified-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_sibling_zero_fixture.my",
+      "--counters",
+      "--release",
+      "--verify-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_sibling_zero_fixture-verified-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-verified-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.7876140428707004
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-verified-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-verified-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012628980912268162
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-verified-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-verified-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012943041510879993
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-optimized-debug-zero-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_sibling_zero_fixture.my",
+      "--experimental-zero-rc",
+      "--counters",
+      "--optimize-debug",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_sibling_zero_fixture-optimized-debug-zero-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-optimized-debug-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.15040626982226968
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-optimized-debug-zero-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-optimized-debug-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0013576489873230457
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-optimized-debug-zero-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-optimized-debug-zero-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012937961146235466
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-optimized-debug-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_sibling_zero_fixture.my",
+      "--counters",
+      "--optimize-debug",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_sibling_zero_fixture-optimized-debug-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-optimized-debug-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 1.8003041960764676
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-optimized-debug-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-optimized-debug-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012465149629861116
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-optimized-debug-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-optimized-debug-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.4934077528305352
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-no-facts-zero-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_sibling_zero_fixture.my",
+      "--experimental-zero-rc",
+      "--counters",
+      "--release",
+      "--no-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_sibling_zero_fixture-no-facts-zero-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-no-facts-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.31198391411453485
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-no-facts-zero-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-no-facts-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0011947569437325
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-no-facts-zero-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-no-facts-zero-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012399980332702398
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-no-facts-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_sibling_zero_fixture.my",
+      "--counters",
+      "--release",
+      "--no-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_sibling_zero_fixture-no-facts-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-no-facts-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.13823320902884007
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-no-facts-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-no-facts-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0013497991021722555
+  },
+  {
+    "name": "list_exchange_sibling_zero_fixture-no-facts-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_sibling_zero_fixture-no-facts-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012977479491382837
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-release-zero-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_wide_discard_fixture.my",
+      "--experimental-zero-rc",
+      "--counters",
+      "--release",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_wide_discard_fixture-release-zero-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-release-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 1.306939949048683
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-release-zero-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-release-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.001230189809575677
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-release-zero-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-release-zero-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012688529677689075
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-release-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_wide_discard_fixture.my",
+      "--counters",
+      "--release",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_wide_discard_fixture-release-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-release-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.14371368288993835
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-release-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-release-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012461431324481964
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-release-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-release-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0013214580249041319
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-debug-zero-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_wide_discard_fixture.my",
+      "--experimental-zero-rc",
+      "--counters",
+      "--unoptimized",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_wide_discard_fixture-debug-zero-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-debug-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.11731480900198221
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-debug-zero-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-debug-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012509911321103573
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-debug-zero-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-debug-zero-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012446129694581032
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-debug-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_wide_discard_fixture.my",
+      "--counters",
+      "--unoptimized",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_wide_discard_fixture-debug-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-debug-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.13245058804750443
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-debug-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-debug-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012686350382864475
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-debug-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-debug-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.001348773017525673
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-verified-zero-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_wide_discard_fixture.my",
+      "--experimental-zero-rc",
+      "--counters",
+      "--release",
+      "--verify-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_wide_discard_fixture-verified-zero-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-verified-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.15181882306933403
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-verified-zero-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-verified-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0009970208629965782
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-verified-zero-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-verified-zero-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0013018560130149126
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-verified-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_wide_discard_fixture.my",
+      "--counters",
+      "--release",
+      "--verify-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_wide_discard_fixture-verified-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-verified-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.5581493019126356
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-verified-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-verified-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0013200428802520037
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-verified-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-verified-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0013368050567805767
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-optimized-debug-zero-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_wide_discard_fixture.my",
+      "--experimental-zero-rc",
+      "--counters",
+      "--optimize-debug",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_wide_discard_fixture-optimized-debug-zero-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-optimized-debug-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.2542436870280653
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-optimized-debug-zero-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-optimized-debug-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.001172945136204362
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-optimized-debug-zero-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-optimized-debug-zero-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0013839839957654476
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-optimized-debug-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_wide_discard_fixture.my",
+      "--counters",
+      "--optimize-debug",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_wide_discard_fixture-optimized-debug-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-optimized-debug-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 1.3934053929988295
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-optimized-debug-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-optimized-debug-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012509331572800875
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-optimized-debug-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-optimized-debug-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.10250345896929502
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-no-facts-zero-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_wide_discard_fixture.my",
+      "--experimental-zero-rc",
+      "--counters",
+      "--release",
+      "--no-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_wide_discard_fixture-no-facts-zero-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-no-facts-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.1408516140654683
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-no-facts-zero-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-no-facts-zero-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012042559683322906
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-no-facts-zero-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-no-facts-zero-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0013865388464182615
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-no-facts-rc-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/src/core/list_exchange_wide_discard_fixture.my",
+      "--counters",
+      "--release",
+      "--no-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-list_exchange_wide_discard_fixture-no-facts-rc",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-no-facts-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 1.0769533340353519
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-no-facts-rc-else-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-no-facts-rc"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012834048829972744
+  },
+  {
+    "name": "list_exchange_wide_discard_fixture-no-facts-rc-take-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/list_exchange_wide_discard_fixture-no-facts-rc",
+      "take"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0012296491768211126
+  },
+  {
+    "name": "slope-build",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/slope.my",
+      "--experimental-zero-rc",
+      "--counters",
+      "--release",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-slope",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/slope"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.15613628993742168
+  },
+  {
+    "name": "10-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/slope",
+      "00010"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.0014459090307354927
+  },
+  {
+    "name": "10000-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/slope",
+      "10000"
+    ],
+    "returncode": 0,
+    "elapsed_including_admission": 0.001432023011147976
+  },
+  {
+    "name": "refusal-mut-pending-overwrite",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/refusal-mut-pending-overwrite.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-refusal-mut-pending-overwrite",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/refusal-mut-pending-overwrite"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.006954642944037914
+  },
+  {
+    "name": "refusal-generic-pending-overwrite",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/refusal-generic-pending-overwrite.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-refusal-generic-pending-overwrite",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/refusal-generic-pending-overwrite"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.006080653052777052
+  },
+  {
+    "name": "refusal-index-relocation",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/refusal-index-relocation.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-refusal-index-relocation",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/refusal-index-relocation"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.0083188870921731
+  },
+  {
+    "name": "refusal-replacement-relocation",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/refusal-replacement-relocation.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-refusal-replacement-relocation",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/refusal-replacement-relocation"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.005961057031527162
+  },
+  {
+    "name": "refusal-borrow",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/refusal-borrow.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-refusal-borrow",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/refusal-borrow"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.009055261965841055
+  },
+  {
+    "name": "refusal-moved",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/refusal-moved.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-refusal-moved",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/refusal-moved"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.0064338380470871925
+  },
+  {
+    "name": "refusal-pending",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/refusal-pending.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-refusal-pending",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/refusal-pending"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.006805384997278452
+  },
+  {
+    "name": "refusal-arity",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/refusal-arity.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-refusal-arity",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/refusal-arity"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.007543989922851324
+  },
+  {
+    "name": "refusal-type",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-008/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/refusal-type.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/cache-refusal-type",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-008/refusal-type"
+    ],
+    "returncode": 1,
+    "elapsed_including_admission": 0.005573648028075695
+  }
+]

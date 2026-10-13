@@ -1,0 +1,26 @@
+{
+  "status": "own_waiter_cancelled_before_admission",
+  "utc": "2026-10-13T03:59:07.191280+00:00",
+  "process_group": 1356513,
+  "reason": "Switch next helper to previously qualified immutable explicit component route; no pin edits",
+  "component_route": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/experiments/text-gaps-20261012/coordinator/component-route.json",
+  "component_route_sha256": "8b46bf0ad1ad652c5c462fab175265af40dfb47e3439e5a46e9753ca702dde8f",
+  "qualified_inputs": [
+    {
+      "gid": 1000,
+      "mode": 292,
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar",
+      "sha256": "0557a645579881d54d3f4c493c8b07be38d42b0a21622ab712b84589ee212c27",
+      "size": 1517547520,
+      "uid": 1000
+    },
+    {
+      "gid": 1000,
+      "mode": 436,
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+      "sha256": "32f37baa2509b01c231a104d7e9ba224a7193399201d0f87ec8a5db8fa6f039b",
+      "size": 524,
+      "uid": 1000
+    }
+  ]
+}

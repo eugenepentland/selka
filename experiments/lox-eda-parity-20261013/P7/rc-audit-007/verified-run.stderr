@@ -1,0 +1,2 @@
+/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/rc-audit-007/snapshot.my:5:5: error[R_CORE_FACT]: native execution failed (count == 1 before freeing a unique block: value 0, other 1)
+  in main at /home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/rc-audit-007/snapshot.my:5:5

@@ -1,0 +1,27 @@
+{
+  "document": {
+    "document": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/docs/managed-memory.md",
+    "document_sha256": "e4eeb5ca8c6b959a20ce144058b22804e6b835b53b1c674b0c3e350e98dfffc3",
+    "source": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/docs/exchange.my",
+    "source_sha256": "b904abd81d11fd92966a4b3944a6968c130f42293dfb42c252cb6594a9b23570",
+    "expected_exit": 42
+  },
+  "source": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/docs-009/exchange.my",
+  "source_sha256": "b904abd81d11fd92966a4b3944a6968c130f42293dfb42c252cb6594a9b23570",
+  "installation": {
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-009/bin/mylang": "8c8a87b66f68f401948eb1b23685d82220152b27fe71510f9de85ddfa3b140eb",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-009/libexec/mylang/components/cache-plan-22271c9d612d0ac6913d2d42a316a5a793a828e2a7a292e9f18801df277fddeb": "22271c9d612d0ac6913d2d42a316a5a793a828e2a7a292e9f18801df277fddeb",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-009/libexec/mylang/components/cache-plan-f7848b0f937de77cfecc5fc3b59d6d509ad20c6430e9cfdca20094353b008100": "f7848b0f937de77cfecc5fc3b59d6d509ad20c6430e9cfdca20094353b008100",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-009/libexec/mylang/components/cache-plan.json": "8820360070f456ae6657fe5d358734eb13ecf743e3c31501f96acbef68de2fe6",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-009/libexec/mylang/components/test-index-1c8c5fd0f690f6e7f2baab964e3c184868e3771d9c1809210297949cac695cae": "1c8c5fd0f690f6e7f2baab964e3c184868e3771d9c1809210297949cac695cae",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-009/libexec/mylang/components/test-index-7cf9a0d075c8d9f68d3fe98cd672698aefad930aa67eb6ca139d749ef109856c": "7cf9a0d075c8d9f68d3fe98cd672698aefad930aa67eb6ca139d749ef109856c",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-009/libexec/mylang/components/test-index.json": "ee20e23818458ba32fc226fcad7cbcc7fc49304aabaff85adbd812929c15e420",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-009/tools/selka-components": "e23f6be1bf3a9b409c7955dd2dce5164c7715b1033d975703bec4832fe3eb611"
+  },
+  "compiler": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-009/bin/mylang",
+  "outer_lease": {
+    "kind": "build",
+    "directory": "/home/epentland/.cache/mylang/slots"
+  },
+  "verifier_sha256": "3b6095ab87230f3dc0886cdba209d526f9ffac289c3e9118312cdb99483bb56d"
+}

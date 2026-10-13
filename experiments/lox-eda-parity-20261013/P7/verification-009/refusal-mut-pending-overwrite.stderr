@@ -1,0 +1,3 @@
+/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-009/refusal-mut-pending-overwrite.my:2:5: error[E_RESULT_OVERWRITE]: assignment would overwrite an unhandled result-bearing value
+      values = [Ok(8)]
+      ^

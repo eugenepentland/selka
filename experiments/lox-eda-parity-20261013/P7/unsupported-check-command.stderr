@@ -1,0 +1,40 @@
+usage: mylang build <file.my> (-o <output> | --run [-- ARGS...]) [--release | --unoptimized | --optimize-debug] [--link FILE.c]... (native build; `mylang build` prints the options)
+       mylang run <file.my> [options] [-- ARGS...] | run-project <entry.my> [options] [-- ARGS...] (build and run; `mylang run` prints the options)
+       mylang test <entry.my|directory> [--filter GLOB] [--json] [--release | --unoptimized | --optimize-debug] [--affected --against REF] (run the public test_* functions)
+       mylang dump-ir <file.my> [--facts] | dump-typed <file.my> [FUNCTION] | coverage <file.my>... (developer views of the new core)
+       mylang juice <doctor|analyze|record|compare|validate|calibrate> (performance work proxy)
+       mylang cost <entry.my> [FUNCTION] [--json] [--debug | --no-facts | --verify-facts] [--llvm-remarks FILE.opt.yaml] (per-function Core costs)
+       mylang list-interfaces <entry.my> [--contracts | --cost] (public declarations; --cost checks bodies and appends release costs)
+       mylang fix [--check] <entry.my|directory> (apply every structured diagnostic repair)
+       mylang doc-coverage [<repo-root>] (every implemented feature and standard export needs a documented example)
+       mylang doctest [<repo-root>] [--filter GLOB] [--report PATH] [--jobs N] [--verbose] (run every fenced documentation example)
+       mylang reference --query TERM [--format=text|json] (compiler-derived facts from this executable)
+       mylang docs [TOPIC] (list the user guides built into this executable, or print one)
+       mylang packages lock CONFIG.json --output LOCK.json | build ENTRY.my --lock LOCK.json [--command C] [--receipt FILE] (offline locked local packages)
+       mylang cache gc|configure --shared-cache-dir DIR --kind compiler|tests (shared native cache retention; cache --help for options)
+       mylang dump-tokens <file.my> (stage-0 `tokens-v1` JSON on stdout; lexical failures exit 1)
+       mylang interfaces emit|check|oracle <entry.my> | show <module.myi> (per-module interface artifacts; `mylang interfaces` prints the options)
+       mylang <schema-project|input-module|check|discover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fmt-module|fmt-project|list-modules|list-interfaces|list-declarations|check-project|check-module|check-policy> <file.my>
+  schema-project: --schema-report (include checked source and compiler identities)
+  check: type-check a program; a file that declares no main is checked as a library, like check-module; imports, public declarations or project configuration select module-graph checking
+  check-module: type-check a library module and its imports without an executable main
+  input-module: reads a typed JSON manifest and writes generated module source
+  schema-project: --inputs=manifest.json (repeat for up to 16 modules)
+  discover-duplicates/discover-project-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N
+  report-quality/report-project-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)
+  check-policy: --policy=path.json (required; policy failures exit 3)
+  lint: --gate --accept --json --profile=agent|strict|safety --against=REF (blocking findings exit 3)
+  tests-for: <entry.my> <qualified-name> lists the tests that reach a declaration
+  api-diff: <entry.my> --write=FILE | --against=FILE [--json] (classified interface changes)
+  api: <entry.my> --write | --check [--json] (the generated .api interface file beside every module; stale files exit 1)
+  context: <entry.my> --symbol=NAME | --at=PATH:LINE:COLUMN [--context-bytes=N] [--format=json] [--against=FILE] (one bounded agent-context-v1 answer about one declaration)
+  fmt-project: --check (required; checks the reachable import graph)
+  fmt/fmt-module: --check (otherwise writes formatted source to stdout)
+  list-declarations: parse-only declarations-v1 JSON with byte ranges
+  index-project: navigation-summary-v1 per-module declaration counts by default; --module=NAME --symbol=NAME --kind=function|type|constraint|field|case|parameter|local select navigation-v1 records (navigation-selection-v1); --full prints the complete navigation-v1 document
+  project-dependencies: checked module graph and hashes; --inputs supported
+  one-shot commands: --timings=json (phase-timings-v1 JSON Lines on stderr)
+    --report prints work-report-v1 actual work/reuse plus a frontend-cache-v1 comparison receipt on stderr; --timings=json also adds them; --cache-dir=DIR selects their root; --no-cache disables reuse
+    --explain-invalidation prints an invalidation-report-v1 comparison on stderr for project-dependencies and check-project; --no-cache explains against no baseline
+  all commands: --diagnostics=text|json (stderr JSON Lines; stdout unchanged)
+  check-session: persistent check/clear/quit lines on stdin; JSON status on stdout; --inputs supported

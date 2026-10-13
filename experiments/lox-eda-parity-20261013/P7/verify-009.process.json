@@ -1,0 +1,4 @@
+{
+  "returncode": 0,
+  "enclosing": "scripts/build-slot.sh build python3 verify.py"
+}

@@ -1,0 +1,4 @@
+/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-009/refusal-replacement-relocation.my:6:36: error[E_MUTATION_OVERLAP]: receiver `xs` overlaps `mut xs` evaluated in this statement; make the call `replacement(mut xs)` in its own statement first, save its result in a local, then update the receiver using that local
+      _ = xs.exchange(0, replacement(mut xs))
+                                     ^
+  note: /home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/verification-009/refusal-replacement-relocation.my:6:9: the assignment or update receiver names an overlapping place
