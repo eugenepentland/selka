@@ -147,6 +147,14 @@ build admission when needed. Valid unchanged preparation skips that admission.
 It then checks each registered action's inputs and successful receipt outside
 the gate slot. Missing and freshness-required actions share one normal FIFO
 gate invocation, retaining the build graph's dependency and memory scheduling.
+Once the gate slot is granted and the inputs are revalidated, the coordinator
+looks every missing action's key up again and reuses a success another request
+published while this one queued; the gate command then names only what is still
+missing, and a request whose every action was published meanwhile releases the
+slot without running anything. `reuse_lookups` in `last-run.json` counts the
+reuses found before the queue (`pre_queue`) and after admission
+(`post_admission`). A request does not wait for work another request is still
+running: an action that is unpublished when this request is admitted executes here.
 New unregistered checks force execution of the original complete gate.
 
 Optional admitted-command deadlines, advisory loop targets, bounded logs and
