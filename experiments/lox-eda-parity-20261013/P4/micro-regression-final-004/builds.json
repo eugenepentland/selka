@@ -1,0 +1,86 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-004/install/bin/mylang",
+  "compiler_sha256": "6c3e20ff94dcfdbe6c47e8d8bd5ec14b6a32cf3d35e9c3be17c253db1626d9df",
+  "installation": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-004/install",
+  "installation_files": {
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-004/install/bin/mylang": "6c3e20ff94dcfdbe6c47e8d8bd5ec14b6a32cf3d35e9c3be17c253db1626d9df",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-004/install/tools/selka-components": "c2d1186c661e06d4e33de54ad04a70b4700e60737a4774e4045444db2cd35172",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-004/install/libexec/mylang/components/test-index.json": "58fddecf56237e81d06273d99a5f6e3fb5597681b1566ad161a55a0837fa9116",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-004/install/libexec/mylang/components/cache-plan-06fcac93b85a468ebc9c66322a4773386453954d6dd4319e812587fd8aaa147c": "06fcac93b85a468ebc9c66322a4773386453954d6dd4319e812587fd8aaa147c",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-004/install/libexec/mylang/components/test-index-0d91707258aef88fb651129fe18a84e505d3fe6c083af68cc308dcef954a05b8": "0d91707258aef88fb651129fe18a84e505d3fe6c083af68cc308dcef954a05b8",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-004/install/libexec/mylang/components/cache-plan.json": "2f48bd821be4fee59b1dad62450aa025188c97063d0b64964802b928f99362c3"
+  },
+  "entries": [
+    {
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/micro-regression-final-004/text-runtime",
+      "sha256": "3bd744c7048ac7ba1a745b88b62cea5e4848fe184de27a03bd443786781637af",
+      "source": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+      "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+      "flags": [
+        "--release",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/micro-regression-final-004/cache-runtime",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/micro-regression-final-004/text-runtime",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/benchmarks/runtime/ports/native_clock.c"
+      ],
+      "command": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-004/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+        "--release",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/micro-regression-final-004/cache-runtime",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/micro-regression-final-004/text-runtime",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/benchmarks/runtime/ports/native_clock.c"
+      ],
+      "status": "ok",
+      "zero_rc": true
+    },
+    {
+      "kind": "counted",
+      "binary": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/micro-regression-final-004/text-counted",
+      "sha256": "a1fdfec7218124dbebda7431b287d81bb90b44e05e30c0e66c8cec7c03ae8392",
+      "source": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+      "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+      "flags": [
+        "--release",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/micro-regression-final-004/cache-counted",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/micro-regression-final-004/text-counted",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--counters"
+      ],
+      "command": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-004/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+        "--release",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/micro-regression-final-004/cache-counted",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/micro-regression-final-004/text-counted",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--counters"
+      ],
+      "status": "ok",
+      "zero_rc": true
+    }
+  ],
+  "original_inputs_sha256": "bfcd8fa66a60782a8b7143df3a3d803bad317f693a141dcb34fdb578ae62006d"
+}

@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 3228, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 3, FIFO ticket 3228 after 15s
+text.my:279:17: warning[W_UNUSED_BINDING]: binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed
+              mut cursor = seed + step
+                  ^

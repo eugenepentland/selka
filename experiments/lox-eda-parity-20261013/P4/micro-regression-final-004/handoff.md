@@ -1,0 +1,9 @@
+# C4 six micros built/qualified; P6 owns timing, held for full gate
+
+Exact common004 installation, source42a93ae15b0990778379066475d3b803a596cf07, compiler6c3e20ff94dcfdbe6c47e8d8bd5ec14b6a32cf3d35e9c3be17c253db1626d9df. Receipt/all6installation files verified before/after. Runtime+counted builds use shared ordinary admission, private P4 scratch/cache/TMPDIR and unchanged source/clocklink/release+zeroRCflags. Only inherited unused-binding compile warning; no production/guest source changes.
+
+All42runtime checksum controls (7arms×6cells) and18separatecounted controls pass at1iteration. Counted livebytes-at-exit0, RCevents/unique-tests/sharemarks0. Raw stdout/stderr/counters preserved; internalguestclocks are excluded from performance evidence. Historical common-final-002 source/input/control/tool pins unchanged.
+
+Six fresh frozen specs preserve same7arms (C0/textcommon002/common004/ZigSafe/ZigFast/Rust/Go), sizes/seed42/calibration budgets,3warmups15rotated/reversed paired rounds,3RSS/count protocol. P4 owns only build/spec/untimed artifacts. Active host-before and actual timing outputs are P6-owned P7windowfinal004/<case>.<profile>/cell.host-before.json, explicitly in each spec files+provenance; all6missingpaths verified and never created here. prepare.inventory generic legacy writes.results/reports metadata is inactive; spec paths and P6 coordinatedOUTPUT are authoritative. No run.py/wholecell scheduler is provided or executed.
+
+P6 received absolute specdir and build-validation/compiler-binding/builds receipts. Its reviewed bounded-window wrapper retains protocol/state between shared exclusive windows. Root/P6 must authorize timing only after combinedfullgate green. No P4timing requested or sampled. AllC3/predecessor evidence remains immutable and unmeasured, and local unstagedheap dependency is untouched/excluded.

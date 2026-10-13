@@ -1,0 +1,9 @@
+Six fresh C4 micro cells: string_split/json_transform/csv_aggregate small+large. P4 owns builds/specs/untimed checks only; P6 wrapper owner owns eventual bounded-window timing/output after root full-gate green. No run.py/whole-cell scheduler is enabled here. All earlier C3 preparation and outputs remain immutable and unmeasured.
+
+Exact common004 compiler/source receipt and all6installation files are pinned in compiler-binding.json. Historical common-final-002 source/input/control/tool hashes are verified before/after candidate runtime/count builds through shared ordinary admission/private P4 scratch/cache/TMPDIR. Source/workload algorithms unchanged. Seven arms C0checked-baseline/textcommon002checked-common/finalcommon004checked-candidate/ZigSafe/ZigFast/Rust/Go; same sizes/seed42/calibration budgets,3warmups15rotated/reversed paired rounds,3RSS and separatecounts. Untimed checksum/control clocks are excluded from performance evidence.
+
+Fresh host-before outputs are explicitly bound to P6-owned paths:
+/home/epentland/ai/canopy/mylang-lox-runtime-stack-20261013-p7/.tmp/lox-eda-parity/P7-micro-windows/final-004/<case>.<profile>/cell.host-before.json
+P4 will never create those outputs. No historical snapshot/source/results path is overwritten. Wrapper retains frozen protocol/state across <=55slaunch windows plus currentguestdeadline; shared exclusive admission interleaves fairly. Exact wrapper binding/release remains coordinator/P6-owned; no timing before gateauthorization.
+
+prepare.py inventory/build commands are identical to previous preparation apart from new ownpaths and coordinated host-before paths. qualify.py runs1iteration perarm/cell and separatecounts under ordinary admission, checking registry oracle/output/livebytes/RC/unique/sharemarks. Local uncommitted P1heap dependency remains untouched and excluded from evidence commits.
