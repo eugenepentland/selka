@@ -1,0 +1,3240 @@
+{
+  "c2_binary": {
+    "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/lox/zero-rc",
+    "sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef"
+  },
+  "c2_llvm": {
+    "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/lox/zero-rc.ll",
+    "sha256": "293e0aba81f1fe05029cf34d4f1261ff31aca152623b9a4830c12a513af18ce6"
+  },
+  "zig_binary": {
+    "path": "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-fast",
+    "sha256": "0c884acc8e3e2c0e7930910f0f21e89de7078b932368f19f11dc72fb3e3924da"
+  },
+  "input": {
+    "path": "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox",
+    "sha256": "f02eaa1982294f880a80075bc2d0eb7d5a06011d1e8e1aeb3f6b9a8dca5cfc25"
+  },
+  "vm_source": {
+    "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/source-002/lox/vm.my",
+    "sha256": "d85aa6930bede52f053be1cb25e090075f774fb5f9e34706b48f75501db2ea9e"
+  },
+  "value_source": {
+    "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/source-002/lox/value.my",
+    "sha256": "be66ac3375e327f4bdf1759177519fd95a45bcd1f60070af0bf70047e8bb8c41"
+  },
+  "build_receipt": {
+    "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/native-002/build/lox/build-receipt.json",
+    "sha256": "67262b31f83866602441128dc3ac5945d87c678285621798b51f864842615b9c"
+  },
+  "c1_runtime_receipts": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/runtime/vm-string_equality.chunk00.json",
+      "sha256": "8673f15275859ed83cd83757a668e8e9d875d54876e0a7d121297e7846be8298",
+      "arm_status": {
+        "zig-fast": {
+          "status": "ok"
+        },
+        "mylang-before": {
+          "status": "relative_timeout",
+          "arm": "mylang-before",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4408229179680347,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup"
+        },
+        "mylang-zero-rc": {
+          "status": "relative_timeout",
+          "arm": "mylang-zero-rc",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4406035940628499,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup"
+        },
+        "mylang-before-same-compiler": {
+          "status": "relative_timeout",
+          "arm": "mylang-before-same-compiler",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/before-same-compiler",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.440605822019279,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup"
+        }
+      },
+      "budget": 1.439172717
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/runtime/vm-string_equality.chunk01.json",
+      "sha256": "c9c3c68b65075236a0c58e9c9b4907c8c49f1ffd1e7fc9fac34afdc1124d6a63",
+      "arm_status": {
+        "zig-fast": {
+          "status": "ok"
+        },
+        "mylang-before": {
+          "status": "relative_timeout",
+          "arm": "mylang-before",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4408229179680347,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        },
+        "mylang-zero-rc": {
+          "status": "relative_timeout",
+          "arm": "mylang-zero-rc",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4406035940628499,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        },
+        "mylang-before-same-compiler": {
+          "status": "relative_timeout",
+          "arm": "mylang-before-same-compiler",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/before-same-compiler",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.440605822019279,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        }
+      },
+      "budget": 1.439172717
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/runtime/vm-string_equality.chunk02.json",
+      "sha256": "16c26ae783932b8e658eebb24858da601e99f6707aca57c9945f591417c88189",
+      "arm_status": {
+        "zig-fast": {
+          "status": "ok"
+        },
+        "mylang-before": {
+          "status": "relative_timeout",
+          "arm": "mylang-before",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4408229179680347,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        },
+        "mylang-zero-rc": {
+          "status": "relative_timeout",
+          "arm": "mylang-zero-rc",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4406035940628499,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        },
+        "mylang-before-same-compiler": {
+          "status": "relative_timeout",
+          "arm": "mylang-before-same-compiler",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/before-same-compiler",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.440605822019279,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        }
+      },
+      "budget": 1.439172717
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/runtime/vm-string_equality.chunk03.json",
+      "sha256": "a679913a8b1a52828f1b0cc18faada58cc2c8e91cae93ffef0956962fe8dcf8f",
+      "arm_status": {
+        "zig-fast": {
+          "status": "ok"
+        },
+        "mylang-before": {
+          "status": "relative_timeout",
+          "arm": "mylang-before",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4408229179680347,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        },
+        "mylang-zero-rc": {
+          "status": "relative_timeout",
+          "arm": "mylang-zero-rc",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4406035940628499,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        },
+        "mylang-before-same-compiler": {
+          "status": "relative_timeout",
+          "arm": "mylang-before-same-compiler",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/before-same-compiler",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.440605822019279,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        }
+      },
+      "budget": 1.439172717
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/runtime/vm-string_equality.chunk04.json",
+      "sha256": "95e79020d6f9bc464a3fc811e713907c3a257616977e3d483879bda2f5663a38",
+      "arm_status": {
+        "zig-fast": {
+          "status": "ok"
+        },
+        "mylang-before": {
+          "status": "relative_timeout",
+          "arm": "mylang-before",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4408229179680347,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        },
+        "mylang-zero-rc": {
+          "status": "relative_timeout",
+          "arm": "mylang-zero-rc",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4406035940628499,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        },
+        "mylang-before-same-compiler": {
+          "status": "relative_timeout",
+          "arm": "mylang-before-same-compiler",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/before-same-compiler",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.440605822019279,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        }
+      },
+      "budget": 1.439172717
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/runtime/vm-string_equality.chunk05.json",
+      "sha256": "28ba5812e1389f41fdbc6b99a5afa71b43632353be5938bc33d3dbc1689d9222",
+      "arm_status": {
+        "zig-fast": {
+          "status": "ok"
+        },
+        "mylang-before": {
+          "status": "relative_timeout",
+          "arm": "mylang-before",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4408229179680347,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        },
+        "mylang-zero-rc": {
+          "status": "relative_timeout",
+          "arm": "mylang-zero-rc",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4406035940628499,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        },
+        "mylang-before-same-compiler": {
+          "status": "relative_timeout",
+          "arm": "mylang-before-same-compiler",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/before-same-compiler",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.440605822019279,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        }
+      },
+      "budget": 1.439172717
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/runtime/vm-string_equality.chunk06.json",
+      "sha256": "108362ce63608cd6ea246b83ae93c7a5525b26dd3914f88469658a62bfa869f1",
+      "arm_status": {
+        "zig-fast": {
+          "status": "ok"
+        },
+        "mylang-before": {
+          "status": "relative_timeout",
+          "arm": "mylang-before",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4408229179680347,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        },
+        "mylang-zero-rc": {
+          "status": "relative_timeout",
+          "arm": "mylang-zero-rc",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4406035940628499,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        },
+        "mylang-before-same-compiler": {
+          "status": "relative_timeout",
+          "arm": "mylang-before-same-compiler",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/before-same-compiler",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.440605822019279,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        }
+      },
+      "budget": 1.439172717
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/runtime/vm-string_equality.chunk07.json",
+      "sha256": "be9735b7b9fa8f2a19eb2695e54cba64bb54331285c2843ebdce60bc29b38d1c",
+      "arm_status": {
+        "zig-fast": {
+          "status": "ok"
+        },
+        "mylang-before": {
+          "status": "relative_timeout",
+          "arm": "mylang-before",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4408229179680347,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        },
+        "mylang-zero-rc": {
+          "status": "relative_timeout",
+          "arm": "mylang-zero-rc",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4406035940628499,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        },
+        "mylang-before-same-compiler": {
+          "status": "relative_timeout",
+          "arm": "mylang-before-same-compiler",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/before-same-compiler",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.440605822019279,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        }
+      },
+      "budget": 1.439172717
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/runtime/vm-string_equality.chunk08.json",
+      "sha256": "aba7124a01f81c1ef48f26240c2dbdb1c8023e56991ecdfe731d3482bdeb7f3d",
+      "arm_status": {
+        "zig-fast": {
+          "status": "ok"
+        },
+        "mylang-before": {
+          "status": "relative_timeout",
+          "arm": "mylang-before",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4408229179680347,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        },
+        "mylang-zero-rc": {
+          "status": "relative_timeout",
+          "arm": "mylang-zero-rc",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4406035940628499,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        },
+        "mylang-before-same-compiler": {
+          "status": "relative_timeout",
+          "arm": "mylang-before-same-compiler",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/before-same-compiler",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.440605822019279,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        }
+      },
+      "budget": 1.439172717
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/runtime/vm-string_equality.chunk09.json",
+      "sha256": "702786b639ce6c55355a5191c4ff1c9b72cbb9184a2513ab636244f0d07ec708",
+      "arm_status": {
+        "zig-fast": {
+          "status": "ok"
+        },
+        "mylang-before": {
+          "status": "relative_timeout",
+          "arm": "mylang-before",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4408229179680347,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        },
+        "mylang-zero-rc": {
+          "status": "relative_timeout",
+          "arm": "mylang-zero-rc",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4406035940628499,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        },
+        "mylang-before-same-compiler": {
+          "status": "relative_timeout",
+          "arm": "mylang-before-same-compiler",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/before-same-compiler",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.440605822019279,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        }
+      },
+      "budget": 1.439172717
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/runtime/vm-string_equality.chunk10.json",
+      "sha256": "8c7d111c702155cd7e25e3b184277d3a22b1d0e54aee8c66466cd9a06e3b3bae",
+      "arm_status": {
+        "zig-fast": {
+          "status": "ok"
+        },
+        "mylang-before": {
+          "status": "relative_timeout",
+          "arm": "mylang-before",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4408229179680347,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        },
+        "mylang-zero-rc": {
+          "status": "relative_timeout",
+          "arm": "mylang-zero-rc",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4406035940628499,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        },
+        "mylang-before-same-compiler": {
+          "status": "relative_timeout",
+          "arm": "mylang-before-same-compiler",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/before-same-compiler",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.440605822019279,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        }
+      },
+      "budget": 1.439172717
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/runtime/vm-string_equality.chunk11.json",
+      "sha256": "3f2218e308d2136209b076432ff5dd912e248d71850c80fff01a03e20c8a40a8",
+      "arm_status": {
+        "zig-fast": {
+          "status": "ok"
+        },
+        "mylang-before": {
+          "status": "relative_timeout",
+          "arm": "mylang-before",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4408229179680347,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        },
+        "mylang-zero-rc": {
+          "status": "relative_timeout",
+          "arm": "mylang-zero-rc",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4406035940628499,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        },
+        "mylang-before-same-compiler": {
+          "status": "relative_timeout",
+          "arm": "mylang-before-same-compiler",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/before-same-compiler",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.440605822019279,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        }
+      },
+      "budget": 1.439172717
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/runtime/vm-string_equality.chunk12.json",
+      "sha256": "79e8ff3d5f0441e52181e6ddc2bc33c99bac559634e10b819c60d73fc4442e6b",
+      "arm_status": {
+        "zig-fast": {
+          "status": "ok"
+        },
+        "mylang-before": {
+          "status": "relative_timeout",
+          "arm": "mylang-before",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4408229179680347,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        },
+        "mylang-zero-rc": {
+          "status": "relative_timeout",
+          "arm": "mylang-zero-rc",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/zero-rc",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.4406035940628499,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        },
+        "mylang-before-same-compiler": {
+          "status": "relative_timeout",
+          "arm": "mylang-before-same-compiler",
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/before-same-compiler",
+            "--engine=vm",
+            "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+          ],
+          "timeout_seconds": 1.439172717,
+          "observed_wall_before_kill_seconds": 1.440605822019279,
+          "relative_timeout_policy": {
+            "reference_arm": "zig-fast",
+            "factor": 3,
+            "calibration_samples": [
+              {
+                "arm": "zig-fast",
+                "value": 0.478690392,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 0
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.479724239,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 1
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.488491621,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 2
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.482106872,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 3
+              },
+              {
+                "arm": "zig-fast",
+                "value": 0.475789352,
+                "output": {
+                  "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                  "artifacts": {}
+                },
+                "stderr": "",
+                "round": 4
+              }
+            ],
+            "calibration_warmups": 2,
+            "reference_median_seconds": 0.479724239,
+            "absolute_ceiling_seconds": 120.0,
+            "budget_seconds": 1.439172717,
+            "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+            "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+          },
+          "censored": true,
+          "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr": "",
+          "round": 0,
+          "phase": "warmup",
+          "inherited_from_prior_chunk": true
+        }
+      },
+      "budget": 1.439172717
+    }
+  ]
+}
