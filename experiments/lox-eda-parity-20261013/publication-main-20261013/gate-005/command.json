@@ -1,0 +1,40 @@
+{
+  "source_commit": "505d2ca3411c6d757fbe0ad829ebf9983abf954e",
+  "source_tree": "ae916d9b0609247a60c448c2d0ac5b608fda8335",
+  "parents": [
+    "d1f408e6d909f79799526ea04cf07b84c88b3017"
+  ],
+  "command": [
+    "python3",
+    "-B",
+    "scripts/verify_cache.py",
+    "--zig",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "--integration",
+    "--",
+    "-j4",
+    "--maxrss",
+    "8589934592",
+    "-Dcomponent-owned-compiler-pin=/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+    "-Dcomponent-seed-source=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar"
+  ],
+  "component_inputs": [
+    {
+      "gid": 1000,
+      "mode": 292,
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar",
+      "sha256": "0557a645579881d54d3f4c493c8b07be38d42b0a21622ab712b84589ee212c27",
+      "size": 1517547520,
+      "uid": 1000
+    },
+    {
+      "gid": 1000,
+      "mode": 436,
+      "path": "/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+      "sha256": "32f37baa2509b01c231a104d7e9ba224a7193399201d0f87ec8a5db8fa6f039b",
+      "size": 524,
+      "uid": 1000
+    }
+  ],
+  "started_utc": "2026-10-13T11:58:53Z"
+}

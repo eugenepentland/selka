@@ -1,0 +1,120 @@
+{
+  "status": "qualified for publication",
+  "source_commit": "505d2ca3411c6d757fbe0ad829ebf9983abf954e",
+  "source_tree": "ae916d9b0609247a60c448c2d0ac5b608fda8335",
+  "previous_local_main": "fcd00eb60d7a572d2299b20e0e6ed1db68f8185d",
+  "performance_branch": "8c0aa4bbdcab614b59ac5cd9ad833cc0255e9038",
+  "remote_before": "4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9",
+  "target": "origin/development (local main upstream)",
+  "merge_commit": "f1daf821fbfe06096e71979aa2a815bff08d83bc",
+  "gate": {
+    "steps_passed": 149,
+    "steps_total": 149,
+    "tests_passed": 3194,
+    "tests_failed": 0,
+    "shard_partition_skips": 27739,
+    "actions_selected": 46,
+    "actions_reused": 0,
+    "inputs_stable": true,
+    "integration": {
+      "forced_fact_leak": {
+        "passed": true,
+        "suites": [
+          {
+            "argv": [
+              "test",
+              "tests/lang",
+              "--release",
+              "--verify-facts",
+              "--force",
+              "--json",
+              "--cache-dir",
+              "/home/epentland/ai/canopy/mylang-publish-parity-main-20261013/.mylang-cache/verification-v3/integration/integration-fact-leak-cb17wl8b/tests_lang"
+            ],
+            "counts": {
+              "cached": 0,
+              "failed": 0,
+              "passed": 1596,
+              "skipped": 0,
+              "unsupported": 1
+            },
+            "exit": 0,
+            "fresh_and_passed": true,
+            "stderr_tail": "",
+            "suite": "tests/lang"
+          },
+          {
+            "argv": [
+              "test",
+              "tests/value_semantics",
+              "--release",
+              "--verify-facts",
+              "--force",
+              "--json",
+              "--cache-dir",
+              "/home/epentland/ai/canopy/mylang-publish-parity-main-20261013/.mylang-cache/verification-v3/integration/integration-fact-leak-cb17wl8b/tests_value_semantics"
+            ],
+            "counts": {
+              "cached": 0,
+              "failed": 0,
+              "passed": 140,
+              "skipped": 0,
+              "unsupported": 0
+            },
+            "exit": 0,
+            "fresh_and_passed": true,
+            "stderr_tail": "",
+            "suite": "tests/value_semantics"
+          },
+          {
+            "argv": [
+              "test",
+              "tests/ported",
+              "--release",
+              "--verify-facts",
+              "--force",
+              "--json",
+              "--cache-dir",
+              "/home/epentland/ai/canopy/mylang-publish-parity-main-20261013/.mylang-cache/verification-v3/integration/integration-fact-leak-cb17wl8b/tests_ported"
+            ],
+            "counts": {
+              "cached": 0,
+              "failed": 0,
+              "passed": 98,
+              "skipped": 0,
+              "unsupported": 0
+            },
+            "exit": 0,
+            "fresh_and_passed": true,
+            "stderr_tail": "",
+            "suite": "tests/ported"
+          }
+        ]
+      },
+      "request_status": 0,
+      "shared_mismatches": {
+        "grew": {},
+        "logs": {},
+        "nonzero": {},
+        "passed": true
+      },
+      "status": 0,
+      "version": 1
+    }
+  },
+  "guardian_checks_passed": 88,
+  "attempt_exit_codes": [
+    2,
+    1,
+    1,
+    1,
+    0
+  ],
+  "compiler_sha256": "d63857db7d2269961f690ed39e7351f17897ac7c0349ffe919e5ddabd64e2709",
+  "performance_note": "Existing performance results remain bound to C4 source 42a93ae15b0990778379066475d3b803a596cf07. This publication gate is not a new performance measurement.",
+  "prior_cli_failure": {
+    "status": "not reproduced in 20 focused reruns or subsequent complete gate",
+    "cause": "undetermined",
+    "diagnostics_commit": "505d2ca3411c6d757fbe0ad829ebf9983abf954e"
+  }
+}

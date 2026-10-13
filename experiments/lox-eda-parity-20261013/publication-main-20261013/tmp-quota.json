@@ -1,0 +1,17 @@
+{
+  "path": "/tmp",
+  "returncode": 0,
+  "errno": 0,
+  "quota": {
+    "bhardlimit": 12839478,
+    "bsoftlimit": 12839478,
+    "curspace": 13095116800,
+    "ihardlimit": 0,
+    "isoftlimit": 0,
+    "curinodes": 193607,
+    "btime": 0,
+    "itime": 0,
+    "valid": 63
+  },
+  "note": "Read-only user quota query. Block limits are 1024-byte units; curspace is bytes."
+}

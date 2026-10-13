@@ -1,0 +1,116 @@
+{
+  "command": [
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "build",
+    "test-cli",
+    "-Dtest-filter=library modules and bare",
+    "-Dtest-filter=CLI an edit to one contract",
+    "-j4",
+    "--maxrss",
+    "8589934592",
+    "-Dcomponent-owned-compiler-pin=/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+    "-Dcomponent-seed-source=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar"
+  ],
+  "rounds": [
+    {
+      "round": 0,
+      "exit_code": 0,
+      "seconds": 1.6903095080051571
+    },
+    {
+      "round": 1,
+      "exit_code": 0,
+      "seconds": 1.693094597198069
+    },
+    {
+      "round": 2,
+      "exit_code": 0,
+      "seconds": 1.5837417491711676
+    },
+    {
+      "round": 3,
+      "exit_code": 0,
+      "seconds": 1.7300006849691272
+    },
+    {
+      "round": 4,
+      "exit_code": 0,
+      "seconds": 1.7429130079690367
+    },
+    {
+      "round": 5,
+      "exit_code": 0,
+      "seconds": 1.7107368521392345
+    },
+    {
+      "round": 6,
+      "exit_code": 0,
+      "seconds": 1.7418449770193547
+    },
+    {
+      "round": 7,
+      "exit_code": 0,
+      "seconds": 1.663067681947723
+    },
+    {
+      "round": 8,
+      "exit_code": 0,
+      "seconds": 1.7696368990000337
+    },
+    {
+      "round": 9,
+      "exit_code": 0,
+      "seconds": 1.75018973601982
+    },
+    {
+      "round": 10,
+      "exit_code": 0,
+      "seconds": 1.928991112159565
+    },
+    {
+      "round": 11,
+      "exit_code": 0,
+      "seconds": 1.9395041489042342
+    },
+    {
+      "round": 12,
+      "exit_code": 0,
+      "seconds": 1.7319484730251133
+    },
+    {
+      "round": 13,
+      "exit_code": 0,
+      "seconds": 1.8267926289699972
+    },
+    {
+      "round": 14,
+      "exit_code": 0,
+      "seconds": 1.86893236101605
+    },
+    {
+      "round": 15,
+      "exit_code": 0,
+      "seconds": 1.7332636690698564
+    },
+    {
+      "round": 16,
+      "exit_code": 0,
+      "seconds": 1.7336333629209548
+    },
+    {
+      "round": 17,
+      "exit_code": 0,
+      "seconds": 1.7876946409232914
+    },
+    {
+      "round": 18,
+      "exit_code": 0,
+      "seconds": 1.9381894571706653
+    },
+    {
+      "round": 19,
+      "exit_code": 0,
+      "seconds": 1.9869873928837478
+    }
+  ]
+}
