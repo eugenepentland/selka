@@ -1,0 +1,46 @@
+build-slot: FIFO ticket 3040, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 3040, position 2; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 3040, position 2; earlier build tickets must run first; waiting (120s so far)
+build-slot: build slot 1, FIFO ticket 3040 after 135s
+11ec5ecc401f1b6c513d50d4fa7f6d7c6062ac502c52dde8547b01b46623b32c
+29c26866058206d1992eb51a1ba82c2dfe0fe58b4f875d38775938b9e3961fe6
+test-core
++- verification action core member 0 0 pass, 1 fail (1 total)
+guardian/test: test wall 1.12s; slowest over 50ms:
+guardian/test:   1.12s  inline_scalar_reader_test.test.scalar reader query body edit invalidates transitive caller eligibility
+guardian/test: FAIL — 1 failed of 1
+guardian/test: RESULT {"passed":0,"failed":1,"skipped":0}
+error: 'inline_scalar_reader_test.test.scalar reader query body edit invalidates transitive caller eligibility' failed:
+       guardian/test: 1 test(s) selected by filter: "scalar reader query body edit"
+       slices differ. first difference occurs at index 0 (0x0)
+       
+       ============ expected this output: =============  len: 32 (0x20)
+       
+       36 49 23 31 D0 89 96 F8  14 88 8C E0 AA 12 F0 42  6I#1...........B
+       C4 45 A2 80 17 BD AC AE  4D EF B9 81 45 D3 DC 18  .E......M...E...
+       
+       ============= instead found this: ==============  len: 32 (0x20)
+       
+       D2 03 A8 AD B2 F0 6E BC  EB 49 6C B9 88 D6 A2 08  ......n..Il.....
+       92 F7 5F 64 25 D2 6A FA  6C 96 71 9F B2 DB A9 84  .._d%.j.l.q.....
+       
+       ================================================
+       
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:378:5: 0x13c517d in expectEqualSlices__anon_44117 (std.zig)
+           return error.TestExpectedEqual;
+           ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:136:27: 0x13c5369 in expectEqualInner__anon_44104 (std.zig)
+               .array => |array| try expectEqualSlices(array.child, &expected, &actual),
+                                 ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:75:5: 0x13c7fda in expectEqual (root_test.zig)
+           return expectEqualInner(T, expected, actual);
+           ^
+       /home/epentland/ai/canopy/mylang-lox-inline-core-20261013-p2/src/core/inline_scalar_reader_test.zig:270:5: 0x13c8082 in test.scalar reader query body edit invalidates transitive caller eligibility (root_test.zig)
+           try std.testing.expectEqual(uncached.canonical, reused.canonical);
+           ^
+failed command: python3 scripts/verification_native_telemetry.py --action-id core --member 0 --root-id src/core/root_test.zig -- sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lox-inline-core-20261013-p2/zig-out/libexec/mylang/components ./.tmp/lox-eda-parity/P2/core-inline-001/zig-local/o/3a14eebd4f5d2dfc8a76040e09ddf42a/test "--guardian-filter=scalar reader query body edit" --cache-dir=./.tmp/lox-eda-parity/P2/core-inline-001/zig-local --seed=0xd7f2b64e --listen=-
+
+Build Summary: 10/12 steps succeeded (1 failed); 0/1 tests passed (1 failed)
+test-core transitive failure
++- verification action core member 0 0 pass, 1 fail (1 total)
+

@@ -1,0 +1,1822 @@
+{
+  "fib": {
+    "medians_seconds": {
+      "zig-fast": 0.591221923,
+      "c2": 1.210746913,
+      "core-policy": 1.076159144
+    },
+    "sample_counts": {
+      "zig-fast": 9,
+      "c2": 9,
+      "core-policy": 9
+    },
+    "median_quotient": {
+      "candidate_c2_all_available": 0.8888390566559305,
+      "candidate_c2_paired_subset": 0.8888390566559305,
+      "candidate_zig": 1.8202287535944435,
+      "c2_zig": 2.047872154091282
+    },
+    "paired_candidate_c2": {
+      "rounds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "samples": [
+        0.8975704813862262,
+        0.8796318293603009,
+        0.8972724391738193,
+        0.8881070667859349,
+        0.8958726662508145,
+        0.8933388110765246,
+        0.8884252918125325,
+        0.8988976344389822,
+        0.8899226908604151
+      ],
+      "median": 0.8933388110765246,
+      "min": 0.8796318293603009,
+      "max": 0.8988976344389822,
+      "wins": 9
+    },
+    "samples": [
+      {
+        "arm": "zig-fast",
+        "value": 0.582495672,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 0
+      },
+      {
+        "arm": "c2",
+        "value": 1.162546516,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 0
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.043467436,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 0
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.046667883,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 1
+      },
+      {
+        "arm": "c2",
+        "value": 1.189893144,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 1
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.58277274,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 1
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.589887767,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 2
+      },
+      {
+        "arm": "c2",
+        "value": 1.168866252,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 2
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.048791473,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 2
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.076159144,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 3
+      },
+      {
+        "arm": "c2",
+        "value": 1.211744827,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 3
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.593713098,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 3
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.588544596,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 4
+      },
+      {
+        "arm": "c2",
+        "value": 1.212214617,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 4
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.085989941,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 4
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.075757778,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 5
+      },
+      {
+        "arm": "c2",
+        "value": 1.204199084,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 5
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.591221923,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 5
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.593052502,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 6
+      },
+      {
+        "arm": "c2",
+        "value": 1.214487335,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 6
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.078981265,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 6
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.088337536,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 7
+      },
+      {
+        "arm": "c2",
+        "value": 1.210746913,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 7
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.591379138,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 7
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.596981699,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 8
+      },
+      {
+        "arm": "c2",
+        "value": 1.21610589,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 8
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.082240226,
+        "output": {
+          "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 8
+      }
+    ],
+    "receipts": [
+      {
+        "file": "fib-chunk0.json",
+        "sha256": "2ec11319a7b7ba9562ec4e2f448e19a38ea2b8bab956cbf48e820323bad5a6c4",
+        "started_utc": "2026-10-13T08:34:42.936180+00:00",
+        "finished_utc": "2026-10-13T08:35:01.585475+00:00",
+        "arm_status": {
+          "zig-fast": {
+            "status": "ok"
+          },
+          "c2": {
+            "status": "ok"
+          },
+          "core-policy": {
+            "status": "ok"
+          }
+        }
+      },
+      {
+        "file": "fib-chunk1.json",
+        "sha256": "dbe9dab5ad2f334be8e7a1d54cc3c7c2d2f62e784152e26d4fcd2f00ca697a9a",
+        "started_utc": "2026-10-13T08:36:00.314424+00:00",
+        "finished_utc": "2026-10-13T08:36:09.551049+00:00",
+        "arm_status": {
+          "zig-fast": {
+            "status": "ok"
+          },
+          "c2": {
+            "status": "ok"
+          },
+          "core-policy": {
+            "status": "ok"
+          }
+        }
+      },
+      {
+        "file": "fib-chunk2.json",
+        "sha256": "7d05bcf50c67f41dec58b4197d1979e2dbb27a86b30a8e37e5cf6bd635be799d",
+        "started_utc": "2026-10-13T08:36:35.916454+00:00",
+        "finished_utc": "2026-10-13T08:36:45.189701+00:00",
+        "arm_status": {
+          "zig-fast": {
+            "status": "ok"
+          },
+          "c2": {
+            "status": "ok"
+          },
+          "core-policy": {
+            "status": "ok"
+          }
+        }
+      }
+    ],
+    "actual_censor_events": [],
+    "budget_seconds": 1.7422677060000002
+  },
+  "closures": {
+    "medians_seconds": {
+      "zig-fast": 0.756365989,
+      "c2": 1.344436976,
+      "core-policy": 1.227925874
+    },
+    "sample_counts": {
+      "zig-fast": 9,
+      "c2": 9,
+      "core-policy": 9
+    },
+    "median_quotient": {
+      "candidate_c2_all_available": 0.9133383683431213,
+      "candidate_c2_paired_subset": 0.9133383683431213,
+      "candidate_zig": 1.623454639497282,
+      "c2_zig": 1.7774952807932245
+    },
+    "paired_candidate_c2": {
+      "rounds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "samples": [
+        0.9048003822372632,
+        0.9069311689961378,
+        0.9276312826593797,
+        0.9133128890717902,
+        0.9099364275639273,
+        0.9133383683431213,
+        0.9288485788650872,
+        0.9120556245002742,
+        0.91108342771827
+      ],
+      "median": 0.9120556245002742,
+      "min": 0.9048003822372632,
+      "max": 0.9288485788650872,
+      "wins": 9
+    },
+    "samples": [
+      {
+        "arm": "zig-fast",
+        "value": 0.751866792,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 0
+      },
+      {
+        "arm": "c2",
+        "value": 1.333293347,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 0
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.20636433,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 0
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.209919279,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 1
+      },
+      {
+        "arm": "c2",
+        "value": 1.334080601,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 1
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.755095724,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 1
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.756207224,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 2
+      },
+      {
+        "arm": "c2",
+        "value": 1.331674673,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 2
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.235303085,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 2
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.227626505,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 3
+      },
+      {
+        "arm": "c2",
+        "value": 1.344146699,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 3
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.757033503,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 3
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.756365989,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 4
+      },
+      {
+        "arm": "c2",
+        "value": 1.348677592,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 4
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.22721087,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 4
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.227925874,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 5
+      },
+      {
+        "arm": "c2",
+        "value": 1.344436976,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 5
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.770397252,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 5
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.755797532,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 6
+      },
+      {
+        "arm": "c2",
+        "value": 1.358852198,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 6
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.262167933,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 6
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.23130547,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 7
+      },
+      {
+        "arm": "c2",
+        "value": 1.350033306,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 7
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.760327418,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 7
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.757811605,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 8
+      },
+      {
+        "arm": "c2",
+        "value": 1.35424152,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 8
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.233827006,
+        "output": {
+          "stdout_sha256": "5c1bc928b1aa3275718aed95eabf1c87b836a3122be2ab4b376856b2e44029db",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 8
+      }
+    ],
+    "receipts": [
+      {
+        "file": "closures-chunk0.json",
+        "sha256": "46b22b581e1d7bef1b1cb832b3eaeb42d6c04dddc06aa0c3cdc9c4720f053479",
+        "started_utc": "2026-10-13T08:35:01.670154+00:00",
+        "finished_utc": "2026-10-13T08:35:24.155220+00:00",
+        "arm_status": {
+          "zig-fast": {
+            "status": "ok"
+          },
+          "c2": {
+            "status": "ok"
+          },
+          "core-policy": {
+            "status": "ok"
+          }
+        }
+      },
+      {
+        "file": "closures-chunk1.json",
+        "sha256": "dba69da5439dd03e4eec27217a158c47e682ecbf5181d69870c3726acd1941d8",
+        "started_utc": "2026-10-13T08:36:09.637531+00:00",
+        "finished_utc": "2026-10-13T08:36:20.403363+00:00",
+        "arm_status": {
+          "zig-fast": {
+            "status": "ok"
+          },
+          "c2": {
+            "status": "ok"
+          },
+          "core-policy": {
+            "status": "ok"
+          }
+        }
+      },
+      {
+        "file": "closures-chunk2.json",
+        "sha256": "d2e7a6c9c35e75cc0ece3f844bb922518734fa285219a65ac38ec23c2bf921fe",
+        "started_utc": "2026-10-13T08:36:45.270220+00:00",
+        "finished_utc": "2026-10-13T08:36:56.105063+00:00",
+        "arm_status": {
+          "zig-fast": {
+            "status": "ok"
+          },
+          "c2": {
+            "status": "ok"
+          },
+          "core-policy": {
+            "status": "ok"
+          }
+        }
+      }
+    ],
+    "actual_censor_events": [],
+    "budget_seconds": 2.248425063
+  },
+  "invocation": {
+    "medians_seconds": {
+      "zig-fast": 0.749208756,
+      "c2": 1.836272131,
+      "core-policy": 1.615225501
+    },
+    "sample_counts": {
+      "zig-fast": 9,
+      "c2": 7,
+      "core-policy": 9
+    },
+    "median_quotient": {
+      "candidate_c2_all_available": 0.8796220743819588,
+      "candidate_c2_paired_subset": 0.878143932904899,
+      "candidate_zig": 2.1559084675192985,
+      "c2_zig": 2.4509485724697004
+    },
+    "paired_candidate_c2": {
+      "rounds": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "samples": [
+        0.8815151995600072,
+        0.8831901570546851,
+        0.8704725691051908,
+        0.88018324356312,
+        0.8796220743819588,
+        0.8739602299278666,
+        0.8789153503525207
+      ],
+      "median": 0.8796220743819588,
+      "min": 0.8704725691051908,
+      "max": 0.8831901570546851,
+      "wins": 7
+    },
+    "samples": [
+      {
+        "arm": "zig-fast",
+        "value": 0.749852474,
+        "output": {
+          "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 0
+      },
+      {
+        "arm": "c2",
+        "value": 1.820047915,
+        "output": {
+          "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 0
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.604399901,
+        "output": {
+          "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 0
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.605519884,
+        "output": {
+          "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 1
+      },
+      {
+        "arm": "c2",
+        "value": 1.817864331,
+        "output": {
+          "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 1
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.745314989,
+        "output": {
+          "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 1
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.747099969,
+        "output": {
+          "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 2
+      },
+      {
+        "arm": "c2",
+        "value": 1.842623376,
+        "output": {
+          "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 2
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.603953104,
+        "output": {
+          "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 2
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.615246641,
+        "output": {
+          "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 3
+      },
+      {
+        "arm": "c2",
+        "value": 1.835125416,
+        "output": {
+          "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 3
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.749027943,
+        "output": {
+          "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 3
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.748747956,
+        "output": {
+          "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 4
+      },
+      {
+        "arm": "c2",
+        "value": 1.836272131,
+        "output": {
+          "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 4
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.615225501,
+        "output": {
+          "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 4
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.612511231,
+        "output": {
+          "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 5
+      },
+      {
+        "arm": "c2",
+        "value": 1.845062482,
+        "output": {
+          "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 5
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.749714429,
+        "output": {
+          "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 5
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.74930501,
+        "output": {
+          "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 6
+      },
+      {
+        "arm": "c2",
+        "value": 1.840433512,
+        "output": {
+          "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 6
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.617585265,
+        "output": {
+          "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 6
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.875707588,
+        "output": {
+          "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 7
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.750778569,
+        "output": {
+          "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 7
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.749208756,
+        "output": {
+          "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 8
+      },
+      {
+        "arm": "core-policy",
+        "value": 1.633556971,
+        "output": {
+          "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 8
+      }
+    ],
+    "receipts": [
+      {
+        "file": "invocation-chunk0.json",
+        "sha256": "a8726ed57a05550879f5432b9d487c500ea2b7e5c6b381cb123c8b2e49b6687e",
+        "started_utc": "2026-10-13T08:35:24.243557+00:00",
+        "finished_utc": "2026-10-13T08:35:51.128274+00:00",
+        "arm_status": {
+          "zig-fast": {
+            "status": "ok"
+          },
+          "c2": {
+            "status": "ok"
+          },
+          "core-policy": {
+            "status": "ok"
+          }
+        }
+      },
+      {
+        "file": "invocation-chunk1.json",
+        "sha256": "c1e9b0c797e2162893c26ba681ed44c2fe8ddf26519c970b5693ab21b0220783",
+        "started_utc": "2026-10-13T08:36:20.487854+00:00",
+        "finished_utc": "2026-10-13T08:36:33.845854+00:00",
+        "arm_status": {
+          "zig-fast": {
+            "status": "ok"
+          },
+          "c2": {
+            "status": "ok"
+          },
+          "core-policy": {
+            "status": "ok"
+          }
+        }
+      },
+      {
+        "file": "invocation-chunk2.json",
+        "sha256": "846d074f54265587269429bc6fa106ec68fccd900beeded664324064d76d7abd",
+        "started_utc": "2026-10-13T08:36:56.187733+00:00",
+        "finished_utc": "2026-10-13T08:37:08.402871+00:00",
+        "arm_status": {
+          "zig-fast": {
+            "status": "ok"
+          },
+          "c2": {
+            "status": "relative_timeout",
+            "arm": "c2",
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/lox/zero-rc",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/invocation.vm.1500000.lox"
+            ],
+            "timeout_seconds": 2.24176221,
+            "observed_wall_before_kill_seconds": 2.243848216952756,
+            "relative_timeout_policy": {
+              "reference_arm": "zig-fast",
+              "factor": 3.0,
+              "calibration_samples": [
+                {
+                  "arm": "zig-fast",
+                  "value": 0.745952229,
+                  "output": {
+                    "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 0
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.746456492,
+                  "output": {
+                    "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 1
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.7476163,
+                  "output": {
+                    "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 2
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.766836538,
+                  "output": {
+                    "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 3
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.74725407,
+                  "output": {
+                    "stdout_sha256": "1acf1e94660bf03b23b1265ac476eeb5c504e8b4a0e7ba3e2667bf1a59ea9895",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 4
+                }
+              ],
+              "calibration_warmups": 2,
+              "reference_median_seconds": 0.74725407,
+              "absolute_ceiling_seconds": 120.0,
+              "budget_seconds": 2.24176221,
+              "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+              "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+            },
+            "censored": true,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr": "",
+            "round": 7,
+            "phase": "wall_sample"
+          },
+          "core-policy": {
+            "status": "ok"
+          }
+        }
+      }
+    ],
+    "actual_censor_events": [
+      {
+        "arm": "c2",
+        "phase": "wall_sample",
+        "round": 7,
+        "budget_seconds": 2.24176221,
+        "observed_before_kill": 2.243848216952756
+      }
+    ],
+    "budget_seconds": 2.24176221
+  },
+  "string_equality": {
+    "medians_seconds": {
+      "zig-fast": 0.474977627,
+      "c2": null,
+      "core-policy": null
+    },
+    "sample_counts": {
+      "zig-fast": 9,
+      "c2": 0,
+      "core-policy": 0
+    },
+    "median_quotient": {
+      "candidate_c2_all_available": null,
+      "candidate_c2_paired_subset": null,
+      "candidate_zig": null,
+      "c2_zig": null
+    },
+    "paired_candidate_c2": {
+      "rounds": [],
+      "samples": [],
+      "median": null,
+      "min": null,
+      "max": null,
+      "wins": 0
+    },
+    "samples": [
+      {
+        "arm": "zig-fast",
+        "value": 0.475127405,
+        "output": {
+          "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 0
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.472843944,
+        "output": {
+          "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 1
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.473847961,
+        "output": {
+          "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 2
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.474198931,
+        "output": {
+          "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 3
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.47590916,
+        "output": {
+          "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 4
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.472990909,
+        "output": {
+          "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 5
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.475551899,
+        "output": {
+          "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 6
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.474977627,
+        "output": {
+          "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 7
+      },
+      {
+        "arm": "zig-fast",
+        "value": 0.475879066,
+        "output": {
+          "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+          "artifacts": {}
+        },
+        "stderr": "",
+        "round": 8
+      }
+    ],
+    "receipts": [
+      {
+        "file": "string_equality-chunk0.json",
+        "sha256": "3ce269ded08e94b28a07482434c2d0e13ea2055b8805c2226844d8c7d5dc812c",
+        "started_utc": "2026-10-13T08:35:51.212177+00:00",
+        "finished_utc": "2026-10-13T08:36:00.228380+00:00",
+        "arm_status": {
+          "zig-fast": {
+            "status": "ok"
+          },
+          "c2": {
+            "status": "relative_timeout",
+            "arm": "c2",
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/lox/zero-rc",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+            ],
+            "timeout_seconds": 1.4217453660000001,
+            "observed_wall_before_kill_seconds": 1.4228058990556747,
+            "relative_timeout_policy": {
+              "reference_arm": "zig-fast",
+              "factor": 3.0,
+              "calibration_samples": [
+                {
+                  "arm": "zig-fast",
+                  "value": 0.475828065,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 0
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.471071371,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 1
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.473915122,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 2
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.472922889,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 3
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.477179113,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 4
+                }
+              ],
+              "calibration_warmups": 2,
+              "reference_median_seconds": 0.473915122,
+              "absolute_ceiling_seconds": 120.0,
+              "budget_seconds": 1.4217453660000001,
+              "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+              "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+            },
+            "censored": true,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr": "",
+            "round": 0,
+            "phase": "warmup"
+          },
+          "core-policy": {
+            "status": "relative_timeout",
+            "arm": "core-policy",
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-lox-inline-core-20261013-p2/.tmp/lox-eda-parity/P2/core-inline-001/lox-001/zero-rc",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+            ],
+            "timeout_seconds": 1.4217453660000001,
+            "observed_wall_before_kill_seconds": 1.4236534559167922,
+            "relative_timeout_policy": {
+              "reference_arm": "zig-fast",
+              "factor": 3.0,
+              "calibration_samples": [
+                {
+                  "arm": "zig-fast",
+                  "value": 0.475828065,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 0
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.471071371,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 1
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.473915122,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 2
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.472922889,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 3
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.477179113,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 4
+                }
+              ],
+              "calibration_warmups": 2,
+              "reference_median_seconds": 0.473915122,
+              "absolute_ceiling_seconds": 120.0,
+              "budget_seconds": 1.4217453660000001,
+              "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+              "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+            },
+            "censored": true,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr": "",
+            "round": 0,
+            "phase": "warmup"
+          }
+        }
+      },
+      {
+        "file": "string_equality-chunk1.json",
+        "sha256": "7e7954c14caec2a3bc78d02049e63d4bc189049fea55438367659979ce5fc464",
+        "started_utc": "2026-10-13T08:36:33.930594+00:00",
+        "finished_utc": "2026-10-13T08:36:35.832650+00:00",
+        "arm_status": {
+          "zig-fast": {
+            "status": "ok"
+          },
+          "c2": {
+            "status": "relative_timeout",
+            "arm": "c2",
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/lox/zero-rc",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+            ],
+            "timeout_seconds": 1.4217453660000001,
+            "observed_wall_before_kill_seconds": 1.4228058990556747,
+            "relative_timeout_policy": {
+              "reference_arm": "zig-fast",
+              "factor": 3.0,
+              "calibration_samples": [
+                {
+                  "arm": "zig-fast",
+                  "value": 0.475828065,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 0
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.471071371,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 1
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.473915122,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 2
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.472922889,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 3
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.477179113,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 4
+                }
+              ],
+              "calibration_warmups": 2,
+              "reference_median_seconds": 0.473915122,
+              "absolute_ceiling_seconds": 120.0,
+              "budget_seconds": 1.4217453660000001,
+              "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+              "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+            },
+            "censored": true,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr": "",
+            "round": 0,
+            "phase": "warmup",
+            "inherited_from_prior_chunk": true
+          },
+          "core-policy": {
+            "status": "relative_timeout",
+            "arm": "core-policy",
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-lox-inline-core-20261013-p2/.tmp/lox-eda-parity/P2/core-inline-001/lox-001/zero-rc",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+            ],
+            "timeout_seconds": 1.4217453660000001,
+            "observed_wall_before_kill_seconds": 1.4236534559167922,
+            "relative_timeout_policy": {
+              "reference_arm": "zig-fast",
+              "factor": 3.0,
+              "calibration_samples": [
+                {
+                  "arm": "zig-fast",
+                  "value": 0.475828065,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 0
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.471071371,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 1
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.473915122,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 2
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.472922889,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 3
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.477179113,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 4
+                }
+              ],
+              "calibration_warmups": 2,
+              "reference_median_seconds": 0.473915122,
+              "absolute_ceiling_seconds": 120.0,
+              "budget_seconds": 1.4217453660000001,
+              "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+              "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+            },
+            "censored": true,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr": "",
+            "round": 0,
+            "phase": "warmup",
+            "inherited_from_prior_chunk": true
+          }
+        }
+      },
+      {
+        "file": "string_equality-chunk2.json",
+        "sha256": "592bc1919597f89366e7a3376c877fa666ccd1d917d924dd84092afa82487ff2",
+        "started_utc": "2026-10-13T08:37:08.485012+00:00",
+        "finished_utc": "2026-10-13T08:37:10.391538+00:00",
+        "arm_status": {
+          "zig-fast": {
+            "status": "ok"
+          },
+          "c2": {
+            "status": "relative_timeout",
+            "arm": "c2",
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/lox/zero-rc",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+            ],
+            "timeout_seconds": 1.4217453660000001,
+            "observed_wall_before_kill_seconds": 1.4228058990556747,
+            "relative_timeout_policy": {
+              "reference_arm": "zig-fast",
+              "factor": 3.0,
+              "calibration_samples": [
+                {
+                  "arm": "zig-fast",
+                  "value": 0.475828065,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 0
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.471071371,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 1
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.473915122,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 2
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.472922889,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 3
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.477179113,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 4
+                }
+              ],
+              "calibration_warmups": 2,
+              "reference_median_seconds": 0.473915122,
+              "absolute_ceiling_seconds": 120.0,
+              "budget_seconds": 1.4217453660000001,
+              "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+              "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+            },
+            "censored": true,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr": "",
+            "round": 0,
+            "phase": "warmup",
+            "inherited_from_prior_chunk": true
+          },
+          "core-policy": {
+            "status": "relative_timeout",
+            "arm": "core-policy",
+            "argv": [
+              "/home/epentland/ai/canopy/mylang-lox-inline-core-20261013-p2/.tmp/lox-eda-parity/P2/core-inline-001/lox-001/zero-rc",
+              "--engine=vm",
+              "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.vm.100000.lox"
+            ],
+            "timeout_seconds": 1.4217453660000001,
+            "observed_wall_before_kill_seconds": 1.4236534559167922,
+            "relative_timeout_policy": {
+              "reference_arm": "zig-fast",
+              "factor": 3.0,
+              "calibration_samples": [
+                {
+                  "arm": "zig-fast",
+                  "value": 0.475828065,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 0
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.471071371,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 1
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.473915122,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 2
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.472922889,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 3
+                },
+                {
+                  "arm": "zig-fast",
+                  "value": 0.477179113,
+                  "output": {
+                    "stdout_sha256": "b80500a01f984c764f1a3b486622d0ef7cc5b13fa9bd57ec9015113eaf875597",
+                    "artifacts": {}
+                  },
+                  "stderr": "",
+                  "round": 4
+                }
+              ],
+              "calibration_warmups": 2,
+              "reference_median_seconds": 0.473915122,
+              "absolute_ceiling_seconds": 120.0,
+              "budget_seconds": 1.4217453660000001,
+              "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+              "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+            },
+            "censored": true,
+            "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr": "",
+            "round": 0,
+            "phase": "warmup",
+            "inherited_from_prior_chunk": true
+          }
+        }
+      }
+    ],
+    "actual_censor_events": [
+      {
+        "arm": "c2",
+        "phase": "warmup",
+        "round": 0,
+        "budget_seconds": 1.4217453660000001,
+        "observed_before_kill": 1.4228058990556747
+      },
+      {
+        "arm": "core-policy",
+        "phase": "warmup",
+        "round": 0,
+        "budget_seconds": 1.4217453660000001,
+        "observed_before_kill": 1.4236534559167922
+      }
+    ],
+    "budget_seconds": 1.4217453660000001
+  }
+}

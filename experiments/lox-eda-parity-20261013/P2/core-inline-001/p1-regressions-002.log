@@ -1,0 +1,22 @@
+build-slot: FIFO ticket 3114, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 3114 after 5s
+c16fdbdb3f467d6706e3cc74aa98e673ecd6ba905450016867f60971b4a6a03f
+94f7d4013a85b07529679131b2de573d2aea498c795b9c5ce446d310a77a31d8
+test-core
++- verification action core member 0 w
+guardian/test: 64 test(s) selected by filter: "optimizer", "inline"
+guardian/test: test wall 9.84s; slowest over 50ms:
+guardian/test:   3.28s  inline_scalar_reader_test.test.scalar reader five native modes and RC control retain discarded checks and failure order
+guardian/test:   0.84s  inline_scalar_reader_test.test.scalar reader deferred query edits in both directions match fresh cache at raw boundary
+guardian/test:   0.53s  dict_test.test.a probe scans an index-less table's cached hashes inline, and a table that lost an entry asks the runtime, as the old core answers
+guardian/test:   0.48s  u2_test.test.U2 checked inlined peeks retain negative-index semantics
+guardian/test:   0.47s  optimization_cache_test.test.optimizer demand reuses nonidentity CFG and unswitch checkpoints with exact loop ancestry
+guardian/test:   0.46s  inline_scalar_reader_test.test.scalar reader query body edit invalidates transitive caller eligibility
+guardian/test:   0.43s  u2_test.test.U2 an inlined peek retains its bounds failure after earlier output
+guardian/test:   0.37s  s1_views_test.test.a borrowed key of at most 16 octets is compared inline by overlapping words and every octet counts
+guardian/test:   0.26s  optimization_cache_test.test.optimizer demand nonidentity checkpoints preserve physical caller order parameter demotion and eager output
+guardian/test:   0.22s  s1_views_test.test.a borrowed key probe is inline for small, deleted-from and indexed tables and asks the runtime only past a full group
+guardian/test: PASS — 64 passed
+guardian/test: RESULT {"passed":64,"failed":0,"skipped":0}
+failed command: python3 scripts/verification_native_telemetry.py --action-id core --member 0 --root-id src/core/root_test.zig -- sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lox-inline-core-20261013-p2/zig-out/libexec/mylang/components ./.tmp/lox-eda-parity/P2/core-inline-001/zig-local/o/fd6695dac610767be83d14a3e1c32f5d/test --guardian-filter=optimizer --guardian-filter=inline --cache-dir=./.tmp/lox-eda-parity/P2/core-inline-001/zig-local --seed=0x9a2f593a --listen=-
+

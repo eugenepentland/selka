@@ -1,0 +1,22 @@
+{
+  "selection": "adopt bounded Core policy for C3 combined qualification; coordinator accepted",
+  "production_commit": "1ecc334ee1af550eb643cc6cc11896c436326d81",
+  "base_commit": "fbeba4eed7b549a3feef14c8b8dd620e41494139",
+  "compiler_sha256": "ca97ce2cd24c45ed08d5970723a9055ccaf408148b7f57f66eaefe3926eafb1f",
+  "guest_sha256": "5ac38bd14d472cd6764194db844a27bfd2c1dba2f7c919b9c6485d7abbf0a0e7",
+  "tests": {
+    "scalar_reader_focus_before_hygiene": 12,
+    "optimizer_inline_final": 64,
+    "Lox_checked_release_force_verify_facts": 103,
+    "conformance_vm_normal": 246,
+    "conformance_vm_stress": 246,
+    "conformance_tree_normal": 241,
+    "conformance_tree_stress": 241,
+    "Guardian_full_production": 88
+  },
+  "measured_runs": 88,
+  "actual_censors": 3,
+  "invocation_pair_denominator": 7,
+  "equality_ratio": null,
+  "policy_expanded_after_qualification": false
+}

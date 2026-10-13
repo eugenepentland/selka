@@ -1,0 +1,17 @@
+build-slot: timing slot 1, FIFO ticket 1544 after 0s
+{
+  "zig-fast": {
+    "seconds": {
+      "median": 0.474198931,
+      "min": 0.472990909,
+      "max": 0.47590916,
+      "samples": [
+        0.474198931,
+        0.47590916,
+        0.472990909
+      ]
+    }
+  },
+  "c2": {},
+  "core-policy": {}
+}

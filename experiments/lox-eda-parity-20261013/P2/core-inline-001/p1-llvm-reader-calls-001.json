@@ -1,0 +1,14 @@
+{
+  "common002": {
+    "my.vm::read_byte": 6,
+    "my.vm::read_constant": 1,
+    "my.vm::read_short": 3,
+    "my.vm_queries::constant_operand": 0
+  },
+  "candidate": {
+    "my.vm::read_byte": 0,
+    "my.vm::read_constant": 0,
+    "my.vm::read_short": 3,
+    "my.vm_queries::constant_operand": 1
+  }
+}

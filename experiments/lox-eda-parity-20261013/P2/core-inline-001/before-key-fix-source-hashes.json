@@ -1,0 +1,8 @@
+{
+  "src/core/inline_reader.zig": "263eac25acad475c7fd70f43a6f7d182874af0e523bbb9b1631ab530c3006641",
+  "src/core/inline.zig": "f59fb297849d8d1a1832764b27eaee09362f9770673941e2f4ea47a7b9efe27c",
+  "src/core/inline_scalar_reader_test.zig": "bc152b53ad8d2e8f3aa79e29460e643311168255f8dcec135bb9949bb913a8e3",
+  "test/core/inline_scalar_reader.my": "8ff8f5af13ec951319abb0e0e8444a342a26aa28e007c189dc4581372474e77f",
+  "src/core/passes.zig": "69dff093dfd8c28ad1f39c953f49c5fdfb1eecc9bb23d4569de85812d7c1b016",
+  "src/core/optimization_cache.zig": "d3eb93d72d0cbe588baed2c6e3fb0ea348c9e381118941005bf7d3b22c28e759"
+}

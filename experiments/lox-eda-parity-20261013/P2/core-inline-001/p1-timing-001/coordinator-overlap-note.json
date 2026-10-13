@@ -1,0 +1,10 @@
+{
+  "coordinator_unadmitted_hook_window_utc": [
+    "2026-10-13T08:33:08Z",
+    "2026-10-13T08:34:36Z"
+  ],
+  "first_timing_started_utc": "2026-10-13T08:34:42.936180+00:00",
+  "overlap": false,
+  "reruns_required": false,
+  "source": "coordinator message reporting completed Guardian88 hook; first harness progress header"
+}

@@ -1,0 +1,4 @@
+build-slot: build slot 3, FIFO ticket 3083 after 0s
+error: invalid option: -Dmax-rss
+error:   access the help menu with 'zig build -h'
+error: configure command exited with code 1: .tmp/lox-eda-parity/P2/core-inline-001/zig-local/o/2164e0f38779a8bbbbf7975fd0ade70d/configurer --zig /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig --build-root /home/epentland/ai/canopy/mylang-lox-inline-core-20261013-p2 "-Dtest-filter=scalar reader" -Dmax-rss=8589934592

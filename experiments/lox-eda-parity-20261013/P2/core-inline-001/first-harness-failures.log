@@ -1,0 +1,1273 @@
+build-slot: FIFO ticket 3015, position 15; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 3015, position 15; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 3015, position 15; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 3015, position 15; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 3015, position 15; earlier build tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 3015, position 15; earlier build tickets must run first; waiting (301s so far)
+build-slot: FIFO ticket 3015, position 14; earlier build tickets must run first; waiting (361s so far)
+build-slot: FIFO ticket 3015, position 12; earlier build tickets must run first; waiting (421s so far)
+build-slot: FIFO ticket 3015, position 5; earlier build tickets must run first; waiting (481s so far)
+build-slot: build slot 1, FIFO ticket 3015 after 516s
+11ec5ecc401f1b6c513d50d4fa7f6d7c6062ac502c52dde8547b01b46623b32c
+29c26866058206d1992eb51a1ba82c2dfe0fe58b4f875d38775938b9e3961fe6
+test-core
++- verification action core member 0 1 pass, 3 fail, 5 crash (9 total)
+guardian/test: test wall 4.28s; slowest over 50ms:
+guardian/test:   4.26s  inline_scalar_reader_test.test.scalar reader query body edit invalidates transitive caller eligibility
+guardian/test: FAIL — 2 failed of 3
+guardian/test: RESULT {"passed":1,"failed":2,"skipped":0}
+error: 'inline_scalar_reader_test.test.scalar reader qualifies closed mutable returns and refuses managed donors' exited with code 134 with stderr:
+       guardian/test: 9 test(s) selected by filter: "scalar reader"
+       thread 962998 panic: missing fixture function
+       /home/epentland/ai/canopy/mylang-lox-inline-core-20261013-p2/src/core/inline_scalar_reader_test.zig:30:5: 0x229ba68 in named (root_test.zig)
+           @panic("missing fixture function");
+           ^
+       /home/epentland/ai/canopy/mylang-lox-inline-core-20261013-p2/src/core/inline_scalar_reader_test.zig:47:68: 0x2992a98 in test.scalar reader qualifies closed mutable returns and refuses managed donors (root_test.zig)
+               try std.testing.expect(reader.mutationFamily(&module, named(&module, name)));
+                                                                          ^
+       /home/epentland/ai/canopy/guardian-zig/src/test_runner.zig:685:39: 0x1406073 in serveOneTest (test_runner.zig)
+           builtin.test_functions[index].func() catch |err| switch (err) {
+                                             ^
+       /home/epentland/ai/canopy/guardian-zig/src/test_runner.zig:610:42: 0x14068c9 in mainServer (test_runner.zig)
+                   .run_test => try serveOneTest(&server, try server.receiveBody_u32()),
+                                                ^
+       /home/epentland/ai/canopy/guardian-zig/src/test_runner.zig:306:39: 0x1406f6d in main (test_runner.zig)
+           if (args.listen) return mainServer() catch fatal("internal test runner failure");
+                                             ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x14037ff in callMain (std.zig)
+           if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{
+                                                                                              ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x14031d1 in _start (std.zig)
+           asm volatile (switch (native_arch) {
+           ^
+error: 'inline_scalar_reader_test.test.scalar reader clones loop and differing early return writebacks with ancestry' failed:
+       guardian/test: 9 test(s) selected by filter: "scalar reader"
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:614:14: 0x146c7f9 in expect (std.zig)
+           if (!ok) return error.TestUnexpectedResult;
+                    ^
+       /home/epentland/ai/canopy/mylang-lox-inline-core-20261013-p2/src/core/inline_scalar_reader_test.zig:65:5: 0x2990eb7 in test.scalar reader clones loop and differing early return writebacks with ancestry (root_test.zig)
+           try std.testing.expect(before > 0);
+           ^
+error: 'inline_scalar_reader_test.test.scalar reader caps query inspection at thirty two blocks and ninety six instructions' exited with code 134 with stderr:
+       thread 963658 panic: missing fixture function
+       /home/epentland/ai/canopy/mylang-lox-inline-core-20261013-p2/src/core/inline_scalar_reader_test.zig:30:5: 0x229ba68 in named (root_test.zig)
+           @panic("missing fixture function");
+           ^
+       /home/epentland/ai/canopy/mylang-lox-inline-core-20261013-p2/src/core/inline_scalar_reader_test.zig:85:24: 0x29901d4 in test.scalar reader caps query inspection at thirty two blocks and ninety six instructions (root_test.zig)
+           const query = named(&module, "::instruction");
+                              ^
+       /home/epentland/ai/canopy/guardian-zig/src/test_runner.zig:685:39: 0x1406073 in serveOneTest (test_runner.zig)
+           builtin.test_functions[index].func() catch |err| switch (err) {
+                                             ^
+       /home/epentland/ai/canopy/guardian-zig/src/test_runner.zig:610:42: 0x14068c9 in mainServer (test_runner.zig)
+                   .run_test => try serveOneTest(&server, try server.receiveBody_u32()),
+                                                ^
+       /home/epentland/ai/canopy/guardian-zig/src/test_runner.zig:306:39: 0x1406f6d in main (test_runner.zig)
+           if (args.listen) return mainServer() catch fatal("internal test runner failure");
+                                             ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x14037ff in callMain (std.zig)
+           if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{
+                                                                                              ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x14031d1 in _start (std.zig)
+           asm volatile (switch (native_arch) {
+           ^
+error: 'inline_scalar_reader_test.test.scalar reader refuses borrowed views and bounded shared compound expansion' exited with code 134 with stderr:
+       guardian/test: 9 test(s) selected by filter: "scalar reader"
+       thread 963889 panic: missing fixture function
+       /home/epentland/ai/canopy/mylang-lox-inline-core-20261013-p2/src/core/inline_scalar_reader_test.zig:30:5: 0x229ba68 in named (root_test.zig)
+           @panic("missing fixture function");
+           ^
+       /home/epentland/ai/canopy/mylang-lox-inline-core-20261013-p2/src/core/inline_scalar_reader_test.zig:104:26: 0x298f5aa in test.scalar reader refuses borrowed views and bounded shared compound expansion (root_test.zig)
+           const wrapper = named(&module, "::read_byte");
+                                ^
+       /home/epentland/ai/canopy/guardian-zig/src/test_runner.zig:685:39: 0x1406073 in serveOneTest (test_runner.zig)
+           builtin.test_functions[index].func() catch |err| switch (err) {
+                                             ^
+       /home/epentland/ai/canopy/guardian-zig/src/test_runner.zig:610:42: 0x14068c9 in mainServer (test_runner.zig)
+                   .run_test => try serveOneTest(&server, try server.receiveBody_u32()),
+                                                ^
+       /home/epentland/ai/canopy/guardian-zig/src/test_runner.zig:306:39: 0x1406f6d in main (test_runner.zig)
+           if (args.listen) return mainServer() catch fatal("internal test runner failure");
+                                             ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x14037ff in callMain (std.zig)
+           if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{
+                                                                                              ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x14031d1 in _start (std.zig)
+           asm volatile (switch (native_arch) {
+           ^
+error: 'inline_scalar_reader_test.test.scalar reader refused whole tuple uses consume projection trial allowance' exited with code 134 with stderr:
+       guardian/test: 9 test(s) selected by filter: "scalar reader"
+       thread 964186 panic: missing reader call
+       /home/epentland/ai/canopy/mylang-lox-inline-core-20261013-p2/src/core/inline_scalar_reader_test.zig:148:5: 0x298e63e in firstByteCall (root_test.zig)
+           @panic("missing reader call");
+           ^
+       /home/epentland/ai/canopy/mylang-lox-inline-core-20261013-p2/src/core/inline_scalar_reader_test.zig:158:35: 0x298ec2e in test.scalar reader refused whole tuple uses consume projection trial allowance (root_test.zig)
+           const template = firstByteCall(&module, caller);
+                                         ^
+       /home/epentland/ai/canopy/guardian-zig/src/test_runner.zig:685:39: 0x1406073 in serveOneTest (test_runner.zig)
+           builtin.test_functions[index].func() catch |err| switch (err) {
+                                             ^
+       /home/epentland/ai/canopy/guardian-zig/src/test_runner.zig:610:42: 0x14068c9 in mainServer (test_runner.zig)
+                   .run_test => try serveOneTest(&server, try server.receiveBody_u32()),
+                                                ^
+       /home/epentland/ai/canopy/guardian-zig/src/test_runner.zig:306:39: 0x1406f6d in main (test_runner.zig)
+           if (args.listen) return mainServer() catch fatal("internal test runner failure");
+                                             ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x14037ff in callMain (std.zig)
+           if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{
+                                                                                              ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x14031d1 in _start (std.zig)
+           asm volatile (switch (native_arch) {
+           ^
+error: 'inline_scalar_reader_test.test.scalar reader successful clones remain within existing constructor instruction budget' exited with code 134 with stderr:
+       guardian/test: 9 test(s) selected by filter: "scalar reader"
+       thread 964772 panic: missing reader call
+       /home/epentland/ai/canopy/mylang-lox-inline-core-20261013-p2/src/core/inline_scalar_reader_test.zig:148:5: 0x298e63e in firstByteCall (root_test.zig)
+           @panic("missing reader call");
+           ^
+       /home/epentland/ai/canopy/mylang-lox-inline-core-20261013-p2/src/core/inline_scalar_reader_test.zig:177:35: 0x298dafe in test.scalar reader successful clones remain within existing constructor instruction budget (root_test.zig)
+           const template = firstByteCall(&module, caller);
+                                         ^
+       /home/epentland/ai/canopy/guardian-zig/src/test_runner.zig:685:39: 0x1406073 in serveOneTest (test_runner.zig)
+           builtin.test_functions[index].func() catch |err| switch (err) {
+                                             ^
+       /home/epentland/ai/canopy/guardian-zig/src/test_runner.zig:610:42: 0x14068c9 in mainServer (test_runner.zig)
+                   .run_test => try serveOneTest(&server, try server.receiveBody_u32()),
+                                                ^
+       /home/epentland/ai/canopy/guardian-zig/src/test_runner.zig:306:39: 0x1406f6d in main (test_runner.zig)
+           if (args.listen) return mainServer() catch fatal("internal test runner failure");
+                                             ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:753:88: 0x14037ff in callMain (std.zig)
+           if (fn_info.param_types[0].? == std.process.Init.Minimal) return wrapMain(root.main(.{
+                                                                                              ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/start.zig:218:5: 0x14031d1 in _start (std.zig)
+           asm volatile (switch (native_arch) {
+           ^
+error: 'inline_scalar_reader_test.test.scalar reader query body edit invalidates transitive caller eligibility' failed:
+       guardian/test: 9 test(s) selected by filter: "scalar reader"
+       
+       ====== expected this output: =========
+       fn main(cap) -> i64
+       b0:
+         %2 = list_new list[union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}}] 2:i64
+         %4 = list_new list[i64] 3:i64
+         %6 = list_push list[i64] %4, 18:i64
+         %8 = list_push list[i64] %6, 52:i64
+         %10 = list_push list[i64] %8, 0:i64
+         %12 = list_new list[union{record{i64}, record{f64}}] 0:i64
+         %13 = record_make record{list[i64], list[union{record{i64}, record{f64}}]} %10, %12
+         %14 = record_make record{record{list[i64], list[union{record{i64}, record{f64}}]}} %13
+         %15 = union_make union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}} tag1 %14
+         %16 = list_push list[union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}}] %2, %15
+         %18 = list_new list[i64] 1:i64
+         %20 = list_push list[i64] %18, 0:i64
+         %22 = list_new list[union{record{i64}, record{f64}}] 1:i64
+         %24 = record_make record{i64} 42:i64
+         %25 = union_make union{record{i64}, record{f64}} tag0 %24
+         %26 = list_push list[union{record{i64}, record{f64}}] %22, %25
+         %27 = record_make record{list[i64], list[union{record{i64}, record{f64}}]} %20, %26
+         %28 = record_make record{record{list[i64], list[union{record{i64}, record{f64}}]}} %27
+         %29 = union_make union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}} tag1 %28
+         %30 = list_push list[union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}}] %16, %29
+         %31 = record_make record{list[union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}}]} %30
+         jump b57
+       b1: ; preds b56 b3
+         unreachable
+       b2: ; preds b3
+         jump b4
+       b3: ; preds b56
+         %41 = cmp.eq bool %304, 1:i64
+         branch %41, b2, b1
+       b4: ; preds b2 b6
+         %49 = phi i64 0:i64, %63
+         %53 = phi i64 0:i64, %60
+         %56 = phi i64 0:i64, %310
+         %51 = cmp.lt bool %49, 3:i64
+         branch %51, b5, b7
+       b5: ; preds b4
+         jump b59
+       b6: ; preds b58
+         %63 = add.proven i64 %49, 1:i64
+         jump b4
+       b7: ; preds b4
+         %66 = cmp.eq bool %53, 70:i64
+         branch %66, b10, b8
+       b8: ; preds b7 b10
+         unreachable
+       b9: ; preds b10
+         jump b61
+       b10: ; preds b7
+         %69 = cmp.eq bool %56, 3:i64
+         branch %69, b9, b8
+       b11: ; preds b60 b13
+         unreachable
+       b12: ; preds b13
+         jump b63
+       b13: ; preds b60
+         %81 = cmp.eq bool %316, 0:i64
+         branch %81, b12, b11
+       b14: ; preds b18 b16
+         unreachable
+       b15: ; preds b16
+         jump b65
+       b16: ; preds b18
+         %122 = cmp.eq bool %322, 1:i64
+         branch %122, b15, b14
+       b17: ; preds b62
+         %96 = cmp.eq bool %91, 0:u32
+         branch %96, b19, b20
+       b18: ; preds b62 b19 b21 b22
+         %118 = phi bool %93, %104, %115, %93
+         branch %118, b16, b14
+       b19: ; preds b17
+         %98 = union_payload record{i64} tag0 %320
+         %99 = union_payload record{i64} tag0 %90
+         %101 = record_get i64 %98, field0
+         %102 = record_get i64 %99, field0
+         %103 = cmp.eq bool %101, %102
+         %104 = bit_and bool 1:bool, %103
+         jump b18
+       b20: ; preds b17
+         %107 = cmp.eq bool %91, 1:u32
+         branch %107, b21, b22
+       b21: ; preds b20
+         %109 = union_payload record{f64} tag1 %320
+         %110 = union_payload record{f64} tag1 %90
+         %112 = record_get f64 %109, field0
+         %113 = record_get f64 %110, field0
+         %114 = fcmp.eq bool %112, %113
+         %115 = bit_and bool 1:bool, %114
+         jump b18
+       b22: ; preds b20
+         jump b18
+       b23: ; preds b64 b25
+         unreachable
+       b24: ; preds b25
+         jump b69
+       b25: ; preds b64
+         %136 = cmp.eq bool %338, 1:i64
+         branch %136, b24, b23
+       b26: ; preds b68 b28
+         unreachable
+       b27: ; preds b28
+         %153 = list_new list[i64] 1:i64
+         %155 = list_push list[i64] %153, 1:i64
+         %157 = call record{i64, list[i64], i64} mutating_reader(%155, 0:i64)
+         %158 = record_get i64 %157, field0
+         %159 = record_get list[i64] %157, field1
+         %160 = record_get i64 %157, field2
+         %162 = cmp.eq bool %158, 1:i64
+         branch %162, b31, b29
+       b28: ; preds b68
+         %149 = cmp.eq bool %351, 2:i64
+         branch %149, b27, b26
+       b29: ; preds b27 b31
+         unreachable
+       b30: ; preds b31
+         %169 = list_new list[str] 1:i64
+         %171 = list_push list[str] %169, str7
+         %173 = call record{str, i64} string_reader(%171, 0:i64)
+         %174 = record_get str %173, field0
+         %175 = record_get i64 %173, field1
+         %177 = call bool myl_core_str_eq(%174, str8)
+         release %174
+         branch %177, b34, b32
+       b31: ; preds b27
+         %165 = cmp.eq bool %160, 1:i64
+         branch %165, b30, b29
+       b32: ; preds b30 b34
+         unreachable
+       b33: ; preds b34
+         %186 = record_make record{i64, i64, i64} 0:i64, 0:i64, 777:i64
+         jump b73
+       b34: ; preds b30
+         %180 = cmp.eq bool %175, 1:i64
+         branch %180, b33, b32
+       b35: ; preds b72 b39 b38 b37
+         unreachable
+       b36: ; preds b37
+         %212 = record_set record{i64, i64, i64} %194, field1, 0:i64
+         jump b40
+       b37: ; preds b38
+         %208 = cmp.eq bool 777:i64, 777:i64
+         branch %208, b36, b35
+       b38: ; preds b39
+         %204 = cmp.eq bool 0:i64, 0:i64
+         branch %204, b37, b35
+       b39: ; preds b72
+         %200 = cmp.eq bool %354, 1:i64
+         branch %200, b38, b35
+       b40: ; preds b36 b42
+         %403 = phi i64 777:i64, %403
+         %402 = phi i64 0:i64, %360
+         %401 = phi i64 0:i64, %401
+         %216 = phi i64 0:i64, %232
+         %221 = phi record{i64, i64, i64} %212, %229
+         %218 = cmp.lt bool %216, 3:i64
+         branch %218, b41, b43
+       b41: ; preds b40
+         jump b75
+       b42: ; preds b74
+         %232 = add.proven i64 %216, 1:i64
+         jump b40
+       b43: ; preds b40
+         %236 = cmp.eq bool %402, 3:i64
+         branch %236, b46, b44
+       b44: ; preds b43 b46
+         unreachable
+       b45: ; preds b46
+         %244 = record_set record{i64, i64, i64} %221, field1, 0:i64
+         jump b77
+       b46: ; preds b43
+         %240 = cmp.eq bool %403, 777:i64
+         branch %240, b45, b44
+       b47: ; preds b76 b49
+         unreachable
+       b48: ; preds b49
+         jump b81
+       b49: ; preds b76
+         %260 = cmp.eq bool %403, 777:i64
+         branch %260, b48, b47
+       b50: ; preds b80 b52
+         unreachable
+       b51: ; preds b52
+         %277 = call record{str, i64} generic_reader[str](%171, 0:i64)
+         release %171
+         %278 = record_get str %277, field0
+         %279 = record_get i64 %277, field1
+         %281 = call bool myl_core_str_eq(%278, str14)
+         release %278
+         branch %281, b55, b53
+       b52: ; preds b80
+         %272 = cmp.eq bool %379, 1:i64
+         branch %272, b51, b50
+       b53: ; preds b51 b55
+         unreachable
+       b54: ; preds b55
+         %297 = call str myl_core_show_22(%320)
+         print param0, %302, %53, %297, %351
+         release %297
+         ret 0:i64
+       b55: ; preds b51
+         %284 = cmp.eq bool %279, 1:i64
+         branch %284, b54, b53
+       b56: ; preds b57
+         %38 = cmp.eq bool %302, 18:i64
+         branch %38, b3, b1
+       b57: ; preds b0
+         %302 = call i64 instruction(%31, 0:i64, 0:i64)
+         %304 = add.proven i64 0:i64, 1:i64
+         jump b56
+       b58: ; preds b59
+         %60 = add.exact i64 %53, %308
+         jump b6
+       b59: ; preds b5
+         %308 = call i64 instruction(%31, 0:i64, %56)
+         %310 = add.proven i64 %56, 1:i64
+         jump b58
+       b60: ; preds b61
+         %78 = cmp.eq bool %314, 0:i64
+         branch %78, b13, b11
+       b61: ; preds b9
+         %314 = call i64 instruction(%31, 0:i64, -1:i64)
+         %316 = add.proven i64 -1:i64, 1:i64
+         jump b60
+       b62: ; preds b63
+         %89 = record_make record{i64} 42:i64
+         %90 = union_make union{record{i64}, record{f64}} tag0 %89
+         %91 = union_tag u32 %320
+         %92 = union_tag u32 %90
+         %93 = cmp.eq bool %91, %92
+         branch %93, b17, b18
+       b63: ; preds b12
+         %320 = call union{record{i64}, record{f64}} constant_operand(%31, 1:i64, %316)
+         %322 = add.proven i64 %316, 1:i64
+         jump b62
+       b64: ; preds b66 b67
+         %338 = phi i64 %329, %333
+         %133 = cmp.eq bool %326, 18:i64
+         branch %133, b25, b23
+       b65: ; preds b15
+         %326 = call i64 instruction(%31, 0:i64, 0:i64)
+         branch 1:bool, b66, b67
+       b66: ; preds b65
+         %329 = add.proven i64 0:i64, 1:i64
+         jump b64
+       b67: ; preds b65
+         %333 = add.exact i64 0:i64, 2:i64
+         jump b64
+       b68: ; preds b70 b71
+         %351 = phi i64 %342, %346
+         %146 = cmp.eq bool %339, 18:i64
+         branch %146, b28, b26
+       b69: ; preds b24
+         %339 = call i64 instruction(%31, 0:i64, 0:i64)
+         branch 0:bool, b70, b71
+       b70: ; preds b69
+         %342 = add.exact i64 0:i64, 1:i64
+         jump b68
+       b71: ; preds b69
+         %346 = add.proven i64 0:i64, 2:i64
+         jump b68
+       b72: ; preds b73
+         %194 = record_set record{i64, i64, i64} %186, field1, %354
+         %196 = cmp.eq bool %352, 18:i64
+         branch %196, b39, b35
+       b73: ; preds b33
+         %352 = call i64 instruction(%31, 0:i64, 0:i64)
+         %354 = add.proven i64 0:i64, 1:i64
+         jump b72
+       b74: ; preds b75
+         %229 = record_set record{i64, i64, i64} %221, field1, %360
+         jump b42
+       b75: ; preds b41
+         %358 = call i64 instruction(%31, %401, %402)
+         %360 = add.exact i64 %402, 1:i64
+         jump b74
+       b76: ; preds b78 b79
+         %376 = phi i64 %367, %371
+         %253 = record_set record{i64, i64, i64} %244, field1, %376
+         %256 = cmp.eq bool %376, 2:i64
+         branch %256, b49, b47
+       b77: ; preds b45
+         %364 = call i64 instruction(%31, %401, 0:i64)
+         release %31
+         branch 0:bool, b78, b79
+       b78: ; preds b77
+         %367 = add.exact i64 0:i64, 1:i64
+         jump b76
+       b79: ; preds b77
+         %371 = add.proven i64 0:i64, 2:i64
+         jump b76
+       b80: ; preds b82
+         %269 = cmp.eq bool %392, 1:i64
+         branch %269, b52, b50
+       b81: ; preds b48
+         jump b83
+       b82: ; preds b85
+         %379 = add.proven i64 0:i64, 1:i64
+         jump b80
+       b83: ; preds b81
+         %384 = cmp.lt bool 0:i64, 0:i64
+         branch %384, b84, b85
+       b84: ; preds b83
+         %386 = list_len u64 %159
+         %387 = convert.exact i64 %386
+         %388 = add.exact i64 %387, 0:i64
+         jump b85
+       b85: ; preds b83 b84
+         %390 = phi i64 0:i64, %388
+         %392 = list_get.exact i64 %159, %390
+         release %159
+         jump b82
+       fn read_byte(record{list[union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}}]}, i64, i64) -> record{i64, i64}
+       b0:
+         %3 = call i64 instruction(param0, param1, param2)
+         %5 = add.exact i64 param2, 1:i64
+         %6 = record_make record{i64, i64} %3, %5
+         ret %6
+       fn read_constant(record{list[union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}}]}, i64, i64) -> record{union{record{i64}, record{f64}}, i64}
+       b0:
+         %3 = call union{record{i64}, record{f64}} constant_operand(param0, param1, param2)
+         %5 = add.exact i64 param2, 1:i64
+         %6 = record_make record{union{record{i64}, record{f64}}, i64} %3, %5
+         ret %6
+       fn branch_reader(record{list[union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}}]}, i64, i64, bool) -> record{i64, i64}
+       b0:
+         %4 = call i64 instruction(param0, param1, param2)
+         branch param3, b1, b2
+       b1: ; preds b0
+         %7 = add.exact i64 param2, 1:i64
+         %8 = record_make record{i64, i64} %4, %7
+         ret %8
+       b2: ; preds b0
+         %11 = add.exact i64 param2, 2:i64
+         %12 = record_make record{i64, i64} %4, %11
+         ret %12
+       fn mutating_reader(list[i64], i64) -> record{i64, list[i64], i64}
+       b0:
+         jump b2
+       b1: ; preds b4
+         %6 = add.proven i64 param1, 1:i64
+         %7 = record_make record{i64, list[i64], i64} %20, %10, %6
+         ret %7
+       b2: ; preds b0
+         %10 = list_push list[i64] param0, 7:i64
+         %12 = cmp.lt bool param1, 0:i64
+         branch %12, b3, b4
+       b3: ; preds b2
+         %14 = list_len u64 %10
+         %15 = convert.exact i64 %14
+         %16 = add.exact i64 %15, param1
+         jump b4
+       b4: ; preds b2 b3
+         %18 = phi i64 param1, %16
+         %20 = list_get.exact i64 %10, %18
+         jump b1
+       fn string_reader(list[str], i64) -> record{str, i64}
+       b0:
+         %2 = call str string_query(param0, param1)
+         %4 = add.proven i64 param1, 1:i64
+         %5 = record_make record{str, i64} %2, %4
+         ret %5
+       fn myl_core_str_eq(str, str) -> bool runtime
+       fn generic_reader[i64](list[i64], i64) -> record{i64, i64}
+       b0:
+         jump b2
+       b1: ; preds b4
+         %4 = add.exact i64 param1, 1:i64
+         %5 = record_make record{i64, i64} %16, %4
+         ret %5
+       b2: ; preds b0
+         %8 = cmp.lt bool param1, 0:i64
+         branch %8, b3, b4
+       b3: ; preds b2
+         %10 = list_len u64 param0
+         %11 = convert.proven i64 %10
+         %12 = add.proven i64 %11, param1
+         jump b4
+       b4: ; preds b2 b3
+         %14 = phi i64 param1, %12
+         %16 = list_get.exact i64 param0, %14
+         jump b1
+       fn generic_reader[str](list[str], i64) -> record{str, i64}
+       b0:
+         %2 = call str generic_query[str](param0, param1)
+         %4 = add.proven i64 param1, 1:i64
+         %5 = record_make record{str, i64} %2, %4
+         ret %5
+       fn myl_core_render_shape_16_22() -> void runtime
+       fn myl_core_render_shape_17_27() -> void runtime
+       fn myl_core_render_shape_18_0() -> void runtime
+       fn myl_core_render_shape_19_28() -> void runtime
+       fn myl_core_render_shape_20_31() -> void runtime
+       fn myl_core_str_from_f64(f64) -> str extern
+       fn myl_core_show_22(union{record{i64}, record{f64}}) -> str runtime
+       fn instruction(record{list[union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}}]}, i64, i64) -> i64
+       b0:
+         %3 = record_get list[union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}}] param0, field0
+         %5 = cmp.lt bool param1, 0:i64
+         branch %5, b1, b2
+       b1: ; preds b0
+         %7 = list_len u64 %3
+         %8 = convert.proven i64 %7
+         %9 = add.proven i64 %8, param1
+         jump b2
+       b2: ; preds b0 b1
+         %11 = phi i64 param1, %9
+         %14 = list_get_field.exact u32 %3, %11, path 0
+         %16 = cmp.eq bool %14, 1:u32
+         branch %16, b4, b5
+       b3: ; preds b8 b10
+         unreachable
+       b4: ; preds b2
+         %20 = list_get_field list[i64] %3, %11, path 2.0.0
+         %23 = cmp.lt bool param2, 0:i64
+         branch %23, b6, b7
+       b5: ; preds b2
+         %34 = cmp.eq bool %14, 0:u32
+         branch %34, b8, b9
+       b6: ; preds b4
+         %25 = list_len u64 %20
+         %26 = convert.proven i64 %25
+         %27 = add.proven i64 %26, param2
+         jump b7
+       b7: ; preds b4 b6
+         %29 = phi i64 param2, %27
+         %31 = list_get.exact i64 %20, %29
+         ret %31
+       b8: ; preds b5
+         jump b3
+       b9: ; preds b5
+         jump b10
+       b10: ; preds b9
+         jump b3
+       fn constant_operand(record{list[union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}}]}, i64, i64) -> union{record{i64}, record{f64}}
+       b0:
+         %3 = record_get list[union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}}] param0, field0
+         %5 = cmp.lt bool param1, 0:i64
+         branch %5, b1, b2
+       b1: ; preds b0
+         %7 = list_len u64 %3
+         %8 = convert.proven i64 %7
+         %9 = add.proven i64 %8, param1
+         jump b2
+       b2: ; preds b0 b1
+         %11 = phi i64 param1, %9
+         %14 = list_get_field.exact u32 %3, %11, path 0
+         %16 = cmp.eq bool %14, 1:u32
+         branch %16, b4, b5
+       b3: ; preds b10 b12
+         unreachable
+       b4: ; preds b2
+         %19 = list_get_field record{list[i64], list[union{record{i64}, record{f64}}]} %3, %11, path 2.0
+         %20 = record_get list[i64] %19, field0
+         %23 = cmp.lt bool param2, 0:i64
+         branch %23, b6, b7
+       b5: ; preds b2
+         %46 = cmp.eq bool %14, 0:u32
+         branch %46, b10, b11
+       b6: ; preds b4
+         %25 = list_len u64 %20
+         %26 = convert.proven i64 %25
+         %27 = add.proven i64 %26, param2
+         jump b7
+       b7: ; preds b4 b6
+         %29 = phi i64 param2, %27
+         %31 = list_get.exact i64 %20, %29
+         %33 = record_get list[union{record{i64}, record{f64}}] %19, field1
+         %35 = cmp.lt bool %31, 0:i64
+         branch %35, b8, b9
+       b8: ; preds b7
+         %37 = list_len u64 %33
+         %38 = convert.proven i64 %37
+         %39 = add.proven i64 %38, %31
+         jump b9
+       b9: ; preds b7 b8
+         %41 = phi i64 %31, %39
+         %43 = list_get.exact union{record{i64}, record{f64}} %33, %41
+         ret %43
+       b10: ; preds b5
+         jump b3
+       b11: ; preds b5
+         jump b12
+       b12: ; preds b11
+         jump b3
+       fn mutating_query(list[i64], i64) -> record{i64, list[i64]}
+       b0:
+         %3 = list_push list[i64] param0, 7:i64
+         %5 = cmp.lt bool param1, 0:i64
+         branch %5, b1, b2
+       b1: ; preds b0
+         %7 = list_len u64 %3
+         %8 = convert.proven i64 %7
+         %9 = add.proven i64 %8, param1
+         jump b2
+       b2: ; preds b0 b1
+         %11 = phi i64 param1, %9
+         %13 = list_get.exact i64 %3, %11
+         %15 = record_make record{i64, list[i64]} %13, %3
+         ret %15
+       fn string_query(list[str], i64) -> str
+       b0:
+         %3 = cmp.lt bool param1, 0:i64
+         branch %3, b1, b2
+       b1: ; preds b0
+         %5 = list_len u64 param0
+         %6 = convert.proven i64 %5
+         %7 = add.proven i64 %6, param1
+         jump b2
+       b2: ; preds b0 b1
+         %9 = phi i64 param1, %7
+         %11 = list_get.exact str param0, %9
+         %12 = call str myl_core_owned_octets_copy(%11)
+         ret %12
+       fn generic_query[i64](list[i64], i64) -> i64
+       b0:
+         %3 = cmp.lt bool param1, 0:i64
+         branch %3, b1, b2
+       b1: ; preds b0
+         %5 = list_len u64 param0
+         %6 = convert.proven i64 %5
+         %7 = add.proven i64 %6, param1
+         jump b2
+       b2: ; preds b0 b1
+         %9 = phi i64 param1, %7
+         %11 = list_get.exact i64 param0, %9
+         ret %11
+       fn generic_query[str](list[str], i64) -> str
+       b0:
+         %3 = cmp.lt bool param1, 0:i64
+         branch %3, b1, b2
+       b1: ; preds b0
+         %5 = list_len u64 param0
+         %6 = convert.proven i64 %5
+         %7 = add.proven i64 %6, param1
+         jump b2
+       b2: ; preds b0 b1
+         %9 = phi i64 param1, %7
+         %11 = list_get.exact str param0, %9
+         %12 = call str myl_core_owned_octets_copy(%11)
+         ret %12
+       fn myl_core_owned_octets_copy(str) -> str runtime
+       ␃
+       
+       ======== instead found this: =========
+       fn main(cap) -> i64
+       b0:
+         %2 = list_new list[union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}}] 2:i64
+         %4 = list_new list[i64] 3:i64
+         %6 = list_push list[i64] %4, 18:i64
+         %8 = list_push list[i64] %6, 52:i64
+         %10 = list_push list[i64] %8, 0:i64
+         %12 = list_new list[union{record{i64}, record{f64}}] 0:i64
+         %13 = record_make record{list[i64], list[union{record{i64}, record{f64}}]} %10, %12
+         %14 = record_make record{record{list[i64], list[union{record{i64}, record{f64}}]}} %13
+         %15 = union_make union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}} tag1 %14
+         %16 = list_push list[union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}}] %2, %15
+         %18 = list_new list[i64] 1:i64
+         %20 = list_push list[i64] %18, 0:i64
+         %22 = list_new list[union{record{i64}, record{f64}}] 1:i64
+         %24 = record_make record{i64} 42:i64
+         %25 = union_make union{record{i64}, record{f64}} tag0 %24
+         %26 = list_push list[union{record{i64}, record{f64}}] %22, %25
+         %27 = record_make record{list[i64], list[union{record{i64}, record{f64}}]} %20, %26
+         %28 = record_make record{record{list[i64], list[union{record{i64}, record{f64}}]}} %27
+         %29 = union_make union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}} tag1 %28
+         %30 = list_push list[union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}}] %16, %29
+         %31 = record_make record{list[union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}}]} %30
+         jump b57
+       b1: ; preds b56 b3
+         unreachable
+       b2: ; preds b3
+         jump b4
+       b3: ; preds b56
+         %41 = cmp.eq bool %304, 1:i64
+         branch %41, b2, b1
+       b4: ; preds b2 b6
+         %49 = phi i64 0:i64, %63
+         %53 = phi i64 0:i64, %60
+         %56 = phi i64 0:i64, %310
+         %51 = cmp.lt bool %49, 3:i64
+         branch %51, b5, b7
+       b5: ; preds b4
+         jump b59
+       b6: ; preds b58
+         %63 = add.proven i64 %49, 1:i64
+         jump b4
+       b7: ; preds b4
+         %66 = cmp.eq bool %53, 70:i64
+         branch %66, b10, b8
+       b8: ; preds b7 b10
+         unreachable
+       b9: ; preds b10
+         jump b61
+       b10: ; preds b7
+         %69 = cmp.eq bool %56, 3:i64
+         branch %69, b9, b8
+       b11: ; preds b60 b13
+         unreachable
+       b12: ; preds b13
+         jump b63
+       b13: ; preds b60
+         %81 = cmp.eq bool %316, 0:i64
+         branch %81, b12, b11
+       b14: ; preds b18 b16
+         unreachable
+       b15: ; preds b16
+         jump b65
+       b16: ; preds b18
+         %122 = cmp.eq bool %322, 1:i64
+         branch %122, b15, b14
+       b17: ; preds b62
+         %96 = cmp.eq bool %91, 0:u32
+         branch %96, b19, b20
+       b18: ; preds b62 b19 b21 b22
+         %118 = phi bool %93, %104, %115, %93
+         branch %118, b16, b14
+       b19: ; preds b17
+         %98 = union_payload record{i64} tag0 %320
+         %99 = union_payload record{i64} tag0 %90
+         %101 = record_get i64 %98, field0
+         %102 = record_get i64 %99, field0
+         %103 = cmp.eq bool %101, %102
+         %104 = bit_and bool 1:bool, %103
+         jump b18
+       b20: ; preds b17
+         %107 = cmp.eq bool %91, 1:u32
+         branch %107, b21, b22
+       b21: ; preds b20
+         %109 = union_payload record{f64} tag1 %320
+         %110 = union_payload record{f64} tag1 %90
+         %112 = record_get f64 %109, field0
+         %113 = record_get f64 %110, field0
+         %114 = fcmp.eq bool %112, %113
+         %115 = bit_and bool 1:bool, %114
+         jump b18
+       b22: ; preds b20
+         jump b18
+       b23: ; preds b64 b25
+         unreachable
+       b24: ; preds b25
+         jump b69
+       b25: ; preds b64
+         %136 = cmp.eq bool %338, 1:i64
+         branch %136, b24, b23
+       b26: ; preds b68 b28
+         unreachable
+       b27: ; preds b28
+         %153 = list_new list[i64] 1:i64
+         %155 = list_push list[i64] %153, 1:i64
+         %157 = call record{i64, list[i64], i64} mutating_reader(%155, 0:i64)
+         %158 = record_get i64 %157, field0
+         %159 = record_get list[i64] %157, field1
+         %160 = record_get i64 %157, field2
+         %162 = cmp.eq bool %158, 1:i64
+         branch %162, b31, b29
+       b28: ; preds b68
+         %149 = cmp.eq bool %351, 2:i64
+         branch %149, b27, b26
+       b29: ; preds b27 b31
+         unreachable
+       b30: ; preds b31
+         %169 = list_new list[str] 1:i64
+         %171 = list_push list[str] %169, str7
+         %173 = call record{str, i64} string_reader(%171, 0:i64)
+         %174 = record_get str %173, field0
+         %175 = record_get i64 %173, field1
+         %177 = call bool myl_core_str_eq(%174, str7)
+         release %174
+         branch %177, b34, b32
+       b31: ; preds b27
+         %165 = cmp.eq bool %160, 1:i64
+         branch %165, b30, b29
+       b32: ; preds b30 b34
+         unreachable
+       b33: ; preds b34
+         %186 = record_make record{i64, i64, i64} 0:i64, 0:i64, 777:i64
+         jump b73
+       b34: ; preds b30
+         %180 = cmp.eq bool %175, 1:i64
+         branch %180, b33, b32
+       b35: ; preds b72 b39 b38 b37
+         unreachable
+       b36: ; preds b37
+         %212 = record_set record{i64, i64, i64} %194, field1, 0:i64
+         jump b40
+       b37: ; preds b38
+         %208 = cmp.eq bool 777:i64, 777:i64
+         branch %208, b36, b35
+       b38: ; preds b39
+         %204 = cmp.eq bool 0:i64, 0:i64
+         branch %204, b37, b35
+       b39: ; preds b72
+         %200 = cmp.eq bool %354, 1:i64
+         branch %200, b38, b35
+       b40: ; preds b36 b42
+         %403 = phi i64 777:i64, %403
+         %402 = phi i64 0:i64, %360
+         %401 = phi i64 0:i64, %401
+         %216 = phi i64 0:i64, %232
+         %221 = phi record{i64, i64, i64} %212, %229
+         %218 = cmp.lt bool %216, 3:i64
+         branch %218, b41, b43
+       b41: ; preds b40
+         jump b75
+       b42: ; preds b74
+         %232 = add.proven i64 %216, 1:i64
+         jump b40
+       b43: ; preds b40
+         %236 = cmp.eq bool %402, 3:i64
+         branch %236, b46, b44
+       b44: ; preds b43 b46
+         unreachable
+       b45: ; preds b46
+         %244 = record_set record{i64, i64, i64} %221, field1, 0:i64
+         jump b77
+       b46: ; preds b43
+         %240 = cmp.eq bool %403, 777:i64
+         branch %240, b45, b44
+       b47: ; preds b76 b49
+         unreachable
+       b48: ; preds b49
+         jump b81
+       b49: ; preds b76
+         %260 = cmp.eq bool %403, 777:i64
+         branch %260, b48, b47
+       b50: ; preds b80 b52
+         unreachable
+       b51: ; preds b52
+         %277 = call record{str, i64} generic_reader[str](%171, 0:i64)
+         release %171
+         %278 = record_get str %277, field0
+         %279 = record_get i64 %277, field1
+         %281 = call bool myl_core_str_eq(%278, str7)
+         release %278
+         branch %281, b55, b53
+       b52: ; preds b80
+         %272 = cmp.eq bool %379, 1:i64
+         branch %272, b51, b50
+       b53: ; preds b51 b55
+         unreachable
+       b54: ; preds b55
+         %297 = call str myl_core_show_22(%320)
+         print param0, %302, %53, %297, %351
+         release %297
+         ret 0:i64
+       b55: ; preds b51
+         %284 = cmp.eq bool %279, 1:i64
+         branch %284, b54, b53
+       b56: ; preds b57
+         %38 = cmp.eq bool %302, 18:i64
+         branch %38, b3, b1
+       b57: ; preds b0
+         %302 = call i64 instruction(%31, 0:i64, 0:i64)
+         %304 = add.proven i64 0:i64, 1:i64
+         jump b56
+       b58: ; preds b59
+         %60 = add.exact i64 %53, %308
+         jump b6
+       b59: ; preds b5
+         %308 = call i64 instruction(%31, 0:i64, %56)
+         %310 = add.proven i64 %56, 1:i64
+         jump b58
+       b60: ; preds b61
+         %78 = cmp.eq bool %314, 0:i64
+         branch %78, b13, b11
+       b61: ; preds b9
+         %314 = call i64 instruction(%31, 0:i64, -1:i64)
+         %316 = add.proven i64 -1:i64, 1:i64
+         jump b60
+       b62: ; preds b63
+         %89 = record_make record{i64} 42:i64
+         %90 = union_make union{record{i64}, record{f64}} tag0 %89
+         %91 = union_tag u32 %320
+         %92 = union_tag u32 %90
+         %93 = cmp.eq bool %91, %92
+         branch %93, b17, b18
+       b63: ; preds b12
+         %320 = call union{record{i64}, record{f64}} constant_operand(%31, 1:i64, %316)
+         %322 = add.proven i64 %316, 1:i64
+         jump b62
+       b64: ; preds b66 b67
+         %338 = phi i64 %329, %333
+         %133 = cmp.eq bool %326, 18:i64
+         branch %133, b25, b23
+       b65: ; preds b15
+         %326 = call i64 instruction(%31, 0:i64, 0:i64)
+         branch 1:bool, b66, b67
+       b66: ; preds b65
+         %329 = add.proven i64 0:i64, 1:i64
+         jump b64
+       b67: ; preds b65
+         %333 = add.exact i64 0:i64, 2:i64
+         jump b64
+       b68: ; preds b70 b71
+         %351 = phi i64 %342, %346
+         %146 = cmp.eq bool %339, 18:i64
+         branch %146, b28, b26
+       b69: ; preds b24
+         %339 = call i64 instruction(%31, 0:i64, 0:i64)
+         branch 0:bool, b70, b71
+       b70: ; preds b69
+         %342 = add.exact i64 0:i64, 1:i64
+         jump b68
+       b71: ; preds b69
+         %346 = add.proven i64 0:i64, 2:i64
+         jump b68
+       b72: ; preds b73
+         %194 = record_set record{i64, i64, i64} %186, field1, %354
+         %196 = cmp.eq bool %352, 18:i64
+         branch %196, b39, b35
+       b73: ; preds b33
+         %352 = call i64 instruction(%31, 0:i64, 0:i64)
+         %354 = add.proven i64 0:i64, 1:i64
+         jump b72
+       b74: ; preds b75
+         %229 = record_set record{i64, i64, i64} %221, field1, %360
+         jump b42
+       b75: ; preds b41
+         %358 = call i64 instruction(%31, %401, %402)
+         %360 = add.exact i64 %402, 1:i64
+         jump b74
+       b76: ; preds b78 b79
+         %376 = phi i64 %367, %371
+         %253 = record_set record{i64, i64, i64} %244, field1, %376
+         %256 = cmp.eq bool %376, 2:i64
+         branch %256, b49, b47
+       b77: ; preds b45
+         %364 = call i64 instruction(%31, %401, 0:i64)
+         release %31
+         branch 0:bool, b78, b79
+       b78: ; preds b77
+         %367 = add.exact i64 0:i64, 1:i64
+         jump b76
+       b79: ; preds b77
+         %371 = add.proven i64 0:i64, 2:i64
+         jump b76
+       b80: ; preds b82
+         %269 = cmp.eq bool %392, 1:i64
+         branch %269, b52, b50
+       b81: ; preds b48
+         jump b83
+       b82: ; preds b85
+         %379 = add.proven i64 0:i64, 1:i64
+         jump b80
+       b83: ; preds b81
+         %384 = cmp.lt bool 0:i64, 0:i64
+         branch %384, b84, b85
+       b84: ; preds b83
+         %386 = list_len u64 %159
+         %387 = convert.exact i64 %386
+         %388 = add.exact i64 %387, 0:i64
+         jump b85
+       b85: ; preds b83 b84
+         %390 = phi i64 0:i64, %388
+         %392 = list_get.exact i64 %159, %390
+         release %159
+         jump b82
+       fn read_byte(record{list[union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}}]}, i64, i64) -> record{i64, i64}
+       b0:
+         %3 = call i64 instruction(param0, param1, param2)
+         %5 = add.exact i64 param2, 1:i64
+         %6 = record_make record{i64, i64} %3, %5
+         ret %6
+       fn read_constant(record{list[union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}}]}, i64, i64) -> record{union{record{i64}, record{f64}}, i64}
+       b0:
+         %3 = call union{record{i64}, record{f64}} constant_operand(param0, param1, param2)
+         %5 = add.exact i64 param2, 1:i64
+         %6 = record_make record{union{record{i64}, record{f64}}, i64} %3, %5
+         ret %6
+       fn branch_reader(record{list[union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}}]}, i64, i64, bool) -> record{i64, i64}
+       b0:
+         %4 = call i64 instruction(param0, param1, param2)
+         branch param3, b1, b2
+       b1: ; preds b0
+         %7 = add.exact i64 param2, 1:i64
+         %8 = record_make record{i64, i64} %4, %7
+         ret %8
+       b2: ; preds b0
+         %11 = add.exact i64 param2, 2:i64
+         %12 = record_make record{i64, i64} %4, %11
+         ret %12
+       fn mutating_reader(list[i64], i64) -> record{i64, list[i64], i64}
+       b0:
+         jump b2
+       b1: ; preds b4
+         %6 = add.proven i64 param1, 1:i64
+         %7 = record_make record{i64, list[i64], i64} %20, %10, %6
+         ret %7
+       b2: ; preds b0
+         %10 = list_push list[i64] param0, 7:i64
+         %12 = cmp.lt bool param1, 0:i64
+         branch %12, b3, b4
+       b3: ; preds b2
+         %14 = list_len u64 %10
+         %15 = convert.exact i64 %14
+         %16 = add.exact i64 %15, param1
+         jump b4
+       b4: ; preds b2 b3
+         %18 = phi i64 param1, %16
+         %20 = list_get.exact i64 %10, %18
+         jump b1
+       fn string_reader(list[str], i64) -> record{str, i64}
+       b0:
+         %2 = call str string_query(param0, param1)
+         %4 = add.proven i64 param1, 1:i64
+         %5 = record_make record{str, i64} %2, %4
+         ret %5
+       fn myl_core_str_eq(str, str) -> bool runtime
+       fn generic_reader[i64](list[i64], i64) -> record{i64, i64}
+       b0:
+         jump b2
+       b1: ; preds b4
+         %4 = add.exact i64 param1, 1:i64
+         %5 = record_make record{i64, i64} %16, %4
+         ret %5
+       b2: ; preds b0
+         %8 = cmp.lt bool param1, 0:i64
+         branch %8, b3, b4
+       b3: ; preds b2
+         %10 = list_len u64 param0
+         %11 = convert.proven i64 %10
+         %12 = add.proven i64 %11, param1
+         jump b4
+       b4: ; preds b2 b3
+         %14 = phi i64 param1, %12
+         %16 = list_get.exact i64 param0, %14
+         jump b1
+       fn generic_reader[str](list[str], i64) -> record{str, i64}
+       b0:
+         %2 = call str generic_query[str](param0, param1)
+         %4 = add.proven i64 param1, 1:i64
+         %5 = record_make record{str, i64} %2, %4
+         ret %5
+       fn myl_core_render_shape_16_22() -> void runtime
+       fn myl_core_render_shape_17_27() -> void runtime
+       fn myl_core_render_shape_18_0() -> void runtime
+       fn myl_core_render_shape_19_28() -> void runtime
+       fn myl_core_render_shape_20_31() -> void runtime
+       fn myl_core_str_from_f64(f64) -> str extern
+       fn myl_core_show_22(union{record{i64}, record{f64}}) -> str runtime
+       fn instruction(record{list[union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}}]}, i64, i64) -> i64
+       b0:
+         %3 = record_get list[union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}}] param0, field0
+         %5 = cmp.lt bool param1, 0:i64
+         branch %5, b1, b2
+       b1: ; preds b0
+         %7 = list_len u64 %3
+         %8 = convert.proven i64 %7
+         %9 = add.proven i64 %8, param1
+         jump b2
+       b2: ; preds b0 b1
+         %11 = phi i64 param1, %9
+         %14 = list_get_field.exact u32 %3, %11, path 0
+         %16 = cmp.eq bool %14, 1:u32
+         branch %16, b4, b5
+       b3: ; preds b8 b10
+         unreachable
+       b4: ; preds b2
+         %20 = list_get_field list[i64] %3, %11, path 2.0.0
+         %23 = cmp.lt bool param2, 0:i64
+         branch %23, b6, b7
+       b5: ; preds b2
+         %34 = cmp.eq bool %14, 0:u32
+         branch %34, b8, b9
+       b6: ; preds b4
+         %25 = list_len u64 %20
+         %26 = convert.proven i64 %25
+         %27 = add.proven i64 %26, param2
+         jump b7
+       b7: ; preds b4 b6
+         %29 = phi i64 param2, %27
+         %31 = list_get.exact i64 %20, %29
+         ret %31
+       b8: ; preds b5
+         jump b3
+       b9: ; preds b5
+         jump b10
+       b10: ; preds b9
+         jump b3
+       fn constant_operand(record{list[union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}}]}, i64, i64) -> union{record{i64}, record{f64}}
+       b0:
+         %3 = record_get list[union{void, record{record{list[i64], list[union{record{i64}, record{f64}}]}}, record{i64}}] param0, field0
+         %5 = cmp.lt bool param1, 0:i64
+         branch %5, b1, b2
+       b1: ; preds b0
+         %7 = list_len u64 %3
+         %8 = convert.proven i64 %7
+         %9 = add.proven i64 %8, param1
+         jump b2
+       b2: ; preds b0 b1
+         %11 = phi i64 param1, %9
+         %14 = list_get_field.exact u32 %3, %11, path 0
+         %16 = cmp.eq bool %14, 1:u32
+         branch %16, b4, b5
+       b3: ; preds b10 b12
+         unreachable
+       b4: ; preds b2
+         %19 = list_get_field record{list[i64], list[union{record{i64}, record{f64}}]} %3, %11, path 2.0
+         %20 = record_get list[i64] %19, field0
+         %23 = cmp.lt bool param2, 0:i64
+         branch %23, b6, b7
+       b5: ; preds b2
+         %46 = cmp.eq bool %14, 0:u32
+         branch %46, b10, b11
+       b6: ; preds b4
+         %25 = list_len u64 %20
+         %26 = convert.proven i64 %25
+         %27 = add.proven i64 %26, param2
+         jump b7
+       b7: ; preds b4 b6
+         %29 = phi i64 param2, %27
+         %31 = list_get.exact i64 %20, %29
+         %33 = record_get list[union{record{i64}, record{f64}}] %19, field1
+         %35 = cmp.lt bool %31, 0:i64
+         branch %35, b8, b9
+       b8: ; preds b7
+         %37 = list_len u64 %33
+         %38 = convert.proven i64 %37
+         %39 = add.proven i64 %38, %31
+         jump b9
+       b9: ; preds b7 b8
+         %41 = phi i64 %31, %39
+         %43 = list_get.exact union{record{i64}, record{f64}} %33, %41
+         ret %43
+       b10: ; preds b5
+         jump b3
+       b11: ; preds b5
+         jump b12
+       b12: ; preds b11
+         jump b3
+       fn mutating_query(list[i64], i64) -> record{i64, list[i64]}
+       b0:
+         %3 = list_push list[i64] param0, 7:i64
+         %5 = cmp.lt bool param1, 0:i64
+         branch %5, b1, b2
+       b1: ; preds b0
+         %7 = list_len u64 %3
+         %8 = convert.proven i64 %7
+         %9 = add.proven i64 %8, param1
+         jump b2
+       b2: ; preds b0 b1
+         %11 = phi i64 param1, %9
+         %13 = list_get.exact i64 %3, %11
+         %15 = record_make record{i64, list[i64]} %13, %3
+         ret %15
+       fn string_query(list[str], i64) -> str
+       b0:
+         %3 = cmp.lt bool param1, 0:i64
+         branch %3, b1, b2
+       b1: ; preds b0
+         %5 = list_len u64 param0
+         %6 = convert.proven i64 %5
+         %7 = add.proven i64 %6, param1
+         jump b2
+       b2: ; preds b0 b1
+         %9 = phi i64 param1, %7
+         %11 = list_get.exact str param0, %9
+         %12 = call str myl_core_owned_octets_copy(%11)
+         ret %12
+       fn generic_query[i64](list[i64], i64) -> i64
+       b0:
+         %3 = cmp.lt bool param1, 0:i64
+         branch %3, b1, b2
+       b1: ; preds b0
+         %5 = list_len u64 param0
+         %6 = convert.proven i64 %5
+         %7 = add.proven i64 %6, param1
+         jump b2
+       b2: ; preds b0 b1
+         %9 = phi i64 param1, %7
+         %11 = list_get.exact i64 param0, %9
+         ret %11
+       fn generic_query[str](list[str], i64) -> str
+       b0:
+         %3 = cmp.lt bool param1, 0:i64
+         branch %3, b1, b2
+       b1: ; preds b0
+         %5 = list_len u64 param0
+         %6 = convert.proven i64 %5
+         %7 = add.proven i64 %6, param1
+         jump b2
+       b2: ; preds b0 b1
+         %9 = phi i64 param1, %7
+         %11 = list_get.exact str param0, %9
+         %12 = call str myl_core_owned_octets_copy(%11)
+         ret %12
+       fn myl_core_owned_octets_copy(str) -> str runtime
+       ␃
+       
+       ======================================
+       First difference occurs on line 123:
+       expected:
+         %177 = call bool myl_core_str_eq(%174, str8)
+                                                   ^ ('\x38')
+       found:
+         %177 = call bool myl_core_str_eq(%174, str7)
+                                                   ^ ('\x37')
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/testing.zig:681:9: 0x227da65 in expectEqualStrings (std.zig)
+               return error.TestExpectedEqual;
+               ^
+       /home/epentland/ai/canopy/mylang-lox-inline-core-20261013-p2/src/core/inline_scalar_reader_test.zig:231:5: 0x229723f in test.scalar reader query body edit invalidates transitive caller eligibility (root_test.zig)
+           try std.testing.expectEqualStrings(cold.text, warm.text);
+           ^
+error: 'inline_scalar_reader_test.test.scalar reader five native modes and RC control retain discarded checks and failure order' failed:
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/Io/Threaded.zig:15313:9: 0x1380cf2 in processSpawnPosix (std.zig)
+               return child_err;
+               ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/process.zig:452:5: 0x228fcdd in spawn (std.zig)
+           return io.vtable.processSpawn(io.userdata, options);
+           ^
+       /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/std/process.zig:506:17: 0x2287159 in run (std.zig)
+           var child = try spawn(io, .{
+                       ^
+       /home/epentland/ai/canopy/mylang-lox-inline-core-20261013-p2/src/core/inline_scalar_reader_test.zig:281:22: 0x227e932 in test.scalar reader five native modes and RC control retain discarded checks and failure order (root_test.zig)
+               const good = try std.process.run(a, std.testing.io, .{ .argv = argv.items, .environ_map = &environment, .cwd = .{ .path = root } });
+                            ^
+failed command: python3 scripts/verification_native_telemetry.py --action-id core --member 0 --root-id src/core/root_test.zig -- sh -c "if [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec env \"\$@\"" with-tools MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lox-inline-core-20261013-p2/zig-out/libexec/mylang/components ./.tmp/lox-eda-parity/P2/core-inline-001/zig-local/o/42763a583f767cd9710db37a31b8ac08/test "--guardian-filter=scalar reader" --cache-dir=./.tmp/lox-eda-parity/P2/core-inline-001/zig-local --seed=0x503a9051 --listen=-
+
+Build Summary: 10/12 steps succeeded (1 failed); 1/9 tests passed (3 failed, 5 crashed)
+test-core transitive failure
++- verification action core member 0 1 pass, 3 fail, 5 crash (9 total)
+

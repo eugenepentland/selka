@@ -1,0 +1,279 @@
+{
+  "common002": {
+    "symbols": {
+      "my.vm::read_byte": {
+        "address": "0000000001062540",
+        "bytes": 169
+      },
+      "my.vm::read_constant": {
+        "address": "00000000010625f0",
+        "bytes": 238
+      },
+      "my.vm::read_short": {
+        "address": "0000000001062c90",
+        "bytes": 429
+      },
+      "my.vm::runtime_error": {
+        "address": "00000000010620c0",
+        "bytes": 1140
+      },
+      "my.vm::run": {
+        "address": "000000000105ab70",
+        "bytes": 12896
+      }
+    },
+    "calls": {
+      "my.vm::read_byte": [
+        {
+          "caller": "my.vm::run",
+          "instruction": "105abfc:\te8 3f 79 00 00       \tcall   1062540 <my.vm::read_byte>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105b170:\te8 cb 73 00 00       \tcall   1062540 <my.vm::read_byte>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105b703:\te8 38 6e 00 00       \tcall   1062540 <my.vm::read_byte>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105b8c5:\te8 76 6c 00 00       \tcall   1062540 <my.vm::read_byte>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105b93e:\te8 fd 6b 00 00       \tcall   1062540 <my.vm::read_byte>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105bc1b:\te8 20 69 00 00       \tcall   1062540 <my.vm::read_byte>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105bc2c:\te8 0f 69 00 00       \tcall   1062540 <my.vm::read_byte>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105c050:\te8 eb 64 00 00       \tcall   1062540 <my.vm::read_byte>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105c209:\te8 32 63 00 00       \tcall   1062540 <my.vm::read_byte>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105c304:\te8 37 62 00 00       \tcall   1062540 <my.vm::read_byte>"
+        }
+      ],
+      "my.vm::read_constant": [
+        {
+          "caller": "my.vm::run",
+          "instruction": "105ae12:\te8 d9 77 00 00       \tcall   10625f0 <my.vm::read_constant>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105af7a:\te8 71 76 00 00       \tcall   10625f0 <my.vm::read_constant>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105affd:\te8 ee 75 00 00       \tcall   10625f0 <my.vm::read_constant>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105b2aa:\te8 41 73 00 00       \tcall   10625f0 <my.vm::read_constant>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105b311:\te8 da 72 00 00       \tcall   10625f0 <my.vm::read_constant>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105b55e:\te8 8d 70 00 00       \tcall   10625f0 <my.vm::read_constant>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105b5f4:\te8 f7 6f 00 00       \tcall   10625f0 <my.vm::read_constant>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105b812:\te8 d9 6d 00 00       \tcall   10625f0 <my.vm::read_constant>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105ba0e:\te8 dd 6b 00 00       \tcall   10625f0 <my.vm::read_constant>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105bab4:\te8 37 6b 00 00       \tcall   10625f0 <my.vm::read_constant>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105c037:\te8 b4 65 00 00       \tcall   10625f0 <my.vm::read_constant>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105c2eb:\te8 00 63 00 00       \tcall   10625f0 <my.vm::read_constant>"
+        }
+      ],
+      "my.vm::read_short": [
+        {
+          "caller": "my.vm::run",
+          "instruction": "105aee7:\te8 a4 7d 00 00       \tcall   1062c90 <my.vm::read_short>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105af58:\te8 33 7d 00 00       \tcall   1062c90 <my.vm::read_short>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105b685:\te8 06 76 00 00       \tcall   1062c90 <my.vm::read_short>"
+        }
+      ],
+      "my.heap::function_instruction": [],
+      "my.vm_queries::constant_operand": [],
+      "my.heap::function_constant": []
+    },
+    "counts": {
+      "my.vm::read_byte": {
+        "whole_binary": 10,
+        "vm_run": 10
+      },
+      "my.vm::read_constant": {
+        "whole_binary": 12,
+        "vm_run": 12
+      },
+      "my.vm::read_short": {
+        "whole_binary": 3,
+        "vm_run": 3
+      },
+      "my.heap::function_instruction": {
+        "whole_binary": 0,
+        "vm_run": 0
+      },
+      "my.vm_queries::constant_operand": {
+        "whole_binary": 0,
+        "vm_run": 0
+      },
+      "my.heap::function_constant": {
+        "whole_binary": 0,
+        "vm_run": 0
+      }
+    }
+  },
+  "candidate": {
+    "symbols": {
+      "my.vm_queries::constant_operand": {
+        "address": "0000000001069950",
+        "bytes": 202
+      },
+      "my.vm::read_short": {
+        "address": "00000000010633f0",
+        "bytes": 429
+      },
+      "my.vm::runtime_error": {
+        "address": "00000000010629c0",
+        "bytes": 1140
+      },
+      "my.vm::run": {
+        "address": "000000000105ac30",
+        "bytes": 15018
+      }
+    },
+    "calls": {
+      "my.vm::read_byte": [],
+      "my.vm::read_constant": [],
+      "my.vm::read_short": [
+        {
+          "caller": "my.vm::run",
+          "instruction": "105aff0:\te8 fb 83 00 00       \tcall   10633f0 <my.vm::read_short>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105b060:\te8 8b 83 00 00       \tcall   10633f0 <my.vm::read_short>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105b81d:\te8 ce 7b 00 00       \tcall   10633f0 <my.vm::read_short>"
+        }
+      ],
+      "my.heap::function_instruction": [],
+      "my.vm_queries::constant_operand": [
+        {
+          "caller": "my.vm::run",
+          "instruction": "105af04:\te8 47 ea 00 00       \tcall   1069950 <my.vm_queries::constant_operand>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105b082:\te8 c9 e8 00 00       \tcall   1069950 <my.vm_queries::constant_operand>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105b10d:\te8 3e e8 00 00       \tcall   1069950 <my.vm_queries::constant_operand>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105b402:\te8 49 e5 00 00       \tcall   1069950 <my.vm_queries::constant_operand>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105b48e:\te8 bd e4 00 00       \tcall   1069950 <my.vm_queries::constant_operand>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105b6de:\te8 6d e2 00 00       \tcall   1069950 <my.vm_queries::constant_operand>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105b773:\te8 d8 e1 00 00       \tcall   1069950 <my.vm_queries::constant_operand>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105b9e3:\te8 68 df 00 00       \tcall   1069950 <my.vm_queries::constant_operand>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105bc67:\te8 e4 dc 00 00       \tcall   1069950 <my.vm_queries::constant_operand>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105bd12:\te8 39 dc 00 00       \tcall   1069950 <my.vm_queries::constant_operand>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105c35a:\te8 f1 d5 00 00       \tcall   1069950 <my.vm_queries::constant_operand>"
+        },
+        {
+          "caller": "my.vm::run",
+          "instruction": "105c68d:\te8 be d2 00 00       \tcall   1069950 <my.vm_queries::constant_operand>"
+        }
+      ],
+      "my.heap::function_constant": []
+    },
+    "counts": {
+      "my.vm::read_byte": {
+        "whole_binary": 0,
+        "vm_run": 0
+      },
+      "my.vm::read_constant": {
+        "whole_binary": 0,
+        "vm_run": 0
+      },
+      "my.vm::read_short": {
+        "whole_binary": 3,
+        "vm_run": 3
+      },
+      "my.heap::function_instruction": {
+        "whole_binary": 0,
+        "vm_run": 0
+      },
+      "my.vm_queries::constant_operand": {
+        "whole_binary": 12,
+        "vm_run": 12
+      },
+      "my.heap::function_constant": {
+        "whole_binary": 0,
+        "vm_run": 0
+      }
+    }
+  }
+}

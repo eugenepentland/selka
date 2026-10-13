@@ -1,0 +1,12 @@
+build-slot: gate slot 1, FIFO ticket 508 after 0s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 18 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10645 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/lox-inline-core-20261013-p2 1ecc334ee] Inline bounded scalar writeback readers with complete query cache dependencies
+ 7 files changed, 935 insertions(+), 5 deletions(-)
+ create mode 100644 src/core/inline_scalar_reader_test.zig
+ create mode 100644 test/core/inline_scalar_reader.my

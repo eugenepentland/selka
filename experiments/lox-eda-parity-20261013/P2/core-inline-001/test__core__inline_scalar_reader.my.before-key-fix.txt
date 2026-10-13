@@ -1,0 +1,145 @@
+enum Item:
+    integer(value: int)
+    real(value: float)
+
+
+record Function:
+    code: int[]
+    constants: Item[]
+
+
+enum Object:
+    empty
+    function(value: Function)
+    alternate(value: int)
+
+
+record Runtime:
+    objects: Object[]
+
+
+record Frame:
+    function: int
+    ip: int
+    sentinel: int
+
+
+func instruction(rt: Runtime, function: int, index: int) -> int:
+    # query edit reservation: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    match rt.objects[function]:
+        case Object.function(value=payload):
+            return payload.code[index]
+        case _:
+            pass
+    assert False, "object is not a function"
+    return 0
+
+
+func constant_operand(rt: Runtime, function: int, index: int) -> Item:
+    match rt.objects[function]:
+        case Object.function(value=payload):
+            const selected = payload.code[index]
+            return payload.constants[selected]
+        case _:
+            pass
+    assert False, "object is not a function"
+    return Item.integer(value=0)
+
+
+func read_byte(rt: Runtime, function: int, mut ip: int) -> int:
+    const byte = instruction(rt, function, ip)
+    ip = ip + 1
+    return byte
+
+
+func read_constant(rt: Runtime, function: int, mut ip: int) -> Item:
+    const selected = constant_operand(rt, function, ip)
+    ip = ip + 1
+    return selected
+
+
+func branch_reader(rt: Runtime, function: int, mut ip: int, early: bool) -> int:
+    const selected = instruction(rt, function, ip)
+    if early:
+        ip = ip + 1
+        return selected
+    ip = ip + 2
+    return selected
+
+
+func advance_first(rt: Runtime, function: int, mut ip: int) -> int:
+    ip = ip + 1
+    return instruction(rt, function, ip)
+
+
+func mutating_query(mut values: int[], index: int) -> int:
+    values.append(7)
+    return values[index]
+
+
+func mutating_reader(mut values: int[], mut ip: int) -> int:
+    const selected = mutating_query(mut values, ip)
+    ip = ip + 1
+    return selected
+
+
+func string_query(values: str[], index: int) -> str:
+    return values[index].copy()
+
+
+func string_reader(values: str[], mut ip: int) -> str:
+    const selected = string_query(values, ip)
+    ip = ip + 1
+    return selected
+
+
+func generic_query[T](values: T[], index: int) -> T:
+    return values[index].copy()
+
+
+func generic_reader[T](values: T[], mut ip: int) -> T:
+    const selected = generic_query[T](values, ip)
+    ip = ip + 1
+    return selected
+
+
+func main(out: Stream) -> int:
+    mut rt = Runtime(objects=[Object.function(value=Function(code=[18, 52, 0], constants=[])), Object.function(value=Function(code=[0], constants=[Item.integer(value=42)]))])
+    mut ip = 0
+    const byte = read_byte(rt, 0, mut ip)
+    assert byte == 18 and ip == 1
+    mut total = 0
+    ip = 0
+    for step in range(3):
+        total += read_byte(rt, 0, mut ip)
+    assert total == 70 and ip == 3
+    ip = -1
+    assert read_byte(rt, 0, mut ip) == 0 and ip == 0
+    const item = read_constant(rt, 1, mut ip)
+    assert item == Item.integer(value=42) and ip == 1
+    ip = 0
+    assert branch_reader(rt, 0, mut ip, True) == 18 and ip == 1
+    ip = 0
+    assert branch_reader(rt, 0, mut ip, False) == 18 and ip == 2
+    mut values = [1]
+    mut donor_ip = 0
+    assert mutating_reader(mut values, mut donor_ip) == 1 and donor_ip == 1
+    mut texts = ["ok"]
+    mut text_ip = 0
+    assert string_reader(texts, mut text_ip) == "ok" and text_ip == 1
+    mut frame = Frame(function=0, ip=0, sentinel=777)
+    const interior = read_byte(rt, frame.function, mut frame.ip)
+    assert interior == 18 and frame.ip == 1 and frame.function == 0 and frame.sentinel == 777
+    frame.ip = 0
+    for step in range(3):
+        _ = read_byte(rt, frame.function, mut frame.ip)
+    assert frame.ip == 3 and frame.sentinel == 777
+    frame.ip = 0
+    _ = branch_reader(rt, frame.function, mut frame.ip, False)
+    assert frame.ip == 2 and frame.sentinel == 777
+    mut generic_ip = 0
+    assert generic_reader[int](values, mut generic_ip) == 1 and generic_ip == 1
+    mut generic_text_ip = 0
+    assert generic_reader[str](texts, mut generic_text_ip) == "ok" and generic_text_ip == 1
+    out.print(byte, total, item, ip)
+    return 0

@@ -1,0 +1,48 @@
+{
+  "source_commit": "1ecc334ee1af550eb643cc6cc11896c436326d81",
+  "base_commit": "fbeba4eed7b549a3feef14c8b8dd620e41494139",
+  "compiler": "/home/epentland/ai/canopy/mylang-lox-inline-core-20261013-p2/.tmp/lox-eda-parity/P2/core-inline-001/install-001/bin/mylang",
+  "compiler_sha256": "ca97ce2cd24c45ed08d5970723a9055ccaf408148b7f57f66eaefe3926eafb1f",
+  "status": "full pinned-route install exited0; full production Guardian88; focused64 tests pass",
+  "installation_files": [
+    {
+      "path": "bin/mylang",
+      "sha256": "ca97ce2cd24c45ed08d5970723a9055ccaf408148b7f57f66eaefe3926eafb1f",
+      "bytes": 240286221
+    },
+    {
+      "path": "libexec/mylang/components/cache-plan-3b6f5f3fa00bb6bcb434875aefba0f4d7125e3698cd88ce6fbac0678fbbba63f",
+      "sha256": "3b6f5f3fa00bb6bcb434875aefba0f4d7125e3698cd88ce6fbac0678fbbba63f",
+      "bytes": 373640
+    },
+    {
+      "path": "libexec/mylang/components/cache-plan.json",
+      "sha256": "f492a8489d43c168708c9796abeaeb370d7eb5b6af0fbf37608479a0823fbf18",
+      "bytes": 327
+    },
+    {
+      "path": "libexec/mylang/components/test-index-fa4fb1cafb259bbda7181bf81d3f21168cef8f81dac26151a7b60d3f44861261",
+      "sha256": "fa4fb1cafb259bbda7181bf81d3f21168cef8f81dac26151a7b60d3f44861261",
+      "bytes": 308304
+    },
+    {
+      "path": "libexec/mylang/components/test-index.json",
+      "sha256": "7722416d161bb7164bf3ce3efddf706f7088a88889dee25076e9cb45d5268d92",
+      "bytes": 327
+    },
+    {
+      "path": "tools/selka-components",
+      "sha256": "93cee63ab12bafd86305b3692df8e36bd304c74c868dbb7c68acf20ba3fcd900",
+      "bytes": 4526816
+    }
+  ],
+  "production_source_hashes": {
+    "src/core/inline.zig": "35807c431953ccf193ce4d1899b1dd6cb6db9fb83bb7196c4d5ed2c8ed9ab1fc",
+    "src/core/inline_reader.zig": "cf49bb353711af4b16a09d5b04be1a1456e160cf35f31d362ca43197ae15429f",
+    "src/core/passes.zig": "53684b219a115742d9d6436fb205f858be33438faf48235cbb8aa720a3d8cd40",
+    "src/core/optimization_cache.zig": "127700cc149fc5d325e61e7f2a843e51810f5990b301e0ca84480ffe6bf5dd0b",
+    "src/core/root_test.zig": "0f95ce86074527f4ee222b3a7f28fac5f488a6795b33bcec9d06838a2b9127f3",
+    "src/core/inline_scalar_reader_test.zig": "5fe0416cc3df62a2af8c43ecafdb80ba7eb84f9ef25adc56235945fbf0b3ddca",
+    "test/core/inline_scalar_reader.my": "8ff8f5af13ec951319abb0e0e8444a342a26aa28e007c189dc4581372474e77f"
+  }
+}

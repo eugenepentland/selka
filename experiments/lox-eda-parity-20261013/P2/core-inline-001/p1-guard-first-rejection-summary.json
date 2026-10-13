@@ -1,0 +1,15 @@
+{
+  "source": "transcribed first production git commit hook output, no commit occurred",
+  "failed_checks": [
+    "allocator-hygiene",
+    "twin-drift",
+    "test-no-conditional",
+    "bool-ops-per-condition",
+    "line-length",
+    "repeated-string-literal",
+    "error-path-test"
+  ],
+  "fix_scope": "thread fixture backing allocator; hoist setup loops; split generated source literal; fixture path const; add MissingCall fixture error test; document intentional read-query/constructor whitelist divergence; split equivalent condition",
+  "weakened_checks": false,
+  "final_full_Guardian_passed": 88
+}

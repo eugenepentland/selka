@@ -1,0 +1,324 @@
+//! Bounded local reader cloning preserves checked reads and scalar writeback CFGs.
+const std = @import("std");
+const ir = @import("ir.zig");
+const reader = @import("inline_reader.zig");
+const inliner = @import("inline.zig");
+const origins = @import("inline_origins.zig");
+const support = @import("test_support.zig");
+const options = @import("core_test_options");
+const build = @import("build.zig");
+
+fn fixture(a: std.mem.Allocator) !ir.Module {
+    const path = try std.fs.path.join(a, &.{ options.fixtures, "inline_scalar_reader.my" });
+    const source = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, a, .limited(1 << 20));
+    return fromSource(a, source);
+}
+
+fn fromSource(a: std.mem.Allocator, source: []const u8) !ir.Module {
+    var unit = try @import("mylang").Compilation.init(a, "inline_scalar_reader.my", source);
+    try unit.check();
+    var refusal: build.Refusal = .{};
+    var module = try build.buildExecutable(a, .{ .program = unit.program.?, .single_owner = true, .zero_rc = true }, &refusal);
+    try support.verified(a, &module, &.{});
+    return module;
+}
+
+fn named(module: *ir.Module, name: []const u8) *ir.Function {
+    for (module.functions.items) |*f| {
+        if (std.mem.endsWith(u8, f.name, name)) return f;
+    }
+    @panic("missing fixture function");
+}
+
+fn calls(module: *const ir.Module, f: *const ir.Function, name: []const u8) usize {
+    var count: usize = 0;
+    for (f.insts.items) |inst| {
+        if (inst.op == .call and std.mem.endsWith(u8, module.functions.items[inst.a.index()].name, name)) count += 1;
+    }
+    return count;
+}
+
+// spec-case: NEW-CORE-INLINE-1
+test "scalar reader qualifies closed mutable returns and refuses managed donors" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    var module = try fixture(arena.allocator());
+    for ([_][]const u8{ "read_byte", "read_constant", "branch_reader" }) |name| {
+        try std.testing.expect(reader.mutationFamily(&module, named(&module, name)));
+    }
+    for ([_][]const u8{ "mutating_reader", "string_reader" }) |name| {
+        try std.testing.expect(!reader.mutationFamily(&module, named(&module, name)));
+    }
+    module.zero_rc = false;
+    try std.testing.expect(!reader.mutationFamily(&module, named(&module, "read_byte")));
+}
+
+// spec-case: NEW-CORE-INLINE-1
+// spec-case: NEW-CORE-S4-SITES-1
+test "scalar reader clones loop and differing early return writebacks with ancestry" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var module = try fixture(a);
+    var table: origins.Table = .{};
+    const before = calls(&module, &module.functions.items[module.entry], "read_byte");
+    try std.testing.expect(before > 0);
+    const changed = try inliner.cfgCallerDemandWithScratch(a, a, &module, module.entry, &table, null);
+    try std.testing.expect(changed > 0);
+    try std.testing.expectEqual(@as(usize, 0), calls(&module, &module.functions.items[module.entry], "read_byte"));
+    try std.testing.expectEqual(@as(usize, 0), calls(&module, &module.functions.items[module.entry], "read_constant"));
+    try std.testing.expectEqual(@as(usize, 0), calls(&module, &module.functions.items[module.entry], "branch_reader"));
+    try std.testing.expect(table.frames.items.len > 0);
+    try support.verified(a, &module, &.{});
+    const result = try support.runPasses(a, &module, .verify);
+    const ran = try support.runOwned(a, &module, .{ .release = true, .verify = true, .own = false, .analysis = support.analysis(&result) });
+    try std.testing.expectEqual(@as(u8, 0), ran.status);
+    try std.testing.expectEqualStrings("", ran.stderr);
+}
+
+// spec-case: NEW-CORE-INLINE-1
+test "scalar reader caps query inspection at thirty two blocks and ninety six instructions" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var module = try fixture(a);
+    const query = named(&module, "instruction");
+    const wrapper = named(&module, "read_byte");
+    while (query.blocks.items.len < 32) try query.blocks.append(a, .{});
+    try std.testing.expect(reader.mutationFamily(&module, wrapper));
+    try query.blocks.append(a, .{});
+    try std.testing.expect(!reader.mutationFamily(&module, wrapper));
+    query.blocks.items.len = 32;
+    while (query.insts.items.len < 96) try query.insts.append(a, .{ .op = .iconst, .ty = .i64 });
+    try std.testing.expect(reader.mutationFamily(&module, wrapper));
+    try query.insts.append(a, .{ .op = .iconst, .ty = .i64 });
+    try std.testing.expect(!reader.mutationFamily(&module, wrapper));
+}
+
+// spec-case: NEW-CORE-INLINE-1
+test "scalar reader refuses borrowed views and bounded shared compound expansion" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var module = try fixture(a);
+    const wrapper = named(&module, "read_byte");
+    const original = wrapper.signature.ret;
+    const fields = module.compound(original).record;
+    const first = fields[0];
+    const writable = @constCast(fields);
+    writable[0] = .str_view;
+    try std.testing.expect(!reader.mutationFamily(&module, wrapper));
+    writable[0] = first;
+    var shared: ir.Type = .i64;
+    for (0..8) |_| shared = try module.intern(a, .{ .record = &.{ shared, shared } });
+    wrapper.signature.ret = try module.intern(a, .{ .record = &.{ shared, .i64 } });
+    try std.testing.expect(!reader.mutationFamily(&module, wrapper));
+    wrapper.signature.ret = original;
+    wrapper.signature.owned |= 1;
+    try std.testing.expect(!reader.mutationFamily(&module, wrapper));
+}
+
+fn duplicateCalls(a: std.mem.Allocator, caller: *ir.Function, template: ir.Ref, count: usize, projected: bool) !void {
+    const original = caller.inst(template);
+    var additions: std.ArrayList(ir.Ref) = .empty;
+    for (0..count) |_| {
+        const call: ir.Ref = @fromBackingInt(@intCast(caller.insts.items.len));
+        try caller.insts.append(a, original);
+        try additions.append(a, call);
+        for (0..if (projected) @as(usize, 2) else 1) |field| {
+            const ref: ir.Ref = @fromBackingInt(@intCast(caller.insts.items.len));
+            try caller.insts.append(a, if (projected) .{ .op = .record_get, .ty = .i64, .a = call, .data = field } else .{ .op = .copy, .ty = original.ty, .a = call });
+            try additions.append(a, ref);
+        }
+    }
+    for (caller.blocks.items) |*block| {
+        for (block.insts.items) |ref| {
+            if (ref != template) continue;
+            try block.insts.insertSlice(a, block.insts.items.len - 1, additions.items);
+            return;
+        }
+    }
+    return error.MissingCall;
+}
+
+fn firstByteCall(module: *const ir.Module, caller: *const ir.Function) ir.Ref {
+    for (caller.insts.items, 0..) |inst, index| {
+        if (inst.op == .call and std.mem.endsWith(u8, module.functions.items[inst.a.index()].name, "read_byte")) return @fromBackingInt(@intCast(index));
+    }
+    @panic("missing reader call");
+}
+
+// spec-case: NEW-CORE-INLINE-1
+test "scalar reader refused whole tuple uses consume projection trial allowance" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var module = try fixture(a);
+    const caller = &module.functions.items[module.entry];
+    const template = firstByteCall(&module, caller);
+    const callee = &module.functions.items[caller.inst(template).a.index()];
+    try std.testing.expect(reader.mutationFamily(&module, callee));
+    try duplicateCalls(a, caller, template, reader.mutation_trial_limit + 20, false);
+    const constants = calls(&module, caller, "read_constant");
+    var table: origins.Table = .{};
+    _ = try inliner.cfgCallerDemandWithScratch(a, a, &module, module.entry, &table, null);
+    // Refused trials in the first block exhaust the new family's allowance.
+    try std.testing.expectEqual(constants, calls(&module, caller, "read_constant"));
+    try support.verified(a, &module, &.{});
+}
+
+// spec-case: NEW-CORE-INLINE-1
+test "scalar reader successful clones remain within existing constructor instruction budget" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var module = try fixture(a);
+    const caller = &module.functions.items[module.entry];
+    const template = firstByteCall(&module, caller);
+    const callee = &module.functions.items[caller.inst(template).a.index()];
+    const cost = callee.insts.items.len + 3;
+    try duplicateCalls(a, caller, template, 40, true);
+    const before = calls(&module, caller, "read_byte");
+    var table: origins.Table = .{};
+    _ = try inliner.cfgCallerDemandWithScratch(a, a, &module, module.entry, &table, null);
+    const copied = before - calls(&module, caller, "read_byte");
+    try std.testing.expect(copied > 0 and copied <= @import("destination.zig").max_caller_instructions / cost);
+    try std.testing.expect(copied < before);
+    try support.verified(a, &module, &.{});
+}
+
+const cache = @import("optimization_cache.zig");
+const store = @import("stage_store.zig");
+const emitter = @import("emit_llvm.zig");
+const snapshot = @import("ir_snapshot.zig");
+const passes = @import("passes.zig");
+
+fn locate(_: *const anyopaque, offset: u32) emitter.Location {
+    return .{ .line = 1, .column = offset + 1, .path = "inline_scalar_reader.my" };
+}
+
+const Produced = struct { llvm: []const u8, text: []const u8, canonical: [32]u8, statistics: cache.Statistics, native_status: u8 };
+
+fn compileSource(a: std.mem.Allocator, source: []const u8, storage: ?*store.Store) !Produced {
+    var module = try fromSource(a, source);
+    const token: u8 = 0;
+    const locator: emitter.Locator = .{ .context = &token, .locate = locate };
+    var context: cache.Context = undefined;
+    if (storage) |s| context = cache.Context.init(s, try snapshot.Context.init(a, &module, null), locator);
+    const result = if (storage != null) try passes.runCached(a, std.testing.allocator, &module, .verify, &context) else try passes.runWithScratch(a, std.testing.allocator, &module, .verify);
+    try support.verified(a, &module, result.plans);
+    const llvm = try emitter.emitModule(a, &module, .{ .locator = locator, .source_path = "inline_scalar_reader.my", .main = .{ .parameters = &.{"out"}, .capabilities = &.{0} }, .analysis = support.analysis(&result) });
+    const ran = try support.runOwned(a, &module, .{ .release = true, .verify = true, .own = false, .analysis = support.analysis(&result) });
+    try std.testing.expectEqualStrings("", ran.stderr);
+    var canon = try @import("canonical_ir.zig").Canon.prepare(a, &module, locator);
+    var semantic = std.crypto.hash.Blake3.init(.{});
+    for (module.functions.items, 0..) |_, index| {
+        const digest = try canon.functionDigest(@intCast(index));
+        semantic.update(&digest);
+    }
+    var canonical: [32]u8 = undefined;
+    semantic.final(&canonical);
+    return .{ .canonical = canonical, .llvm = llvm, .text = try @import("print.zig").module(a, &module), .statistics = if (storage != null) context.statistics else .{}, .native_status = ran.status };
+}
+
+// spec-case: NEW-CORE-INLINE-1
+// spec-case: NEW-CORE-STAGE-CACHE-8
+test "scalar reader query body edit invalidates transitive caller eligibility" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const path = try std.fs.path.join(a, &.{ options.fixtures, "inline_scalar_reader.my" });
+    const source = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, path, a, .limited(1 << 20));
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    var storage = try store.Store.init(std.testing.allocator, std.testing.io, try dir.dir.realPathFileAlloc(std.testing.io, ".", a));
+    defer storage.deinit();
+    const cold = try compileSource(a, source, &storage);
+    const warm = try compileSource(a, source, &storage);
+    try std.testing.expectEqualStrings(cold.llvm, warm.llvm);
+    try std.testing.expectEqual(cold.canonical, warm.canonical);
+    try std.testing.expectEqual(@as(u8, 0), warm.native_status);
+    try std.testing.expect(warm.statistics.hits[@backingInt(cache.Stage.inline_cfg)] > 0);
+    const start = std.mem.indexOf(u8, source, "    # query edit reservation:").?;
+    const end = start + std.mem.indexOfScalar(u8, source[start..], '\n').?;
+    const line = try a.dupe(u8, source[start..end]);
+    @memset(line, 'x');
+    const prefix = "    _ = constant_operand(rt, 1, 0) # ";
+    @memcpy(line[0..prefix.len], prefix);
+    const edited = try std.mem.replaceOwned(u8, a, source, source[start..end], line);
+    try std.testing.expectEqual(source.len, edited.len);
+    // Caller and wrapper text and absolute spans remain fixed; only the query changes.
+    var original_module = try fromSource(a, source);
+    var altered_module = try fromSource(a, edited);
+    const original_context = try snapshot.Context.init(a, &original_module, null);
+    const altered_context = try snapshot.Context.init(a, &altered_module, null);
+    try std.testing.expectEqual(try snapshot.layout(a, original_context), try snapshot.layout(a, altered_context));
+    const token: u8 = 0;
+    const locator: emitter.Locator = .{ .context = &token, .locate = locate };
+    var original_canon = try @import("canonical_ir.zig").Canon.prepare(a, &original_module, locator);
+    var altered_canon = try @import("canonical_ir.zig").Canon.prepare(a, &altered_module, locator);
+    var wrapper_index: u32 = undefined;
+    for (original_module.functions.items, 0..) |f, index| {
+        if (std.mem.eql(u8, f.name, "read_byte")) wrapper_index = @intCast(index);
+    }
+    try std.testing.expectEqual(try original_canon.functionDigest(wrapper_index), try altered_canon.functionDigest(wrapper_index));
+    try std.testing.expect(!reader.mutationFamily(&altered_module, named(&altered_module, "read_byte")));
+    const uncached = try compileSource(a, edited, null);
+    const reused = try compileSource(a, edited, &storage);
+    try std.testing.expectEqual(@as(u8, 0), reused.native_status);
+    try std.testing.expectEqual(uncached.native_status, reused.native_status);
+    try std.testing.expectEqual(uncached.canonical, reused.canonical);
+    try std.testing.expectEqualStrings(uncached.llvm, reused.llvm);
+    try std.testing.expect(reused.statistics.misses[@backingInt(cache.Stage.inline_cfg)] > 0);
+}
+
+// spec-case: NEW-CORE-INLINE-1
+// spec-case: NEW-CORE-S4-SITES-1
+test "scalar reader five native modes and RC control retain discarded checks and failure order" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var dir = std.testing.tmpDir(.{});
+    defer dir.cleanup();
+    const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
+    var environment = try std.testing.environ.createMap(a);
+    try environment.put("MYL_CORE_LEAKCHECK", "1");
+    try environment.put("MYLANG_COUNTERS", try std.fs.path.join(a, &.{ root, "counters.json" }));
+    const compiler_path = try std.Io.Dir.cwd().realPathFileAlloc(std.testing.io, options.core_path, a);
+    const fixture_path = try std.fs.path.join(a, &.{ options.fixtures, "inline_scalar_reader.my" });
+    const source = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, fixture_path, a, .limited(1 << 20));
+    const prefix = source[0..std.mem.indexOf(u8, source, "func main(out:").?];
+    const Case = struct { name: []const u8, call: []const u8, ip: []const u8, object: []const u8, category: []const u8 };
+    const cases = [_]Case{
+        .{ .name = "discarded", .call = "_ = read_byte(rt, 0, mut ip)", .ip = "5", .object = "Object.function(value=Function(code=[18], constants=[]))", .category = "R_LIST_BOUNDS" },
+        .{ .name = "read-first", .call = "_ = read_byte(rt, 0, mut ip)", .ip = "9223372036854775807", .object = "Object.function(value=Function(code=[18], constants=[]))", .category = "R_LIST_BOUNDS" },
+        .{ .name = "advance-first", .call = "_ = advance_first(rt, 0, mut ip)", .ip = "9223372036854775807", .object = "Object.function(value=Function(code=[18], constants=[]))", .category = "R_OVERFLOW" },
+        .{ .name = "kind", .call = "_ = read_byte(rt, 0, mut ip)", .ip = "0", .object = "Object.alternate(value=3)", .category = "R_ASSERT" },
+        .{ .name = "constant-pool", .call = "_ = read_constant(rt, 0, mut ip)", .ip = "0", .object = "Object.function(value=Function(code=[7], constants=[Item.integer(value=42)]))", .category = "R_LIST_BOUNDS" },
+    };
+    for ([_][]const []const u8{ &.{ "--release", "--verify-facts" }, &.{"--release"}, &.{"--unoptimized"}, &.{"--optimize-debug"}, &.{ "--release", "--no-facts" } }) |flags| {
+        var argv: std.ArrayList([]const u8) = .empty;
+        try argv.appendSlice(a, &.{ compiler_path, "run", fixture_path, "--cache-dir", root, "--experimental-zero-rc" });
+        try argv.appendSlice(a, flags);
+        const good = try std.process.run(a, std.testing.io, .{ .argv = argv.items, .environ_map = &environment, .cwd = .{ .path = root } });
+        if (good.term != .exited or good.term.exited != 0) std.debug.print("{s}{s}\n", .{ good.stdout, good.stderr });
+        try std.testing.expect(good.term == .exited and good.term.exited == 0);
+        try std.testing.expectEqualStrings("", good.stderr);
+        for (cases) |case| {
+            const path = try std.fs.path.join(a, &.{ root, try std.fmt.allocPrint(a, "{s}.my", .{case.name}) });
+            const main = try std.fmt.allocPrint(a, "func main(out: Stream) -> int:\n    mut rt = Runtime(objects=[{s}])\n    mut ip = {s}\n    out.print(\"before\")\n    {s}\n    out.print(\"after\")\n    return 0\n", .{ case.object, case.ip, case.call });
+            try std.Io.Dir.cwd().writeFile(std.testing.io, .{ .sub_path = path, .data = try std.mem.concat(a, u8, &.{ prefix, main }) });
+            argv.clearRetainingCapacity();
+            try argv.appendSlice(a, &.{ compiler_path, "run", path, "--cache-dir", root, "--experimental-zero-rc" });
+            try argv.appendSlice(a, flags);
+            const bad = try std.process.run(a, std.testing.io, .{ .argv = argv.items, .environ_map = &environment, .cwd = .{ .path = root } });
+            try std.testing.expect(bad.term == .exited and bad.term.exited != 0);
+            try std.testing.expectEqualStrings("before\n", bad.stdout);
+            try std.testing.expect(std.mem.indexOf(u8, bad.stderr, case.category) != null);
+            if (std.mem.eql(u8, case.name, "kind")) try std.testing.expect(std.mem.indexOf(u8, bad.stderr, "object is not a function") != null);
+        }
+    }
+    const rc = try std.process.run(a, std.testing.io, .{ .argv = &.{ compiler_path, "run", fixture_path, "--cache-dir", root, "--release" }, .environ_map = &environment, .cwd = .{ .path = root } });
+    try std.testing.expect(rc.term == .exited and rc.term.exited == 0);
+    try std.testing.expectEqualStrings("", rc.stderr);
+}
