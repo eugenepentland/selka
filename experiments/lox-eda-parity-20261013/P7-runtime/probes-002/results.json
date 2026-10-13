@@ -1,0 +1,168 @@
+{
+  "status": "passed",
+  "variants": {
+    "baseline-rc": {
+      "values": {
+        "copy_pushes": 400,
+        "copy_blocks": 4,
+        "bulk_pushes": 4097,
+        "pointer_references": 7,
+        "recursive_references": 40000,
+        "live": 0
+      },
+      "binary_sha256": "d17f14323f76aa403d5797159bef8a0fc3bd42931c37fad97df5399602079b7d"
+    },
+    "baseline-zero-rc": {
+      "values": {
+        "copy_pushes": 400,
+        "copy_blocks": 4,
+        "bulk_pushes": 4097,
+        "pointer_references": 7,
+        "recursive_references": 40000,
+        "live": 0
+      },
+      "binary_sha256": "9abbc999c22755acadb755072fc3ab64062ba0870f78572a83c7d61469eb14ec"
+    },
+    "scalar-rc": {
+      "values": {
+        "copy_pushes": 10,
+        "copy_blocks": 4,
+        "bulk_pushes": 4097,
+        "pointer_references": 7,
+        "recursive_references": 40000,
+        "live": 0
+      },
+      "binary_sha256": "8fa866d5ce72aa07aae19471c2d8c58c76bcb9c00745eab61709cccb89c04a5b"
+    },
+    "scalar-zero-rc": {
+      "values": {
+        "copy_pushes": 10,
+        "copy_blocks": 4,
+        "bulk_pushes": 4097,
+        "pointer_references": 7,
+        "recursive_references": 40000,
+        "live": 0
+      },
+      "binary_sha256": "7341b13cc4d2ed30e4be65be629765c82a096035681be81c75abe2e375be9fbb"
+    },
+    "pointer-rc": {
+      "values": {
+        "copy_pushes": 400,
+        "copy_blocks": 4,
+        "bulk_pushes": 4097,
+        "pointer_references": 7,
+        "recursive_references": 40000,
+        "live": 0
+      },
+      "binary_sha256": "d17f14323f76aa403d5797159bef8a0fc3bd42931c37fad97df5399602079b7d"
+    },
+    "pointer-zero-rc": {
+      "values": {
+        "copy_pushes": 400,
+        "copy_blocks": 4,
+        "bulk_pushes": 4097,
+        "pointer_references": 1,
+        "recursive_references": 0,
+        "live": 0
+      },
+      "binary_sha256": "889093ff5586e64cb26426d0d6bcaa3029840cfe41d9321afed005e46a5ee169"
+    },
+    "combined-rc": {
+      "values": {
+        "copy_pushes": 10,
+        "copy_blocks": 4,
+        "bulk_pushes": 4097,
+        "pointer_references": 7,
+        "recursive_references": 40000,
+        "live": 0
+      },
+      "binary_sha256": "8fa866d5ce72aa07aae19471c2d8c58c76bcb9c00745eab61709cccb89c04a5b"
+    },
+    "combined-zero-rc": {
+      "values": {
+        "copy_pushes": 10,
+        "copy_blocks": 4,
+        "bulk_pushes": 4097,
+        "pointer_references": 1,
+        "recursive_references": 0,
+        "live": 0
+      },
+      "binary_sha256": "a391660e8cc358d2ed615ab5ecfceea1712e314a0767b6ba6a633a44fc5f02d6"
+    },
+    "bulk-rc": {
+      "values": {
+        "copy_pushes": 400,
+        "copy_blocks": 4,
+        "bulk_pushes": 1,
+        "pointer_references": 7,
+        "recursive_references": 40000,
+        "live": 0
+      },
+      "binary_sha256": "148fee11e47f963972de8b516dd615185c6d31dc8c0f99653d5f3e97ecd0910e"
+    },
+    "bulk-zero-rc": {
+      "values": {
+        "copy_pushes": 400,
+        "copy_blocks": 4,
+        "bulk_pushes": 1,
+        "pointer_references": 7,
+        "recursive_references": 40000,
+        "live": 0
+      },
+      "binary_sha256": "2cfc397f207a525fbc11787635f03d05797a5818ccfa94771c860fee1af79add"
+    },
+    "all-rc": {
+      "values": {
+        "copy_pushes": 10,
+        "copy_blocks": 4,
+        "bulk_pushes": 1,
+        "pointer_references": 7,
+        "recursive_references": 40000,
+        "live": 0
+      },
+      "binary_sha256": "eae54fd4f77f160a1ede1faea6b6f75688f2892586a10af428493aba85e89860"
+    },
+    "all-zero-rc": {
+      "values": {
+        "copy_pushes": 10,
+        "copy_blocks": 4,
+        "bulk_pushes": 1,
+        "pointer_references": 1,
+        "recursive_references": 0,
+        "live": 0
+      },
+      "binary_sha256": "f48bfb9f5f1229110f0d4ffc3367aa8c701e51be7023dafcd74c729dd7faa498"
+    }
+  },
+  "source_pins": {
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_text.c": "e5b35bddb03ab2408ea30dedebf02fb3ec91f063674f8eff570d37783dfc8185",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_bytes.c": "e0b8f39d0e313ef7e48f4b705ad0d33656979ca1112788ccff4cd37de007856e",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_number_text.zig": "4604f15557b3b51da16c0de65cc769f2654265fda44ec0cd17a56843eb269933",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_count.c": "e7497cd9feb3ea3d98898223777dc805f3e56f78cbeaa6cfc6cf4d86a090a891",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_number.c": "5455e1833a885320fc9c0f8aca819512d6254792b80af3379cd4cd3f4c172c8f",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_number_format.zig": "002d54fdcf9409c54c43006ffc5da860cf730e6c80eb77021f1278f1719424a7",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_sort.c": "296372f21bd56e5b537fbe183e048a6142fd07ad8b57e3be6f1b7905ee958712",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_host.c": "77fa8d5fe29bbaca29b580256bd6cd786c40f92c3dfd11f839a261d6456d80fb",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_test.c": "18535b83cd85b1f4ccd8bd55153c38a55299e561b8dd09429cba3c257d96e7fd",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_number_parse.zig": "53ad97811d5888d72102b60cb7a6535ba8718900b360ca39d5b30f01df3e0e1e",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_io.c": "f4a44d8a37abdc52f7b3ce2015979f59172d5778269d3d14b3db4a80ae458138",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_unicode_data.h": "668ed92a73281c3d22138b64719b4a30f2cd7472e31db9b6162f2e272292aeea",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_tasks.c": "2145018fce759abacf3ca24cd076f575e6f9b20d2a916e9ec2e76997ac56fded",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_durable.c": "168754b78294267aebbd64f98cc712dcb9a08646b1973440452c32f5cd4cb85a",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_rt.c": "1da897c92854f2615dab2935a1f0c81f712cae15cbb5fe1c19e304a0f00a6ace",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_values.c": "714ddaa4b4087769ac86b6f8a3477592312c71bb60cabf41ca97f4ab535ca0be",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_dict.c": "10bc89068cd282ab3226e5d8d27e4b5dc89d25c89ced7268ee2ed01115c3dd3d",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_owned_copy.c": "26d8c9e775b64c8064d50fcf678fb89536ef1f40ca881bbda5943a4c17f30dc6",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_count.h": "3a39d1ece245f90d88a9812e29bb59467d95d34566e33da2c384d41622eaaee7"
+  },
+  "runtime_manifest_sha256": "8141e0c728f72deed768c52dab685c2377ee329e7772c697e9d39dd7b82853d5",
+  "probe_sha256": "2ff66e4c4392acf2fba5b34573624b41c93341534e5475ec33f359f77f57579c",
+  "harness_sha256": "3a1d8ec1f7a35660e8afa487b33f9f1a5f6bf8b6aca2c468f73680c6be34bd49",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "outer_lease": {
+    "kind": "build",
+    "directory": "/home/epentland/.cache/mylang/slots"
+  },
+  "commands": 84
+}

@@ -1,0 +1,27 @@
+[
+  {
+    "case": "eda-Cyclops-Flex",
+    "arm": "installed-C1",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/eda/zero-rc",
+      "--model",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/Cyclops-Flex/model.sexp",
+      "--project-dir",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+      "--out-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/outputs/eda-Cyclops-Flex"
+    ],
+    "returncode": 0,
+    "stdout_sha256": "506f29696eab0b93eb183cc9efacae20308887096d6548098bedfd34fa51d80d",
+    "stderr_sha256": "9a439e081632c4553c987be6824d52bb97956506fc25e99c6957bcd1e2ea6cd8",
+    "golden_equal": true,
+    "artifacts": {
+      "Cyclops-Flex.kicad_pro": "a67980cd8d26be9fcaefae095603ab16bf2a3d3326121612b939dbf25019e0aa",
+      "Cyclops-Flex.kicad_sch": "120c5690a5041e673d7d21f6d2ab98411c375f534c3e9688520dfc1c88cfd6f0",
+      "Cyclops-Flex.net": "dce6645f331cdc5d5b09564d06b49d0d69374357808184788a1d359a8dbac413",
+      "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+      "netlisp.kicad_sym": "7acb157812927878382607861dccd25e75ea926e8ad470a885d2ca2e8cffcb8a",
+      "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+    }
+  }
+]

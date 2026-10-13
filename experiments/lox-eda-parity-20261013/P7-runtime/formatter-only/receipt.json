@@ -1,0 +1,66 @@
+[
+  {
+    "format": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-001/install/bin/mylang",
+      "fmt",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/list_exchange_fixture.my"
+    ],
+    "format_returncode": 0,
+    "check": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-001/install/bin/mylang",
+      "fmt",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/list_exchange_fixture.my",
+      "--check"
+    ],
+    "check_returncode": 0,
+    "check_stderr": ""
+  },
+  {
+    "format": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-001/install/bin/mylang",
+      "fmt",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/list_exchange_sibling_fixture.my"
+    ],
+    "format_returncode": 0,
+    "check": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-001/install/bin/mylang",
+      "fmt",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/list_exchange_sibling_fixture.my",
+      "--check"
+    ],
+    "check_returncode": 0,
+    "check_stderr": ""
+  },
+  {
+    "format": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-001/install/bin/mylang",
+      "fmt",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/list_exchange_sibling_zero_fixture.my"
+    ],
+    "format_returncode": 0,
+    "check": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-001/install/bin/mylang",
+      "fmt",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/list_exchange_sibling_zero_fixture.my",
+      "--check"
+    ],
+    "check_returncode": 0,
+    "check_stderr": ""
+  },
+  {
+    "format": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-001/install/bin/mylang",
+      "fmt",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/list_exchange_wide_discard_fixture.my"
+    ],
+    "format_returncode": 0,
+    "check": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-001/install/bin/mylang",
+      "fmt",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/list_exchange_wide_discard_fixture.my",
+      "--check"
+    ],
+    "check_returncode": 0,
+    "check_stderr": ""
+  }
+]

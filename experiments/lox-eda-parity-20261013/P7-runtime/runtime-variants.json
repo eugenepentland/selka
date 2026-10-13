@@ -1,0 +1,113 @@
+{
+  "baseline_commit": "be33ce79b5b58c3e254e73709c9dd7eb97e5a849",
+  "runtime_file_order": [
+    "runtime/core_rt.c",
+    "runtime/core_dict.c",
+    "runtime/core_unicode_data.h",
+    "runtime/core_text.c",
+    "runtime/core_sort.c",
+    "runtime/core_number.c",
+    "runtime/core_io.c",
+    "runtime/core_durable.c",
+    "runtime/core_host.c",
+    "runtime/core_bytes.c",
+    "runtime/core_values.c",
+    "runtime/core_owned_copy.c",
+    "runtime/core_test.c",
+    "runtime/core_tasks.c"
+  ],
+  "variants": {
+    "baseline": {
+      "runtime_sha256": "50dc885253c2bfc4165b8369fd6e054000b14e93976d1f4c00163cf5a1970dfd",
+      "probe_runtime_sha256": "9d549217eb9c4cf18bfe26d75912e2488a61b27bd516036251ed9487fde5f867",
+      "selected": [],
+      "source_inputs": {
+        "runtime/core_rt.c": "940e245170a99bb46db08c8e3d49edb9e6528329f0a9c54e38918be0c1b11032",
+        "runtime/core_dict.c": "10bc89068cd282ab3226e5d8d27e4b5dc89d25c89ced7268ee2ed01115c3dd3d",
+        "runtime/core_unicode_data.h": "668ed92a73281c3d22138b64719b4a30f2cd7472e31db9b6162f2e272292aeea",
+        "runtime/core_text.c": "e5b35bddb03ab2408ea30dedebf02fb3ec91f063674f8eff570d37783dfc8185",
+        "runtime/core_sort.c": "296372f21bd56e5b537fbe183e048a6142fd07ad8b57e3be6f1b7905ee958712",
+        "runtime/core_number.c": "5455e1833a885320fc9c0f8aca819512d6254792b80af3379cd4cd3f4c172c8f",
+        "runtime/core_io.c": "f4a44d8a37abdc52f7b3ce2015979f59172d5778269d3d14b3db4a80ae458138",
+        "runtime/core_durable.c": "168754b78294267aebbd64f98cc712dcb9a08646b1973440452c32f5cd4cb85a",
+        "runtime/core_host.c": "77fa8d5fe29bbaca29b580256bd6cd786c40f92c3dfd11f839a261d6456d80fb",
+        "runtime/core_bytes.c": "e0b8f39d0e313ef7e48f4b705ad0d33656979ca1112788ccff4cd37de007856e",
+        "runtime/core_values.c": "714ddaa4b4087769ac86b6f8a3477592312c71bb60cabf41ca97f4ab535ca0be",
+        "runtime/core_owned_copy.c": "9f0fc3f83cd0a06f8171edb2f23867ef4a1f9213a5554625078df58dda86d450",
+        "runtime/core_test.c": "18535b83cd85b1f4ccd8bd55153c38a55299e561b8dd09429cba3c257d96e7fd",
+        "runtime/core_tasks.c": "2145018fce759abacf3ca24cd076f575e6f9b20d2a916e9ec2e76997ac56fded"
+      }
+    },
+    "scalar": {
+      "runtime_sha256": "3a987f8d229c6dee4c060a11a3cd1fbeb5a53bb7cb6d3f0a2d8fe6c32c5019aa",
+      "probe_runtime_sha256": "d6816fd1d3722bddbf9df9caa11aa740b1db2b211f12621f9f0b3f8712dfbfca",
+      "selected": [
+        "runtime/core_owned_copy.c"
+      ],
+      "source_inputs": {
+        "runtime/core_rt.c": "940e245170a99bb46db08c8e3d49edb9e6528329f0a9c54e38918be0c1b11032",
+        "runtime/core_dict.c": "10bc89068cd282ab3226e5d8d27e4b5dc89d25c89ced7268ee2ed01115c3dd3d",
+        "runtime/core_unicode_data.h": "668ed92a73281c3d22138b64719b4a30f2cd7472e31db9b6162f2e272292aeea",
+        "runtime/core_text.c": "e5b35bddb03ab2408ea30dedebf02fb3ec91f063674f8eff570d37783dfc8185",
+        "runtime/core_sort.c": "296372f21bd56e5b537fbe183e048a6142fd07ad8b57e3be6f1b7905ee958712",
+        "runtime/core_number.c": "5455e1833a885320fc9c0f8aca819512d6254792b80af3379cd4cd3f4c172c8f",
+        "runtime/core_io.c": "f4a44d8a37abdc52f7b3ce2015979f59172d5778269d3d14b3db4a80ae458138",
+        "runtime/core_durable.c": "168754b78294267aebbd64f98cc712dcb9a08646b1973440452c32f5cd4cb85a",
+        "runtime/core_host.c": "77fa8d5fe29bbaca29b580256bd6cd786c40f92c3dfd11f839a261d6456d80fb",
+        "runtime/core_bytes.c": "e0b8f39d0e313ef7e48f4b705ad0d33656979ca1112788ccff4cd37de007856e",
+        "runtime/core_values.c": "714ddaa4b4087769ac86b6f8a3477592312c71bb60cabf41ca97f4ab535ca0be",
+        "runtime/core_owned_copy.c": "e0df96ef27050a5f74ba36ac9f761633b7fd0eaa3dcb81ee392f37cb21648b21",
+        "runtime/core_test.c": "18535b83cd85b1f4ccd8bd55153c38a55299e561b8dd09429cba3c257d96e7fd",
+        "runtime/core_tasks.c": "2145018fce759abacf3ca24cd076f575e6f9b20d2a916e9ec2e76997ac56fded"
+      }
+    },
+    "pointer": {
+      "runtime_sha256": "441a0cc962f8953d7f2894c181d3ce4387fca61ff3c5af51155790b4b91f31cb",
+      "probe_runtime_sha256": "1b610f6694828e73e357823c98ceafc7d5f6e557a7004ffbad0c89ec8f09cdb1",
+      "selected": [
+        "runtime/core_rt.c"
+      ],
+      "source_inputs": {
+        "runtime/core_rt.c": "1da897c92854f2615dab2935a1f0c81f712cae15cbb5fe1c19e304a0f00a6ace",
+        "runtime/core_dict.c": "10bc89068cd282ab3226e5d8d27e4b5dc89d25c89ced7268ee2ed01115c3dd3d",
+        "runtime/core_unicode_data.h": "668ed92a73281c3d22138b64719b4a30f2cd7472e31db9b6162f2e272292aeea",
+        "runtime/core_text.c": "e5b35bddb03ab2408ea30dedebf02fb3ec91f063674f8eff570d37783dfc8185",
+        "runtime/core_sort.c": "296372f21bd56e5b537fbe183e048a6142fd07ad8b57e3be6f1b7905ee958712",
+        "runtime/core_number.c": "5455e1833a885320fc9c0f8aca819512d6254792b80af3379cd4cd3f4c172c8f",
+        "runtime/core_io.c": "f4a44d8a37abdc52f7b3ce2015979f59172d5778269d3d14b3db4a80ae458138",
+        "runtime/core_durable.c": "168754b78294267aebbd64f98cc712dcb9a08646b1973440452c32f5cd4cb85a",
+        "runtime/core_host.c": "77fa8d5fe29bbaca29b580256bd6cd786c40f92c3dfd11f839a261d6456d80fb",
+        "runtime/core_bytes.c": "e0b8f39d0e313ef7e48f4b705ad0d33656979ca1112788ccff4cd37de007856e",
+        "runtime/core_values.c": "714ddaa4b4087769ac86b6f8a3477592312c71bb60cabf41ca97f4ab535ca0be",
+        "runtime/core_owned_copy.c": "9f0fc3f83cd0a06f8171edb2f23867ef4a1f9213a5554625078df58dda86d450",
+        "runtime/core_test.c": "18535b83cd85b1f4ccd8bd55153c38a55299e561b8dd09429cba3c257d96e7fd",
+        "runtime/core_tasks.c": "2145018fce759abacf3ca24cd076f575e6f9b20d2a916e9ec2e76997ac56fded"
+      }
+    },
+    "combined": {
+      "runtime_sha256": "b59abfc1d5fad17d44a88c051a14d4f1cd5aabbb14b156c3638fed946f04c4f9",
+      "probe_runtime_sha256": "108c37dbf11ff39a899aace3af9c05c1d60708df0195c1b93892e45db2b2ab1f",
+      "selected": [
+        "runtime/core_rt.c",
+        "runtime/core_owned_copy.c"
+      ],
+      "source_inputs": {
+        "runtime/core_rt.c": "1da897c92854f2615dab2935a1f0c81f712cae15cbb5fe1c19e304a0f00a6ace",
+        "runtime/core_dict.c": "10bc89068cd282ab3226e5d8d27e4b5dc89d25c89ced7268ee2ed01115c3dd3d",
+        "runtime/core_unicode_data.h": "668ed92a73281c3d22138b64719b4a30f2cd7472e31db9b6162f2e272292aeea",
+        "runtime/core_text.c": "e5b35bddb03ab2408ea30dedebf02fb3ec91f063674f8eff570d37783dfc8185",
+        "runtime/core_sort.c": "296372f21bd56e5b537fbe183e048a6142fd07ad8b57e3be6f1b7905ee958712",
+        "runtime/core_number.c": "5455e1833a885320fc9c0f8aca819512d6254792b80af3379cd4cd3f4c172c8f",
+        "runtime/core_io.c": "f4a44d8a37abdc52f7b3ce2015979f59172d5778269d3d14b3db4a80ae458138",
+        "runtime/core_durable.c": "168754b78294267aebbd64f98cc712dcb9a08646b1973440452c32f5cd4cb85a",
+        "runtime/core_host.c": "77fa8d5fe29bbaca29b580256bd6cd786c40f92c3dfd11f839a261d6456d80fb",
+        "runtime/core_bytes.c": "e0b8f39d0e313ef7e48f4b705ad0d33656979ca1112788ccff4cd37de007856e",
+        "runtime/core_values.c": "714ddaa4b4087769ac86b6f8a3477592312c71bb60cabf41ca97f4ab535ca0be",
+        "runtime/core_owned_copy.c": "e0df96ef27050a5f74ba36ac9f761633b7fd0eaa3dcb81ee392f37cb21648b21",
+        "runtime/core_test.c": "18535b83cd85b1f4ccd8bd55153c38a55299e561b8dd09429cba3c257d96e7fd",
+        "runtime/core_tasks.c": "2145018fce759abacf3ca24cd076f575e6f9b20d2a916e9ec2e76997ac56fded"
+      }
+    }
+  },
+  "probe_sha256": "b1be5b1931166cdbd2d3c36e9d06e29b66bc7e2e92087301c537e691f00c3950"
+}

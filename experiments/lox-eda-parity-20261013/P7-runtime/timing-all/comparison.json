@@ -1,0 +1,67 @@
+{
+  "status": "prepared_not_run",
+  "cpu": 8,
+  "timing_admission": "coordinator-owned scripts/build-slot.sh timing",
+  "comparison": "candidate versus baseline-relinked; Zig ReleaseFast is frozen oracle/deadline calibration",
+  "wall_pairs": 9,
+  "warmups": 2,
+  "rss_samples": 3,
+  "max_guest_seconds": 120,
+  "chunk_target_seconds": 60,
+  "commands": [
+    {
+      "case": "eda-adf5901",
+      "initial_argv": [
+        "python3",
+        "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/experiments/lox-eda-parity-20261013/measure.py",
+        "experiments/lox-eda-parity-20261013/P7-runtime/timing-all/eda-adf5901.json",
+        "experiments/lox-eda-parity-20261013/P7-runtime/timing-all/eda-adf5901.chunk00.json",
+        "--cpu",
+        "8",
+        "--calibration-rounds",
+        "3",
+        "--calibration-warmups",
+        "0",
+        "--warmups",
+        "2",
+        "--round-start",
+        "0",
+        "--rounds",
+        "1",
+        "--rss-rounds",
+        "0",
+        "--guest-timeout",
+        "120"
+      ],
+      "continuation": "Clone spec with prior_receipt pointing to exact preceding chunk; run round-start1..8, rounds1, warmups0, rss-rounds0; final RSS-only chunk rounds0,warmups0,rss-rounds3. Each command receives one coordinator-owned outer build-slot timing lease; no nested admission."
+    },
+    {
+      "case": "eda-Cyclops-Flex",
+      "initial_argv": [
+        "python3",
+        "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/experiments/lox-eda-parity-20261013/measure.py",
+        "experiments/lox-eda-parity-20261013/P7-runtime/timing-all/eda-Cyclops-Flex.json",
+        "experiments/lox-eda-parity-20261013/P7-runtime/timing-all/eda-Cyclops-Flex.chunk00.json",
+        "--cpu",
+        "8",
+        "--calibration-rounds",
+        "3",
+        "--calibration-warmups",
+        "0",
+        "--warmups",
+        "2",
+        "--round-start",
+        "0",
+        "--rounds",
+        "1",
+        "--rss-rounds",
+        "0",
+        "--guest-timeout",
+        "120"
+      ],
+      "continuation": "Clone spec with prior_receipt pointing to exact preceding chunk; run round-start1..8, rounds1, warmups0, rss-rounds0; final RSS-only chunk rounds0,warmups0,rss-rounds3. Each command receives one coordinator-owned outer build-slot timing lease; no nested admission."
+    }
+  ],
+  "measure_sha256": "ebead08898b4eba7885e41451378be14e8d53dc5cf213d66d4230f33130e8c7d",
+  "prepare_sha256": "d022590e5af0cf1704d3c6f0e4d805a567593364be9ca98c48f3173487ff5ac2"
+}

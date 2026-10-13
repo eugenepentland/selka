@@ -1,0 +1,75 @@
+{
+  "status": "built_not_timed",
+  "inputs": {
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/eda/zero-rc.ll": "74599602ae7e9607ce8a34de65b5f825520ee7f41190b385d813dd9b16e9024f",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/eda/zero-rc": "794eb7ce25c67c209189ee65688ba1b07746cfbe10926d22f91c67986cdf1180",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-001/install/bin/mylang": "955f311e1dbf65b55f4c148ab03cdcb4881bc5668289aea93336dbfd7985206a",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-001/zig-cache/o/38d22d1e4461e413e446fb42adf284b2/core_number_text.o": "7319abd678df56df66f7913ead6715206cb1aa964d42428a6eee7def9bb7b4c5",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-001/install/libexec/mylang/components/cache-plan-06fcac93b85a468ebc9c66322a4773386453954d6dd4319e812587fd8aaa147c": "06fcac93b85a468ebc9c66322a4773386453954d6dd4319e812587fd8aaa147c",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-001/install/libexec/mylang/components/cache-plan.json": "2f48bd821be4fee59b1dad62450aa025188c97063d0b64964802b928f99362c3",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-001/install/libexec/mylang/components/test-index-0d91707258aef88fb651129fe18a84e505d3fe6c083af68cc308dcef954a05b8": "0d91707258aef88fb651129fe18a84e505d3fe6c083af68cc308dcef954a05b8",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-001/install/libexec/mylang/components/test-index.json": "58fddecf56237e81d06273d99a5f6e3fb5597681b1566ad161a55a0837fa9116",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-001/install/tools/selka-components": "c2d1186c661e06d4e33de54ad04a70b4700e60737a4774e4045444db2cd35172"
+  },
+  "installation_receipt_sha256": "d8582cee6b72a1b99a1ab4fa6ef4bee8cb1de3c8c4c8ebfbf0497f6af6b22766",
+  "llvm_object_sha256": "c7b08320ada0039a7db7f687150935dc7a240fd1e8502b5d5d713b08245ea1d3",
+  "private_llvm_sha256": "74599602ae7e9607ce8a34de65b5f825520ee7f41190b385d813dd9b16e9024f",
+  "private_number_sha256": "7319abd678df56df66f7913ead6715206cb1aa964d42428a6eee7def9bb7b4c5",
+  "variants": {
+    "baseline": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/guests/eda-baseline",
+      "sha256": "b61d84235790ecff3044eba497aa0802d487ada43d9cdf871c49f33c078a27f2",
+      "runtime_source_sha256": "5691c11381b6d727ab944f4e3dd9f88ed29b0f9554d70c863412a670d44675ca",
+      "runtime_object_sha256": "a1dd63bd451e8c7b7ebb9e7bbaf744e214f8055b90b184eaa7b26aa792575885",
+      "symbol_sha256": "c22d1d5475e4ee2d22c5cd438eb689aeb1368047d3cd85070274ed99312a334b"
+    },
+    "scalar": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/guests/eda-scalar",
+      "sha256": "12fcec38a3ef1c47d502afd2d8e487eefc6874de6c844c78e9ac1f9fc8b6915d",
+      "runtime_source_sha256": "0ec078db9cc7ff4e489f435169cfabb226f99f53b514bf28bcb669be946e76d9",
+      "runtime_object_sha256": "1e2e834ae63a8c7450522b15f4081cbf6390f63339bbb7bacb244ac6c52b466e",
+      "symbol_sha256": "0ec8b61a474b6569dc8c78452e3e3296de44f07f24b2b947a35ec736ee50c214"
+    },
+    "pointer": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/guests/eda-pointer",
+      "sha256": "12be3c9de0416ee8a5906608668f3f6a8160f505f1d37f6571861dbc90a71efb",
+      "runtime_source_sha256": "1fd1c2afd591d83cb1223fac2f165fcb178127465f3f17507bc655d852a230ce",
+      "runtime_object_sha256": "59b6a2872bd4efde1e94fb67b3548711756c69a46bb5bbfae9af6699935f1c93",
+      "symbol_sha256": "ce18e4cdfabd00c3d3252547b26b23015015719b777072e09362e14d62cebab2"
+    },
+    "combined": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/guests/eda-combined",
+      "sha256": "dad2e3aa43f374bada922a7fb97ed83f4011bf82349e9ccd96b988a4ae5e0954",
+      "runtime_source_sha256": "6155a14f06d6d297c59cc07640bb4a12149e91cf31decc531a6529f40989c8c8",
+      "runtime_object_sha256": "a09581400d6d678e6ce68078bcbe2fce323d6e175a02d12316b144ccb61bdc54",
+      "symbol_sha256": "bed98c1aeefc1e849ccccbb39be2b538d3d4da0b6c18a86163740524d0025bc6"
+    },
+    "bulk": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/guests/eda-bulk",
+      "sha256": "37b8f630d38b2e9147fb8e7e5ca74eb0e2cc53b990890363714f75fb66a1fc68",
+      "runtime_source_sha256": "51736491e913c13f1ee833cbbdaa74d9e4015c63e8c6bf014e14fbd89520b1a6",
+      "runtime_object_sha256": "3aa73c512ed7371ad49a64785b565fb7dceab39b9b8f135d72afcb0c27ff9de4",
+      "symbol_sha256": "c5f87b6256b4bdac3c33cf3d869fbbc46258b842691d44fa5485f8d46aac2569"
+    },
+    "all": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/guests/eda-all",
+      "sha256": "6b84b91e7568d1c394af394657400edc570572802eac019aaf5c915bab9a81de",
+      "runtime_source_sha256": "ebb0b03238744f33cc8314c049848958c978cd0366ae076893cbc3f17d6275ad",
+      "runtime_object_sha256": "05dc6a5de56df473e2b73e3eff52b484702bcdaf40a91f11cc5b80c059e43e70",
+      "symbol_sha256": "ce18e4cdfabd00c3d3252547b26b23015015719b777072e09362e14d62cebab2"
+    }
+  },
+  "native_flags": [
+    "-target",
+    "x86_64-linux-gnu.2.31",
+    "-march=native",
+    "-mllvm",
+    "-x86-experimental-pref-innermost-loop-alignment=6"
+  ],
+  "harness_sha256": "bf92b5aaba534f7b2b00e0261fe7721910af3883cb6ff04779c4fc218a61ec6c",
+  "outer_lease": {
+    "kind": "build",
+    "directory": "/home/epentland/.cache/mylang/slots"
+  }
+}

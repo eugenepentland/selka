@@ -1,0 +1,2 @@
+[W] export-kicad-sch: vendor symbol 'W5500-EVB-PICO' does not draw 1 pad(s) the design uses — adding them as unit 2
+[I] export-kicad-sch: rf-switch-8way: 3/7 components drawn from vendor symbols (138 libraries indexed)

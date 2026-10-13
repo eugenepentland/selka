@@ -1,0 +1,116 @@
+{
+  "status": "passed",
+  "variants": {
+    "baseline-rc": {
+      "values": {
+        "copy_pushes": 400,
+        "copy_blocks": 4,
+        "pointer_references": 7,
+        "recursive_references": 40000,
+        "live": 0
+      },
+      "binary_sha256": "b2253334283ef780eb2164daba88a8cbe699071ab3623e3143ab031719d7d61c"
+    },
+    "baseline-zero-rc": {
+      "values": {
+        "copy_pushes": 400,
+        "copy_blocks": 4,
+        "pointer_references": 7,
+        "recursive_references": 40000,
+        "live": 0
+      },
+      "binary_sha256": "a41b9d04c4bbd6973151ebecf725dcfaecfacdf9673502e29a8a29ca460d0263"
+    },
+    "scalar-rc": {
+      "values": {
+        "copy_pushes": 10,
+        "copy_blocks": 4,
+        "pointer_references": 7,
+        "recursive_references": 40000,
+        "live": 0
+      },
+      "binary_sha256": "c7e5455346e9ac1882743213c9b7c9abf4a43200e5c0aa90bdebef0162310d93"
+    },
+    "scalar-zero-rc": {
+      "values": {
+        "copy_pushes": 10,
+        "copy_blocks": 4,
+        "pointer_references": 7,
+        "recursive_references": 40000,
+        "live": 0
+      },
+      "binary_sha256": "f7371079312445d54fed14df32f6679a9e4b2beb0e1c2003e61fa555f566c94d"
+    },
+    "pointer-rc": {
+      "values": {
+        "copy_pushes": 400,
+        "copy_blocks": 4,
+        "pointer_references": 7,
+        "recursive_references": 40000,
+        "live": 0
+      },
+      "binary_sha256": "b2253334283ef780eb2164daba88a8cbe699071ab3623e3143ab031719d7d61c"
+    },
+    "pointer-zero-rc": {
+      "values": {
+        "copy_pushes": 400,
+        "copy_blocks": 4,
+        "pointer_references": 1,
+        "recursive_references": 0,
+        "live": 0
+      },
+      "binary_sha256": "e1d5b575ae7c3e40276828d092c3ceb86df7e0725d8dc06ae1b7e0ba1e90d531"
+    },
+    "combined-rc": {
+      "values": {
+        "copy_pushes": 10,
+        "copy_blocks": 4,
+        "pointer_references": 7,
+        "recursive_references": 40000,
+        "live": 0
+      },
+      "binary_sha256": "c7e5455346e9ac1882743213c9b7c9abf4a43200e5c0aa90bdebef0162310d93"
+    },
+    "combined-zero-rc": {
+      "values": {
+        "copy_pushes": 10,
+        "copy_blocks": 4,
+        "pointer_references": 1,
+        "recursive_references": 0,
+        "live": 0
+      },
+      "binary_sha256": "21a763de9d964c95607db3179b8eb9b06920637b397dc0cc54845ae4724b4c3e"
+    }
+  },
+  "source_pins": {
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_text.c": "e5b35bddb03ab2408ea30dedebf02fb3ec91f063674f8eff570d37783dfc8185",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_bytes.c": "e0b8f39d0e313ef7e48f4b705ad0d33656979ca1112788ccff4cd37de007856e",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_number_text.zig": "4604f15557b3b51da16c0de65cc769f2654265fda44ec0cd17a56843eb269933",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_count.c": "e7497cd9feb3ea3d98898223777dc805f3e56f78cbeaa6cfc6cf4d86a090a891",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_number.c": "5455e1833a885320fc9c0f8aca819512d6254792b80af3379cd4cd3f4c172c8f",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_number_format.zig": "002d54fdcf9409c54c43006ffc5da860cf730e6c80eb77021f1278f1719424a7",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_sort.c": "296372f21bd56e5b537fbe183e048a6142fd07ad8b57e3be6f1b7905ee958712",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_host.c": "77fa8d5fe29bbaca29b580256bd6cd786c40f92c3dfd11f839a261d6456d80fb",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_test.c": "18535b83cd85b1f4ccd8bd55153c38a55299e561b8dd09429cba3c257d96e7fd",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_number_parse.zig": "53ad97811d5888d72102b60cb7a6535ba8718900b360ca39d5b30f01df3e0e1e",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_io.c": "f4a44d8a37abdc52f7b3ce2015979f59172d5778269d3d14b3db4a80ae458138",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_unicode_data.h": "668ed92a73281c3d22138b64719b4a30f2cd7472e31db9b6162f2e272292aeea",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_tasks.c": "2145018fce759abacf3ca24cd076f575e6f9b20d2a916e9ec2e76997ac56fded",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_durable.c": "168754b78294267aebbd64f98cc712dcb9a08646b1973440452c32f5cd4cb85a",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_rt.c": "1da897c92854f2615dab2935a1f0c81f712cae15cbb5fe1c19e304a0f00a6ace",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_values.c": "714ddaa4b4087769ac86b6f8a3477592312c71bb60cabf41ca97f4ab535ca0be",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_dict.c": "10bc89068cd282ab3226e5d8d27e4b5dc89d25c89ced7268ee2ed01115c3dd3d",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_owned_copy.c": "e0df96ef27050a5f74ba36ac9f761633b7fd0eaa3dcb81ee392f37cb21648b21",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/core_count.h": "3a39d1ece245f90d88a9812e29bb59467d95d34566e33da2c384d41622eaaee7"
+  },
+  "runtime_manifest_sha256": "e4cc75a2d07ceeb9da128ba111136ce41d54d8665157b536f2a9b13aed85b852",
+  "probe_sha256": "b1be5b1931166cdbd2d3c36e9d06e29b66bc7e2e92087301c537e691f00c3950",
+  "harness_sha256": "06b17b5508fc6817ee40497b17985f0655c5e73634c086c587be84d70feb3c19",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+  "zig_sha256": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f",
+  "outer_lease": {
+    "kind": "build",
+    "directory": "/home/epentland/.cache/mylang/slots"
+  },
+  "commands": 40
+}

@@ -1,0 +1,4 @@
+copy_pushes=10 copy_blocks=4
+pointer_references=1
+recursive_references=0
+runtime contracts passed; live=0

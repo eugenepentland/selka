@@ -1,0 +1,6 @@
+[I] export-kicad-sch: stm32n6: 40 per-pin bypass-stub nets labelled as their base rail
+[W] export-kicad-sch: vendor symbol '436331045822' does not draw 2 pad(s) the design uses — adding them as unit 2
+[W] export-kicad-sch: vendor symbol 'USB4235-03-C' does not draw 4 pad(s) the design uses — adding them as unit 2
+[I] export-kicad-sch: stm32n6: 18/38 components drawn from vendor symbols (138 libraries indexed)
+[I] export-kicad-sch: stm32n6: STM32N657L0H3Q Core System: 1 overlapping text pairs of 818 drawn texts (e.g. pin_name "VDD33U_SB" over pin_name "OTG1_T_XRTUNE" at 46,360)
+[I] export-kicad-sch: stm32n6: 1 overlapping text pairs across 22 sheets

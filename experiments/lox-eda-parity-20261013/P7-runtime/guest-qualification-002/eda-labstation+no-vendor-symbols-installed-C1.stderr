@@ -1,0 +1,3 @@
+[I] export-kicad-sch: labstation: Ethernet: 1 overlapping text pairs of 281 drawn texts (e.g. pin_name "VDD" over pin_name "SCSN" at 134,46)
+[I] export-kicad-sch: labstation: sub-block flash: 1 overlapping text pairs of 38 drawn texts (e.g. pin_name "~{HOLD_OR_}RESET_(IO3)" over pin_name "VCC" at 51,40)
+[I] export-kicad-sch: labstation: 2 overlapping text pairs across 24 sheets

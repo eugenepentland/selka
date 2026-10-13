@@ -1,0 +1,454 @@
+[
+  {
+    "name": "baseline-rc-build",
+    "argv": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "cc",
+      "-O2",
+      "-g0",
+      "-falign-functions=64",
+      "-std=c11",
+      "-target",
+      "x86_64-linux-gnu.2.31",
+      "-march=native",
+      "-pthread",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/baseline/probe.c",
+      "-lm",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/baseline/probe-rc"
+    ],
+    "returncode": 0,
+    "expected": 0
+  },
+  {
+    "name": "baseline-rc-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/baseline/probe-rc"
+    ],
+    "returncode": 0,
+    "expected": 0
+  },
+  {
+    "name": "baseline-rc-tag",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/baseline/probe-rc",
+      "tag"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "name": "baseline-rc-resource",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/baseline/probe-rc",
+      "resource"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "name": "baseline-rc-descriptor",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/baseline/probe-rc",
+      "descriptor"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "name": "baseline-zero-rc-build",
+    "argv": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "cc",
+      "-O2",
+      "-g0",
+      "-falign-functions=64",
+      "-std=c11",
+      "-target",
+      "x86_64-linux-gnu.2.31",
+      "-march=native",
+      "-pthread",
+      "-DMYL_ZERO_RC=1",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/baseline/probe.c",
+      "-lm",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/baseline/probe-zero-rc"
+    ],
+    "returncode": 0,
+    "expected": 0
+  },
+  {
+    "name": "baseline-zero-rc-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/baseline/probe-zero-rc"
+    ],
+    "returncode": 0,
+    "expected": 0
+  },
+  {
+    "name": "baseline-zero-rc-tag",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/baseline/probe-zero-rc",
+      "tag"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "name": "baseline-zero-rc-resource",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/baseline/probe-zero-rc",
+      "resource"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "name": "baseline-zero-rc-descriptor",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/baseline/probe-zero-rc",
+      "descriptor"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "name": "scalar-rc-build",
+    "argv": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "cc",
+      "-O2",
+      "-g0",
+      "-falign-functions=64",
+      "-std=c11",
+      "-target",
+      "x86_64-linux-gnu.2.31",
+      "-march=native",
+      "-pthread",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/scalar/probe.c",
+      "-lm",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/scalar/probe-rc"
+    ],
+    "returncode": 0,
+    "expected": 0
+  },
+  {
+    "name": "scalar-rc-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/scalar/probe-rc"
+    ],
+    "returncode": 0,
+    "expected": 0
+  },
+  {
+    "name": "scalar-rc-tag",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/scalar/probe-rc",
+      "tag"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "name": "scalar-rc-resource",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/scalar/probe-rc",
+      "resource"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "name": "scalar-rc-descriptor",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/scalar/probe-rc",
+      "descriptor"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "name": "scalar-zero-rc-build",
+    "argv": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "cc",
+      "-O2",
+      "-g0",
+      "-falign-functions=64",
+      "-std=c11",
+      "-target",
+      "x86_64-linux-gnu.2.31",
+      "-march=native",
+      "-pthread",
+      "-DMYL_ZERO_RC=1",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/scalar/probe.c",
+      "-lm",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/scalar/probe-zero-rc"
+    ],
+    "returncode": 0,
+    "expected": 0
+  },
+  {
+    "name": "scalar-zero-rc-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/scalar/probe-zero-rc"
+    ],
+    "returncode": 0,
+    "expected": 0
+  },
+  {
+    "name": "scalar-zero-rc-tag",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/scalar/probe-zero-rc",
+      "tag"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "name": "scalar-zero-rc-resource",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/scalar/probe-zero-rc",
+      "resource"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "name": "scalar-zero-rc-descriptor",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/scalar/probe-zero-rc",
+      "descriptor"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "name": "pointer-rc-build",
+    "argv": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "cc",
+      "-O2",
+      "-g0",
+      "-falign-functions=64",
+      "-std=c11",
+      "-target",
+      "x86_64-linux-gnu.2.31",
+      "-march=native",
+      "-pthread",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/pointer/probe.c",
+      "-lm",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/pointer/probe-rc"
+    ],
+    "returncode": 0,
+    "expected": 0
+  },
+  {
+    "name": "pointer-rc-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/pointer/probe-rc"
+    ],
+    "returncode": 0,
+    "expected": 0
+  },
+  {
+    "name": "pointer-rc-tag",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/pointer/probe-rc",
+      "tag"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "name": "pointer-rc-resource",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/pointer/probe-rc",
+      "resource"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "name": "pointer-rc-descriptor",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/pointer/probe-rc",
+      "descriptor"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "name": "pointer-zero-rc-build",
+    "argv": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "cc",
+      "-O2",
+      "-g0",
+      "-falign-functions=64",
+      "-std=c11",
+      "-target",
+      "x86_64-linux-gnu.2.31",
+      "-march=native",
+      "-pthread",
+      "-DMYL_ZERO_RC=1",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/pointer/probe.c",
+      "-lm",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/pointer/probe-zero-rc"
+    ],
+    "returncode": 0,
+    "expected": 0
+  },
+  {
+    "name": "pointer-zero-rc-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/pointer/probe-zero-rc"
+    ],
+    "returncode": 0,
+    "expected": 0
+  },
+  {
+    "name": "pointer-zero-rc-tag",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/pointer/probe-zero-rc",
+      "tag"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "name": "pointer-zero-rc-resource",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/pointer/probe-zero-rc",
+      "resource"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "name": "pointer-zero-rc-descriptor",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/pointer/probe-zero-rc",
+      "descriptor"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "name": "combined-rc-build",
+    "argv": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "cc",
+      "-O2",
+      "-g0",
+      "-falign-functions=64",
+      "-std=c11",
+      "-target",
+      "x86_64-linux-gnu.2.31",
+      "-march=native",
+      "-pthread",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/combined/probe.c",
+      "-lm",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/combined/probe-rc"
+    ],
+    "returncode": 0,
+    "expected": 0
+  },
+  {
+    "name": "combined-rc-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/combined/probe-rc"
+    ],
+    "returncode": 0,
+    "expected": 0
+  },
+  {
+    "name": "combined-rc-tag",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/combined/probe-rc",
+      "tag"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "name": "combined-rc-resource",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/combined/probe-rc",
+      "resource"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "name": "combined-rc-descriptor",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/combined/probe-rc",
+      "descriptor"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "name": "combined-zero-rc-build",
+    "argv": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "cc",
+      "-O2",
+      "-g0",
+      "-falign-functions=64",
+      "-std=c11",
+      "-target",
+      "x86_64-linux-gnu.2.31",
+      "-march=native",
+      "-pthread",
+      "-DMYL_ZERO_RC=1",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/combined/probe.c",
+      "-lm",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/combined/probe-zero-rc"
+    ],
+    "returncode": 0,
+    "expected": 0
+  },
+  {
+    "name": "combined-zero-rc-run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/combined/probe-zero-rc"
+    ],
+    "returncode": 0,
+    "expected": 0
+  },
+  {
+    "name": "combined-zero-rc-tag",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/combined/probe-zero-rc",
+      "tag"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "name": "combined-zero-rc-resource",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/combined/probe-zero-rc",
+      "resource"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "name": "combined-zero-rc-descriptor",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/combined/probe-zero-rc",
+      "descriptor"
+    ],
+    "returncode": -6,
+    "expected": -6
+  }
+]

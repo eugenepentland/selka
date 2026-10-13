@@ -1,0 +1,47 @@
+[
+  {
+    "path": "probes-001.log",
+    "raw_sha256": "b9b5a0aab6dcf706a82c356d0bdd64fea6fdb24a027248197f246d922af074bc",
+    "archive_sha256": "70d6bf51d3bdc7cd680f765e2a0ea93fbcad87bfc34854ca12365e7f8c4f00e8"
+  },
+  {
+    "path": "commit-scalar.log",
+    "raw_sha256": "1313d1062591f4178114648062d06ed678a50e6f47437fdd02203510a7b513ed",
+    "archive_sha256": "7974aa3e6a29cde42ec88564b1f6cc4d8d3582f510259e4ccfe6537559b70728"
+  },
+  {
+    "path": "guest-builds-001.log",
+    "raw_sha256": "585d42a4eed214c4ebc8a31229e422b1a5acd16f76488a4b81b6df4a69bab251",
+    "archive_sha256": "b021b3fb1da556e32a85cb209cbfd578bf8b3c13d34ffba15e2bf1eac2b411b2"
+  },
+  {
+    "path": "guest-qualification-001.log",
+    "raw_sha256": "701899fee33c53ed444e221d0c3c7d3ccce6e9c13d4315eb84ec3c34e923e87c",
+    "archive_sha256": "e11569f7dbbd2e02018f71418b774587bd4c1f9dcde70d1595a4fdb1c96d4730"
+  },
+  {
+    "path": "commit-pointer.log",
+    "raw_sha256": "6c8e195308b847f336d9e6278779cf84710e04a4c6e86ef361bf0cfa1836a81c",
+    "archive_sha256": "7ecdaa903022b157a5fd7268a8f3a5222ad1ed914e58d1aa542a85a76c07277f"
+  },
+  {
+    "path": "commit-bulk.log",
+    "raw_sha256": "8d9c1a2db9d50a7defa55fb04501e46f78a48a2358451fa64924f682a8c021c3",
+    "archive_sha256": "5806bd4f5ba762c254608f880c788130aecc1c6b6b5bb7791dc1001a94bce3f7"
+  },
+  {
+    "path": "probes-002.log",
+    "raw_sha256": "c7f1fa08f57b92e3573dc7c84c0ae3557aa8934ddddeb12efc7ff85e12c52a6c",
+    "archive_sha256": "97fc5a5f5938d57df01aedb4f1d6a91c76611019331afd93cfed1fab4f23aca6"
+  },
+  {
+    "path": "commit-formatter.log",
+    "raw_sha256": "4623e01bf468a453b129d436b38f2a282ff637f70dcba2a30cbd3548392ad614",
+    "archive_sha256": "6151104cc9c7f6797320427d3403615d0314e4af84bcf0505a555871c9e9347a"
+  },
+  {
+    "path": "guest-qualification-002.log",
+    "raw_sha256": "05bf494c629600675b9606f3d7cfc6c609d15f20c29769bb4401847169a0ce0e",
+    "archive_sha256": "06277cc323b812bd232776fc83be68300a591431277b5851ba2de514a0e8047e"
+  }
+]

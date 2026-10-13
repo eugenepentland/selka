@@ -1,0 +1,4 @@
+[I] export-kicad-sch: rf-switch-eval: 3/7 components drawn from vendor symbols (138 libraries indexed)
+[I] export-kicad-sch: rf-switch-eval: SKY13575 SP4T: 4 overlapping text pairs of 104 drawn texts (e.g. pin_name "RFC" over pin_name "VC1" at 37,42)
+[I] export-kicad-sch: rf-switch-eval: BGS12P2L6 SPDT: 3 overlapping text pairs of 48 drawn texts (e.g. pin_name "RFIN" over pin_name "VDD" at 34,45)
+[I] export-kicad-sch: rf-switch-eval: 7 overlapping text pairs across 6 sheets
