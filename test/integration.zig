@@ -8728,6 +8728,7 @@ test "library modules and bare *_test.my files are valid guest test entries" {
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, library_run.term);
     try testing.expect(std.mem.indexOf(u8, library_run.stdout, "1 passed") != null);
     const bare_run = try guestTestRun(a, bare, &.{ "--filter", "test_bare" }, cache);
+    if (bare_run.term != .exited or bare_run.term.exited != 0) std.debug.print("bare guest test: {s}{s}\n", .{ bare_run.stdout, bare_run.stderr });
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, bare_run.term);
     try testing.expect(std.mem.indexOf(u8, bare_run.stdout, "1 passed") != null);
 }
@@ -8987,6 +8988,7 @@ test "CLI an edit to one contract clause is never served from a warm cache" {
     defer testing.allocator.free(cache_argument);
     const warm_test = try contractCommand(&.{ compilerPath(), "test", entry, cache_argument, tools[0] });
     defer freeResult(warm_test);
+    if (std.mem.indexOf(u8, warm_test.stdout, "2 passed") == null) std.debug.print("contract guest test: {s}{s}\n", .{ warm_test.stdout, warm_test.stderr });
     try testing.expect(std.mem.indexOf(u8, warm_test.stdout, "2 passed") != null);
     const warm_run = try contractCommand(&.{ compilerPath(), "run", entry, cache_argument, tools[0] });
     defer freeResult(warm_run);
