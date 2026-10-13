@@ -1,0 +1,42 @@
+{
+  "baseline": {
+    "functions": {
+      "read_byte": {
+        "native_bytes": 169,
+        "calls": 10
+      },
+      "read_constant": {
+        "native_bytes": 238,
+        "calls": 12
+      },
+      "run": {
+        "native_bytes": 12896,
+        "calls": 1
+      }
+    },
+    "text_bytes": 377094,
+    "total_binary_bytes": 865176
+  },
+  "inline": {
+    "functions": {
+      "read_byte": {
+        "native_bytes": 0,
+        "calls": 0
+      },
+      "read_constant": {
+        "native_bytes": 0,
+        "calls": 0
+      },
+      "run": {
+        "native_bytes": 15464,
+        "calls": 1
+      }
+    },
+    "text_bytes": 379462,
+    "total_binary_bytes": 870320
+  },
+  "delta": {
+    "text_bytes": 2368,
+    "run_bytes": 2568
+  }
+}

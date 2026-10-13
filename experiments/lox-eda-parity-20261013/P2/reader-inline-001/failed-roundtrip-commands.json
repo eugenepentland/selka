@@ -1,0 +1,45 @@
+[
+  {
+    "name": "baseline-compile",
+    "argv": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "cc",
+      "-c",
+      "-O3",
+      "-target",
+      "x86_64-linux-gnu.2.31",
+      "-march=native",
+      "-mllvm",
+      "-x86-experimental-pref-innermost-loop-alignment=6",
+      "-Wno-override-module",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/.tmp/lox-eda-parity/P2/reader-inline-001/baseline.o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/.tmp/lox-eda-parity/P2/reader-inline-001/baseline.ll"
+    ],
+    "status": 0,
+    "build_diagnostic_wall_seconds": 1.4403129969723523
+  },
+  {
+    "name": "baseline-link",
+    "argv": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "cc",
+      "-O3",
+      "-target",
+      "x86_64-linux-gnu.2.31",
+      "-march=native",
+      "-mllvm",
+      "-x86-experimental-pref-innermost-loop-alignment=6",
+      "-pthread",
+      "-Wno-override-module",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/.tmp/lox-eda-parity/P2/reader-inline-001/baseline",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/.tmp/lox-eda-parity/P2/reader-inline-001/baseline.o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/.tmp/lox-eda-parity/P2/reader-inline-001/runtime.o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/.tmp/lox-eda-parity/P2/reader-inline-001/number.o",
+      "-lm"
+    ],
+    "status": 0,
+    "build_diagnostic_wall_seconds": 2.968365798005834
+  }
+]

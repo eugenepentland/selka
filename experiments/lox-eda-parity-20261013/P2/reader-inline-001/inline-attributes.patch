@@ -1,0 +1,20 @@
+--- baseline.ll
++++ inline.ll
+@@ -10238,7 +10238,7 @@
+   %v79 = phi ptr [ %v72, %append.fast.178 ], [ %apcall.184, %append.slow.179 ]
+   br label %b10
+ }
+-define internal fastcc { i64, i64 } @"my.vm::read_byte"(ptr noalias readonly align 8 %p0, i64 %p1, i64 %p2) nounwind uwtable !dbg !1000881 {
++define internal fastcc { i64, i64 } @"my.vm::read_byte"(ptr noalias readonly align 8 %p0, i64 %p1, i64 %p2) alwaysinline nounwind uwtable !dbg !1000881 {
+ entry:
+   %slot = alloca i64, align 8
+   br label %b0
+@@ -10256,7 +10256,7 @@
+   %v6 = insertvalue { i64, i64 } %rm.5, i64 %v5, 1
+   ret { i64, i64 } %v6
+ }
+-define internal fastcc { { i8, [1 x i64] }, i64 } @"my.vm::read_constant"(ptr noalias readonly align 8 %p0, i64 %p1, i64 %p2) nounwind uwtable !dbg !1000886 {
++define internal fastcc { { i8, [1 x i64] }, i64 } @"my.vm::read_constant"(ptr noalias readonly align 8 %p0, i64 %p1, i64 %p2) alwaysinline nounwind uwtable !dbg !1000886 {
+ entry:
+   %slot = alloca i64, align 8
+   br label %b0

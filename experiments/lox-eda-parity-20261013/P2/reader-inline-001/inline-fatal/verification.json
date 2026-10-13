@@ -1,0 +1,293 @@
+{
+  "binary": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/.tmp/lox-eda-parity/P2/reader-inline-001/probe-inline",
+  "sha256": "3843f65b2810642b68b8c0414f4a7618bc947bc2331d8e63dde346f5821e4bc3",
+  "timings": "not measured",
+  "cases": [
+    {
+      "scenario": "byte-valid",
+      "arms": {
+        "legacy": {
+          "status": 0,
+          "stdout": "18/1\n",
+          "category": null,
+          "detail": null,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/byte-valid-legacy.stderr.txt"
+        },
+        "scalar": {
+          "status": 0,
+          "stdout": "18/1\n",
+          "category": null,
+          "detail": null,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/byte-valid-scalar.stderr.txt"
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "scenario": "byte-negative",
+      "arms": {
+        "legacy": {
+          "status": 0,
+          "stdout": "52/0\n",
+          "category": null,
+          "detail": null,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/byte-negative-legacy.stderr.txt"
+        },
+        "scalar": {
+          "status": 0,
+          "stdout": "52/0\n",
+          "category": null,
+          "detail": null,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/byte-negative-scalar.stderr.txt"
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "scenario": "constant-valid",
+      "arms": {
+        "legacy": {
+          "status": 0,
+          "stdout": "42/1\n",
+          "category": null,
+          "detail": null,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/constant-valid-legacy.stderr.txt"
+        },
+        "scalar": {
+          "status": 0,
+          "stdout": "42/1\n",
+          "category": null,
+          "detail": null,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/constant-valid-scalar.stderr.txt"
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "scenario": "short-valid",
+      "arms": {
+        "legacy": {
+          "status": 0,
+          "stdout": "4660/2\n",
+          "category": null,
+          "detail": null,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/short-valid-legacy.stderr.txt"
+        },
+        "scalar": {
+          "status": 0,
+          "stdout": "4660/2\n",
+          "category": null,
+          "detail": null,
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/short-valid-scalar.stderr.txt"
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "scenario": "byte-bounds",
+      "arms": {
+        "legacy": {
+          "status": 1,
+          "stdout": "",
+          "category": "R_LIST_BOUNDS",
+          "detail": "native execution failed (index 0, length 0)",
+          "stderr_sha256": "7197600b91fdffd0abfe218b9f0afbf44d0a0460f1fd3d4e59872a2bc1e57518",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/byte-bounds-legacy.stderr.txt"
+        },
+        "scalar": {
+          "status": 1,
+          "stdout": "",
+          "category": "R_LIST_BOUNDS",
+          "detail": "native execution failed (index 0, length 0)",
+          "stderr_sha256": "5e316f131b4186658b8a35281ccb026382a40b1c96c18b691cdeef56dfda84de",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/byte-bounds-scalar.stderr.txt"
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "scenario": "byte-max-ip",
+      "arms": {
+        "legacy": {
+          "status": 1,
+          "stdout": "",
+          "category": "R_LIST_BOUNDS",
+          "detail": "native execution failed (index 9223372036854775807, length 2)",
+          "stderr_sha256": "de9a807a33ebe14cb8b424b68d6c95c1dc0a82ee0e5314b5def83442cd0b7058",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/byte-max-ip-legacy.stderr.txt"
+        },
+        "scalar": {
+          "status": 1,
+          "stdout": "",
+          "category": "R_LIST_BOUNDS",
+          "detail": "native execution failed (index 9223372036854775807, length 2)",
+          "stderr_sha256": "db883cfc6babbb8e76dec18eba9a54a80d318d1a5ecf6341d681f120c16c3a7e",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/byte-max-ip-scalar.stderr.txt"
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "scenario": "constant-code-bounds",
+      "arms": {
+        "legacy": {
+          "status": 1,
+          "stdout": "",
+          "category": "R_LIST_BOUNDS",
+          "detail": "native execution failed (index 0, length 0)",
+          "stderr_sha256": "7ac0b7a2119d9096ea0823a45f1427842c463872b96f2a1c9ae78dad0de70248",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/constant-code-bounds-legacy.stderr.txt"
+        },
+        "scalar": {
+          "status": 1,
+          "stdout": "",
+          "category": "R_LIST_BOUNDS",
+          "detail": "native execution failed (index 0, length 0)",
+          "stderr_sha256": "7ac0b7a2119d9096ea0823a45f1427842c463872b96f2a1c9ae78dad0de70248",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/constant-code-bounds-scalar.stderr.txt"
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "scenario": "constant-pool-bounds",
+      "arms": {
+        "legacy": {
+          "status": 1,
+          "stdout": "",
+          "category": "R_LIST_BOUNDS",
+          "detail": "native execution failed (index 1, length 0)",
+          "stderr_sha256": "a32e102ca1c57b38ddc5c6c8cf823e3e7ab519291999262387040facf9f64479",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/constant-pool-bounds-legacy.stderr.txt"
+        },
+        "scalar": {
+          "status": 1,
+          "stdout": "",
+          "category": "R_LIST_BOUNDS",
+          "detail": "native execution failed (index 1, length 0)",
+          "stderr_sha256": "a32e102ca1c57b38ddc5c6c8cf823e3e7ab519291999262387040facf9f64479",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/constant-pool-bounds-scalar.stderr.txt"
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "scenario": "constant-max-ip",
+      "arms": {
+        "legacy": {
+          "status": 1,
+          "stdout": "",
+          "category": "R_LIST_BOUNDS",
+          "detail": "native execution failed (index 9223372036854775807, length 1)",
+          "stderr_sha256": "bd1aacfb3e2e86188ec3bb2c4b60ac4eeb1f00da7dccc213f7ccd4af26a0c078",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/constant-max-ip-legacy.stderr.txt"
+        },
+        "scalar": {
+          "status": 1,
+          "stdout": "",
+          "category": "R_LIST_BOUNDS",
+          "detail": "native execution failed (index 9223372036854775807, length 1)",
+          "stderr_sha256": "bd1aacfb3e2e86188ec3bb2c4b60ac4eeb1f00da7dccc213f7ccd4af26a0c078",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/constant-max-ip-scalar.stderr.txt"
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "scenario": "string-kind",
+      "arms": {
+        "legacy": {
+          "status": 1,
+          "stdout": "",
+          "category": "R_ASSERT",
+          "detail": "native execution failed: value is not an object",
+          "stderr_sha256": "985d1db010602b5c8a60e32783b2fdd1df79b524f07454085ddb4a31bb76d906",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/string-kind-legacy.stderr.txt"
+        },
+        "scalar": {
+          "status": 1,
+          "stdout": "",
+          "category": "R_ASSERT",
+          "detail": "native execution failed: value is not an object",
+          "stderr_sha256": "e5de7881c5c7801b09320e7af331fa59a9e53c2f9197010e0018b4ea2164a749",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/string-kind-scalar.stderr.txt"
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "scenario": "short-low-bounds",
+      "arms": {
+        "legacy": {
+          "status": 1,
+          "stdout": "",
+          "category": "R_LIST_BOUNDS",
+          "detail": "native execution failed (index 1, length 1)",
+          "stderr_sha256": "9de3b95a186cf53907771faae80367f84545af947c71d3ac743f2fe57f722787",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/short-low-bounds-legacy.stderr.txt"
+        },
+        "scalar": {
+          "status": 1,
+          "stdout": "",
+          "category": "R_LIST_BOUNDS",
+          "detail": "native execution failed (index 1, length 1)",
+          "stderr_sha256": "f0ffcc7adb6721a44564aed29b3be59380b4b6672b34b8041b18921ebaa54064",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/short-low-bounds-scalar.stderr.txt"
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "scenario": "short-multiply-first",
+      "arms": {
+        "legacy": {
+          "status": 1,
+          "stdout": "",
+          "category": "R_OVERFLOW",
+          "detail": "native execution failed (mul: left 9223372036854775807, right 256, width 64)",
+          "stderr_sha256": "929630ccece44b1fa2cfa06e5bdecc7db1513b862c7d1016385b0e4d45f328ff",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/short-multiply-first-legacy.stderr.txt"
+        },
+        "scalar": {
+          "status": 1,
+          "stdout": "",
+          "category": "R_OVERFLOW",
+          "detail": "native execution failed (mul: left 9223372036854775807, right 256, width 64)",
+          "stderr_sha256": "8432cbd24a98cc080148ec679b8f442f99c99b9e7f004dc4d0520a9742d38500",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/short-multiply-first-scalar.stderr.txt"
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "scenario": "short-max-ip",
+      "arms": {
+        "legacy": {
+          "status": 1,
+          "stdout": "",
+          "category": "R_OVERFLOW",
+          "detail": "native execution failed (add: left 9223372036854775807, right 2, width 64)",
+          "stderr_sha256": "90100863994f257e0d9ac5908b8fdd9bba0750e83715518bcf1ccf1662c89ce3",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/short-max-ip-legacy.stderr.txt"
+        },
+        "scalar": {
+          "status": 1,
+          "stdout": "",
+          "category": "R_OVERFLOW",
+          "detail": "native execution failed (add: left 9223372036854775807, right 2, width 64)",
+          "stderr_sha256": "a208b65a6764efeaea201173bfec16408ddf2d618fc9418c70f7962041b992e5",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/reader-inline-001/inline-fatal/short-max-ip-scalar.stderr.txt"
+        }
+      },
+      "status": "passed"
+    }
+  ]
+}

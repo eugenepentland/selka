@@ -1,0 +1,211 @@
+{
+  "scalar_frame_probe": {
+    "status": "not_requested_in_correctness_only_mode"
+  },
+  "binaries": {
+    "candidate": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/.tmp/lox-eda-parity/P2/reader-inline-001/baseline",
+      "sha256": "e656cbc57054a12fa06edd29e2ac2e1507f57ff920064d0ec0de96a5b3f64719"
+    },
+    "baseline": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/.tmp/lox-eda-parity/P2/scalar-ip-001/candidate",
+      "sha256": "c98e80fddbcc78f6c8f94cfa4b97f392d4ef938b9befd1b92a7e8ac11360cd92"
+    }
+  },
+  "correctness": [
+    {
+      "arm": "candidate",
+      "case": "recursion",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "recursion",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "upvalues",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "upvalues",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "open-shared",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "open-shared",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "class-gc",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "class-gc",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "trace",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "trace",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "arity",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "arity",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "overflow",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "overflow",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "cleanup",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "candidate",
+      "case": "cleanup",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "recursion",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "recursion",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "upvalues",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "upvalues",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "open-shared",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "open-shared",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "class-gc",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "class-gc",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "trace",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "trace",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "arity",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "arity",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "overflow",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "overflow",
+      "gc_stress": true,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "cleanup",
+      "gc_stress": false,
+      "status": "passed"
+    },
+    {
+      "arm": "baseline",
+      "case": "cleanup",
+      "gc_stress": true,
+      "status": "passed"
+    }
+  ],
+  "allocation": [],
+  "timings": "not measured; reduced inputs only"
+}

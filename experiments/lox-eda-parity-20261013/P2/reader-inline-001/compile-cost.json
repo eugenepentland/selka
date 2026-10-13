@@ -1,0 +1,56 @@
+{
+  "label": "single fresh native compile pair; diagnostic, not repeatable compiler benchmark",
+  "script_sha256": "46d37235b7c6dc294d93d92349aa5554e5ffd56fde565e705150c11ebba3ec5c",
+  "samples": [
+    {
+      "arm": "baseline",
+      "argv": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "cc",
+        "-c",
+        "-O3",
+        "-target",
+        "x86_64-linux-gnu.2.31",
+        "-march=native",
+        "-mllvm",
+        "-x86-experimental-pref-innermost-loop-alignment=6",
+        "-Wno-override-module",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/.tmp/lox-eda-parity/P2/reader-inline-001/cost-001/baseline/candidate.o",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/.tmp/lox-eda-parity/P2/reader-inline-001/baseline.ll"
+      ],
+      "fresh_private_cache": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/.tmp/lox-eda-parity/P2/reader-inline-001/cost-001/baseline",
+      "wall_seconds": 1.56,
+      "user_seconds": 1.48,
+      "system_seconds": 0.07,
+      "maxrss_kib": 130628,
+      "llvm_sha256": "794a1cbe5824a7e524eb92dc24bbff2ef9a284dc8af85f830b37432c71681a9e",
+      "object_sha256": "af0a2a72d494cf0b565f31cc86d429d0133bd8d11d40f122791989c07f5a3ebb"
+    },
+    {
+      "arm": "inline",
+      "argv": [
+        "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+        "cc",
+        "-c",
+        "-O3",
+        "-target",
+        "x86_64-linux-gnu.2.31",
+        "-march=native",
+        "-mllvm",
+        "-x86-experimental-pref-innermost-loop-alignment=6",
+        "-Wno-override-module",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/.tmp/lox-eda-parity/P2/reader-inline-001/cost-001/inline/candidate.o",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/.tmp/lox-eda-parity/P2/reader-inline-001/inline.ll"
+      ],
+      "fresh_private_cache": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/.tmp/lox-eda-parity/P2/reader-inline-001/cost-001/inline",
+      "wall_seconds": 1.58,
+      "user_seconds": 1.51,
+      "system_seconds": 0.07,
+      "maxrss_kib": 133924,
+      "llvm_sha256": "bb9eb2b66bdf79add942f2050800793358ee845d8fcf83c994d64420393c60b3",
+      "object_sha256": "3c92539e63ff4d98fe89aff545e9617533d59d169aee7ce018140d8256ada3b5"
+    }
+  ]
+}

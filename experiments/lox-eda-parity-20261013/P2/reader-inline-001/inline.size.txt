@@ -1,0 +1,39 @@
+/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/.tmp/lox-eda-parity/P2/reader-inline-001/inline  :
+section             size       addr
+.interp               28   16777952
+.note.ABI-tag         32   16777980
+.dynsym             2664   16778016
+.gnu.version         222   16780680
+.gnu.version_r       160   16780904
+.gnu.hash             28   16781064
+.hash                896   16781092
+.dynstr             1196   16781988
+.rela.dyn             96   16783184
+.rela.plt           2568   16783280
+.rodata            97556   16785856
+.eh_frame_hdr       4084   16883412
+.eh_frame          24980   16887496
+.text             379462   16916608
+.plt                1728   17296080
+.tdata                 4   17301904
+.tbss                720   17301920
+.data.rel.ro       50496   17301920
+.dynamic             352   17352416
+.got                  48   17352768
+.got.plt             880   17352816
+.relro_padding      1056   17353696
+.data                 16   17357792
+.bss              150736   17357808
+.debug_info        57694          0
+.debug_abbrev       2112          0
+.debug_aranges        48          0
+.debug_line        42618          0
+.debug_str         25093          0
+.comment              40          0
+.debug_ranges      34816          0
+.debug_pubnames    13394          0
+.debug_pubtypes     4048          0
+.debug_loc         79963          0
+Total             979834
+
+

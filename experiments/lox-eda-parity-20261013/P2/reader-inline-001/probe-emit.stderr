@@ -1,0 +1,3 @@
+main.my:4:8: warning[W_UNUSED_IMPORT]: import `table` is never referenced in this module; remove it or use it
+  import table
+         ^
