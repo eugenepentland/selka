@@ -1,0 +1,485 @@
+{
+  "publication": "WITHHELD pending complete validated report",
+  "cells": [
+    {
+      "cell": "eda-Cyclops-Flex",
+      "censors": {},
+      "matched": 9,
+      "eligibility": "receipt-chain complete; artifact pins await final report validator",
+      "paired": [
+        0.8261812963516416,
+        0.7893674215646752,
+        0.8319685007096509,
+        0.7977486124081501,
+        0.810817930995346,
+        0.7886817416856885,
+        0.7673542345733313,
+        0.7912243517145151,
+        0.7747799521159124
+      ],
+      "paired_median": 0.7912243517145151,
+      "range": [
+        0.7673542345733313,
+        0.8319685007096509
+      ],
+      "over_5_percent": 0,
+      "median_quotient": 0.7881785343697834
+    },
+    {
+      "cell": "eda-adf5901",
+      "censors": {},
+      "matched": 9,
+      "eligibility": "receipt-chain complete; artifact pins await final report validator",
+      "paired": [
+        0.7899869282902336,
+        0.8116348132745808,
+        0.7090053524138409,
+        0.7981946741735112,
+        0.7625766517157563,
+        0.8177742793801547,
+        0.7679376867572819,
+        0.8099693001055722,
+        0.7721128534448375
+      ],
+      "paired_median": 0.7899869282902336,
+      "range": [
+        0.7090053524138409,
+        0.8177742793801547
+      ],
+      "over_5_percent": 0,
+      "median_quotient": 0.7805295767552898
+    },
+    {
+      "cell": "eda-barracuda-base",
+      "censors": {},
+      "matched": 9,
+      "eligibility": "receipt-chain complete; artifact pins await final report validator",
+      "paired": [
+        0.8180459487406634,
+        0.8101506135118091,
+        0.8099116216916068,
+        0.7612076119482241,
+        0.8028551721142567,
+        0.8117327260902327,
+        0.809890616190018,
+        0.7985133414632251,
+        0.8396198025017833
+      ],
+      "paired_median": 0.8099116216916068,
+      "range": [
+        0.7612076119482241,
+        0.8396198025017833
+      ],
+      "over_5_percent": 0,
+      "median_quotient": 0.8098774894716326
+    },
+    {
+      "cell": "eda-barracuda-via-fence",
+      "censors": {},
+      "matched": 9,
+      "eligibility": "receipt-chain complete; artifact pins await final report validator",
+      "paired": [
+        0.8002530897066598,
+        0.8231963919512767,
+        0.7914733841593096,
+        0.8359902634226256,
+        0.8020601547669,
+        0.8015620479387258,
+        0.816905999152721,
+        0.7888795523569915,
+        0.8039519394947212
+      ],
+      "paired_median": 0.8020601547669,
+      "range": [
+        0.7888795523569915,
+        0.8359902634226256
+      ],
+      "over_5_percent": 0,
+      "median_quotient": 0.8092958301645734
+    },
+    {
+      "cell": "eda-barracuda",
+      "censors": {},
+      "matched": 9,
+      "eligibility": "receipt-chain complete; artifact pins await final report validator",
+      "paired": [
+        0.8042677862964126,
+        0.8023049367676065,
+        0.7675758875831911,
+        0.8134476776064156,
+        0.8055674996731049,
+        0.8131469490901214,
+        0.8066018343233404,
+        0.8152570015440679,
+        0.8164121158809972
+      ],
+      "paired_median": 0.8066018343233404,
+      "range": [
+        0.7675758875831911,
+        0.8164121158809972
+      ],
+      "over_5_percent": 0,
+      "median_quotient": 0.8073332900211386
+    },
+    {
+      "cell": "eda-black-canyon+flat",
+      "censors": {},
+      "matched": 9,
+      "eligibility": "receipt-chain complete; artifact pins await final report validator",
+      "paired": [
+        0.7945316683993262,
+        0.7917005407156515,
+        0.7839290340098408,
+        0.8331335789118512,
+        0.7730886989416874,
+        0.8066373324558332,
+        0.7832364285208391,
+        0.8058757587006803,
+        0.7852252730424937
+      ],
+      "paired_median": 0.7917005407156515,
+      "range": [
+        0.7730886989416874,
+        0.8331335789118512
+      ],
+      "over_5_percent": 0,
+      "median_quotient": 0.7921000805899557
+    },
+    {
+      "cell": "eda-black-canyon",
+      "censors": {},
+      "matched": 9,
+      "eligibility": "receipt-chain complete; artifact pins await final report validator",
+      "paired": [
+        0.7893191163919164,
+        0.8454941811439287,
+        0.7816370261223752,
+        0.7933470111063914,
+        0.7732761524700021,
+        0.8140033647698299,
+        0.7994571732695204,
+        0.796340605576218,
+        0.7934721376606065
+      ],
+      "paired_median": 0.7934721376606065,
+      "range": [
+        0.7732761524700021,
+        0.8454941811439287
+      ],
+      "over_5_percent": 0,
+      "median_quotient": 0.7930901307532642
+    },
+    {
+      "cell": "eda-blinky-breakout",
+      "censors": {},
+      "matched": 9,
+      "eligibility": "receipt-chain complete; artifact pins await final report validator",
+      "paired": [
+        0.8906434649803369,
+        0.9361193043962148,
+        0.9078451013540203,
+        0.8822970807540274,
+        0.8988495006480277,
+        0.9160084274593299,
+        0.8836896999977791,
+        0.9413947302214233,
+        0.9247614901592204
+      ],
+      "paired_median": 0.9078451013540203,
+      "range": [
+        0.8822970807540274,
+        0.9413947302214233
+      ],
+      "over_5_percent": 0,
+      "median_quotient": 0.9195502752027538
+    },
+    {
+      "cell": "eda-cyclops-analog+no-vendor-symbols",
+      "censors": {},
+      "matched": 9,
+      "eligibility": "receipt-chain complete; artifact pins await final report validator",
+      "paired": [
+        0.8221882940894775,
+        0.8214539778810969,
+        0.819173354983762,
+        0.8350988738916354,
+        0.8129895189675829,
+        0.8186914756880881,
+        0.8295695755108169,
+        0.7667772778649183,
+        0.8044180731293045
+      ],
+      "paired_median": 0.819173354983762,
+      "range": [
+        0.7667772778649183,
+        0.8350988738916354
+      ],
+      "over_5_percent": 0,
+      "median_quotient": 0.8185059817188192
+    },
+    {
+      "cell": "eda-cyclops-analog",
+      "censors": {},
+      "matched": 9,
+      "eligibility": "receipt-chain complete; artifact pins await final report validator",
+      "paired": [
+        0.7793624146996778,
+        0.7881155174243583,
+        0.7932514546827549,
+        0.8074878003831939,
+        0.7850753014508213,
+        0.7730811662533719,
+        0.8141410309543845,
+        0.815008732851051,
+        0.7729522666723772
+      ],
+      "paired_median": 0.7881155174243583,
+      "range": [
+        0.7729522666723772,
+        0.815008732851051
+      ],
+      "over_5_percent": 0,
+      "median_quotient": 0.7913182990358936
+    },
+    {
+      "cell": "eda-cyclops-breakout",
+      "censors": {},
+      "matched": 9,
+      "eligibility": "receipt-chain complete; artifact pins await final report validator",
+      "paired": [
+        0.7760733410470703,
+        0.7751911953330443,
+        0.7581705669100467,
+        0.8012958773588315,
+        0.7901721839382617,
+        0.805488800905111,
+        0.7666959447889777,
+        0.790597474460588,
+        0.7691425994510994
+      ],
+      "paired_median": 0.7760733410470703,
+      "range": [
+        0.7581705669100467,
+        0.805488800905111
+      ],
+      "over_5_percent": 0,
+      "median_quotient": 0.7765654895178934
+    },
+    {
+      "cell": "eda-cyclops-digital-pcb",
+      "censors": {},
+      "matched": 9,
+      "eligibility": "receipt-chain complete; artifact pins await final report validator",
+      "paired": [
+        0.8537685970512762,
+        0.8139917856096247,
+        0.798399960176245,
+        0.883862203530672,
+        0.8093662832533258,
+        0.8083386144544198,
+        0.8357122937850877,
+        0.8392982921046482,
+        0.8096652339500455
+      ],
+      "paired_median": 0.8139917856096247,
+      "range": [
+        0.798399960176245,
+        0.883862203530672
+      ],
+      "over_5_percent": 0,
+      "median_quotient": 0.8139917856096247
+    },
+    {
+      "cell": "eda-cyclops-interposer",
+      "censors": {},
+      "matched": 9,
+      "eligibility": "receipt-chain complete; artifact pins await final report validator",
+      "paired": [
+        0.8013126123419257,
+        0.810343777245081,
+        0.7959098218263048,
+        0.7861186086058503,
+        0.7845121310071616,
+        0.7966506818728145,
+        0.7738982058614559,
+        0.8200887277529245,
+        0.7786803572665131
+      ],
+      "paired_median": 0.7959098218263048,
+      "range": [
+        0.7738982058614559,
+        0.8200887277529245
+      ],
+      "over_5_percent": 0,
+      "median_quotient": 0.7977101579651006
+    },
+    {
+      "cell": "eda-cyclops-kband-breakout",
+      "censors": {},
+      "matched": 9,
+      "eligibility": "receipt-chain complete; artifact pins await final report validator",
+      "paired": [
+        0.7954262806439941,
+        0.7985840879660878,
+        0.7906492266953211,
+        0.8272306952463551,
+        0.7706267774655443,
+        0.8117538313775877,
+        0.7849010541767718,
+        0.8201212644805248,
+        0.7826288630561264
+      ],
+      "paired_median": 0.7954262806439941,
+      "range": [
+        0.7706267774655443,
+        0.8272306952463551
+      ],
+      "over_5_percent": 0,
+      "median_quotient": 0.8001005862959988
+    },
+    {
+      "cell": "eda-cyclops-kband-pcb",
+      "censors": {},
+      "matched": 9,
+      "eligibility": "receipt-chain complete; artifact pins await final report validator",
+      "paired": [
+        0.8355558249727617,
+        0.8361098161674894,
+        0.8283486722222584,
+        0.8119991612116647,
+        0.8410716231281596,
+        0.8267352985047146,
+        0.8115151471828117,
+        0.8323129138317505,
+        0.8415968976662191
+      ],
+      "paired_median": 0.8323129138317505,
+      "range": [
+        0.8115151471828117,
+        0.8415968976662191
+      ],
+      "over_5_percent": 0,
+      "median_quotient": 0.8344373117000582
+    },
+    {
+      "cell": "eda-cyclops-kband",
+      "censors": {},
+      "matched": 9,
+      "eligibility": "receipt-chain complete; artifact pins await final report validator",
+      "paired": [
+        0.8132251832594666,
+        0.7992083524679814,
+        0.8109854374964569,
+        0.8033922472974049,
+        0.8128558961017022,
+        0.8365604441890488,
+        0.8062984184749283,
+        0.8090186505881222,
+        0.7938108547361423
+      ],
+      "paired_median": 0.8090186505881222,
+      "range": [
+        0.7938108547361423,
+        0.8365604441890488
+      ],
+      "over_5_percent": 0,
+      "median_quotient": 0.8109854374964569
+    },
+    {
+      "cell": "eda-cyclops-xband-sip",
+      "censors": {},
+      "matched": 9,
+      "eligibility": "receipt-chain complete; artifact pins await final report validator",
+      "paired": [
+        0.7831530386541773,
+        0.8350636236239173,
+        0.7764921074236566,
+        0.8003738772972093,
+        0.7803313071854335,
+        0.7950612851374755,
+        0.7993865518934804,
+        0.8007146914228885,
+        0.7555808509416089
+      ],
+      "paired_median": 0.7950612851374755,
+      "range": [
+        0.7555808509416089,
+        0.8350636236239173
+      ],
+      "over_5_percent": 0,
+      "median_quotient": 0.7864972844168984
+    },
+    {
+      "cell": "eda-dual-flash",
+      "censors": {},
+      "matched": 9,
+      "eligibility": "receipt-chain complete; artifact pins await final report validator",
+      "paired": [
+        0.7490705416036251,
+        0.7833503442491161,
+        0.775391775792295,
+        0.8630109966450211,
+        0.7849382335473502,
+        0.7984278913695361,
+        0.8035530351609126,
+        0.8012271267360853,
+        0.8073475689963624
+      ],
+      "paired_median": 0.7984278913695361,
+      "range": [
+        0.7490705416036251,
+        0.8630109966450211
+      ],
+      "over_5_percent": 0,
+      "median_quotient": 0.7922373929952413
+    },
+    {
+      "cell": "eda-labstation+no-vendor-symbols",
+      "censors": {},
+      "matched": 9,
+      "eligibility": "receipt-chain complete; artifact pins await final report validator",
+      "paired": [
+        0.8449910643626996,
+        0.8296842519532006,
+        0.8513618268666467,
+        0.8459166075106058,
+        0.8486751228530763,
+        0.8472822882049365,
+        0.8211067387655238,
+        0.8527272014774213,
+        0.8272395566473398
+      ],
+      "paired_median": 0.8459166075106058,
+      "range": [
+        0.8211067387655238,
+        0.8527272014774213
+      ],
+      "over_5_percent": 0,
+      "median_quotient": 0.8426364787941504
+    },
+    {
+      "cell": "eda-labstation",
+      "censors": {},
+      "matched": 9,
+      "eligibility": "receipt-chain complete; artifact pins await final report validator",
+      "paired": [
+        0.8327585237546573,
+        0.8108239830645063,
+        0.8094123584925604,
+        0.8094012779259392,
+        0.7989721046868264,
+        0.8005004685746789,
+        0.8243580335997577,
+        0.8298331121182257,
+        0.8236789185551154
+      ],
+      "paired_median": 0.8108239830645063,
+      "range": [
+        0.7989721046868264,
+        0.8327585237546573
+      ],
+      "over_5_percent": 0,
+      "median_quotient": 0.8122473954031078
+    }
+  ]
+}
