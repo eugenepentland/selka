@@ -1,0 +1,3178 @@
+ Percent |	Source code & Disassembly of zero-rc for cpu_core/cycles/u (646 samples, percent: local period)
+---------------------------------------------------------------------------------------------------------------
+         :
+         :
+         :
+         : 3       Disassembly of section .text:
+         :
+         : 5       000000000105b0f0 <my.vm::run>:
+    0.00 :   105b0f0:        push   %rbp
+    0.00 :   105b0f1:        push   %r15
+    0.00 :   105b0f3:        push   %r14
+    0.00 :   105b0f5:        push   %r13
+    0.00 :   105b0f7:        push   %r12
+    0.00 :   105b0f9:        push   %rbx
+    0.00 :   105b0fa:        sub    $0xaa8,%rsp
+    0.00 :   105b101:        mov    %rcx,0x60(%rsp)
+    0.00 :   105b106:        mov    %rdx,0x38(%rsp)
+    0.00 :   105b10b:        mov    %rsi,%r14
+    0.00 :   105b10e:        mov    %rdi,0x40(%rsp)
+    0.00 :   105b113:        mov    0x90(%rsi),%r15
+    0.00 :   105b11a:        mov    %r15,%rsi
+    0.00 :   105b11d:        dec    %rsi
+    0.00 :   105b120:        jo     105e4f8 <my.vm::run+0x3408>
+    0.00 :   105b126:        mov    0x80(%r14),%rbp
+    0.00 :   105b12d:        mov    0x88(%r14),%rax
+    0.00 :   105b134:        mov    0x8(%rax),%rdx
+    0.00 :   105b138:        cmp    %rdx,%rsi
+    0.00 :   105b13b:        jae    105dd93 <my.vm::run+0x2ca3>
+    0.00 :   105b141:        mov    %rsi,%rcx
+    0.00 :   105b144:        shl    $0x5,%rcx
+    0.00 :   105b148:        mov    0x20(%rax,%rcx,1),%r10
+    0.00 :   105b14d:        mov    0x28(%rax,%rcx,1),%rbx
+    0.00 :   105b152:        mov    0x30(%rax,%rcx,1),%r8
+    0.00 :   105b157:        mov    0x38(%rax,%rcx,1),%r9
+    0.00 :   105b15c:        lea    -0x53db7(%rip),%r13        # 10073ac <core_number_pairs+0x14c>
+    0.00 :   105b163:        mov    %r14,0x8(%rsp)
+    0.00 :   105b168:        nopl   0x0(%rax,%rax,1)
+    3.10 :   105b170:        lea    0x260(%rsp),%rdi
+    1.80 :   105b178:        mov    %r14,%rsi
+    0.87 :   105b17b:        mov    %r10,%rdx
+    0.00 :   105b17e:        mov    %rbx,%rcx
+    0.50 :   105b181:        call   1063000 <my.vm::read_byte>
+    0.00 :   105b186:        mov    0x88(%r14),%rax
+    1.76 :   105b18d:        mov    %r15,%r11
+    0.00 :   105b190:        lea    -0x1(%r15),%r12
+    0.00 :   105b194:        mov    %r12,%rdx
+    0.00 :   105b197:        test   %r15,%r15
+    0.00 :   105b19a:        jg     105b1a3 <my.vm::run+0xb3>
+    0.00 :   105b19c:        mov    0x8(%rax),%rdx
+    0.00 :   105b1a0:        add    %r12,%rdx
+    8.55 :   105b1a3:        mov    0x260(%rsp),%rcx
+    0.14 :   105b1ab:        mov    0x268(%rsp),%r10
+    0.14 :   105b1b3:        mov    0x270(%rsp),%rbx
+    0.19 :   105b1bb:        mov    0x278(%rsp),%r8
+    0.89 :   105b1c3:        mov    0x280(%rsp),%r9
+    0.00 :   105b1cb:        shl    $0x5,%rdx
+    0.00 :   105b1cf:        mov    %r10,0x20(%rax,%rdx,1)
+    0.22 :   105b1d4:        mov    %rbx,0x28(%rax,%rdx,1)
+    6.55 :   105b1d9:        mov    %r8,0x30(%rax,%rdx,1)
+    0.24 :   105b1de:        mov    %r9,0x38(%rax,%rdx,1)
+    0.00 :   105b1e3:        mov    %rax,0x88(%r14)
+    0.31 :   105b1ea:        cmp    $0x24,%rcx
+    0.00 :   105b1ee:        ja     105cf66 <my.vm::run+0x1e76>
+    0.58 :   105b1f4:        movslq 0x0(%r13,%rcx,4),%rax
+    1.13 :   105b1f9:        add    %r13,%rax
+    2.32 :   105b1fc:        jmp    *%rax
+    0.00 :   105b1fe:        mov    0x80(%r14),%rax
+    1.02 :   105b205:        mov    %rax,%rsi
+    0.00 :   105b208:        dec    %rsi
+    0.00 :   105b20b:        jo     105de38 <my.vm::run+0x2d48>
+    0.00 :   105b211:        mov    0x78(%r14),%rax
+    0.00 :   105b215:        mov    0x8(%rax),%rdx
+    0.36 :   105b219:        mov    %rsi,%rdi
+    0.00 :   105b21c:        cmp    %rdx,%rsi
+    0.00 :   105b21f:        jae    105d667 <my.vm::run+0x2577>
+    0.00 :   105b225:        shl    $0x4,%rdi
+    0.65 :   105b229:        cmpb   $0x2,0x20(%rax,%rdi,1)
+    0.31 :   105b22e:        jne    105b28b <my.vm::run+0x19b>
+    0.45 :   105b230:        mov    %rsi,%r12
+    0.00 :   105b233:        dec    %r12
+    0.00 :   105b236:        jo     105dfa8 <my.vm::run+0x2eb8>
+    0.00 :   105b23c:        vmovsd 0x28(%rax,%rdi,1),%xmm0
+    0.00 :   105b242:        mov    %r12,%rsi
+    1.17 :   105b245:        cmp    %rdx,%r12
+    0.00 :   105b248:        jae    105d682 <my.vm::run+0x2592>
+    0.00 :   105b24e:        add    $0x20,%rax
+    0.00 :   105b252:        shl    $0x4,%rsi
+    0.10 :   105b256:        cmpb   $0x2,(%rax,%rsi,1)
+    0.22 :   105b25a:        jne    105b28b <my.vm::run+0x19b>
+    0.00 :   105b25c:        add    %rsi,%rax
+    0.00 :   105b25f:        vmovsd 0x8(%rax),%xmm1
+    0.80 :   105b264:        add    $0xfffffffffffffff0,%rcx
+    0.00 :   105b268:        cmp    $0x4,%rcx
+    0.00 :   105b26c:        ja     105d4f2 <my.vm::run+0x2402>
+    0.00 :   105b272:        lea    -0x53ded(%rip),%rdx        # 100748c <core_number_pairs+0x22c>
+    0.18 :   105b279:        movslq (%rdx,%rcx,4),%rcx
+    0.00 :   105b27d:        add    %rdx,%rcx
+    0.00 :   105b280:        jmp    *%rcx
+    0.00 :   105b282:        vucomisd %xmm0,%xmm1
+    0.00 :   105b286:        jmp    105d4df <my.vm::run+0x23ef>
+    0.00 :   105b28b:        mov    %r13,%r15
+    0.00 :   105b28e:        mov    %r10,%r13
+    0.00 :   105b291:        mov    %rbx,%rbp
+    0.00 :   105b294:        mov    %r8,%rbx
+    0.00 :   105b297:        mov    %r9,%r12
+    0.00 :   105b29a:        lea    -0x48c01(%rip),%rcx        # 10126a0 <core_number_pairs+0xb440>
+    0.00 :   105b2a1:        lea    0x68(%rsp),%rdi
+    0.00 :   105b2a6:        mov    %r14,%rsi
+    0.00 :   105b2a9:        mov    0x38(%rsp),%rdx
+    0.00 :   105b2ae:        call   1062b80 <my.vm::runtime_error>
+    0.00 :   105b2b3:        testb  $0x1,0x68(%rsp)
+    0.00 :   105b2b8:        je     105dd49 <my.vm::run+0x2c59>
+    0.00 :   105b2be:        mov    0x80(%r14),%rax
+    0.00 :   105b2c5:        mov    0x90(%r14),%r11
+    0.00 :   105b2cc:        mov    %r12,%r9
+    0.00 :   105b2cf:        mov    %rbx,%r8
+    0.00 :   105b2d2:        mov    %rbp,%rbx
+    0.00 :   105b2d5:        mov    %r13,%r10
+    0.00 :   105b2d8:        mov    %r15,%r13
+    0.00 :   105b2db:        mov    %rax,%r12
+    0.00 :   105b2de:        jmp    105d5a0 <my.vm::run+0x24b0>
+    0.00 :   105b2e3:        mov    0x80(%r14),%rsi
+    0.00 :   105b2ea:        mov    %rsi,%r15
+    0.00 :   105b2ed:        dec    %r15
+    0.00 :   105b2f0:        jo     105e23b <my.vm::run+0x314b>
+    0.00 :   105b2f6:        mov    %r8,0x20(%rsp)
+    0.00 :   105b2fb:        mov    %r15,%rsi
+    0.00 :   105b2fe:        dec    %rsi
+    0.00 :   105b301:        jo     105e1f9 <my.vm::run+0x3109>
+    0.00 :   105b307:        mov    %r10,%rbp
+    0.00 :   105b30a:        mov    %rbx,%r14
+    0.00 :   105b30d:        mov    0x8(%rsp),%rax
+    0.00 :   105b312:        mov    0x78(%rax),%rbx
+    0.00 :   105b316:        mov    0x8(%rbx),%rdx
+    0.00 :   105b31a:        cmp    %rdx,%rsi
+    0.00 :   105b31d:        jae    105d844 <my.vm::run+0x2754>
+    0.00 :   105b323:        mov    %rsi,%rax
+    0.00 :   105b326:        shl    $0x4,%rax
+    0.00 :   105b32a:        cmpb   $0x3,0x20(%rbx,%rax,1)
+    0.00 :   105b32f:        jne    105cfd0 <my.vm::run+0x1ee0>
+    0.00 :   105b335:        mov    0x28(%rbx,%rax,1),%rax
+    0.00 :   105b33a:        mov    0x8(%rsp),%rcx
+    0.00 :   105b33f:        mov    (%rcx),%rsi
+    0.00 :   105b342:        mov    0x8(%rsi),%rcx
+    0.00 :   105b346:        mov    %rax,%rdi
+    0.00 :   105b349:        cmp    %rcx,%rax
+    0.00 :   105b34c:        jae    105db08 <my.vm::run+0x2a18>
+    0.00 :   105b352:        imul   $0x38,%rdi,%rcx
+    0.00 :   105b356:        cmpl   $0x6,0x20(%rsi,%rcx,1)
+    0.00 :   105b35b:        jne    105cfd0 <my.vm::run+0x1ee0>
+    0.00 :   105b361:        mov    %r15,%rcx
+    0.00 :   105b364:        cmp    %rdx,%r15
+    0.00 :   105b367:        jae    105dbe0 <my.vm::run+0x2af0>
+    0.00 :   105b36d:        mov    %r9,0x10(%rsp)
+    0.00 :   105b372:        lea    0x20(%rbx),%rdx
+    0.00 :   105b376:        shl    $0x4,%rcx
+    0.00 :   105b37a:        movzbl (%rdx,%rcx,1),%esi
+    0.00 :   105b37e:        cmp    $0x3,%esi
+    0.00 :   105b381:        jne    105e496 <my.vm::run+0x33a6>
+    0.00 :   105b387:        add    %rcx,%rdx
+    0.00 :   105b38a:        mov    0x8(%rdx),%rsi
+    0.00 :   105b38e:        mov    0x8(%rsp),%r12
+    0.00 :   105b393:        mov    %r12,%rdi
+    0.00 :   105b396:        mov    %rax,%rdx
+    0.00 :   105b399:        call   106a830 <my.heap::inherit_class_methods>
+    0.00 :   105b39e:        mov    %r15,0x80(%r12)
+    0.00 :   105b3a6:        mov    0x8(%rbx),%rdx
+    0.00 :   105b3aa:        cmp    %rdx,%r15
+    0.00 :   105b3ad:        jae    105dc16 <my.vm::run+0x2b26>
+    0.00 :   105b3b3:        mov    0x90(%r12),%r11
+    0.00 :   105b3bb:        mov    0x10(%rsp),%r9
+    0.00 :   105b3c0:        mov    0x20(%rsp),%r8
+    0.00 :   105b3c5:        mov    %r14,%rbx
+    0.00 :   105b3c8:        mov    %r12,%r14
+    0.00 :   105b3cb:        mov    %r15,%r12
+    0.00 :   105b3ce:        jmp    105d58f <my.vm::run+0x249f>
+    0.00 :   105b3d3:        lea    0x68(%rsp),%rdi
+    0.00 :   105b3d8:        mov    %r14,%rsi
+    0.00 :   105b3db:        mov    %r10,%rdx
+    0.00 :   105b3de:        mov    %rbx,%rcx
+    0.00 :   105b3e1:        call   10630c0 <my.vm::read_constant>
+    0.00 :   105b3e6:        movzbl 0x68(%rsp),%eax
+    0.00 :   105b3eb:        cmp    $0x3,%eax
+    0.00 :   105b3ee:        jne    105defa <my.vm::run+0x2e0a>
+    0.00 :   105b3f4:        mov    0x80(%r14),%rsi
+    0.00 :   105b3fb:        mov    %rsi,%rax
+    0.00 :   105b3fe:        dec    %rax
+    0.00 :   105b401:        jo     105e219 <my.vm::run+0x3129>
+    0.00 :   105b407:        mov    %rax,%r15
+    0.00 :   105b40a:        mov    %rax,%rsi
+    0.00 :   105b40d:        dec    %rsi
+    0.00 :   105b410:        jo     105e1a5 <my.vm::run+0x30b5>
+    0.00 :   105b416:        mov    0x90(%rsp),%r13
+    0.00 :   105b41e:        mov    0x88(%rsp),%rax
+    0.00 :   105b426:        mov    %rax,0x20(%rsp)
+    0.00 :   105b42b:        mov    0x80(%rsp),%rax
+    0.00 :   105b433:        mov    %rax,0x18(%rsp)
+    0.00 :   105b438:        mov    0x70(%rsp),%r12
+    0.00 :   105b43d:        mov    0x78(%rsp),%rbp
+    0.00 :   105b442:        mov    0x8(%rsp),%rax
+    0.00 :   105b447:        mov    0x78(%rax),%rbx
+    0.00 :   105b44b:        mov    0x8(%rbx),%rdx
+    0.00 :   105b44f:        cmp    %rdx,%rsi
+    0.00 :   105b452:        jae    105d972 <my.vm::run+0x2882>
+    0.00 :   105b458:        mov    %rsi,%rax
+    0.00 :   105b45b:        shl    $0x4,%rax
+    0.00 :   105b45f:        movzbl 0x20(%rbx,%rax,1),%ecx
+    0.00 :   105b464:        cmp    $0x3,%ecx
+    0.00 :   105b467:        jne    105dea3 <my.vm::run+0x2db3>
+    0.00 :   105b46d:        mov    0x28(%rbx,%rax,1),%rax
+    0.00 :   105b472:        mov    %rax,0x10(%rsp)
+    0.00 :   105b477:        mov    0x8(%rsp),%r14
+    0.00 :   105b47c:        mov    %r14,%rdi
+    0.00 :   105b47f:        mov    %r12,%rsi
+    0.00 :   105b482:        call   1069b60 <my.heap::string_hash>
+    0.00 :   105b487:        mov    0x8(%rbx),%rdx
+    0.00 :   105b48b:        mov    %r15,%rcx
+    0.00 :   105b48e:        cmp    %rdx,%r15
+    0.00 :   105b491:        jae    105d9d9 <my.vm::run+0x28e9>
+    0.00 :   105b497:        lea    0x20(%rbx),%rdx
+    0.00 :   105b49b:        shl    $0x4,%rcx
+    0.00 :   105b49f:        mov    0x8(%rdx,%rcx,1),%r9
+    0.00 :   105b4a4:        mov    (%rdx,%rcx,1),%r8d
+    0.00 :   105b4a8:        mov    %r14,%rdi
+    0.00 :   105b4ab:        mov    0x10(%rsp),%rsi
+    0.00 :   105b4b0:        mov    %r12,%rdx
+    0.00 :   105b4b3:        mov    %eax,%ecx
+    0.00 :   105b4b5:        call   106aa10 <my.heap::set_class_method>
+    0.00 :   105b4ba:        mov    %r15,0x80(%r14)
+    0.00 :   105b4c1:        mov    0x8(%rbx),%rdx
+    0.00 :   105b4c5:        cmp    %rdx,%r15
+    0.00 :   105b4c8:        mov    %r15,%r12
+    0.00 :   105b4cb:        jae    105d9f4 <my.vm::run+0x2904>
+    0.00 :   105b4d1:        mov    0x90(%r14),%r11
+    0.00 :   105b4d8:        mov    %r13,%r9
+    0.00 :   105b4db:        lea    -0x54136(%rip),%r13        # 10073ac <core_number_pairs+0x14c>
+    0.00 :   105b4e2:        jmp    105d221 <my.vm::run+0x2131>
+    0.36 :   105b4e7:        lea    0x1c0(%rsp),%rdi
+    0.37 :   105b4ef:        mov    %r14,%rsi
+    0.00 :   105b4f2:        mov    %r10,%rdx
+    0.00 :   105b4f5:        mov    %rbx,%rcx
+    0.00 :   105b4f8:        call   1063790 <my.vm::read_short>
+    0.00 :   105b4fd:        mov    %rbp,%r12
+    0.00 :   105b500:        mov    %rbp,%rsi
+    0.00 :   105b503:        dec    %rsi
+    0.00 :   105b506:        jo     105e132 <my.vm::run+0x3042>
+    0.00 :   105b50c:        mov    0x1c0(%rsp),%rdx
+    0.00 :   105b514:        mov    0x1c8(%rsp),%r10
+    0.00 :   105b51c:        mov    0x1d0(%rsp),%rbx
+    0.00 :   105b524:        mov    0x1d8(%rsp),%r8
+    0.00 :   105b52c:        mov    0x1e0(%rsp),%r9
+    0.75 :   105b534:        mov    0x78(%r14),%rcx
+    0.00 :   105b538:        mov    0x8(%rcx),%rax
+    0.16 :   105b53c:        cmp    %rax,%rsi
+    0.00 :   105b53f:        jae    105d709 <my.vm::run+0x2619>
+    0.04 :   105b545:        mov    %rsi,%rdi
+    0.00 :   105b548:        mov    %r15,%r11
+    0.00 :   105b54b:        shl    $0x4,%rdi
+    0.22 :   105b54f:        movzbl 0x20(%rcx,%rdi,1),%eax
+    0.00 :   105b554:        test   %eax,%eax
+    0.00 :   105b556:        je     105b573 <my.vm::run+0x483>
+    0.00 :   105b558:        cmp    $0x1,%eax
+    0.00 :   105b55b:        jne    105d5a0 <my.vm::run+0x24b0>
+    0.00 :   105b561:        lea    (%rcx,%rdi,1),%rax
+    0.00 :   105b565:        add    $0x20,%rax
+    0.07 :   105b569:        testb  $0x1,0x8(%rax)
+    0.00 :   105b56d:        jne    105d5a0 <my.vm::run+0x24b0>
+    0.67 :   105b573:        mov    %r8,%rax
+    0.00 :   105b576:        add    %rdx,%rax
+    0.41 :   105b579:        jo     105e4e9 <my.vm::run+0x33f9>
+    0.26 :   105b57f:        mov    %rax,%r8
+    0.00 :   105b582:        jmp    105d5a0 <my.vm::run+0x24b0>
+    0.00 :   105b587:        lea    0x198(%rsp),%rdi
+    0.00 :   105b58f:        mov    %r14,%rsi
+    0.00 :   105b592:        mov    %r10,%rdx
+    0.00 :   105b595:        mov    %rbx,%rcx
+    0.00 :   105b598:        call   1063790 <my.vm::read_short>
+    0.00 :   105b59d:        mov    0x198(%rsp),%rdx
+    0.00 :   105b5a5:        mov    0x1b0(%rsp),%rsi
+    0.00 :   105b5ad:        mov    %rsi,%r8
+    0.00 :   105b5b0:        sub    %rdx,%r8
+    0.00 :   105b5b3:        jo     105e33a <my.vm::run+0x324a>
+    0.00 :   105b5b9:        mov    0x1a0(%rsp),%r10
+    0.00 :   105b5c1:        mov    0x1a8(%rsp),%rbx
+    0.00 :   105b5c9:        mov    0x1b8(%rsp),%r9
+    0.00 :   105b5d1:        jmp    105bf16 <my.vm::run+0xe26>
+    0.00 :   105b5d6:        lea    0x68(%rsp),%rdi
+    0.00 :   105b5db:        mov    %r14,%rsi
+    0.00 :   105b5de:        mov    %r10,%rdx
+    0.00 :   105b5e1:        mov    %rbx,%rcx
+    0.00 :   105b5e4:        call   10630c0 <my.vm::read_constant>
+    0.00 :   105b5e9:        movzbl 0x68(%rsp),%eax
+    0.00 :   105b5ee:        cmp    $0x3,%eax
+    0.00 :   105b5f1:        jne    105df51 <my.vm::run+0x2e61>
+    0.00 :   105b5f7:        mov    %r14,%r12
+    0.00 :   105b5fa:        mov    0x90(%rsp),%r15
+    0.00 :   105b602:        mov    0x88(%rsp),%rbx
+    0.00 :   105b60a:        mov    0x80(%rsp),%r14
+    0.00 :   105b612:        mov    0x70(%rsp),%rdx
+    0.00 :   105b617:        mov    0x78(%rsp),%rbp
+    0.00 :   105b61c:        lea    0x710(%rsp),%rdi
+    0.00 :   105b624:        mov    %r12,%rsi
+    0.00 :   105b627:        call   10641f0 <my.heap::allocate_class>
+    0.00 :   105b62c:        mov    0x710(%rsp),%rax
+    0.00 :   105b634:        mov    0x78(%r12),%rcx
+    0.00 :   105b639:        mov    0x80(%r12),%rsi
+    0.00 :   105b641:        mov    0x8(%rcx),%rdx
+    0.00 :   105b645:        cmp    %rdx,%rsi
+    0.00 :   105b648:        jae    105d8eb <my.vm::run+0x27fb>
+    0.00 :   105b64e:        mov    %rsi,%rdi
+    0.00 :   105b651:        shl    $0x4,%rdi
+    0.00 :   105b655:        movq   $0x3,0x20(%rcx,%rdi,1)
+    0.00 :   105b65e:        mov    %rax,0x28(%rcx,%rdi,1)
+    0.00 :   105b663:        mov    0x8(%rsp),%rax
+    0.00 :   105b668:        mov    %rcx,0x78(%rax)
+    0.00 :   105b66c:        mov    0x80(%rax),%rsi
+    0.00 :   105b673:        mov    %rsi,%r12
+    0.00 :   105b676:        inc    %r12
+    0.00 :   105b679:        jo     105e346 <my.vm::run+0x3256>
+    0.00 :   105b67f:        mov    %r15,%r9
+    0.00 :   105b682:        mov    %rbx,%r8
+    0.00 :   105b685:        mov    %rbp,%r10
+    0.00 :   105b688:        mov    %r12,0x80(%rax)
+    0.00 :   105b68f:        mov    0x90(%rax),%r11
+    0.00 :   105b696:        jmp    105d346 <my.vm::run+0x2256>
+    0.00 :   105b69b:        lea    0x68(%rsp),%rdi
+    0.00 :   105b6a0:        mov    %r14,%rsi
+    0.00 :   105b6a3:        mov    %r10,%rdx
+    0.00 :   105b6a6:        mov    %rbx,%rcx
+    0.00 :   105b6a9:        call   10630c0 <my.vm::read_constant>
+    0.00 :   105b6ae:        movzbl 0x68(%rsp),%eax
+    0.00 :   105b6b3:        cmp    $0x3,%eax
+    0.00 :   105b6b6:        jne    105de69 <my.vm::run+0x2d79>
+    0.00 :   105b6bc:        mov    %rbp,%rsi
+    0.00 :   105b6bf:        dec    %rsi
+    0.00 :   105b6c2:        jo     105e2ea <my.vm::run+0x31fa>
+    0.00 :   105b6c8:        mov    0x90(%rsp),%r12
+    0.00 :   105b6d0:        mov    0x88(%rsp),%rbx
+    0.00 :   105b6d8:        mov    0x80(%rsp),%r14
+    0.00 :   105b6e0:        mov    0x70(%rsp),%r8
+    0.00 :   105b6e5:        mov    0x78(%rsp),%r13
+    0.00 :   105b6ea:        mov    0x8(%rsp),%rax
+    0.00 :   105b6ef:        mov    %rsi,0x80(%rax)
+    0.00 :   105b6f6:        mov    0x78(%rax),%rax
+    0.00 :   105b6fa:        mov    0x8(%rax),%rdx
+    0.00 :   105b6fe:        cmp    %rdx,%rsi
+    0.00 :   105b701:        jae    105d921 <my.vm::run+0x2831>
+    0.00 :   105b707:        mov    %rsi,%rcx
+    0.00 :   105b70a:        shl    $0x4,%rcx
+    0.00 :   105b70e:        movzbl 0x20(%rax,%rcx,1),%edx
+    0.00 :   105b713:        cmp    $0x3,%edx
+    0.00 :   105b716:        jne    105df17 <my.vm::run+0x2e27>
+    0.00 :   105b71c:        add    %rcx,%rax
+    0.00 :   105b71f:        add    $0x20,%rax
+    0.00 :   105b723:        mov    0x8(%rax),%rcx
+    0.00 :   105b727:        lea    0x9b8(%rsp),%rdi
+    0.00 :   105b72f:        mov    0x8(%rsp),%rbp
+    0.00 :   105b734:        mov    %rbp,%rsi
+    0.00 :   105b737:        mov    0x38(%rsp),%rdx
+    0.00 :   105b73c:        call   10631e0 <my.vm::bind_method>
+    0.00 :   105b741:        testb  $0x1,0x9b8(%rsp)
+    0.00 :   105b749:        je     105dd49 <my.vm::run+0x2c59>
+    0.00 :   105b74f:        mov    0x80(%rbp),%rax
+    0.00 :   105b756:        mov    0x90(%rbp),%r11
+    0.00 :   105b75d:        mov    %r12,%r9
+    0.00 :   105b760:        mov    %rax,%r12
+    0.00 :   105b763:        mov    %rbx,%r8
+    0.00 :   105b766:        mov    %r14,%rbx
+    0.00 :   105b769:        mov    %rbp,%r14
+    0.00 :   105b76c:        mov    %r13,%r10
+    0.00 :   105b76f:        lea    -0x543ca(%rip),%r13        # 10073ac <core_number_pairs+0x14c>
+    0.00 :   105b776:        jmp    105d5a0 <my.vm::run+0x24b0>
+    0.00 :   105b77b:        mov    %rbp,%rsi
+    0.42 :   105b77e:        dec    %rsi
+    0.00 :   105b781:        jo     105e2fe <my.vm::run+0x320e>
+    0.00 :   105b787:        mov    %rsi,0x80(%r14)
+    0.00 :   105b78e:        mov    0x78(%r14),%rax
+    0.30 :   105b792:        mov    0x8(%rax),%rdx
+    0.27 :   105b796:        cmp    %rdx,%rsi
+    0.00 :   105b799:        jae    105d727 <my.vm::run+0x2637>
+    0.23 :   105b79f:        mov    %rsi,%rcx
+    0.40 :   105b7a2:        shl    $0x4,%rcx
+    0.30 :   105b7a6:        vmovupd 0x20(%rax,%rcx,1),%xmm0
+    1.43 :   105b7ac:        vmovapd %xmm0,0x20(%rsp)
+    0.63 :   105b7b2:        mov    %r14,%rdi
+    0.00 :   105b7b5:        mov    %r9,%r12
+    0.00 :   105b7b8:        mov    %r9,%rsi
+    0.00 :   105b7bb:        call   1064030 <my.vm::close_upvalues>
+    0.00 :   105b7c0:        mov    0x90(%r14),%rsi
+    0.00 :   105b7c7:        mov    %rsi,%r11
+    0.00 :   105b7ca:        dec    %r11
+    0.00 :   105b7cd:        jo     105e297 <my.vm::run+0x31a7>
+    0.00 :   105b7d3:        mov    %r11,0x90(%r14)
+    0.00 :   105b7da:        je     105dd68 <my.vm::run+0x2c78>
+    0.00 :   105b7e0:        mov    %r12,0x80(%r14)
+    0.50 :   105b7e7:        mov    0x78(%r14),%rax
+    0.00 :   105b7eb:        mov    0x8(%rax),%rdx
+    0.00 :   105b7ef:        mov    %r12,%rcx
+    0.00 :   105b7f2:        cmp    %rdx,%r12
+    0.00 :   105b7f5:        jae    105da45 <my.vm::run+0x2955>
+    0.00 :   105b7fb:        shl    $0x4,%rcx
+    0.00 :   105b7ff:        vmovapd 0x20(%rsp),%xmm0
+    0.00 :   105b805:        vandpd -0x5742d(%rip),%xmm0,%xmm0        # 10043e0 <__anon_2214+0xb0>
+    0.97 :   105b80d:        vmovupd %xmm0,0x20(%rax,%rcx,1)
+    0.00 :   105b813:        mov    %rax,0x78(%r14)
+    0.00 :   105b817:        inc    %r12
+    0.00 :   105b81a:        mov    %r12,0x80(%r14)
+    0.00 :   105b821:        mov    %r11,%rsi
+    0.00 :   105b824:        dec    %rsi
+    0.00 :   105b827:        jo     105e459 <my.vm::run+0x3369>
+    0.00 :   105b82d:        mov    0x88(%r14),%rax
+    0.82 :   105b834:        mov    0x8(%rax),%rdx
+    0.82 :   105b838:        cmp    %rdx,%rsi
+    0.00 :   105b83b:        jb     105d07a <my.vm::run+0x1f8a>
+    0.00 :   105b841:        mov    %rsi,%rcx
+    0.00 :   105b844:        sar    $0x3f,%rcx
+    0.00 :   105b848:        and    %rdx,%rcx
+    0.00 :   105b84b:        add    %rsi,%rcx
+    0.00 :   105b84e:        cmp    %rdx,%rcx
+    0.00 :   105b851:        jb     105d07d <my.vm::run+0x1f8d>
+    0.00 :   105b857:        jmp    105e73b <my.vm::run+0x364b>
+    0.00 :   105b85c:        lea    0x68(%rsp),%rdi
+    0.00 :   105b861:        mov    %r14,%rsi
+    0.00 :   105b864:        mov    %r10,%rdx
+    0.00 :   105b867:        mov    %rbx,%rcx
+    0.00 :   105b86a:        call   1063000 <my.vm::read_byte>
+    0.00 :   105b86f:        mov    0x68(%rsp),%rdx
+    0.00 :   105b874:        mov    0x70(%rsp),%rsi
+    0.00 :   105b879:        mov    %r14,%rbp
+    0.00 :   105b87c:        mov    0x78(%rsp),%rax
+    0.00 :   105b881:        mov    %rax,0x18(%rsp)
+    0.00 :   105b886:        mov    0x80(%rsp),%rbx
+    0.00 :   105b88e:        mov    0x88(%rsp),%r12
+    0.00 :   105b896:        mov    %r14,%rdi
+    0.00 :   105b899:        mov    %rsi,%r14
+    0.00 :   105b89c:        call   106a030 <my.heap::closure_upvalue>
+    0.00 :   105b8a1:        mov    %rax,%r15
+    0.00 :   105b8a4:        lea    0x328(%rsp),%rdi
+    0.00 :   105b8ac:        mov    %rbp,%rsi
+    0.00 :   105b8af:        mov    %rax,%rdx
+    0.00 :   105b8b2:        call   1069f30 <my.heap::upvalue_obj>
+    0.00 :   105b8b7:        mov    0x328(%rsp),%rax
+    0.00 :   105b8bf:        mov    0x78(%rbp),%rdi
+    0.00 :   105b8c3:        mov    0x80(%rbp),%rcx
+    0.00 :   105b8ca:        mov    %rcx,%rsi
+    0.00 :   105b8cd:        dec    %rsi
+    0.00 :   105b8d0:        seto   %dl
+    0.00 :   105b8d3:        cmp    $0xffffffffffffffff,%rax
+    0.00 :   105b8d7:        mov    %rbx,0x20(%rsp)
+    0.00 :   105b8dc:        je     105d15e <my.vm::run+0x206e>
+    0.00 :   105b8e2:        test   %dl,%dl
+    0.00 :   105b8e4:        jne    105e4b3 <my.vm::run+0x33c3>
+    0.00 :   105b8ea:        mov    0x8(%rdi),%rdx
+    0.00 :   105b8ee:        cmp    %rdx,%rsi
+    0.00 :   105b8f1:        mov    %r12,%r9
+    0.00 :   105b8f4:        jae    105dab7 <my.vm::run+0x29c7>
+    0.00 :   105b8fa:        mov    %rsi,%rcx
+    0.00 :   105b8fd:        shl    $0x4,%rcx
+    0.00 :   105b901:        vmovupd 0x20(%rdi,%rcx,1),%xmm0
+    0.00 :   105b907:        mov    %r14,%rbp
+    0.00 :   105b90a:        cmp    %rdx,%rax
+    0.00 :   105b90d:        jae    105dad2 <my.vm::run+0x29e2>
+    0.00 :   105b913:        mov    %rax,%rcx
+    0.00 :   105b916:        add    $0x20,%rdi
+    0.00 :   105b91a:        shl    $0x4,%rcx
+    0.00 :   105b91e:        vandpd -0x57546(%rip),%xmm0,%xmm0        # 10043e0 <__anon_2214+0xb0>
+    0.00 :   105b926:        vmovupd %xmm0,(%rdi,%rcx,1)
+    0.00 :   105b92b:        jmp    105d20e <my.vm::run+0x211e>
+    0.42 :   105b930:        mov    %rbp,%r12
+    0.53 :   105b933:        dec    %r12
+    0.00 :   105b936:        jo     105e357 <my.vm::run+0x3267>
+    0.00 :   105b93c:        mov    %r12,0x80(%r14)
+    0.00 :   105b943:        mov    0x78(%r14),%rax
+    0.00 :   105b947:        mov    0x8(%rax),%rdx
+    1.00 :   105b94b:        cmp    %rdx,%r12
+    0.00 :   105b94e:        jb     105d5a0 <my.vm::run+0x24b0>
+    0.00 :   105b954:        mov    %r12,%rax
+    0.00 :   105b957:        sar    $0x3f,%rax
+    0.00 :   105b95b:        and    %rdx,%rax
+    0.00 :   105b95e:        add    %r12,%rax
+    0.00 :   105b961:        cmp    %rdx,%rax
+    0.00 :   105b964:        jb     105d5a0 <my.vm::run+0x24b0>
+    0.00 :   105b96a:        jmp    105e7bc <my.vm::run+0x36cc>
+    0.00 :   105b96f:        mov    %r8,0x20(%rsp)
+    0.00 :   105b974:        mov    0x80(%r14),%rsi
+    0.00 :   105b97b:        mov    %rsi,%rax
+    0.00 :   105b97e:        dec    %rax
+    0.00 :   105b981:        jo     105e121 <my.vm::run+0x3031>
+    0.00 :   105b987:        mov    %rbx,%r12
+    0.00 :   105b98a:        mov    0x78(%r14),%rbx
+    0.00 :   105b98e:        mov    0x8(%rbx),%rdx
+    0.00 :   105b992:        mov    %rax,%r13
+    0.00 :   105b995:        cmp    %rdx,%rax
+    0.00 :   105b998:        jae    105d742 <my.vm::run+0x2652>
+    0.00 :   105b99e:        mov    %rax,0x50(%rsp)
+    0.00 :   105b9a3:        shl    $0x4,%r13
+    0.00 :   105b9a7:        cmpb   $0x3,0x20(%rbx,%r13,1)
+    0.00 :   105b9ad:        jne    105cf6e <my.vm::run+0x1e7e>
+    0.00 :   105b9b3:        mov    0x28(%rbx,%r13,1),%r15
+    0.00 :   105b9b8:        mov    (%r14),%rax
+    0.00 :   105b9bb:        mov    0x8(%rax),%rdx
+    0.00 :   105b9bf:        mov    %r15,%rcx
+    0.00 :   105b9c2:        cmp    %rdx,%r15
+    0.00 :   105b9c5:        jae    105daed <my.vm::run+0x29fd>
+    0.00 :   105b9cb:        imul   $0x38,%rcx,%rcx
+    0.00 :   105b9cf:        cmpl   $0x7,0x20(%rax,%rcx,1)
+    0.00 :   105b9d4:        jne    105cf6e <my.vm::run+0x1e7e>
+    0.00 :   105b9da:        lea    0x530(%rsp),%rdi
+    0.00 :   105b9e2:        mov    %r14,%rsi
+    0.00 :   105b9e5:        mov    %r10,%rdx
+    0.00 :   105b9e8:        mov    %r12,%rcx
+    0.00 :   105b9eb:        mov    0x20(%rsp),%r8
+    0.00 :   105b9f0:        call   10630c0 <my.vm::read_constant>
+    0.00 :   105b9f5:        movzbl 0x530(%rsp),%eax
+    0.00 :   105b9fd:        cmp    $0x3,%eax
+    0.00 :   105ba00:        jne    105e479 <my.vm::run+0x3389>
+    0.00 :   105ba06:        mov    0x558(%rsp),%rax
+    0.00 :   105ba0e:        mov    %rax,0x10(%rsp)
+    0.00 :   105ba13:        mov    0x550(%rsp),%rax
+    0.00 :   105ba1b:        mov    %rax,0x20(%rsp)
+    0.00 :   105ba20:        mov    0x548(%rsp),%r12
+    0.00 :   105ba28:        mov    0x538(%rsp),%rbp
+    0.00 :   105ba30:        mov    0x540(%rsp),%rax
+    0.00 :   105ba38:        mov    %rax,0x48(%rsp)
+    0.00 :   105ba3d:        mov    %r14,%rdi
+    0.00 :   105ba40:        mov    %rbp,%rsi
+    0.00 :   105ba43:        call   1069b60 <my.heap::string_hash>
+    0.00 :   105ba48:        mov    %r14,%rdi
+    0.00 :   105ba4b:        mov    %r15,%rsi
+    0.00 :   105ba4e:        mov    %rbp,0x18(%rsp)
+    0.00 :   105ba53:        mov    %rbp,%rdx
+    0.00 :   105ba56:        mov    %eax,%ecx
+    0.00 :   105ba58:        call   106a140 <my.heap::instance_field>
+    0.00 :   105ba5d:        cmp    $0x1,%al
+    0.00 :   105ba5f:        jne    105d5e1 <my.vm::run+0x24f1>
+    0.00 :   105ba65:        lea    (%rbx,%r13,1),%rax
+    0.00 :   105ba69:        add    $0x20,%rax
+    0.00 :   105ba6d:        movzbl %dl,%edx
+    0.00 :   105ba70:        mov    %rdx,(%rax)
+    0.00 :   105ba73:        mov    %rcx,0x8(%rax)
+    0.00 :   105ba77:        mov    0x50(%rsp),%rax
+    0.00 :   105ba7c:        inc    %rax
+    0.00 :   105ba7f:        mov    %rax,0x80(%r14)
+    0.00 :   105ba86:        mov    0x90(%r14),%r11
+    0.00 :   105ba8d:        lea    -0x546e8(%rip),%r13        # 10073ac <core_number_pairs+0x14c>
+    0.00 :   105ba94:        jmp    105cfb6 <my.vm::run+0x1ec6>
+    0.00 :   105ba99:        lea    0x348(%rsp),%rdi
+    0.00 :   105baa1:        mov    %r14,%rsi
+    0.00 :   105baa4:        mov    %r10,%rdx
+    0.00 :   105baa7:        mov    %rbx,%rcx
+    0.00 :   105baaa:        call   10630c0 <my.vm::read_constant>
+    0.00 :   105baaf:        movzbl 0x348(%rsp),%eax
+    0.00 :   105bab7:        cmp    $0x3,%eax
+    0.00 :   105baba:        jne    105df34 <my.vm::run+0x2e44>
+    0.00 :   105bac0:        mov    0x80(%r14),%rax
+    0.00 :   105bac7:        mov    %rax,%rsi
+    0.00 :   105baca:        dec    %rsi
+    0.00 :   105bacd:        jo     105e24c <my.vm::run+0x315c>
+    0.00 :   105bad3:        mov    %r14,%rdx
+    0.00 :   105bad6:        mov    0x370(%rsp),%rcx
+    0.00 :   105bade:        mov    0x368(%rsp),%rdi
+    0.00 :   105bae6:        mov    0x360(%rsp),%r14
+    0.00 :   105baee:        mov    0x350(%rsp),%r15
+    0.00 :   105baf6:        mov    0x358(%rsp),%r8
+    0.00 :   105bafe:        mov    0x78(%rdx),%rax
+    0.00 :   105bb02:        mov    0x8(%rax),%rdx
+    0.00 :   105bb06:        cmp    %rdx,%rsi
+    0.00 :   105bb09:        mov    %rcx,0x10(%rsp)
+    0.00 :   105bb0e:        mov    %rdi,0x20(%rsp)
+    0.00 :   105bb13:        mov    %r14,0x18(%rsp)
+    0.00 :   105bb18:        mov    %r8,0x48(%rsp)
+    0.00 :   105bb1d:        jae    105d93c <my.vm::run+0x284c>
+    0.00 :   105bb23:        mov    %rsi,%rcx
+    0.00 :   105bb26:        shl    $0x4,%rcx
+    0.00 :   105bb2a:        mov    0x28(%rax,%rcx,1),%rbx
+    0.00 :   105bb2f:        mov    0x20(%rax,%rcx,1),%ebp
+    0.00 :   105bb33:        mov    0x8(%rsp),%r14
+    0.00 :   105bb38:        mov    %r14,%rdi
+    0.00 :   105bb3b:        mov    %r15,%rsi
+    0.00 :   105bb3e:        call   1069b60 <my.heap::string_hash>
+    0.00 :   105bb43:        mov    0x30(%r14),%rdi
+    0.00 :   105bb47:        mov    0x38(%r14),%rsi
+    0.00 :   105bb4b:        mov    %r15,%rdx
+    0.00 :   105bb4e:        mov    %eax,%ecx
+    0.00 :   105bb50:        mov    %ebp,%r8d
+    0.00 :   105bb53:        mov    %rbx,%r9
+    0.00 :   105bb56:        call   1069c40 <my.table::set>
+    0.00 :   105bb5b:        mov    %rdx,0x30(%r14)
+    0.00 :   105bb5f:        mov    %rcx,0x38(%r14)
+    0.00 :   105bb63:        test   $0x1,%al
+    0.00 :   105bb65:        je     105d137 <my.vm::run+0x2047>
+    0.00 :   105bb6b:        mov    %rdx,%rbx
+    0.00 :   105bb6e:        mov    %rcx,%r12
+    0.00 :   105bb71:        mov    %r14,%rdi
+    0.00 :   105bb74:        mov    %r15,%rsi
+    0.00 :   105bb77:        call   1069b60 <my.heap::string_hash>
+    0.00 :   105bb7c:        mov    %rbx,%rdi
+    0.00 :   105bb7f:        mov    %r12,%rsi
+    0.00 :   105bb82:        mov    %r15,%rdx
+    0.00 :   105bb85:        mov    %eax,%ecx
+    0.00 :   105bb87:        call   1069e30 <my.table::delete>
+    0.00 :   105bb8c:        mov    %rax,0x30(%r14)
+    0.00 :   105bb90:        mov    %rdx,0x38(%r14)
+    0.00 :   105bb94:        mov    %r14,%rdi
+    0.00 :   105bb97:        mov    %r15,%rsi
+    0.00 :   105bb9a:        call   1069970 <my.heap::string_chars>
+    0.00 :   105bb9f:        mov    %rax,%rbx
+    0.00 :   105bba2:        lea    -0x49609(%rip),%rdi        # 10125a0 <core_number_pairs+0xb340>
+    0.00 :   105bba9:        mov    %rax,%rsi
+    0.00 :   105bbac:        call   102f2c0 <myl_core_bytes_concat>
+    0.00 :   105bbb1:        mov    %rax,%r15
+    0.00 :   105bbb4:        mov    %rbx,%rdi
+    0.00 :   105bbb7:        call   1023ec0 <myl_core_drop_owned>
+    0.00 :   105bbbc:        lea    -0x495e3(%rip),%rsi        # 10125e0 <core_number_pairs+0xb380>
+    0.00 :   105bbc3:        mov    %r15,%rdi
+    0.00 :   105bbc6:        call   102f2c0 <myl_core_bytes_concat>
+    0.00 :   105bbcb:        mov    %rax,%rbx
+    0.00 :   105bbce:        mov    %r15,%rdi
+    0.00 :   105bbd1:        call   1023ec0 <myl_core_drop_owned>
+    0.00 :   105bbd6:        lea    0x68(%rsp),%rdi
+    0.00 :   105bbdb:        mov    %r14,%rsi
+    0.00 :   105bbde:        mov    0x38(%rsp),%rdx
+    0.00 :   105bbe3:        mov    %rbx,%rcx
+    0.00 :   105bbe6:        call   1062b80 <my.vm::runtime_error>
+    0.00 :   105bbeb:        mov    %rbx,%rdi
+    0.00 :   105bbee:        call   1023ec0 <myl_core_drop_owned>
+    0.00 :   105bbf3:        testb  $0x1,0x68(%rsp)
+    0.00 :   105bbf8:        mov    0x48(%rsp),%r10
+    0.00 :   105bbfd:        je     105dd49 <my.vm::run+0x2c59>
+    0.00 :   105bc03:        mov    0x80(%r14),%r12
+    0.00 :   105bc0a:        mov    0x90(%r14),%r11
+    0.00 :   105bc11:        mov    0x10(%rsp),%r9
+    0.00 :   105bc16:        jmp    105be03 <my.vm::run+0xd13>
+    0.00 :   105bc1b:        mov    0x78(%r14),%rax
+    0.00 :   105bc1f:        mov    0x8(%rax),%rdx
+    0.00 :   105bc23:        mov    %rbp,%rcx
+    0.00 :   105bc26:        cmp    %rdx,%rbp
+    0.00 :   105bc29:        jae    105d69d <my.vm::run+0x25ad>
+    0.00 :   105bc2f:        shl    $0x4,%rcx
+    0.00 :   105bc33:        movq   $0x1,0x20(%rax,%rcx,1)
+    0.00 :   105bc3c:        movb   $0x1,0x28(%rax,%rcx,1)
+    0.00 :   105bc41:        mov    %rax,0x78(%r14)
+    0.00 :   105bc45:        mov    %rbp,%r12
+    0.00 :   105bc48:        inc    %r12
+    0.00 :   105bc4b:        jno    105c028 <my.vm::run+0xf38>
+    0.00 :   105bc51:        jmp    105e1b9 <my.vm::run+0x30c9>
+    0.00 :   105bc56:        mov    %rbp,%rsi
+    0.00 :   105bc59:        dec    %rsi
+    0.00 :   105bc5c:        jo     105e191 <my.vm::run+0x30a1>
+    0.00 :   105bc62:        mov    %rsi,0x80(%r14)
+    0.00 :   105bc69:        mov    0x78(%r14),%rax
+    0.00 :   105bc6d:        mov    0x8(%rax),%rdx
+    0.00 :   105bc71:        mov    %rsi,%rcx
+    0.00 :   105bc74:        cmp    %rdx,%rsi
+    0.00 :   105bc77:        jae    105d75d <my.vm::run+0x266d>
+    0.00 :   105bc7d:        mov    %rsi,%r12
+    0.00 :   105bc80:        dec    %r12
+    0.00 :   105bc83:        jo     105e16c <my.vm::run+0x307c>
+    0.00 :   105bc89:        mov    %r8,%r11
+    0.00 :   105bc8c:        mov    %r10,%rbp
+    0.00 :   105bc8f:        shl    $0x4,%rcx
+    0.00 :   105bc93:        movzbl 0x20(%rax,%rcx,1),%r8d
+    0.00 :   105bc99:        mov    0x28(%rax,%rcx,1),%rdi
+    0.00 :   105bc9e:        mov    %r12,0x80(%r14)
+    0.00 :   105bca5:        mov    %r12,%rcx
+    0.00 :   105bca8:        cmp    %rdx,%r12
+    0.00 :   105bcab:        jae    105d85f <my.vm::run+0x276f>
+    0.00 :   105bcb1:        lea    0x20(%rax),%rdx
+    0.00 :   105bcb5:        shl    $0x4,%rcx
+    0.00 :   105bcb9:        movzbl (%rdx,%rcx,1),%r10d
+    0.00 :   105bcbe:        mov    0x8(%rdx,%rcx,1),%rsi
+    0.00 :   105bcc3:        cmp    $0x2,%r10d
+    0.00 :   105bcc7:        je     105d477 <my.vm::run+0x2387>
+    0.00 :   105bccd:        cmp    $0x1,%r10d
+    0.00 :   105bcd1:        je     105d45c <my.vm::run+0x236c>
+    0.00 :   105bcd7:        test   %r10d,%r10d
+    0.00 :   105bcda:        jne    105d4aa <my.vm::run+0x23ba>
+    0.00 :   105bce0:        test   %r8b,%r8b
+    0.00 :   105bce3:        sete   %sil
+    0.00 :   105bce7:        jmp    105d521 <my.vm::run+0x2431>
+    0.00 :   105bcec:        mov    0x78(%r14),%rax
+    0.00 :   105bcf0:        mov    0x8(%rax),%rdx
+    0.00 :   105bcf4:        mov    %rbp,%rcx
+    0.00 :   105bcf7:        cmp    %rdx,%rbp
+    0.00 :   105bcfa:        jae    105d6b8 <my.vm::run+0x25c8>
+    0.00 :   105bd00:        shl    $0x4,%rcx
+    0.00 :   105bd04:        movq   $0x1,0x20(%rax,%rcx,1)
+    0.00 :   105bd0d:        movb   $0x0,0x28(%rax,%rcx,1)
+    0.00 :   105bd12:        mov    %rax,0x78(%r14)
+    0.00 :   105bd16:        mov    %rbp,%r12
+    0.00 :   105bd19:        inc    %r12
+    0.00 :   105bd1c:        jno    105c028 <my.vm::run+0xf38>
+    0.00 :   105bd22:        jmp    105e409 <my.vm::run+0x3319>
+    1.69 :   105bd27:        lea    0x348(%rsp),%rdi
+    0.00 :   105bd2f:        mov    %r14,%rsi
+    0.00 :   105bd32:        mov    %r10,%rdx
+    0.00 :   105bd35:        mov    %rbx,%rcx
+    0.00 :   105bd38:        call   10630c0 <my.vm::read_constant>
+    0.16 :   105bd3d:        movzbl 0x348(%rsp),%eax
+    1.31 :   105bd45:        cmp    $0x3,%eax
+    0.00 :   105bd48:        jne    105df6e <my.vm::run+0x2e7e>
+    0.43 :   105bd4e:        mov    0x370(%rsp),%rax
+    0.00 :   105bd56:        mov    %rax,0x10(%rsp)
+    0.00 :   105bd5b:        mov    0x368(%rsp),%rax
+    0.00 :   105bd63:        mov    %rax,0x20(%rsp)
+    0.00 :   105bd68:        mov    0x360(%rsp),%rax
+    0.00 :   105bd70:        mov    %rax,0x18(%rsp)
+    0.00 :   105bd75:        mov    0x350(%rsp),%r15
+    0.10 :   105bd7d:        mov    0x358(%rsp),%rbp
+    0.45 :   105bd85:        mov    0x30(%r14),%rbx
+    0.00 :   105bd89:        mov    0x38(%r14),%r12
+    0.00 :   105bd8d:        mov    %r14,%rdi
+    0.00 :   105bd90:        mov    %r15,%rsi
+    0.10 :   105bd93:        call   1069b60 <my.heap::string_hash>
+    0.00 :   105bd98:        mov    %rbx,%rdi
+    0.00 :   105bd9b:        mov    %r12,%rsi
+    0.00 :   105bd9e:        mov    %r15,%rdx
+    0.57 :   105bda1:        mov    %eax,%ecx
+    0.00 :   105bda3:        call   1069a50 <my.table::get>
+    0.00 :   105bda8:        cmp    $0x1,%al
+    0.00 :   105bdaa:        jne    105d0b5 <my.vm::run+0x1fc5>
+    0.00 :   105bdb0:        mov    0x78(%r14),%rdi
+    0.14 :   105bdb4:        mov    0x80(%r14),%rsi
+    0.00 :   105bdbb:        mov    0x8(%rdi),%rax
+    0.00 :   105bdbf:        mov    %rsi,%r8
+    0.00 :   105bdc2:        cmp    %rax,%rsi
+    0.00 :   105bdc5:        jae    105db23 <my.vm::run+0x2a33>
+    0.00 :   105bdcb:        shl    $0x4,%r8
+    0.00 :   105bdcf:        movzbl %dl,%eax
+    0.00 :   105bdd2:        mov    %rax,0x20(%rdi,%r8,1)
+    0.24 :   105bdd7:        mov    %rcx,0x28(%rdi,%r8,1)
+    0.73 :   105bddc:        mov    %rsi,%r12
+    0.03 :   105bddf:        inc    %r12
+    0.00 :   105bde2:        mov    0x10(%rsp),%r9
+    0.00 :   105bde7:        jo     105e4d8 <my.vm::run+0x33e8>
+    0.00 :   105bded:        mov    %rbp,%r10
+    0.00 :   105bdf0:        mov    0x8(%rsp),%r14
+    0.00 :   105bdf5:        mov    %r12,0x80(%r14)
+    0.75 :   105bdfc:        mov    0x90(%r14),%r11
+    0.19 :   105be03:        mov    0x20(%rsp),%r8
+    0.05 :   105be08:        mov    0x18(%rsp),%rbx
+    0.00 :   105be0d:        jmp    105d5a0 <my.vm::run+0x24b0>
+    0.00 :   105be12:        lea    0x2b0(%rsp),%rdi
+    2.06 :   105be1a:        mov    %r14,%rsi
+    0.00 :   105be1d:        mov    %r10,%rdx
+    0.00 :   105be20:        mov    %rbx,%rcx
+    0.00 :   105be23:        call   10630c0 <my.vm::read_constant>
+    0.69 :   105be28:        vmovapd 0x2b0(%rsp),%xmm0
+    2.55 :   105be31:        mov    0x2c0(%rsp),%r10
+    0.00 :   105be39:        mov    0x2c8(%rsp),%rbx
+    0.00 :   105be41:        mov    0x2d0(%rsp),%r8
+    0.00 :   105be49:        mov    0x2d8(%rsp),%r9
+    0.00 :   105be51:        mov    0x78(%r14),%rax
+    0.47 :   105be55:        mov    0x8(%rax),%rdx
+    0.00 :   105be59:        mov    %rbp,%rcx
+    0.00 :   105be5c:        cmp    %rdx,%rbp
+    0.00 :   105be5f:        jae    105d6d3 <my.vm::run+0x25e3>
+    0.67 :   105be65:        shl    $0x4,%rcx
+    0.00 :   105be69:        vandpd -0x57a91(%rip),%xmm0,%xmm0        # 10043e0 <__anon_2214+0xb0>
+    2.06 :   105be71:        vmovupd %xmm0,0x20(%rax,%rcx,1)
+    0.35 :   105be77:        mov    %rax,0x78(%r14)
+    0.00 :   105be7b:        mov    %rbp,%r12
+    0.34 :   105be7e:        inc    %r12
+    0.00 :   105be81:        jo     105e312 <my.vm::run+0x3222>
+    0.00 :   105be87:        mov    %r15,%r11
+    0.00 :   105be8a:        mov    %r12,0x80(%r14)
+    0.00 :   105be91:        jmp    105d5a0 <my.vm::run+0x24b0>
+    0.00 :   105be96:        mov    0x78(%r14),%rax
+    0.00 :   105be9a:        mov    0x8(%rax),%rdx
+    0.00 :   105be9e:        mov    %rbp,%rcx
+    0.00 :   105bea1:        cmp    %rdx,%rbp
+    0.00 :   105bea4:        jae    105d6ee <my.vm::run+0x25fe>
+    0.00 :   105beaa:        shl    $0x4,%rcx
+    0.00 :   105beae:        movq   $0x0,0x20(%rax,%rcx,1)
+    0.00 :   105beb7:        mov    %rax,0x78(%r14)
+    0.00 :   105bebb:        mov    %rbp,%r12
+    0.00 :   105bebe:        inc    %r12
+    0.00 :   105bec1:        jno    105c028 <my.vm::run+0xf38>
+    0.00 :   105bec7:        jmp    105e3b9 <my.vm::run+0x32c9>
+    0.00 :   105becc:        lea    0x1e8(%rsp),%rdi
+    0.00 :   105bed4:        mov    %r14,%rsi
+    0.00 :   105bed7:        mov    %r10,%rdx
+    0.00 :   105beda:        mov    %rbx,%rcx
+    0.00 :   105bedd:        call   1063790 <my.vm::read_short>
+    0.00 :   105bee2:        mov    0x1e8(%rsp),%rdx
+    0.00 :   105beea:        mov    0x200(%rsp),%rsi
+    0.00 :   105bef2:        mov    %rsi,%r8
+    0.00 :   105bef5:        add    %rdx,%r8
+    0.00 :   105bef8:        jo     105e20d <my.vm::run+0x311d>
+    0.00 :   105befe:        mov    0x1f0(%rsp),%r10
+    0.00 :   105bf06:        mov    0x1f8(%rsp),%rbx
+    0.00 :   105bf0e:        mov    0x208(%rsp),%r9
+    0.00 :   105bf16:        mov    %r15,%r11
+    0.00 :   105bf19:        mov    %rbp,%r12
+    0.00 :   105bf1c:        jmp    105d5a0 <my.vm::run+0x24b0>
+    0.00 :   105bf21:        mov    %rbx,0x18(%rsp)
+    0.00 :   105bf26:        mov    %rbp,%r12
+    0.00 :   105bf29:        dec    %r12
+    0.00 :   105bf2c:        jo     105e3a5 <my.vm::run+0x32b5>
+    0.00 :   105bf32:        mov    %r8,%rbx
+    0.00 :   105bf35:        mov    %r10,%rbp
+    0.00 :   105bf38:        mov    %r9,0x10(%rsp)
+    0.00 :   105bf3d:        mov    0x8(%rsp),%r14
+    0.00 :   105bf42:        mov    %r12,0x80(%r14)
+    0.00 :   105bf49:        mov    0x78(%r14),%rax
+    0.00 :   105bf4d:        mov    0x8(%rax),%rdx
+    0.00 :   105bf51:        mov    %r12,%rsi
+    0.00 :   105bf54:        cmp    %rdx,%r12
+    0.00 :   105bf57:        jae    105d778 <my.vm::run+0x2688>
+    0.00 :   105bf5d:        shl    $0x4,%rsi
+    0.00 :   105bf61:        mov    0x28(%rax,%rsi,1),%rcx
+    0.00 :   105bf66:        mov    0x20(%rax,%rsi,1),%edx
+    0.00 :   105bf6a:        mov    %r14,%rdi
+    0.00 :   105bf6d:        mov    0x38(%rsp),%rsi
+    0.00 :   105bf72:        call   1063400 <my.output::print_value>
+    0.00 :   105bf77:        mov    0x10(%rsp),%r9
+    0.00 :   105bf7c:        mov    %rbx,%r8
+    0.00 :   105bf7f:        mov    0x18(%rsp),%rbx
+    0.00 :   105bf84:        mov    %r15,%r11
+    0.00 :   105bf87:        jmp    105d58f <my.vm::run+0x249f>
+    1.38 :   105bf8c:        lea    0x238(%rsp),%rdi
+    1.03 :   105bf94:        mov    %r14,%rsi
+    0.00 :   105bf97:        mov    %r10,%rdx
+    0.00 :   105bf9a:        mov    %rbx,%rcx
+    0.00 :   105bf9d:        call   1063000 <my.vm::read_byte>
+    0.00 :   105bfa2:        mov    0x238(%rsp),%rdx
+    0.52 :   105bfaa:        mov    0x258(%rsp),%r9
+    0.00 :   105bfb2:        mov    %r9,%rsi
+    0.00 :   105bfb5:        add    %rdx,%rsi
+    0.04 :   105bfb8:        jo     105e2a8 <my.vm::run+0x31b8>
+    1.18 :   105bfbe:        mov    0x240(%rsp),%r10
+    0.75 :   105bfc6:        mov    0x248(%rsp),%rbx
+    0.00 :   105bfce:        mov    0x250(%rsp),%r8
+    0.00 :   105bfd6:        mov    0x78(%r14),%rax
+    0.29 :   105bfda:        mov    0x8(%rax),%rdx
+    0.14 :   105bfde:        cmp    %rdx,%rsi
+    0.00 :   105bfe1:        jae    105d793 <my.vm::run+0x26a3>
+    0.00 :   105bfe7:        mov    %rsi,%rcx
+    0.00 :   105bfea:        mov    %r15,%r11
+    1.28 :   105bfed:        shl    $0x4,%rcx
+    0.15 :   105bff1:        vmovupd 0x20(%rax,%rcx,1),%xmm0
+    1.42 :   105bff7:        mov    %rbp,%rcx
+    0.00 :   105bffa:        cmp    %rdx,%rbp
+    0.00 :   105bffd:        jae    105d7ea <my.vm::run+0x26fa>
+    0.00 :   105c003:        lea    0x20(%rax),%rdx
+    0.00 :   105c007:        shl    $0x4,%rcx
+    0.00 :   105c00b:        vandpd -0x57c33(%rip),%xmm0,%xmm0        # 10043e0 <__anon_2214+0xb0>
+    2.63 :   105c013:        vmovupd %xmm0,(%rdx,%rcx,1)
+    0.78 :   105c018:        mov    %rax,0x78(%r14)
+    0.00 :   105c01c:        mov    %rbp,%r12
+    0.00 :   105c01f:        inc    %r12
+    0.00 :   105c022:        jo     105e272 <my.vm::run+0x3182>
+    0.00 :   105c028:        mov    %r12,0x80(%r14)
+    0.00 :   105c02f:        jmp    105d5a0 <my.vm::run+0x24b0>
+    0.00 :   105c034:        mov    0x80(%r14),%rsi
+    0.00 :   105c03b:        mov    %rsi,%r15
+    0.00 :   105c03e:        dec    %r15
+    0.00 :   105c041:        jo     105e22a <my.vm::run+0x313a>
+    0.00 :   105c047:        mov    %r8,0x20(%rsp)
+    0.00 :   105c04c:        mov    %r15,%rcx
+    0.00 :   105c04f:        dec    %rcx
+    0.00 :   105c052:        jo     105e1e5 <my.vm::run+0x30f5>
+    0.00 :   105c058:        mov    %rbx,%r12
+    0.00 :   105c05b:        mov    %r10,%rbp
+    0.00 :   105c05e:        mov    %r9,0x10(%rsp)
+    0.00 :   105c063:        mov    0x78(%r14),%rbx
+    0.00 :   105c067:        mov    0x8(%rbx),%rdx
+    0.00 :   105c06b:        mov    %rcx,%rax
+    0.00 :   105c06e:        mov    %rcx,0x50(%rsp)
+    0.00 :   105c073:        cmp    %rdx,%rcx
+    0.00 :   105c076:        jae    105d87a <my.vm::run+0x278a>
+    0.00 :   105c07c:        shl    $0x4,%rax
+    0.00 :   105c080:        movzbl 0x20(%rbx,%rax,1),%ecx
+    0.00 :   105c085:        test   %ecx,%ecx
+    0.00 :   105c087:        je     105d4be <my.vm::run+0x23ce>
+    0.00 :   105c08d:        cmp    $0x1,%ecx
+    0.00 :   105c090:        je     105d49d <my.vm::run+0x23ad>
+    0.00 :   105c096:        cmp    $0x3,%ecx
+    0.00 :   105c099:        jne    105d4cb <my.vm::run+0x23db>
+    0.00 :   105c09f:        mov    0x28(%rbx,%rax,1),%rsi
+    0.00 :   105c0a4:        mov    (%r14),%rax
+    0.00 :   105c0a7:        mov    0x8(%rax),%rdx
+    0.00 :   105c0ab:        mov    %rsi,%rcx
+    0.00 :   105c0ae:        cmp    %rdx,%rsi
+    0.00 :   105c0b1:        mov    0x10(%rsp),%r9
+    0.00 :   105c0b6:        mov    %rbp,%r8
+    0.00 :   105c0b9:        jae    105dbfb <my.vm::run+0x2b0b>
+    0.00 :   105c0bf:        imul   $0x38,%rcx,%rcx
+    0.00 :   105c0c3:        cmpl   $0x7,0x20(%rax,%rcx,1)
+    0.00 :   105c0c8:        jne    105d54c <my.vm::run+0x245c>
+    0.00 :   105c0ce:        mov    %rsi,%rbp
+    0.00 :   105c0d1:        lea    0x158(%rsp),%rdi
+    0.00 :   105c0d9:        mov    %r14,%rsi
+    0.00 :   105c0dc:        mov    %r8,%rdx
+    0.00 :   105c0df:        mov    %r12,%rcx
+    0.00 :   105c0e2:        mov    0x20(%rsp),%r8
+    0.00 :   105c0e7:        call   10630c0 <my.vm::read_constant>
+    0.00 :   105c0ec:        movzbl 0x158(%rsp),%eax
+    0.00 :   105c0f4:        cmp    $0x3,%eax
+    0.00 :   105c0f7:        jne    105e531 <my.vm::run+0x3441>
+    0.00 :   105c0fd:        mov    0x180(%rsp),%rax
+    0.00 :   105c105:        mov    %rax,0x10(%rsp)
+    0.00 :   105c10a:        mov    0x178(%rsp),%rax
+    0.00 :   105c112:        mov    %rax,0x20(%rsp)
+    0.00 :   105c117:        mov    0x170(%rsp),%rax
+    0.00 :   105c11f:        mov    %rax,0x18(%rsp)
+    0.00 :   105c124:        mov    0x160(%rsp),%r12
+    0.00 :   105c12c:        mov    0x168(%rsp),%rax
+    0.00 :   105c134:        mov    %rax,0x48(%rsp)
+    0.00 :   105c139:        mov    %r14,%rdi
+    0.00 :   105c13c:        mov    %r12,%rsi
+    0.00 :   105c13f:        call   1069b60 <my.heap::string_hash>
+    0.00 :   105c144:        mov    0x8(%rbx),%rdx
+    0.00 :   105c148:        mov    %r15,%rcx
+    0.00 :   105c14b:        cmp    %rdx,%r15
+    0.00 :   105c14e:        jae    105dc4c <my.vm::run+0x2b5c>
+    0.00 :   105c154:        lea    0x20(%rbx),%r13
+    0.00 :   105c158:        shl    $0x4,%rcx
+    0.00 :   105c15c:        mov    0x8(%r13,%rcx,1),%r9
+    0.00 :   105c161:        mov    0x0(%r13,%rcx,1),%r8d
+    0.00 :   105c166:        mov    %r14,%rdi
+    0.00 :   105c169:        mov    %rbp,%rsi
+    0.00 :   105c16c:        mov    %r12,%rdx
+    0.00 :   105c16f:        mov    %eax,%ecx
+    0.00 :   105c171:        call   106a310 <my.heap::set_instance_field>
+    0.00 :   105c176:        mov    0x8(%rbx),%rdx
+    0.00 :   105c17a:        cmp    %rdx,%r15
+    0.00 :   105c17d:        jae    105dc67 <my.vm::run+0x2b77>
+    0.00 :   105c183:        mov    %r15,%rax
+    0.00 :   105c186:        mov    0x10(%rsp),%r9
+    0.00 :   105c18b:        mov    0x48(%rsp),%r10
+    0.00 :   105c190:        shl    $0x4,%rax
+    0.00 :   105c194:        vmovupd 0x0(%r13,%rax,1),%xmm0
+    0.00 :   105c19b:        mov    0x50(%rsp),%r12
+    0.00 :   105c1a0:        mov    %r12,%rax
+    0.00 :   105c1a3:        cmp    %rdx,%r12
+    0.00 :   105c1a6:        mov    0x20(%rsp),%r8
+    0.00 :   105c1ab:        mov    0x18(%rsp),%rbx
+    0.00 :   105c1b0:        jae    105dc8c <my.vm::run+0x2b9c>
+    0.00 :   105c1b6:        vandpd -0x57dde(%rip),%xmm0,%xmm0        # 10043e0 <__anon_2214+0xb0>
+    0.00 :   105c1be:        shl    $0x4,%rax
+    0.00 :   105c1c2:        vmovupd %xmm0,0x0(%r13,%rax,1)
+    0.00 :   105c1c9:        inc    %r12
+    0.00 :   105c1cc:        mov    0x8(%rsp),%r14
+    0.00 :   105c1d1:        mov    %r12,0x80(%r14)
+    0.00 :   105c1d8:        mov    0x90(%r14),%r11
+    0.00 :   105c1df:        lea    -0x54e3a(%rip),%r13        # 10073ac <core_number_pairs+0x14c>
+    0.00 :   105c1e6:        jmp    105d5a0 <my.vm::run+0x24b0>
+    0.00 :   105c1eb:        lea    0x210(%rsp),%rdi
+    0.00 :   105c1f3:        mov    %r14,%rsi
+    0.00 :   105c1f6:        mov    %r10,%rdx
+    0.00 :   105c1f9:        mov    %rbx,%rcx
+    0.00 :   105c1fc:        call   1063000 <my.vm::read_byte>
+    0.00 :   105c201:        mov    %rbp,%r12
+    0.00 :   105c204:        mov    %rbp,%rsi
+    0.00 :   105c207:        dec    %rsi
+    0.00 :   105c20a:        jo     105e17d <my.vm::run+0x308d>
+    0.00 :   105c210:        mov    0x210(%rsp),%rax
+    0.00 :   105c218:        mov    0x218(%rsp),%r10
+    0.00 :   105c220:        mov    0x220(%rsp),%rbx
+    0.00 :   105c228:        mov    0x228(%rsp),%r8
+    0.00 :   105c230:        mov    0x230(%rsp),%r9
+    0.00 :   105c238:        mov    0x78(%r14),%rcx
+    0.00 :   105c23c:        mov    0x8(%rcx),%rdx
+    0.00 :   105c240:        cmp    %rdx,%rsi
+    0.00 :   105c243:        jae    105d7b1 <my.vm::run+0x26c1>
+    0.00 :   105c249:        mov    %rsi,%rdi
+    0.00 :   105c24c:        mov    %r15,%r11
+    0.00 :   105c24f:        mov    %r9,%rsi
+    0.00 :   105c252:        add    %rax,%rsi
+    0.00 :   105c255:        jo     105e146 <my.vm::run+0x3056>
+    0.00 :   105c25b:        shl    $0x4,%rdi
+    0.00 :   105c25f:        vmovupd 0x20(%rcx,%rdi,1),%xmm0
+    0.00 :   105c265:        cmp    %rdx,%rsi
+    0.00 :   105c268:        jae    105d89a <my.vm::run+0x27aa>
+    0.00 :   105c26e:        mov    %rsi,%rax
+    0.00 :   105c271:        lea    0x20(%rcx),%rdx
+    0.00 :   105c275:        shl    $0x4,%rax
+    0.00 :   105c279:        vandpd -0x57ea1(%rip),%xmm0,%xmm0        # 10043e0 <__anon_2214+0xb0>
+    0.00 :   105c281:        vmovupd %xmm0,(%rdx,%rax,1)
+    0.00 :   105c286:        mov    %rcx,0x78(%r14)
+    0.00 :   105c28a:        jmp    105d5a0 <my.vm::run+0x24b0>
+    0.00 :   105c28f:        lea    0x68(%rsp),%rdi
+    0.00 :   105c294:        mov    %r14,%rsi
+    0.00 :   105c297:        mov    %r10,%rdx
+    0.00 :   105c29a:        mov    %rbx,%rcx
+    0.00 :   105c29d:        call   1063000 <my.vm::read_byte>
+    0.00 :   105c2a2:        mov    0x68(%rsp),%rdx
+    0.00 :   105c2a7:        mov    0x70(%rsp),%rsi
+    0.00 :   105c2ac:        mov    %r14,%r12
+    0.00 :   105c2af:        mov    0x78(%rsp),%r14
+    0.00 :   105c2b4:        mov    0x80(%rsp),%rbx
+    0.00 :   105c2bc:        mov    0x88(%rsp),%r15
+    0.00 :   105c2c4:        mov    %r12,%rdi
+    0.00 :   105c2c7:        mov    %rsi,%rbp
+    0.00 :   105c2ca:        call   106a030 <my.heap::closure_upvalue>
+    0.00 :   105c2cf:        lea    0x2e8(%rsp),%rdi
+    0.00 :   105c2d7:        mov    %r12,%rsi
+    0.00 :   105c2da:        mov    %rax,%rdx
+    0.00 :   105c2dd:        call   1069f30 <my.heap::upvalue_obj>
+    0.00 :   105c2e2:        mov    0x2e8(%rsp),%rsi
+    0.00 :   105c2ea:        cmp    $0xffffffffffffffff,%rsi
+    0.00 :   105c2ee:        je     105d230 <my.vm::run+0x2140>
+    0.00 :   105c2f4:        mov    0x78(%r12),%rax
+    0.00 :   105c2f9:        mov    0x8(%rax),%rdx
+    0.00 :   105c2fd:        cmp    %rdx,%rsi
+    0.00 :   105c300:        jae    105da78 <my.vm::run+0x2988>
+    0.00 :   105c306:        mov    %rsi,%rcx
+    0.00 :   105c309:        mov    %r15,%r9
+    0.00 :   105c30c:        mov    %rbx,%r8
+    0.00 :   105c30f:        mov    %rbp,%r10
+    0.00 :   105c312:        shl    $0x4,%rcx
+    0.00 :   105c316:        vmovupd 0x20(%rax,%rcx,1),%xmm0
+    0.00 :   105c31c:        mov    0x8(%rsp),%rcx
+    0.00 :   105c321:        mov    0x80(%rcx),%rsi
+    0.00 :   105c328:        mov    %rsi,%rcx
+    0.00 :   105c32b:        cmp    %rdx,%rsi
+    0.00 :   105c32e:        mov    %r14,%rbx
+    0.00 :   105c331:        jae    105da9c <my.vm::run+0x29ac>
+    0.00 :   105c337:        add    $0x20,%rax
+    0.00 :   105c33b:        shl    $0x4,%rcx
+    0.00 :   105c33f:        vandpd -0x57f67(%rip),%xmm0,%xmm0        # 10043e0 <__anon_2214+0xb0>
+    0.00 :   105c347:        vmovupd %xmm0,(%rax,%rcx,1)
+    0.00 :   105c34c:        mov    %rsi,%r12
+    0.00 :   105c34f:        inc    %r12
+    0.00 :   105c352:        jno    105d287 <my.vm::run+0x2197>
+    0.00 :   105c358:        jmp    105e4c7 <my.vm::run+0x33d7>
+    0.00 :   105c35d:        mov    %rbp,%rsi
+    0.00 :   105c360:        dec    %rsi
+    0.00 :   105c363:        jo     105e3f5 <my.vm::run+0x3305>
+    0.00 :   105c369:        mov    0x78(%r14),%rax
+    0.00 :   105c36d:        mov    0x8(%rax),%rdx
+    0.00 :   105c371:        cmp    %rdx,%rsi
+    0.00 :   105c374:        jae    105d7cf <my.vm::run+0x26df>
+    0.00 :   105c37a:        mov    %rsi,%rcx
+    0.00 :   105c37d:        shl    $0x4,%rcx
+    0.00 :   105c381:        mov    0x20(%rax,%rcx,1),%r15
+    0.00 :   105c386:        mov    0x28(%rax,%rcx,1),%r12
+    0.00 :   105c38b:        lea    0x68(%rsp),%rdi
+    0.00 :   105c390:        mov    %r14,%rsi
+    0.00 :   105c393:        mov    %r10,%rdx
+    0.00 :   105c396:        mov    %rbx,%rcx
+    0.00 :   105c399:        call   10630c0 <my.vm::read_constant>
+    0.00 :   105c39e:        movzbl 0x68(%rsp),%eax
+    0.00 :   105c3a3:        cmp    $0x3,%eax
+    0.00 :   105c3a6:        jne    105dec0 <my.vm::run+0x2dd0>
+    0.00 :   105c3ac:        mov    0x90(%rsp),%r13
+    0.00 :   105c3b4:        mov    0x88(%rsp),%rax
+    0.00 :   105c3bc:        mov    %rax,0x20(%rsp)
+    0.00 :   105c3c1:        mov    0x80(%rsp),%rax
+    0.00 :   105c3c9:        mov    %rax,0x18(%rsp)
+    0.00 :   105c3ce:        mov    0x70(%rsp),%rbx
+    0.00 :   105c3d3:        mov    0x78(%rsp),%rbp
+    0.00 :   105c3d8:        mov    %r14,%rdi
+    0.00 :   105c3db:        mov    %rbx,%rsi
+    0.00 :   105c3de:        call   1069b60 <my.heap::string_hash>
+    0.00 :   105c3e3:        mov    0x30(%r14),%rdi
+    0.00 :   105c3e7:        mov    0x38(%r14),%rsi
+    0.00 :   105c3eb:        mov    %rbx,%rdx
+    0.00 :   105c3ee:        mov    %eax,%ecx
+    0.00 :   105c3f0:        mov    %r15d,%r8d
+    0.00 :   105c3f3:        mov    %r12,%r9
+    0.00 :   105c3f6:        call   1069c40 <my.table::set>
+    0.00 :   105c3fb:        mov    %rdx,0x30(%r14)
+    0.00 :   105c3ff:        mov    %rcx,0x38(%r14)
+    0.00 :   105c403:        mov    0x80(%r14),%rsi
+    0.00 :   105c40a:        mov    %rsi,%r12
+    0.00 :   105c40d:        dec    %r12
+    0.00 :   105c410:        jo     105e2d9 <my.vm::run+0x31e9>
+    0.00 :   105c416:        mov    %r12,0x80(%r14)
+    0.00 :   105c41d:        mov    0x78(%r14),%rax
+    0.00 :   105c421:        mov    0x90(%r14),%r11
+    0.00 :   105c428:        mov    0x8(%rax),%rdx
+    0.00 :   105c42c:        cmp    %rdx,%r12
+    0.00 :   105c42f:        mov    %r13,%r9
+    0.00 :   105c432:        mov    %rbp,%r10
+    0.00 :   105c435:        jae    105d98d <my.vm::run+0x289d>
+    0.00 :   105c43b:        lea    -0x55096(%rip),%r13        # 10073ac <core_number_pairs+0x14c>
+    0.00 :   105c442:        mov    0x20(%rsp),%r8
+    0.00 :   105c447:        mov    0x18(%rsp),%rbx
+    0.00 :   105c44c:        mov    0x8(%rsp),%r14
+    0.00 :   105c451:        jmp    105d5a0 <my.vm::run+0x24b0>
+    0.00 :   105c456:        lea    0x68(%rsp),%rdi
+    0.00 :   105c45b:        mov    %r14,%rsi
+    0.00 :   105c45e:        mov    %r10,%rdx
+    0.00 :   105c461:        mov    %rbx,%rcx
+    0.00 :   105c464:        call   10630c0 <my.vm::read_constant>
+    0.00 :   105c469:        movzbl 0x68(%rsp),%eax
+    0.00 :   105c46e:        cmp    $0x3,%eax
+    0.00 :   105c471:        jne    105df8b <my.vm::run+0x2e9b>
+    0.00 :   105c477:        mov    %r14,%rcx
+    0.00 :   105c47a:        mov    0x90(%rsp),%r12
+    0.00 :   105c482:        mov    0x88(%rsp),%rbp
+    0.00 :   105c48a:        mov    0x80(%rsp),%r14
+    0.00 :   105c492:        mov    0x70(%rsp),%rdi
+    0.00 :   105c497:        mov    0x78(%rsp),%rax
+    0.00 :   105c49c:        mov    %rax,0x48(%rsp)
+    0.00 :   105c4a1:        mov    (%rcx),%rax
+    0.00 :   105c4a4:        mov    0x8(%rax),%rdx
+    0.00 :   105c4a8:        mov    %rdi,%rcx
+    0.00 :   105c4ab:        cmp    %rdx,%rdi
+    0.00 :   105c4ae:        jae    105d906 <my.vm::run+0x2816>
+    0.00 :   105c4b4:        mov    %r12,0x10(%rsp)
+    0.00 :   105c4b9:        imul   $0x38,%rcx,%rdx
+    0.00 :   105c4bd:        mov    0x20(%rax,%rdx,1),%ecx
+    0.00 :   105c4c1:        cmp    $0x2,%ecx
+    0.00 :   105c4c4:        jne    105dde7 <my.vm::run+0x2cf7>
+    0.00 :   105c4ca:        add    %rdx,%rax
+    0.00 :   105c4cd:        add    $0x20,%rax
+    0.00 :   105c4d1:        mov    0x10(%rax),%rsi
+    0.00 :   105c4d5:        mov    %rsi,0x50(%rsp)
+    0.00 :   105c4da:        call   105ad70 <my.object::new_closure>
+    0.00 :   105c4df:        mov    %rax,%r15
+    0.00 :   105c4e2:        mov    %rdx,%r12
+    0.00 :   105c4e5:        mov    $0x8,%esi
+    0.00 :   105c4ea:        mov    %rdx,%rdi
+    0.00 :   105c4ed:        call   1023d80 <myl_core_list_copy>
+    0.00 :   105c4f2:        mov    %rax,%rbx
+    0.00 :   105c4f5:        movq   $0x4,0x620(%rsp)
+    0.00 :   105c501:        mov    %r15,0x190(%rsp)
+    0.00 :   105c509:        mov    %r15,0x628(%rsp)
+    0.00 :   105c511:        mov    %rax,0x630(%rsp)
+    0.00 :   105c519:        lea    0x348(%rsp),%rdi
+    0.00 :   105c521:        lea    0x620(%rsp),%rdx
+    0.00 :   105c529:        mov    0x8(%rsp),%r15
+    0.00 :   105c52e:        mov    %r15,%rsi
+    0.00 :   105c531:        call   105a920 <my.heap::allocate>
+    0.00 :   105c536:        mov    %rbx,%rdi
+    0.00 :   105c539:        call   1023ec0 <myl_core_drop_owned>
+    0.00 :   105c53e:        mov    0x348(%rsp),%rdi
+    0.00 :   105c546:        mov    0x78(%r15),%rax
+    0.00 :   105c54a:        mov    0x80(%r15),%rsi
+    0.00 :   105c551:        mov    0x8(%rax),%rdx
+    0.00 :   105c555:        mov    %rsi,%rcx
+    0.00 :   105c558:        cmp    %rdx,%rsi
+    0.00 :   105c55b:        jae    105da0f <my.vm::run+0x291f>
+    0.00 :   105c561:        shl    $0x4,%rcx
+    0.00 :   105c565:        movq   $0x3,0x20(%rax,%rcx,1)
+    0.00 :   105c56e:        mov    %rdi,0x28(%rax,%rcx,1)
+    0.00 :   105c573:        mov    %rsi,%rax
+    0.00 :   105c576:        inc    %rax
+    0.00 :   105c579:        jo     105e2b7 <my.vm::run+0x31c7>
+    0.00 :   105c57f:        mov    %rdi,0x188(%rsp)
+    0.00 :   105c587:        mov    0x8(%rsp),%rcx
+    0.00 :   105c58c:        mov    %rax,0x80(%rcx)
+    0.00 :   105c593:        mov    $0x8,%esi
+    0.00 :   105c598:        mov    %r12,%rdi
+    0.00 :   105c59b:        call   1023d80 <myl_core_list_copy>
+    0.00 :   105c5a0:        mov    %rax,0x58(%rsp)
+    0.00 :   105c5a5:        mov    %r12,%rdi
+    0.00 :   105c5a8:        call   1023ec0 <myl_core_drop_owned>
+    0.00 :   105c5ad:        cmpq   $0x0,0x50(%rsp)
+    0.00 :   105c5b3:        mov    %rbp,%r8
+    0.00 :   105c5b6:        mov    %r14,%rcx
+    0.00 :   105c5b9:        jle    105d291 <my.vm::run+0x21a1>
+    0.00 :   105c5bf:        xor    %r15d,%r15d
+    0.00 :   105c5c2:        mov    0x10(%rsp),%r9
+    0.00 :   105c5c7:        mov    0x8(%rsp),%r14
+    0.00 :   105c5cc:        mov    0x48(%rsp),%rdx
+    0.00 :   105c5d1:        jmp    105c61d <my.vm::run+0x152d>
+    0.00 :   105c5d3:        mov    %r12,0x98(%rbx)
+    0.00 :   105c5da:        mov    0x58(%rsp),%rax
+    0.00 :   105c5df:        mov    0x8(%rax),%rdx
+    0.00 :   105c5e3:        cmp    %rdx,%r15
+    0.00 :   105c5e6:        lea    -0x55241(%rip),%r13        # 10073ac <core_number_pairs+0x14c>
+    0.00 :   105c5ed:        mov    0x10(%rsp),%r9
+    0.00 :   105c5f2:        jae    105de29 <my.vm::run+0x2d39>
+    0.00 :   105c5f8:        mov    %r12,0x20(%rax,%r15,8)
+    0.00 :   105c5fd:        inc    %r15
+    0.00 :   105c600:        cmp    0x50(%rsp),%r15
+    0.00 :   105c605:        mov    0x20(%rsp),%r8
+    0.00 :   105c60a:        mov    0x18(%rsp),%rcx
+    0.00 :   105c60f:        mov    0x8(%rsp),%r14
+    0.00 :   105c614:        mov    %rbp,%rdx
+    0.00 :   105c617:        je     105d2a0 <my.vm::run+0x21b0>
+    0.00 :   105c61d:        lea    0x158(%rsp),%rdi
+    0.00 :   105c625:        mov    %r14,%rsi
+    0.00 :   105c628:        call   1063000 <my.vm::read_byte>
+    0.00 :   105c62d:        mov    0x158(%rsp),%rbx
+    0.00 :   105c635:        mov    0x160(%rsp),%rdx
+    0.00 :   105c63d:        mov    0x168(%rsp),%rcx
+    0.00 :   105c645:        mov    0x170(%rsp),%r8
+    0.00 :   105c64d:        mov    0x178(%rsp),%r9
+    0.00 :   105c655:        lea    0x288(%rsp),%rdi
+    0.00 :   105c65d:        mov    %r14,%rsi
+    0.00 :   105c660:        call   1063000 <my.vm::read_byte>
+    0.00 :   105c665:        mov    0x288(%rsp),%rdx
+    0.00 :   105c66d:        mov    0x290(%rsp),%rcx
+    0.00 :   105c675:        mov    0x298(%rsp),%rax
+    0.00 :   105c67d:        mov    %rax,0x18(%rsp)
+    0.00 :   105c682:        mov    0x2a0(%rsp),%rax
+    0.00 :   105c68a:        mov    %rax,0x20(%rsp)
+    0.00 :   105c68f:        mov    0x2a8(%rsp),%rsi
+    0.00 :   105c697:        cmp    $0x1,%rbx
+    0.00 :   105c69b:        jne    105c750 <my.vm::run+0x1660>
+    0.00 :   105c6a1:        mov    %rsi,%rbx
+    0.00 :   105c6a4:        add    %rdx,%rbx
+    0.00 :   105c6a7:        jo     105de1d <my.vm::run+0x2d2d>
+    0.00 :   105c6ad:        mov    %rcx,%rbp
+    0.00 :   105c6b0:        mov    %rsi,0x10(%rsp)
+    0.00 :   105c6b5:        mov    0x8(%rsp),%rsi
+    0.00 :   105c6ba:        mov    0x98(%rsi),%r12
+    0.00 :   105c6c1:        cmp    $0xffffffffffffffff,%r12
+    0.00 :   105c6c5:        je     105c77e <my.vm::run+0x168e>
+    0.00 :   105c6cb:        lea    0x510(%rsp),%rdi
+    0.00 :   105c6d3:        mov    %r12,%rdx
+    0.00 :   105c6d6:        call   1069f30 <my.heap::upvalue_obj>
+    0.00 :   105c6db:        mov    $0xffffffffffffffff,%r13
+    0.00 :   105c6e2:        cmp    %rbx,0x510(%rsp)
+    0.00 :   105c6ea:        jle    105c78e <my.vm::run+0x169e>
+    0.00 :   105c6f0:        mov    0x8(%rsp),%r14
+    0.00 :   105c6f5:        data16 cs nopw 0x0(%rax,%rax,1)
+    0.00 :   105c700:        mov    %r12,%r13
+    0.00 :   105c703:        lea    0x4f0(%rsp),%rdi
+    0.00 :   105c70b:        mov    %r14,%rsi
+    0.00 :   105c70e:        mov    %r12,%rdx
+    0.00 :   105c711:        call   1069f30 <my.heap::upvalue_obj>
+    0.00 :   105c716:        mov    0x508(%rsp),%r12
+    0.00 :   105c71e:        cmp    $0xffffffffffffffff,%r12
+    0.00 :   105c722:        je     105c7b6 <my.vm::run+0x16c6>
+    0.00 :   105c728:        lea    0x4d0(%rsp),%rdi
+    0.00 :   105c730:        mov    %r14,%rsi
+    0.00 :   105c733:        mov    %r12,%rdx
+    0.00 :   105c736:        call   1069f30 <my.heap::upvalue_obj>
+    0.00 :   105c73b:        cmp    %rbx,0x4d0(%rsp)
+    0.00 :   105c743:        jg     105c700 <my.vm::run+0x1610>
+    0.00 :   105c745:        jmp    105c793 <my.vm::run+0x16a3>
+    0.00 :   105c747:        nopw   0x0(%rax,%rax,1)
+    0.00 :   105c750:        mov    %rsi,%rbx
+    0.00 :   105c753:        mov    %r14,%rdi
+    0.00 :   105c756:        mov    %rcx,%rbp
+    0.00 :   105c759:        mov    %rcx,%rsi
+    0.00 :   105c75c:        call   106a030 <my.heap::closure_upvalue>
+    0.00 :   105c761:        mov    %rax,%r12
+    0.00 :   105c764:        mov    0x58(%rsp),%rax
+    0.00 :   105c769:        mov    0x8(%rax),%rdx
+    0.00 :   105c76d:        cmp    %rdx,%r15
+    0.00 :   105c770:        jae    105de0e <my.vm::run+0x2d1e>
+    0.00 :   105c776:        mov    %rbx,%r9
+    0.00 :   105c779:        jmp    105c5f8 <my.vm::run+0x1508>
+    0.00 :   105c77e:        mov    $0xffffffffffffffff,%r12
+    0.00 :   105c785:        mov    $0xffffffffffffffff,%r13
+    0.00 :   105c78c:        jmp    105c7bd <my.vm::run+0x16cd>
+    0.00 :   105c78e:        mov    0x8(%rsp),%r14
+    0.00 :   105c793:        lea    0x4b0(%rsp),%rdi
+    0.00 :   105c79b:        mov    %r14,%rsi
+    0.00 :   105c79e:        mov    %r12,%rdx
+    0.00 :   105c7a1:        call   1069f30 <my.heap::upvalue_obj>
+    0.00 :   105c7a6:        cmp    %rbx,0x4b0(%rsp)
+    0.00 :   105c7ae:        je     105c5da <my.vm::run+0x14ea>
+    0.00 :   105c7b4:        jmp    105c7bd <my.vm::run+0x16cd>
+    0.00 :   105c7b6:        mov    $0xffffffffffffffff,%r12
+    0.00 :   105c7bd:        movq   $0x5,0x530(%rsp)
+    0.00 :   105c7c9:        mov    %rbx,0x538(%rsp)
+    0.00 :   105c7d1:        movq   $0x0,0x540(%rsp)
+    0.00 :   105c7dd:        mov    %r12,0x550(%rsp)
+    0.00 :   105c7e5:        lea    0x68(%rsp),%rdi
+    0.00 :   105c7ea:        lea    0x530(%rsp),%rdx
+    0.00 :   105c7f2:        mov    0x8(%rsp),%rbx
+    0.00 :   105c7f7:        mov    %rbx,%rsi
+    0.00 :   105c7fa:        call   105a920 <my.heap::allocate>
+    0.00 :   105c7ff:        mov    0x68(%rsp),%r12
+    0.00 :   105c804:        cmp    $0xffffffffffffffff,%r13
+    0.00 :   105c808:        je     105c5d3 <my.vm::run+0x14e3>
+    0.00 :   105c80e:        lea    0x308(%rsp),%rdi
+    0.00 :   105c816:        mov    %rbx,%rsi
+    0.00 :   105c819:        mov    %r13,%rdx
+    0.00 :   105c81c:        call   1069f30 <my.heap::upvalue_obj>
+    0.00 :   105c821:        mov    0x318(%rsp),%rsi
+    0.00 :   105c829:        movzbl 0x310(%rsp),%r9d
+    0.00 :   105c832:        mov    0x308(%rsp),%r10
+    0.00 :   105c83a:        mov    (%rbx),%r8
+    0.00 :   105c83d:        mov    0x8(%r8),%rdx
+    0.00 :   105c841:        cmp    %rdx,%r13
+    0.00 :   105c844:        jae    105c8d0 <my.vm::run+0x17e0>
+    0.00 :   105c84a:        mov    %r13,%rax
+    0.00 :   105c84d:        imul   $0x38,%rax,%r11
+    0.00 :   105c851:        movzbl 0x20(%r8,%r11,1),%edx
+    0.00 :   105c857:        mov    0x28(%r8,%r11,1),%rax
+    0.00 :   105c85c:        mov    0x30(%r8,%r11,1),%rdi
+    0.00 :   105c861:        mov    0x38(%r8,%r11,1),%rcx
+    0.00 :   105c866:        mov    0x40(%r8,%r11,1),%rbx
+    0.00 :   105c86b:        mov    0x48(%r8,%r11,1),%r13
+    0.00 :   105c870:        movq   $0x5,0x20(%r8,%r11,1)
+    0.00 :   105c879:        mov    %r10,0x28(%r8,%r11,1)
+    0.00 :   105c87e:        movzbl %r9b,%r9d
+    0.00 :   105c882:        mov    %r9,0x30(%r8,%r11,1)
+    0.00 :   105c887:        mov    %rsi,0x38(%r8,%r11,1)
+    0.00 :   105c88c:        mov    %r12,0x40(%r8,%r11,1)
+    0.00 :   105c891:        dec    %edx
+    0.00 :   105c893:        cmp    $0x8,%edx
+    0.00 :   105c896:        ja     105c5da <my.vm::run+0x14ea>
+    0.00 :   105c89c:        lea    -0x5543b(%rip),%rsi        # 1007468 <core_number_pairs+0x208>
+    0.00 :   105c8a3:        movslq (%rsi,%rdx,4),%rdx
+    0.00 :   105c8a7:        add    %rsi,%rdx
+    0.00 :   105c8aa:        jmp    *%rdx
+    0.00 :   105c8ac:        call   1023ec0 <myl_core_drop_owned>
+    0.00 :   105c8b1:        jmp    105c5da <my.vm::run+0x14ea>
+    0.00 :   105c8b6:        mov    %rcx,%rdi
+    0.00 :   105c8b9:        call   1023ec0 <myl_core_drop_owned>
+    0.00 :   105c8be:        mov    %rbx,%rdi
+    0.00 :   105c8c1:        call   1023ec0 <myl_core_drop_owned>
+    0.00 :   105c8c6:        mov    %r13,%rdi
+    0.00 :   105c8c9:        jmp    105c8ac <my.vm::run+0x17bc>
+    0.00 :   105c8cb:        mov    %rax,%rdi
+    0.00 :   105c8ce:        jmp    105c8ac <my.vm::run+0x17bc>
+    0.00 :   105c8d0:        mov    %r13,%rax
+    0.00 :   105c8d3:        sar    $0x3f,%rax
+    0.00 :   105c8d7:        and    %rdx,%rax
+    0.00 :   105c8da:        add    %r13,%rax
+    0.00 :   105c8dd:        cmp    %rdx,%rax
+    0.00 :   105c8e0:        jb     105c84d <my.vm::run+0x175d>
+    0.00 :   105c8e6:        jmp    105e691 <my.vm::run+0x35a1>
+    0.05 :   105c8eb:        mov    0x80(%r14),%rax
+    0.00 :   105c8f2:        mov    %rax,%rsi
+    0.00 :   105c8f5:        dec    %rsi
+    0.00 :   105c8f8:        jo     105e3cd <my.vm::run+0x32dd>
+    0.00 :   105c8fe:        mov    %r8,0x20(%rsp)
+    0.00 :   105c903:        mov    0x78(%r14),%rax
+    0.00 :   105c907:        mov    0x8(%rax),%rdx
+    0.21 :   105c90b:        mov    %rsi,%r15
+    0.00 :   105c90e:        sar    $0x3f,%r15
+    0.21 :   105c912:        and    %rdx,%r15
+    0.00 :   105c915:        mov    %rsi,%rcx
+    0.00 :   105c918:        cmp    %rdx,%rsi
+    0.00 :   105c91b:        jae    105d805 <my.vm::run+0x2715>
+    0.00 :   105c921:        mov    %r10,%rbp
+    0.00 :   105c924:        lea    0x20(%rax),%rdi
+    0.00 :   105c928:        shl    $0x4,%rcx
+    0.00 :   105c92c:        movzbl 0x20(%rax,%rcx,1),%r8d
+    0.18 :   105c932:        mov    0x28(%rax,%rcx,1),%rax
+    0.00 :   105c937:        cmp    $0x2,%r8d
+    0.00 :   105c93b:        je     105d383 <my.vm::run+0x2293>
+    0.00 :   105c941:        cmp    $0x3,%r8d
+    0.00 :   105c945:        jne    105d3d9 <my.vm::run+0x22e9>
+    0.00 :   105c94b:        mov    (%r14),%r10
+    0.00 :   105c94e:        mov    0x8(%r10),%rcx
+    0.00 :   105c952:        cmp    %rcx,%rax
+    0.00 :   105c955:        jae    105dbaa <my.vm::run+0x2aba>
+    0.00 :   105c95b:        mov    %rax,%r8
+    0.00 :   105c95e:        imul   $0x38,%r8,%rax
+    0.00 :   105c962:        cmpl   $0x1,0x20(%r10,%rax,1)
+    0.00 :   105c968:        jne    105d3d9 <my.vm::run+0x22e9>
+    0.00 :   105c96e:        mov    %rsi,%rax
+    0.00 :   105c971:        dec    %rax
+    0.00 :   105c974:        jo     105e58f <my.vm::run+0x349f>
+    0.00 :   105c97a:        mov    %rax,%r8
+    0.00 :   105c97d:        cmp    %rdx,%rax
+    0.00 :   105c980:        jae    105dc31 <my.vm::run+0x2b41>
+    0.00 :   105c986:        shl    $0x4,%r8
+    0.00 :   105c98a:        cmpb   $0x3,(%rdi,%r8,1)
+    0.00 :   105c98f:        jne    105d3d9 <my.vm::run+0x22e9>
+    0.00 :   105c995:        mov    %r9,%r12
+    0.00 :   105c998:        mov    0x8(%rdi,%r8,1),%r8
+    0.00 :   105c99d:        cmp    %rcx,%r8
+    0.00 :   105c9a0:        jae    105dcc2 <my.vm::run+0x2bd2>
+    0.00 :   105c9a6:        mov    %r8,%r11
+    0.00 :   105c9a9:        add    $0x20,%r10
+    0.00 :   105c9ad:        imul   $0x38,%r11,%rcx
+    0.00 :   105c9b1:        cmpl   $0x1,(%r10,%rcx,1)
+    0.00 :   105c9b6:        mov    %r12,%r9
+    0.00 :   105c9b9:        jne    105d3d9 <my.vm::run+0x22e9>
+    0.00 :   105c9bf:        cmp    %rdx,%rsi
+    0.00 :   105c9c2:        jae    105dcdd <my.vm::run+0x2bed>
+    0.00 :   105c9c8:        mov    %rsi,%r15
+    0.00 :   105c9cb:        shl    $0x4,%r15
+    0.00 :   105c9cf:        movzbl (%rdi,%r15,1),%ecx
+    0.00 :   105c9d4:        cmp    $0x3,%ecx
+    0.00 :   105c9d7:        jne    105e5a0 <my.vm::run+0x34b0>
+    0.00 :   105c9dd:        mov    0x8(%rdi,%r15,1),%rcx
+    0.00 :   105c9e2:        cmp    %rdx,%rax
+    0.00 :   105c9e5:        jae    105dcee <my.vm::run+0x2bfe>
+    0.00 :   105c9eb:        mov    %rax,%rsi
+    0.00 :   105c9ee:        shl    $0x4,%rsi
+    0.00 :   105c9f2:        movzbl (%rdi,%rsi,1),%eax
+    0.00 :   105c9f6:        cmp    $0x3,%eax
+    0.00 :   105c9f9:        jne    105e5e3 <my.vm::run+0x34f3>
+    0.00 :   105c9ff:        add    %rsi,%rdi
+    0.00 :   105ca02:        mov    0x8(%rdi),%rdx
+    0.00 :   105ca06:        lea    0x348(%rsp),%rdi
+    0.00 :   105ca0e:        mov    %r14,%rsi
+    0.00 :   105ca11:        call   106e2f0 <my.lox_strings::concat>
+    0.00 :   105ca16:        mov    0x80(%r14),%rax
+    0.00 :   105ca1d:        mov    %rax,%rsi
+    0.00 :   105ca20:        dec    %rsi
+    0.00 :   105ca23:        jo     105e621 <my.vm::run+0x3531>
+    0.00 :   105ca29:        mov    0x348(%rsp),%rax
+    0.00 :   105ca31:        mov    0x78(%r14),%rcx
+    0.00 :   105ca35:        mov    0x8(%rcx),%rdx
+    0.00 :   105ca39:        cmp    %rdx,%rsi
+    0.00 :   105ca3c:        mov    %r12,%r9
+    0.00 :   105ca3f:        mov    0x20(%rsp),%r8
+    0.00 :   105ca44:        mov    %rbp,%r10
+    0.00 :   105ca47:        jae    105dd09 <my.vm::run+0x2c19>
+    0.00 :   105ca4d:        mov    %rsi,%r12
+    0.00 :   105ca50:        dec    %r12
+    0.00 :   105ca53:        jo     105e610 <my.vm::run+0x3520>
+    0.00 :   105ca59:        mov    %r12,%rsi
+    0.00 :   105ca5c:        cmp    %rdx,%r12
+    0.00 :   105ca5f:        jae    105dd24 <my.vm::run+0x2c34>
+    0.00 :   105ca65:        shl    $0x4,%rsi
+    0.00 :   105ca69:        movq   $0x3,0x20(%rcx,%rsi,1)
+    0.00 :   105ca72:        mov    %rax,0x28(%rcx,%rsi,1)
+    0.00 :   105ca77:        jmp    105d502 <my.vm::run+0x2412>
+    0.00 :   105ca7c:        lea    0x68(%rsp),%rdi
+    0.00 :   105ca81:        mov    %r14,%rsi
+    0.00 :   105ca84:        mov    %r10,%rdx
+    0.00 :   105ca87:        mov    %rbx,%rcx
+    0.00 :   105ca8a:        call   10630c0 <my.vm::read_constant>
+    0.00 :   105ca8f:        movzbl 0x68(%rsp),%eax
+    0.00 :   105ca94:        cmp    $0x3,%eax
+    0.00 :   105ca97:        jne    105dedd <my.vm::run+0x2ded>
+    0.00 :   105ca9d:        mov    0x90(%rsp),%r9
+    0.00 :   105caa5:        mov    0x88(%rsp),%r8
+    0.00 :   105caad:        mov    0x80(%rsp),%rcx
+    0.00 :   105cab5:        mov    0x70(%rsp),%rbx
+    0.00 :   105caba:        mov    0x78(%rsp),%rdx
+    0.00 :   105cabf:        lea    0x438(%rsp),%rdi
+    0.00 :   105cac7:        mov    %r14,%rsi
+    0.00 :   105caca:        call   1063000 <my.vm::read_byte>
+    0.00 :   105cacf:        mov    0x88(%r14),%rax
+    0.00 :   105cad6:        test   %r15,%r15
+    0.00 :   105cad9:        jg     105cadf <my.vm::run+0x19ef>
+    0.00 :   105cadb:        add    0x8(%rax),%r12
+    0.00 :   105cadf:        mov    0x438(%rsp),%r9
+    0.00 :   105cae7:        mov    0x450(%rsp),%rcx
+    0.00 :   105caef:        shl    $0x5,%r12
+    0.00 :   105caf3:        mov    %rcx,0x30(%rax,%r12,1)
+    0.00 :   105caf8:        mov    %rax,0x88(%r14)
+    0.00 :   105caff:        mov    %rbp,%rsi
+    0.00 :   105cb02:        dec    %rsi
+    0.00 :   105cb05:        jo     105e3e1 <my.vm::run+0x32f1>
+    0.00 :   105cb0b:        mov    %rsi,0x80(%r14)
+    0.00 :   105cb12:        mov    0x78(%r14),%rax
+    0.00 :   105cb16:        mov    0x8(%rax),%rdx
+    0.00 :   105cb1a:        cmp    %rdx,%rsi
+    0.00 :   105cb1d:        jae    105d957 <my.vm::run+0x2867>
+    0.00 :   105cb23:        mov    %rsi,%rcx
+    0.00 :   105cb26:        shl    $0x4,%rcx
+    0.00 :   105cb2a:        movzbl 0x20(%rax,%rcx,1),%edx
+    0.00 :   105cb2f:        cmp    $0x3,%edx
+    0.00 :   105cb32:        jne    105de4c <my.vm::run+0x2d5c>
+    0.00 :   105cb38:        add    %rcx,%rax
+    0.00 :   105cb3b:        add    $0x20,%rax
+    0.00 :   105cb3f:        mov    0x8(%rax),%rcx
+    0.00 :   105cb43:        lea    0x7d8(%rsp),%rdi
+    0.00 :   105cb4b:        mov    %r14,%rsi
+    0.00 :   105cb4e:        mov    0x38(%rsp),%rdx
+    0.00 :   105cb53:        mov    %rbx,%r8
+    0.00 :   105cb56:        call   1063f10 <my.vm::invoke_from_class>
+    0.00 :   105cb5b:        testb  $0x1,0x7d8(%rsp)
+    0.00 :   105cb63:        je     105dd49 <my.vm::run+0x2c59>
+    0.00 :   105cb69:        mov    0x90(%r14),%r11
+    0.00 :   105cb70:        mov    %r11,%rsi
+    0.00 :   105cb73:        dec    %rsi
+    0.00 :   105cb76:        jo     105e445 <my.vm::run+0x3355>
+    0.00 :   105cb7c:        mov    0x80(%r14),%r12
+    0.00 :   105cb83:        mov    0x88(%r14),%rax
+    0.00 :   105cb8a:        mov    0x8(%rax),%rdx
+    0.00 :   105cb8e:        cmp    %rdx,%rsi
+    0.00 :   105cb91:        jb     105d07a <my.vm::run+0x1f8a>
+    0.00 :   105cb97:        mov    %rsi,%rcx
+    0.00 :   105cb9a:        sar    $0x3f,%rcx
+    0.00 :   105cb9e:        and    %rdx,%rcx
+    0.00 :   105cba1:        add    %rsi,%rcx
+    0.00 :   105cba4:        cmp    %rdx,%rcx
+    0.00 :   105cba7:        jb     105d07d <my.vm::run+0x1f8d>
+    0.00 :   105cbad:        jmp    105e7cb <my.vm::run+0x36db>
+    0.00 :   105cbb2:        mov    %rbp,%rsi
+    0.00 :   105cbb5:        dec    %rsi
+    0.00 :   105cbb8:        jo     105e36b <my.vm::run+0x327b>
+    0.00 :   105cbbe:        mov    %r10,%r14
+    0.00 :   105cbc1:        mov    %rbx,%r13
+    0.00 :   105cbc4:        mov    %r8,%rbx
+    0.00 :   105cbc7:        mov    %r9,%r12
+    0.00 :   105cbca:        mov    0x8(%rsp),%r15
+    0.00 :   105cbcf:        mov    %r15,%rdi
+    0.00 :   105cbd2:        call   1064030 <my.vm::close_upvalues>
+    0.00 :   105cbd7:        mov    0x80(%r15),%rsi
+    0.00 :   105cbde:        mov    %rsi,%rcx
+    0.00 :   105cbe1:        dec    %rcx
+    0.00 :   105cbe4:        jo     105e286 <my.vm::run+0x3196>
+    0.00 :   105cbea:        mov    %rcx,0x80(%r15)
+    0.00 :   105cbf1:        mov    0x78(%r15),%rax
+    0.00 :   105cbf5:        mov    0x90(%r15),%r11
+    0.00 :   105cbfc:        mov    0x8(%rax),%rdx
+    0.00 :   105cc00:        cmp    %rdx,%rcx
+    0.00 :   105cc03:        mov    %r12,%r9
+    0.00 :   105cc06:        mov    %rbx,%r8
+    0.00 :   105cc09:        mov    %rcx,%r12
+    0.00 :   105cc0c:        mov    %r14,%r10
+    0.00 :   105cc0f:        jae    105d8b5 <my.vm::run+0x27c5>
+    0.00 :   105cc15:        mov    %r13,%rbx
+    0.00 :   105cc18:        mov    0x8(%rsp),%r14
+    0.00 :   105cc1d:        lea    -0x55878(%rip),%r13        # 10073ac <core_number_pairs+0x14c>
+    0.00 :   105cc24:        jmp    105d5a0 <my.vm::run+0x24b0>
+    0.00 :   105cc29:        mov    %rbp,%r12
+    0.00 :   105cc2c:        dec    %r12
+    0.00 :   105cc2f:        jo     105e158 <my.vm::run+0x3068>
+    0.00 :   105cc35:        mov    %r12,0x80(%r14)
+    0.00 :   105cc3c:        mov    0x78(%r14),%rax
+    0.00 :   105cc40:        mov    0x8(%rax),%rdx
+    0.00 :   105cc44:        mov    %r12,%rcx
+    0.00 :   105cc47:        sar    $0x3f,%rcx
+    0.00 :   105cc4b:        and    %rdx,%rcx
+    0.00 :   105cc4e:        mov    %r12,%rdi
+    0.00 :   105cc51:        cmp    %rdx,%r12
+    0.00 :   105cc54:        jae    105d817 <my.vm::run+0x2727>
+    0.00 :   105cc5a:        shl    $0x4,%rdi
+    0.00 :   105cc5e:        movzbl 0x20(%rax,%rdi,1),%edx
+    0.00 :   105cc63:        mov    %r10,%r15
+    0.00 :   105cc66:        mov    %r8,%r10
+    0.00 :   105cc69:        test   %edx,%edx
+    0.00 :   105cc6b:        je     105d41e <my.vm::run+0x232e>
+    0.00 :   105cc71:        cmp    $0x1,%edx
+    0.00 :   105cc74:        jne    105d422 <my.vm::run+0x2332>
+    0.00 :   105cc7a:        lea    (%rax,%rdi,1),%rdx
+    0.00 :   105cc7e:        add    $0x20,%rdx
+    0.00 :   105cc82:        movzbl 0x8(%rdx),%edx
+    0.00 :   105cc86:        not    %dl
+    0.00 :   105cc88:        and    $0x1,%dl
+    0.00 :   105cc8b:        jmp    105d424 <my.vm::run+0x2334>
+    0.25 :   105cc90:        lea    0x488(%rsp),%rdi
+    0.11 :   105cc98:        mov    %r14,%rsi
+    0.00 :   105cc9b:        mov    %r10,%rdx
+    0.00 :   105cc9e:        mov    %rbx,%rcx
+    0.00 :   105cca1:        mov    %r11,%rbx
+    0.00 :   105cca4:        call   1063000 <my.vm::read_byte>
+    0.00 :   105cca9:        mov    0x88(%r14),%rax
+    0.05 :   105ccb0:        test   %rbx,%rbx
+    0.00 :   105ccb3:        jg     105ccb9 <my.vm::run+0x1bc9>
+    0.00 :   105ccb5:        add    0x8(%rax),%r12
+    0.00 :   105ccb9:        mov    0x488(%rsp),%r9
+    0.00 :   105ccc1:        mov    0x4a0(%rsp),%rcx
+    0.00 :   105ccc9:        shl    $0x5,%r12
+    0.26 :   105cccd:        mov    %rcx,0x30(%rax,%r12,1)
+    0.00 :   105ccd2:        mov    %rax,0x88(%r14)
+    0.00 :   105ccd9:        mov    %rbp,%rax
+    0.00 :   105ccdc:        dec    %rax
+    0.10 :   105ccdf:        jo     105e391 <my.vm::run+0x32a1>
+    0.00 :   105cce5:        mov    %rax,%rsi
+    0.00 :   105cce8:        sub    %r9,%rsi
+    0.00 :   105cceb:        jo     105e260 <my.vm::run+0x3170>
+    0.54 :   105ccf1:        mov    0x78(%r14),%rax
+    0.21 :   105ccf5:        mov    0x8(%rax),%rdx
+    0.07 :   105ccf9:        cmp    %rdx,%rsi
+    0.00 :   105ccfc:        jae    105d8d0 <my.vm::run+0x27e0>
+    0.00 :   105cd02:        mov    %rsi,%rcx
+    0.00 :   105cd05:        shl    $0x4,%rcx
+    0.00 :   105cd09:        mov    0x28(%rax,%rcx,1),%r8
+    0.41 :   105cd0e:        mov    0x20(%rax,%rcx,1),%ecx
+    0.00 :   105cd12:        mov    0x60(%rsp),%rax
+    0.39 :   105cd17:        mov    %rax,(%rsp)
+    0.00 :   105cd1b:        lea    0x8c8(%rsp),%rdi
+    0.00 :   105cd23:        mov    %r14,%rsi
+    0.14 :   105cd26:        mov    0x38(%rsp),%rdx
+    0.00 :   105cd2b:        call   1063960 <my.vm::call_value>
+    0.20 :   105cd30:        testb  $0x1,0x8c8(%rsp)
+    0.00 :   105cd38:        je     105dd49 <my.vm::run+0x2c59>
+    0.00 :   105cd3e:        mov    0x90(%r14),%r11
+    0.23 :   105cd45:        mov    %r11,%rsi
+    0.00 :   105cd48:        dec    %rsi
+    0.00 :   105cd4b:        jo     105e41d <my.vm::run+0x332d>
+    0.00 :   105cd51:        mov    0x80(%r14),%r12
+    0.00 :   105cd58:        mov    0x88(%r14),%rax
+    0.00 :   105cd5f:        mov    0x8(%rax),%rdx
+    0.00 :   105cd63:        cmp    %rdx,%rsi
+    0.00 :   105cd66:        jb     105d07a <my.vm::run+0x1f8a>
+    0.00 :   105cd6c:        mov    %rsi,%rcx
+    0.00 :   105cd6f:        sar    $0x3f,%rcx
+    0.00 :   105cd73:        and    %rdx,%rcx
+    0.00 :   105cd76:        add    %rsi,%rcx
+    0.00 :   105cd79:        cmp    %rdx,%rcx
+    0.00 :   105cd7c:        jb     105d07d <my.vm::run+0x1f8d>
+    0.00 :   105cd82:        jmp    105e77a <my.vm::run+0x368a>
+    0.00 :   105cd87:        lea    0x68(%rsp),%r13
+    0.00 :   105cd8c:        mov    %r13,%rdi
+    0.00 :   105cd8f:        mov    %r14,%rsi
+    0.00 :   105cd92:        mov    %r10,%rdx
+    0.00 :   105cd95:        mov    %rbx,%rcx
+    0.00 :   105cd98:        call   10630c0 <my.vm::read_constant>
+    0.00 :   105cd9d:        movzbl 0x68(%rsp),%eax
+    0.00 :   105cda2:        cmp    $0x3,%eax
+    0.00 :   105cda5:        jne    105de86 <my.vm::run+0x2d96>
+    0.00 :   105cdab:        mov    0x90(%rsp),%r9
+    0.00 :   105cdb3:        mov    0x88(%rsp),%r8
+    0.00 :   105cdbb:        mov    0x80(%rsp),%rcx
+    0.00 :   105cdc3:        mov    0x70(%rsp),%rax
+    0.00 :   105cdc8:        mov    %rax,0x20(%rsp)
+    0.00 :   105cdcd:        mov    0x78(%rsp),%rdx
+    0.00 :   105cdd2:        lea    0x460(%rsp),%rdi
+    0.00 :   105cdda:        mov    %r14,%rsi
+    0.00 :   105cddd:        call   1063000 <my.vm::read_byte>
+    0.00 :   105cde2:        mov    0x88(%r14),%rax
+    0.00 :   105cde9:        test   %r15,%r15
+    0.00 :   105cdec:        jg     105cdf2 <my.vm::run+0x1d02>
+    0.00 :   105cdee:        add    0x8(%rax),%r12
+    0.00 :   105cdf2:        mov    0x460(%rsp),%rbx
+    0.00 :   105cdfa:        mov    0x478(%rsp),%rcx
+    0.00 :   105ce02:        shl    $0x5,%r12
+    0.00 :   105ce06:        mov    %rcx,0x30(%rax,%r12,1)
+    0.00 :   105ce0b:        mov    %rax,0x88(%r14)
+    0.00 :   105ce12:        mov    0x80(%r14),%r15
+    0.00 :   105ce19:        mov    %r15,%rax
+    0.00 :   105ce1c:        dec    %rax
+    0.00 :   105ce1f:        jo     105e326 <my.vm::run+0x3236>
+    0.00 :   105ce25:        mov    %rax,%rsi
+    0.00 :   105ce28:        sub    %rbx,%rsi
+    0.00 :   105ce2b:        jo     105e37f <my.vm::run+0x328f>
+    0.00 :   105ce31:        mov    0x78(%r14),%r12
+    0.00 :   105ce35:        mov    0x8(%r12),%rdx
+    0.00 :   105ce3a:        cmp    %rdx,%rsi
+    0.00 :   105ce3d:        jae    105d9be <my.vm::run+0x28ce>
+    0.00 :   105ce43:        mov    %rsi,%rax
+    0.00 :   105ce46:        shl    $0x4,%rax
+    0.00 :   105ce4a:        cmpb   $0x3,0x20(%r12,%rax,1)
+    0.00 :   105ce50:        jne    105d023 <my.vm::run+0x1f33>
+    0.00 :   105ce56:        mov    0x28(%r12,%rax,1),%rbp
+    0.00 :   105ce5b:        mov    (%r14),%rax
+    0.00 :   105ce5e:        mov    0x8(%rax),%rdx
+    0.00 :   105ce62:        mov    %rbp,%rcx
+    0.00 :   105ce65:        cmp    %rdx,%rbp
+    0.00 :   105ce68:        jae    105db3e <my.vm::run+0x2a4e>
+    0.00 :   105ce6e:        imul   $0x38,%rcx,%rcx
+    0.00 :   105ce72:        cmpl   $0x7,0x20(%rax,%rcx,1)
+    0.00 :   105ce77:        jne    105d023 <my.vm::run+0x1f33>
+    0.00 :   105ce7d:        mov    %r14,%rdi
+    0.00 :   105ce80:        mov    0x20(%rsp),%r13
+    0.00 :   105ce85:        mov    %r13,%rsi
+    0.00 :   105ce88:        call   1069b60 <my.heap::string_hash>
+    0.00 :   105ce8d:        mov    %r14,%rdi
+    0.00 :   105ce90:        mov    %rbp,%rsi
+    0.00 :   105ce93:        mov    %r13,%rdx
+    0.00 :   105ce96:        mov    %eax,%ecx
+    0.00 :   105ce98:        call   106a140 <my.heap::instance_field>
+    0.00 :   105ce9d:        cmp    $0x1,%al
+    0.00 :   105ce9f:        jne    105d60e <my.vm::run+0x251e>
+    0.00 :   105cea5:        mov    %r15,%rax
+    0.00 :   105cea8:        sub    %rbx,%rax
+    0.00 :   105ceab:        jo     105e5bd <my.vm::run+0x34cd>
+    0.00 :   105ceb1:        mov    %rax,%rsi
+    0.00 :   105ceb4:        dec    %rsi
+    0.00 :   105ceb7:        jo     105e5cf <my.vm::run+0x34df>
+    0.00 :   105cebd:        mov    %rcx,%r8
+    0.00 :   105cec0:        mov    0x8(%r12),%rax
+    0.00 :   105cec5:        cmp    %rax,%rsi
+    0.00 :   105cec8:        jae    105dca7 <my.vm::run+0x2bb7>
+    0.00 :   105cece:        mov    %rsi,%rcx
+    0.00 :   105ced1:        add    $0x20,%r12
+    0.00 :   105ced5:        shl    $0x4,%rcx
+    0.00 :   105ced9:        movzbl %dl,%eax
+    0.00 :   105cedc:        mov    %rax,(%r12,%rcx,1)
+    0.00 :   105cee0:        mov    %r8,0x8(%r12,%rcx,1)
+    0.00 :   105cee5:        mov    0x60(%rsp),%rax
+    0.00 :   105ceea:        mov    %rax,(%rsp)
+    0.00 :   105ceee:        movzbl %dl,%ecx
+    0.00 :   105cef1:        lea    0x68(%rsp),%r13
+    0.00 :   105cef6:        mov    %r13,%rdi
+    0.00 :   105cef9:        mov    %r14,%rsi
+    0.00 :   105cefc:        mov    0x38(%rsp),%rdx
+    0.00 :   105cf01:        mov    %rbx,%r9
+    0.00 :   105cf04:        call   1063960 <my.vm::call_value>
+    0.00 :   105cf09:        testb  $0x1,0x0(%r13)
+    0.00 :   105cf0e:        jne    105d045 <my.vm::run+0x1f55>
+    0.00 :   105cf14:        jmp    105dd49 <my.vm::run+0x2c59>
+    0.00 :   105cf19:        mov    0x80(%r14),%rsi
+    0.00 :   105cf20:        mov    %rsi,%r12
+    0.00 :   105cf23:        dec    %r12
+    0.00 :   105cf26:        jo     105e2c8 <my.vm::run+0x31d8>
+    0.00 :   105cf2c:        mov    0x78(%r14),%rax
+    0.00 :   105cf30:        mov    0x8(%rax),%rdx
+    0.00 :   105cf34:        mov    %r12,%rcx
+    0.00 :   105cf37:        cmp    %rdx,%r12
+    0.00 :   105cf3a:        jae    105d829 <my.vm::run+0x2739>
+    0.00 :   105cf40:        shl    $0x4,%rcx
+    0.00 :   105cf44:        cmpb   $0x2,0x20(%rax,%rcx,1)
+    0.00 :   105cf49:        jne    105d09a <my.vm::run+0x1faa>
+    0.00 :   105cf4f:        add    %rcx,%rax
+    0.00 :   105cf52:        add    $0x20,%rax
+    0.00 :   105cf56:        movq   $0x2,(%rax)
+    0.00 :   105cf5d:        xorb   $0x80,0xf(%rax)
+    0.00 :   105cf61:        jmp    105d502 <my.vm::run+0x2412>
+    0.00 :   105cf66:        mov    %rbp,%r12
+    0.00 :   105cf69:        jmp    105d5a0 <my.vm::run+0x24b0>
+    0.00 :   105cf6e:        mov    %r10,0x48(%rsp)
+    0.00 :   105cf73:        mov    %r9,0x10(%rsp)
+    0.00 :   105cf78:        lea    -0x4a95f(%rip),%rcx        # 1012620 <core_number_pairs+0xb3c0>
+    0.00 :   105cf7f:        lea    0x348(%rsp),%r15
+    0.00 :   105cf87:        mov    %r15,%rdi
+    0.00 :   105cf8a:        mov    %r14,%rsi
+    0.00 :   105cf8d:        mov    0x38(%rsp),%rdx
+    0.00 :   105cf92:        call   1062b80 <my.vm::runtime_error>
+    0.00 :   105cf97:        testb  $0x1,(%r15)
+    0.00 :   105cf9b:        lea    -0x55bf6(%rip),%r13        # 10073ac <core_number_pairs+0x14c>
+    0.00 :   105cfa2:        je     105dd49 <my.vm::run+0x2c59>
+    0.00 :   105cfa8:        mov    0x80(%r14),%rax
+    0.00 :   105cfaf:        mov    0x90(%r14),%r11
+    0.00 :   105cfb6:        mov    0x10(%rsp),%r9
+    0.00 :   105cfbb:        mov    0x20(%rsp),%r8
+    0.00 :   105cfc0:        mov    %r12,%rbx
+    0.00 :   105cfc3:        mov    %rax,%r12
+    0.00 :   105cfc6:        mov    0x48(%rsp),%r10
+    0.00 :   105cfcb:        jmp    105d5a0 <my.vm::run+0x24b0>
+    0.00 :   105cfd0:        mov    %r13,%r15
+    0.00 :   105cfd3:        mov    %rbp,%r13
+    0.00 :   105cfd6:        mov    %r9,%r12
+    0.00 :   105cfd9:        lea    -0x4a7c0(%rip),%rcx        # 1012820 <core_number_pairs+0xb5c0>
+    0.00 :   105cfe0:        lea    0x68(%rsp),%rdi
+    0.00 :   105cfe5:        mov    0x8(%rsp),%rbp
+    0.00 :   105cfea:        mov    %rbp,%rsi
+    0.00 :   105cfed:        mov    0x38(%rsp),%rdx
+    0.00 :   105cff2:        call   1062b80 <my.vm::runtime_error>
+    0.00 :   105cff7:        testb  $0x1,0x68(%rsp)
+    0.00 :   105cffc:        je     105dd49 <my.vm::run+0x2c59>
+    0.00 :   105d002:        mov    0x80(%rbp),%rax
+    0.00 :   105d009:        mov    0x90(%rbp),%r11
+    0.00 :   105d010:        mov    %r12,%r9
+    0.00 :   105d013:        mov    0x20(%rsp),%r8
+    0.00 :   105d018:        mov    %r14,%rbx
+    0.00 :   105d01b:        mov    %rbp,%r14
+    0.00 :   105d01e:        jmp    105b2d5 <my.vm::run+0x1e5>
+    0.00 :   105d023:        lea    -0x4a84a(%rip),%rcx        # 10127e0 <core_number_pairs+0xb580>
+    0.00 :   105d02a:        mov    %r13,%rdi
+    0.00 :   105d02d:        mov    %r14,%rsi
+    0.00 :   105d030:        mov    0x38(%rsp),%rdx
+    0.00 :   105d035:        call   1062b80 <my.vm::runtime_error>
+    0.00 :   105d03a:        testb  $0x1,0x0(%r13)
+    0.00 :   105d03f:        je     105dd49 <my.vm::run+0x2c59>
+    0.00 :   105d045:        mov    0x90(%r14),%r11
+    0.00 :   105d04c:        mov    %r11,%rsi
+    0.00 :   105d04f:        dec    %rsi
+    0.00 :   105d052:        jo     105e431 <my.vm::run+0x3341>
+    0.00 :   105d058:        mov    0x80(%r14),%r12
+    0.00 :   105d05f:        mov    0x88(%r14),%rax
+    0.00 :   105d066:        mov    0x8(%rax),%rdx
+    0.00 :   105d06a:        cmp    %rdx,%rsi
+    0.00 :   105d06d:        lea    -0x55cc8(%rip),%r13        # 10073ac <core_number_pairs+0x14c>
+    0.00 :   105d074:        jae    105da5d <my.vm::run+0x296d>
+    0.00 :   105d07a:        mov    %rsi,%rcx
+    0.89 :   105d07d:        shl    $0x5,%rcx
+    0.00 :   105d081:        mov    0x20(%rax,%rcx,1),%r10
+    0.00 :   105d086:        mov    0x28(%rax,%rcx,1),%rbx
+    0.21 :   105d08b:        mov    0x30(%rax,%rcx,1),%r8
+    0.00 :   105d090:        mov    0x38(%rax,%rcx,1),%r9
+    0.63 :   105d095:        jmp    105d5a0 <my.vm::run+0x24b0>
+    0.00 :   105d09a:        mov    %r13,%r15
+    0.00 :   105d09d:        mov    %r10,%r13
+    0.00 :   105d0a0:        mov    %rbx,%rbp
+    0.00 :   105d0a3:        mov    %r8,%rbx
+    0.00 :   105d0a6:        mov    %r9,%r12
+    0.00 :   105d0a9:        lea    -0x4a970(%rip),%rcx        # 1012740 <core_number_pairs+0xb4e0>
+    0.00 :   105d0b0:        jmp    105b2a1 <my.vm::run+0x1b1>
+    0.00 :   105d0b5:        mov    %r14,%rdi
+    0.00 :   105d0b8:        mov    %r15,%rsi
+    0.00 :   105d0bb:        call   1069970 <my.heap::string_chars>
+    0.00 :   105d0c0:        mov    %rax,%rbx
+    0.00 :   105d0c3:        lea    -0x4ab2a(%rip),%rdi        # 10125a0 <core_number_pairs+0xb340>
+    0.00 :   105d0ca:        mov    %rax,%rsi
+    0.00 :   105d0cd:        call   102f2c0 <myl_core_bytes_concat>
+    0.00 :   105d0d2:        mov    %rax,%r15
+    0.00 :   105d0d5:        mov    %rbx,%rdi
+    0.00 :   105d0d8:        call   1023ec0 <myl_core_drop_owned>
+    0.00 :   105d0dd:        lea    -0x4ab04(%rip),%rsi        # 10125e0 <core_number_pairs+0xb380>
+    0.00 :   105d0e4:        mov    %r15,%rdi
+    0.00 :   105d0e7:        call   102f2c0 <myl_core_bytes_concat>
+    0.00 :   105d0ec:        mov    %rax,%rbx
+    0.00 :   105d0ef:        mov    %r15,%rdi
+    0.00 :   105d0f2:        call   1023ec0 <myl_core_drop_owned>
+    0.00 :   105d0f7:        lea    0x68(%rsp),%rdi
+    0.00 :   105d0fc:        mov    %r14,%rsi
+    0.00 :   105d0ff:        mov    0x38(%rsp),%rdx
+    0.00 :   105d104:        mov    %rbx,%rcx
+    0.00 :   105d107:        call   1062b80 <my.vm::runtime_error>
+    0.00 :   105d10c:        mov    %rbx,%rdi
+    0.00 :   105d10f:        call   1023ec0 <myl_core_drop_owned>
+    0.00 :   105d114:        testb  $0x1,0x68(%rsp)
+    0.00 :   105d119:        je     105dd49 <my.vm::run+0x2c59>
+    0.00 :   105d11f:        mov    0x80(%r14),%r12
+    0.00 :   105d126:        mov    0x90(%r14),%r11
+    0.00 :   105d12d:        mov    0x10(%rsp),%r9
+    0.00 :   105d132:        jmp    105d221 <my.vm::run+0x2131>
+    0.00 :   105d137:        mov    0x80(%r14),%r12
+    0.00 :   105d13e:        mov    0x90(%r14),%r11
+    0.00 :   105d145:        mov    0x10(%rsp),%r9
+    0.00 :   105d14a:        mov    0x20(%rsp),%r8
+    0.00 :   105d14f:        mov    0x18(%rsp),%rbx
+    0.00 :   105d154:        mov    0x48(%rsp),%r10
+    0.00 :   105d159:        jmp    105d5a0 <my.vm::run+0x24b0>
+    0.00 :   105d15e:        test   %dl,%dl
+    0.00 :   105d160:        jne    105e50c <my.vm::run+0x341c>
+    0.00 :   105d166:        mov    0x340(%rsp),%r8
+    0.00 :   105d16e:        mov    0x8(%rdi),%rdx
+    0.00 :   105d172:        cmp    %rdx,%rsi
+    0.00 :   105d175:        mov    %r12,%r9
+    0.00 :   105d178:        jae    105db74 <my.vm::run+0x2a84>
+    0.00 :   105d17e:        mov    %rsi,%rax
+    0.00 :   105d181:        shl    $0x4,%rax
+    0.00 :   105d185:        vmovupd 0x20(%rdi,%rax,1),%xmm0
+    0.00 :   105d18b:        mov    0x8(%rsp),%rax
+    0.00 :   105d190:        mov    (%rax),%rsi
+    0.00 :   105d193:        mov    0x8(%rsi),%rdx
+    0.00 :   105d197:        mov    %r14,%rbp
+    0.00 :   105d19a:        cmp    %rdx,%r15
+    0.00 :   105d19d:        jae    105db8f <my.vm::run+0x2a9f>
+    0.00 :   105d1a3:        mov    %r15,%rax
+    0.00 :   105d1a6:        imul   $0x38,%rax,%r10
+    0.00 :   105d1aa:        movzbl 0x20(%rsi,%r10,1),%edx
+    0.00 :   105d1b0:        mov    0x28(%rsi,%r10,1),%rax
+    0.00 :   105d1b5:        mov    0x30(%rsi,%r10,1),%rdi
+    0.00 :   105d1ba:        mov    0x38(%rsi,%r10,1),%rcx
+    0.00 :   105d1bf:        mov    0x40(%rsi,%r10,1),%rbx
+    0.00 :   105d1c4:        mov    0x48(%rsi,%r10,1),%r15
+    0.00 :   105d1c9:        movq   $0x5,0x20(%rsi,%r10,1)
+    0.00 :   105d1d2:        movq   $0xffffffffffffffff,0x28(%rsi,%r10,1)
+    0.00 :   105d1db:        vandpd -0x58e03(%rip),%xmm0,%xmm0        # 10043e0 <__anon_2214+0xb0>
+    0.00 :   105d1e3:        vmovupd %xmm0,0x30(%rsi,%r10,1)
+    0.00 :   105d1ea:        mov    %r8,0x40(%rsi,%r10,1)
+    0.00 :   105d1ef:        dec    %edx
+    0.00 :   105d1f1:        cmp    $0x8,%edx
+    0.00 :   105d1f4:        ja     105d20e <my.vm::run+0x211e>
+    0.00 :   105d1f6:        lea    -0x55d5d(%rip),%rsi        # 10074a0 <core_number_pairs+0x240>
+    0.00 :   105d1fd:        movslq (%rsi,%rdx,4),%rdx
+    0.00 :   105d201:        add    %rsi,%rdx
+    0.00 :   105d204:        jmp    *%rdx
+    0.00 :   105d206:        call   1023ec0 <myl_core_drop_owned>
+    0.00 :   105d20b:        mov    %r12,%r9
+    0.00 :   105d20e:        mov    0x8(%rsp),%r14
+    0.00 :   105d213:        mov    0x80(%r14),%r12
+    0.00 :   105d21a:        mov    0x90(%r14),%r11
+    0.00 :   105d221:        mov    0x20(%rsp),%r8
+    0.00 :   105d226:        mov    0x18(%rsp),%rbx
+    0.00 :   105d22b:        jmp    105d58f <my.vm::run+0x249f>
+    0.00 :   105d230:        mov    0x2f8(%rsp),%rax
+    0.00 :   105d238:        movzbl 0x2f0(%rsp),%edi
+    0.00 :   105d240:        mov    0x78(%r12),%rcx
+    0.00 :   105d245:        mov    0x80(%r12),%rsi
+    0.00 :   105d24d:        mov    0x8(%rcx),%rdx
+    0.00 :   105d251:        mov    %rsi,%r8
+    0.00 :   105d254:        cmp    %rdx,%rsi
+    0.00 :   105d257:        jae    105db59 <my.vm::run+0x2a69>
+    0.00 :   105d25d:        shl    $0x4,%r8
+    0.00 :   105d261:        movzbl %dil,%edx
+    0.00 :   105d265:        mov    %rdx,0x20(%rcx,%r8,1)
+    0.00 :   105d26a:        mov    %rax,0x28(%rcx,%r8,1)
+    0.00 :   105d26f:        mov    %rsi,%r12
+    0.00 :   105d272:        inc    %r12
+    0.00 :   105d275:        mov    %r15,%r9
+    0.00 :   105d278:        mov    %rbx,%r8
+    0.00 :   105d27b:        mov    %r14,%rbx
+    0.00 :   105d27e:        mov    %rbp,%r10
+    0.00 :   105d281:        jo     105e520 <my.vm::run+0x3430>
+    0.00 :   105d287:        mov    0x8(%rsp),%r14
+    0.00 :   105d28c:        jmp    105d505 <my.vm::run+0x2415>
+    0.00 :   105d291:        mov    0x10(%rsp),%r9
+    0.00 :   105d296:        mov    0x8(%rsp),%r14
+    0.00 :   105d29b:        mov    0x48(%rsp),%rdx
+    0.00 :   105d2a0:        mov    %rdx,%r11
+    0.00 :   105d2a3:        mov    (%r14),%r10
+    0.00 :   105d2a6:        mov    0x8(%r10),%rdx
+    0.00 :   105d2aa:        mov    0x188(%rsp),%rsi
+    0.00 :   105d2b2:        mov    %rcx,%r14
+    0.00 :   105d2b5:        mov    %r8,%r12
+    0.00 :   105d2b8:        cmp    %rdx,%rsi
+    0.00 :   105d2bb:        jae    105da2a <my.vm::run+0x293a>
+    0.00 :   105d2c1:        mov    %rsi,%rax
+    0.00 :   105d2c4:        imul   $0x38,%rax,%r8
+    0.00 :   105d2c8:        movzbl 0x20(%r10,%r8,1),%edx
+    0.00 :   105d2ce:        mov    0x28(%r10,%r8,1),%rdi
+    0.00 :   105d2d3:        mov    0x30(%r10,%r8,1),%rsi
+    0.00 :   105d2d8:        mov    0x38(%r10,%r8,1),%rax
+    0.00 :   105d2dd:        mov    0x40(%r10,%r8,1),%rbx
+    0.00 :   105d2e2:        mov    0x48(%r10,%r8,1),%r15
+    0.00 :   105d2e7:        movq   $0x4,0x20(%r10,%r8,1)
+    0.00 :   105d2f0:        mov    0x190(%rsp),%rcx
+    0.00 :   105d2f8:        mov    %rcx,0x28(%r10,%r8,1)
+    0.00 :   105d2fd:        mov    0x58(%rsp),%rcx
+    0.00 :   105d302:        mov    %rcx,0x30(%r10,%r8,1)
+    0.00 :   105d307:        cmp    $0x9,%edx
+    0.00 :   105d30a:        mov    %r11,%r10
+    0.00 :   105d30d:        ja     105d32d <my.vm::run+0x223d>
+    0.00 :   105d30f:        mov    $0x2d0,%ecx
+    0.00 :   105d314:        bt     %edx,%ecx
+    0.00 :   105d317:        jae    105d351 <my.vm::run+0x2261>
+    0.00 :   105d319:        mov    %rsi,%rdi
+    0.00 :   105d31c:        mov    %r9,%rbx
+    0.00 :   105d31f:        mov    %r10,%r15
+    0.00 :   105d322:        call   1023ec0 <myl_core_drop_owned>
+    0.00 :   105d327:        mov    %r15,%r10
+    0.00 :   105d32a:        mov    %rbx,%r9
+    0.00 :   105d32d:        mov    0x8(%rsp),%rax
+    0.00 :   105d332:        mov    0x80(%rax),%rcx
+    0.00 :   105d339:        mov    0x90(%rax),%r11
+    0.00 :   105d340:        mov    %r12,%r8
+    0.00 :   105d343:        mov    %rcx,%r12
+    0.00 :   105d346:        mov    %r14,%rbx
+    0.00 :   105d349:        mov    %rax,%r14
+    0.00 :   105d34c:        jmp    105d5a0 <my.vm::run+0x24b0>
+    0.00 :   105d351:        cmp    $0x1,%edx
+    0.00 :   105d354:        je     105d31c <my.vm::run+0x222c>
+    0.00 :   105d356:        cmp    $0x2,%edx
+    0.00 :   105d359:        jne    105d32d <my.vm::run+0x223d>
+    0.00 :   105d35b:        mov    %rax,%rdi
+    0.00 :   105d35e:        mov    %r10,%r13
+    0.00 :   105d361:        mov    %r9,%rbp
+    0.00 :   105d364:        call   1023ec0 <myl_core_drop_owned>
+    0.00 :   105d369:        mov    %rbx,%rdi
+    0.00 :   105d36c:        call   1023ec0 <myl_core_drop_owned>
+    0.00 :   105d371:        mov    %rbp,%r9
+    0.00 :   105d374:        mov    %r13,%r10
+    0.00 :   105d377:        lea    -0x55fd2(%rip),%r13        # 10073ac <core_number_pairs+0x14c>
+    0.00 :   105d37e:        mov    %r15,%rdi
+    0.00 :   105d381:        jmp    105d31c <my.vm::run+0x222c>
+    0.15 :   105d383:        mov    %rsi,%r12
+    0.00 :   105d386:        dec    %r12
+    0.00 :   105d389:        jo     105e54e <my.vm::run+0x345e>
+    0.00 :   105d38f:        mov    %r12,%rcx
+    0.00 :   105d392:        cmp    %rdx,%r12
+    0.00 :   105d395:        jae    105dbc5 <my.vm::run+0x2ad5>
+    0.00 :   105d39b:        shl    $0x4,%rcx
+    0.75 :   105d39f:        cmpb   $0x2,(%rdi,%rcx,1)
+    0.16 :   105d3a3:        jne    105d3d9 <my.vm::run+0x22e9>
+    0.00 :   105d3a5:        add    %rcx,%rdi
+    0.00 :   105d3a8:        vmovq  %rax,%xmm0
+    0.00 :   105d3ad:        vaddsd 0x8(%rdi),%xmm0,%xmm0
+    0.00 :   105d3b2:        movq   $0x2,(%rdi)
+    0.00 :   105d3b9:        vmovsd %xmm0,0x8(%rdi)
+    0.00 :   105d3be:        inc    %r12
+    0.21 :   105d3c1:        mov    %r12,0x80(%r14)
+    0.00 :   105d3c8:        mov    0x90(%r14),%r11
+    0.41 :   105d3cf:        mov    0x20(%rsp),%r8
+    0.00 :   105d3d4:        jmp    105d58f <my.vm::run+0x249f>
+    0.00 :   105d3d9:        mov    %r9,%r12
+    0.00 :   105d3dc:        lea    -0x4ad03(%rip),%rcx        # 10126e0 <core_number_pairs+0xb480>
+    0.00 :   105d3e3:        lea    0x68(%rsp),%rdi
+    0.00 :   105d3e8:        mov    %r14,%rsi
+    0.00 :   105d3eb:        mov    0x38(%rsp),%rdx
+    0.00 :   105d3f0:        call   1062b80 <my.vm::runtime_error>
+    0.00 :   105d3f5:        testb  $0x1,0x68(%rsp)
+    0.00 :   105d3fa:        je     105dd49 <my.vm::run+0x2c59>
+    0.00 :   105d400:        mov    0x80(%r14),%rax
+    0.00 :   105d407:        mov    0x90(%r14),%r11
+    0.00 :   105d40e:        mov    %r12,%r9
+    0.00 :   105d411:        mov    %rax,%r12
+    0.00 :   105d414:        mov    0x20(%rsp),%r8
+    0.00 :   105d419:        jmp    105d58f <my.vm::run+0x249f>
+    0.00 :   105d41e:        mov    $0x1,%dl
+    0.00 :   105d420:        jmp    105d424 <my.vm::run+0x2334>
+    0.00 :   105d422:        xor    %edx,%edx
+    0.00 :   105d424:        lea    0x20(%rax),%rdi
+    0.00 :   105d428:        mov    %r12,%r8
+    0.00 :   105d42b:        shl    $0x4,%r8
+    0.00 :   105d42f:        add    %rdi,%r8
+    0.00 :   105d432:        shl    $0x4,%rcx
+    0.00 :   105d436:        movq   $0x1,(%rcx,%r8,1)
+    0.00 :   105d43e:        mov    %dl,0x8(%rcx,%r8,1)
+    0.00 :   105d443:        mov    %rax,0x78(%r14)
+    0.00 :   105d447:        inc    %r12
+    0.00 :   105d44a:        mov    %r12,0x80(%r14)
+    0.00 :   105d451:        mov    %r10,%r8
+    0.00 :   105d454:        mov    %r15,%r10
+    0.00 :   105d457:        jmp    105d5a0 <my.vm::run+0x24b0>
+    0.00 :   105d45c:        cmp    $0x1,%r8b
+    0.00 :   105d460:        mov    %rbp,%r10
+    0.00 :   105d463:        jne    105d518 <my.vm::run+0x2428>
+    0.00 :   105d469:        xor    %edi,%esi
+    0.00 :   105d46b:        xor    $0x1,%sil
+    0.00 :   105d46f:        mov    %r11,%r8
+    0.00 :   105d472:        jmp    105d527 <my.vm::run+0x2437>
+    0.00 :   105d477:        cmp    $0x2,%r8b
+    0.00 :   105d47b:        jne    105d51f <my.vm::run+0x242f>
+    0.00 :   105d481:        vmovq  %rsi,%xmm0
+    0.00 :   105d486:        vmovq  %rdi,%xmm1
+    0.00 :   105d48b:        vcmpeqsd %xmm1,%xmm0,%xmm0
+    0.00 :   105d490:        vmovq  %xmm0,%rsi
+    0.00 :   105d495:        and    $0x1,%esi
+    0.00 :   105d498:        jmp    105d521 <my.vm::run+0x2431>
+    0.00 :   105d49d:        lea    0x530(%rsp),%rbx
+    0.00 :   105d4a5:        jmp    105d551 <my.vm::run+0x2461>
+    0.00 :   105d4aa:        cmp    $0x3,%r8b
+    0.00 :   105d4ae:        sete   %r8b
+    0.00 :   105d4b2:        cmp    %rdi,%rsi
+    0.00 :   105d4b5:        sete   %sil
+    0.00 :   105d4b9:        and    %r8b,%sil
+    0.00 :   105d4bc:        jmp    105d521 <my.vm::run+0x2431>
+    0.00 :   105d4be:        lea    0x348(%rsp),%rbx
+    0.00 :   105d4c6:        jmp    105d551 <my.vm::run+0x2461>
+    0.00 :   105d4cb:        lea    0x620(%rsp),%rbx
+    0.00 :   105d4d3:        jmp    105d551 <my.vm::run+0x2461>
+    0.19 :   105d4d5:        vsubsd %xmm0,%xmm1,%xmm0
+    0.26 :   105d4d9:        jmp    105d4f6 <my.vm::run+0x2406>
+    0.16 :   105d4db:        vucomisd %xmm1,%xmm0
+    0.61 :   105d4df:        movq   $0x1,(%rax)
+    0.42 :   105d4e6:        seta   0x8(%rax)
+    1.26 :   105d4ea:        jmp    105d502 <my.vm::run+0x2412>
+    0.00 :   105d4ec:        vmulsd %xmm1,%xmm0,%xmm0
+    0.00 :   105d4f0:        jmp    105d4f6 <my.vm::run+0x2406>
+    0.00 :   105d4f2:        vdivsd %xmm0,%xmm1,%xmm0
+    0.37 :   105d4f6:        movq   $0x2,(%rax)
+    0.00 :   105d4fd:        vmovsd %xmm0,0x8(%rax)
+    0.00 :   105d502:        inc    %r12
+    0.00 :   105d505:        mov    %r12,0x80(%r14)
+    0.00 :   105d50c:        mov    0x90(%r14),%r11
+    0.21 :   105d513:        jmp    105d5a0 <my.vm::run+0x24b0>
+    0.00 :   105d518:        xor    %esi,%esi
+    0.00 :   105d51a:        mov    %r11,%r8
+    0.00 :   105d51d:        jmp    105d527 <my.vm::run+0x2437>
+    0.00 :   105d51f:        xor    %esi,%esi
+    0.00 :   105d521:        mov    %r11,%r8
+    0.00 :   105d524:        mov    %rbp,%r10
+    0.00 :   105d527:        add    %rcx,%rdx
+    0.00 :   105d52a:        movq   $0x1,(%rdx)
+    0.00 :   105d531:        and    $0x1,%sil
+    0.00 :   105d535:        mov    %sil,0x8(%rdx)
+    0.00 :   105d539:        mov    %rax,0x78(%r14)
+    0.00 :   105d53d:        inc    %r12
+    0.00 :   105d540:        mov    %r12,0x80(%r14)
+    0.00 :   105d547:        mov    %r15,%r11
+    0.00 :   105d54a:        jmp    105d5a0 <my.vm::run+0x24b0>
+    0.00 :   105d54c:        lea    0x68(%rsp),%rbx
+    0.00 :   105d551:        lea    -0x4aef8(%rip),%rcx        # 1012660 <core_number_pairs+0xb400>
+    0.00 :   105d558:        mov    %rbx,%rdi
+    0.00 :   105d55b:        mov    %r14,%rsi
+    0.00 :   105d55e:        mov    0x38(%rsp),%rdx
+    0.00 :   105d563:        call   1062b80 <my.vm::runtime_error>
+    0.00 :   105d568:        testb  $0x1,(%rbx)
+    0.00 :   105d56b:        je     105dd49 <my.vm::run+0x2c59>
+    0.00 :   105d571:        mov    0x80(%r14),%rax
+    0.00 :   105d578:        mov    0x90(%r14),%r11
+    0.00 :   105d57f:        mov    0x10(%rsp),%r9
+    0.00 :   105d584:        mov    0x20(%rsp),%r8
+    0.00 :   105d589:        mov    %r12,%rbx
+    0.00 :   105d58c:        mov    %rax,%r12
+    0.00 :   105d58f:        mov    %rbp,%r10
+    0.21 :   105d592:        data16 data16 data16 data16 cs nopw 0x0(%rax,%rax,1)
+    2.11 :   105d5a0:        mov    %r11,%rsi
+    1.97 :   105d5a3:        dec    %rsi
+    2.57 :   105d5a6:        jo     105ddb5 <my.vm::run+0x2cc5>
+    2.36 :   105d5ac:        mov    %r12,%rbp
+    0.37 :   105d5af:        mov    %r11,%r15
+    0.20 :   105d5b2:        mov    0x88(%r14),%rax
+    1.82 :   105d5b9:        mov    0x8(%rax),%rdx
+    1.88 :   105d5bd:        cmp    %rdx,%rsi
+    1.43 :   105d5c0:        jb     105b170 <my.vm::run+0x80>
+    0.00 :   105d5c6:        mov    %rsi,%rax
+    0.00 :   105d5c9:        sar    $0x3f,%rax
+    0.00 :   105d5cd:        and    %rdx,%rax
+    0.00 :   105d5d0:        add    %rsi,%rax
+    0.00 :   105d5d3:        cmp    %rdx,%rax
+    0.00 :   105d5d6:        jb     105b170 <my.vm::run+0x80>
+    0.00 :   105d5dc:        jmp    105e679 <my.vm::run+0x3589>
+    0.00 :   105d5e1:        mov    %r14,%rdi
+    0.00 :   105d5e4:        mov    %r15,%rsi
+    0.00 :   105d5e7:        call   106a230 <my.heap::instance_class>
+    0.00 :   105d5ec:        lea    0x68(%rsp),%r15
+    0.00 :   105d5f1:        mov    %r15,%rdi
+    0.00 :   105d5f4:        mov    %r14,%rsi
+    0.00 :   105d5f7:        mov    0x38(%rsp),%rdx
+    0.00 :   105d5fc:        mov    %rax,%rcx
+    0.00 :   105d5ff:        mov    0x18(%rsp),%r8
+    0.00 :   105d604:        call   10631e0 <my.vm::bind_method>
+    0.00 :   105d609:        jmp    105cf97 <my.vm::run+0x1ea7>
+    0.00 :   105d60e:        mov    %r14,%rdi
+    0.00 :   105d611:        mov    %rbp,%rsi
+    0.00 :   105d614:        call   106a230 <my.heap::instance_class>
+    0.00 :   105d619:        mov    %r13,%r8
+    0.00 :   105d61c:        lea    0x68(%rsp),%r13
+    0.00 :   105d621:        mov    %r13,%rdi
+    0.00 :   105d624:        mov    %r14,%rsi
+    0.00 :   105d627:        mov    0x38(%rsp),%rdx
+    0.00 :   105d62c:        mov    %rax,%rcx
+    0.00 :   105d62f:        mov    %rbx,%r9
+    0.00 :   105d632:        call   1063f10 <my.vm::invoke_from_class>
+    0.00 :   105d637:        testb  $0x1,0x0(%r13)
+    0.00 :   105d63c:        jne    105d045 <my.vm::run+0x1f55>
+    0.00 :   105d642:        jmp    105dd49 <my.vm::run+0x2c59>
+    0.00 :   105d647:        mov    %rcx,%rdi
+    0.00 :   105d64a:        call   1023ec0 <myl_core_drop_owned>
+    0.00 :   105d64f:        mov    %rbx,%rdi
+    0.00 :   105d652:        call   1023ec0 <myl_core_drop_owned>
+    0.00 :   105d657:        mov    %r15,%rdi
+    0.00 :   105d65a:        jmp    105d206 <my.vm::run+0x2116>
+    0.00 :   105d65f:        mov    %rax,%rdi
+    0.00 :   105d662:        jmp    105d206 <my.vm::run+0x2116>
+    0.00 :   105d667:        mov    %rsi,%rdi
+    0.00 :   105d66a:        sar    $0x3f,%rdi
+    0.00 :   105d66e:        and    %rdx,%rdi
+    0.00 :   105d671:        add    %rsi,%rdi
+    0.00 :   105d674:        cmp    %rdx,%rdi
+    0.00 :   105d677:        jb     105b225 <my.vm::run+0x135>
+    0.00 :   105d67d:        jmp    105e685 <my.vm::run+0x3595>
+    0.00 :   105d682:        mov    %r12,%rsi
+    0.00 :   105d685:        sar    $0x3f,%rsi
+    0.00 :   105d689:        and    %rdx,%rsi
+    0.00 :   105d68c:        add    %r12,%rsi
+    0.00 :   105d68f:        cmp    %rdx,%rsi
+    0.00 :   105d692:        jb     105b24e <my.vm::run+0x15e>
+    0.00 :   105d698:        jmp    105e6a0 <my.vm::run+0x35b0>
+    0.00 :   105d69d:        mov    %rbp,%rcx
+    0.00 :   105d6a0:        sar    $0x3f,%rcx
+    0.00 :   105d6a4:        and    %rdx,%rcx
+    0.00 :   105d6a7:        add    %rbp,%rcx
+    0.00 :   105d6aa:        cmp    %rdx,%rcx
+    0.00 :   105d6ad:        jb     105bc2f <my.vm::run+0xb3f>
+    0.00 :   105d6b3:        jmp    105e6e2 <my.vm::run+0x35f2>
+    0.00 :   105d6b8:        mov    %rbp,%rcx
+    0.00 :   105d6bb:        sar    $0x3f,%rcx
+    0.00 :   105d6bf:        and    %rdx,%rcx
+    0.00 :   105d6c2:        add    %rbp,%rcx
+    0.00 :   105d6c5:        cmp    %rdx,%rcx
+    0.00 :   105d6c8:        jb     105bd00 <my.vm::run+0xc10>
+    0.00 :   105d6ce:        jmp    105e7fe <my.vm::run+0x370e>
+    0.00 :   105d6d3:        mov    %rbp,%rcx
+    0.00 :   105d6d6:        sar    $0x3f,%rcx
+    0.00 :   105d6da:        and    %rdx,%rcx
+    0.00 :   105d6dd:        add    %rbp,%rcx
+    0.00 :   105d6e0:        cmp    %rdx,%rcx
+    0.00 :   105d6e3:        jb     105be65 <my.vm::run+0xd75>
+    0.00 :   105d6e9:        jmp    105e792 <my.vm::run+0x36a2>
+    0.00 :   105d6ee:        mov    %rbp,%rcx
+    0.00 :   105d6f1:        sar    $0x3f,%rcx
+    0.00 :   105d6f5:        and    %rdx,%rcx
+    0.00 :   105d6f8:        add    %rbp,%rcx
+    0.00 :   105d6fb:        cmp    %rdx,%rcx
+    0.00 :   105d6fe:        jb     105beaa <my.vm::run+0xdba>
+    0.00 :   105d704:        jmp    105e753 <my.vm::run+0x3663>
+    0.00 :   105d709:        mov    %rsi,%rdi
+    0.00 :   105d70c:        sar    $0x3f,%rdi
+    0.00 :   105d710:        and    %rax,%rdi
+    0.00 :   105d713:        add    %rsi,%rdi
+    0.00 :   105d716:        cmp    %rax,%rdi
+    0.00 :   105d719:        mov    %r15,%r11
+    0.00 :   105d71c:        jb     105b54b <my.vm::run+0x45b>
+    0.00 :   105d722:        jmp    105e7d7 <my.vm::run+0x36e7>
+    0.00 :   105d727:        mov    %rsi,%rcx
+    0.00 :   105d72a:        sar    $0x3f,%rcx
+    0.00 :   105d72e:        and    %rdx,%rcx
+    0.00 :   105d731:        add    %rsi,%rcx
+    0.00 :   105d734:        cmp    %rdx,%rcx
+    0.00 :   105d737:        jb     105b7a2 <my.vm::run+0x6b2>
+    0.00 :   105d73d:        jmp    105e80d <my.vm::run+0x371d>
+    0.00 :   105d742:        mov    %rax,%r13
+    0.00 :   105d745:        sar    $0x3f,%r13
+    0.00 :   105d749:        and    %rdx,%r13
+    0.00 :   105d74c:        add    %rax,%r13
+    0.00 :   105d74f:        cmp    %rdx,%r13
+    0.00 :   105d752:        jb     105b99e <my.vm::run+0x8ae>
+    0.00 :   105d758:        jmp    105e8bb <my.vm::run+0x37cb>
+    0.00 :   105d75d:        mov    %rsi,%rcx
+    0.00 :   105d760:        sar    $0x3f,%rcx
+    0.00 :   105d764:        and    %rdx,%rcx
+    0.00 :   105d767:        add    %rsi,%rcx
+    0.00 :   105d76a:        cmp    %rdx,%rcx
+    0.00 :   105d76d:        jb     105bc7d <my.vm::run+0xb8d>
+    0.00 :   105d773:        jmp    105e7e6 <my.vm::run+0x36f6>
+    0.00 :   105d778:        mov    %r12,%rsi
+    0.00 :   105d77b:        sar    $0x3f,%rsi
+    0.00 :   105d77f:        and    %rdx,%rsi
+    0.00 :   105d782:        add    %r12,%rsi
+    0.00 :   105d785:        cmp    %rdx,%rsi
+    0.00 :   105d788:        jb     105bf5d <my.vm::run+0xe6d>
+    0.00 :   105d78e:        jmp    105e894 <my.vm::run+0x37a4>
+    0.00 :   105d793:        mov    %rsi,%rcx
+    0.00 :   105d796:        sar    $0x3f,%rcx
+    0.00 :   105d79a:        and    %rdx,%rcx
+    0.00 :   105d79d:        add    %rsi,%rcx
+    0.00 :   105d7a0:        cmp    %rdx,%rcx
+    0.00 :   105d7a3:        mov    %r15,%r11
+    0.00 :   105d7a6:        jb     105bfed <my.vm::run+0xefd>
+    0.00 :   105d7ac:        jmp    105e762 <my.vm::run+0x3672>
+    0.00 :   105d7b1:        mov    %rsi,%rdi
+    0.00 :   105d7b4:        sar    $0x3f,%rdi
+    0.00 :   105d7b8:        and    %rdx,%rdi
+    0.00 :   105d7bb:        add    %rsi,%rdi
+    0.00 :   105d7be:        cmp    %rdx,%rdi
+    0.00 :   105d7c1:        mov    %r15,%r11
+    0.00 :   105d7c4:        jb     105c24f <my.vm::run+0x115f>
+    0.00 :   105d7ca:        jmp    105e7f2 <my.vm::run+0x3702>
+    0.00 :   105d7cf:        mov    %rsi,%rcx
+    0.00 :   105d7d2:        sar    $0x3f,%rcx
+    0.00 :   105d7d6:        and    %rdx,%rcx
+    0.00 :   105d7d9:        add    %rsi,%rcx
+    0.00 :   105d7dc:        cmp    %rdx,%rcx
+    0.00 :   105d7df:        jb     105c37d <my.vm::run+0x128d>
+    0.00 :   105d7e5:        jmp    105e86a <my.vm::run+0x377a>
+    0.00 :   105d7ea:        mov    %rbp,%rcx
+    0.00 :   105d7ed:        sar    $0x3f,%rcx
+    0.00 :   105d7f1:        and    %rdx,%rcx
+    0.00 :   105d7f4:        add    %rbp,%rcx
+    0.00 :   105d7f7:        cmp    %rdx,%rcx
+    0.00 :   105d7fa:        jb     105c003 <my.vm::run+0xf13>
+    0.00 :   105d800:        jmp    105e85b <my.vm::run+0x376b>
+    0.00 :   105d805:        lea    (%r15,%rsi,1),%rcx
+    0.00 :   105d809:        cmp    %rdx,%rcx
+    0.00 :   105d80c:        jb     105c921 <my.vm::run+0x1831>
+    0.00 :   105d812:        jmp    105e747 <my.vm::run+0x3657>
+    0.00 :   105d817:        lea    (%r12,%rcx,1),%rdi
+    0.00 :   105d81b:        cmp    %rdx,%rdi
+    0.00 :   105d81e:        jb     105cc5a <my.vm::run+0x1b6a>
+    0.00 :   105d824:        jmp    105e819 <my.vm::run+0x3729>
+    0.00 :   105d829:        mov    %r12,%rcx
+    0.00 :   105d82c:        sar    $0x3f,%rcx
+    0.00 :   105d830:        and    %rdx,%rcx
+    0.00 :   105d833:        add    %r12,%rcx
+    0.00 :   105d836:        cmp    %rdx,%rcx
+    0.00 :   105d839:        jb     105cf40 <my.vm::run+0x1e50>
+    0.00 :   105d83f:        jmp    105e876 <my.vm::run+0x3786>
+    0.00 :   105d844:        mov    %rsi,%rax
+    0.00 :   105d847:        sar    $0x3f,%rax
+    0.00 :   105d84b:        and    %rdx,%rax
+    0.00 :   105d84e:        add    %rsi,%rax
+    0.00 :   105d851:        cmp    %rdx,%rax
+    0.00 :   105d854:        jb     105b326 <my.vm::run+0x236>
+    0.00 :   105d85a:        jmp    105e76e <my.vm::run+0x367e>
+    0.00 :   105d85f:        mov    %r12,%rcx
+    0.00 :   105d862:        sar    $0x3f,%rcx
+    0.00 :   105d866:        and    %rdx,%rcx
+    0.00 :   105d869:        add    %r12,%rcx
+    0.00 :   105d86c:        cmp    %rdx,%rcx
+    0.00 :   105d86f:        jb     105bcb1 <my.vm::run+0xbc1>
+    0.00 :   105d875:        jmp    105e7a1 <my.vm::run+0x36b1>
+    0.00 :   105d87a:        mov    0x50(%rsp),%rcx
+    0.00 :   105d87f:        mov    %rcx,%rax
+    0.00 :   105d882:        sar    $0x3f,%rax
+    0.00 :   105d886:        and    %rdx,%rax
+    0.00 :   105d889:        add    %rcx,%rax
+    0.00 :   105d88c:        cmp    %rdx,%rax
+    0.00 :   105d88f:        jb     105c07c <my.vm::run+0xf8c>
+    0.00 :   105d895:        jmp    105e6f1 <my.vm::run+0x3601>
+    0.00 :   105d89a:        mov    %rsi,%rax
+    0.00 :   105d89d:        sar    $0x3f,%rax
+    0.00 :   105d8a1:        and    %rdx,%rax
+    0.00 :   105d8a4:        add    %rsi,%rax
+    0.00 :   105d8a7:        cmp    %rdx,%rax
+    0.00 :   105d8aa:        jb     105c271 <my.vm::run+0x1181>
+    0.00 :   105d8b0:        jmp    105e6af <my.vm::run+0x35bf>
+    0.00 :   105d8b5:        mov    %r12,%rax
+    0.00 :   105d8b8:        sar    $0x3f,%rax
+    0.00 :   105d8bc:        and    %rdx,%rax
+    0.00 :   105d8bf:        add    %r12,%rax
+    0.00 :   105d8c2:        cmp    %rdx,%rax
+    0.00 :   105d8c5:        jb     105cc15 <my.vm::run+0x1b25>
+    0.00 :   105d8cb:        jmp    105e885 <my.vm::run+0x3795>
+    0.00 :   105d8d0:        mov    %rsi,%rcx
+    0.00 :   105d8d3:        sar    $0x3f,%rcx
+    0.00 :   105d8d7:        and    %rdx,%rcx
+    0.00 :   105d8da:        add    %rsi,%rcx
+    0.00 :   105d8dd:        cmp    %rdx,%rcx
+    0.00 :   105d8e0:        jb     105cd05 <my.vm::run+0x1c15>
+    0.00 :   105d8e6:        jmp    105e720 <my.vm::run+0x3630>
+    0.00 :   105d8eb:        mov    %rsi,%rdi
+    0.00 :   105d8ee:        sar    $0x3f,%rdi
+    0.00 :   105d8f2:        and    %rdx,%rdi
+    0.00 :   105d8f5:        add    %rsi,%rdi
+    0.00 :   105d8f8:        cmp    %rdx,%rdi
+    0.00 :   105d8fb:        jb     105b651 <my.vm::run+0x561>
+    0.00 :   105d901:        jmp    105e8a3 <my.vm::run+0x37b3>
+    0.00 :   105d906:        mov    %rdi,%rcx
+    0.00 :   105d909:        sar    $0x3f,%rcx
+    0.00 :   105d90d:        and    %rdx,%rcx
+    0.00 :   105d910:        add    %rdi,%rcx
+    0.00 :   105d913:        cmp    %rdx,%rcx
+    0.00 :   105d916:        jb     105c4b4 <my.vm::run+0x13c4>
+    0.00 :   105d91c:        jmp    105e72c <my.vm::run+0x363c>
+    0.00 :   105d921:        mov    %rsi,%rcx
+    0.00 :   105d924:        sar    $0x3f,%rcx
+    0.00 :   105d928:        and    %rdx,%rcx
+    0.00 :   105d92b:        add    %rsi,%rcx
+    0.00 :   105d92e:        cmp    %rdx,%rcx
+    0.00 :   105d931:        jb     105b70a <my.vm::run+0x61a>
+    0.00 :   105d937:        jmp    105e786 <my.vm::run+0x3696>
+    0.00 :   105d93c:        mov    %rsi,%rcx
+    0.00 :   105d93f:        sar    $0x3f,%rcx
+    0.00 :   105d943:        and    %rdx,%rcx
+    0.00 :   105d946:        add    %rsi,%rcx
+    0.00 :   105d949:        cmp    %rdx,%rcx
+    0.00 :   105d94c:        jb     105bb26 <my.vm::run+0xa36>
+    0.00 :   105d952:        jmp    105e6ca <my.vm::run+0x35da>
+    0.00 :   105d957:        mov    %rsi,%rcx
+    0.00 :   105d95a:        sar    $0x3f,%rcx
+    0.00 :   105d95e:        and    %rdx,%rcx
+    0.00 :   105d961:        add    %rsi,%rcx
+    0.00 :   105d964:        cmp    %rdx,%rcx
+    0.00 :   105d967:        jb     105cb26 <my.vm::run+0x1a36>
+    0.00 :   105d96d:        jmp    105e828 <my.vm::run+0x3738>
+    0.00 :   105d972:        mov    %rsi,%rax
+    0.00 :   105d975:        sar    $0x3f,%rax
+    0.00 :   105d979:        and    %rdx,%rax
+    0.00 :   105d97c:        add    %rsi,%rax
+    0.00 :   105d97f:        cmp    %rdx,%rax
+    0.00 :   105d982:        jb     105b45b <my.vm::run+0x36b>
+    0.00 :   105d988:        jmp    105e7b0 <my.vm::run+0x36c0>
+    0.00 :   105d98d:        mov    %r12,%rax
+    0.00 :   105d990:        sar    $0x3f,%rax
+    0.00 :   105d994:        and    %rdx,%rax
+    0.00 :   105d997:        add    %r12,%rax
+    0.00 :   105d99a:        cmp    %rdx,%rax
+    0.00 :   105d99d:        lea    -0x565f8(%rip),%r13        # 10073ac <core_number_pairs+0x14c>
+    0.00 :   105d9a4:        mov    0x20(%rsp),%r8
+    0.00 :   105d9a9:        mov    0x18(%rsp),%rbx
+    0.00 :   105d9ae:        jae    105e834 <my.vm::run+0x3744>
+    0.00 :   105d9b4:        mov    0x8(%rsp),%r14
+    0.00 :   105d9b9:        jmp    105d5a0 <my.vm::run+0x24b0>
+    0.00 :   105d9be:        mov    %rsi,%rax
+    0.00 :   105d9c1:        sar    $0x3f,%rax
+    0.00 :   105d9c5:        and    %rdx,%rax
+    0.00 :   105d9c8:        add    %rsi,%rax
+    0.00 :   105d9cb:        cmp    %rdx,%rax
+    0.00 :   105d9ce:        jb     105ce46 <my.vm::run+0x1d56>
+    0.00 :   105d9d4:        jmp    105e843 <my.vm::run+0x3753>
+    0.00 :   105d9d9:        mov    %r15,%rcx
+    0.00 :   105d9dc:        sar    $0x3f,%rcx
+    0.00 :   105d9e0:        and    %rdx,%rcx
+    0.00 :   105d9e3:        add    %r15,%rcx
+    0.00 :   105d9e6:        cmp    %rdx,%rcx
+    0.00 :   105d9e9:        jb     105b497 <my.vm::run+0x3a7>
+    0.00 :   105d9ef:        jmp    105e6bb <my.vm::run+0x35cb>
+    0.00 :   105d9f4:        mov    %r12,%rax
+    0.00 :   105d9f7:        sar    $0x3f,%rax
+    0.00 :   105d9fb:        and    %rdx,%rax
+    0.00 :   105d9fe:        add    %r12,%rax
+    0.00 :   105da01:        cmp    %rdx,%rax
+    0.00 :   105da04:        jb     105b4d1 <my.vm::run+0x3e1>
+    0.00 :   105da0a:        jmp    105e711 <my.vm::run+0x3621>
+    0.00 :   105da0f:        mov    %rsi,%rcx
+    0.00 :   105da12:        sar    $0x3f,%rcx
+    0.00 :   105da16:        and    %rdx,%rcx
+    0.00 :   105da19:        add    %rsi,%rcx
+    0.00 :   105da1c:        cmp    %rdx,%rcx
+    0.00 :   105da1f:        jb     105c561 <my.vm::run+0x1471>
+    0.00 :   105da25:        jmp    105e84f <my.vm::run+0x375f>
+    0.00 :   105da2a:        mov    %rsi,%rax
+    0.00 :   105da2d:        sar    $0x3f,%rax
+    0.00 :   105da31:        and    %rdx,%rax
+    0.00 :   105da34:        add    %rsi,%rax
+    0.00 :   105da37:        cmp    %rdx,%rax
+    0.00 :   105da3a:        jb     105d2c4 <my.vm::run+0x21d4>
+    0.00 :   105da40:        jmp    105e6d6 <my.vm::run+0x35e6>
+    0.00 :   105da45:        sar    $0x3f,%rcx
+    0.00 :   105da49:        and    %rdx,%rcx
+    0.00 :   105da4c:        add    %r12,%rcx
+    0.00 :   105da4f:        cmp    %rdx,%rcx
+    0.00 :   105da52:        jb     105b7fb <my.vm::run+0x70b>
+    0.00 :   105da58:        jmp    105e702 <my.vm::run+0x3612>
+    0.00 :   105da5d:        mov    %rsi,%rcx
+    0.00 :   105da60:        sar    $0x3f,%rcx
+    0.00 :   105da64:        and    %rdx,%rcx
+    0.00 :   105da67:        add    %rsi,%rcx
+    0.00 :   105da6a:        cmp    %rdx,%rcx
+    0.00 :   105da6d:        jb     105d07d <my.vm::run+0x1f8d>
+    0.00 :   105da73:        jmp    105e8af <my.vm::run+0x37bf>
+    0.00 :   105da78:        mov    %rsi,%rcx
+    0.00 :   105da7b:        sar    $0x3f,%rcx
+    0.00 :   105da7f:        and    %rdx,%rcx
+    0.00 :   105da82:        add    %rsi,%rcx
+    0.00 :   105da85:        cmp    %rdx,%rcx
+    0.00 :   105da88:        mov    %r15,%r9
+    0.00 :   105da8b:        mov    %rbx,%r8
+    0.00 :   105da8e:        mov    %rbp,%r10
+    0.00 :   105da91:        jb     105c312 <my.vm::run+0x1222>
+    0.00 :   105da97:        jmp    105ea1a <my.vm::run+0x392a>
+    0.00 :   105da9c:        mov    %rsi,%rcx
+    0.00 :   105da9f:        sar    $0x3f,%rcx
+    0.00 :   105daa3:        and    %rdx,%rcx
+    0.00 :   105daa6:        add    %rsi,%rcx
+    0.00 :   105daa9:        cmp    %rdx,%rcx
+    0.00 :   105daac:        jb     105c337 <my.vm::run+0x1247>
+    0.00 :   105dab2:        jmp    105e9b7 <my.vm::run+0x38c7>
+    0.00 :   105dab7:        mov    %rsi,%rcx
+    0.00 :   105daba:        sar    $0x3f,%rcx
+    0.00 :   105dabe:        and    %rdx,%rcx
+    0.00 :   105dac1:        add    %rsi,%rcx
+    0.00 :   105dac4:        cmp    %rdx,%rcx
+    0.00 :   105dac7:        jb     105b8fd <my.vm::run+0x80d>
+    0.00 :   105dacd:        jmp    105ea26 <my.vm::run+0x3936>
+    0.00 :   105dad2:        mov    %rax,%rcx
+    0.00 :   105dad5:        sar    $0x3f,%rcx
+    0.00 :   105dad9:        and    %rdx,%rcx
+    0.00 :   105dadc:        add    %rax,%rcx
+    0.00 :   105dadf:        cmp    %rdx,%rcx
+    0.00 :   105dae2:        jb     105b916 <my.vm::run+0x826>
+    0.00 :   105dae8:        jmp    105e999 <my.vm::run+0x38a9>
+    0.00 :   105daed:        mov    %r15,%rcx
+    0.00 :   105daf0:        sar    $0x3f,%rcx
+    0.00 :   105daf4:        and    %rdx,%rcx
+    0.00 :   105daf7:        add    %r15,%rcx
+    0.00 :   105dafa:        cmp    %rdx,%rcx
+    0.00 :   105dafd:        jb     105b9cb <my.vm::run+0x8db>
+    0.00 :   105db03:        jmp    105e96c <my.vm::run+0x387c>
+    0.00 :   105db08:        mov    %rax,%rdi
+    0.00 :   105db0b:        sar    $0x3f,%rdi
+    0.00 :   105db0f:        and    %rcx,%rdi
+    0.00 :   105db12:        add    %rax,%rdi
+    0.00 :   105db15:        cmp    %rcx,%rdi
+    0.00 :   105db18:        jb     105b352 <my.vm::run+0x262>
+    0.00 :   105db1e:        jmp    105e94b <my.vm::run+0x385b>
+    0.00 :   105db23:        mov    %rsi,%r8
+    0.00 :   105db26:        sar    $0x3f,%r8
+    0.00 :   105db2a:        and    %rax,%r8
+    0.00 :   105db2d:        add    %rsi,%r8
+    0.00 :   105db30:        cmp    %rax,%r8
+    0.00 :   105db33:        jb     105bdcb <my.vm::run+0xcdb>
+    0.00 :   105db39:        jmp    105e97b <my.vm::run+0x388b>
+    0.00 :   105db3e:        mov    %rbp,%rcx
+    0.00 :   105db41:        sar    $0x3f,%rcx
+    0.00 :   105db45:        and    %rdx,%rcx
+    0.00 :   105db48:        add    %rbp,%rcx
+    0.00 :   105db4b:        cmp    %rdx,%rcx
+    0.00 :   105db4e:        jb     105ce6e <my.vm::run+0x1d7e>
+    0.00 :   105db54:        jmp    105e9ed <my.vm::run+0x38fd>
+    0.00 :   105db59:        mov    %rsi,%r8
+    0.00 :   105db5c:        sar    $0x3f,%r8
+    0.00 :   105db60:        and    %rdx,%r8
+    0.00 :   105db63:        add    %rsi,%r8
+    0.00 :   105db66:        cmp    %rdx,%r8
+    0.00 :   105db69:        jb     105d25d <my.vm::run+0x216d>
+    0.00 :   105db6f:        jmp    105e8ca <my.vm::run+0x37da>
+    0.00 :   105db74:        mov    %rsi,%rax
+    0.00 :   105db77:        sar    $0x3f,%rax
+    0.00 :   105db7b:        and    %rdx,%rax
+    0.00 :   105db7e:        add    %rsi,%rax
+    0.00 :   105db81:        cmp    %rdx,%rax
+    0.00 :   105db84:        jb     105d181 <my.vm::run+0x2091>
+    0.00 :   105db8a:        jmp    105e91e <my.vm::run+0x382e>
+    0.00 :   105db8f:        mov    %r15,%rax
+    0.00 :   105db92:        sar    $0x3f,%rax
+    0.00 :   105db96:        and    %rdx,%rax
+    0.00 :   105db99:        add    %r15,%rax
+    0.00 :   105db9c:        cmp    %rdx,%rax
+    0.00 :   105db9f:        jb     105d1a6 <my.vm::run+0x20b6>
+    0.00 :   105dba5:        jmp    105e903 <my.vm::run+0x3813>
+    0.00 :   105dbaa:        mov    %rax,%r8
+    0.00 :   105dbad:        sar    $0x3f,%r8
+    0.00 :   105dbb1:        and    %rcx,%r8
+    0.00 :   105dbb4:        add    %rax,%r8
+    0.00 :   105dbb7:        cmp    %rcx,%r8
+    0.00 :   105dbba:        jb     105c95e <my.vm::run+0x186e>
+    0.00 :   105dbc0:        jmp    105e8d6 <my.vm::run+0x37e6>
+    0.00 :   105dbc5:        mov    %r12,%rcx
+    0.00 :   105dbc8:        sar    $0x3f,%rcx
+    0.00 :   105dbcc:        and    %rdx,%rcx
+    0.00 :   105dbcf:        add    %r12,%rcx
+    0.00 :   105dbd2:        cmp    %rdx,%rcx
+    0.00 :   105dbd5:        jb     105d39b <my.vm::run+0x22ab>
+    0.00 :   105dbdb:        jmp    105e9fc <my.vm::run+0x390c>
+    0.00 :   105dbe0:        mov    %r15,%rcx
+    0.00 :   105dbe3:        sar    $0x3f,%rcx
+    0.00 :   105dbe7:        and    %rdx,%rcx
+    0.00 :   105dbea:        add    %r15,%rcx
+    0.00 :   105dbed:        cmp    %rdx,%rcx
+    0.00 :   105dbf0:        jb     105b36d <my.vm::run+0x27d>
+    0.00 :   105dbf6:        jmp    105e92a <my.vm::run+0x383a>
+    0.00 :   105dbfb:        mov    %rsi,%rcx
+    0.00 :   105dbfe:        sar    $0x3f,%rcx
+    0.00 :   105dc02:        and    %rdx,%rcx
+    0.00 :   105dc05:        add    %rsi,%rcx
+    0.00 :   105dc08:        cmp    %rdx,%rcx
+    0.00 :   105dc0b:        jb     105c0bf <my.vm::run+0xfcf>
+    0.00 :   105dc11:        jmp    105e912 <my.vm::run+0x3822>
+    0.00 :   105dc16:        mov    %r15,%rax
+    0.00 :   105dc19:        sar    $0x3f,%rax
+    0.00 :   105dc1d:        and    %rdx,%rax
+    0.00 :   105dc20:        add    %r15,%rax
+    0.00 :   105dc23:        cmp    %rdx,%rax
+    0.00 :   105dc26:        jb     105b3b3 <my.vm::run+0x2c3>
+    0.00 :   105dc2c:        jmp    105ea0b <my.vm::run+0x391b>
+    0.00 :   105dc31:        mov    %rax,%r8
+    0.00 :   105dc34:        sar    $0x3f,%r8
+    0.00 :   105dc38:        and    %rdx,%r8
+    0.00 :   105dc3b:        add    %rax,%r8
+    0.00 :   105dc3e:        cmp    %rdx,%r8
+    0.00 :   105dc41:        jb     105c986 <my.vm::run+0x1896>
+    0.00 :   105dc47:        jmp    105e8e8 <my.vm::run+0x37f8>
+    0.00 :   105dc4c:        mov    %r15,%rcx
+    0.00 :   105dc4f:        sar    $0x3f,%rcx
+    0.00 :   105dc53:        and    %rdx,%rcx
+    0.00 :   105dc56:        add    %r15,%rcx
+    0.00 :   105dc59:        cmp    %rdx,%rcx
+    0.00 :   105dc5c:        jb     105c154 <my.vm::run+0x1064>
+    0.00 :   105dc62:        jmp    105e9a8 <my.vm::run+0x38b8>
+    0.00 :   105dc67:        mov    %r15,%rax
+    0.00 :   105dc6a:        sar    $0x3f,%rax
+    0.00 :   105dc6e:        and    %rdx,%rax
+    0.00 :   105dc71:        add    %r15,%rax
+    0.00 :   105dc74:        cmp    %rdx,%rax
+    0.00 :   105dc77:        mov    0x10(%rsp),%r9
+    0.00 :   105dc7c:        mov    0x48(%rsp),%r10
+    0.00 :   105dc81:        jb     105c190 <my.vm::run+0x10a0>
+    0.00 :   105dc87:        jmp    105e98a <my.vm::run+0x389a>
+    0.00 :   105dc8c:        mov    %r12,%rax
+    0.00 :   105dc8f:        sar    $0x3f,%rax
+    0.00 :   105dc93:        and    %rdx,%rax
+    0.00 :   105dc96:        add    %r12,%rax
+    0.00 :   105dc99:        cmp    %rdx,%rax
+    0.00 :   105dc9c:        jb     105c1b6 <my.vm::run+0x10c6>
+    0.00 :   105dca2:        jmp    105e9d2 <my.vm::run+0x38e2>
+    0.00 :   105dca7:        mov    %rsi,%rcx
+    0.00 :   105dcaa:        sar    $0x3f,%rcx
+    0.00 :   105dcae:        and    %rax,%rcx
+    0.00 :   105dcb1:        add    %rsi,%rcx
+    0.00 :   105dcb4:        cmp    %rax,%rcx
+    0.00 :   105dcb7:        jb     105ced1 <my.vm::run+0x1de1>
+    0.00 :   105dcbd:        jmp    105e95d <my.vm::run+0x386d>
+    0.00 :   105dcc2:        mov    %r8,%r11
+    0.00 :   105dcc5:        sar    $0x3f,%r11
+    0.00 :   105dcc9:        and    %rcx,%r11
+    0.00 :   105dccc:        add    %r8,%r11
+    0.00 :   105dccf:        cmp    %rcx,%r11
+    0.00 :   105dcd2:        jb     105c9a9 <my.vm::run+0x18b9>
+    0.00 :   105dcd8:        jmp    105e939 <my.vm::run+0x3849>
+    0.00 :   105dcdd:        add    %rsi,%r15
+    0.00 :   105dce0:        cmp    %rdx,%r15
+    0.00 :   105dce3:        jb     105c9cb <my.vm::run+0x18db>
+    0.00 :   105dce9:        jmp    105e9e1 <my.vm::run+0x38f1>
+    0.00 :   105dcee:        mov    %rax,%rsi
+    0.00 :   105dcf1:        sar    $0x3f,%rsi
+    0.00 :   105dcf5:        and    %rdx,%rsi
+    0.00 :   105dcf8:        add    %rax,%rsi
+    0.00 :   105dcfb:        cmp    %rdx,%rsi
+    0.00 :   105dcfe:        jb     105c9ee <my.vm::run+0x18fe>
+    0.00 :   105dd04:        jmp    105e9c3 <my.vm::run+0x38d3>
+    0.00 :   105dd09:        mov    %rsi,%rdi
+    0.00 :   105dd0c:        sar    $0x3f,%rdi
+    0.00 :   105dd10:        and    %rdx,%rdi
+    0.00 :   105dd13:        add    %rsi,%rdi
+    0.00 :   105dd16:        cmp    %rdx,%rdi
+    0.00 :   105dd19:        jb     105ca4d <my.vm::run+0x195d>
+    0.00 :   105dd1f:        jmp    105e8f7 <my.vm::run+0x3807>
+    0.00 :   105dd24:        mov    %r12,%rsi
+    0.00 :   105dd27:        sar    $0x3f,%rsi
+    0.00 :   105dd2b:        and    %rdx,%rsi
+    0.00 :   105dd2e:        add    %r12,%rsi
+    0.00 :   105dd31:        cmp    %rdx,%rsi
+    0.00 :   105dd34:        jb     105ca65 <my.vm::run+0x1975>
+    0.00 :   105dd3a:        lea    0x26d9f(%rip),%rdi        # 1084ae0 <core_durable_error.verbs+0x4ad0>
+    0.00 :   105dd41:        mov    %r12,%rsi
+    0.00 :   105dd44:        call   1024c40 <myl_core_trap>
+    0.00 :   105dd49:        mov    $0x2,%ecx
+    0.00 :   105dd4e:        mov    0x40(%rsp),%rax
+    0.00 :   105dd53:        mov    %rcx,(%rax)
+    0.00 :   105dd56:        add    $0xaa8,%rsp
+    0.00 :   105dd5d:        pop    %rbx
+    0.00 :   105dd5e:        pop    %r12
+    0.00 :   105dd60:        pop    %r13
+    0.00 :   105dd62:        pop    %r14
+    0.00 :   105dd64:        pop    %r15
+    0.00 :   105dd66:        pop    %rbp
+    0.00 :   105dd67:        ret
+    0.00 :   105dd68:        mov    0x80(%r14),%rax
+    0.00 :   105dd6f:        mov    %rax,%rsi
+    0.00 :   105dd72:        dec    %rsi
+    0.00 :   105dd75:        jo     105e665 <my.vm::run+0x3575>
+    0.00 :   105dd7b:        mov    %rsi,0x80(%r14)
+    0.00 :   105dd82:        mov    0x78(%r14),%rax
+    0.00 :   105dd86:        mov    0x8(%rax),%rdx
+    0.00 :   105dd8a:        cmp    %rdx,%rsi
+    0.00 :   105dd8d:        jae    105ddc9 <my.vm::run+0x2cd9>
+    0.00 :   105dd8f:        xor    %ecx,%ecx
+    0.00 :   105dd91:        jmp    105dd4e <my.vm::run+0x2c5e>
+    0.00 :   105dd93:        mov    %rsi,%rcx
+    0.00 :   105dd96:        sar    $0x3f,%rcx
+    0.00 :   105dd9a:        and    %rdx,%rcx
+    0.00 :   105dd9d:        add    %rsi,%rcx
+    0.00 :   105dda0:        cmp    %rdx,%rcx
+    0.00 :   105dda3:        jb     105b144 <my.vm::run+0x54>
+    0.00 :   105dda9:        lea    0x22650(%rip),%rdi        # 1080400 <core_durable_error.verbs+0x3f0>
+    0.00 :   105ddb0:        call   1024c40 <myl_core_trap>
+    0.00 :   105ddb5:        lea    0x22914(%rip),%rdi        # 10806d0 <core_durable_error.verbs+0x6c0>
+    0.00 :   105ddbc:        mov    $0x1,%edx
+    0.00 :   105ddc1:        mov    %r11,%rsi
+    0.00 :   105ddc4:        call   1024c40 <myl_core_trap>
+    0.00 :   105ddc9:        mov    %rsi,%rax
+    0.00 :   105ddcc:        sar    $0x3f,%rax
+    0.00 :   105ddd0:        and    %rdx,%rax
+    0.00 :   105ddd3:        add    %rsi,%rax
+    0.00 :   105ddd6:        cmp    %rdx,%rax
+    0.00 :   105ddd9:        jb     105dd8f <my.vm::run+0x2c9f>
+    0.00 :   105dddb:        lea    0x2306e(%rip),%rdi        # 1080e50 <core_durable_error.verbs+0xe40>
+    0.00 :   105dde2:        call   1024c40 <myl_core_trap>
+    0.00 :   105dde7:        cmp    $0x9,%ecx
+    0.00 :   105ddea:        ja     105e46d <my.vm::run+0x337d>
+    0.00 :   105ddf0:        mov    %ecx,%eax
+    0.00 :   105ddf2:        lea    -0x569b9(%rip),%rcx        # 1007440 <core_number_pairs+0x1e0>
+    0.00 :   105ddf9:        movslq (%rcx,%rax,4),%rax
+    0.00 :   105ddfd:        add    %rcx,%rax
+    0.00 :   105de00:        jmp    *%rax
+    0.00 :   105de02:        lea    0x273f7(%rip),%rdi        # 1085200 <core_durable_error.verbs+0x51f0>
+    0.00 :   105de09:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105de0e:        lea    0x24b3b(%rip),%rdi        # 1082950 <core_durable_error.verbs+0x2940>
+    0.00 :   105de15:        mov    %r15,%rsi
+    0.00 :   105de18:        call   1024c40 <myl_core_trap>
+    0.00 :   105de1d:        lea    0x24acc(%rip),%rdi        # 10828f0 <core_durable_error.verbs+0x28e0>
+    0.00 :   105de24:        call   1024c40 <myl_core_trap>
+    0.00 :   105de29:        lea    0x24af0(%rip),%rdi        # 1082920 <core_durable_error.verbs+0x2910>
+    0.00 :   105de30:        mov    %r15,%rsi
+    0.00 :   105de33:        call   1024c40 <myl_core_trap>
+    0.00 :   105de38:        lea    0x24511(%rip),%rdi        # 1082350 <core_durable_error.verbs+0x2340>
+    0.00 :   105de3f:        mov    $0x1,%edx
+    0.00 :   105de44:        mov    %rax,%rsi
+    0.00 :   105de47:        call   1024c40 <myl_core_trap>
+    0.00 :   105de4c:        cmp    $0x1,%edx
+    0.00 :   105de4f:        je     105e019 <my.vm::run+0x2f29>
+    0.00 :   105de55:        test   %edx,%edx
+    0.00 :   105de57:        jne    105e025 <my.vm::run+0x2f35>
+    0.00 :   105de5d:        lea    0x2439c(%rip),%rdi        # 1082200 <core_durable_error.verbs+0x21f0>
+    0.00 :   105de64:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105de69:        cmp    $0x1,%eax
+    0.00 :   105de6c:        je     105e031 <my.vm::run+0x2f41>
+    0.00 :   105de72:        test   %eax,%eax
+    0.00 :   105de74:        jne    105e03d <my.vm::run+0x2f4d>
+    0.00 :   105de7a:        lea    0x2437f(%rip),%rdi        # 1082200 <core_durable_error.verbs+0x21f0>
+    0.00 :   105de81:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105de86:        cmp    $0x1,%eax
+    0.00 :   105de89:        je     105e049 <my.vm::run+0x2f59>
+    0.00 :   105de8f:        test   %eax,%eax
+    0.00 :   105de91:        jne    105e055 <my.vm::run+0x2f65>
+    0.00 :   105de97:        lea    0x24362(%rip),%rdi        # 1082200 <core_durable_error.verbs+0x21f0>
+    0.00 :   105de9e:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105dea3:        cmp    $0x1,%ecx
+    0.00 :   105dea6:        je     105e061 <my.vm::run+0x2f71>
+    0.00 :   105deac:        test   %ecx,%ecx
+    0.00 :   105deae:        jne    105e079 <my.vm::run+0x2f89>
+    0.00 :   105deb4:        lea    0x24345(%rip),%rdi        # 1082200 <core_durable_error.verbs+0x21f0>
+    0.00 :   105debb:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105dec0:        cmp    $0x1,%eax
+    0.00 :   105dec3:        je     105e06d <my.vm::run+0x2f7d>
+    0.00 :   105dec9:        test   %eax,%eax
+    0.00 :   105decb:        jne    105e085 <my.vm::run+0x2f95>
+    0.00 :   105ded1:        lea    0x24328(%rip),%rdi        # 1082200 <core_durable_error.verbs+0x21f0>
+    0.00 :   105ded8:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105dedd:        cmp    $0x1,%eax
+    0.00 :   105dee0:        je     105e091 <my.vm::run+0x2fa1>
+    0.00 :   105dee6:        test   %eax,%eax
+    0.00 :   105dee8:        jne    105e09d <my.vm::run+0x2fad>
+    0.00 :   105deee:        lea    0x2430b(%rip),%rdi        # 1082200 <core_durable_error.verbs+0x21f0>
+    0.00 :   105def5:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105defa:        cmp    $0x1,%eax
+    0.00 :   105defd:        je     105e0a9 <my.vm::run+0x2fb9>
+    0.00 :   105df03:        test   %eax,%eax
+    0.00 :   105df05:        jne    105e0b5 <my.vm::run+0x2fc5>
+    0.00 :   105df0b:        lea    0x242ee(%rip),%rdi        # 1082200 <core_durable_error.verbs+0x21f0>
+    0.00 :   105df12:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105df17:        cmp    $0x1,%edx
+    0.00 :   105df1a:        je     105e0c1 <my.vm::run+0x2fd1>
+    0.00 :   105df20:        test   %edx,%edx
+    0.00 :   105df22:        jne    105e0d9 <my.vm::run+0x2fe9>
+    0.00 :   105df28:        lea    0x242d1(%rip),%rdi        # 1082200 <core_durable_error.verbs+0x21f0>
+    0.00 :   105df2f:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105df34:        cmp    $0x1,%eax
+    0.00 :   105df37:        je     105e0cd <my.vm::run+0x2fdd>
+    0.00 :   105df3d:        test   %eax,%eax
+    0.00 :   105df3f:        jne    105e0e5 <my.vm::run+0x2ff5>
+    0.00 :   105df45:        lea    0x242b4(%rip),%rdi        # 1082200 <core_durable_error.verbs+0x21f0>
+    0.00 :   105df4c:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105df51:        cmp    $0x1,%eax
+    0.00 :   105df54:        je     105e0f1 <my.vm::run+0x3001>
+    0.00 :   105df5a:        test   %eax,%eax
+    0.00 :   105df5c:        jne    105e0fd <my.vm::run+0x300d>
+    0.00 :   105df62:        lea    0x24297(%rip),%rdi        # 1082200 <core_durable_error.verbs+0x21f0>
+    0.00 :   105df69:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105df6e:        cmp    $0x1,%eax
+    0.00 :   105df71:        je     105e109 <my.vm::run+0x3019>
+    0.00 :   105df77:        test   %eax,%eax
+    0.00 :   105df79:        jne    105e115 <my.vm::run+0x3025>
+    0.00 :   105df7f:        lea    0x2427a(%rip),%rdi        # 1082200 <core_durable_error.verbs+0x21f0>
+    0.00 :   105df86:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105df8b:        cmp    $0x1,%eax
+    0.00 :   105df8e:        je     105e1cd <my.vm::run+0x30dd>
+    0.00 :   105df94:        test   %eax,%eax
+    0.00 :   105df96:        jne    105e1d9 <my.vm::run+0x30e9>
+    0.00 :   105df9c:        lea    0x2425d(%rip),%rdi        # 1082200 <core_durable_error.verbs+0x21f0>
+    0.00 :   105dfa3:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105dfa8:        lea    0x24401(%rip),%rdi        # 10823b0 <core_durable_error.verbs+0x23a0>
+    0.00 :   105dfaf:        mov    $0x1,%edx
+    0.00 :   105dfb4:        call   1024c40 <myl_core_trap>
+    0.00 :   105dfb9:        lea    0x27270(%rip),%rdi        # 1085230 <core_durable_error.verbs+0x5220>
+    0.00 :   105dfc0:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105dfc5:        lea    0x27324(%rip),%rdi        # 10852f0 <core_durable_error.verbs+0x52e0>
+    0.00 :   105dfcc:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105dfd1:        lea    0x27288(%rip),%rdi        # 1085260 <core_durable_error.verbs+0x5250>
+    0.00 :   105dfd8:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105dfdd:        lea    0x272ac(%rip),%rdi        # 1085290 <core_durable_error.verbs+0x5280>
+    0.00 :   105dfe4:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105dfe9:        lea    0x272d0(%rip),%rdi        # 10852c0 <core_durable_error.verbs+0x52b0>
+    0.00 :   105dff0:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105dff5:        lea    0x27324(%rip),%rdi        # 1085320 <core_durable_error.verbs+0x5310>
+    0.00 :   105dffc:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e001:        lea    0x27348(%rip),%rdi        # 1085350 <core_durable_error.verbs+0x5340>
+    0.00 :   105e008:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e00d:        lea    0x2736c(%rip),%rdi        # 1085380 <core_durable_error.verbs+0x5370>
+    0.00 :   105e014:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e019:        lea    0x24210(%rip),%rdi        # 1082230 <core_durable_error.verbs+0x2220>
+    0.00 :   105e020:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e025:        lea    0x24234(%rip),%rdi        # 1082260 <core_durable_error.verbs+0x2250>
+    0.00 :   105e02c:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e031:        lea    0x241f8(%rip),%rdi        # 1082230 <core_durable_error.verbs+0x2220>
+    0.00 :   105e038:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e03d:        lea    0x2421c(%rip),%rdi        # 1082260 <core_durable_error.verbs+0x2250>
+    0.00 :   105e044:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e049:        lea    0x241e0(%rip),%rdi        # 1082230 <core_durable_error.verbs+0x2220>
+    0.00 :   105e050:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e055:        lea    0x24204(%rip),%rdi        # 1082260 <core_durable_error.verbs+0x2250>
+    0.00 :   105e05c:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e061:        lea    0x241c8(%rip),%rdi        # 1082230 <core_durable_error.verbs+0x2220>
+    0.00 :   105e068:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e06d:        lea    0x241bc(%rip),%rdi        # 1082230 <core_durable_error.verbs+0x2220>
+    0.00 :   105e074:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e079:        lea    0x241e0(%rip),%rdi        # 1082260 <core_durable_error.verbs+0x2250>
+    0.00 :   105e080:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e085:        lea    0x241d4(%rip),%rdi        # 1082260 <core_durable_error.verbs+0x2250>
+    0.00 :   105e08c:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e091:        lea    0x24198(%rip),%rdi        # 1082230 <core_durable_error.verbs+0x2220>
+    0.00 :   105e098:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e09d:        lea    0x241bc(%rip),%rdi        # 1082260 <core_durable_error.verbs+0x2250>
+    0.00 :   105e0a4:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e0a9:        lea    0x24180(%rip),%rdi        # 1082230 <core_durable_error.verbs+0x2220>
+    0.00 :   105e0b0:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e0b5:        lea    0x241a4(%rip),%rdi        # 1082260 <core_durable_error.verbs+0x2250>
+    0.00 :   105e0bc:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e0c1:        lea    0x24168(%rip),%rdi        # 1082230 <core_durable_error.verbs+0x2220>
+    0.00 :   105e0c8:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e0cd:        lea    0x2415c(%rip),%rdi        # 1082230 <core_durable_error.verbs+0x2220>
+    0.00 :   105e0d4:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e0d9:        lea    0x24180(%rip),%rdi        # 1082260 <core_durable_error.verbs+0x2250>
+    0.00 :   105e0e0:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e0e5:        lea    0x24174(%rip),%rdi        # 1082260 <core_durable_error.verbs+0x2250>
+    0.00 :   105e0ec:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e0f1:        lea    0x24138(%rip),%rdi        # 1082230 <core_durable_error.verbs+0x2220>
+    0.00 :   105e0f8:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e0fd:        lea    0x2415c(%rip),%rdi        # 1082260 <core_durable_error.verbs+0x2250>
+    0.00 :   105e104:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e109:        lea    0x24120(%rip),%rdi        # 1082230 <core_durable_error.verbs+0x2220>
+    0.00 :   105e110:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e115:        lea    0x24144(%rip),%rdi        # 1082260 <core_durable_error.verbs+0x2250>
+    0.00 :   105e11c:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e121:        lea    0x23f58(%rip),%rdi        # 1082080 <core_durable_error.verbs+0x2070>
+    0.00 :   105e128:        mov    $0x1,%edx
+    0.00 :   105e12d:        call   1024c40 <myl_core_trap>
+    0.00 :   105e132:        lea    0x22aa7(%rip),%rdi        # 1080be0 <core_durable_error.verbs+0xbd0>
+    0.00 :   105e139:        mov    $0x1,%edx
+    0.00 :   105e13e:        mov    %r12,%rsi
+    0.00 :   105e141:        call   1024c40 <myl_core_trap>
+    0.00 :   105e146:        lea    0x22823(%rip),%rdi        # 1080970 <core_durable_error.verbs+0x960>
+    0.00 :   105e14d:        mov    %r9,%rsi
+    0.00 :   105e150:        mov    %rax,%rdx
+    0.00 :   105e153:        call   1024c40 <myl_core_trap>
+    0.00 :   105e158:        lea    0x229c1(%rip),%rdi        # 1080b20 <core_durable_error.verbs+0xb10>
+    0.00 :   105e15f:        mov    $0x1,%edx
+    0.00 :   105e164:        mov    %rbp,%rsi
+    0.00 :   105e167:        call   1024c40 <myl_core_trap>
+    0.00 :   105e16c:        lea    0x22e2d(%rip),%rdi        # 1080fa0 <core_durable_error.verbs+0xf90>
+    0.00 :   105e173:        mov    $0x1,%edx
+    0.00 :   105e178:        call   1024c40 <myl_core_trap>
+    0.00 :   105e17d:        lea    0x2281c(%rip),%rdi        # 10809a0 <core_durable_error.verbs+0x990>
+    0.00 :   105e184:        mov    $0x1,%edx
+    0.00 :   105e189:        mov    %r12,%rsi
+    0.00 :   105e18c:        call   1024c40 <myl_core_trap>
+    0.00 :   105e191:        lea    0x22928(%rip),%rdi        # 1080ac0 <core_durable_error.verbs+0xab0>
+    0.00 :   105e198:        mov    $0x1,%edx
+    0.00 :   105e19d:        mov    %rbp,%rsi
+    0.00 :   105e1a0:        call   1024c40 <myl_core_trap>
+    0.00 :   105e1a5:        lea    0x24a14(%rip),%rdi        # 1082bc0 <core_durable_error.verbs+0x2bb0>
+    0.00 :   105e1ac:        mov    $0x1,%edx
+    0.00 :   105e1b1:        mov    %r15,%rsi
+    0.00 :   105e1b4:        call   1024c40 <myl_core_trap>
+    0.00 :   105e1b9:        lea    0x22660(%rip),%rdi        # 1080820 <core_durable_error.verbs+0x810>
+    0.00 :   105e1c0:        mov    $0x1,%edx
+    0.00 :   105e1c5:        mov    %rbp,%rsi
+    0.00 :   105e1c8:        call   1024c40 <myl_core_trap>
+    0.00 :   105e1cd:        lea    0x2405c(%rip),%rdi        # 1082230 <core_durable_error.verbs+0x2220>
+    0.00 :   105e1d4:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e1d9:        lea    0x24080(%rip),%rdi        # 1082260 <core_durable_error.verbs+0x2250>
+    0.00 :   105e1e0:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e1e5:        lea    0x23f24(%rip),%rdi        # 1082110 <core_durable_error.verbs+0x2100>
+    0.00 :   105e1ec:        mov    $0x1,%edx
+    0.00 :   105e1f1:        mov    %r15,%rsi
+    0.00 :   105e1f4:        call   1024c40 <myl_core_trap>
+    0.00 :   105e1f9:        lea    0x248d0(%rip),%rdi        # 1082ad0 <core_durable_error.verbs+0x2ac0>
+    0.00 :   105e200:        mov    $0x1,%edx
+    0.00 :   105e205:        mov    %r15,%rsi
+    0.00 :   105e208:        call   1024c40 <myl_core_trap>
+    0.00 :   105e20d:        lea    0x222ac(%rip),%rdi        # 10804c0 <core_durable_error.verbs+0x4b0>
+    0.00 :   105e214:        call   1024c40 <myl_core_trap>
+    0.00 :   105e219:        lea    0x24970(%rip),%rdi        # 1082b90 <core_durable_error.verbs+0x2b80>
+    0.00 :   105e220:        mov    $0x1,%edx
+    0.00 :   105e225:        call   1024c40 <myl_core_trap>
+    0.00 :   105e22a:        lea    0x23eaf(%rip),%rdi        # 10820e0 <core_durable_error.verbs+0x20d0>
+    0.00 :   105e231:        mov    $0x1,%edx
+    0.00 :   105e236:        call   1024c40 <myl_core_trap>
+    0.00 :   105e23b:        lea    0x2485e(%rip),%rdi        # 1082aa0 <core_durable_error.verbs+0x2a90>
+    0.00 :   105e242:        mov    $0x1,%edx
+    0.00 :   105e247:        call   1024c40 <myl_core_trap>
+    0.00 :   105e24c:        lea    0x23bbd(%rip),%rdi        # 1081e10 <core_durable_error.verbs+0x1e00>
+    0.00 :   105e253:        mov    $0x1,%edx
+    0.00 :   105e258:        mov    %rax,%rsi
+    0.00 :   105e25b:        call   1024c40 <myl_core_trap>
+    0.00 :   105e260:        lea    0x22a09(%rip),%rdi        # 1080c70 <core_durable_error.verbs+0xc60>
+    0.00 :   105e267:        mov    %rax,%rsi
+    0.00 :   105e26a:        mov    %r9,%rdx
+    0.00 :   105e26d:        call   1024c40 <myl_core_trap>
+    0.00 :   105e272:        lea    0x226c7(%rip),%rdi        # 1080940 <core_durable_error.verbs+0x930>
+    0.00 :   105e279:        mov    $0x1,%edx
+    0.00 :   105e27e:        mov    %rbp,%rsi
+    0.00 :   105e281:        call   1024c40 <myl_core_trap>
+    0.00 :   105e286:        lea    0x22aa3(%rip),%rdi        # 1080d30 <core_durable_error.verbs+0xd20>
+    0.00 :   105e28d:        mov    $0x1,%edx
+    0.00 :   105e292:        call   1024c40 <myl_core_trap>
+    0.00 :   105e297:        lea    0x22af2(%rip),%rdi        # 1080d90 <core_durable_error.verbs+0xd80>
+    0.00 :   105e29e:        mov    $0x1,%edx
+    0.00 :   105e2a3:        call   1024c40 <myl_core_trap>
+    0.00 :   105e2a8:        lea    0x22181(%rip),%rdi        # 1080430 <core_durable_error.verbs+0x420>
+    0.00 :   105e2af:        mov    %r9,%rsi
+    0.00 :   105e2b2:        call   1024c40 <myl_core_trap>
+    0.00 :   105e2b7:        lea    0x24722(%rip),%rdi        # 10829e0 <core_durable_error.verbs+0x29d0>
+    0.00 :   105e2be:        mov    $0x1,%edx
+    0.00 :   105e2c3:        call   1024c40 <myl_core_trap>
+    0.00 :   105e2c8:        lea    0x24261(%rip),%rdi        # 1082530 <core_durable_error.verbs+0x2520>
+    0.00 :   105e2cf:        mov    $0x1,%edx
+    0.00 :   105e2d4:        call   1024c40 <myl_core_trap>
+    0.00 :   105e2d9:        lea    0x22c60(%rip),%rdi        # 1080f40 <core_durable_error.verbs+0xf30>
+    0.00 :   105e2e0:        mov    $0x1,%edx
+    0.00 :   105e2e5:        call   1024c40 <myl_core_trap>
+    0.00 :   105e2ea:        lea    0x2276f(%rip),%rdi        # 1080a60 <core_durable_error.verbs+0xa50>
+    0.00 :   105e2f1:        mov    $0x1,%edx
+    0.00 :   105e2f6:        mov    %rbp,%rsi
+    0.00 :   105e2f9:        call   1024c40 <myl_core_trap>
+    0.00 :   105e2fe:        lea    0x22abb(%rip),%rdi        # 1080dc0 <core_durable_error.verbs+0xdb0>
+    0.00 :   105e305:        mov    $0x1,%edx
+    0.00 :   105e30a:        mov    %rbp,%rsi
+    0.00 :   105e30d:        call   1024c40 <myl_core_trap>
+    0.00 :   105e312:        lea    0x22447(%rip),%rdi        # 1080760 <core_durable_error.verbs+0x750>
+    0.00 :   105e319:        mov    $0x1,%edx
+    0.00 :   105e31e:        mov    %rbp,%rsi
+    0.00 :   105e321:        call   1024c40 <myl_core_trap>
+    0.00 :   105e326:        lea    0x24533(%rip),%rdi        # 1082860 <core_durable_error.verbs+0x2850>
+    0.00 :   105e32d:        mov    $0x1,%edx
+    0.00 :   105e332:        mov    %r15,%rsi
+    0.00 :   105e335:        call   1024c40 <myl_core_trap>
+    0.00 :   105e33a:        lea    0x221df(%rip),%rdi        # 1080520 <core_durable_error.verbs+0x510>
+    0.00 :   105e341:        call   1024c40 <myl_core_trap>
+    0.00 :   105e346:        lea    0x22bc3(%rip),%rdi        # 1080f10 <core_durable_error.verbs+0xf00>
+    0.00 :   105e34d:        mov    $0x1,%edx
+    0.00 :   105e352:        call   1024c40 <myl_core_trap>
+    0.00 :   105e357:        lea    0x22552(%rip),%rdi        # 10808b0 <core_durable_error.verbs+0x8a0>
+    0.00 :   105e35e:        mov    $0x1,%edx
+    0.00 :   105e363:        mov    %rbp,%rsi
+    0.00 :   105e366:        call   1024c40 <myl_core_trap>
+    0.00 :   105e36b:        lea    0x222fe(%rip),%rdi        # 1080670 <core_durable_error.verbs+0x660>
+    0.00 :   105e372:        mov    $0x1,%edx
+    0.00 :   105e377:        mov    %rbp,%rsi
+    0.00 :   105e37a:        call   1024c40 <myl_core_trap>
+    0.00 :   105e37f:        lea    0x2450a(%rip),%rdi        # 1082890 <core_durable_error.verbs+0x2880>
+    0.00 :   105e386:        mov    %rax,%rsi
+    0.00 :   105e389:        mov    %rbx,%rdx
+    0.00 :   105e38c:        call   1024c40 <myl_core_trap>
+    0.00 :   105e391:        lea    0x228a8(%rip),%rdi        # 1080c40 <core_durable_error.verbs+0xc30>
+    0.00 :   105e398:        mov    $0x1,%edx
+    0.00 :   105e39d:        mov    %rbp,%rsi
+    0.00 :   105e3a0:        call   1024c40 <myl_core_trap>
+    0.00 :   105e3a5:        lea    0x227d4(%rip),%rdi        # 1080b80 <core_durable_error.verbs+0xb70>
+    0.00 :   105e3ac:        mov    $0x1,%edx
+    0.00 :   105e3b1:        mov    %rbp,%rsi
+    0.00 :   105e3b4:        call   1024c40 <myl_core_trap>
+    0.00 :   105e3b9:        lea    0x22400(%rip),%rdi        # 10807c0 <core_durable_error.verbs+0x7b0>
+    0.00 :   105e3c0:        mov    $0x1,%edx
+    0.00 :   105e3c5:        mov    %rbp,%rsi
+    0.00 :   105e3c8:        call   1024c40 <myl_core_trap>
+    0.00 :   105e3cd:        lea    0x2403c(%rip),%rdi        # 1082410 <core_durable_error.verbs+0x2400>
+    0.00 :   105e3d4:        mov    $0x1,%edx
+    0.00 :   105e3d9:        mov    %rax,%rsi
+    0.00 :   105e3dc:        call   1024c40 <myl_core_trap>
+    0.00 :   105e3e1:        lea    0x228e8(%rip),%rdi        # 1080cd0 <core_durable_error.verbs+0xcc0>
+    0.00 :   105e3e8:        mov    $0x1,%edx
+    0.00 :   105e3ed:        mov    %rbp,%rsi
+    0.00 :   105e3f0:        call   1024c40 <myl_core_trap>
+    0.00 :   105e3f5:        lea    0x22604(%rip),%rdi        # 1080a00 <core_durable_error.verbs+0x9f0>
+    0.00 :   105e3fc:        mov    $0x1,%edx
+    0.00 :   105e401:        mov    %rbp,%rsi
+    0.00 :   105e404:        call   1024c40 <myl_core_trap>
+    0.00 :   105e409:        lea    0x22470(%rip),%rdi        # 1080880 <core_durable_error.verbs+0x870>
+    0.00 :   105e410:        mov    $0x1,%edx
+    0.00 :   105e415:        mov    %rbp,%rsi
+    0.00 :   105e418:        call   1024c40 <myl_core_trap>
+    0.00 :   105e41d:        lea    0x2212c(%rip),%rdi        # 1080550 <core_durable_error.verbs+0x540>
+    0.00 :   105e424:        mov    $0x1,%edx
+    0.00 :   105e429:        mov    %r11,%rsi
+    0.00 :   105e42c:        call   1024c40 <myl_core_trap>
+    0.00 :   105e431:        lea    0x22178(%rip),%rdi        # 10805b0 <core_durable_error.verbs+0x5a0>
+    0.00 :   105e438:        mov    $0x1,%edx
+    0.00 :   105e43d:        mov    %r11,%rsi
+    0.00 :   105e440:        call   1024c40 <myl_core_trap>
+    0.00 :   105e445:        lea    0x221c4(%rip),%rdi        # 1080610 <core_durable_error.verbs+0x600>
+    0.00 :   105e44c:        mov    $0x1,%edx
+    0.00 :   105e451:        mov    %r11,%rsi
+    0.00 :   105e454:        call   1024c40 <myl_core_trap>
+    0.00 :   105e459:        lea    0x22a20(%rip),%rdi        # 1080e80 <core_durable_error.verbs+0xe70>
+    0.00 :   105e460:        mov    $0x1,%edx
+    0.00 :   105e465:        mov    %r11,%rsi
+    0.00 :   105e468:        call   1024c40 <myl_core_trap>
+    0.00 :   105e46d:        lea    0x26f3c(%rip),%rdi        # 10853b0 <core_durable_error.verbs+0x53a0>
+    0.00 :   105e474:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e479:        cmp    $0x1,%eax
+    0.00 :   105e47c:        je     105e55f <my.vm::run+0x346f>
+    0.00 :   105e482:        test   %eax,%eax
+    0.00 :   105e484:        jne    105e56b <my.vm::run+0x347b>
+    0.00 :   105e48a:        lea    0x23d6f(%rip),%rdi        # 1082200 <core_durable_error.verbs+0x21f0>
+    0.00 :   105e491:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e496:        cmp    $0x1,%esi
+    0.00 :   105e499:        je     105e577 <my.vm::run+0x3487>
+    0.00 :   105e49f:        test   %esi,%esi
+    0.00 :   105e4a1:        jne    105e583 <my.vm::run+0x3493>
+    0.00 :   105e4a7:        lea    0x23d52(%rip),%rdi        # 1082200 <core_durable_error.verbs+0x21f0>
+    0.00 :   105e4ae:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e4b3:        lea    0x23b06(%rip),%rdi        # 1081fc0 <core_durable_error.verbs+0x1fb0>
+    0.00 :   105e4ba:        mov    $0x1,%edx
+    0.00 :   105e4bf:        mov    %rcx,%rsi
+    0.00 :   105e4c2:        call   1024c40 <myl_core_trap>
+    0.00 :   105e4c7:        lea    0x23a62(%rip),%rdi        # 1081f30 <core_durable_error.verbs+0x1f20>
+    0.00 :   105e4ce:        mov    $0x1,%edx
+    0.00 :   105e4d3:        call   1024c40 <myl_core_trap>
+    0.00 :   105e4d8:        lea    0x23901(%rip),%rdi        # 1081de0 <core_durable_error.verbs+0x1dd0>
+    0.00 :   105e4df:        mov    $0x1,%edx
+    0.00 :   105e4e4:        call   1024c40 <myl_core_trap>
+    0.00 :   105e4e9:        lea    0x22000(%rip),%rdi        # 10804f0 <core_durable_error.verbs+0x4e0>
+    0.00 :   105e4f0:        mov    %r8,%rsi
+    0.00 :   105e4f3:        call   1024c40 <myl_core_trap>
+    0.00 :   105e4f8:        lea    0x21ed1(%rip),%rdi        # 10803d0 <core_durable_error.verbs+0x3c0>
+    0.00 :   105e4ff:        mov    $0x1,%edx
+    0.00 :   105e504:        mov    %r15,%rsi
+    0.00 :   105e507:        call   1024c40 <myl_core_trap>
+    0.00 :   105e50c:        lea    0x23b0d(%rip),%rdi        # 1082020 <core_durable_error.verbs+0x2010>
+    0.00 :   105e513:        mov    $0x1,%edx
+    0.00 :   105e518:        mov    %rcx,%rsi
+    0.00 :   105e51b:        call   1024c40 <myl_core_trap>
+    0.00 :   105e520:        lea    0x239a9(%rip),%rdi        # 1081ed0 <core_durable_error.verbs+0x1ec0>
+    0.00 :   105e527:        mov    $0x1,%edx
+    0.00 :   105e52c:        call   1024c40 <myl_core_trap>
+    0.00 :   105e531:        cmp    $0x1,%eax
+    0.00 :   105e534:        je     105e5f8 <my.vm::run+0x3508>
+    0.00 :   105e53a:        test   %eax,%eax
+    0.00 :   105e53c:        jne    105e604 <my.vm::run+0x3514>
+    0.00 :   105e542:        lea    0x23cb7(%rip),%rdi        # 1082200 <core_durable_error.verbs+0x21f0>
+    0.00 :   105e549:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e54e:        lea    0x23f7b(%rip),%rdi        # 10824d0 <core_durable_error.verbs+0x24c0>
+    0.00 :   105e555:        mov    $0x1,%edx
+    0.00 :   105e55a:        call   1024c40 <myl_core_trap>
+    0.00 :   105e55f:        lea    0x23cca(%rip),%rdi        # 1082230 <core_durable_error.verbs+0x2220>
+    0.00 :   105e566:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e56b:        lea    0x23cee(%rip),%rdi        # 1082260 <core_durable_error.verbs+0x2250>
+    0.00 :   105e572:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e577:        lea    0x23cb2(%rip),%rdi        # 1082230 <core_durable_error.verbs+0x2220>
+    0.00 :   105e57e:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e583:        lea    0x23cd6(%rip),%rdi        # 1082260 <core_durable_error.verbs+0x2250>
+    0.00 :   105e58a:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e58f:        lea    0x23eda(%rip),%rdi        # 1082470 <core_durable_error.verbs+0x2460>
+    0.00 :   105e596:        mov    $0x1,%edx
+    0.00 :   105e59b:        call   1024c40 <myl_core_trap>
+    0.00 :   105e5a0:        cmp    $0x1,%ecx
+    0.00 :   105e5a3:        je     105e635 <my.vm::run+0x3545>
+    0.00 :   105e5a9:        test   %ecx,%ecx
+    0.00 :   105e5ab:        jne    105e641 <my.vm::run+0x3551>
+    0.00 :   105e5b1:        lea    0x23c48(%rip),%rdi        # 1082200 <core_durable_error.verbs+0x21f0>
+    0.00 :   105e5b8:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e5bd:        lea    0x2420c(%rip),%rdi        # 10827d0 <core_durable_error.verbs+0x27c0>
+    0.00 :   105e5c4:        mov    %r15,%rsi
+    0.00 :   105e5c7:        mov    %rbx,%rdx
+    0.00 :   105e5ca:        call   1024c40 <myl_core_trap>
+    0.00 :   105e5cf:        lea    0x2422a(%rip),%rdi        # 1082800 <core_durable_error.verbs+0x27f0>
+    0.00 :   105e5d6:        mov    $0x1,%edx
+    0.00 :   105e5db:        mov    %rax,%rsi
+    0.00 :   105e5de:        call   1024c40 <myl_core_trap>
+    0.00 :   105e5e3:        cmp    $0x1,%eax
+    0.00 :   105e5e6:        je     105e64d <my.vm::run+0x355d>
+    0.00 :   105e5e8:        test   %eax,%eax
+    0.00 :   105e5ea:        jne    105e659 <my.vm::run+0x3569>
+    0.00 :   105e5ec:        lea    0x23c0d(%rip),%rdi        # 1082200 <core_durable_error.verbs+0x21f0>
+    0.00 :   105e5f3:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e5f8:        lea    0x23c31(%rip),%rdi        # 1082230 <core_durable_error.verbs+0x2220>
+    0.00 :   105e5ff:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e604:        lea    0x23c55(%rip),%rdi        # 1082260 <core_durable_error.verbs+0x2250>
+    0.00 :   105e60b:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e610:        lea    0x26499(%rip),%rdi        # 1084ab0 <core_durable_error.verbs+0x4aa0>
+    0.00 :   105e617:        mov    $0x1,%edx
+    0.00 :   105e61c:        call   1024c40 <myl_core_trap>
+    0.00 :   105e621:        lea    0x26428(%rip),%rdi        # 1084a50 <core_durable_error.verbs+0x4a40>
+    0.00 :   105e628:        mov    $0x1,%edx
+    0.00 :   105e62d:        mov    %rax,%rsi
+    0.00 :   105e630:        call   1024c40 <myl_core_trap>
+    0.00 :   105e635:        lea    0x23bf4(%rip),%rdi        # 1082230 <core_durable_error.verbs+0x2220>
+    0.00 :   105e63c:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e641:        lea    0x23c18(%rip),%rdi        # 1082260 <core_durable_error.verbs+0x2250>
+    0.00 :   105e648:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e64d:        lea    0x23bdc(%rip),%rdi        # 1082230 <core_durable_error.verbs+0x2220>
+    0.00 :   105e654:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e659:        lea    0x23c00(%rip),%rdi        # 1082260 <core_durable_error.verbs+0x2250>
+    0.00 :   105e660:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   105e665:        lea    0x227b4(%rip),%rdi        # 1080e20 <core_durable_error.verbs+0xe10>
+    0.00 :   105e66c:        mov    $0x1,%edx
+    0.00 :   105e671:        mov    %rax,%rsi
+    0.00 :   105e674:        call   1024c40 <myl_core_trap>
+    0.00 :   105e679:        lea    0x22080(%rip),%rdi        # 1080700 <core_durable_error.verbs+0x6f0>
+    0.00 :   105e680:        call   1024c40 <myl_core_trap>
+    0.00 :   105e685:        lea    0x23cf4(%rip),%rdi        # 1082380 <core_durable_error.verbs+0x2370>
+    0.00 :   105e68c:        call   1024c40 <myl_core_trap>
+    0.00 :   105e691:        lea    0x26d48(%rip),%rdi        # 10853e0 <core_durable_error.verbs+0x53d0>
+    0.00 :   105e698:        mov    %r13,%rsi
+    0.00 :   105e69b:        call   1024c40 <myl_core_trap>
+    0.00 :   105e6a0:        lea    0x23d39(%rip),%rdi        # 10823e0 <core_durable_error.verbs+0x23d0>
+    0.00 :   105e6a7:        mov    %r12,%rsi
+    0.00 :   105e6aa:        call   1024c40 <myl_core_trap>
+    0.00 :   105e6af:        lea    0x21dda(%rip),%rdi        # 1080490 <core_durable_error.verbs+0x480>
+    0.00 :   105e6b6:        call   1024c40 <myl_core_trap>
+    0.00 :   105e6bb:        lea    0x2455e(%rip),%rdi        # 1082c20 <core_durable_error.verbs+0x2c10>
+    0.00 :   105e6c2:        mov    %r15,%rsi
+    0.00 :   105e6c5:        call   1024c40 <myl_core_trap>
+    0.00 :   105e6ca:        lea    0x2376f(%rip),%rdi        # 1081e40 <core_durable_error.verbs+0x1e30>
+    0.00 :   105e6d1:        call   1024c40 <myl_core_trap>
+    0.00 :   105e6d6:        lea    0x242a3(%rip),%rdi        # 1082980 <core_durable_error.verbs+0x2970>
+    0.00 :   105e6dd:        call   1024c40 <myl_core_trap>
+    0.00 :   105e6e2:        lea    0x22107(%rip),%rdi        # 10807f0 <core_durable_error.verbs+0x7e0>
+    0.00 :   105e6e9:        mov    %rbp,%rsi
+    0.00 :   105e6ec:        call   1024c40 <myl_core_trap>
+    0.00 :   105e6f1:        lea    0x23a48(%rip),%rdi        # 1082140 <core_durable_error.verbs+0x2130>
+    0.00 :   105e6f8:        mov    0x50(%rsp),%rsi
+    0.00 :   105e6fd:        call   1024c40 <myl_core_trap>
+    0.00 :   105e702:        lea    0x227a7(%rip),%rdi        # 1080eb0 <core_durable_error.verbs+0xea0>
+    0.00 :   105e709:        mov    %r12,%rsi
+    0.00 :   105e70c:        call   1024c40 <myl_core_trap>
+    0.00 :   105e711:        lea    0x24538(%rip),%rdi        # 1082c50 <core_durable_error.verbs+0x2c40>
+    0.00 :   105e718:        mov    %r12,%rsi
+    0.00 :   105e71b:        call   1024c40 <myl_core_trap>
+    0.00 :   105e720:        lea    0x22579(%rip),%rdi        # 1080ca0 <core_durable_error.verbs+0xc90>
+    0.00 :   105e727:        call   1024c40 <myl_core_trap>
+    0.00 :   105e72c:        mov    %rdi,%rsi
+    0.00 :   105e72f:        lea    0x26a9a(%rip),%rdi        # 10851d0 <core_durable_error.verbs+0x51c0>
+    0.00 :   105e736:        call   1024c40 <myl_core_trap>
+    0.00 :   105e73b:        lea    0x21f5e(%rip),%rdi        # 10806a0 <core_durable_error.verbs+0x690>
+    0.00 :   105e742:        call   1024c40 <myl_core_trap>
+    0.00 :   105e747:        lea    0x23cf2(%rip),%rdi        # 1082440 <core_durable_error.verbs+0x2430>
+    0.00 :   105e74e:        call   1024c40 <myl_core_trap>
+    0.00 :   105e753:        lea    0x22036(%rip),%rdi        # 1080790 <core_durable_error.verbs+0x780>
+    0.00 :   105e75a:        mov    %rbp,%rsi
+    0.00 :   105e75d:        call   1024c40 <myl_core_trap>
+    0.00 :   105e762:        lea    0x21cf7(%rip),%rdi        # 1080460 <core_durable_error.verbs+0x450>
+    0.00 :   105e769:        call   1024c40 <myl_core_trap>
+    0.00 :   105e76e:        lea    0x2438b(%rip),%rdi        # 1082b00 <core_durable_error.verbs+0x2af0>
+    0.00 :   105e775:        call   1024c40 <myl_core_trap>
+    0.00 :   105e77a:        lea    0x21dff(%rip),%rdi        # 1080580 <core_durable_error.verbs+0x570>
+    0.00 :   105e781:        call   1024c40 <myl_core_trap>
+    0.00 :   105e786:        lea    0x22303(%rip),%rdi        # 1080a90 <core_durable_error.verbs+0xa80>
+    0.00 :   105e78d:        call   1024c40 <myl_core_trap>
+    0.00 :   105e792:        lea    0x21f97(%rip),%rdi        # 1080730 <core_durable_error.verbs+0x720>
+    0.00 :   105e799:        mov    %rbp,%rsi
+    0.00 :   105e79c:        call   1024c40 <myl_core_trap>
+    0.00 :   105e7a1:        lea    0x22828(%rip),%rdi        # 1080fd0 <core_durable_error.verbs+0xfc0>
+    0.00 :   105e7a8:        mov    %r12,%rsi
+    0.00 :   105e7ab:        call   1024c40 <myl_core_trap>
+    0.00 :   105e7b0:        lea    0x24439(%rip),%rdi        # 1082bf0 <core_durable_error.verbs+0x2be0>
+    0.00 :   105e7b7:        call   1024c40 <myl_core_trap>
+    0.00 :   105e7bc:        lea    0x2211d(%rip),%rdi        # 10808e0 <core_durable_error.verbs+0x8d0>
+    0.00 :   105e7c3:        mov    %r12,%rsi
+    0.00 :   105e7c6:        call   1024c40 <myl_core_trap>
+    0.00 :   105e7cb:        lea    0x21e6e(%rip),%rdi        # 1080640 <core_durable_error.verbs+0x630>
+    0.00 :   105e7d2:        call   1024c40 <myl_core_trap>
+    0.00 :   105e7d7:        lea    0x22432(%rip),%rdi        # 1080c10 <core_durable_error.verbs+0xc00>
+    0.00 :   105e7de:        mov    %rax,%rdx
+    0.00 :   105e7e1:        call   1024c40 <myl_core_trap>
+    0.00 :   105e7e6:        lea    0x22303(%rip),%rdi        # 1080af0 <core_durable_error.verbs+0xae0>
+    0.00 :   105e7ed:        call   1024c40 <myl_core_trap>
+    0.00 :   105e7f2:        lea    0x221d7(%rip),%rdi        # 10809d0 <core_durable_error.verbs+0x9c0>
+    0.00 :   105e7f9:        call   1024c40 <myl_core_trap>
+    0.00 :   105e7fe:        lea    0x2204b(%rip),%rdi        # 1080850 <core_durable_error.verbs+0x840>
+    0.00 :   105e805:        mov    %rbp,%rsi
+    0.00 :   105e808:        call   1024c40 <myl_core_trap>
+    0.00 :   105e80d:        lea    0x225dc(%rip),%rdi        # 1080df0 <core_durable_error.verbs+0xde0>
+    0.00 :   105e814:        call   1024c40 <myl_core_trap>
+    0.00 :   105e819:        lea    0x22330(%rip),%rdi        # 1080b50 <core_durable_error.verbs+0xb40>
+    0.00 :   105e820:        mov    %r12,%rsi
+    0.00 :   105e823:        call   1024c40 <myl_core_trap>
+    0.00 :   105e828:        lea    0x224d1(%rip),%rdi        # 1080d00 <core_durable_error.verbs+0xcf0>
+    0.00 :   105e82f:        call   1024c40 <myl_core_trap>
+    0.00 :   105e834:        lea    0x22735(%rip),%rdi        # 1080f70 <core_durable_error.verbs+0xf60>
+    0.00 :   105e83b:        mov    %r12,%rsi
+    0.00 :   105e83e:        call   1024c40 <myl_core_trap>
+    0.00 :   105e843:        lea    0x24076(%rip),%rdi        # 10828c0 <core_durable_error.verbs+0x28b0>
+    0.00 :   105e84a:        call   1024c40 <myl_core_trap>
+    0.00 :   105e84f:        lea    0x2415a(%rip),%rdi        # 10829b0 <core_durable_error.verbs+0x29a0>
+    0.00 :   105e856:        call   1024c40 <myl_core_trap>
+    0.00 :   105e85b:        lea    0x220ae(%rip),%rdi        # 1080910 <core_durable_error.verbs+0x900>
+    0.00 :   105e862:        mov    %rbp,%rsi
+    0.00 :   105e865:        call   1024c40 <myl_core_trap>
+    0.00 :   105e86a:        lea    0x221bf(%rip),%rdi        # 1080a30 <core_durable_error.verbs+0xa20>
+    0.00 :   105e871:        call   1024c40 <myl_core_trap>
+    0.00 :   105e876:        lea    0x23ce3(%rip),%rdi        # 1082560 <core_durable_error.verbs+0x2550>
+    0.00 :   105e87d:        mov    %r12,%rsi
+    0.00 :   105e880:        call   1024c40 <myl_core_trap>
+    0.00 :   105e885:        lea    0x224d4(%rip),%rdi        # 1080d60 <core_durable_error.verbs+0xd50>
+    0.00 :   105e88c:        mov    %r12,%rsi
+    0.00 :   105e88f:        call   1024c40 <myl_core_trap>
+    0.00 :   105e894:        lea    0x22315(%rip),%rdi        # 1080bb0 <core_durable_error.verbs+0xba0>
+    0.00 :   105e89b:        mov    %r12,%rsi
+    0.00 :   105e89e:        call   1024c40 <myl_core_trap>
+    0.00 :   105e8a3:        lea    0x22636(%rip),%rdi        # 1080ee0 <core_durable_error.verbs+0xed0>
+    0.00 :   105e8aa:        call   1024c40 <myl_core_trap>
+    0.00 :   105e8af:        lea    0x21d2a(%rip),%rdi        # 10805e0 <core_durable_error.verbs+0x5d0>
+    0.00 :   105e8b6:        call   1024c40 <myl_core_trap>
+    0.00 :   105e8bb:        lea    0x237ee(%rip),%rdi        # 10820b0 <core_durable_error.verbs+0x20a0>
+    0.00 :   105e8c2:        mov    %rax,%rsi
+    0.00 :   105e8c5:        call   1024c40 <myl_core_trap>
+    0.00 :   105e8ca:        lea    0x235cf(%rip),%rdi        # 1081ea0 <core_durable_error.verbs+0x1e90>
+    0.00 :   105e8d1:        call   1024c40 <myl_core_trap>
+    0.00 :   105e8d6:        lea    0x260e3(%rip),%rdi        # 10849c0 <core_durable_error.verbs+0x49b0>
+    0.00 :   105e8dd:        mov    %rax,%rsi
+    0.00 :   105e8e0:        mov    %rcx,%rdx
+    0.00 :   105e8e3:        call   1024c40 <myl_core_trap>
+    0.00 :   105e8e8:        lea    0x23bb1(%rip),%rdi        # 10824a0 <core_durable_error.verbs+0x2490>
+    0.00 :   105e8ef:        mov    %rax,%rsi
+    0.00 :   105e8f2:        call   1024c40 <myl_core_trap>
+    0.00 :   105e8f7:        lea    0x26182(%rip),%rdi        # 1084a80 <core_durable_error.verbs+0x4a70>
+    0.00 :   105e8fe:        call   1024c40 <myl_core_trap>
+    0.00 :   105e903:        lea    0x23686(%rip),%rdi        # 1081f90 <core_durable_error.verbs+0x1f80>
+    0.00 :   105e90a:        mov    %r15,%rsi
+    0.00 :   105e90d:        call   1024c40 <myl_core_trap>
+    0.00 :   105e912:        lea    0x25a17(%rip),%rdi        # 1084330 <core_durable_error.verbs+0x4320>
+    0.00 :   105e919:        call   1024c40 <myl_core_trap>
+    0.00 :   105e91e:        lea    0x2372b(%rip),%rdi        # 1082050 <core_durable_error.verbs+0x2040>
+    0.00 :   105e925:        call   1024c40 <myl_core_trap>
+    0.00 :   105e92a:        lea    0x241ff(%rip),%rdi        # 1082b30 <core_durable_error.verbs+0x2b20>
+    0.00 :   105e931:        mov    %r15,%rsi
+    0.00 :   105e934:        call   1024c40 <myl_core_trap>
+    0.00 :   105e939:        lea    0x26080(%rip),%rdi        # 10849c0 <core_durable_error.verbs+0x49b0>
+    0.00 :   105e940:        mov    %r8,%rsi
+    0.00 :   105e943:        mov    %rcx,%rdx
+    0.00 :   105e946:        call   1024c40 <myl_core_trap>
+    0.00 :   105e94b:        lea    0x26abe(%rip),%rdi        # 1085410 <core_durable_error.verbs+0x5400>
+    0.00 :   105e952:        mov    %rax,%rsi
+    0.00 :   105e955:        mov    %rcx,%rdx
+    0.00 :   105e958:        call   1024c40 <myl_core_trap>
+    0.00 :   105e95d:        lea    0x23ecc(%rip),%rdi        # 1082830 <core_durable_error.verbs+0x2820>
+    0.00 :   105e964:        mov    %rax,%rdx
+    0.00 :   105e967:        call   1024c40 <myl_core_trap>
+    0.00 :   105e96c:        lea    0x259bd(%rip),%rdi        # 1084330 <core_durable_error.verbs+0x4320>
+    0.00 :   105e973:        mov    %r15,%rsi
+    0.00 :   105e976:        call   1024c40 <myl_core_trap>
+    0.00 :   105e97b:        lea    0x2342e(%rip),%rdi        # 1081db0 <core_durable_error.verbs+0x1da0>
+    0.00 :   105e982:        mov    %rax,%rdx
+    0.00 :   105e985:        call   1024c40 <myl_core_trap>
+    0.00 :   105e98a:        lea    0x2380f(%rip),%rdi        # 10821a0 <core_durable_error.verbs+0x2190>
+    0.00 :   105e991:        mov    %r15,%rsi
+    0.00 :   105e994:        call   1024c40 <myl_core_trap>
+    0.00 :   105e999:        lea    0x235c0(%rip),%rdi        # 1081f60 <core_durable_error.verbs+0x1f50>
+    0.00 :   105e9a0:        mov    %rax,%rsi
+    0.00 :   105e9a3:        call   1024c40 <myl_core_trap>
+    0.00 :   105e9a8:        lea    0x237c1(%rip),%rdi        # 1082170 <core_durable_error.verbs+0x2160>
+    0.00 :   105e9af:        mov    %r15,%rsi
+    0.00 :   105e9b2:        call   1024c40 <myl_core_trap>
+    0.00 :   105e9b7:        lea    0x23542(%rip),%rdi        # 1081f00 <core_durable_error.verbs+0x1ef0>
+    0.00 :   105e9be:        call   1024c40 <myl_core_trap>
+    0.00 :   105e9c3:        lea    0x26056(%rip),%rdi        # 1084a20 <core_durable_error.verbs+0x4a10>
+    0.00 :   105e9ca:        mov    %rax,%rsi
+    0.00 :   105e9cd:        call   1024c40 <myl_core_trap>
+    0.00 :   105e9d2:        lea    0x237f7(%rip),%rdi        # 10821d0 <core_durable_error.verbs+0x21c0>
+    0.00 :   105e9d9:        mov    %r12,%rsi
+    0.00 :   105e9dc:        call   1024c40 <myl_core_trap>
+    0.00 :   105e9e1:        lea    0x26008(%rip),%rdi        # 10849f0 <core_durable_error.verbs+0x49e0>
+    0.00 :   105e9e8:        call   1024c40 <myl_core_trap>
+    0.00 :   105e9ed:        lea    0x2593c(%rip),%rdi        # 1084330 <core_durable_error.verbs+0x4320>
+    0.00 :   105e9f4:        mov    %rbp,%rsi
+    0.00 :   105e9f7:        call   1024c40 <myl_core_trap>
+    0.00 :   105e9fc:        lea    0x23afd(%rip),%rdi        # 1082500 <core_durable_error.verbs+0x24f0>
+    0.00 :   105ea03:        mov    %r12,%rsi
+    0.00 :   105ea06:        call   1024c40 <myl_core_trap>
+    0.00 :   105ea0b:        lea    0x2414e(%rip),%rdi        # 1082b60 <core_durable_error.verbs+0x2b50>
+    0.00 :   105ea12:        mov    %r15,%rsi
+    0.00 :   105ea15:        call   1024c40 <myl_core_trap>
+    0.00 :   105ea1a:        lea    0x2344f(%rip),%rdi        # 1081e70 <core_durable_error.verbs+0x1e60>
+    0.00 :   105ea21:        call   1024c40 <myl_core_trap>
+    0.00 :   105ea26:        lea    0x235c3(%rip),%rdi        # 1081ff0 <core_durable_error.verbs+0x1fe0>
+    0.00 :   105ea2d:        call   1024c40 <myl_core_trap>

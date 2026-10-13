@@ -1,0 +1,78 @@
+ Percent |	Source code & Disassembly of zero-rc for cpu_core/cycles/u (126 samples, percent: local period)
+---------------------------------------------------------------------------------------------------------------
+         :
+         :
+         :
+         : 3       Disassembly of section .text:
+         :
+         : 5       00000000010630c0 <my.vm::read_constant>:
+   10.47 :   10630c0:        push   %rbx
+    0.72 :   10630c1:        mov    (%rsi),%r10
+    2.13 :   10630c4:        mov    0x8(%r10),%rax
+    3.13 :   10630c8:        mov    %rcx,%rsi
+    0.00 :   10630cb:        cmp    %rax,%rcx
+    0.00 :   10630ce:        jae    1063148 <my.vm::read_constant+0x88>
+    0.27 :   10630d0:        imul   $0x38,%rsi,%rax
+    0.00 :   10630d4:        cmpl   $0x2,0x20(%r10,%rax,1)
+    5.92 :   10630da:        jne    10631bd <my.vm::read_constant+0xfd>
+    1.11 :   10630e0:        mov    %r8,%rsi
+    0.00 :   10630e3:        add    %r10,%rax
+    0.00 :   10630e6:        add    $0x20,%rax
+    0.00 :   10630ea:        mov    0x18(%rax),%r10
+    0.00 :   10630ee:        mov    0x28(%rax),%r11
+    0.00 :   10630f2:        mov    0x8(%r10),%rax
+    9.98 :   10630f6:        mov    %r8,%rbx
+    7.36 :   10630f9:        cmp    %rax,%r8
+    0.00 :   10630fc:        jae    1063170 <my.vm::read_constant+0xb0>
+    2.48 :   10630fe:        mov    0x20(%r10,%rbx,8),%rax
+    0.00 :   1063103:        mov    0x8(%r11),%r10
+    0.00 :   1063107:        cmp    %r10,%rax
+    0.00 :   106310a:        jae    1063195 <my.vm::read_constant+0xd5>
+    2.87 :   1063110:        mov    %rax,%rbx
+    0.00 :   1063113:        inc    %r8
+    0.00 :   1063116:        jo     10631c9 <my.vm::read_constant+0x109>
+    0.00 :   106311c:        shl    $0x4,%rbx
+   13.31 :   1063120:        vmovups 0x20(%r11,%rbx,1),%xmm0
+   12.55 :   1063127:        vandps -0x5ed4f(%rip),%xmm0,%xmm0        # 10043e0 <__anon_2214+0xb0>
+   15.55 :   106312f:        vmovups %xmm0,(%rdi)
+    9.18 :   1063133:        mov    %rdx,0x10(%rdi)
+    0.00 :   1063137:        mov    %rcx,0x18(%rdi)
+    0.00 :   106313b:        mov    %r8,0x20(%rdi)
+    0.00 :   106313f:        mov    %r9,0x28(%rdi)
+    0.00 :   1063143:        mov    %rdi,%rax
+    2.97 :   1063146:        pop    %rbx
+    0.00 :   1063147:        ret
+    0.00 :   1063148:        mov    %rcx,%rsi
+    0.00 :   106314b:        sar    $0x3f,%rsi
+    0.00 :   106314f:        and    %rax,%rsi
+    0.00 :   1063152:        add    %rcx,%rsi
+    0.00 :   1063155:        cmp    %rax,%rsi
+    0.00 :   1063158:        jb     10630d0 <my.vm::read_constant+0x10>
+    0.00 :   106315e:        lea    0x2098b(%rip),%rdi        # 1083af0 <core_durable_error.verbs+0x3ae0>
+    0.00 :   1063165:        mov    %rcx,%rsi
+    0.00 :   1063168:        mov    %rax,%rdx
+    0.00 :   106316b:        call   1024c40 <myl_core_trap>
+    0.00 :   1063170:        mov    %r8,%rbx
+    0.00 :   1063173:        sar    $0x3f,%rbx
+    0.00 :   1063177:        and    %rax,%rbx
+    0.00 :   106317a:        add    %r8,%rbx
+    0.00 :   106317d:        cmp    %rax,%rbx
+    0.00 :   1063180:        jb     10630fe <my.vm::read_constant+0x3e>
+    0.00 :   1063186:        lea    0x209c3(%rip),%rdi        # 1083b50 <core_durable_error.verbs+0x3b40>
+    0.00 :   106318d:        mov    %rax,%rdx
+    0.00 :   1063190:        call   1024c40 <myl_core_trap>
+    0.00 :   1063195:        mov    %rax,%rbx
+    0.00 :   1063198:        sar    $0x3f,%rbx
+    0.00 :   106319c:        and    %r10,%rbx
+    0.00 :   106319f:        add    %rax,%rbx
+    0.00 :   10631a2:        cmp    %r10,%rbx
+    0.00 :   10631a5:        jb     1063113 <my.vm::read_constant+0x53>
+    0.00 :   10631ab:        lea    0x209ce(%rip),%rdi        # 1083b80 <core_durable_error.verbs+0x3b70>
+    0.00 :   10631b2:        mov    %rax,%rsi
+    0.00 :   10631b5:        mov    %r10,%rdx
+    0.00 :   10631b8:        call   1024c40 <myl_core_trap>
+    0.00 :   10631bd:        lea    0x2095c(%rip),%rdi        # 1083b20 <core_durable_error.verbs+0x3b10>
+    0.00 :   10631c4:        call   1029fc0 <myl_core_assert_fail>
+    0.00 :   10631c9:        lea    0x1ebb0(%rip),%rdi        # 1081d80 <core_durable_error.verbs+0x1d70>
+    0.00 :   10631d0:        mov    $0x1,%edx
+    0.00 :   10631d5:        call   1024c40 <myl_core_trap>

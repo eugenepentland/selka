@@ -1,0 +1,25 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 1K of event 'cpu_core/cycles/u'
+# Event count (approx.): 3821120819
+#
+# Overhead  Command  Shared Object         Symbol                       
+# ........  .......  ....................  .............................
+#
+    45.08%  zero-rc  zero-rc               [.] my.vm::run
+    24.99%  zero-rc  zero-rc               [.] my.vm::read_byte
+     8.85%  zero-rc  zero-rc               [.] my.vm::read_constant
+     6.20%  zero-rc  zero-rc               [.] my.vm::call_value
+     4.54%  zero-rc  zero-rc               [.] my.vm::read_short
+     3.73%  zero-rc  zero-rc               [.] my.table::get
+     2.64%  zero-rc  zero-rc               [.] my.vm::call
+     2.33%  zero-rc  zero-rc               [.] my.heap::string_hash
+     1.08%  zero-rc  zero-rc               [.] my.vm::close_upvalues
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

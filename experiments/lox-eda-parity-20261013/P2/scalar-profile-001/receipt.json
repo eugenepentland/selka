@@ -1,0 +1,101 @@
+{
+  "label": "diagnostic CPU attribution, not timing benefit",
+  "compiler_sha256": "955f311e1dbf65b55f4c148ab03cdcb4881bc5668289aea93336dbfd7985206a",
+  "input_sha256": "e5c412ecb35cb4bcda97ac05f47f7cd8267f23deb0403bc5dd31126980216f45",
+  "binary_sha256": {
+    "C1": "8b6cb98665c289b963c8ced786235d9a2023ce5981a3c0cf366c24253fd19ea5",
+    "short": "64895849dbe5a723eae4fff1838f6f781af243b3b187ae6349ad24b1deeda5b0",
+    "scalar": "c98e80fddbcc78f6c8f94cfa4b97f392d4ef938b9befd1b92a7e8ac11360cd92",
+    "zig": "0c884acc8e3e2c0e7930910f0f21e89de7078b932368f19f11dc72fb3e3924da"
+  },
+  "cpu": [
+    8
+  ],
+  "script_sha256": "245f5cf0f0daa26d43abc6ae718d5c6f801efa26e62a2f6800becf3edb459da7",
+  "DEBUGINFOD_URLS": "",
+  "zig": [
+    {
+      "stage": "warmup",
+      "seconds": 0.6018292249646038
+    },
+    {
+      "stage": "warmup",
+      "seconds": 0.5949167541693896
+    },
+    {
+      "stage": "measured",
+      "seconds": 0.5876424179878086
+    },
+    {
+      "stage": "measured",
+      "seconds": 0.5908191849011928
+    },
+    {
+      "stage": "measured",
+      "seconds": 0.5923748000059277
+    },
+    {
+      "stage": "measured",
+      "seconds": 0.5920029170811176
+    },
+    {
+      "stage": "measured",
+      "seconds": 0.5931108510121703
+    }
+  ],
+  "profiles": [
+    {
+      "arm": "C1",
+      "command": [
+        "perf",
+        "record",
+        "-e",
+        "cycles:u",
+        "-F",
+        "997",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/scalar-profile-001/C1.data",
+        "--",
+        "python3",
+        "-c",
+        "import os,sys; f=os.open(sys.argv[1],os.O_WRONLY|os.O_CREAT|os.O_TRUNC,0o644); os.dup2(f,2); os.close(f); os.execv(sys.argv[2],sys.argv[2:])",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/scalar-profile-001/C1.guest.stderr",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/zero-rc",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-zero-rc-20261012/lox/full-size-counters/inputs/vm-fib.lox"
+      ],
+      "elapsed_seconds": 1.4463108768686652,
+      "status": 0,
+      "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+      "output_matches": true,
+      "guest_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "arm": "scalar",
+      "command": [
+        "perf",
+        "record",
+        "-e",
+        "cycles:u",
+        "-F",
+        "997",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/scalar-profile-001/scalar.data",
+        "--",
+        "python3",
+        "-c",
+        "import os,sys; f=os.open(sys.argv[1],os.O_WRONLY|os.O_CREAT|os.O_TRUNC,0o644); os.dup2(f,2); os.close(f); os.execv(sys.argv[2],sys.argv[2:])",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/scalar-profile-001/scalar.guest.stderr",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/.tmp/lox-eda-parity/P2/scalar-ip-001/candidate",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-zero-rc-20261012/lox/full-size-counters/inputs/vm-fib.lox"
+      ],
+      "elapsed_seconds": 1.2434665318578482,
+      "status": 0,
+      "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+      "output_matches": true,
+      "guest_stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "guest_cutoff_seconds": 1.776008751243353
+}

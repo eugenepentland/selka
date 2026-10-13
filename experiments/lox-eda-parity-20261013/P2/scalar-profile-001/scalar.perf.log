@@ -1,0 +1,2 @@
+[ perf record: Woken up 1 times to write data ]
+[ perf record: Captured and wrote 0.191 MB /home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/scalar-profile-001/scalar.data (1227 samples) ]

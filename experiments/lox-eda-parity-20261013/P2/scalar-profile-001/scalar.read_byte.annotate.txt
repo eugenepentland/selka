@@ -1,0 +1,56 @@
+ Percent |	Source code & Disassembly of candidate for cpu_core/cycles/u (248 samples, percent: local period)
+-----------------------------------------------------------------------------------------------------------------
+         :
+         :
+         :
+         : 3       Disassembly of section .text:
+         :
+         : 5       0000000001062900 <my.vm::read_byte>:
+   26.79 :   1062900:        push   %rax
+    0.00 :   1062901:        mov    (%rdi),%rcx
+    0.00 :   1062904:        mov    0x8(%rcx),%rax
+    0.58 :   1062908:        cmp    %rax,%rsi
+    0.00 :   106290b:        jae    1062944 <my.vm::read_byte+0x44>
+    0.00 :   106290d:        mov    %rsi,%rdi
+    0.00 :   1062910:        imul   $0x38,%rdi,%rax
+    0.00 :   1062914:        cmpl   $0x2,0x20(%rcx,%rax,1)
+   31.55 :   1062919:        jne    1062989 <my.vm::read_byte+0x89>
+    0.00 :   106291b:        add    %rcx,%rax
+    0.00 :   106291e:        add    $0x20,%rax
+    0.00 :   1062922:        mov    0x18(%rax),%rsi
+    1.01 :   1062926:        mov    0x8(%rsi),%rax
+   10.93 :   106292a:        mov    %rdx,%rdi
+    0.00 :   106292d:        cmp    %rax,%rdx
+    0.00 :   1062930:        jae    1062965 <my.vm::read_byte+0x65>
+    3.65 :   1062932:        mov    %rdx,%rcx
+   22.58 :   1062935:        inc    %rcx
+    0.00 :   1062938:        jo     1062995 <my.vm::read_byte+0x95>
+    0.00 :   106293a:        mov    0x20(%rsi,%rdi,8),%rax
+    0.12 :   106293f:        mov    %rcx,%rdx
+    0.00 :   1062942:        pop    %rcx
+    2.78 :   1062943:        ret
+    0.00 :   1062944:        mov    %rsi,%rdi
+    0.00 :   1062947:        sar    $0x3f,%rdi
+    0.00 :   106294b:        and    %rax,%rdi
+    0.00 :   106294e:        add    %rsi,%rdi
+    0.00 :   1062951:        cmp    %rax,%rdi
+    0.00 :   1062954:        jb     1062910 <my.vm::read_byte+0x10>
+    0.00 :   1062956:        lea    0x20983(%rip),%rdi        # 10832e0 <core_durable_error.verbs+0x3a50>
+    0.00 :   106295d:        mov    %rax,%rdx
+    0.00 :   1062960:        call   1024c00 <myl_core_trap>
+    0.00 :   1062965:        mov    %rdx,%rdi
+    0.00 :   1062968:        sar    $0x3f,%rdi
+    0.00 :   106296c:        and    %rax,%rdi
+    0.00 :   106296f:        add    %rdx,%rdi
+    0.00 :   1062972:        cmp    %rax,%rdi
+    0.00 :   1062975:        jb     1062932 <my.vm::read_byte+0x32>
+    0.00 :   1062977:        lea    0x209c2(%rip),%rdi        # 1083340 <core_durable_error.verbs+0x3ab0>
+    0.00 :   106297e:        mov    %rdx,%rsi
+    0.00 :   1062981:        mov    %rax,%rdx
+    0.00 :   1062984:        call   1024c00 <myl_core_trap>
+    0.00 :   1062989:        lea    0x20980(%rip),%rdi        # 1083310 <core_durable_error.verbs+0x3a80>
+    0.00 :   1062990:        call   1029f80 <myl_core_assert_fail>
+    0.00 :   1062995:        lea    0x1ec34(%rip),%rdi        # 10815d0 <core_durable_error.verbs+0x1d40>
+    0.00 :   106299c:        mov    %rdx,%rsi
+    0.00 :   106299f:        mov    $0x1,%edx
+    0.00 :   10629a4:        call   1024c00 <myl_core_trap>

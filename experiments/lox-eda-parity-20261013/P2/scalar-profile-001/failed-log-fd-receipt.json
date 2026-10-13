@@ -1,0 +1,73 @@
+{
+  "label": "diagnostic CPU attribution, not timing benefit",
+  "compiler_sha256": "955f311e1dbf65b55f4c148ab03cdcb4881bc5668289aea93336dbfd7985206a",
+  "input_sha256": "e5c412ecb35cb4bcda97ac05f47f7cd8267f23deb0403bc5dd31126980216f45",
+  "binary_sha256": {
+    "C1": "8b6cb98665c289b963c8ced786235d9a2023ce5981a3c0cf366c24253fd19ea5",
+    "short": "64895849dbe5a723eae4fff1838f6f781af243b3b187ae6349ad24b1deeda5b0",
+    "scalar": "c98e80fddbcc78f6c8f94cfa4b97f392d4ef938b9befd1b92a7e8ac11360cd92",
+    "zig": "0c884acc8e3e2c0e7930910f0f21e89de7078b932368f19f11dc72fb3e3924da"
+  },
+  "cpu": [
+    8
+  ],
+  "script_sha256": "cc1aa62a63a3054379cf99fddfd6425c783f79c5d2a3110063d2c3ff8ff2ee9e",
+  "DEBUGINFOD_URLS": "",
+  "zig": [
+    {
+      "stage": "warmup",
+      "seconds": 0.5882321260869503
+    },
+    {
+      "stage": "warmup",
+      "seconds": 0.5966361509636045
+    },
+    {
+      "stage": "measured",
+      "seconds": 0.5899759491439909
+    },
+    {
+      "stage": "measured",
+      "seconds": 0.5895957038737833
+    },
+    {
+      "stage": "measured",
+      "seconds": 0.5950104829389602
+    },
+    {
+      "stage": "measured",
+      "seconds": 0.5929604230914265
+    },
+    {
+      "stage": "measured",
+      "seconds": 0.5960121699608862
+    }
+  ],
+  "profiles": [
+    {
+      "arm": "C1",
+      "command": [
+        "perf",
+        "record",
+        "--log-fd",
+        "3",
+        "-e",
+        "cycles:u",
+        "-F",
+        "997",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/scalar-profile-001/C1.data",
+        "--",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/zero-rc",
+        "--engine=vm",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-zero-rc-20261012/lox/full-size-counters/inputs/vm-fib.lox"
+      ],
+      "elapsed_seconds": 0.00799968489445746,
+      "status": 129,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "output_matches": false,
+      "guest_stderr_sha256": "6255e2e06fbd09f6fbcf63f99861f49388448bf4b58179d264d38e6f0ca01e47"
+    }
+  ],
+  "guest_cutoff_seconds": 1.7788812692742795
+}
