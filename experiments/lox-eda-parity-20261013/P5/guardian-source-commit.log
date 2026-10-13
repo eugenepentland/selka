@@ -1,0 +1,27 @@
+build-slot: FIFO ticket 2737, position 11; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 2737, position 2; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 2737, position 2; earlier build tickets must run first; waiting (121s so far)
+build-slot: build slot 1, FIFO ticket 2737 after 141s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 18 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10579 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/lox-eda-parity-20261013-p5 f5c2be1ee] EDA: borrow routing obstacles and scan pin spacing without copies
+ 18 files changed, 633 insertions(+), 19 deletions(-)
+ create mode 100644 experiments/lox-eda-parity-20261013/P5/baseline-copy-calls.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P5/compose-tests-path-borrow-rejected.log
+ create mode 100644 experiments/lox-eda-parity-20261013/P5/compose-tests.log
+ create mode 100644 experiments/lox-eda-parity-20261013/P5/emit-tests.log
+ create mode 100644 experiments/lox-eda-parity-20261013/P5/handoff.md
+ create mode 100644 experiments/lox-eda-parity-20261013/P5/identity.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P5/profile-cyclops-digital-pcb-command.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P5/profile-rds3+flat-command.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P5/profile.py
+ create mode 100644 experiments/lox-eda-parity-20261013/P5/rejected-source-manifest.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P5/source-manifest.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P5/test-commands.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P5/test-receipt.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P5/wire-tests.log

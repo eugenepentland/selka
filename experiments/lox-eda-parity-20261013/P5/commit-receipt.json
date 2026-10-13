@@ -1,0 +1,11 @@
+{
+  "source_commit": "f5c2be1ee18a1cf6a8c58101d6b7364709b4ea3d",
+  "base_commit": "2525a66f61838086f5327d74db7412926ce4a221",
+  "guardian": "88 checks passed",
+  "guardian_raw_log_sha256": "93a1d411c49c715d30e52ed0273fb2abae6c423d642be731ddd759e010d1271a",
+  "source_manifest_sha256": "878f5477974e673493afc496fe1c7cfce0e709398ab8f6f157ad627d1c248efd",
+  "test_receipt_sha256": "5b41964168d422d0712ffea2a73cb8cb719497d328416ec980552a628ff8ebdd",
+  "profiling": "not executed; consolidated by coordinator",
+  "runtime_claims": false,
+  "feedback_entry": false
+}

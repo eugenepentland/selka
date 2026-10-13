@@ -1,6 +1,9 @@
 # P5 remaining EDA copies
 
+Source and qualification commit: `f5c2be1ee18a1cf6a8c58101d6b7364709b4ea3d`. Normal Guardian passed all 88 checks.
 Base: `2525a66f61838086f5327d74db7412926ce4a221`.
+`commit-receipt.json` records commit/source/test/log digests; raw gate output is
+in `guardian-source-commit.log`.
 
 The candidate caches the target pin side and edge coordinate in `edge_spacing`
 and reads candidate pins without copying their pad/name text. Empty units still
