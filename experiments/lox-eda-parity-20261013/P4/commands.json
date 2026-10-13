@@ -1,0 +1,49 @@
+{
+  "environment": [
+    "source /home/epentland/.config/mylang/dev-env.sh",
+    "TMPDIR=$PWD/.tmp/lox-eda-parity/P4/tmp"
+  ],
+  "commands": [
+    [
+      "scripts/build-slot.sh",
+      "build",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+      "test",
+      "experiments/lox-eda-parity-20261013/source/lox/p4_tree_tests.my",
+      "--cases",
+      "experiments/lox-eda-parity-20261013/P4/cases.json",
+      "--experimental-zero-rc",
+      "--release",
+      "--verify-facts",
+      "--jobs",
+      "4",
+      "--max-steps",
+      "1000000000",
+      "--max-frames",
+      "40000",
+      "--max-memory",
+      "2G",
+      "--timeout-ms",
+      "120000",
+      "--cache-dir",
+      ".tmp/lox-eda-parity/P4/test-cache",
+      "--json"
+    ],
+    [
+      "scripts/build-slot.sh",
+      "build",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+      "build",
+      "experiments/lox-eda-parity-20261013/source/lox/main.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--counters",
+      "--cache-dir",
+      ".tmp/lox-eda-parity/P4/count-cache",
+      "-o",
+      ".tmp/lox-eda-parity/P4/tree-counted",
+      "--emit-llvm",
+      ".tmp/lox-eda-parity/P4/tree.ll"
+    ]
+  ]
+}

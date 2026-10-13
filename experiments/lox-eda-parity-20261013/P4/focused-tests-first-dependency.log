@@ -1,0 +1,14 @@
+build-slot: FIFO ticket 2698, position 5; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 2698, position 5; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 2698, position 5; earlier build tickets must run first; waiting (121s so far)
+build-slot: FIFO ticket 2698, position 5; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 2698, position 5; earlier build tickets must run first; waiting (242s so far)
+build-slot: FIFO ticket 2698, position 5; earlier build tickets must run first; waiting (302s so far)
+build-slot: FIFO ticket 2698, position 5; earlier build tickets must run first; waiting (362s so far)
+build-slot: build slot 1, FIFO ticket 2698 after 422s
+heap.my:206:13: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+              rt.objects[ref] = object.Obj.instance(value=updated)
+              ^
+heap.my:206:13: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+              rt.objects[ref] = object.Obj.instance(value=updated)
+              ^

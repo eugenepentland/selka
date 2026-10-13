@@ -1,0 +1,9 @@
+{
+  "source_bytes_unchanged_after_build_and_tests": true,
+  "files": {
+    ".tmp/lox-eda-parity/P4/tree.ll": "8b0722bfb0cea0b340f615f9252ec8cbb3b33393151d6ab1e407049732c2ee51",
+    ".tmp/lox-eda-parity/P4/tree-counted": "587107fe1f8fd2cf81d6b1207021d2e0c82c2616e29791871ec51b9aca664675",
+    "experiments/lox-eda-parity-20261013/P4/focused-tests.json": "8053ad63c093bee521b2ae983c11515dd9df25c969ed8851ed40fd48d9f93d34",
+    "experiments/lox-eda-parity-20261013/P4/cases.json": "bd1982e238ced845984379564dfdf980f363a12e03d5f024d57c4c2fc72c56dd"
+  }
+}

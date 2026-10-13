@@ -1,0 +1,22 @@
+build-slot: FIFO ticket 2714, position 12; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 2714, position 12; earlier build tickets must run first; waiting (61s so far)
+build-slot: FIFO ticket 2714, position 12; earlier build tickets must run first; waiting (121s so far)
+build-slot: FIFO ticket 2714, position 12; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 2714, position 12; earlier build tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 2714, position 12; earlier build tickets must run first; waiting (301s so far)
+build-slot: FIFO ticket 2714, position 12; earlier build tickets must run first; waiting (361s so far)
+build-slot: FIFO ticket 2714, position 12; earlier build tickets must run first; waiting (421s so far)
+build-slot: FIFO ticket 2714, position 12; earlier build tickets must run first; waiting (482s so far)
+build-slot: FIFO ticket 2714, position 12; earlier build tickets must run first; waiting (542s so far)
+build-slot: FIFO ticket 2714, position 12; earlier build tickets must run first; waiting (602s so far)
+build-slot: FIFO ticket 2714, position 12; earlier build tickets must run first; waiting (662s so far)
+build-slot: FIFO ticket 2714, position 12; earlier build tickets must run first; waiting (722s so far)
+build-slot: FIFO ticket 2714, position 12; earlier build tickets must run first; waiting (782s so far)
+build-slot: FIFO ticket 2714, position 5; earlier build tickets must run first; waiting (843s so far)
+build-slot: build slot 1, FIFO ticket 2714 after 873s
+output.my:5:8: warning[W_UNUSED_IMPORT]: import `object` is never referenced in this module; remove it or use it
+  import object
+         ^
+vm_queries.my:4:8: warning[W_UNUSED_IMPORT]: import `object` is never referenced in this module; remove it or use it
+  import object
+         ^

@@ -1,0 +1,11 @@
+class Box { init(n) { this.n = n; } inc() { this.n = this.n + 1; return this.n; } }
+fun make(n) { fun inc() { n = n + 1; return n; } return inc; }
+var total = 0;
+var i = 0;
+while (i < 100) {
+  var box = Box(i);
+  var closure = make(i);
+  total = total + box.inc() + closure();
+  i = i + 1;
+}
+print total;

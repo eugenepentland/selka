@@ -89,18 +89,6 @@ func is_string(rt: heap.Runtime, item: value.Value) -> bool:
             return False
 
 
-func instance_of(rt: heap.Runtime, item: value.Value) -> object.InstanceObj?:
-    match item:
-        case value.Value.obj(value=ref):
-            match rt.objects[ref]:
-                case object.Obj.instance(value=payload):
-                    return Some(payload.copy())
-                case _:
-                    return None
-        case _:
-            return None
-
-
 func name_text(rt: heap.Runtime, name: value.ObjRef) -> bytes:
     return heap.string_chars(rt, name)
 
@@ -120,7 +108,7 @@ func env_at(rt: heap.Runtime, hops: int) -> value.ObjRef:
 
 
 func new_env(mut rt: heap.Runtime, enclosing: value.ObjRef, slot_count: int) -> value.ObjRef:
-    return heap.allocate(mut rt, object.Obj.env(value=object.new_env(enclosing, slot_count)))
+    return heap.allocate_env(mut rt, enclosing, slot_count)
 
 
 # A method bound to a receiver: an Env holding the receiver, then a
@@ -283,20 +271,14 @@ func set(program: ast.Program, mut rt: heap.Runtime, mut o: output.Output, mut i
     if not is_instance_value(rt, heap.peek(rt, 0)):
         return Err(fail (b"Only instances have fields.", node.name.line))
     try evaluate(program, mut rt, mut o, mut it, node.assigned, clock)
-    # The RHS may change this same object. Read its current fields afterward.
-    match instance_of(rt, heap.peek(rt, 1)):
-        case Some(instance):
-            mut fields = instance.fields.copy()
-            _ = table.set(mut fields, node.name_ref, heap.string_hash(rt, node.name_ref), heap.peek(rt, 0))
-            mut instance_ref = as_obj(heap.peek(rt, 1))
-            mut updated_instance = instance
-            updated_instance.fields = fields
-            rt.objects[instance_ref] = object.Obj.instance(value=updated_instance)
-            mut assigned = heap.pop(mut rt)
-            replace_top(mut rt, assigned)
-            return Ok(())
-        case None:
-            return Err(fail (b"Only instances have fields.", node.name.line))
+    # Resolve the same stable handle after RHS execution, preserving its writes.
+    mut instance_ref = as_obj(heap.peek(rt, 1))
+    mut hash = heap.string_hash(rt, node.name_ref)
+    mut assigned = heap.peek(rt, 0)
+    heap.set_instance_field(mut rt, instance_ref, node.name_ref, hash, assigned)
+    _ = heap.pop(mut rt)
+    replace_top(mut rt, assigned)
+    return Ok(())
 
 
 func super_access(mut rt: heap.Runtime, node: ast.SuperExpr) -> Result[Unit, RuntimeError]:
@@ -426,7 +408,7 @@ func call_value(program: ast.Program, mut rt: heap.Runtime, mut o: output.Output
 # the call's own env exists.
 func instantiate(program: ast.Program, mut rt: heap.Runtime, mut o: output.Output, mut it: Interpreter, class_ref: value.ObjRef, count: int, line: int, clock: Clock?) -> Result[Unit, RuntimeError]:
     mut callee_slot = rt.stack_top - count - 1
-    mut instance = heap.allocate(mut rt, object.Obj.instance(value=object.InstanceObj(klass=class_ref, fields=table.new_table())))
+    mut instance = heap.allocate_instance(mut rt, class_ref)
     rt.stack[callee_slot] = value.Value.obj(value=instance)
     match heap.class_method(rt, class_ref, rt.init_string, heap.string_hash(rt, rt.init_string)):
         case Some(init_value):
@@ -476,7 +458,7 @@ func push_superclass(program: ast.Program, mut rt: heap.Runtime, mut o: output.O
 
 
 # SPEC §9.4's Class steps: bind the name to nil, push the superclass, push
-# the new class, copy the inherited methods down and open the `super` env,
+# the new class, inherit methods through stable handles and open the `super` env,
 # add a TreeFunction per method, then store the class and pop.
 func class_declaration(program: ast.Program, mut rt: heap.Runtime, mut o: output.Output, mut it: Interpreter, node: ast.ClassStmt, clock: Clock?) -> Result[Unit, RuntimeError]:
     if node.slot == ast.GLOBAL:
@@ -487,15 +469,11 @@ func class_declaration(program: ast.Program, mut rt: heap.Runtime, mut o: output
             superclass = try push_superclass(program, mut rt, mut o, mut it, expr, clock)
         case None:
             pass
-    mut klass = object.ClassObj(name=node.name_ref, methods=table.new_table())
-    mut methods = klass.methods.copy()
-    const __owned_arg_14 = value.Value.obj(value=heap.allocate(mut rt, object.Obj.klass(value=klass)))
+    const __owned_arg_14 = value.Value.obj(value=heap.allocate_class(mut rt, node.name_ref))
     heap.push(mut rt, __owned_arg_14)
     mut klass_ref = as_obj(heap.peek(rt, 0))
     if superclass != value.NO_OBJ:
-        const __owned_arg_15 = heap.class_obj(rt, superclass).methods.copy()
-        table.add_all(__owned_arg_15, mut methods)
-        heap.set_class_methods(mut rt, klass_ref, methods)
+        heap.inherit_class_methods(mut rt, klass_ref, superclass)
         const __owned_arg_16 = rt.current_env
         mut env = new_env(mut rt, __owned_arg_16, 1)
         heap.set_env_slot(mut rt, env, 0, value.Value.obj(value=superclass))
@@ -504,8 +482,8 @@ func class_declaration(program: ast.Program, mut rt: heap.Runtime, mut o: output
         mut name = program.functions[method].name_ref
         const __owned_arg_17 = object.Obj.tree_function(value=object.TreeFunctionObj(decl=method, name=name, closure=rt.current_env, is_initializer=name == rt.init_string))
         mut function = heap.allocate(mut rt, __owned_arg_17)
-        _ = table.set(mut methods, name, heap.string_hash(rt, name), value.Value.obj(value=function))
-        heap.set_class_methods(mut rt, klass_ref, methods)
+        mut hash = heap.string_hash(rt, name)
+        heap.set_class_method(mut rt, klass_ref, name, hash, value.Value.obj(value=function))
     if superclass != value.NO_OBJ:
         restore_env(mut rt)
     define(mut rt, node.name_ref, node.slot)

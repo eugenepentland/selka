@@ -1,0 +1,40 @@
+{
+  "llvm_sha256": "8b0722bfb0cea0b340f615f9252ec8cbb3b33393151d6ab1e407049732c2ee51",
+  "functions": {
+    "new_env": {
+      "copy_calls": [],
+      "heap_calls": [
+        "notail call fastcc void @\"my.heap::allocate_env\"(ptr sret([200 x i8]) align 8 %v3, ptr %v5, i64 %p1, i64 %p2), !dbg !1002622"
+      ]
+    },
+    "set": {
+      "copy_calls": [],
+      "heap_calls": [
+        "%v55 = notail call fastcc i32 @\"my.heap::string_hash\"(ptr %v38, i64 %v54), !dbg !1002866",
+        "notail call fastcc void @\"my.heap::set_instance_field\"(ptr %v59, i64 %v53, i64 %v54, i32 %v55, { i8, [1 x i64] } %v116), !dbg !1002876"
+      ]
+    },
+    "instantiate": {
+      "copy_calls": [],
+      "heap_calls": [
+        "notail call fastcc void @\"my.heap::allocate_instance\"(ptr sret([200 x i8]) align 8 %v12, ptr %v14, i64 %p4), !dbg !1004555",
+        "%v35 = notail call fastcc i32 @\"my.heap::string_hash\"(ptr %v31, i64 %v33), !dbg !1004559",
+        "%v36 = notail call fastcc { i8, [2 x i64] } @\"my.heap::class_method\"(ptr %v31, i64 %p4, i64 %v33, i32 %v35), !dbg !1004561",
+        "%v43 = notail call fastcc { i64, i64, i64, i1 } @\"my.heap::tree_function_obj\"(ptr %v31, i64 %v42), !dbg !1004565",
+        "notail call fastcc void @\"my.heap::set_env_slot\"(ptr %v53, i64 %v47, i64 0, { i8, [1 x i64] } %v52), !dbg !1004569"
+      ]
+    },
+    "class_declaration": {
+      "copy_calls": [],
+      "heap_calls": [
+        "notail call fastcc void @\"my.heap::set_global\"(ptr sret([200 x i8]) align 8 %v12, ptr %v14, i64 %v10, { i8, [1 x i64] } %v11), !dbg !1001529",
+        "notail call fastcc void @\"my.heap::allocate_class\"(ptr sret([200 x i8]) align 8 %v51, ptr %v53, i64 %v50), !dbg !1001531",
+        "notail call fastcc void @\"my.heap::inherit_class_methods\"(ptr %v64, i64 %v59, i64 %v60), !dbg !1001535",
+        "notail call fastcc void @\"my.heap::set_env_slot\"(ptr %v73, i64 %v68, i64 0, { i8, [1 x i64] } %v72), !dbg !1001539",
+        "notail call fastcc void @\"my.heap::allocate\"(ptr sret([200 x i8]) align 8 %v110, ptr %v112, ptr %v109), !dbg !1001543",
+        "%v113 = notail call fastcc i32 @\"my.heap::string_hash\"(ptr %v112, i64 %v100), !dbg !1001545",
+        "notail call fastcc void @\"my.heap::set_class_method\"(ptr %v118, i64 %v59, i64 %v100, i32 %v113, { i8, [1 x i64] } %v117), !dbg !1001547"
+      ]
+    }
+  }
+}
