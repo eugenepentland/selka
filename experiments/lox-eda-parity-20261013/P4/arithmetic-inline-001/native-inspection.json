@@ -1,0 +1,110 @@
+{
+  "baseline": {
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "llvm_sha256": "293e0aba81f1fe05029cf34d4f1261ff31aca152623b9a4830c12a513af18ce6",
+    "interpreter_symbols": {
+      "my.interpreter::arithmetic": {
+        "address": "000000000106f3d0",
+        "bytes": 90
+      },
+      "my.interpreter::as_obj": {
+        "address": "000000000106bd00",
+        "bytes": 61
+      },
+      "my.interpreter::bind": {
+        "address": "0000000001070190",
+        "bytes": 471
+      },
+      "my.interpreter::call_value": {
+        "address": "000000000106f430",
+        "bytes": 3411
+      },
+      "my.interpreter::define": {
+        "address": "0000000001067190",
+        "bytes": 289
+      },
+      "my.interpreter::enter_function": {
+        "address": "0000000001072b00",
+        "bytes": 1332
+      },
+      "my.interpreter::evaluate": {
+        "address": "0000000001064fd0",
+        "bytes": 8636
+      },
+      "my.interpreter::execute": {
+        "address": "000000000105ddd0",
+        "bytes": 6019
+      },
+      "my.interpreter::is_string": {
+        "address": "000000000106f380",
+        "bytes": 74
+      },
+      "my.interpreter::new_env": {
+        "address": "000000000106bbb0",
+        "bytes": 333
+      },
+      "my.interpreter::run_function": {
+        "address": "0000000001073040",
+        "bytes": 979
+      }
+    },
+    "arithmetic_call_sites": [
+      "1066337:\te8 94 90 00 00       \tcall   106f3d0 <my.interpreter::arithmetic>"
+    ],
+    "native_evaluator_bytes": 8636,
+    "llvm_evaluator_arithmetic_calls": 0
+  },
+  "candidate": {
+    "binary_sha256": "c50c7adb140159400aa573cd75279de52534fc34b6de781cdb4b2c7f4811ebc2",
+    "llvm_sha256": "92ba0d57bda300d18047471094b2afc27e10e0e51046875b033629fe10610f47",
+    "interpreter_symbols": {
+      "my.interpreter::as_obj": {
+        "address": "000000000106bd40",
+        "bytes": 61
+      },
+      "my.interpreter::bind": {
+        "address": "0000000001070170",
+        "bytes": 471
+      },
+      "my.interpreter::call_value": {
+        "address": "000000000106f410",
+        "bytes": 3411
+      },
+      "my.interpreter::define": {
+        "address": "00000000010671b0",
+        "bytes": 289
+      },
+      "my.interpreter::enter_function": {
+        "address": "0000000001072b00",
+        "bytes": 1332
+      },
+      "my.interpreter::evaluate": {
+        "address": "0000000001064fd0",
+        "bytes": 8672
+      },
+      "my.interpreter::execute": {
+        "address": "000000000105ddd0",
+        "bytes": 6019
+      },
+      "my.interpreter::is_string": {
+        "address": "000000000106f3c0",
+        "bytes": 74
+      },
+      "my.interpreter::new_env": {
+        "address": "000000000106bbf0",
+        "bytes": 333
+      },
+      "my.interpreter::run_function": {
+        "address": "0000000001073040",
+        "bytes": 979
+      }
+    },
+    "arithmetic_call_sites": [],
+    "native_evaluator_bytes": 8672,
+    "llvm_evaluator_arithmetic_calls": 0
+  },
+  "change": {
+    "evaluate_bytes": 36,
+    "baseline_arithmetic_bytes": 90
+  }
+}

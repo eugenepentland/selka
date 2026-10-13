@@ -1,0 +1,32 @@
+{
+  "status": "coordinator approved conditionally after both103 tests and all numeric/error/GC controls pass; not submitted",
+  "cases": [
+    "fib.tree.28",
+    "binary_trees.tree.10",
+    "string_equality.tree.10000"
+  ],
+  "roles": {
+    "fib": "recursive numeric dispatch primary",
+    "binary_trees": "recursive classes/numeric subtraction+comparison generalization",
+    "string_equality": "discarded local-read control; only loop comparison uses numeric helper"
+  },
+  "protocol": {
+    "cpu": 8,
+    "warmups": 2,
+    "rounds": 9,
+    "chunks": 3,
+    "rounds_per_chunk": 3,
+    "paired_order": "existing measure.py forward arm order on even rounds, reversed on odd rounds; no sample exclusions",
+    "fresh_zig_calibration_warmups": 2,
+    "fresh_zig_calibration_rounds": 5,
+    "zig_factor": 3,
+    "absolute_timeout_seconds": 120,
+    "rss_rounds": 0
+  },
+  "measurer": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/measure.py",
+  "measurer_sha256": "ebead08898b4eba7885e41451378be14e8d53dc5cf213d66d4230f33130e8c7d",
+  "execution": "only after coordinator timing approval; one exclusive lease per bounded chunk, prior_receipt for chunks1/2, no nested admission",
+  "baseline": "untouched frozenC2 source, same common002 compiler/flags as prototype",
+  "outputs": "fresh P4/arithmetic-inline-001/diagnostics; all old evidence remains immutable",
+  "authorization": "Root: Timing plan reviewed and approved AFTER both103 tests and your numeric/error/GC controls pass. Use listed3cases/9pairs/2warmups with fresh3xZig120cap, one shared exclusive lease per bounded chunk."
+}

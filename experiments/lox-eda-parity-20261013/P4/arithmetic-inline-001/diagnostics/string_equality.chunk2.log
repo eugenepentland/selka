@@ -1,0 +1,41 @@
+build-slot: FIFO ticket 1381, position 2; earlier timing tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 1381, position 1; waiting for memory-accounting settle delay or another measurement; waiting (60s so far)
+build-slot: timing slot 1, FIFO ticket 1381 after 65s
+{
+  "zig-fast": {
+    "seconds": {
+      "median": 0.143630141,
+      "min": 0.143108233,
+      "max": 0.15633487,
+      "samples": [
+        0.15633487,
+        0.143108233,
+        0.143630141
+      ]
+    }
+  },
+  "baseline": {
+    "seconds": {
+      "median": 0.205147554,
+      "min": 0.203607086,
+      "max": 0.21959152,
+      "samples": [
+        0.21959152,
+        0.205147554,
+        0.203607086
+      ]
+    }
+  },
+  "candidate": {
+    "seconds": {
+      "median": 0.205559301,
+      "min": 0.201585988,
+      "max": 0.214766997,
+      "samples": [
+        0.214766997,
+        0.205559301,
+        0.201585988
+      ]
+    }
+  }
+}

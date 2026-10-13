@@ -1,0 +1,636 @@
+# The Runtime (SPEC §7): the object table with its free list and mark bits,
+# the intern and globals tables, every GC root both engines keep, the value
+# stack, and the collector and its statistics.
+import object
+import table
+import value
+
+# 64 frames of 256 slots each.
+public const STACK_MAX: int = 16384
+
+
+public const FRAMES_MAX: int = 64
+
+
+const FIRST_GC: int = 1048576
+
+
+# An active VM call stores scalar object handles, the next instruction's
+# byte offset, and the value-stack index of slot 0. The closure is a GC root
+# that keeps its function and upvalues live. Instruction readers borrow
+# those objects briefly; publishing a frame never copies their storage.
+# Runtime keeps FRAMES_MAX frames and reuses them.
+public record CallFrame:
+    closure: value.ObjRef
+    function: value.ObjRef
+    ip: int
+    base: int
+
+
+# The collector's mark state: one mark bit per object-table slot and the gray
+# stack of marked objects whose references are not yet traced.
+public record Marker:
+    marks: bool[]
+    gray: value.ObjRef[]
+
+
+public record Runtime:
+    objects: object.Obj[]
+    marker: Marker
+    free_slots: int[]
+    strings: table.Table
+    globals: table.Table
+    init_string: value.ObjRef
+    gc_stress: bool
+    bytes_allocated: int
+    next_gc: int
+    allocations: int
+    collections: int
+    freed: int
+    stack: value.Value[]
+    stack_top: int
+    frames: CallFrame[]
+    frame_count: int
+    open_upvalues: value.ObjRef
+    compiling: value.ObjRef[]
+    current_env: value.ObjRef
+    saved_envs: value.ObjRef[]
+    permanent_roots: value.ObjRef[]
+
+
+# An empty runtime; clock authority is borrowed separately by each engine.
+public func new_runtime(gc_stress: bool) -> Runtime:
+    mut stack: value.Value[] = []
+    mut i = 0
+    while i < STACK_MAX:
+        stack.append(value.Value.nil)
+        i += 1
+    mut frames: CallFrame[] = []
+    i = 0
+    while i < FRAMES_MAX:
+        frames.append(CallFrame(closure=value.NO_OBJ, function=value.NO_OBJ, ip=0, base=0))
+        i += 1
+    return Runtime(objects=[], marker=Marker(marks=[], gray=[]), free_slots=[], strings=table.new_table(), globals=table.new_table(), init_string=value.NO_OBJ, gc_stress=gc_stress, bytes_allocated=0, next_gc=FIRST_GC, allocations=0, collections=0, freed=0, stack=stack, stack_top=0, frames=frames, frame_count=0, open_upvalues=value.NO_OBJ, compiling=[], current_env=value.NO_OBJ, saved_envs=[], permanent_roots=[])
+
+
+public func push(mut rt: Runtime, item: value.Value):
+    rt.stack[rt.stack_top] = item
+    rt.stack_top = rt.stack_top + 1
+
+
+public func pop(mut rt: Runtime) -> value.Value:
+    rt.stack_top = rt.stack_top - 1
+    return rt.stack[rt.stack_top]
+
+
+public func peek(rt: Runtime, distance: int) -> value.Value:
+    return rt.stack[rt.stack_top - 1 - distance]
+
+
+# Charges the object's cost, collects if stress mode or the threshold says
+# so, then stores it in a free slot (most recently freed first) or a new one.
+# Whatever the caller still needs must already be rooted.
+func reserve_object(mut rt: Runtime, cost: int) -> value.ObjRef:
+    rt.bytes_allocated = rt.bytes_allocated + cost
+    if rt.gc_stress or rt.bytes_allocated > rt.next_gc:
+        collect(mut rt)
+    mut slot = len(rt.objects)
+    if len(rt.free_slots) > 0:
+        slot = rt.free_slots.pop()
+    else:
+        rt.objects.append(object.Obj.free)
+        rt.marker.marks.append(False)
+    rt.allocations = rt.allocations + 1
+    return slot
+
+
+public func allocate(mut rt: Runtime, obj: object.Obj) -> value.ObjRef:
+    const cost = object.cost(obj)
+    const slot = reserve_object(mut rt, cost)
+    rt.objects[slot] = obj.copy()
+    return slot
+
+
+# Fresh scalar-input constructors publish their owned payload directly. The
+# collection runs before construction; callers root every referenced handle.
+# Existing allocate and snapshot accessors retain independent-copy contracts.
+public func allocate_instance(mut rt: Runtime, klass: value.ObjRef) -> value.ObjRef:
+    const slot = reserve_object(mut rt, 48)
+    rt.objects[slot] = object.Obj.instance(value=object.InstanceObj(klass=klass, fields=table.new_table()))
+    return slot
+
+
+public func allocate_class(mut rt: Runtime, name: value.ObjRef) -> value.ObjRef:
+    const slot = reserve_object(mut rt, 48)
+    rt.objects[slot] = object.Obj.klass(value=object.ClassObj(name=name, methods=table.new_table()))
+    return slot
+
+
+public func allocate_env(mut rt: Runtime, enclosing: value.ObjRef, slot_count: int) -> value.ObjRef:
+    const slot = reserve_object(mut rt, 32 + 16 * max(slot_count, 0))
+    rt.objects[slot] = object.Obj.env(value=object.new_env(enclosing, slot_count))
+    return slot
+
+
+# Reserve and collect while the caller's callee, arguments and enclosing env
+# remain rooted. Fill fresh owned slots before publishing their object once.
+public func allocate_call_env(mut rt: Runtime, enclosing: value.ObjRef, slot_count: int, args: int, count: int) -> value.ObjRef:
+    assert count >= 0 and count <= max(slot_count, 0), "invalid call environment argument count"
+    assert args >= 0 and args <= rt.stack_top and count <= rt.stack_top - args, "call arguments are not rooted stack slots"
+    const slot = reserve_object(mut rt, 32 + 16 * max(slot_count, 0))
+    mut env = object.new_env(enclosing, slot_count)
+    mut i = 0
+    while i < count:
+        env.slots[i] = rt.stack[args + i]
+        i += 1
+    rt.objects[slot] = object.Obj.env(value=env)
+    return slot
+
+
+# The payload accessors below check the kind; a mismatch is an internal bug.
+public func string_obj(rt: Runtime, ref: value.ObjRef) -> object.StringObj:
+    match rt.objects[ref]:
+        case object.Obj.string(value=payload):
+            return payload.copy()
+        case _:
+            assert False, "object is not a string"
+            return object.StringObj(chars=b"", hash=0u32)
+
+
+public func function_obj(rt: Runtime, ref: value.ObjRef) -> object.FunctionObj:
+    match rt.objects[ref]:
+        case object.Obj.function(value=payload):
+            return payload.copy()
+        case _:
+            assert False, "object is not a function"
+            return object.new_function()
+
+
+public func closure_obj(rt: Runtime, ref: value.ObjRef) -> object.ClosureObj:
+    match rt.objects[ref]:
+        case object.Obj.closure(value=payload):
+            return payload.copy()
+        case _:
+            assert False, "object is not a closure"
+            return object.new_closure(value.NO_OBJ, 0)
+
+
+public func upvalue_obj(rt: Runtime, ref: value.ObjRef) -> object.UpvalueObj:
+    match rt.objects[ref]:
+        case object.Obj.upvalue(value=payload):
+            return payload.copy()
+        case _:
+            assert False, "object is not an upvalue"
+            return object.UpvalueObj(slot=object.NO_SLOT, closed=value.Value.nil, next_open=value.NO_OBJ)
+
+
+public func class_obj(rt: Runtime, ref: value.ObjRef) -> object.ClassObj:
+    match rt.objects[ref]:
+        case object.Obj.klass(value=payload):
+            return payload.copy()
+        case _:
+            assert False, "object is not a class"
+            return object.ClassObj(name=value.NO_OBJ, methods=table.new_table())
+
+
+# ObjRef, rather than a shared class payload, carries object identity. Every
+# changed payload is written back into its object-table slot.
+public func set_class_methods(mut rt: Runtime, ref: value.ObjRef, methods: table.Table):
+    const name = class_name(rt, ref)
+    rt.objects[ref] = object.Obj.klass(value=object.ClassObj(name=name, methods=methods.copy()))
+
+
+public func set_instance_fields(mut rt: Runtime, ref: value.ObjRef, fields: table.Table):
+    const klass = instance_class(rt, ref)
+    rt.objects[ref] = object.Obj.instance(value=object.InstanceObj(klass=klass, fields=fields.copy()))
+
+
+# Checked extraction never crosses a Lox GC, callback, or early return. Validate
+# handles and kinds before replacing a slot with the temporary free case.
+func require_ref(rt: Runtime, ref: value.ObjRef):
+    assert ref >= 0 and ref < len(rt.objects), "invalid object handle"
+
+
+func require_class(rt: Runtime, ref: value.ObjRef):
+    require_ref(rt, ref)
+    match rt.objects[ref]:
+        case object.Obj.klass(value=_):
+            return
+        case _:
+            pass
+    assert False, "object is not a class"
+
+
+func require_instance(rt: Runtime, ref: value.ObjRef):
+    require_ref(rt, ref)
+    assert is_instance(rt, ref), "object is not an instance"
+
+
+func require_env_slot(rt: Runtime, ref: value.ObjRef, index: int):
+    require_ref(rt, ref)
+    match rt.objects[ref]:
+        case object.Obj.env(value=payload):
+            const count = len(payload.slots)
+            assert index >= -count and index < count, "environment slot index out of bounds"
+            return
+        case _:
+            pass
+    assert False, "object is not an env"
+
+
+public func set_instance_field(mut rt: Runtime, ref: value.ObjRef, key: value.ObjRef, hash: u32, item: value.Value):
+    require_instance(rt, ref)
+    match rt.objects.exchange(ref, object.Obj.free):
+        case object.Obj.instance(value=payload):
+            mut updated = payload
+            _ = table.set(mut updated.fields, key, hash, item)
+            rt.objects[ref] = object.Obj.instance(value=updated)
+            return
+        case _:
+            pass
+    assert False, "validated instance changed kind"
+
+
+public func set_class_method(mut rt: Runtime, ref: value.ObjRef, key: value.ObjRef, hash: u32, item: value.Value):
+    require_class(rt, ref)
+    match rt.objects.exchange(ref, object.Obj.free):
+        case object.Obj.klass(value=payload):
+            mut updated = payload
+            _ = table.set(mut updated.methods, key, hash, item)
+            rt.objects[ref] = object.Obj.klass(value=updated)
+            return
+        case _:
+            pass
+    assert False, "validated class changed kind"
+
+
+func add_class_methods(rt: Runtime, parent: value.ObjRef, mut methods: table.Table):
+    match rt.objects[parent]:
+        case object.Obj.klass(value=payload):
+            table.add_all(payload.methods, mut methods)
+            return
+        case _:
+            pass
+    assert False, "validated superclass changed kind"
+
+
+public func inherit_class_methods(mut rt: Runtime, ref: value.ObjRef, parent: value.ObjRef):
+    require_class(rt, ref)
+    require_class(rt, parent)
+    if ref == parent:
+        return
+    match rt.objects.exchange(ref, object.Obj.free):
+        case object.Obj.klass(value=payload):
+            mut updated = payload
+            add_class_methods(rt, parent, mut updated.methods)
+            rt.objects[ref] = object.Obj.klass(value=updated)
+            return
+        case _:
+            pass
+    assert False, "validated subclass changed kind"
+
+
+public func env_obj(rt: Runtime, ref: value.ObjRef) -> object.EnvObj:
+    match rt.objects[ref]:
+        case object.Obj.env(value=payload):
+            return payload.copy()
+        case _:
+            assert False, "object is not an env"
+            return object.new_env(value.NO_OBJ, 0)
+
+
+# A checked owned payload is restored before any allocation can run the GC.
+public func set_env_slot(mut rt: Runtime, ref: value.ObjRef, index: int, item: value.Value):
+    require_env_slot(rt, ref, index)
+    match rt.objects.exchange(ref, object.Obj.free):
+        case object.Obj.env(value=payload):
+            mut updated = payload
+            updated.slots[index] = item
+            rt.objects[ref] = object.Obj.env(value=updated)
+            return
+        case _:
+            pass
+    assert False, "validated environment changed kind"
+
+
+public func string_hash(rt: Runtime, ref: value.ObjRef) -> u32:
+    match rt.objects[ref]:
+        case object.Obj.string(value=payload):
+            return payload.hash
+        case _:
+            assert False, "object is not a string"
+            return 0u32
+
+
+# Scoped queries return selected scalar fields or selected independent text.
+# No view or address escapes the call; the owned snapshot accessors above retain
+# their independent-copy contracts. Handles continue to carry object identity.
+
+
+public func string_chars(rt: Runtime, ref: value.ObjRef) -> bytes:
+    match rt.objects[ref]:
+        case object.Obj.string(value=payload):
+            return payload.chars.copy()
+        case _:
+            assert False, "object is not a string"
+            return b""
+
+
+public func string_matches(rt: Runtime, ref: value.ObjRef, chars: bytes) -> bool:
+    match rt.objects[ref]:
+        case object.Obj.string(value=payload):
+            return len(payload.chars) == len(chars) and payload.chars == chars
+        case _:
+            assert False, "object is not a string"
+            return False
+
+
+public func function_arity(rt: Runtime, ref: value.ObjRef) -> int:
+    match rt.objects[ref]:
+        case object.Obj.function(value=payload):
+            return payload.arity
+        case _:
+            assert False, "object is not a function"
+            return 0
+
+
+public func function_upvalue_count(rt: Runtime, ref: value.ObjRef) -> int:
+    match rt.objects[ref]:
+        case object.Obj.function(value=payload):
+            return payload.upvalue_count
+        case _:
+            assert False, "object is not a function"
+            return 0
+
+
+public func function_name(rt: Runtime, ref: value.ObjRef) -> value.ObjRef:
+    match rt.objects[ref]:
+        case object.Obj.function(value=payload):
+            return payload.name
+        case _:
+            assert False, "object is not a function"
+            return value.NO_OBJ
+
+
+public func function_instruction(rt: Runtime, ref: value.ObjRef, index: int) -> int:
+    match rt.objects[ref]:
+        case object.Obj.function(value=payload):
+            return payload.code.code[index]
+        case _:
+            pass
+    assert False, "object is not a function"
+    return 0
+
+
+public func function_line(rt: Runtime, ref: value.ObjRef, index: int) -> int:
+    match rt.objects[ref]:
+        case object.Obj.function(value=payload):
+            return payload.code.lines[index]
+        case _:
+            pass
+    assert False, "object is not a function"
+    return 0
+
+
+public func function_constant(rt: Runtime, ref: value.ObjRef, index: int) -> value.Value:
+    match rt.objects[ref]:
+        case object.Obj.function(value=payload):
+            return payload.code.constants[index]
+        case _:
+            pass
+    assert False, "object is not a function"
+    return value.Value.nil
+
+
+public func closure_function(rt: Runtime, ref: value.ObjRef) -> value.ObjRef:
+    match rt.objects[ref]:
+        case object.Obj.closure(value=payload):
+            return payload.function
+        case _:
+            assert False, "object is not a closure"
+            return value.NO_OBJ
+
+
+public func closure_upvalue(rt: Runtime, ref: value.ObjRef, index: int) -> value.ObjRef:
+    match rt.objects[ref]:
+        case object.Obj.closure(value=payload):
+            return payload.upvalues[index]
+        case _:
+            assert False, "object is not a closure"
+            return value.NO_OBJ
+
+
+public func env_enclosing(rt: Runtime, ref: value.ObjRef) -> value.ObjRef:
+    match rt.objects[ref]:
+        case object.Obj.env(value=payload):
+            return payload.enclosing
+        case _:
+            pass
+    assert False, "object is not a env"
+    return value.NO_OBJ
+
+
+public func env_slot(rt: Runtime, ref: value.ObjRef, index: int) -> value.Value:
+    match rt.objects[ref]:
+        case object.Obj.env(value=payload):
+            return payload.slots[index]
+        case _:
+            pass
+    assert False, "object is not a env"
+    return value.Value.nil
+
+
+public func class_name(rt: Runtime, ref: value.ObjRef) -> value.ObjRef:
+    match rt.objects[ref]:
+        case object.Obj.klass(value=payload):
+            return payload.name
+        case _:
+            assert False, "object is not a klass"
+            return value.NO_OBJ
+
+
+public func class_method(rt: Runtime, ref: value.ObjRef, key: value.ObjRef, hash: u32) -> value.Value?:
+    match rt.objects[ref]:
+        case object.Obj.klass(value=payload):
+            return table.get(payload.methods, key, hash)
+        case _:
+            assert False, "object is not a klass"
+            return None
+
+
+public func instance_class(rt: Runtime, ref: value.ObjRef) -> value.ObjRef:
+    match rt.objects[ref]:
+        case object.Obj.instance(value=payload):
+            return payload.klass
+        case _:
+            assert False, "object is not a instance"
+            return value.NO_OBJ
+
+
+public func instance_field(rt: Runtime, ref: value.ObjRef, key: value.ObjRef, hash: u32) -> value.Value?:
+    match rt.objects[ref]:
+        case object.Obj.instance(value=payload):
+            return table.get(payload.fields, key, hash)
+        case _:
+            assert False, "object is not a instance"
+            return None
+
+
+public func tree_function_obj(rt: Runtime, ref: value.ObjRef) -> object.TreeFunctionObj:
+    match rt.objects[ref]:
+        case object.Obj.tree_function(value=payload):
+            return payload
+        case _:
+            pass
+    assert False, "object is not a tree_function"
+    return object.TreeFunctionObj(decl=0, name=value.NO_OBJ, closure=value.NO_OBJ, is_initializer=False)
+
+
+public func native_obj(rt: Runtime, ref: value.ObjRef) -> object.NativeObj:
+    match rt.objects[ref]:
+        case object.Obj.native(value=payload):
+            return payload
+        case _:
+            assert False, "object is not a native"
+            return object.NativeObj(id=0, arity=0)
+
+
+public func bound_method_obj(rt: Runtime, ref: value.ObjRef) -> object.BoundMethodObj:
+    match rt.objects[ref]:
+        case object.Obj.bound_method(value=payload):
+            return payload
+        case _:
+            assert False, "object is not a bound_method"
+            return object.BoundMethodObj(receiver=value.Value.nil, method=value.NO_OBJ)
+
+
+public func is_instance(rt: Runtime, ref: value.ObjRef) -> bool:
+    match rt.objects[ref]:
+        case object.Obj.instance(value=_):
+            return True
+        case _:
+            return False
+
+
+# Binds a global; answers whether the name was new.
+public func set_global(mut rt: Runtime, name: value.ObjRef, item: value.Value) -> bool:
+    const hash = string_hash(rt, name)
+    return table.set(mut rt.globals, name, hash, item)
+
+
+func mark_object(mut marker: Marker, ref: value.ObjRef):
+    if ref == value.NO_OBJ or marker.marks[ref]:
+        return
+    marker.marks[ref] = True
+    marker.gray.append(ref)
+
+
+func mark_value(mut marker: Marker, item: value.Value):
+    match item:
+        case value.Value.obj(value=ref):
+            mark_object(mut marker, ref)
+        case _:
+            pass
+
+
+func mark_table(mut marker: Marker, source: table.Table):
+    for entry in source.entries:
+        mark_object(mut marker, entry.key)
+        mark_value(mut marker, entry.value)
+
+
+func mark_roots(mut marker: Marker, rt: Runtime):
+    mark_table(mut marker, rt.globals)
+    mark_object(mut marker, rt.init_string)
+    mut i = 0
+    while i < rt.stack_top:
+        mark_value(mut marker, rt.stack[i])
+        i += 1
+    i = 0
+    while i < rt.frame_count:
+        mark_object(mut marker, rt.frames[i].closure)
+        i += 1
+    mut upvalue = rt.open_upvalues
+    while upvalue != value.NO_OBJ:
+        mark_object(mut marker, upvalue)
+        upvalue = upvalue_obj(rt, upvalue).next_open
+    for function in rt.compiling:
+        mark_object(mut marker, function)
+    mark_object(mut marker, rt.current_env)
+    for env in rt.saved_envs:
+        mark_object(mut marker, env)
+    for ref in rt.permanent_roots:
+        mark_object(mut marker, ref)
+
+
+# Marks everything one object references directly (SPEC §7.4 step 2).
+func blacken(mut marker: Marker, rt: Runtime, ref: value.ObjRef):
+    match rt.objects[ref]:
+        case object.Obj.klass(value=payload):
+            mark_object(mut marker, payload.name)
+            mark_table(mut marker, payload.methods)
+        case object.Obj.instance(value=payload):
+            mark_object(mut marker, payload.klass)
+            mark_table(mut marker, payload.fields)
+        case object.Obj.closure(value=payload):
+            mark_object(mut marker, payload.function)
+            for upvalue in payload.upvalues:
+                mark_object(mut marker, upvalue)
+        case object.Obj.function(value=payload):
+            mark_object(mut marker, payload.name)
+            for constant in payload.code.constants:
+                mark_value(mut marker, constant)
+        case object.Obj.upvalue(value=payload):
+            mark_value(mut marker, payload.closed)
+        case object.Obj.bound_method(value=payload):
+            mark_value(mut marker, payload.receiver)
+            mark_object(mut marker, payload.method)
+        case object.Obj.env(value=payload):
+            mark_object(mut marker, payload.enclosing)
+            for slot in payload.slots:
+                mark_value(mut marker, slot)
+        case object.Obj.tree_function(value=payload):
+            mark_object(mut marker, payload.closure)
+        case _:
+            pass
+
+
+func is_free(obj: object.Obj) -> bool:
+    match obj:
+        case object.Obj.free:
+            return True
+        case _:
+            return False
+
+
+func sweep(mut rt: Runtime):
+    mut i = 0
+    while i < len(rt.objects):
+        if rt.marker.marks[i]:
+            rt.marker.marks[i] = False
+        elif not is_free(rt.objects[i]):
+            rt.bytes_allocated = rt.bytes_allocated - object.cost(rt.objects[i])
+            rt.objects[i] = object.Obj.free
+            rt.free_slots.append(i)
+            rt.freed = rt.freed + 1
+        i += 1
+
+
+# Mark from the roots with an explicit gray stack, drop unmarked keys from
+# the weak intern table, then sweep in ascending slot order (SPEC §7.4).
+public func collect(mut rt: Runtime):
+    mut marker = rt.marker.copy()
+    mark_roots(mut marker, rt)
+    while len(marker.gray) > 0:
+        mut ref = marker.gray.pop()
+        blacken(mut marker, rt, ref)
+    rt.marker = marker
+    mut i = 0
+    while i < len(rt.strings.entries):
+        mut entry = rt.strings.entries[i]
+        if entry.key != value.NO_OBJ and not rt.marker.marks[entry.key]:
+            _ = table.delete(mut rt.strings, entry.key, entry.hash)
+        i += 1
+    sweep(mut rt)
+    rt.collections = rt.collections + 1
+    rt.next_gc = max(rt.bytes_allocated * 2, FIRST_GC)

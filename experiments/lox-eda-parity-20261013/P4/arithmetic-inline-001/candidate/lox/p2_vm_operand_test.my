@@ -1,0 +1,35 @@
+import chunk
+import heap
+import object
+import output
+import value
+import vm
+import vm_queries
+
+public func test_fused_constant_selected_value() -> bool:
+    mut rt = heap.new_runtime(True)
+    mut function = object.new_function()
+    mut code = chunk.new_chunk()
+    _ = chunk.add_constant(mut code, value.Value.number(value=42.0))
+    _ = chunk.add_constant(mut code, value.Value.boolean(value=True))
+    chunk.write_byte(mut code, 1, 1)
+    chunk.write_byte(mut code, 0, 1)
+    function.code = code
+    const ref = heap.allocate(mut rt, object.Obj.function(value=function))
+    heap.push(mut rt, value.Value.obj(value=ref))
+    heap.collect(mut rt)
+    return vm_queries.constant_operand(rt, ref, 0) == value.Value.boolean(value=True) and vm_queries.constant_operand(rt, ref, 1) == value.Value.number(value=42.0) and vm_queries.constant_operand(rt, ref, -1) == value.Value.number(value=42.0)
+
+public func test_constant_operand_pool_boundary(out: Stream) -> bool:
+    mut source = b""
+    mut expected = b""
+    mut i = 0
+    while i < 256:
+        const digits = str(i).encode()
+        source = source + b"print " + digits + b";\n"
+        expected = expected + digits + b"\n"
+        i += 1
+    mut rt = heap.new_runtime(True)
+    mut o = output.capture(out)
+    const result = vm.interpret(mut rt, mut o, source, None)
+    return result == vm.InterpretResult.OK and bytes(o.stdout) == expected and bytes(o.stderr) == b""

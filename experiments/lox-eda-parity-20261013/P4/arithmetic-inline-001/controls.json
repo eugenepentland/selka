@@ -1,0 +1,37 @@
+[
+  {
+    "name": "numeric",
+    "source": "experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/controls/numeric.lox",
+    "status": 0,
+    "stdout": "9\n5\n14\n3.5\ntrue\ntrue\ntrue\ntrue\ntrue\nfalse\ntrue\nfalse\nfalse\n",
+    "stderr": ""
+  },
+  {
+    "name": "operand_order",
+    "source": "experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/controls/operand_order.lox",
+    "status": 70,
+    "stdout": "1\n2\n",
+    "stderr": "Operands must be numbers.\n[line 2]\n"
+  },
+  {
+    "name": "plus_type_error",
+    "source": "experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/controls/plus_type_error.lox",
+    "status": 70,
+    "stdout": "2\n",
+    "stderr": "Operands must be two numbers or two strings.\n[line 2]\n"
+  },
+  {
+    "name": "gc_concat",
+    "source": "experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/controls/gc_concat.lox",
+    "status": 0,
+    "stdout": "abab\n5\ntrue\n",
+    "stderr": ""
+  },
+  {
+    "name": "closures_and_scopes",
+    "source": "experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/controls/closures_and_scopes.lox",
+    "status": 0,
+    "stdout": "3\n3\n21\n",
+    "stderr": ""
+  }
+]

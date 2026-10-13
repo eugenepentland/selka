@@ -1,0 +1,62 @@
+# The mutation-overlap check's disjointness proof is exponential in the
+# size of two recursive type graphs.
+#
+#   time mylang check overlap_proof_blowup.my      => > 30 s (never seen finish)
+#
+# `walk` passes `state` writable and `e` read-only, so origins.zig's
+# typesMayAlias must prove the State graph and the Expr graph share no
+# managed type. It walks pairs of types along every path, remembering only
+# the pairs on the current path, so each extra recursive class multiplies
+# the work: with Node0..Node2 and Obj0..Obj1 at two fields each it takes
+# 2.5 s, and this file (two of each, three fields) does not finish in 30 s.
+# The Lox tree engine hit it the moment evaluate(mut interpreter, expr)
+# took an AST node next to the runtime; the port now addresses AST nodes by
+# index so no call passes a node.
+class Node0:
+    left: Expr
+    right: Expr
+    items: list[Expr]
+
+class Node1:
+    left: Expr
+    right: Expr
+    items: list[Expr]
+
+union Expr:
+    leaf: int,
+    n0: Node0,
+    n1: Node1
+
+class Obj0:
+    next: Heap
+    values: list[float]
+    more: list[Heap]
+
+class Obj1:
+    next: Heap
+    values: list[float]
+    more: list[Heap]
+
+union Heap:
+    empty: int,
+    o0: Obj0,
+    o1: Obj1
+
+class State:
+    objects: list[Heap]
+    depth: int
+
+def count(state: mut State, e: Expr) -> int:
+    state.depth = state.depth + 1
+    match e:
+        case Expr.leaf(v):
+            return v
+        case _:
+            return 0
+
+def walk(state: mut State, e: Expr) -> int:
+    return count(mut state, e)
+
+def main() -> int:
+    s = State(objects=[], depth=0)
+    return walk(mut s, Expr.leaf(3))

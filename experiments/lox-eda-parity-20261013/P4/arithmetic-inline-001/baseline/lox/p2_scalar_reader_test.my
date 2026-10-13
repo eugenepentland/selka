@@ -1,0 +1,17 @@
+import heap
+import output
+import vm
+
+# Nonzero high bytes for forward and backward jumps, combined with calls,
+# captured locals, properties, invokes and super invokes under GC stress.
+public func test_scalar_reader_full_frame_resume(out: Stream) -> bool:
+    mut padding = b""
+    mut i = 0
+    while i < 180:
+        padding = padding + b"nil;"
+        i += 1
+    const source = b"class A { init(x) { this.x = x; } value() { return this.x; } } class B < A { value() { return super.value() + 1; } } fun wrap(x) { fun get() { return x.value(); } return get; } var get = wrap(B(40)); var i = 0; while (i < 2) { if (i == 0) {" + padding + b"} else {" + padding + b"} print get(); i = i + 1; }"
+    mut rt = heap.new_runtime(True)
+    mut o = output.capture(out)
+    const result = vm.interpret(mut rt, mut o, source, None)
+    return result == vm.InterpretResult.OK and bytes(o.stdout) == b"41\n41\n" and bytes(o.stderr) == b"" and rt.frame_count == 0 and rt.stack_top == 0

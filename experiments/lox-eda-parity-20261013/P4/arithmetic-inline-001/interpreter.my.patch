@@ -1,0 +1,46 @@
+--- a/interpreter.my
++++ b/interpreter.my
+@@ -181,28 +181,24 @@
+         elif a is None or b is None:
+             return Err(fail (b"Operands must be numbers.", node.operator.line))
+         else:
+-            result = arithmetic(kind, a, b)
++            match kind:
++                case ast.TokenKind.GREATER:
++                    result = value.Value.boolean(value=a > b)
++                case ast.TokenKind.GREATER_EQUAL:
++                    result = value.Value.boolean(value=a >= b)
++                case ast.TokenKind.LESS:
++                    result = value.Value.boolean(value=a < b)
++                case ast.TokenKind.LESS_EQUAL:
++                    result = value.Value.boolean(value=a <= b)
++                case ast.TokenKind.MINUS:
++                    result = value.Value.number(value=a - b)
++                case ast.TokenKind.SLASH:
++                    result = value.Value.number(value=a / b)
++                case _:
++                    result = value.Value.number(value=a * b)
+     _ = heap.pop(mut rt)
+     replace_top(mut rt, result)
+     return Ok(())
+-
+-
+-func arithmetic(kind: ast.TokenKind, a: float, b: float) -> value.Value:
+-    match kind:
+-        case ast.TokenKind.GREATER:
+-            return value.Value.boolean(value=a > b)
+-        case ast.TokenKind.GREATER_EQUAL:
+-            return value.Value.boolean(value=a >= b)
+-        case ast.TokenKind.LESS:
+-            return value.Value.boolean(value=a < b)
+-        case ast.TokenKind.LESS_EQUAL:
+-            return value.Value.boolean(value=a <= b)
+-        case ast.TokenKind.MINUS:
+-            return value.Value.number(value=a - b)
+-        case ast.TokenKind.SLASH:
+-            return value.Value.number(value=a / b)
+-        case _:
+-            return value.Value.number(value=a * b)
+ 
+ 
+ func unary(program: ast.Program, mut rt: heap.Runtime, mut o: output.Output, mut it: Interpreter, node: ast.UnaryExpr, clock: Clock?) -> Result[Unit, RuntimeError]:

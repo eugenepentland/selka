@@ -1,0 +1,116 @@
+{
+  "environment": [
+    "source /home/epentland/.config/mylang/dev-env.sh",
+    "TMPDIR=$PWD/.tmp/lox-eda-parity/P4/arithmetic-inline-001/tmp",
+    "MYLANG_COMPONENT_DIR=common-002/install/libexec/mylang/components"
+  ],
+  "commands": [
+    {
+      "name": "baseline-build",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+        "build",
+        "experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/baseline/lox/main.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--cache-dir",
+        ".tmp/lox-eda-parity/P4/arithmetic-inline-001/baseline/cache",
+        "-o",
+        ".tmp/lox-eda-parity/P4/arithmetic-inline-001/baseline/lox",
+        "--emit-llvm",
+        ".tmp/lox-eda-parity/P4/arithmetic-inline-001/baseline/lox.ll"
+      ]
+    },
+    {
+      "name": "baseline-verified-tests",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+        "test",
+        "experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/baseline/lox",
+        "--experimental-zero-rc",
+        "--release",
+        "--verify-facts",
+        "--jobs",
+        "4",
+        "--max-steps",
+        "1000000000",
+        "--max-frames",
+        "40000",
+        "--max-memory",
+        "2G",
+        "--timeout-ms",
+        "120000",
+        "--cache-dir",
+        ".tmp/lox-eda-parity/P4/arithmetic-inline-001/baseline/test-cache",
+        "--json"
+      ]
+    },
+    {
+      "name": "candidate-build",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+        "build",
+        "experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/candidate/lox/main.my",
+        "--experimental-zero-rc",
+        "--release",
+        "--cache-dir",
+        ".tmp/lox-eda-parity/P4/arithmetic-inline-001/candidate/cache",
+        "-o",
+        ".tmp/lox-eda-parity/P4/arithmetic-inline-001/candidate/lox",
+        "--emit-llvm",
+        ".tmp/lox-eda-parity/P4/arithmetic-inline-001/candidate/lox.ll"
+      ]
+    },
+    {
+      "name": "candidate-verified-tests",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+        "test",
+        "experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/candidate/lox",
+        "--experimental-zero-rc",
+        "--release",
+        "--verify-facts",
+        "--jobs",
+        "4",
+        "--max-steps",
+        "1000000000",
+        "--max-frames",
+        "40000",
+        "--max-memory",
+        "2G",
+        "--timeout-ms",
+        "120000",
+        "--cache-dir",
+        ".tmp/lox-eda-parity/P4/arithmetic-inline-001/candidate/test-cache",
+        "--json"
+      ]
+    },
+    {
+      "name": "focused-controls",
+      "command": [
+        "scripts/build-slot.sh",
+        "build",
+        "python3",
+        "-B",
+        "experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/run-controls.py"
+      ],
+      "returncode": 0
+    }
+  ],
+  "cwd": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4",
+  "qualification": {
+    "baseline_tests_passed": 103,
+    "candidate_tests_passed": 103,
+    "focused_controls_passed": 20,
+    "native_builds_passed": true
+  },
+  "timing_commands_receipt": "timing-commands.json"
+}

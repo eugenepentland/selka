@@ -1,0 +1,13 @@
+build-slot: FIFO ticket 2975, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 2975, position 2; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 2975, position 2; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 2975, position 1; waiting for measurement or memory-accounting settle delay; waiting (181s so far)
+build-slot: FIFO ticket 2975, position 1; waiting for measurement or memory-accounting settle delay; waiting (241s so far)
+build-slot: FIFO ticket 2975, position 1; waiting for measurement or memory-accounting settle delay; waiting (301s so far)
+build-slot: FIFO ticket 2975, position 1; waiting for measurement or memory-accounting settle delay; waiting (361s so far)
+build-slot: FIFO ticket 2975, position 1; waiting for measurement or memory-accounting settle delay; waiting (422s so far)
+build-slot: FIFO ticket 2975, position 1; waiting for measurement or memory-accounting settle delay; waiting (482s so far)
+build-slot: FIFO ticket 2975, position 1; waiting for measurement or memory-accounting settle delay; waiting (542s so far)
+build-slot: FIFO ticket 2975, position 1; waiting for measurement or memory-accounting settle delay; waiting (602s so far)
+build-slot: FIFO ticket 2975, position 1; waiting for measurement or memory-accounting settle delay; waiting (662s so far)
+build-slot: build slot 1, FIFO ticket 2975 after 667s

@@ -1,0 +1,48 @@
+build-slot: FIFO ticket 1365, position 1; draining active work (build1.lock); waiting (0s so far)
+build-slot: FIFO ticket 1365, position 1; draining active work (gate1.lock); waiting (61s so far)
+build-slot: FIFO ticket 1365, position 1; draining active work (gate1.lock); waiting (121s so far)
+build-slot: FIFO ticket 1365, position 1; draining active work (gate1.lock); waiting (181s so far)
+build-slot: FIFO ticket 1365, position 1; draining active work (gate1.lock); waiting (241s so far)
+build-slot: FIFO ticket 1365, position 1; draining active work (gate1.lock); waiting (301s so far)
+build-slot: FIFO ticket 1365, position 1; draining active work (gate1.lock); waiting (361s so far)
+build-slot: FIFO ticket 1365, position 1; draining active work (gate1.lock); waiting (422s so far)
+build-slot: FIFO ticket 1365, position 1; draining active work (gate1.lock); waiting (482s so far)
+build-slot: timing slot 1, FIFO ticket 1365 after 537s
+{
+  "zig-fast": {
+    "seconds": {
+      "median": 0.095921435,
+      "min": 0.09555873,
+      "max": 0.097174269,
+      "samples": [
+        0.097174269,
+        0.095921435,
+        0.09555873
+      ]
+    }
+  },
+  "baseline": {
+    "seconds": {
+      "median": 0.1090955,
+      "min": 0.108659443,
+      "max": 0.110860364,
+      "samples": [
+        0.110860364,
+        0.108659443,
+        0.1090955
+      ]
+    }
+  },
+  "candidate": {
+    "seconds": {
+      "median": 0.110846554,
+      "min": 0.108532828,
+      "max": 0.111376504,
+      "samples": [
+        0.110846554,
+        0.108532828,
+        0.111376504
+      ]
+    }
+  }
+}

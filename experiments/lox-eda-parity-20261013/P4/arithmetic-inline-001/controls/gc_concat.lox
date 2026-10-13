@@ -1,0 +1,1 @@
+fun make() { return "a" + "b"; } fun combine() { return make() + make(); } print combine(); print (3 * 7 - 1) / 4; print combine() == "abab";

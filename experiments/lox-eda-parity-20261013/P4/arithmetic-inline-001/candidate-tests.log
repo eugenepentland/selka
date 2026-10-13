@@ -1,0 +1,12 @@
+build-slot: FIFO ticket 2978, position 5; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 2978, position 5; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 2978, position 4; earlier build tickets must run first; waiting (121s so far)
+build-slot: FIFO ticket 2978, position 4; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 2978, position 4; earlier build tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 2978, position 4; earlier build tickets must run first; waiting (301s so far)
+build-slot: FIFO ticket 2978, position 4; earlier build tickets must run first; waiting (361s so far)
+build-slot: FIFO ticket 2978, position 4; earlier build tickets must run first; waiting (421s so far)
+build-slot: FIFO ticket 2978, position 4; earlier build tickets must run first; waiting (481s so far)
+build-slot: FIFO ticket 2978, position 4; earlier build tickets must run first; waiting (542s so far)
+build-slot: FIFO ticket 2978, position 1; waiting for measurement or memory-accounting settle delay; waiting (602s so far)
+build-slot: build slot 1, FIFO ticket 2978 after 607s

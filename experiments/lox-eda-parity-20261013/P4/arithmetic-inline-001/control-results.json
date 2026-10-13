@@ -1,0 +1,272 @@
+[
+  {
+    "arm": "baseline",
+    "control": "numeric",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/arithmetic-inline-001/baseline/lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/controls/numeric.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "source_sha256": "364442d0b30de7cfc1b105cd120ae3f54c3c687d420687a6dedb2ef545e439c8",
+    "passed": true
+  },
+  {
+    "arm": "baseline",
+    "control": "numeric-stress",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/arithmetic-inline-001/baseline/lox",
+      "--engine=tree",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/controls/numeric.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "source_sha256": "364442d0b30de7cfc1b105cd120ae3f54c3c687d420687a6dedb2ef545e439c8",
+    "passed": true
+  },
+  {
+    "arm": "baseline",
+    "control": "operand_order",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/arithmetic-inline-001/baseline/lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/controls/operand_order.lox"
+    ],
+    "returncode": 70,
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "source_sha256": "6263a3ca521421bd0cc61758a905115489deeb13ac20dfe2046122371125cc92",
+    "passed": true
+  },
+  {
+    "arm": "baseline",
+    "control": "operand_order-stress",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/arithmetic-inline-001/baseline/lox",
+      "--engine=tree",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/controls/operand_order.lox"
+    ],
+    "returncode": 70,
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "source_sha256": "6263a3ca521421bd0cc61758a905115489deeb13ac20dfe2046122371125cc92",
+    "passed": true
+  },
+  {
+    "arm": "baseline",
+    "control": "plus_type_error",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/arithmetic-inline-001/baseline/lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/controls/plus_type_error.lox"
+    ],
+    "returncode": 70,
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "source_sha256": "be0e577e00e8e625ba86346715996a097da084a68dbf6cfce91409ac15750119",
+    "passed": true
+  },
+  {
+    "arm": "baseline",
+    "control": "plus_type_error-stress",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/arithmetic-inline-001/baseline/lox",
+      "--engine=tree",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/controls/plus_type_error.lox"
+    ],
+    "returncode": 70,
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "source_sha256": "be0e577e00e8e625ba86346715996a097da084a68dbf6cfce91409ac15750119",
+    "passed": true
+  },
+  {
+    "arm": "baseline",
+    "control": "gc_concat",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/arithmetic-inline-001/baseline/lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/controls/gc_concat.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "source_sha256": "9e437d909d07a61895679d615d12af78305229423e16fc3c2f6c1178e00cf714",
+    "passed": true
+  },
+  {
+    "arm": "baseline",
+    "control": "gc_concat-stress",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/arithmetic-inline-001/baseline/lox",
+      "--engine=tree",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/controls/gc_concat.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "source_sha256": "9e437d909d07a61895679d615d12af78305229423e16fc3c2f6c1178e00cf714",
+    "passed": true
+  },
+  {
+    "arm": "baseline",
+    "control": "closures_and_scopes",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/arithmetic-inline-001/baseline/lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/controls/closures_and_scopes.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "source_sha256": "a929d012b2194a40101b4ae93f4389c6fa189e48c543a8aa03d8b4a2ce5d2e84",
+    "passed": true
+  },
+  {
+    "arm": "baseline",
+    "control": "closures_and_scopes-stress",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/arithmetic-inline-001/baseline/lox",
+      "--engine=tree",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/controls/closures_and_scopes.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "source_sha256": "a929d012b2194a40101b4ae93f4389c6fa189e48c543a8aa03d8b4a2ce5d2e84",
+    "passed": true
+  },
+  {
+    "arm": "candidate",
+    "control": "numeric",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/arithmetic-inline-001/candidate/lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/controls/numeric.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "c50c7adb140159400aa573cd75279de52534fc34b6de781cdb4b2c7f4811ebc2",
+    "source_sha256": "364442d0b30de7cfc1b105cd120ae3f54c3c687d420687a6dedb2ef545e439c8",
+    "passed": true
+  },
+  {
+    "arm": "candidate",
+    "control": "numeric-stress",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/arithmetic-inline-001/candidate/lox",
+      "--engine=tree",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/controls/numeric.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "c50c7adb140159400aa573cd75279de52534fc34b6de781cdb4b2c7f4811ebc2",
+    "source_sha256": "364442d0b30de7cfc1b105cd120ae3f54c3c687d420687a6dedb2ef545e439c8",
+    "passed": true
+  },
+  {
+    "arm": "candidate",
+    "control": "operand_order",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/arithmetic-inline-001/candidate/lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/controls/operand_order.lox"
+    ],
+    "returncode": 70,
+    "binary_sha256": "c50c7adb140159400aa573cd75279de52534fc34b6de781cdb4b2c7f4811ebc2",
+    "source_sha256": "6263a3ca521421bd0cc61758a905115489deeb13ac20dfe2046122371125cc92",
+    "passed": true
+  },
+  {
+    "arm": "candidate",
+    "control": "operand_order-stress",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/arithmetic-inline-001/candidate/lox",
+      "--engine=tree",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/controls/operand_order.lox"
+    ],
+    "returncode": 70,
+    "binary_sha256": "c50c7adb140159400aa573cd75279de52534fc34b6de781cdb4b2c7f4811ebc2",
+    "source_sha256": "6263a3ca521421bd0cc61758a905115489deeb13ac20dfe2046122371125cc92",
+    "passed": true
+  },
+  {
+    "arm": "candidate",
+    "control": "plus_type_error",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/arithmetic-inline-001/candidate/lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/controls/plus_type_error.lox"
+    ],
+    "returncode": 70,
+    "binary_sha256": "c50c7adb140159400aa573cd75279de52534fc34b6de781cdb4b2c7f4811ebc2",
+    "source_sha256": "be0e577e00e8e625ba86346715996a097da084a68dbf6cfce91409ac15750119",
+    "passed": true
+  },
+  {
+    "arm": "candidate",
+    "control": "plus_type_error-stress",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/arithmetic-inline-001/candidate/lox",
+      "--engine=tree",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/controls/plus_type_error.lox"
+    ],
+    "returncode": 70,
+    "binary_sha256": "c50c7adb140159400aa573cd75279de52534fc34b6de781cdb4b2c7f4811ebc2",
+    "source_sha256": "be0e577e00e8e625ba86346715996a097da084a68dbf6cfce91409ac15750119",
+    "passed": true
+  },
+  {
+    "arm": "candidate",
+    "control": "gc_concat",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/arithmetic-inline-001/candidate/lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/controls/gc_concat.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "c50c7adb140159400aa573cd75279de52534fc34b6de781cdb4b2c7f4811ebc2",
+    "source_sha256": "9e437d909d07a61895679d615d12af78305229423e16fc3c2f6c1178e00cf714",
+    "passed": true
+  },
+  {
+    "arm": "candidate",
+    "control": "gc_concat-stress",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/arithmetic-inline-001/candidate/lox",
+      "--engine=tree",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/controls/gc_concat.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "c50c7adb140159400aa573cd75279de52534fc34b6de781cdb4b2c7f4811ebc2",
+    "source_sha256": "9e437d909d07a61895679d615d12af78305229423e16fc3c2f6c1178e00cf714",
+    "passed": true
+  },
+  {
+    "arm": "candidate",
+    "control": "closures_and_scopes",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/arithmetic-inline-001/candidate/lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/controls/closures_and_scopes.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "c50c7adb140159400aa573cd75279de52534fc34b6de781cdb4b2c7f4811ebc2",
+    "source_sha256": "a929d012b2194a40101b4ae93f4389c6fa189e48c543a8aa03d8b4a2ce5d2e84",
+    "passed": true
+  },
+  {
+    "arm": "candidate",
+    "control": "closures_and_scopes-stress",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/arithmetic-inline-001/candidate/lox",
+      "--engine=tree",
+      "--gc-stress",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/experiments/lox-eda-parity-20261013/P4/arithmetic-inline-001/controls/closures_and_scopes.lox"
+    ],
+    "returncode": 0,
+    "binary_sha256": "c50c7adb140159400aa573cd75279de52534fc34b6de781cdb4b2c7f4811ebc2",
+    "source_sha256": "a929d012b2194a40101b4ae93f4389c6fa189e48c543a8aa03d8b4a2ce5d2e84",
+    "passed": true
+  }
+]

@@ -1,0 +1,6 @@
+{
+  "status": "rejected for app adoption",
+  "reason": "All three paired95% intervals include one; no supported runtime benefit",
+  "coordinator_decision": "Agreed: arithmetic-inline rejected as no supported runtime benefit; keep full measured evidence and commit the isolated experiment/handoff, no app adoption.",
+  "production_changed": false
+}
