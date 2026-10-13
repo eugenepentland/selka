@@ -1,0 +1,3 @@
+build-slot: FIFO ticket 2925, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 2925 after 10s
+error: cannot load the program: InvalidModuleName

@@ -1,0 +1,8 @@
+heap.my:77:5: error[R_LIST_BOUNDS]: native execution failed (index 0, length 0)
+  in heap::push at heap.my:77:5
+  in interpreter::get_variable at interpreter.my:136:5
+  in interpreter::evaluate at interpreter.my:325:20
+  in interpreter::execute at interpreter.my:512:17
+  in interpreter::p1_discard_probe at interpreter.my:617:11
+  in discard_probe::main at discard_probe.my:30:12
+MYLANG-TRAP {"version":1,"operation":"index","index":0,"length":0}

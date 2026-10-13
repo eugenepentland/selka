@@ -1,0 +1,6 @@
+build-slot: FIFO ticket 2928, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 2928 after 30s
+discard_probe.my:24:49: error[E_MUTATION_OVERLAP]: receiver `rt.current_env` overlaps `mut rt` evaluated in this statement; make the call `heap.allocate_instance(mut rt, value.NO_OBJ)` in its own statement first, save its result in a local, then update the receiver using that local
+          rt.current_env = heap.allocate_instance(mut rt, value.NO_OBJ)
+                                                  ^
+  note: discard_probe.my:24:9: the assignment or update receiver names an overlapping place

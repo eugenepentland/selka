@@ -1,0 +1,60 @@
+{
+  "binaries": {
+    "compiler": {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-001/install/bin/mylang",
+      "sha256": "955f311e1dbf65b55f4c148ab03cdcb4881bc5668289aea93336dbfd7985206a"
+    },
+    "candidate": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/discard-local-001/candidate-lox",
+      "sha256": "1410b7d78efb47cf2fce0172e28eeb5116466719bd5b1da46061d71d1f2404b1"
+    },
+    "baseline_probe": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/discard-local-001/probe-baseline-bin",
+      "sha256": "549dc53d79fc5fb5ed65c513282ac9d3d2886ab9d02607f1ef0514be30506a05"
+    },
+    "candidate_probe": {
+      "path": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/discard-local-001/probe-candidate-bin",
+      "sha256": "ef72269c4e3dbee1bbba5e49a3d28749145baeef2aa3697b08add5e37b298c25"
+    }
+  },
+  "source_changes": [
+    "interpreter.my",
+    "p1_discard_local_test.my"
+  ],
+  "sources": {
+    "p1_heap_test.my": "03f78adc8a7c65d1ca24432d73709d8e40d3c8f2fad978902b367c84c727bd90",
+    "table.my": "09997c3fbc7461e5698c16de1b186ba755f98b94951b54dadfad0dc7268dfa98",
+    "value.my": "be66ac3375e327f4bdf1759177519fd95a45bcd1f60070af0bf70047e8bb8c41",
+    "scanner_test.my": "c725372b79a947e38f4ca71e3db8c2cf4a06207536eda84d7089613145639a43",
+    "natives.my": "275a01cc19f99e51ed04ca2c45fb997e9df1a61ac83bfbcb71e3344ccb5a8bc8",
+    "resolver.my": "f06d3b559ee224b9c32fc3e48de932b7b151c15b93d97bde0bf92bc0f47cf8de",
+    "scanner.my": "62e0ead93c58c83b4dee2473991df12778e432e2404122d9c59bc1be2bdf30df",
+    "p4_tree_tests.my": "a8486ca90348ec7014887f07181a9c6b96ac319c23abb197d867b439b9eff12a",
+    "main.my": "641f72b214650751a3799292bb9f9900c0ee191a4ee9b51cd6c5d47da731dc3f",
+    "resolver_test.my": "764c6cf4042cab6ffbad624a724268f20d353adc08f38094ebbb0feed1503974",
+    "heap_test.my": "163e84ed66b8b77248337b0a04789993a63f87ccb4beda704dc14fbe2c346cc5",
+    "lox_strings.my": "277c69c5abf81d3db8a51b4d64858bd2eb7ccd1a406b3cfe3eeb949567cdb843",
+    "driver_tests.my": "7de9d76e841420434c3ee6195cd31cb3acfebd23d45c290b6ef49077bd87e99a",
+    "driver.my": "7fc1224dd3e5b42a488a92f4f7282c198ec03fb0eccaa6516b63ca6d75be6c9c",
+    "p2_vm_operand_test.my": "614ed30ffa03b1a590258a5f1e84eb99687dfab2d2501f18e775541d4f4c475e",
+    "compiler_test.my": "57ef31985f79ddd7f36420430847c94bf3fda79b1bc1bc7fff56859ea3310e60",
+    "chunk.my": "d78b6babd52503e76abcd88fe858d11e44ad43cdb45f7a436aa0adabdbf5b731",
+    "p2_tree_tests.my": "851b12836dc599b8431e4ba05b804422ba9961113fbda80b0ec12a2d4743f52d",
+    "output.my": "2a4760acf26f0ce8eaa585d7d69afe521120fbe90c6bdd2f35d8500e79648798",
+    "vm_queries.my": "d8a03a571c8056fbd8330f42fe81ef36502ec2fd16754da6ce3d8dd773ad2e57",
+    "parser_test.my": "7b87e451fc84c6f745246b5b716c2f49d4c994b75ac0149f28e3efdcf6115567",
+    "interpreter.my": "7d2ce9a89e96b0d2cb6728f6bbbcb599499b6acc45d429cb1d20a94c1e45f6ff",
+    "p3_queries_test.my": "9557e1afc80b6bba743d2ff82adf8bdf4eb17cc4908552eaf5696ea036ddaab6",
+    "vm.my": "c08b8e3b5ff904a842c1cdbc508d57eec9906bb8cc8a9b23968a0e76d2f23ef3",
+    "value_test.my": "e08b23815ec0b80060b56168648514c35d2103ab09444b0bd16532ac63caa560",
+    "parser.my": "9d240b7def5f585ad3571f1d6f78f079a32c5b1133569bee8de08c002ea70ddd",
+    "compiler.my": "92f20efd56d2976bc8abf6e349dfb2dd00d7cd6db5a788a87cf054fd99e2ed90",
+    "heap.my": "0fee35652bf52adeb179705f1f27d63bc899fe0d0ff5e3116121732fde8c6639",
+    "p1_discard_local_test.my": "fe1555b353c0ded7869063681418a128ad2133cfefeea4a3acfb29b956f2e90a",
+    "p2_vm_execution_test.my": "35305397d19b76355d64b0d09133069e4db1260b713d6947306737ebd749d2ff",
+    "ast.my": "1fb65ed5a17d23d337b822e263e974886f06386365e869b07fc418d96afe3e46",
+    "lox_strings_test.my": "ef5d217fe56c99212cd02b137f8bd75e458a6ddf89df07d7f4c10df0d85b51ae",
+    "table_test.my": "5cb9baaebaf11aa301faacbeabd777af4a460eb0f0c6e9a67ff8f0e276b0cccc",
+    "object.my": "d7676af7b94ffecfa563e2aa1cbdda39f9dc15934e0268aa168cb8630a111f93"
+  }
+}

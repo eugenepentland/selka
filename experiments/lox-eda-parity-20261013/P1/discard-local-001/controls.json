@@ -1,0 +1,198 @@
+{
+  "valid": {
+    "baseline": {
+      "exit": 0,
+      "stdout": "0\n",
+      "category": null,
+      "message": null,
+      "trap": null
+    },
+    "candidate": {
+      "exit": 0,
+      "stdout": "0\n",
+      "category": null,
+      "message": null,
+      "trap": null
+    }
+  },
+  "stack-end": {
+    "baseline": {
+      "exit": 1,
+      "stdout": "",
+      "category": "R_LIST_BOUNDS",
+      "message": "native execution failed (index 16384, length 16384)",
+      "trap": {
+        "version": 1,
+        "operation": "index",
+        "index": 16384,
+        "length": 16384
+      }
+    },
+    "candidate": {
+      "exit": 1,
+      "stdout": "",
+      "category": "R_LIST_BOUNDS",
+      "message": "native execution failed (index 16384, length 16384)",
+      "trap": {
+        "version": 1,
+        "operation": "index",
+        "index": 16384,
+        "length": 16384
+      }
+    }
+  },
+  "stack-negative": {
+    "baseline": {
+      "exit": 0,
+      "stdout": "-1\n",
+      "category": null,
+      "message": null,
+      "trap": null
+    },
+    "candidate": {
+      "exit": 0,
+      "stdout": "-1\n",
+      "category": null,
+      "message": null,
+      "trap": null
+    }
+  },
+  "stack-empty": {
+    "baseline": {
+      "exit": 1,
+      "stdout": "",
+      "category": "R_LIST_BOUNDS",
+      "message": "native execution failed (index 0, length 0)",
+      "trap": {
+        "version": 1,
+        "operation": "index",
+        "index": 0,
+        "length": 0
+      }
+    },
+    "candidate": {
+      "exit": 1,
+      "stdout": "",
+      "category": "R_LIST_BOUNDS",
+      "message": "native execution failed (index 0, length 0)",
+      "trap": {
+        "version": 1,
+        "operation": "index",
+        "index": 0,
+        "length": 0
+      }
+    }
+  },
+  "slot-negative": {
+    "baseline": {
+      "exit": 0,
+      "stdout": "0\n",
+      "category": null,
+      "message": null,
+      "trap": null
+    },
+    "candidate": {
+      "exit": 0,
+      "stdout": "0\n",
+      "category": null,
+      "message": null,
+      "trap": null
+    }
+  },
+  "slot-end": {
+    "baseline": {
+      "exit": 1,
+      "stdout": "",
+      "category": "R_LIST_BOUNDS",
+      "message": "native execution failed (index 1, length 1)",
+      "trap": {
+        "version": 1,
+        "operation": "index",
+        "index": 1,
+        "length": 1
+      }
+    },
+    "candidate": {
+      "exit": 1,
+      "stdout": "",
+      "category": "R_LIST_BOUNDS",
+      "message": "native execution failed (index 1, length 1)",
+      "trap": {
+        "version": 1,
+        "operation": "index",
+        "index": 1,
+        "length": 1
+      }
+    }
+  },
+  "invalid-kind": {
+    "baseline": {
+      "exit": 1,
+      "stdout": "",
+      "category": "R_ASSERT",
+      "message": "native execution failed: object is not a env",
+      "trap": {
+        "version": 1,
+        "operation": "object is not a env"
+      }
+    },
+    "candidate": {
+      "exit": 1,
+      "stdout": "",
+      "category": "R_ASSERT",
+      "message": "native execution failed: object is not a env",
+      "trap": {
+        "version": 1,
+        "operation": "object is not a env"
+      }
+    }
+  },
+  "kind-and-stack": {
+    "baseline": {
+      "exit": 1,
+      "stdout": "",
+      "category": "R_ASSERT",
+      "message": "native execution failed: object is not a env",
+      "trap": {
+        "version": 1,
+        "operation": "object is not a env"
+      }
+    },
+    "candidate": {
+      "exit": 1,
+      "stdout": "",
+      "category": "R_ASSERT",
+      "message": "native execution failed: object is not a env",
+      "trap": {
+        "version": 1,
+        "operation": "object is not a env"
+      }
+    }
+  },
+  "invalid-handle": {
+    "baseline": {
+      "exit": 1,
+      "stdout": "",
+      "category": "R_LIST_BOUNDS",
+      "message": "native execution failed (index 1, length 1)",
+      "trap": {
+        "version": 1,
+        "operation": "index",
+        "index": 1,
+        "length": 1
+      }
+    },
+    "candidate": {
+      "exit": 1,
+      "stdout": "",
+      "category": "R_LIST_BOUNDS",
+      "message": "native execution failed (index 1, length 1)",
+      "trap": {
+        "version": 1,
+        "operation": "index",
+        "index": 1,
+        "length": 1
+      }
+    }
+  }
+}

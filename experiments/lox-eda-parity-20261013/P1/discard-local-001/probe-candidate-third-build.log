@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 2931, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 2931 after 5s
+discard_probe.my:6:16: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value
+      mut mode = args[0]
+                 ^

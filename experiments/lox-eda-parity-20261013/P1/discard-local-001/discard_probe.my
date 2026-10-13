@@ -1,0 +1,30 @@
+import heap
+import interpreter
+import value
+
+func main(args: str[], out: Stream) -> int:
+    mut mode = args[0].copy()
+    mut rt = heap.new_runtime(False)
+    mut env = heap.allocate_env(mut rt, value.NO_OBJ, 1)
+    rt.current_env = env
+    heap.set_env_slot(mut rt, env, 0, value.Value.number(value=42.0))
+    mut slot = 0
+    mut hops = 0
+    if mode == "stack-end":
+        rt.stack_top = len(rt.stack)
+    if mode == "stack-negative":
+        rt.stack_top = -1
+    if mode == "stack-empty":
+        rt.stack = []
+    if mode == "slot-negative":
+        slot = -1
+    if mode == "slot-end":
+        slot = 1
+    if mode == "invalid-kind" or mode == "kind-and-stack":
+        mut instance = heap.allocate_instance(mut rt, value.NO_OBJ)
+        rt.current_env = instance
+    if mode == "kind-and-stack":
+        rt.stack_top = len(rt.stack)
+    if mode == "invalid-handle":
+        rt.current_env = len(rt.objects)
+    return interpreter.p1_discard_probe(mut rt, out, hops, slot)

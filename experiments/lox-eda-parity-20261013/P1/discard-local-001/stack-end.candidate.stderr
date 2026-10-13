@@ -1,0 +1,5 @@
+interpreter.my:519:29: error[R_LIST_BOUNDS]: native execution failed (index 16384, length 16384)
+  in interpreter::execute at interpreter.my:519:29
+  in interpreter::p1_discard_probe at interpreter.my:628:11
+  in discard_probe::main at discard_probe.my:30:12
+MYLANG-TRAP {"version":1,"operation":"index","index":16384,"length":16384}

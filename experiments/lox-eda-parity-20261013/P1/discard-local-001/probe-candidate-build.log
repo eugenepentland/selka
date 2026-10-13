@@ -1,0 +1,4 @@
+build-slot: build slot 1, FIFO ticket 2933 after 0s
+output.my:5:8: warning[W_UNUSED_IMPORT]: import `object` is never referenced in this module; remove it or use it
+  import object
+         ^

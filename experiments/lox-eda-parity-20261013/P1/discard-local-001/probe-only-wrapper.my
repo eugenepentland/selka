@@ -1,0 +1,15 @@
+# Probe-only entry: synthesize one resolved-local expression statement.
+public func p1_discard_probe(mut rt: heap.Runtime, out: Stream, hops: int, slot: int) -> int:
+    mut program = ast.new_program()
+    mut token = ast.Token(kind=ast.TokenKind.IDENTIFIER, start=0, length=1, line=1, message=b"")
+    program.exprs.append(ast.Expr.variable(value=ast.VariableExpr(name=token, name_ref=value.NO_OBJ, hops=hops, slot=slot)))
+    program.stmts.append(ast.Stmt.expression(value=0))
+    mut o = output.capture(out)
+    mut it = Interpreter(depth=0, returned=value.Value.nil)
+    match execute(program, mut rt, mut o, mut it, 0, None):
+        case Ok(_):
+            out.print(rt.stack_top)
+            return 0
+        case Err(error):
+            out.print(error.message)
+            return 70
