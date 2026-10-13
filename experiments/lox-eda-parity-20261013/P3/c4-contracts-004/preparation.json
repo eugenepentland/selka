@@ -1,0 +1,18 @@
+{
+  "status": "prepared only; no native execution authorized until exact common004 identity arrives",
+  "source_manifest_matches_c3": true,
+  "private_prefix_matches_c3": true,
+  "private_suffix_matches_c3": true,
+  "prior_c3_plan_sha256": "2b32c05edb8c29b38b3fec0718b2ee2fd421ef1dc32a63761678c58d09354b50",
+  "fresh_plan_sha256": "e5a41047a1691bdf5d11c25449858f67e602c0f0e0302b46b55a3be78ad14b95",
+  "workdir": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p3",
+  "private_work": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p3/.tmp/lox-eda-parity/P3/c4-contracts-004",
+  "modes": [
+    "verified-release",
+    "release",
+    "debug",
+    "optimized-debug",
+    "no-facts"
+  ],
+  "tests_per_mode": 3
+}
