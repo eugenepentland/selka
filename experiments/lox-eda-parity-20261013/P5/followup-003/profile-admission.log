@@ -1,0 +1,10 @@
+build-slot: FIFO ticket 1305, position 5; earlier timing tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 1305, position 5; earlier timing tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 1305, position 5; earlier timing tickets must run first; waiting (121s so far)
+build-slot: FIFO ticket 1305, position 5; earlier timing tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 1305, position 5; earlier timing tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 1305, position 5; earlier timing tickets must run first; waiting (301s so far)
+build-slot: FIFO ticket 1305, position 5; earlier timing tickets must run first; waiting (361s so far)
+build-slot: FIFO ticket 1305, position 5; earlier timing tickets must run first; waiting (421s so far)
+build-slot: FIFO ticket 1305, position 4; earlier timing tickets must run first; waiting (481s so far)
+build-slot: timing slot 1, FIFO ticket 1305 after 506s

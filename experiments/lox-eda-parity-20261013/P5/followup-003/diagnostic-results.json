@@ -1,0 +1,476 @@
+{
+  "label": "two-case diagnostic only; no full EDA parity/RSS claim",
+  "cases": [
+    {
+      "case": "stm32n6",
+      "receipt_sha256": "d4d487e78a7f5c9c78b250f80809ba9a15ed965da47f9e14e5023fb68dbe706e",
+      "arm_status": {
+        "zig-fast": {
+          "status": "ok"
+        },
+        "mylang-c1": {
+          "status": "ok"
+        },
+        "mylang-candidate": {
+          "status": "ok"
+        }
+      },
+      "relative_timeout_policy": {
+        "reference_arm": "zig-fast",
+        "factor": 3.0,
+        "calibration_samples": [
+          {
+            "arm": "zig-fast",
+            "value": 0.033384282,
+            "output": {
+              "stdout_sha256": "b79f0f6c916e0c4e30a0ed5e539ae5766dba18f54ba4332d1a7c750c7d4f4d55",
+              "artifacts": {},
+              "golden_tree": {
+                "stm32n6-usb.kicad_sch": "e18d30be71f72e2f90b9de411085f160dbf6a92ef8ce7b5c2df4e61c44293604",
+                "stm32n6-power-status-led.kicad_sch": "2fe66f46390f60bc27afb34eb336dc88301bd578c28be0c8e52ab860f44a1301",
+                "stm32n6-adc-array.kicad_sch": "ae86d622bb94f2274c9e2563c559ce605c3e32c2a67eed059b77ef95249f54ba",
+                "stm32n6.net": "2e570d022faa796a3b2a4830a876f8fcc08dec887cc07227ebd0befe2e89499a",
+                "stm32n6-boot-nor-flash-xspim-p2-port-n.kicad_sch": "7afa628a8c7e75958f215f4d0a69935f6da0563bb18dc84abebf4c3069d8bc06",
+                "stm32n6-stm32n657l0h3q-core-system.kicad_sch": "795f626984f5762c67fe20a6103cedeeec1a7c6d351555680757805f9711a49d",
+                "stm32n6-boot-fail-led.kicad_sch": "8aab76636f2560ce4a139807fb3942dd6376034dc9641a64c202562130774e07",
+                "stm32n6-expansion-connector.kicad_sch": "1a56a1d12a596058734d01d45bf051201fcbd41a758fbb33f949159d8f96da28",
+                "stm32n6-mounting.kicad_sch": "733a95ba698b93b892fd36ee802c8604fa81a241ca920297b40ff52fd9955275",
+                "stm32n6-imu.kicad_sch": "28c82576e3a2304c4cdebbe840cbbf3c50549dd42dfd4bb6dc8b7c8c8869d701",
+                "stm32n6-sub-block-buck.kicad_sch": "cf3f18169000057156cb69a515accfde03381ee53e0cf20f4ef320626366717f",
+                "stm32n6-sub-block-ldo.kicad_sch": "e53c814d96ea44e74144d17c671a843b029f3ae440ca06530c3837aa7e24d7e5",
+                "stm32n6-sub-block-vref.kicad_sch": "5dd54ca9f4d376c1adcf05cc95be6d32af4ad4355e4fbb56aa70e546675f4d2c",
+                "stm32n6-vibration-motor.kicad_sch": "ab83c9114211ccfa2be2c19962f74f3602166c1a3bc6ea607971a7153e45796e",
+                "netlisp.kicad_sym": "f63190277710258009cbd68fe25211245f34919be0bc9aa7016db7c7219582c1",
+                "stm32n6-power-button-controller.kicad_sch": "14a7b031d6d0aa97876d69b20aa52b477fe4320fe5686be169d005eed41c92d8",
+                "stm32n6.kicad_pro": "c74409205f299f5958c92a58b1071e81af835a69942521fb446bdf25bb6bc63d",
+                "stm32n6-sub-block-battery.kicad_sch": "4aa37c421e9ee03e20391ad8f6f9f8ba250979f785c11ab702c13b190cd88ff9",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+                "stm32n6-xspi1-psram.kicad_sch": "3db93cee909b1f4effbc78f620b045678c79be8df629372ef3f76bdddb28dbe2",
+                "stm32n6-test-points.kicad_sch": "a4abcad34c5b5329c30cb43a3f37e09b6e0d402c0c70e9bc0000d60e3be17559",
+                "stm32n6.kicad_sch": "e580fbb85aed99a00113c2ce1df7737625de19d2928fa62d6ec673f7a2e37579",
+                "stm32n6-display.kicad_sch": "6cae54ce7a37f64132dc6c700e00b1e2e6170fc3592a6abecdcac70f54b5d402",
+                "stm32n6-fiducials.kicad_sch": "cc4806dd33e04d9b45f870eec00f145b75c1dede5316ba4b151c7f603f16746b",
+                "stm32n6-neopixel-led.kicad_sch": "daa5f1f484f9c67aae01930b6bd4fdde75b47957b90a7717a0c48de837efc152",
+                "stm32n6-unsectioned.kicad_sch": "45585168a7444c11a8ac8686bad5e9276a3539cfe8bb5bdcc1b74d18d3d158d2"
+              }
+            },
+            "stderr": "[I] export-kicad-sch: stm32n6: 40 per-pin bypass-stub nets labelled as their base rail\n[W] export-kicad-sch: vendor symbol '436331045822' does not draw 2 pad(s) the design uses \u2014 adding them as unit 2\n[W] export-kicad-sch: vendor symbol 'USB4235-03-C' does not draw 4 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: stm32n6: 18/38 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: stm32n6: STM32N657L0H3Q Core System: 1 overlapping text pairs of 818 drawn texts (e.g. pin_name \"VDD33U_SB\" over pin_name \"OTG1_T_XRTUNE\" at 46,360)\n[I] export-kicad-sch: stm32n6: 1 overlapping text pairs across 22 sheets\n",
+            "round": 0
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.033837346,
+            "output": {
+              "stdout_sha256": "b79f0f6c916e0c4e30a0ed5e539ae5766dba18f54ba4332d1a7c750c7d4f4d55",
+              "artifacts": {},
+              "golden_tree": {
+                "stm32n6-usb.kicad_sch": "e18d30be71f72e2f90b9de411085f160dbf6a92ef8ce7b5c2df4e61c44293604",
+                "stm32n6-power-status-led.kicad_sch": "2fe66f46390f60bc27afb34eb336dc88301bd578c28be0c8e52ab860f44a1301",
+                "stm32n6-adc-array.kicad_sch": "ae86d622bb94f2274c9e2563c559ce605c3e32c2a67eed059b77ef95249f54ba",
+                "stm32n6.net": "2e570d022faa796a3b2a4830a876f8fcc08dec887cc07227ebd0befe2e89499a",
+                "stm32n6-boot-nor-flash-xspim-p2-port-n.kicad_sch": "7afa628a8c7e75958f215f4d0a69935f6da0563bb18dc84abebf4c3069d8bc06",
+                "stm32n6-stm32n657l0h3q-core-system.kicad_sch": "795f626984f5762c67fe20a6103cedeeec1a7c6d351555680757805f9711a49d",
+                "stm32n6-boot-fail-led.kicad_sch": "8aab76636f2560ce4a139807fb3942dd6376034dc9641a64c202562130774e07",
+                "stm32n6-expansion-connector.kicad_sch": "1a56a1d12a596058734d01d45bf051201fcbd41a758fbb33f949159d8f96da28",
+                "stm32n6-mounting.kicad_sch": "733a95ba698b93b892fd36ee802c8604fa81a241ca920297b40ff52fd9955275",
+                "stm32n6-imu.kicad_sch": "28c82576e3a2304c4cdebbe840cbbf3c50549dd42dfd4bb6dc8b7c8c8869d701",
+                "stm32n6-sub-block-buck.kicad_sch": "cf3f18169000057156cb69a515accfde03381ee53e0cf20f4ef320626366717f",
+                "stm32n6-sub-block-ldo.kicad_sch": "e53c814d96ea44e74144d17c671a843b029f3ae440ca06530c3837aa7e24d7e5",
+                "stm32n6-sub-block-vref.kicad_sch": "5dd54ca9f4d376c1adcf05cc95be6d32af4ad4355e4fbb56aa70e546675f4d2c",
+                "stm32n6-vibration-motor.kicad_sch": "ab83c9114211ccfa2be2c19962f74f3602166c1a3bc6ea607971a7153e45796e",
+                "netlisp.kicad_sym": "f63190277710258009cbd68fe25211245f34919be0bc9aa7016db7c7219582c1",
+                "stm32n6-power-button-controller.kicad_sch": "14a7b031d6d0aa97876d69b20aa52b477fe4320fe5686be169d005eed41c92d8",
+                "stm32n6.kicad_pro": "c74409205f299f5958c92a58b1071e81af835a69942521fb446bdf25bb6bc63d",
+                "stm32n6-sub-block-battery.kicad_sch": "4aa37c421e9ee03e20391ad8f6f9f8ba250979f785c11ab702c13b190cd88ff9",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+                "stm32n6-xspi1-psram.kicad_sch": "3db93cee909b1f4effbc78f620b045678c79be8df629372ef3f76bdddb28dbe2",
+                "stm32n6-test-points.kicad_sch": "a4abcad34c5b5329c30cb43a3f37e09b6e0d402c0c70e9bc0000d60e3be17559",
+                "stm32n6.kicad_sch": "e580fbb85aed99a00113c2ce1df7737625de19d2928fa62d6ec673f7a2e37579",
+                "stm32n6-display.kicad_sch": "6cae54ce7a37f64132dc6c700e00b1e2e6170fc3592a6abecdcac70f54b5d402",
+                "stm32n6-fiducials.kicad_sch": "cc4806dd33e04d9b45f870eec00f145b75c1dede5316ba4b151c7f603f16746b",
+                "stm32n6-neopixel-led.kicad_sch": "daa5f1f484f9c67aae01930b6bd4fdde75b47957b90a7717a0c48de837efc152",
+                "stm32n6-unsectioned.kicad_sch": "45585168a7444c11a8ac8686bad5e9276a3539cfe8bb5bdcc1b74d18d3d158d2"
+              }
+            },
+            "stderr": "[I] export-kicad-sch: stm32n6: 40 per-pin bypass-stub nets labelled as their base rail\n[W] export-kicad-sch: vendor symbol '436331045822' does not draw 2 pad(s) the design uses \u2014 adding them as unit 2\n[W] export-kicad-sch: vendor symbol 'USB4235-03-C' does not draw 4 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: stm32n6: 18/38 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: stm32n6: STM32N657L0H3Q Core System: 1 overlapping text pairs of 818 drawn texts (e.g. pin_name \"VDD33U_SB\" over pin_name \"OTG1_T_XRTUNE\" at 46,360)\n[I] export-kicad-sch: stm32n6: 1 overlapping text pairs across 22 sheets\n",
+            "round": 1
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.033669449,
+            "output": {
+              "stdout_sha256": "b79f0f6c916e0c4e30a0ed5e539ae5766dba18f54ba4332d1a7c750c7d4f4d55",
+              "artifacts": {},
+              "golden_tree": {
+                "stm32n6-usb.kicad_sch": "e18d30be71f72e2f90b9de411085f160dbf6a92ef8ce7b5c2df4e61c44293604",
+                "stm32n6-power-status-led.kicad_sch": "2fe66f46390f60bc27afb34eb336dc88301bd578c28be0c8e52ab860f44a1301",
+                "stm32n6-adc-array.kicad_sch": "ae86d622bb94f2274c9e2563c559ce605c3e32c2a67eed059b77ef95249f54ba",
+                "stm32n6.net": "2e570d022faa796a3b2a4830a876f8fcc08dec887cc07227ebd0befe2e89499a",
+                "stm32n6-boot-nor-flash-xspim-p2-port-n.kicad_sch": "7afa628a8c7e75958f215f4d0a69935f6da0563bb18dc84abebf4c3069d8bc06",
+                "stm32n6-stm32n657l0h3q-core-system.kicad_sch": "795f626984f5762c67fe20a6103cedeeec1a7c6d351555680757805f9711a49d",
+                "stm32n6-boot-fail-led.kicad_sch": "8aab76636f2560ce4a139807fb3942dd6376034dc9641a64c202562130774e07",
+                "stm32n6-expansion-connector.kicad_sch": "1a56a1d12a596058734d01d45bf051201fcbd41a758fbb33f949159d8f96da28",
+                "stm32n6-mounting.kicad_sch": "733a95ba698b93b892fd36ee802c8604fa81a241ca920297b40ff52fd9955275",
+                "stm32n6-imu.kicad_sch": "28c82576e3a2304c4cdebbe840cbbf3c50549dd42dfd4bb6dc8b7c8c8869d701",
+                "stm32n6-sub-block-buck.kicad_sch": "cf3f18169000057156cb69a515accfde03381ee53e0cf20f4ef320626366717f",
+                "stm32n6-sub-block-ldo.kicad_sch": "e53c814d96ea44e74144d17c671a843b029f3ae440ca06530c3837aa7e24d7e5",
+                "stm32n6-sub-block-vref.kicad_sch": "5dd54ca9f4d376c1adcf05cc95be6d32af4ad4355e4fbb56aa70e546675f4d2c",
+                "stm32n6-vibration-motor.kicad_sch": "ab83c9114211ccfa2be2c19962f74f3602166c1a3bc6ea607971a7153e45796e",
+                "netlisp.kicad_sym": "f63190277710258009cbd68fe25211245f34919be0bc9aa7016db7c7219582c1",
+                "stm32n6-power-button-controller.kicad_sch": "14a7b031d6d0aa97876d69b20aa52b477fe4320fe5686be169d005eed41c92d8",
+                "stm32n6.kicad_pro": "c74409205f299f5958c92a58b1071e81af835a69942521fb446bdf25bb6bc63d",
+                "stm32n6-sub-block-battery.kicad_sch": "4aa37c421e9ee03e20391ad8f6f9f8ba250979f785c11ab702c13b190cd88ff9",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+                "stm32n6-xspi1-psram.kicad_sch": "3db93cee909b1f4effbc78f620b045678c79be8df629372ef3f76bdddb28dbe2",
+                "stm32n6-test-points.kicad_sch": "a4abcad34c5b5329c30cb43a3f37e09b6e0d402c0c70e9bc0000d60e3be17559",
+                "stm32n6.kicad_sch": "e580fbb85aed99a00113c2ce1df7737625de19d2928fa62d6ec673f7a2e37579",
+                "stm32n6-display.kicad_sch": "6cae54ce7a37f64132dc6c700e00b1e2e6170fc3592a6abecdcac70f54b5d402",
+                "stm32n6-fiducials.kicad_sch": "cc4806dd33e04d9b45f870eec00f145b75c1dede5316ba4b151c7f603f16746b",
+                "stm32n6-neopixel-led.kicad_sch": "daa5f1f484f9c67aae01930b6bd4fdde75b47957b90a7717a0c48de837efc152",
+                "stm32n6-unsectioned.kicad_sch": "45585168a7444c11a8ac8686bad5e9276a3539cfe8bb5bdcc1b74d18d3d158d2"
+              }
+            },
+            "stderr": "[I] export-kicad-sch: stm32n6: 40 per-pin bypass-stub nets labelled as their base rail\n[W] export-kicad-sch: vendor symbol '436331045822' does not draw 2 pad(s) the design uses \u2014 adding them as unit 2\n[W] export-kicad-sch: vendor symbol 'USB4235-03-C' does not draw 4 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: stm32n6: 18/38 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: stm32n6: STM32N657L0H3Q Core System: 1 overlapping text pairs of 818 drawn texts (e.g. pin_name \"VDD33U_SB\" over pin_name \"OTG1_T_XRTUNE\" at 46,360)\n[I] export-kicad-sch: stm32n6: 1 overlapping text pairs across 22 sheets\n",
+            "round": 2
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.035200677,
+            "output": {
+              "stdout_sha256": "b79f0f6c916e0c4e30a0ed5e539ae5766dba18f54ba4332d1a7c750c7d4f4d55",
+              "artifacts": {},
+              "golden_tree": {
+                "stm32n6-usb.kicad_sch": "e18d30be71f72e2f90b9de411085f160dbf6a92ef8ce7b5c2df4e61c44293604",
+                "stm32n6-power-status-led.kicad_sch": "2fe66f46390f60bc27afb34eb336dc88301bd578c28be0c8e52ab860f44a1301",
+                "stm32n6-adc-array.kicad_sch": "ae86d622bb94f2274c9e2563c559ce605c3e32c2a67eed059b77ef95249f54ba",
+                "stm32n6.net": "2e570d022faa796a3b2a4830a876f8fcc08dec887cc07227ebd0befe2e89499a",
+                "stm32n6-boot-nor-flash-xspim-p2-port-n.kicad_sch": "7afa628a8c7e75958f215f4d0a69935f6da0563bb18dc84abebf4c3069d8bc06",
+                "stm32n6-stm32n657l0h3q-core-system.kicad_sch": "795f626984f5762c67fe20a6103cedeeec1a7c6d351555680757805f9711a49d",
+                "stm32n6-boot-fail-led.kicad_sch": "8aab76636f2560ce4a139807fb3942dd6376034dc9641a64c202562130774e07",
+                "stm32n6-expansion-connector.kicad_sch": "1a56a1d12a596058734d01d45bf051201fcbd41a758fbb33f949159d8f96da28",
+                "stm32n6-mounting.kicad_sch": "733a95ba698b93b892fd36ee802c8604fa81a241ca920297b40ff52fd9955275",
+                "stm32n6-imu.kicad_sch": "28c82576e3a2304c4cdebbe840cbbf3c50549dd42dfd4bb6dc8b7c8c8869d701",
+                "stm32n6-sub-block-buck.kicad_sch": "cf3f18169000057156cb69a515accfde03381ee53e0cf20f4ef320626366717f",
+                "stm32n6-sub-block-ldo.kicad_sch": "e53c814d96ea44e74144d17c671a843b029f3ae440ca06530c3837aa7e24d7e5",
+                "stm32n6-sub-block-vref.kicad_sch": "5dd54ca9f4d376c1adcf05cc95be6d32af4ad4355e4fbb56aa70e546675f4d2c",
+                "stm32n6-vibration-motor.kicad_sch": "ab83c9114211ccfa2be2c19962f74f3602166c1a3bc6ea607971a7153e45796e",
+                "netlisp.kicad_sym": "f63190277710258009cbd68fe25211245f34919be0bc9aa7016db7c7219582c1",
+                "stm32n6-power-button-controller.kicad_sch": "14a7b031d6d0aa97876d69b20aa52b477fe4320fe5686be169d005eed41c92d8",
+                "stm32n6.kicad_pro": "c74409205f299f5958c92a58b1071e81af835a69942521fb446bdf25bb6bc63d",
+                "stm32n6-sub-block-battery.kicad_sch": "4aa37c421e9ee03e20391ad8f6f9f8ba250979f785c11ab702c13b190cd88ff9",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+                "stm32n6-xspi1-psram.kicad_sch": "3db93cee909b1f4effbc78f620b045678c79be8df629372ef3f76bdddb28dbe2",
+                "stm32n6-test-points.kicad_sch": "a4abcad34c5b5329c30cb43a3f37e09b6e0d402c0c70e9bc0000d60e3be17559",
+                "stm32n6.kicad_sch": "e580fbb85aed99a00113c2ce1df7737625de19d2928fa62d6ec673f7a2e37579",
+                "stm32n6-display.kicad_sch": "6cae54ce7a37f64132dc6c700e00b1e2e6170fc3592a6abecdcac70f54b5d402",
+                "stm32n6-fiducials.kicad_sch": "cc4806dd33e04d9b45f870eec00f145b75c1dede5316ba4b151c7f603f16746b",
+                "stm32n6-neopixel-led.kicad_sch": "daa5f1f484f9c67aae01930b6bd4fdde75b47957b90a7717a0c48de837efc152",
+                "stm32n6-unsectioned.kicad_sch": "45585168a7444c11a8ac8686bad5e9276a3539cfe8bb5bdcc1b74d18d3d158d2"
+              }
+            },
+            "stderr": "[I] export-kicad-sch: stm32n6: 40 per-pin bypass-stub nets labelled as their base rail\n[W] export-kicad-sch: vendor symbol '436331045822' does not draw 2 pad(s) the design uses \u2014 adding them as unit 2\n[W] export-kicad-sch: vendor symbol 'USB4235-03-C' does not draw 4 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: stm32n6: 18/38 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: stm32n6: STM32N657L0H3Q Core System: 1 overlapping text pairs of 818 drawn texts (e.g. pin_name \"VDD33U_SB\" over pin_name \"OTG1_T_XRTUNE\" at 46,360)\n[I] export-kicad-sch: stm32n6: 1 overlapping text pairs across 22 sheets\n",
+            "round": 3
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.033636169,
+            "output": {
+              "stdout_sha256": "b79f0f6c916e0c4e30a0ed5e539ae5766dba18f54ba4332d1a7c750c7d4f4d55",
+              "artifacts": {},
+              "golden_tree": {
+                "stm32n6-usb.kicad_sch": "e18d30be71f72e2f90b9de411085f160dbf6a92ef8ce7b5c2df4e61c44293604",
+                "stm32n6-power-status-led.kicad_sch": "2fe66f46390f60bc27afb34eb336dc88301bd578c28be0c8e52ab860f44a1301",
+                "stm32n6-adc-array.kicad_sch": "ae86d622bb94f2274c9e2563c559ce605c3e32c2a67eed059b77ef95249f54ba",
+                "stm32n6.net": "2e570d022faa796a3b2a4830a876f8fcc08dec887cc07227ebd0befe2e89499a",
+                "stm32n6-boot-nor-flash-xspim-p2-port-n.kicad_sch": "7afa628a8c7e75958f215f4d0a69935f6da0563bb18dc84abebf4c3069d8bc06",
+                "stm32n6-stm32n657l0h3q-core-system.kicad_sch": "795f626984f5762c67fe20a6103cedeeec1a7c6d351555680757805f9711a49d",
+                "stm32n6-boot-fail-led.kicad_sch": "8aab76636f2560ce4a139807fb3942dd6376034dc9641a64c202562130774e07",
+                "stm32n6-expansion-connector.kicad_sch": "1a56a1d12a596058734d01d45bf051201fcbd41a758fbb33f949159d8f96da28",
+                "stm32n6-mounting.kicad_sch": "733a95ba698b93b892fd36ee802c8604fa81a241ca920297b40ff52fd9955275",
+                "stm32n6-imu.kicad_sch": "28c82576e3a2304c4cdebbe840cbbf3c50549dd42dfd4bb6dc8b7c8c8869d701",
+                "stm32n6-sub-block-buck.kicad_sch": "cf3f18169000057156cb69a515accfde03381ee53e0cf20f4ef320626366717f",
+                "stm32n6-sub-block-ldo.kicad_sch": "e53c814d96ea44e74144d17c671a843b029f3ae440ca06530c3837aa7e24d7e5",
+                "stm32n6-sub-block-vref.kicad_sch": "5dd54ca9f4d376c1adcf05cc95be6d32af4ad4355e4fbb56aa70e546675f4d2c",
+                "stm32n6-vibration-motor.kicad_sch": "ab83c9114211ccfa2be2c19962f74f3602166c1a3bc6ea607971a7153e45796e",
+                "netlisp.kicad_sym": "f63190277710258009cbd68fe25211245f34919be0bc9aa7016db7c7219582c1",
+                "stm32n6-power-button-controller.kicad_sch": "14a7b031d6d0aa97876d69b20aa52b477fe4320fe5686be169d005eed41c92d8",
+                "stm32n6.kicad_pro": "c74409205f299f5958c92a58b1071e81af835a69942521fb446bdf25bb6bc63d",
+                "stm32n6-sub-block-battery.kicad_sch": "4aa37c421e9ee03e20391ad8f6f9f8ba250979f785c11ab702c13b190cd88ff9",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+                "stm32n6-xspi1-psram.kicad_sch": "3db93cee909b1f4effbc78f620b045678c79be8df629372ef3f76bdddb28dbe2",
+                "stm32n6-test-points.kicad_sch": "a4abcad34c5b5329c30cb43a3f37e09b6e0d402c0c70e9bc0000d60e3be17559",
+                "stm32n6.kicad_sch": "e580fbb85aed99a00113c2ce1df7737625de19d2928fa62d6ec673f7a2e37579",
+                "stm32n6-display.kicad_sch": "6cae54ce7a37f64132dc6c700e00b1e2e6170fc3592a6abecdcac70f54b5d402",
+                "stm32n6-fiducials.kicad_sch": "cc4806dd33e04d9b45f870eec00f145b75c1dede5316ba4b151c7f603f16746b",
+                "stm32n6-neopixel-led.kicad_sch": "daa5f1f484f9c67aae01930b6bd4fdde75b47957b90a7717a0c48de837efc152",
+                "stm32n6-unsectioned.kicad_sch": "45585168a7444c11a8ac8686bad5e9276a3539cfe8bb5bdcc1b74d18d3d158d2"
+              }
+            },
+            "stderr": "[I] export-kicad-sch: stm32n6: 40 per-pin bypass-stub nets labelled as their base rail\n[W] export-kicad-sch: vendor symbol '436331045822' does not draw 2 pad(s) the design uses \u2014 adding them as unit 2\n[W] export-kicad-sch: vendor symbol 'USB4235-03-C' does not draw 4 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: stm32n6: 18/38 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: stm32n6: STM32N657L0H3Q Core System: 1 overlapping text pairs of 818 drawn texts (e.g. pin_name \"VDD33U_SB\" over pin_name \"OTG1_T_XRTUNE\" at 46,360)\n[I] export-kicad-sch: stm32n6: 1 overlapping text pairs across 22 sheets\n",
+            "round": 4
+          }
+        ],
+        "calibration_warmups": 2,
+        "reference_median_seconds": 0.033669449,
+        "absolute_ceiling_seconds": 120.0,
+        "budget_seconds": 0.101008347,
+        "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+        "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+      },
+      "completed_rounds_by_arm": {
+        "zig-fast": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "mylang-c1": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "mylang-candidate": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ]
+      },
+      "paired_candidate_over_c1_ratios": [
+        0.9874436008589873,
+        0.9747624735647841,
+        1.0653146404221518,
+        0.99257928865558,
+        0.981288938426217,
+        0.9873978549686451,
+        0.9991493075112771,
+        0.994504769917851,
+        0.9957915909390306
+      ],
+      "median_paired_candidate_over_c1": 0.99257928865558,
+      "paired_candidate_over_zig_ratios": [
+        1.6590034800088438,
+        1.6306979127191847,
+        1.8170259369432704,
+        1.5741256559959256,
+        1.6822728182273436,
+        1.6776258797412944,
+        1.7197606318871135,
+        1.6608122235550535,
+        1.729417011089157
+      ],
+      "median_paired_candidate_over_zig": 1.6776258797412944,
+      "candidate_over_c1_medians": 0.9836080012588687,
+      "candidate_over_zig_medians": 1.672763285182382,
+      "median_seconds": {
+        "zig-fast": 0.03419524,
+        "mylang-c1": 0.058153799,
+        "mylang-candidate": 0.057200542
+      }
+    },
+    {
+      "case": "rds3+flat",
+      "receipt_sha256": "299efbc1ee8409d261f60e8d2d87a0e9bc834c6260690307de0e948a55e987ce",
+      "arm_status": {
+        "zig-fast": {
+          "status": "ok"
+        },
+        "mylang-c1": {
+          "status": "ok"
+        },
+        "mylang-candidate": {
+          "status": "ok"
+        }
+      },
+      "relative_timeout_policy": {
+        "reference_arm": "zig-fast",
+        "factor": 3.0,
+        "calibration_samples": [
+          {
+            "arm": "zig-fast",
+            "value": 0.061008113,
+            "output": {
+              "stdout_sha256": "8252e32fd878510b55978b452ddb5813882028d0291406d0fb8f15c2e2f85283",
+              "artifacts": {},
+              "golden_tree": {
+                "rds3.kicad_sch": "75cfc2d50ac3006dfa76292442dd295b3032625c4b155b16805757bdcf699ca2",
+                "netlisp.kicad_sym": "6e048a0dfba96cbc9a26b09d44b2c19ae8dadb8ff40dda9ff92f3d9d3a3ca34e",
+                "rds3.kicad_pro": "64e8a5183c9ef167b76251655a7f5f4d7ec899186c2e6c6c9ac058d10b8ec362",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+                "rds3.net": "f6bd49787a8945a8581055517c2ba4267b90d4e98298c57dbd345608d8295868"
+              }
+            },
+            "stderr": "[W] export-kicad-sch: vendor symbol 'W55RP20-EVB-PICO' does not draw 1 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: rds3: 15/35 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: rds3: root: 1 overlapping text pairs of 4160 drawn texts (e.g. caption \"External Calibration\" over caption \"RF Connector Banks\" at 557,12)\n[I] export-kicad-sch: rds3: 1 overlapping text pairs across 1 sheets\n",
+            "round": 0
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.060658078,
+            "output": {
+              "stdout_sha256": "8252e32fd878510b55978b452ddb5813882028d0291406d0fb8f15c2e2f85283",
+              "artifacts": {},
+              "golden_tree": {
+                "rds3.kicad_sch": "75cfc2d50ac3006dfa76292442dd295b3032625c4b155b16805757bdcf699ca2",
+                "netlisp.kicad_sym": "6e048a0dfba96cbc9a26b09d44b2c19ae8dadb8ff40dda9ff92f3d9d3a3ca34e",
+                "rds3.kicad_pro": "64e8a5183c9ef167b76251655a7f5f4d7ec899186c2e6c6c9ac058d10b8ec362",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+                "rds3.net": "f6bd49787a8945a8581055517c2ba4267b90d4e98298c57dbd345608d8295868"
+              }
+            },
+            "stderr": "[W] export-kicad-sch: vendor symbol 'W55RP20-EVB-PICO' does not draw 1 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: rds3: 15/35 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: rds3: root: 1 overlapping text pairs of 4160 drawn texts (e.g. caption \"External Calibration\" over caption \"RF Connector Banks\" at 557,12)\n[I] export-kicad-sch: rds3: 1 overlapping text pairs across 1 sheets\n",
+            "round": 1
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.060715321,
+            "output": {
+              "stdout_sha256": "8252e32fd878510b55978b452ddb5813882028d0291406d0fb8f15c2e2f85283",
+              "artifacts": {},
+              "golden_tree": {
+                "rds3.kicad_sch": "75cfc2d50ac3006dfa76292442dd295b3032625c4b155b16805757bdcf699ca2",
+                "netlisp.kicad_sym": "6e048a0dfba96cbc9a26b09d44b2c19ae8dadb8ff40dda9ff92f3d9d3a3ca34e",
+                "rds3.kicad_pro": "64e8a5183c9ef167b76251655a7f5f4d7ec899186c2e6c6c9ac058d10b8ec362",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+                "rds3.net": "f6bd49787a8945a8581055517c2ba4267b90d4e98298c57dbd345608d8295868"
+              }
+            },
+            "stderr": "[W] export-kicad-sch: vendor symbol 'W55RP20-EVB-PICO' does not draw 1 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: rds3: 15/35 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: rds3: root: 1 overlapping text pairs of 4160 drawn texts (e.g. caption \"External Calibration\" over caption \"RF Connector Banks\" at 557,12)\n[I] export-kicad-sch: rds3: 1 overlapping text pairs across 1 sheets\n",
+            "round": 2
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.061396454,
+            "output": {
+              "stdout_sha256": "8252e32fd878510b55978b452ddb5813882028d0291406d0fb8f15c2e2f85283",
+              "artifacts": {},
+              "golden_tree": {
+                "rds3.kicad_sch": "75cfc2d50ac3006dfa76292442dd295b3032625c4b155b16805757bdcf699ca2",
+                "netlisp.kicad_sym": "6e048a0dfba96cbc9a26b09d44b2c19ae8dadb8ff40dda9ff92f3d9d3a3ca34e",
+                "rds3.kicad_pro": "64e8a5183c9ef167b76251655a7f5f4d7ec899186c2e6c6c9ac058d10b8ec362",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+                "rds3.net": "f6bd49787a8945a8581055517c2ba4267b90d4e98298c57dbd345608d8295868"
+              }
+            },
+            "stderr": "[W] export-kicad-sch: vendor symbol 'W55RP20-EVB-PICO' does not draw 1 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: rds3: 15/35 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: rds3: root: 1 overlapping text pairs of 4160 drawn texts (e.g. caption \"External Calibration\" over caption \"RF Connector Banks\" at 557,12)\n[I] export-kicad-sch: rds3: 1 overlapping text pairs across 1 sheets\n",
+            "round": 3
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.061054146,
+            "output": {
+              "stdout_sha256": "8252e32fd878510b55978b452ddb5813882028d0291406d0fb8f15c2e2f85283",
+              "artifacts": {},
+              "golden_tree": {
+                "rds3.kicad_sch": "75cfc2d50ac3006dfa76292442dd295b3032625c4b155b16805757bdcf699ca2",
+                "netlisp.kicad_sym": "6e048a0dfba96cbc9a26b09d44b2c19ae8dadb8ff40dda9ff92f3d9d3a3ca34e",
+                "rds3.kicad_pro": "64e8a5183c9ef167b76251655a7f5f4d7ec899186c2e6c6c9ac058d10b8ec362",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+                "rds3.net": "f6bd49787a8945a8581055517c2ba4267b90d4e98298c57dbd345608d8295868"
+              }
+            },
+            "stderr": "[W] export-kicad-sch: vendor symbol 'W55RP20-EVB-PICO' does not draw 1 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: rds3: 15/35 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: rds3: root: 1 overlapping text pairs of 4160 drawn texts (e.g. caption \"External Calibration\" over caption \"RF Connector Banks\" at 557,12)\n[I] export-kicad-sch: rds3: 1 overlapping text pairs across 1 sheets\n",
+            "round": 4
+          }
+        ],
+        "calibration_warmups": 2,
+        "reference_median_seconds": 0.061008113,
+        "absolute_ceiling_seconds": 120.0,
+        "budget_seconds": 0.183024339,
+        "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+        "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+      },
+      "completed_rounds_by_arm": {
+        "zig-fast": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "mylang-c1": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "mylang-candidate": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ]
+      },
+      "paired_candidate_over_c1_ratios": [
+        0.9902746385732243,
+        0.9937156522414571,
+        1.0778055345058062,
+        0.9096299538159988,
+        0.9876770276558745,
+        0.9932942982126975,
+        0.9887368290793762,
+        1.0098324015676106,
+        0.9895491170919364
+      ],
+      "median_paired_candidate_over_c1": 0.9902746385732243,
+      "paired_candidate_over_zig_ratios": [
+        1.6377510742084926,
+        1.6397334183334096,
+        1.7651510759374842,
+        1.6365189037700858,
+        1.6279903489561347,
+        1.6218569362333102,
+        1.620189630334986,
+        1.6943013151386581,
+        1.6625954767159634
+      ],
+      "median_paired_candidate_over_zig": 1.6377510742084926,
+      "candidate_over_c1_medians": 0.992616362885596,
+      "candidate_over_zig_medians": 1.627826366995085,
+      "median_seconds": {
+        "zig-fast": 0.062581443,
+        "mylang-c1": 0.102629502,
+        "mylang-candidate": 0.101871723
+      }
+    }
+  ]
+}

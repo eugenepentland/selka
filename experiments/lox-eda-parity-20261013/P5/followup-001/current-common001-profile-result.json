@@ -1,0 +1,27 @@
+{
+  "returncode": 0,
+  "command": [
+    "perf",
+    "record",
+    "-q",
+    "-e",
+    "cycles:u",
+    "-F",
+    "499",
+    "--call-graph",
+    "dwarf,16384",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/experiments/lox-eda-parity-20261013/P5/followup-001/current-common001.perf.data",
+    "--",
+    "/usr/bin/python3",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/experiments/lox-eda-parity-20261013/P5/followup-001/prepared_capture.py",
+    "workload"
+  ],
+  "spec_sha256": "2a50abca5e227f07adfd2678610512596f1a4ea3ac5cfb907c58250fb380971d",
+  "driver_sha256": "e12c4354d912c38d4a8bfca3ed458c0b574f00112440acdc298592218dbb0879",
+  "cpu_affinity": [
+    8
+  ],
+  "raw_sha256": "0b2b68a0d286af70b3857b792683a7f3d3cb74c3e960e5828164a9a0b909b9d4",
+  "label": "CPU attribution only; no runtime comparison"
+}

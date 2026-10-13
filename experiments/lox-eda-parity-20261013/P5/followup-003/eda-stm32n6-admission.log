@@ -1,0 +1,66 @@
+build-slot: FIFO ticket 1303, position 3; earlier timing tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 1303, position 3; earlier timing tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 1303, position 3; earlier timing tickets must run first; waiting (121s so far)
+build-slot: FIFO ticket 1303, position 3; earlier timing tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 1303, position 3; earlier timing tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 1303, position 3; earlier timing tickets must run first; waiting (301s so far)
+build-slot: FIFO ticket 1303, position 3; earlier timing tickets must run first; waiting (361s so far)
+build-slot: FIFO ticket 1303, position 3; earlier timing tickets must run first; waiting (421s so far)
+build-slot: FIFO ticket 1303, position 2; earlier timing tickets must run first; waiting (481s so far)
+build-slot: timing slot 1, FIFO ticket 1303 after 496s
+{
+  "zig-fast": {
+    "seconds": {
+      "median": 0.03419524,
+      "min": 0.033699406,
+      "max": 0.036697827,
+      "samples": [
+        0.034388131,
+        0.034613311,
+        0.03419524,
+        0.036697827,
+        0.033923012,
+        0.03394748,
+        0.033786288,
+        0.034441306,
+        0.033699406
+      ]
+    }
+  },
+  "mylang-c1": {
+    "seconds": {
+      "median": 0.058153799,
+      "min": 0.057516609,
+      "max": 0.05852663,
+      "samples": [
+        0.057775481,
+        0.057905239,
+        0.058324213,
+        0.058198868,
+        0.05815592,
+        0.057678038,
+        0.058153799,
+        0.057516609,
+        0.05852663
+      ]
+    }
+  },
+  "mylang-candidate": {
+    "seconds": {
+      "median": 0.057200542,
+      "min": 0.056443854,
+      "max": 0.062133638,
+      "samples": [
+        0.057050029,
+        0.056443854,
+        0.062133638,
+        0.057766991,
+        0.057067761,
+        0.056951171,
+        0.058104328,
+        0.057200542,
+        0.058280326
+      ]
+    }
+  }
+}

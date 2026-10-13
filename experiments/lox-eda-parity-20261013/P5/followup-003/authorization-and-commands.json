@@ -1,0 +1,70 @@
+{
+  "authorization": "Coordinator explicitly authorized these three timing leases; no source adoption.",
+  "diagnostic_plan_sha256": "b8d4fe2fc0642b95d6453668f874b164d9303b75127bc101f79e1d0a447fab4f",
+  "pins_sha256": "e486b2430ce1c83b449c208c76fb2ec61e1cae034a4ba1012debf5273e4576da",
+  "commands": [
+    {
+      "case": "stm32n6",
+      "ticket": 1303,
+      "command": [
+        "scripts/build-slot.sh",
+        "timing",
+        "timeout",
+        "58",
+        "taskset",
+        "-c",
+        "8",
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/experiments/lox-eda-parity-20261013/P5/followup-003/bounded_diagnostic.py",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/experiments/lox-eda-parity-20261013/P5/followup-002/eda-stm32n6.json",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/experiments/lox-eda-parity-20261013/P5/followup-002/eda-stm32n6-runtime.json"
+      ],
+      "driver_sha256": "75fc4c330c19b8338f70506ca790bf8cd691a868ef486d834e61ca4aaa3f768a",
+      "spec_sha256": "d261b8cdd4d9f483858b1875370de1ca56f39ea627d4e2730574625b54d19227",
+      "admission_log": "eda-stm32n6-admission.log"
+    },
+    {
+      "case": "rds3+flat",
+      "ticket": 1304,
+      "command": [
+        "scripts/build-slot.sh",
+        "timing",
+        "timeout",
+        "58",
+        "taskset",
+        "-c",
+        "8",
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/experiments/lox-eda-parity-20261013/P5/followup-003/bounded_diagnostic.py",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/experiments/lox-eda-parity-20261013/P5/followup-002/eda-rds3+flat.json",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/experiments/lox-eda-parity-20261013/P5/followup-002/eda-rds3+flat-runtime.json"
+      ],
+      "driver_sha256": "75fc4c330c19b8338f70506ca790bf8cd691a868ef486d834e61ca4aaa3f768a",
+      "spec_sha256": "c2c20a5c7076b5fe8b4139236edbbd668e080e2247cffaad1854b321d875c5b6",
+      "admission_log": "eda-rds3+flat-admission.log"
+    },
+    {
+      "case": "C1 CPU capture",
+      "ticket": 1305,
+      "command": [
+        "scripts/build-slot.sh",
+        "timing",
+        "timeout",
+        "55",
+        "taskset",
+        "-c",
+        "8",
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/experiments/lox-eda-parity-20261013/P5/followup-001/prepared_capture.py"
+      ],
+      "driver_sha256": "e12c4354d912c38d4a8bfca3ed458c0b574f00112440acdc298592218dbb0879",
+      "spec_sha256": "2a50abca5e227f07adfd2678610512596f1a4ea3ac5cfb907c58250fb380971d",
+      "admission_log": "profile-admission.log"
+    }
+  ],
+  "bounded_cleanup": "Diagnostic55s alarm/outer58s cleans only tracked guest process groups; perf40s recorder timeout/outer55s cleans only owned perf group.",
+  "scope": "two-case diagnostics and CPU attribution only; no all-EDA parity claim"
+}

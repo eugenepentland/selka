@@ -1,0 +1,10 @@
+{
+  "recorded_path": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/experiments/lox-eda-parity-20261013/P5/followup-001/current-common001.perf.data",
+  "private_raw_path": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/.tmp/lox-eda-parity/P5/followup-003/current-common001.perf.data",
+  "archive": "C1-rds3-flat.perf.data.gz",
+  "archive_sha256": "cc066449acac3ec98c1aea7780ec6fc066f104605313b21bd398fdded7e80597",
+  "raw_sha256": "0b2b68a0d286af70b3857b792683a7f3d3cb74c3e960e5828164a9a0b909b9d4",
+  "raw_bytes": 10551796,
+  "archive_bytes": 624555,
+  "lossless_roundtrip_verified": true
+}

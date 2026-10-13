@@ -1,0 +1,478 @@
+{
+  "label": "C1 RDS3-flat cycles samples only; no timing comparison",
+  "recorded_samples": 600,
+  "lost_samples": 0,
+  "included_guest_pid_samples": 580,
+  "excluded_driver_other_pid_samples": 20,
+  "included_guest_app_dso_leaf_samples": 513,
+  "included_guest_other_dso_leaf_samples": 67,
+  "guest_pids": [
+    276379,
+    276382,
+    276383,
+    276384,
+    276389,
+    276390,
+    276391,
+    276392,
+    276393,
+    276394,
+    276405,
+    276409
+  ],
+  "seen_guest_pids": [
+    276379,
+    276382,
+    276383,
+    276384,
+    276389,
+    276390,
+    276391,
+    276392,
+    276393,
+    276394,
+    276405,
+    276409
+  ],
+  "excluded_by_pid": [
+    {
+      "name": "276377:python3",
+      "samples": 20
+    }
+  ],
+  "guest_leaf_dso_counts": [
+    {
+      "name": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/eda/zero-rc",
+      "samples": 513
+    },
+    {
+      "name": "/usr/lib/x86_64-linux-gnu/libc.so.6",
+      "samples": 40
+    },
+    {
+      "name": "[unknown]",
+      "samples": 22
+    },
+    {
+      "name": "/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2",
+      "samples": 5
+    }
+  ],
+  "guest_leaf_symbols": [
+    {
+      "name": "block_alloc",
+      "samples": 66
+    },
+    {
+      "name": "[unknown]",
+      "samples": 63
+    },
+    {
+      "name": "myl_core_values_copy_box",
+      "samples": 58
+    },
+    {
+      "name": "core_owned_child",
+      "samples": 53
+    },
+    {
+      "name": "myl_core_drop_owned",
+      "samples": 45
+    },
+    {
+      "name": "my.sexpr_parser::parse_node",
+      "samples": 44
+    },
+    {
+      "name": "my.kicad_sch_verify::check",
+      "samples": 35
+    },
+    {
+      "name": "my.sexpr_parser::next_token",
+      "samples": 33
+    },
+    {
+      "name": "my.kicad_sch_compose::join_sites",
+      "samples": 30
+    },
+    {
+      "name": "my.kicad_sch_verify::grid_scan",
+      "samples": 20
+    },
+    {
+      "name": "myl_core_owned_octets_copy",
+      "samples": 18
+    },
+    {
+      "name": "myl_core_str_eq",
+      "samples": 14
+    },
+    {
+      "name": "myl_core_parse_float_range",
+      "samples": 11
+    },
+    {
+      "name": "my.support_sha256::compress",
+      "samples": 9
+    },
+    {
+      "name": "fmt.parse_float.parseFloat__anon_1373",
+      "samples": 9
+    },
+    {
+      "name": "myl_core_list_grow",
+      "samples": 7
+    },
+    {
+      "name": "myl_core_bytes_concat",
+      "samples": 7
+    },
+    {
+      "name": "myl_core_ir_str_append",
+      "samples": 5
+    },
+    {
+      "name": "my.kicad_sch_verify::on_grid",
+      "samples": 4
+    },
+    {
+      "name": "my.kicad_sch_compose::compose",
+      "samples": 3
+    },
+    {
+      "name": "my.kicad_sch_emit::render",
+      "samples": 3
+    },
+    {
+      "name": "myl_core_str_hash",
+      "samples": 3
+    },
+    {
+      "name": "myl_core_dict_insert",
+      "samples": 2
+    },
+    {
+      "name": "myl_core_bytes_decode_text",
+      "samples": 2
+    },
+    {
+      "name": "memcpy@plt",
+      "samples": 2
+    },
+    {
+      "name": "my.kicad_sym_reader::collect",
+      "samples": 2
+    },
+    {
+      "name": "myl_core_str_chars",
+      "samples": 2
+    },
+    {
+      "name": "myl_core_bytes_utf8_count",
+      "samples": 2
+    },
+    {
+      "name": "my.kicad_sch_emit::mm",
+      "samples": 2
+    },
+    {
+      "name": "myl_core_span_utf8_count",
+      "samples": 2
+    },
+    {
+      "name": "myl_core_str_from_i64",
+      "samples": 2
+    },
+    {
+      "name": "myl_core_dict_new",
+      "samples": 1
+    },
+    {
+      "name": "my.export_kicad_sch::export_sch",
+      "samples": 1
+    },
+    {
+      "name": "myl_core_parse_int_range",
+      "samples": 1
+    },
+    {
+      "name": "my.kicad_sch_textbox::hidden",
+      "samples": 1
+    },
+    {
+      "name": "memmove@plt",
+      "samples": 1
+    },
+    {
+      "name": "my.kicad_sch_textbox::named_text",
+      "samples": 1
+    },
+    {
+      "name": "my.export_kicad_sch::check_coverage",
+      "samples": 1
+    },
+    {
+      "name": "my.design_model::read_instance",
+      "samples": 1
+    },
+    {
+      "name": "read",
+      "samples": 1
+    },
+    {
+      "name": "myl_core_ir_str_slice",
+      "samples": 1
+    },
+    {
+      "name": "my.sexpr_parser::parse_number_node",
+      "samples": 1
+    },
+    {
+      "name": "my.flat_netlist::net_tie_sets_get_or_add",
+      "samples": 1
+    },
+    {
+      "name": "my.kicad_sch_verify::coord",
+      "samples": 1
+    },
+    {
+      "name": "__libc_calloc",
+      "samples": 1
+    },
+    {
+      "name": "myl_core_bytes_valid_list",
+      "samples": 1
+    },
+    {
+      "name": "my.kicad_sch_textbox::font_size",
+      "samples": 1
+    },
+    {
+      "name": "cfree",
+      "samples": 1
+    },
+    {
+      "name": "myl_core_bytes_slice",
+      "samples": 1
+    },
+    {
+      "name": "strpbrk",
+      "samples": 1
+    },
+    {
+      "name": "my.kicad_sch_compose::pin_point",
+      "samples": 1
+    },
+    {
+      "name": "myl_core_ir_str_slice_span",
+      "samples": 1
+    },
+    {
+      "name": "my.kicad_sch_textbox::at_pose",
+      "samples": 1
+    }
+  ],
+  "guest_app_dso_leaf_symbols": [
+    {
+      "name": "block_alloc",
+      "samples": 66
+    },
+    {
+      "name": "myl_core_values_copy_box",
+      "samples": 58
+    },
+    {
+      "name": "core_owned_child",
+      "samples": 53
+    },
+    {
+      "name": "myl_core_drop_owned",
+      "samples": 45
+    },
+    {
+      "name": "my.sexpr_parser::parse_node",
+      "samples": 44
+    },
+    {
+      "name": "my.kicad_sch_verify::check",
+      "samples": 35
+    },
+    {
+      "name": "my.sexpr_parser::next_token",
+      "samples": 33
+    },
+    {
+      "name": "my.kicad_sch_compose::join_sites",
+      "samples": 30
+    },
+    {
+      "name": "my.kicad_sch_verify::grid_scan",
+      "samples": 20
+    },
+    {
+      "name": "myl_core_owned_octets_copy",
+      "samples": 18
+    },
+    {
+      "name": "myl_core_str_eq",
+      "samples": 14
+    },
+    {
+      "name": "myl_core_parse_float_range",
+      "samples": 11
+    },
+    {
+      "name": "my.support_sha256::compress",
+      "samples": 9
+    },
+    {
+      "name": "fmt.parse_float.parseFloat__anon_1373",
+      "samples": 9
+    },
+    {
+      "name": "myl_core_list_grow",
+      "samples": 7
+    },
+    {
+      "name": "myl_core_bytes_concat",
+      "samples": 7
+    },
+    {
+      "name": "myl_core_ir_str_append",
+      "samples": 5
+    },
+    {
+      "name": "my.kicad_sch_verify::on_grid",
+      "samples": 4
+    },
+    {
+      "name": "my.kicad_sch_compose::compose",
+      "samples": 3
+    },
+    {
+      "name": "my.kicad_sch_emit::render",
+      "samples": 3
+    },
+    {
+      "name": "myl_core_str_hash",
+      "samples": 3
+    },
+    {
+      "name": "myl_core_dict_insert",
+      "samples": 2
+    },
+    {
+      "name": "myl_core_bytes_decode_text",
+      "samples": 2
+    },
+    {
+      "name": "memcpy@plt",
+      "samples": 2
+    },
+    {
+      "name": "my.kicad_sym_reader::collect",
+      "samples": 2
+    },
+    {
+      "name": "myl_core_str_chars",
+      "samples": 2
+    },
+    {
+      "name": "myl_core_bytes_utf8_count",
+      "samples": 2
+    },
+    {
+      "name": "my.kicad_sch_emit::mm",
+      "samples": 2
+    },
+    {
+      "name": "myl_core_span_utf8_count",
+      "samples": 2
+    },
+    {
+      "name": "myl_core_str_from_i64",
+      "samples": 2
+    },
+    {
+      "name": "myl_core_dict_new",
+      "samples": 1
+    },
+    {
+      "name": "my.export_kicad_sch::export_sch",
+      "samples": 1
+    },
+    {
+      "name": "myl_core_parse_int_range",
+      "samples": 1
+    },
+    {
+      "name": "my.kicad_sch_textbox::hidden",
+      "samples": 1
+    },
+    {
+      "name": "memmove@plt",
+      "samples": 1
+    },
+    {
+      "name": "my.kicad_sch_textbox::named_text",
+      "samples": 1
+    },
+    {
+      "name": "my.export_kicad_sch::check_coverage",
+      "samples": 1
+    },
+    {
+      "name": "my.design_model::read_instance",
+      "samples": 1
+    },
+    {
+      "name": "myl_core_ir_str_slice",
+      "samples": 1
+    },
+    {
+      "name": "my.sexpr_parser::parse_number_node",
+      "samples": 1
+    },
+    {
+      "name": "my.flat_netlist::net_tie_sets_get_or_add",
+      "samples": 1
+    },
+    {
+      "name": "my.kicad_sch_verify::coord",
+      "samples": 1
+    },
+    {
+      "name": "myl_core_bytes_valid_list",
+      "samples": 1
+    },
+    {
+      "name": "my.kicad_sch_textbox::font_size",
+      "samples": 1
+    },
+    {
+      "name": "myl_core_bytes_slice",
+      "samples": 1
+    },
+    {
+      "name": "my.kicad_sch_compose::pin_point",
+      "samples": 1
+    },
+    {
+      "name": "myl_core_ir_str_slice_span",
+      "samples": 1
+    },
+    {
+      "name": "my.kicad_sch_textbox::at_pose",
+      "samples": 1
+    }
+  ],
+  "guest_callchains_with_frames": 67,
+  "guest_callchains_with_app_frames": 0,
+  "callgraph_limit": "DWARF captured but native application call chains do not reconstruct; no allocation caller or inclusive attribution claim.",
+  "raw_sha256": "0b2b68a0d286af70b3857b792683a7f3d3cb74c3e960e5828164a9a0b909b9d4",
+  "decodes": {
+    "perf-leaf.txt": "eefe4259ada4928294e469a29afec0c09007bdb6d6cde78df0a76abd57c09cff",
+    "perf-script.txt": "247151b8a1f1a68b466fa35840d28992f4482249306742d47a263592f0f60c6b",
+    "perf-report-all.txt": "5ad2dc56772a37f4731989011b6d105e5733722e6b8ee40d86f4ec5f4bd5c2e7"
+  }
+}

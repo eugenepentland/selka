@@ -1,0 +1,48 @@
+{
+  "label": "C1 RDS3-flat cycles samples only; no timing comparison",
+  "recorded_samples": 600,
+  "lost_samples": 0,
+  "included_guest_pid_samples": 580,
+  "excluded_driver_other_pid_samples": 20,
+  "included_guest_app_dso_leaf_samples": 513,
+  "included_guest_other_dso_leaf_samples": 67,
+  "guest_pids": [
+    276379,
+    276382,
+    276383,
+    276384,
+    276389,
+    276390,
+    276391,
+    276392,
+    276393,
+    276394,
+    276405,
+    276409
+  ],
+  "seen_guest_pids": [
+    276379,
+    276382,
+    276383,
+    276384,
+    276389,
+    276390,
+    276391,
+    276392,
+    276393,
+    276394,
+    276405,
+    276409
+  ],
+  "excluded_by_pid": [
+    {
+      "name": "276377:python3",
+      "samples": 20
+    }
+  ],
+  "guest_callchains_with_frames": 67,
+  "guest_callchains_with_app_frames": 0,
+  "callgraph_limit": "DWARF captured but native application call chains do not reconstruct; no allocation caller or inclusive attribution claim.",
+  "raw_sha256": "0b2b68a0d286af70b3857b792683a7f3d3cb74c3e960e5828164a9a0b909b9d4"
+}
+Top guest leaf symbols: [{'name': 'block_alloc', 'samples': 66}, {'name': '[unknown]', 'samples': 63}, {'name': 'myl_core_values_copy_box', 'samples': 58}, {'name': 'core_owned_child', 'samples': 53}, {'name': 'myl_core_drop_owned', 'samples': 45}, {'name': 'my.sexpr_parser::parse_node', 'samples': 44}, {'name': 'my.kicad_sch_verify::check', 'samples': 35}, {'name': 'my.sexpr_parser::next_token', 'samples': 33}, {'name': 'my.kicad_sch_compose::join_sites', 'samples': 30}, {'name': 'my.kicad_sch_verify::grid_scan', 'samples': 20}, {'name': 'myl_core_owned_octets_copy', 'samples': 18}, {'name': 'myl_core_str_eq', 'samples': 14}, {'name': 'myl_core_parse_float_range', 'samples': 11}, {'name': 'my.support_sha256::compress', 'samples': 9}, {'name': 'fmt.parse_float.parseFloat__anon_1373', 'samples': 9}]

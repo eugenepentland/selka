@@ -1,0 +1,1104 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 600  of event 'cpu_core/cycles/u'
+# Event count (approx.): 3456989454
+#
+# Overhead       Samples  Command      Pid:Command  Shared Object         Symbol                                        IPC   [IPC Coverage]
+# ........  ............  .......  ...............  ....................  ............................................  ....................
+#
+     1.59%             9  zero-rc   276391:zero-rc  zero-rc               [.] block_alloc                               -      -            
+     1.52%             9  zero-rc   276409:zero-rc  zero-rc               [.] block_alloc                               -      -            
+     1.34%             8  zero-rc   276384:zero-rc  zero-rc               [.] myl_core_drop_owned                       -      -            
+     1.31%             7  zero-rc   276391:zero-rc  zero-rc               [.] core_owned_child                          -      -            
+     1.23%             7  zero-rc   276392:zero-rc  zero-rc               [.] block_alloc                               -      -            
+     1.20%             7  zero-rc   276389:zero-rc  zero-rc               [.] myl_core_drop_owned                       -      -            
+     1.12%             7  zero-rc   276382:zero-rc  zero-rc               [.] block_alloc                               -      -            
+     1.10%             6  zero-rc   276389:zero-rc  zero-rc               [.] myl_core_values_copy_box                  -      -            
+     1.10%             6  zero-rc   276392:zero-rc  zero-rc               [.] core_owned_child                          -      -            
+     1.06%             6  zero-rc   276390:zero-rc  zero-rc               [.] core_owned_child                          -      -            
+     1.04%             6  zero-rc   276383:zero-rc  zero-rc               [.] core_owned_child                          -      -            
+     1.02%             6  zero-rc   276394:zero-rc  zero-rc               [.] myl_core_values_copy_box                  -      -            
+     1.02%             6  zero-rc   276379:zero-rc  zero-rc               [.] myl_core_values_copy_box                  -      -            
+     1.01%             6  zero-rc   276393:zero-rc  zero-rc               [.] my.sexpr_parser::parse_node               -      -            
+     1.00%             6  zero-rc   276409:zero-rc  zero-rc               [.] myl_core_values_copy_box                  -      -            
+     1.00%             6  zero-rc   276393:zero-rc  zero-rc               [.] myl_core_values_copy_box                  -      -            
+     1.00%             6  zero-rc   276405:zero-rc  zero-rc               [.] myl_core_owned_octets_copy                -      -            
+     0.99%             6  zero-rc   276409:zero-rc  zero-rc               [.] core_owned_child                          -      -            
+     0.97%             6  zero-rc   276409:zero-rc  zero-rc               [.] my.sexpr_parser::parse_node               -      -            
+     0.95%             5  zero-rc   276389:zero-rc  zero-rc               [.] block_alloc                               -      -            
+     0.91%             5  zero-rc   276384:zero-rc  zero-rc               [.] core_owned_child                          -      -            
+     0.88%             5  zero-rc   276382:zero-rc  zero-rc               [.] myl_core_drop_owned                       -      -            
+     0.88%             5  zero-rc   276390:zero-rc  zero-rc               [.] block_alloc                               -      -            
+     0.88%             5  zero-rc   276393:zero-rc  zero-rc               [.] block_alloc                               -      -            
+     0.86%             5  zero-rc   276383:zero-rc  zero-rc               [.] my.sexpr_parser::parse_node               -      -            
+     0.86%             5  zero-rc   276390:zero-rc  zero-rc               [.] myl_core_values_copy_box                  -      -            
+     0.86%             5  zero-rc   276391:zero-rc  zero-rc               [.] my.sexpr_parser::next_token               -      -            
+     0.84%             5  zero-rc   276379:zero-rc  zero-rc               [.] block_alloc                               -      -            
+     0.84%             5  zero-rc   276382:zero-rc  zero-rc               [.] myl_core_values_copy_box                  -      -            
+     0.83%             5  zero-rc   276390:zero-rc  zero-rc               [.] myl_core_drop_owned                       -      -            
+     0.82%             5  zero-rc   276390:zero-rc  zero-rc               [.] my.sexpr_parser::parse_node               -      -            
+     0.79%             5  zero-rc   276382:zero-rc  zero-rc               [.] my.sexpr_parser::next_token               -      -            
+     0.79%             5  zero-rc   276405:zero-rc  zero-rc               [.] block_alloc                               -      -            
+     0.76%             5  python3   276377:python3  python3.14            [.] _PyEval_EvalFrameDefault                  -      -            
+            |
+            ---_PyEval_EvalFrameDefault
+               |          
+               |--0.58%--0x58cce3
+               |          |          
+               |          |--0.40%--0x576c5e
+               |          |          PyObject_CallMethodObjArgs
+               |          |          0x6a7952
+               |          |          PyImport_ImportModuleLevelObject
+               |          |          _PyEval_EvalFrameDefault
+               |          |          |          
+               |          |          |--0.22%--0x58cce3
+               |          |          |          0x576c5e
+               |          |          |          PyObject_CallMethodObjArgs
+               |          |          |          PyImport_ImportModuleLevelObject
+               |          |          |          _PyEval_EvalFrameDefault
+               |          |          |          PyEval_EvalCode
+               |          |          |          0x5e319a
+               |          |          |          _PyEval_EvalFrameDefault
+               |          |          |          0x58cce3
+               |          |          |          0x576c5e
+               |          |          |          PyObject_CallMethodObjArgs
+               |          |          |          0x6a7952
+               |          |          |          PyImport_ImportModuleLevelObject
+               |          |          |          _PyEval_EvalFrameDefault
+               |          |          |          |          
+               |          |          |          |--0.11%--PyEval_EvalCode
+               |          |          |          |          0x5e319a
+               |          |          |          |          _PyEval_EvalFrameDefault
+               |          |          |          |          0x58cce3
+               |          |          |          |          0x576c5e
+               |          |          |          |          PyObject_CallMethodObjArgs
+               |          |          |          |          0x6a7952
+               |          |          |          |          PyImport_ImportModuleLevelObject
+               |          |          |          |          _PyEval_EvalFrameDefault
+               |          |          |          |          PyEval_EvalCode
+               |          |          |          |          0x6cab00
+               |          |          |          |          0x6c76c0
+               |          |          |          |          0x6c6d6a
+               |          |          |          |          0x6c6838
+               |          |          |          |          Py_RunMain
+               |          |          |          |          Py_BytesMain
+               |          |          |          |          0x7b8e98e2a600
+               |          |          |          |          __libc_start_main
+               |          |          |          |          _start
+               |          |          |          |          
+               |          |          |           --0.11%--0x58cce3
+               |          |          |                     0x576c5e
+               |          |          |                     PyObject_CallMethodObjArgs
+               |          |          |                     PyImport_ImportModuleLevelObject
+               |          |          |                     _PyEval_EvalFrameDefault
+               |          |          |                     PyEval_EvalCode
+               |          |          |                     0x5e319a
+               |          |          |                     _PyEval_EvalFrameDefault
+               |          |          |                     0x58cce3
+               |          |          |                     0x576c5e
+               |          |          |                     PyObject_CallMethodObjArgs
+               |          |          |                     0x6a7952
+               |          |          |                     PyImport_ImportModuleLevelObject
+               |          |          |                     _PyEval_EvalFrameDefault
+               |          |          |                     PyEval_EvalCode
+               |          |          |                     0x5e319a
+               |          |          |                     _PyEval_EvalFrameDefault
+               |          |          |                     0x58cce3
+               |          |          |                     0x576c5e
+               |          |          |                     PyObject_CallMethodObjArgs
+               |          |          |                     0x6a7952
+               |          |          |                     PyImport_ImportModuleLevelObject
+               |          |          |                     _PyEval_EvalFrameDefault
+               |          |          |                     PyEval_EvalCode
+               |          |          |                     0x5e319a
+               |          |          |                     _PyEval_EvalFrameDefault
+               |          |          |                     0x58cce3
+               |          |          |                     0x576c5e
+               |          |          |                     PyObject_CallMethodObjArgs
+               |          |          |                     0x6a7952
+               |          |          |                     PyImport_ImportModuleLevelObject
+               |          |          |                     _PyEval_EvalFrameDefault
+               |          |          |                     PyEval_EvalCode
+               |          |          |          
+               |          |           --0.17%--PyEval_EvalCode
+               |          |                     0x5e319a
+               |          |                     _PyEval_EvalFrameDefault
+               |          |                     0x58cce3
+               |          |                     0x576c5e
+               |          |                     PyObject_CallMethodObjArgs
+               |          |                     0x6a7952
+               |          |                     PyImport_ImportModuleLevelObject
+               |          |                     _PyEval_EvalFrameDefault
+               |          |                     PyEval_EvalCode
+               |          |                     0x5e319a
+               |          |                     _PyEval_EvalFrameDefault
+               |          |                     0x58cce3
+               |          |                     0x576c5e
+               |          |                     PyObject_CallMethodObjArgs
+               |          |                     0x6a7952
+               |          |                     PyImport_ImportModuleLevelObject
+               |          |                     _PyEval_EvalFrameDefault
+               |          |                     PyEval_EvalCode
+               |          |                     0x6cab00
+               |          |                     0x6c76c0
+               |          |                     0x6c6d6a
+               |          |                     0x6c6838
+               |          |                     Py_RunMain
+               |          |                     Py_BytesMain
+               |          |                     0x7b8e98e2a600
+               |          |                     __libc_start_main
+               |          |                     _start
+               |          |          
+               |           --0.18%--0x5eddea
+               |                     PyObject_CallOneArg
+               |                     PyObject_IsInstance
+               |                     _PyEval_EvalFrameDefault
+               |                     0x58cce3
+               |                     0x536b4c
+               |                     0x595b1e
+               |                     _PyObject_MakeTpCall
+               |                     _PyEval_EvalFrameDefault
+               |                     PyEval_EvalCode
+               |                     0x6cab00
+               |                     0x6c76c0
+               |                     0x6c6d6a
+               |                     0x6c6838
+               |                     Py_RunMain
+               |                     Py_BytesMain
+               |                     0x7b8e98e2a600
+               |                     __libc_start_main
+               |                     _start
+               |          
+                --0.18%--PyEval_EvalCode
+                          0x6cab00
+                          0x6c76c0
+                          0x6c6d6a
+                          0x6c6838
+                          Py_RunMain
+                          Py_BytesMain
+                          0x7b8e98e2a600
+                          __libc_start_main
+                          _start
+
+     0.76%             4  zero-rc   276379:zero-rc  zero-rc               [.] core_owned_child                          -      -            
+     0.72%             4  zero-rc   276394:zero-rc  zero-rc               [.] core_owned_child                          -      -            
+     0.71%             4  zero-rc   276384:zero-rc  zero-rc               [.] my.kicad_sch_verify::check                -      -            
+     0.70%             4  zero-rc   276383:zero-rc  zero-rc               [.] myl_core_values_copy_box                  -      -            
+     0.70%             4  zero-rc   276392:zero-rc  zero-rc               [.] myl_core_drop_owned                       -      -            
+     0.69%             4  zero-rc   276391:zero-rc  zero-rc               [.] myl_core_values_copy_box                  -      -            
+     0.68%             4  zero-rc   276393:zero-rc  zero-rc               [.] myl_core_drop_owned                       -      -            
+     0.66%             4  zero-rc   276384:zero-rc  zero-rc               [.] my.sexpr_parser::parse_node               -      -            
+     0.66%             4  zero-rc   276393:zero-rc  [unknown]             [k] 0xffffffffbae00b90                        -      -            
+            |
+            ---0xffffffffbae00b90
+               |          
+               |--0.18%--0x70edbc2cfed0
+               |          0x70edbc5cd2ae
+               |          0x70edbc5d0580
+               |          0x70edbc5e2518
+               |          0x70edbc5dedc5
+               |          0x70edbc5e04e0
+               |          0x70edbc5df347
+               |          
+                --0.18%--0x70edbc2b2ff4
+                          0x70edbc2b3dbe
+
+     0.63%             4  zero-rc   276405:zero-rc  zero-rc               [.] myl_core_values_copy_box                  -      -            
+     0.62%             4  zero-rc   276394:zero-rc  zero-rc               [.] my.sexpr_parser::next_token               -      -            
+     0.61%             4  zero-rc   276383:zero-rc  zero-rc               [.] my.kicad_sch_verify::check                -      -            
+     0.61%             3  zero-rc   276389:zero-rc  zero-rc               [.] my.kicad_sch_compose::join_sites          -      -            
+     0.61%             4  zero-rc   276379:zero-rc  zero-rc               [.] my.sexpr_parser::parse_node               -      -            
+     0.59%             3  zero-rc   276391:zero-rc  zero-rc               [.] my.kicad_sch_verify::check                -      -            
+     0.58%             4  zero-rc   276394:zero-rc  zero-rc               [.] my.sexpr_parser::parse_node               -      -            
+     0.56%             3  zero-rc   276383:zero-rc  zero-rc               [.] my.kicad_sch_compose::join_sites          -      -            
+     0.56%             3  zero-rc   276390:zero-rc  zero-rc               [.] my.kicad_sch_compose::join_sites          -      -            
+     0.56%             3  zero-rc   276391:zero-rc  zero-rc               [.] my.kicad_sch_compose::join_sites          -      -            
+     0.56%             3  zero-rc   276379:zero-rc  zero-rc               [.] my.kicad_sch_compose::join_sites          -      -            
+     0.56%             3  zero-rc   276383:zero-rc  zero-rc               [.] block_alloc                               -      -            
+     0.54%             3  zero-rc   276392:zero-rc  zero-rc               [.] myl_core_values_copy_box                  -      -            
+     0.54%             3  zero-rc   276383:zero-rc  zero-rc               [.] my.sexpr_parser::next_token               -      -            
+     0.53%             3  zero-rc   276393:zero-rc  zero-rc               [.] my.kicad_sch_compose::join_sites          -      -            
+     0.53%             3  zero-rc   276394:zero-rc  zero-rc               [.] block_alloc                               -      -            
+     0.53%             3  zero-rc   276405:zero-rc  zero-rc               [.] myl_core_drop_owned                       -      -            
+     0.52%             3  zero-rc   276392:zero-rc  zero-rc               [.] my.kicad_sch_verify::check                -      -            
+     0.51%             3  zero-rc   276405:zero-rc  zero-rc               [.] core_owned_child                          -      -            
+     0.50%             3  zero-rc   276394:zero-rc  zero-rc               [.] myl_core_drop_owned                       -      -            
+     0.50%             3  zero-rc   276384:zero-rc  zero-rc               [.] myl_core_values_copy_box                  -      -            
+     0.50%             3  zero-rc   276383:zero-rc  [unknown]             [k] 0xffffffffbae00b90                        -      -            
+            |
+            ---0xffffffffbae00b90
+               |          
+               |--0.16%--0x7c99ac797d07
+               |          
+                --0.16%--0x7c99ac6b2ff4
+                          0x7c99ac6b4617
+                          0x7c99ac6b5249
+
+     0.50%             3  zero-rc   276390:zero-rc  zero-rc               [.] my.kicad_sch_verify::check                -      -            
+     0.49%             3  zero-rc   276389:zero-rc  zero-rc               [.] my.kicad_sch_verify::check                -      -            
+     0.49%             3  zero-rc   276405:zero-rc  zero-rc               [.] my.sexpr_parser::next_token               -      -            
+     0.49%             3  zero-rc   276382:zero-rc  zero-rc               [.] my.kicad_sch_verify::check                -      -            
+     0.49%             3  zero-rc   276393:zero-rc  zero-rc               [.] my.kicad_sch_verify::check                -      -            
+     0.48%             3  zero-rc   276394:zero-rc  zero-rc               [.] myl_core_owned_octets_copy                -      -            
+     0.47%             3  zero-rc   276384:zero-rc  zero-rc               [.] block_alloc                               -      -            
+     0.46%             3  zero-rc   276384:zero-rc  zero-rc               [.] my.sexpr_parser::next_token               -      -            
+     0.46%             3  zero-rc   276382:zero-rc  [unknown]             [k] 0xffffffffbae00b90                        -      -            
+            |
+            ---0xffffffffbae00b90
+               |          
+                --0.14%--0x7630f0b97d07
+                          0x7630f0ab435f
+                          realloc
+
+     0.46%             3  zero-rc   276389:zero-rc  zero-rc               [.] my.sexpr_parser::next_token               -      -            
+     0.45%             3  zero-rc   276389:zero-rc  zero-rc               [.] my.sexpr_parser::parse_node               -      -            
+     0.44%             3  zero-rc   276379:zero-rc  zero-rc               [.] my.kicad_sch_verify::check                -      -            
+     0.40%             2  zero-rc   276405:zero-rc  zero-rc               [.] my.kicad_sch_verify::check                -      -            
+     0.39%             2  zero-rc   276409:zero-rc  zero-rc               [.] myl_core_drop_owned                       -      -            
+     0.38%             2  zero-rc   276390:zero-rc  zero-rc               [.] my.support_sha256::compress               -      -            
+     0.38%             2  zero-rc   276379:zero-rc  zero-rc               [.] my.support_sha256::compress               -      -            
+     0.38%             2  zero-rc   276382:zero-rc  zero-rc               [.] my.kicad_sch_compose::join_sites          -      -            
+     0.38%             2  zero-rc   276392:zero-rc  zero-rc               [.] my.kicad_sch_compose::join_sites          -      -            
+     0.37%             2  zero-rc   276394:zero-rc  zero-rc               [.] myl_core_ir_str_append                    -      -            
+     0.37%             2  zero-rc   276409:zero-rc  zero-rc               [.] my.kicad_sch_verify::check                -      -            
+     0.37%             2  zero-rc   276394:zero-rc  zero-rc               [.] my.kicad_sch_compose::join_sites          -      -            
+     0.37%             2  zero-rc   276389:zero-rc  zero-rc               [.] myl_core_str_eq                           -      -            
+     0.37%             3  zero-rc   276384:zero-rc  zero-rc               [.] my.kicad_sch_verify::grid_scan            -      -            
+     0.37%             2  zero-rc   276389:zero-rc  zero-rc               [.] core_owned_child                          -      -            
+     0.37%             2  zero-rc   276382:zero-rc  zero-rc               [.] core_owned_child                          -      -            
+     0.37%             2  zero-rc   276392:zero-rc  zero-rc               [.] my.sexpr_parser::parse_node               -      -            
+     0.36%             2  zero-rc   276409:zero-rc  zero-rc               [.] myl_core_owned_octets_copy                -      -            
+     0.36%             2  zero-rc   276382:zero-rc  zero-rc               [.] my.sexpr_parser::parse_node               -      -            
+     0.36%             2  zero-rc   276394:zero-rc  zero-rc               [.] my.kicad_sch_verify::check                -      -            
+     0.35%             2  zero-rc   276389:zero-rc  zero-rc               [.] myl_core_parse_float_range                -      -            
+     0.35%             2  zero-rc   276394:zero-rc  libc.so.6             [.] 0x0000000000197a21                        -      -            
+            |
+            ---0x71d794f97a21
+
+     0.35%             2  zero-rc   276409:zero-rc  zero-rc               [.] my.kicad_sch_compose::join_sites          -      -            
+     0.35%             2  zero-rc   276384:zero-rc  zero-rc               [.] my.kicad_sch_compose::join_sites          -      -            
+     0.35%             2  zero-rc   276392:zero-rc  [unknown]             [k] 0xffffffffbae00b90                        -      -            
+            |
+            ---0xffffffffbae00b90
+               |          
+                --0.16%--0x7518a7397d07
+                          0x7518a72b435f
+                          realloc
+
+     0.35%             2  zero-rc   276405:zero-rc  zero-rc               [.] my.kicad_sch_compose::join_sites          -      -            
+     0.34%             2  zero-rc   276405:zero-rc  [unknown]             [k] 0xffffffffbae00b90                        -      -            
+            |
+            ---0xffffffffbae00b90
+               0x7aa5fb8b2ff4
+               0x7aa5fb8b4617
+               |          
+                --0.16%--0x7aa5fb8b5249
+
+     0.34%             2  zero-rc   276389:zero-rc  zero-rc               [.] fmt.parse_float.parseFloat__anon_1373     -      -            
+     0.34%             2  zero-rc   276392:zero-rc  zero-rc               [.] fmt.parse_float.parseFloat__anon_1373     -      -            
+     0.34%             2  zero-rc   276379:zero-rc  zero-rc               [.] myl_core_owned_octets_copy                -      -            
+     0.34%             2  zero-rc   276379:zero-rc  zero-rc               [.] myl_core_drop_owned                       -      -            
+     0.34%             3  zero-rc   276390:zero-rc  zero-rc               [.] my.kicad_sch_verify::grid_scan            -      -            
+     0.34%             2  zero-rc   276393:zero-rc  zero-rc               [.] core_owned_child                          -      -            
+     0.33%             2  zero-rc   276405:zero-rc  zero-rc               [.] myl_core_parse_float_range                -      -            
+     0.33%             2  zero-rc   276390:zero-rc  [unknown]             [k] 0xffffffffbae00b90                        -      -            
+            |
+            ---0xffffffffbae00b90
+
+     0.33%             2  zero-rc   276405:zero-rc  zero-rc               [.] my.sexpr_parser::parse_node               -      -            
+     0.32%             2  zero-rc   276379:zero-rc  zero-rc               [.] fmt.parse_float.parseFloat__anon_1373     -      -            
+     0.32%             2  zero-rc   276383:zero-rc  zero-rc               [.] myl_core_str_eq                           -      -            
+     0.32%             2  zero-rc   276409:zero-rc  [unknown]             [k] 0xffffffffbae00b90                        -      -            
+            |
+            ---0xffffffffbae00b90
+               0x7092a1f97d07
+
+     0.32%             2  zero-rc   276409:zero-rc  zero-rc               [.] myl_core_str_hash                         -      -            
+     0.31%             2  zero-rc   276379:zero-rc  zero-rc               [.] my.sexpr_parser::next_token               -      -            
+     0.31%             2  zero-rc   276390:zero-rc  zero-rc               [.] my.sexpr_parser::next_token               -      -            
+     0.31%             2  zero-rc   276379:zero-rc  zero-rc               [.] myl_core_str_eq                           -      -            
+     0.30%             2  zero-rc   276391:zero-rc  [unknown]             [k] 0xffffffffbae00b90                        -      -            
+            |
+            ---0xffffffffbae00b90
+               |          
+               |--0.19%--0x7039678b2ff4
+               |          0x7039678b4617
+               |          
+                --0.11%--brk
+                          __sbrk
+                          __default_morecore
+                          0x7039678b38b3
+                          0x7039678b4470
+                          0x7039678b5249
+
+     0.30%             2  zero-rc   276393:zero-rc  zero-rc               [.] myl_core_list_grow                        -      -            
+     0.29%             2  zero-rc   276409:zero-rc  zero-rc               [.] my.sexpr_parser::next_token               -      -            
+     0.29%             2  zero-rc   276392:zero-rc  zero-rc               [.] myl_core_str_eq                           -      -            
+     0.29%             2  zero-rc   276383:zero-rc  zero-rc               [.] fmt.parse_float.parseFloat__anon_1373     -      -            
+     0.28%             2  zero-rc   276384:zero-rc  [unknown]             [k] 0xffffffffbae00b90                        -      -            
+            |
+            ---0xffffffffbae00b90
+               |          
+                --0.16%--0x738ce82a03e6
+
+     0.26%             2  zero-rc   276382:zero-rc  zero-rc               [.] myl_core_list_grow                        -      -            
+     0.26%             2  zero-rc   276394:zero-rc  zero-rc               [.] myl_core_str_eq                           -      -            
+     0.25%             2  zero-rc   276383:zero-rc  zero-rc               [.] my.kicad_sch_verify::grid_scan            -      -            
+     0.25%             2  zero-rc   276389:zero-rc  zero-rc               [.] my.kicad_sch_verify::grid_scan            -      -            
+     0.24%             2  zero-rc   276393:zero-rc  zero-rc               [.] my.kicad_sch_verify::grid_scan            -      -            
+     0.24%             2  zero-rc   276392:zero-rc  zero-rc               [.] my.kicad_sch_verify::grid_scan            -      -            
+     0.23%             2  zero-rc   276391:zero-rc  zero-rc               [.] my.kicad_sch_verify::on_grid              -      -            
+     0.20%             1  zero-rc   276379:zero-rc  zero-rc               [.] myl_core_bytes_concat                     -      -            
+     0.20%             1  zero-rc   276389:zero-rc  zero-rc               [.] my.support_sha256::compress               -      -            
+     0.20%             1  zero-rc   276391:zero-rc  libc.so.6             [.] 0x00000000000b0f9d                        -      -            
+            |
+            ---0x7039678b0f9d
+               0x7039678b2262
+               0x7039678b2328
+
+     0.20%             1  zero-rc   276405:zero-rc  zero-rc               [.] my.kicad_sch_textbox::at_pose             -      -            
+     0.20%             1  zero-rc   276389:zero-rc  libc.so.6             [.] 0x0000000000197a2b                        -      -            
+            |
+            ---0x7d829f997a2b
+
+     0.20%             1  zero-rc   276384:zero-rc  zero-rc               [.] myl_core_bytes_concat                     -      -            
+     0.20%             1  zero-rc   276384:zero-rc  zero-rc               [.] my.export_kicad_sch::check_coverage       -      -            
+     0.19%             1  zero-rc   276383:zero-rc  zero-rc               [.] my.support_sha256::compress               -      -            
+     0.19%             1  zero-rc   276389:zero-rc  libc.so.6             [.] 0x0000000000197a25                        -      -            
+            |
+            ---0x7d829f997a25
+
+     0.19%             1  zero-rc   276379:zero-rc  libc.so.6             [.] 0x0000000000197a4d                        -      -            
+            |
+            ---0x7a3393797a4d
+
+     0.19%             1  zero-rc   276391:zero-rc  zero-rc               [.] my.support_sha256::compress               -      -            
+     0.19%             1  zero-rc   276392:zero-rc  zero-rc               [.] myl_core_bytes_concat                     -      -            
+     0.19%             1  zero-rc   276382:zero-rc  zero-rc               [.] my.kicad_sch_compose::compose             -      -            
+     0.19%             1  zero-rc   276390:zero-rc  libc.so.6             [.] 0x0000000000197a90                        -      -            
+            |
+            ---0x7e545bd97a90
+
+     0.19%             1  zero-rc   276379:zero-rc  zero-rc               [.] myl_core_ir_str_append                    -      -            
+     0.19%             1  zero-rc   276379:zero-rc  zero-rc               [.] myl_core_dict_new                         -      -            
+     0.19%             1  zero-rc   276383:zero-rc  zero-rc               [.] myl_core_str_chars                        -      -            
+     0.19%             1  zero-rc   276392:zero-rc  zero-rc               [.] myl_core_list_grow                        -      -            
+     0.19%             1  zero-rc   276384:zero-rc  zero-rc               [.] my.kicad_sch_textbox::named_text          -      -            
+     0.19%             1  zero-rc   276392:zero-rc  libc.so.6             [.] 0x0000000000197a76                        -      -            
+            |
+            ---0x7518a7397a76
+
+     0.19%             1  zero-rc   276383:zero-rc  zero-rc               [.] my.kicad_sch_emit::render                 -      -            
+     0.19%             1  zero-rc   276390:zero-rc  zero-rc               [.] myl_core_ir_str_slice                     -      -            
+     0.19%             1  zero-rc   276392:zero-rc  zero-rc               [.] myl_core_str_from_i64                     -      -            
+     0.19%             1  zero-rc   276391:zero-rc  zero-rc               [.] myl_core_drop_owned                       -      -            
+     0.19%             1  zero-rc   276394:zero-rc  zero-rc               [.] myl_core_str_from_i64                     -      -            
+     0.19%             1  zero-rc   276382:zero-rc  zero-rc               [.] my.support_sha256::compress               -      -            
+     0.19%             1  zero-rc   276392:zero-rc  zero-rc               [.] my.kicad_sch_emit::mm                     -      -            
+     0.19%             1  zero-rc   276382:zero-rc  zero-rc               [.] myl_core_ir_str_append                    -      -            
+     0.19%             1  zero-rc   276389:zero-rc  zero-rc               [.] myl_core_bytes_concat                     -      -            
+     0.19%             1  zero-rc   276393:zero-rc  zero-rc               [.] my.sexpr_parser::next_token               -      -            
+     0.19%             1  zero-rc   276394:zero-rc  zero-rc               [.] my.kicad_sch_compose::compose             -      -            
+     0.18%             1  zero-rc   276382:zero-rc  zero-rc               [.] memcpy@plt                                -      -            
+     0.18%             1  python3   276377:python3  python3.14            [.] 0x0000000000162523                        -      -            
+            |
+            ---0x562523
+               0x6b003a
+               Py_RunMain
+               Py_BytesMain
+               0x7b8e98e2a600
+               __libc_start_main
+               _start
+
+     0.18%             1  zero-rc   276383:zero-rc  ld-linux-x86-64.so.2  [.] 0x0000000000009aaa                        -      -            
+            |
+            ---0x7c99ac8c1aaa
+               0x7c99ac8c2989
+               0x7c99ac8bb9fc
+               _dl_catch_exception
+               0x7c99ac8bbe2f
+               0x7c99ac8de24e
+               0x7c99ac8dadc5
+               0x7c99ac8dc4e0
+               0x7c99ac8db347
+
+     0.18%             1  zero-rc   276384:zero-rc  ld-linux-x86-64.so.2  [.] 0x0000000000017de1                        -      -            
+            |
+            ---0x738ce85b6de1
+               0x738ce85b76ed
+               0x738ce85c29f3
+               0x738ce85a1418
+               0x738ce85c53a5
+               0x738ce85c1dc5
+               0x738ce85c34e0
+               0x738ce85c2347
+
+     0.18%             1  zero-rc   276391:zero-rc  ld-linux-x86-64.so.2  [.] 0x00000000000239d0                        -      -            
+            |
+            ---0x703967c3c9d0
+               0x703967c1b418
+               0x703967c3f3a5
+               0x703967c3bdc5
+               0x703967c3d4e0
+               0x703967c3c347
+
+     0.18%             1  zero-rc   276392:zero-rc  ld-linux-x86-64.so.2  [.] 0x000000000002c948                        -      -            
+            |
+            ---0x7518a75cd948
+               0x7518a75ac966
+               0x7518a75ace9e
+               0x7518a75ad7ab
+               0x7518a75b2050
+               0x7518a75b5580
+               0x7518a75c7518
+               0x7518a75c3dc5
+               0x7518a75c54e0
+               0x7518a75c4347
+
+     0.18%             1  zero-rc   276394:zero-rc  ld-linux-x86-64.so.2  [.] 0x000000000002b596                        -      -            
+            |
+            ---0x71d79518d596
+               0x71d79516f913
+               0x71d79516c7f1
+               0x71d79516d4ff
+               0x71d7951659fc
+               _dl_catch_exception
+               0x71d795165e2f
+               0x71d79518824e
+               0x71d795184dc5
+               0x71d7951864e0
+               0x71d795185347
+
+     0.18%             1  zero-rc   276405:zero-rc  libc.so.6             [.] strpbrk                                   -      -            
+            |
+            ---strpbrk
+               0x7aa5fbb222ae
+               0x7aa5fbb25580
+               0x7aa5fbb37518
+               0x7aa5fbb33dc5
+               0x7aa5fbb354e0
+               0x7aa5fbb34347
+
+     0.18%             1  zero-rc   276382:zero-rc  zero-rc               [.] myl_core_bytes_concat                     -      -            
+     0.18%             1  zero-rc   276379:zero-rc  zero-rc               [.] myl_core_list_grow                        -      -            
+     0.18%             1  zero-rc   276383:zero-rc  zero-rc               [.] my.kicad_sch_compose::compose             -      -            
+     0.18%             1  zero-rc   276394:zero-rc  zero-rc               [.] myl_core_bytes_slice                      -      -            
+     0.18%             1  zero-rc   276391:zero-rc  zero-rc               [.] myl_core_owned_octets_copy                -      -            
+     0.18%             1  zero-rc   276379:zero-rc  libc.so.6             [.] 0x0000000000197b71                        -      -            
+            |
+            ---0x7a3393797b71
+
+     0.18%             1  zero-rc   276389:zero-rc  zero-rc               [.] myl_core_bytes_decode_text                -      -            
+     0.18%             1  zero-rc   276394:zero-rc  zero-rc               [.] my.kicad_sch_emit::render                 -      -            
+     0.18%             1  zero-rc   276409:zero-rc  zero-rc               [.] myl_core_ir_str_append                    -      -            
+     0.18%             1  zero-rc   276392:zero-rc  libc.so.6             [.] __libc_calloc                             -      -            
+            |
+            ---__libc_calloc
+
+     0.18%             1  zero-rc   276409:zero-rc  libc.so.6             [.] 0x0000000000197a90                        -      -            
+            |
+            ---0x7092a1f97a90
+
+     0.18%             1  zero-rc   276393:zero-rc  zero-rc               [.] myl_core_bytes_valid_list                 -      -            
+     0.18%             1  zero-rc   276394:zero-rc  libc.so.6             [.] 0x0000000000197388                        -      -            
+            |
+            ---0x71d794f97388
+
+     0.18%             1  zero-rc   276384:zero-rc  zero-rc               [.] myl_core_bytes_utf8_count                 -      -            
+     0.18%             1  zero-rc   276393:zero-rc  zero-rc               [.] my.kicad_sch_emit::render                 -      -            
+     0.18%             1  zero-rc   276384:zero-rc  zero-rc               [.] memmove@plt                               -      -            
+     0.18%             1  zero-rc   276382:zero-rc  zero-rc               [.] myl_core_owned_octets_copy                -      -            
+     0.18%             1  zero-rc   276382:zero-rc  zero-rc               [.] my.kicad_sch_textbox::hidden              -      -            
+     0.18%             1  zero-rc   276384:zero-rc  zero-rc               [.] my.kicad_sch_emit::mm                     -      -            
+     0.18%             1  zero-rc   276405:zero-rc  libc.so.6             [.] 0x0000000000197a4d                        -      -            
+            |
+            ---0x7aa5fb997a4d
+
+     0.18%             1  zero-rc   276392:zero-rc  libc.so.6             [.] 0x0000000000197a55                        -      -            
+            |
+            ---0x7518a7397a55
+
+     0.18%             1  python3   276377:python3  libc.so.6             [.] 0x0000000000197a00                        -      -            
+            |
+            ---0x7b8e98f97a00
+               0x53d4aa
+               0x53a9c3
+               0x53ab31
+               0x53ad81
+               0x53ab97
+               0x53ad51
+               0x68db9d
+               0x6b7c19
+               _PyEval_EvalFrameDefault
+               0x58cce3
+               0x576c5e
+               PyObject_CallMethodObjArgs
+               0x6a7952
+               PyImport_ImportModuleLevelObject
+               _PyEval_EvalFrameDefault
+               PyEval_EvalCode
+               0x5e319a
+               _PyEval_EvalFrameDefault
+               0x58cce3
+               0x576c5e
+               PyObject_CallMethodObjArgs
+               0x6a7952
+               PyImport_ImportModuleLevelObject
+               _PyEval_EvalFrameDefault
+               PyEval_EvalCode
+               0x6cab00
+               0x6c76c0
+               0x6c6d6a
+               0x6c6838
+               Py_RunMain
+               Py_BytesMain
+               0x7b8e98e2a600
+               __libc_start_main
+               _start
+
+     0.18%             1  zero-rc   276405:zero-rc  zero-rc               [.] myl_core_ir_str_slice_span                -      -            
+     0.18%             1  zero-rc   276393:zero-rc  zero-rc               [.] fmt.parse_float.parseFloat__anon_1373     -      -            
+     0.18%             1  zero-rc   276409:zero-rc  zero-rc               [.] myl_core_str_chars                        -      -            
+     0.18%             1  zero-rc   276394:zero-rc  libc.so.6             [.] 0x0000000000197a85                        -      -            
+            |
+            ---0x71d794f97a85
+
+     0.18%             1  zero-rc   276393:zero-rc  zero-rc               [.] myl_core_parse_float_range                -      -            
+     0.18%             1  zero-rc   276393:zero-rc  zero-rc               [.] myl_core_bytes_concat                     -      -            
+     0.18%             1  zero-rc   276391:zero-rc  zero-rc               [.] myl_core_span_utf8_count                  -      -            
+     0.17%             1  python3   276377:python3  python3.14            [.] 0x000000000013124d                        -      -            
+            |
+            ---0x53124d
+               0x577318
+               0x5a5882
+               _PyEval_EvalFrameDefault
+               0x536aae
+               0x5d0213
+               _PyObject_MakeTpCall
+               0x565c5a
+               PyObject_Vectorcall
+               _PyEval_EvalFrameDefault
+               PyEval_EvalCode
+               0x5e319a
+               _PyEval_EvalFrameDefault
+               0x58cce3
+               0x576c5e
+               PyObject_CallMethodObjArgs
+               0x6a7952
+               PyImport_ImportModuleLevelObject
+               _PyEval_EvalFrameDefault
+               PyEval_EvalCode
+               0x5e319a
+               _PyEval_EvalFrameDefault
+               0x58cce3
+               0x576c5e
+               PyObject_CallMethodObjArgs
+               0x6a7952
+               PyImport_ImportModuleLevelObject
+               _PyEval_EvalFrameDefault
+               PyEval_EvalCode
+               0x6cab00
+               0x6c76c0
+               0x6c6d6a
+               0x6c6838
+               Py_RunMain
+               Py_BytesMain
+               0x7b8e98e2a600
+               __libc_start_main
+               _start
+
+     0.17%             1  zero-rc   276405:zero-rc  zero-rc               [.] my.support_sha256::compress               -      -            
+     0.17%             1  zero-rc   276394:zero-rc  libc.so.6             [.] cfree                                     -      -            
+            |
+            ---cfree
+
+     0.17%             1  zero-rc   276393:zero-rc  libc.so.6             [.] 0x00000000000b2317                        -      -            
+            |
+            ---0x70edbc2b2317
+
+     0.17%             1  zero-rc   276405:zero-rc  libc.so.6             [.] 0x0000000000197a66                        -      -            
+            |
+            ---0x7aa5fb997a66
+
+     0.17%             1  zero-rc   276393:zero-rc  zero-rc               [.] memcpy@plt                                -      -            
+     0.17%             1  zero-rc   276393:zero-rc  zero-rc               [.] myl_core_str_hash                         -      -            
+     0.17%             1  zero-rc   276379:zero-rc  zero-rc               [.] myl_core_dict_insert                      -      -            
+     0.17%             1  zero-rc   276392:zero-rc  libc.so.6             [.] 0x00000000000b4248                        -      -            
+            |
+            ---0x7518a72b4248
+               realloc
+
+     0.17%             1  zero-rc   276390:zero-rc  zero-rc               [.] my.sexpr_parser::parse_number_node        -      -            
+     0.17%             1  zero-rc   276390:zero-rc  zero-rc               [.] myl_core_str_eq                           -      -            
+     0.17%             1  zero-rc   276392:zero-rc  libc.so.6             [.] 0x00000000000b21f1                        -      -            
+            |
+            ---0x7518a72b21f1
+               0x7518a72b2328
+
+     0.17%             1  python3   276377:python3  python3.14            [.] 0x00000000002256de                        -      -            
+            |
+            ---0x6256de
+               0x624fd8
+               0x56256c
+               0x6d5295
+               0x6b004b
+               Py_RunMain
+               Py_BytesMain
+               0x7b8e98e2a600
+               __libc_start_main
+               _start
+
+     0.17%             1  zero-rc   276393:zero-rc  libc.so.6             [.] 0x000000000019848e                        -      -            
+            |
+            ---0x70edbc39848e
+
+     0.17%             1  zero-rc   276393:zero-rc  zero-rc               [.] my.kicad_sch_textbox::font_size           -      -            
+     0.17%             1  zero-rc   276389:zero-rc  libc.so.6             [.] read                                      -      -            
+            |
+            ---read
+
+     0.17%             1  zero-rc   276384:zero-rc  libc.so.6             [.] 0x00000000000b30f7                        -      -            
+            |
+            ---0x738ce82b30f7
+               0x738ce82b4269
+               realloc
+
+     0.17%             1  zero-rc   276392:zero-rc  zero-rc               [.] myl_core_owned_octets_copy                -      -            
+     0.16%             1  zero-rc   276394:zero-rc  zero-rc               [.] myl_core_dict_insert                      -      -            
+     0.16%             1  zero-rc   276405:zero-rc  zero-rc               [.] my.kicad_sch_compose::pin_point           -      -            
+     0.16%             1  zero-rc   276394:zero-rc  zero-rc               [.] my.kicad_sym_reader::collect              -      -            
+     0.16%             1  zero-rc   276391:zero-rc  libc.so.6             [.] 0x00000000000b2f0e                        -      -            
+            |
+            ---0x7039678b2f0e
+               0x7039678b4470
+               0x7039678b5249
+
+     0.16%             1  zero-rc   276409:zero-rc  libc.so.6             [.] 0x000000000019844d                        -      -            
+            |
+            ---0x7092a1f9844d
+
+     0.16%             1  zero-rc   276384:zero-rc  zero-rc               [.] myl_core_owned_octets_copy                -      -            
+     0.16%             1  zero-rc   276383:zero-rc  zero-rc               [.] myl_core_bytes_concat                     -      -            
+     0.16%             1  zero-rc   276383:zero-rc  zero-rc               [.] myl_core_bytes_utf8_count                 -      -            
+     0.16%             1  zero-rc   276383:zero-rc  zero-rc               [.] my.kicad_sym_reader::collect              -      -            
+     0.16%             1  zero-rc   276383:zero-rc  zero-rc               [.] myl_core_drop_owned                       -      -            
+     0.16%             1  zero-rc   276389:zero-rc  zero-rc               [.] my.design_model::read_instance            -      -            
+     0.16%             1  python3   276377:python3  libcrypto.so.3        [.] 0x0000000000391514                        -      -            
+            |
+            ---0x7b8e98591514
+               SHA256_Update
+               0x7b8e988b548c
+               0x7b8e988b5a85
+               _PyEval_EvalFrameDefault
+               PyEval_EvalCode
+               0x6cab00
+               0x6c76c0
+               0x6c6d6a
+               0x6c6838
+               Py_RunMain
+               Py_BytesMain
+               0x7b8e98e2a600
+               __libc_start_main
+               _start
+
+     0.16%             1  zero-rc   276391:zero-rc  libc.so.6             [.] 0x0000000000197a3f                        -      -            
+            |
+            ---0x703967997a3f
+
+     0.16%             1  zero-rc   276392:zero-rc  zero-rc               [.] myl_core_parse_float_range                -      -            
+     0.16%             1  zero-rc   276405:zero-rc  libc.so.6             [.] 0x0000000000197d07                        -      -            
+            |
+            ---0x7aa5fb997d07
+
+     0.16%             1  zero-rc   276379:zero-rc  libc.so.6             [.] 0x00000000000b2f01                        -      -            
+            |
+            ---0x7a33936b2f01
+               0x7a33936b3dbe
+
+     0.16%             1  zero-rc   276384:zero-rc  zero-rc               [.] myl_core_parse_float_range                -      -            
+     0.16%             1  zero-rc   276409:zero-rc  libc.so.6             [.] 0x0000000000197a52                        -      -            
+            |
+            ---0x7092a1f97a52
+
+     0.16%             1  zero-rc   276382:zero-rc  libc.so.6             [.] 0x0000000000197afa                        -      -            
+            |
+            ---0x7630f0b97afa
+
+     0.15%             1  zero-rc   276379:zero-rc  zero-rc               [.] myl_core_parse_float_range                -      -            
+     0.15%             1  zero-rc   276383:zero-rc  zero-rc               [.] myl_core_owned_octets_copy                -      -            
+     0.15%             1  zero-rc   276391:zero-rc  zero-rc               [.] my.flat_netlist::net_tie_sets_get_or_add  -      -            
+     0.15%             1  zero-rc   276382:zero-rc  zero-rc               [.] myl_core_bytes_decode_text                -      -            
+     0.15%             1  zero-rc   276390:zero-rc  libc.so.6             [.] 0x0000000000197a3f                        -      -            
+            |
+            ---0x7e545bd97a3f
+
+     0.15%             1  zero-rc   276405:zero-rc  libc.so.6             [.] 0x0000000000197a6c                        -      -            
+            |
+            ---0x7aa5fb997a6c
+
+     0.15%             1  zero-rc   276391:zero-rc  zero-rc               [.] myl_core_parse_float_range                -      -            
+     0.15%             1  zero-rc   276390:zero-rc  libc.so.6             [.] 0x0000000000197a54                        -      -            
+            |
+            ---0x7e545bd97a54
+
+     0.15%             1  zero-rc   276405:zero-rc  libc.so.6             [.] 0x0000000000197a52                        -      -            
+            |
+            ---0x7aa5fb997a52
+
+     0.15%             1  zero-rc   276382:zero-rc  zero-rc               [.] my.export_kicad_sch::export_sch           -      -            
+     0.15%             1  zero-rc   276409:zero-rc  libc.so.6             [.] 0x0000000000197a4d                        -      -            
+            |
+            ---0x7092a1f97a4d
+
+     0.15%             1  zero-rc   276384:zero-rc  libc.so.6             [.] 0x000000000019848e                        -      -            
+            |
+            ---0x738ce839848e
+
+     0.15%             1  zero-rc   276405:zero-rc  zero-rc               [.] myl_core_list_grow                        -      -            
+     0.14%             1  zero-rc   276382:zero-rc  zero-rc               [.] myl_core_parse_float_range                -      -            
+     0.14%             1  zero-rc   276382:zero-rc  libc.so.6             [.] 0x0000000000197a6c                        -      -            
+            |
+            ---0x7630f0b97a6c
+
+     0.14%             1  zero-rc   276382:zero-rc  zero-rc               [.] myl_core_parse_int_range                  -      -            
+     0.14%             1  zero-rc   276405:zero-rc  zero-rc               [.] myl_core_span_utf8_count                  -      -            
+     0.14%             1  zero-rc   276382:zero-rc  zero-rc               [.] myl_core_str_eq                           -      -            
+     0.14%             1  zero-rc   276390:zero-rc  zero-rc               [.] myl_core_parse_float_range                -      -            
+     0.14%             1  python3   276377:python3  libc.so.6             [.] 0x00000000000b2f39                        -      -            
+            |
+            ---0x7b8e98eb2f39
+               0x7b8e98eb3dbe
+               0x53f206
+               0x53aefa
+               0x53ab97
+               0x53ad51
+               0x68db9d
+               0x6b7c19
+               _PyEval_EvalFrameDefault
+               0x58cce3
+               0x576c5e
+               PyObject_CallMethodObjArgs
+               0x6a7952
+               PyImport_ImportModuleLevelObject
+               _PyEval_EvalFrameDefault
+               PyEval_EvalCode
+               0x5e319a
+               _PyEval_EvalFrameDefault
+               0x58cce3
+               0x576c5e
+               PyObject_CallMethodObjArgs
+               0x6a7952
+               PyImport_ImportModuleLevelObject
+               _PyEval_EvalFrameDefault
+               PyEval_EvalCode
+               0x6cab00
+               0x6c76c0
+               0x6c6d6a
+               0x6c6838
+               Py_RunMain
+               Py_BytesMain
+               0x7b8e98e2a600
+               __libc_start_main
+               _start
+
+     0.14%             1  zero-rc   276391:zero-rc  zero-rc               [.] my.sexpr_parser::parse_node               -      -            
+     0.14%             1  zero-rc   276391:zero-rc  zero-rc               [.] my.kicad_sch_verify::coord                -      -            
+     0.14%             1  zero-rc   276392:zero-rc  libc.so.6             [.] 0x0000000000197a4d                        -      -            
+            |
+            ---0x7518a7397a4d
+
+     0.13%             1  zero-rc   276382:zero-rc  zero-rc               [.] my.kicad_sch_verify::grid_scan            -      -            
+     0.13%             1  zero-rc   276405:zero-rc  zero-rc               [.] my.kicad_sch_verify::grid_scan            -      -            
+     0.12%             1  zero-rc   276389:zero-rc  zero-rc               [.] my.kicad_sch_verify::on_grid              -      -            
+     0.12%             1  zero-rc   276409:zero-rc  zero-rc               [.] my.kicad_sch_verify::grid_scan            -      -            
+     0.12%             1  zero-rc   276394:zero-rc  libc.so.6             [.] 0x00000000000b2f90                        -      -            
+            |
+            ---0x71d794eb2f90
+               0x71d794eb4470
+               0x71d794eb5249
+
+     0.12%             1  zero-rc   276379:zero-rc  zero-rc               [.] my.kicad_sch_verify::grid_scan            -      -            
+     0.12%             1  zero-rc   276409:zero-rc  zero-rc               [.] myl_core_str_eq                           -      -            
+     0.12%             1  zero-rc   276405:zero-rc  zero-rc               [.] myl_core_str_eq                           -      -            
+     0.12%             1  zero-rc   276394:zero-rc  zero-rc               [.] my.kicad_sch_verify::grid_scan            -      -            
+     0.12%             1  zero-rc   276391:zero-rc  zero-rc               [.] my.kicad_sch_verify::grid_scan            -      -            
+     0.11%             1  zero-rc   276409:zero-rc  zero-rc               [.] my.kicad_sch_verify::on_grid              -      -            
+     0.10%             1  python3   276377:python3  libc.so.6             [.] 0x00000000000b2842                        -      -            
+            |
+            ---0x7b8e98eb2842
+               0x7b8e98eb3dbe
+               PyBytes_FromStringAndSize
+               0x60280b
+               0x6b4212
+               0x601f3e
+               _PyEval_EvalFrameDefault
+               0x58cce3
+               0x576c5e
+               PyObject_CallMethodObjArgs
+               0x6a7952
+               PyImport_ImportModuleLevelObject
+               _PyEval_EvalFrameDefault
+               PyEval_EvalCode
+               0x5e319a
+               _PyEval_EvalFrameDefault
+               0x58cce3
+               0x576c5e
+               PyObject_CallMethodObjArgs
+               0x6a7952
+               PyImport_ImportModuleLevelObject
+               _PyEval_EvalFrameDefault
+               PyEval_EvalCode
+               0x5e319a
+               _PyEval_EvalFrameDefault
+               0x58cce3
+               0x576c5e
+               PyObject_CallMethodObjArgs
+               0x6a7952
+               PyImport_ImportModuleLevelObject
+               _PyEval_EvalFrameDefault
+               PyEval_EvalCode
+               0x5e319a
+               _PyEval_EvalFrameDefault
+               0x58cce3
+               0x576c5e
+               PyObject_CallMethodObjArgs
+               0x6a7952
+               PyImport_ImportModuleLevelObject
+               _PyEval_EvalFrameDefault
+               PyEval_EvalCode
+               0x5e319a
+               _PyEval_EvalFrameDefault
+               0x58cce3
+               0x576c5e
+               PyObject_CallMethodObjArgs
+               0x6a7952
+               PyImport_ImportModuleLevelObject
+               _PyEval_EvalFrameDefault
+               PyEval_EvalCode
+               0x5e319a
+               _PyEval_EvalFrameDefault
+               0x58cce3
+               0x576c5e
+               PyObject_CallMethodObjArgs
+               0x6a7952
+               PyImport_ImportModuleLevelObject
+               _PyEval_EvalFrameDefault
+
+     0.08%             1  python3   276377:python3  libcrypto.so.3        [.] 0x00000000001291bd                        -      -            
+            |
+            ---0x7b8e983291bd
+               BIO_vsnprintf
+               BIO_snprintf
+               OBJ_obj2txt
+               0x7b8e9845dea4
+               OPENSSL_LH_doall_arg_thunk
+               OBJ_NAME_do_all
+               0x7b8e9845d497
+               0x7b8e9842d472
+               0x7b8e9842e031
+               EVP_MD_do_all_provided
+               0x7b8e988b40cd
+               PyModule_ExecDef
+               0x6a0903
+               _PyEval_EvalFrameDefault
+               0x58cce3
+               0x576c5e
+               PyObject_CallMethodObjArgs
+               0x6a7952
+               PyImport_ImportModuleLevelObject
+               _PyEval_EvalFrameDefault
+               PyEval_EvalCode
+               0x5e319a
+               _PyEval_EvalFrameDefault
+               0x58cce3
+               0x576c5e
+               PyObject_CallMethodObjArgs
+               0x6a7952
+               PyImport_ImportModuleLevelObject
+               _PyEval_EvalFrameDefault
+               PyEval_EvalCode
+               0x6cab00
+               0x6c76c0
+               0x6c6d6a
+               0x6c6838
+               Py_RunMain
+               Py_BytesMain
+               0x7b8e98e2a600
+               __libc_start_main
+               _start
+
+     0.07%             1  python3   276377:python3  python3.14            [.] 0x00000000001173d2                        -      -            
+            |
+            ---0x5173d2
+               0x54b623
+               0x5675e8
+               0x566abc
+               0x565401
+               0x548740
+               0x547fd5
+               0x53fd22
+               0x5813dc
+               0x54191d
+               0x53fcf7
+               0x5813dc
+               0x692728
+               0x5414fd
+               0x53fcf7
+               0x68ec4c
+               0x68e784
+               0x6c77cd
+               0x6c7689
+               0x6c6d6a
+               0x6c6838
+               Py_RunMain
+               Py_BytesMain
+               0x7b8e98e2a600
+               __libc_start_main
+               _start
+
+     0.06%             1  python3   276377:python3  python3.14            [.] PyObject_Vectorcall                       -      -            
+            |
+            ---PyObject_Vectorcall
+               _PyEval_EvalFrameDefault
+               PyEval_EvalCode
+               0x5e319a
+               _PyEval_EvalFrameDefault
+               0x58cce3
+               0x576c5e
+               PyObject_CallMethodObjArgs
+               0x6a7952
+               PyImport_ImportModuleLevelObject
+               PyObject_CallFunction
+               PyImport_Import
+               PyImport_ImportModule
+               0x4507e5
+               Py_InitializeFromConfig
+               0x673b91
+               0x673893
+               Py_BytesMain
+               0x7b8e98e2a600
+               __libc_start_main
+               _start
+
+     0.05%             1  python3   276377:python3  python3.14            [.] PyFunction_NewWithQualName                -      -            
+            |
+            ---PyFunction_NewWithQualName
+               _PyEval_EvalFrameDefault
+               PyEval_EvalCode
+               0x5e319a
+               _PyEval_EvalFrameDefault
+               0x58cce3
+               0x576c5e
+               PyObject_CallMethodObjArgs
+               0x6a7952
+               PyImport_ImportModuleLevelObject
+               _PyEval_EvalFrameDefault
+               PyEval_EvalCode
+               0x5e319a
+               _PyEval_EvalFrameDefault
+               0x58cce3
+               0x576c5e
+               PyObject_CallMethodObjArgs
+               0x6a7952
+               PyImport_ImportModuleLevelObject
+               _PyEval_EvalFrameDefault
+               PyEval_EvalCode
+               0x5e319a
+               _PyEval_EvalFrameDefault
+               0x58cce3
+               0x576c5e
+               PyObject_CallMethodObjArgs
+               0x6a7952
+               PyImport_ImportModuleLevelObject
+               PyObject_CallFunction
+               PyImport_Import
+               PyImport_ImportModule
+               0x4507e5
+               Py_InitializeFromConfig
+               0x673b91
+               0x673893
+               Py_BytesMain
+               0x7b8e98e2a600
+               __libc_start_main
+               _start
+
+     0.04%             1  python3   276377:python3  python3.14            [.] 0x000000000020919a                        -      -            
+            |
+            ---0x60919a
+               0x60a7d5
+
+     0.03%             1  python3   276377:python3  python3.14            [.] 0x000000000010a825                        -      -            
+            |
+            ---0x50a825
+               PyModule_AddObjectRef
+               0x6ac7f5
+               PyModule_ExecDef
+               0x6a0903
+               _PyEval_EvalFrameDefault
+               0x58cce3
+               0x576c5e
+               PyObject_CallMethodObjArgs
+               0x6a7952
+               PyImport_ImportModuleLevelObject
+               _PyEval_EvalFrameDefault
+               PyEval_EvalCode
+               0x5e319a
+               PyObject_Vectorcall
+               _PyEval_EvalFrameDefault
+               0x58cce3
+               0x576c5e
+               PyObject_CallMethodObjArgs
+               0x6a7952
+               PyImport_ImportModuleLevelObject
+               _PyEval_EvalFrameDefault
+               0x58cce3
+               0x52a7bc
+               PyObject_CallMethod
+               0x6a1481
+               Py_InitializeFromConfig
+               0x673b91
+               0x673893
+               Py_BytesMain
+               0x7b8e98e2a600
+               __libc_start_main
+               _start
+
+     0.03%             1  python3   276377:python3  python3.14            [.] 0x0000000000119f29                        -      -            
+            |
+            ---0x519f29
+               0x50ff81
+               0x6862b1
+               0x689182
+               0x522971
+               0x509dc2
+               0x678afa
+               Py_InitializeFromConfig
+               0x673b91
+               0x673893
+               Py_BytesMain
+               0x7b8e98e2a600
+               __libc_start_main
+               _start
+
+     0.03%             1  python3   276377:python3  python3.14            [.] 0x00000000002859a4                        -      -            
+            |
+            ---0x6859a4
+               _Py_hashtable_set
+               0x509aaa
+               0x678afa
+               Py_InitializeFromConfig
+               0x673b91
+               0x673893
+               Py_BytesMain
+               0x7b8e98e2a600
+               __libc_start_main
+               _start
+
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

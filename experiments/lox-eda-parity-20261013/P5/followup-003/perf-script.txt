@@ -1,0 +1,1902 @@
+python3  276377/276377  cpu_core/cycles/u: 
+	          6859a4 [unknown] (/usr/bin/python3.14)
+	          50b0a3 _Py_hashtable_set (/usr/bin/python3.14)
+	          509aaa [unknown] (/usr/bin/python3.14)
+	          678afa [unknown] (/usr/bin/python3.14)
+	          677f67 Py_InitializeFromConfig (/usr/bin/python3.14)
+	          673b91 [unknown] (/usr/bin/python3.14)
+	          673893 [unknown] (/usr/bin/python3.14)
+	          673873 Py_BytesMain (/usr/bin/python3.14)
+	    7b8e98e2a600 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7b8e98e2a717 __libc_start_main (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	          672c44 _start (/usr/bin/python3.14)
+
+python3  276377/276377  cpu_core/cycles/u: 
+	          519f29 [unknown] (/usr/bin/python3.14)
+	          50ff81 [unknown] (/usr/bin/python3.14)
+	          6862b1 [unknown] (/usr/bin/python3.14)
+	          689182 [unknown] (/usr/bin/python3.14)
+	          522971 [unknown] (/usr/bin/python3.14)
+	          509dc2 [unknown] (/usr/bin/python3.14)
+	          678afa [unknown] (/usr/bin/python3.14)
+	          677f67 Py_InitializeFromConfig (/usr/bin/python3.14)
+	          673b91 [unknown] (/usr/bin/python3.14)
+	          673893 [unknown] (/usr/bin/python3.14)
+	          673873 Py_BytesMain (/usr/bin/python3.14)
+	    7b8e98e2a600 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7b8e98e2a717 __libc_start_main (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	          672c44 _start (/usr/bin/python3.14)
+
+python3  276377/276377  cpu_core/cycles/u: 
+	          50a825 [unknown] (/usr/bin/python3.14)
+	          58a6d1 PyModule_AddObjectRef (/usr/bin/python3.14)
+	          6ac7f5 [unknown] (/usr/bin/python3.14)
+	          58a536 PyModule_ExecDef (/usr/bin/python3.14)
+	          6a0903 [unknown] (/usr/bin/python3.14)
+	          5515bb _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          5e319a [unknown] (/usr/bin/python3.14)
+	          535882 PyObject_Vectorcall (/usr/bin/python3.14)
+	          55048e _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          52a7bc [unknown] (/usr/bin/python3.14)
+	          58ad96 PyObject_CallMethod (/usr/bin/python3.14)
+	          6a1481 [unknown] (/usr/bin/python3.14)
+	          677faf Py_InitializeFromConfig (/usr/bin/python3.14)
+	          673b91 [unknown] (/usr/bin/python3.14)
+	          673893 [unknown] (/usr/bin/python3.14)
+	          673873 Py_BytesMain (/usr/bin/python3.14)
+	    7b8e98e2a600 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7b8e98e2a717 __libc_start_main (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	          672c44 _start (/usr/bin/python3.14)
+
+python3  276377/276377  cpu_core/cycles/u: 
+	          60919a [unknown] (/usr/bin/python3.14)
+	          60a7d5 [unknown] (/usr/bin/python3.14)
+
+python3  276377/276377  cpu_core/cycles/u: 
+	          5647f9 PyFunction_NewWithQualName (/usr/bin/python3.14)
+	          54fd80 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          5e319a [unknown] (/usr/bin/python3.14)
+	          54fff1 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          5e319a [unknown] (/usr/bin/python3.14)
+	          54fff1 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          5e319a [unknown] (/usr/bin/python3.14)
+	          54fff1 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          52a1dd PyObject_CallFunction (/usr/bin/python3.14)
+	          5ee2f1 PyImport_Import (/usr/bin/python3.14)
+	          6b07af PyImport_ImportModule (/usr/bin/python3.14)
+	          4507e5 [unknown] (/usr/bin/python3.14)
+	          677faf Py_InitializeFromConfig (/usr/bin/python3.14)
+	          673b91 [unknown] (/usr/bin/python3.14)
+	          673893 [unknown] (/usr/bin/python3.14)
+	          673873 Py_BytesMain (/usr/bin/python3.14)
+	    7b8e98e2a600 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7b8e98e2a717 __libc_start_main (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	          672c44 _start (/usr/bin/python3.14)
+
+python3  276377/276377  cpu_core/cycles/u: 
+	          53586f PyObject_Vectorcall (/usr/bin/python3.14)
+	          55048e _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          5e319a [unknown] (/usr/bin/python3.14)
+	          54fff1 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          52a1dd PyObject_CallFunction (/usr/bin/python3.14)
+	          5ee2f1 PyImport_Import (/usr/bin/python3.14)
+	          6b07af PyImport_ImportModule (/usr/bin/python3.14)
+	          4507e5 [unknown] (/usr/bin/python3.14)
+	          677faf Py_InitializeFromConfig (/usr/bin/python3.14)
+	          673b91 [unknown] (/usr/bin/python3.14)
+	          673893 [unknown] (/usr/bin/python3.14)
+	          673873 Py_BytesMain (/usr/bin/python3.14)
+	    7b8e98e2a600 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7b8e98e2a717 __libc_start_main (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	          672c44 _start (/usr/bin/python3.14)
+
+python3  276377/276377  cpu_core/cycles/u: 
+	          5173d2 [unknown] (/usr/bin/python3.14)
+	          54b623 [unknown] (/usr/bin/python3.14)
+	          5675e8 [unknown] (/usr/bin/python3.14)
+	          566abc [unknown] (/usr/bin/python3.14)
+	          565401 [unknown] (/usr/bin/python3.14)
+	          548740 [unknown] (/usr/bin/python3.14)
+	          547fd5 [unknown] (/usr/bin/python3.14)
+	          53fd22 [unknown] (/usr/bin/python3.14)
+	          5813dc [unknown] (/usr/bin/python3.14)
+	          54191d [unknown] (/usr/bin/python3.14)
+	          53fcf7 [unknown] (/usr/bin/python3.14)
+	          5813dc [unknown] (/usr/bin/python3.14)
+	          692728 [unknown] (/usr/bin/python3.14)
+	          5414fd [unknown] (/usr/bin/python3.14)
+	          53fcf7 [unknown] (/usr/bin/python3.14)
+	          68ec4c [unknown] (/usr/bin/python3.14)
+	          68e784 [unknown] (/usr/bin/python3.14)
+	          6c77cd [unknown] (/usr/bin/python3.14)
+	          6c7689 [unknown] (/usr/bin/python3.14)
+	          6c6d6a [unknown] (/usr/bin/python3.14)
+	          6c6838 [unknown] (/usr/bin/python3.14)
+	          6c44e8 Py_RunMain (/usr/bin/python3.14)
+	          673873 Py_BytesMain (/usr/bin/python3.14)
+	    7b8e98e2a600 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7b8e98e2a717 __libc_start_main (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	          672c44 _start (/usr/bin/python3.14)
+
+python3  276377/276377  cpu_core/cycles/u: 
+	    7b8e983291bd [unknown] (/usr/lib/x86_64-linux-gnu/libcrypto.so.3)
+	    7b8e98329f8e BIO_vsnprintf (/usr/lib/x86_64-linux-gnu/libcrypto.so.3)
+	    7b8e9832a072 BIO_snprintf (/usr/lib/x86_64-linux-gnu/libcrypto.so.3)
+	    7b8e9853b4da OBJ_obj2txt (/usr/lib/x86_64-linux-gnu/libcrypto.so.3)
+	    7b8e9845dea4 [unknown] (/usr/lib/x86_64-linux-gnu/libcrypto.so.3)
+	    7b8e9845b4e1 OPENSSL_LH_doall_arg_thunk (/usr/lib/x86_64-linux-gnu/libcrypto.so.3)
+	    7b8e98539a93 OBJ_NAME_do_all (/usr/lib/x86_64-linux-gnu/libcrypto.so.3)
+	    7b8e9845d497 [unknown] (/usr/lib/x86_64-linux-gnu/libcrypto.so.3)
+	    7b8e9842d472 [unknown] (/usr/lib/x86_64-linux-gnu/libcrypto.so.3)
+	    7b8e9842e031 [unknown] (/usr/lib/x86_64-linux-gnu/libcrypto.so.3)
+	    7b8e984163d1 EVP_MD_do_all_provided (/usr/lib/x86_64-linux-gnu/libcrypto.so.3)
+	    7b8e988b40cd [unknown] (/usr/lib/python3.14/lib-dynload/_hashlib.cpython-314-x86_64-linux-gnu.so)
+	          58a536 PyModule_ExecDef (/usr/bin/python3.14)
+	          6a0903 [unknown] (/usr/bin/python3.14)
+	          5515bb _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          5e319a [unknown] (/usr/bin/python3.14)
+	          5515bb _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          6cab00 [unknown] (/usr/bin/python3.14)
+	          6c76c0 [unknown] (/usr/bin/python3.14)
+	          6c6d6a [unknown] (/usr/bin/python3.14)
+	          6c6838 [unknown] (/usr/bin/python3.14)
+	          6c44e8 Py_RunMain (/usr/bin/python3.14)
+	          673873 Py_BytesMain (/usr/bin/python3.14)
+	    7b8e98e2a600 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7b8e98e2a717 __libc_start_main (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	          672c44 _start (/usr/bin/python3.14)
+
+python3  276377/276377  cpu_core/cycles/u: 
+	          54ecc9 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          5515bb _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          5ca4c6 PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          5e319a [unknown] (/usr/bin/python3.14)
+	          5515bb _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          5515bb _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          5ca4c6 PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          5e319a [unknown] (/usr/bin/python3.14)
+	          5515bb _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          5e319a [unknown] (/usr/bin/python3.14)
+	          5515bb _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          5e319a [unknown] (/usr/bin/python3.14)
+	          5515bb _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+
+python3  276377/276377  cpu_core/cycles/u: 
+	    7b8e98eb2842 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7b8e98eb3dbe [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	          50c7f6 PyBytes_FromStringAndSize (/usr/bin/python3.14)
+	          60280b [unknown] (/usr/bin/python3.14)
+	          6b4212 [unknown] (/usr/bin/python3.14)
+	          601f3e [unknown] (/usr/bin/python3.14)
+	          54de25 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          5e319a [unknown] (/usr/bin/python3.14)
+	          5515bb _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          5e319a [unknown] (/usr/bin/python3.14)
+	          5515bb _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          5e319a [unknown] (/usr/bin/python3.14)
+	          5515bb _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          5e319a [unknown] (/usr/bin/python3.14)
+	          5515bb _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          5e319a [unknown] (/usr/bin/python3.14)
+	          5515bb _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+
+python3  276377/276377  cpu_core/cycles/u: 
+	          55021b _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          5515bb _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          5ca4c6 PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          5e319a [unknown] (/usr/bin/python3.14)
+	          5515bb _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          5e319a [unknown] (/usr/bin/python3.14)
+	          5515bb _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          6cab00 [unknown] (/usr/bin/python3.14)
+	          6c76c0 [unknown] (/usr/bin/python3.14)
+	          6c6d6a [unknown] (/usr/bin/python3.14)
+	          6c6838 [unknown] (/usr/bin/python3.14)
+	          6c44e8 Py_RunMain (/usr/bin/python3.14)
+	          673873 Py_BytesMain (/usr/bin/python3.14)
+	    7b8e98e2a600 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7b8e98e2a717 __libc_start_main (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	          672c44 _start (/usr/bin/python3.14)
+
+python3  276377/276377  cpu_core/cycles/u: 
+	    7b8e98eb2f39 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7b8e98eb3dbe [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	          53f206 [unknown] (/usr/bin/python3.14)
+	          53aefa [unknown] (/usr/bin/python3.14)
+	          53ab97 [unknown] (/usr/bin/python3.14)
+	          53ad51 [unknown] (/usr/bin/python3.14)
+	          68db9d [unknown] (/usr/bin/python3.14)
+	          6b7c19 [unknown] (/usr/bin/python3.14)
+	          54fff1 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          5e319a [unknown] (/usr/bin/python3.14)
+	          5515bb _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          6cab00 [unknown] (/usr/bin/python3.14)
+	          6c76c0 [unknown] (/usr/bin/python3.14)
+	          6c6d6a [unknown] (/usr/bin/python3.14)
+	          6c6838 [unknown] (/usr/bin/python3.14)
+	          6c44e8 Py_RunMain (/usr/bin/python3.14)
+	          673873 Py_BytesMain (/usr/bin/python3.14)
+	    7b8e98e2a600 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7b8e98e2a717 __libc_start_main (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	          672c44 _start (/usr/bin/python3.14)
+
+python3  276377/276377  cpu_core/cycles/u: 
+	          54d3ea _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          5e319a [unknown] (/usr/bin/python3.14)
+	          5515bb _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          5e319a [unknown] (/usr/bin/python3.14)
+	          5515bb _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          6cab00 [unknown] (/usr/bin/python3.14)
+	          6c76c0 [unknown] (/usr/bin/python3.14)
+	          6c6d6a [unknown] (/usr/bin/python3.14)
+	          6c6838 [unknown] (/usr/bin/python3.14)
+	          6c44e8 Py_RunMain (/usr/bin/python3.14)
+	          673873 Py_BytesMain (/usr/bin/python3.14)
+	    7b8e98e2a600 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7b8e98e2a717 __libc_start_main (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	          672c44 _start (/usr/bin/python3.14)
+
+python3  276377/276377  cpu_core/cycles/u: 
+	    7b8e98f97a00 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	          53d4aa [unknown] (/usr/bin/python3.14)
+	          53a9c3 [unknown] (/usr/bin/python3.14)
+	          53ab31 [unknown] (/usr/bin/python3.14)
+	          53ad81 [unknown] (/usr/bin/python3.14)
+	          53ab97 [unknown] (/usr/bin/python3.14)
+	          53ad51 [unknown] (/usr/bin/python3.14)
+	          68db9d [unknown] (/usr/bin/python3.14)
+	          6b7c19 [unknown] (/usr/bin/python3.14)
+	          54fff1 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          5e319a [unknown] (/usr/bin/python3.14)
+	          5515bb _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          6cab00 [unknown] (/usr/bin/python3.14)
+	          6c76c0 [unknown] (/usr/bin/python3.14)
+	          6c6d6a [unknown] (/usr/bin/python3.14)
+	          6c6838 [unknown] (/usr/bin/python3.14)
+	          6c44e8 Py_RunMain (/usr/bin/python3.14)
+	          673873 Py_BytesMain (/usr/bin/python3.14)
+	    7b8e98e2a600 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7b8e98e2a717 __libc_start_main (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	          672c44 _start (/usr/bin/python3.14)
+
+python3  276377/276377  cpu_core/cycles/u: 
+	          53124d [unknown] (/usr/bin/python3.14)
+	          577318 [unknown] (/usr/bin/python3.14)
+	          5a5882 [unknown] (/usr/bin/python3.14)
+	          5515bb _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          536aae [unknown] (/usr/bin/python3.14)
+	          5d0213 [unknown] (/usr/bin/python3.14)
+	          52f5e0 _PyObject_MakeTpCall (/usr/bin/python3.14)
+	          565c5a [unknown] (/usr/bin/python3.14)
+	          535882 PyObject_Vectorcall (/usr/bin/python3.14)
+	          55048e _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          5e319a [unknown] (/usr/bin/python3.14)
+	          5515bb _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          5e319a [unknown] (/usr/bin/python3.14)
+	          5515bb _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          576c5e [unknown] (/usr/bin/python3.14)
+	          5cb576 PyObject_CallMethodObjArgs (/usr/bin/python3.14)
+	          6a7952 [unknown] (/usr/bin/python3.14)
+	          5c9fed PyImport_ImportModuleLevelObject (/usr/bin/python3.14)
+	          553c55 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          6cab00 [unknown] (/usr/bin/python3.14)
+	          6c76c0 [unknown] (/usr/bin/python3.14)
+	          6c6d6a [unknown] (/usr/bin/python3.14)
+	          6c6838 [unknown] (/usr/bin/python3.14)
+	          6c44e8 Py_RunMain (/usr/bin/python3.14)
+	          673873 Py_BytesMain (/usr/bin/python3.14)
+	    7b8e98e2a600 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7b8e98e2a717 __libc_start_main (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	          672c44 _start (/usr/bin/python3.14)
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+	    7a33936b2f01 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7a33936b3dbe [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+	    7a3393797b71 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+	    7a3393797a4d [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+zero-rc  276379/276379  cpu_core/cycles/u: 
+
+python3  276377/276377  cpu_core/cycles/u: 
+	    7b8e98591514 [unknown] (/usr/lib/x86_64-linux-gnu/libcrypto.so.3)
+	    7b8e98594960 SHA256_Update (/usr/lib/x86_64-linux-gnu/libcrypto.so.3)
+	    7b8e988b548c [unknown] (/usr/lib/python3.14/lib-dynload/_hashlib.cpython-314-x86_64-linux-gnu.so)
+	    7b8e988b5a85 [unknown] (/usr/lib/python3.14/lib-dynload/_hashlib.cpython-314-x86_64-linux-gnu.so)
+	          54fff1 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          6cab00 [unknown] (/usr/bin/python3.14)
+	          6c76c0 [unknown] (/usr/bin/python3.14)
+	          6c6d6a [unknown] (/usr/bin/python3.14)
+	          6c6838 [unknown] (/usr/bin/python3.14)
+	          6c44e8 Py_RunMain (/usr/bin/python3.14)
+	          673873 Py_BytesMain (/usr/bin/python3.14)
+	    7b8e98e2a600 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7b8e98e2a717 __libc_start_main (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	          672c44 _start (/usr/bin/python3.14)
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+	    7630f0b97a6c [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+	ffffffffbae00b90 [unknown] ([unknown])
+	    7630f0b97d07 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7630f0ab435f [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7630f0ab586e realloc (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+	    7630f0b97afa [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+	ffffffffbae00b90 [unknown] ([unknown])
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+	ffffffffbae00b90 [unknown] ([unknown])
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276382/276382  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+	    7c99ac8c1aaa [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    7c99ac8c2989 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    7c99ac8bb9fc [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    7c99ac8ba512 _dl_catch_exception (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    7c99ac8bbe2f [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    7c99ac8de24e [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    7c99ac8dadc5 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    7c99ac8dc4e0 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    7c99ac8db347 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+	ffffffffbae00b90 [unknown] ([unknown])
+	    7c99ac6b2ff4 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7c99ac6b4617 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7c99ac6b5249 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+	ffffffffbae00b90 [unknown] ([unknown])
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+	ffffffffbae00b90 [unknown] ([unknown])
+	    7c99ac797d07 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276383/276383  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+	    738ce85b6de1 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    738ce85b76ed [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    738ce85c29f3 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    738ce85a1418 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    738ce85c53a5 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    738ce85c1dc5 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    738ce85c34e0 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    738ce85c2347 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+	    738ce839848e [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+	ffffffffbae00b90 [unknown] ([unknown])
+	    738ce82a03e6 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+	    738ce82b30f7 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    738ce82b4269 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    738ce82b586e realloc (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+	ffffffffbae00b90 [unknown] ([unknown])
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276384/276384  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+	    7d829f92816f read (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+	    7d829f997a2b [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+	    7d829f997a25 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+zero-rc  276389/276389  cpu_core/cycles/u: 
+
+python3  276377/276377  cpu_core/cycles/u: 
+	          558976 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          6cab00 [unknown] (/usr/bin/python3.14)
+	          6c76c0 [unknown] (/usr/bin/python3.14)
+	          6c6d6a [unknown] (/usr/bin/python3.14)
+	          6c6838 [unknown] (/usr/bin/python3.14)
+	          6c44e8 Py_RunMain (/usr/bin/python3.14)
+	          673873 Py_BytesMain (/usr/bin/python3.14)
+	    7b8e98e2a600 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7b8e98e2a717 __libc_start_main (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	          672c44 _start (/usr/bin/python3.14)
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+	ffffffffbae00b90 [unknown] ([unknown])
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+	    7e545bd97a3f [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+	    7e545bd97a54 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+	ffffffffbae00b90 [unknown] ([unknown])
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+	    7e545bd97a90 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276390/276390  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+	    703967c3c9d0 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    703967c1b418 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    703967c3f3a5 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    703967c3bdc5 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    703967c3d4e0 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    703967c3c347 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+	    703967997a3f [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+	    7039678b2f0e [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7039678b4470 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7039678b5249 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+	ffffffffbae00b90 [unknown] ([unknown])
+	    7039678b2ff4 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7039678b4617 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+	ffffffffbae00b90 [unknown] ([unknown])
+	    70396792ae1b brk (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    703967934437 __sbrk (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7039678b1bc5 __default_morecore (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7039678b38b3 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7039678b4470 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7039678b5249 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+	    7039678b0f9d [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7039678b2262 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7039678b2328 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276391/276391  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+	    7518a75cd948 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    7518a75ac966 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    7518a75ace9e [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    7518a75ad7ab [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    7518a75b2050 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    7518a75b5580 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    7518a75c7518 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    7518a75c3dc5 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    7518a75c54e0 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    7518a75c4347 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+	    7518a72b21f1 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7518a72b2328 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+	    7518a72b4248 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7518a72b586e realloc (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+	    7518a7397a55 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+	    7518a72b5ea4 __libc_calloc (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+	    7518a7397a76 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+	ffffffffbae00b90 [unknown] ([unknown])
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+	ffffffffbae00b90 [unknown] ([unknown])
+	    7518a7397d07 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7518a72b435f [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7518a72b586e realloc (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+	    7518a7397a4d [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276392/276392  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+	ffffffffbae00b90 [unknown] ([unknown])
+	    70edbc2cfed0 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    70edbc5cd2ae [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    70edbc5d0580 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    70edbc5e2518 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    70edbc5dedc5 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    70edbc5e04e0 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    70edbc5df347 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+	    70edbc39848e [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+	ffffffffbae00b90 [unknown] ([unknown])
+	    70edbc2b2ff4 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    70edbc2b3dbe [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+	ffffffffbae00b90 [unknown] ([unknown])
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+	ffffffffbae00b90 [unknown] ([unknown])
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+	    70edbc2b2317 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276393/276393  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+	    71d79518d596 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    71d79516f913 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    71d79516c7f1 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    71d79516d4ff [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    71d7951659fc [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    71d795164512 _dl_catch_exception (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    71d795165e2f [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    71d79518824e [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    71d795184dc5 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    71d7951864e0 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    71d795185347 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+	    71d794eb5382 cfree (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+	    71d794f97a21 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+	    71d794f97a85 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+	    71d794f97a21 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+	    71d794f97388 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+	    71d794eb2f90 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    71d794eb4470 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    71d794eb5249 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276394/276394  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+	    7aa5fb8bc800 strpbrk (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7aa5fbb222ae [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    7aa5fbb25580 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    7aa5fbb37518 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    7aa5fbb33dc5 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    7aa5fbb354e0 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+	    7aa5fbb34347 [unknown] (/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2)
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+	ffffffffbae00b90 [unknown] ([unknown])
+	    7aa5fb8b2ff4 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7aa5fb8b4617 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7aa5fb8b5249 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+	    7aa5fb997a52 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+	    7aa5fb997a6c [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+	    7aa5fb997d07 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+	    7aa5fb997a66 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+	    7aa5fb997a4d [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+	ffffffffbae00b90 [unknown] ([unknown])
+	    7aa5fb8b2ff4 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7aa5fb8b4617 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+zero-rc  276405/276405  cpu_core/cycles/u: 
+
+python3  276377/276377  cpu_core/cycles/u: 
+	          54d1f0 _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          5eddea [unknown] (/usr/bin/python3.14)
+	          59254a PyObject_CallOneArg (/usr/bin/python3.14)
+	          58f1dd PyObject_IsInstance (/usr/bin/python3.14)
+	          54e62a _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          58cce3 [unknown] (/usr/bin/python3.14)
+	          536b4c [unknown] (/usr/bin/python3.14)
+	          595b1e [unknown] (/usr/bin/python3.14)
+	          52f621 _PyObject_MakeTpCall (/usr/bin/python3.14)
+	          5534ba _PyEval_EvalFrameDefault (/usr/bin/python3.14)
+	          547ee5 PyEval_EvalCode (/usr/bin/python3.14)
+	          6cab00 [unknown] (/usr/bin/python3.14)
+	          6c76c0 [unknown] (/usr/bin/python3.14)
+	          6c6d6a [unknown] (/usr/bin/python3.14)
+	          6c6838 [unknown] (/usr/bin/python3.14)
+	          6c44e8 Py_RunMain (/usr/bin/python3.14)
+	          673873 Py_BytesMain (/usr/bin/python3.14)
+	    7b8e98e2a600 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7b8e98e2a717 __libc_start_main (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	          672c44 _start (/usr/bin/python3.14)
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+	    7092a1f97a4d [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+	    7092a1f97a52 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+	    7092a1f9844d [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+	    7092a1f97a90 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+	ffffffffbae00b90 [unknown] ([unknown])
+	    7092a1f97d07 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+	ffffffffbae00b90 [unknown] ([unknown])
+	    7092a1f97d07 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+zero-rc  276409/276409  cpu_core/cycles/u: 
+
+python3  276377/276377  cpu_core/cycles/u: 
+	          562523 [unknown] (/usr/bin/python3.14)
+	          6b003a [unknown] (/usr/bin/python3.14)
+	          6c43af Py_RunMain (/usr/bin/python3.14)
+	          673873 Py_BytesMain (/usr/bin/python3.14)
+	    7b8e98e2a600 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7b8e98e2a717 __libc_start_main (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	          672c44 _start (/usr/bin/python3.14)
+
+python3  276377/276377  cpu_core/cycles/u: 
+	          6256de [unknown] (/usr/bin/python3.14)
+	          624fd8 [unknown] (/usr/bin/python3.14)
+	          56256c [unknown] (/usr/bin/python3.14)
+	          6d5295 [unknown] (/usr/bin/python3.14)
+	          6b004b [unknown] (/usr/bin/python3.14)
+	          6c43af Py_RunMain (/usr/bin/python3.14)
+	          673873 Py_BytesMain (/usr/bin/python3.14)
+	    7b8e98e2a600 [unknown] (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	    7b8e98e2a717 __libc_start_main (/usr/lib/x86_64-linux-gnu/libc.so.6)
+	          672c44 _start (/usr/bin/python3.14)
+

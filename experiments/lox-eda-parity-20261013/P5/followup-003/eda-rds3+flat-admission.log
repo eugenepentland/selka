@@ -1,0 +1,66 @@
+build-slot: FIFO ticket 1304, position 4; earlier timing tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 1304, position 4; earlier timing tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 1304, position 4; earlier timing tickets must run first; waiting (121s so far)
+build-slot: FIFO ticket 1304, position 4; earlier timing tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 1304, position 4; earlier timing tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 1304, position 4; earlier timing tickets must run first; waiting (301s so far)
+build-slot: FIFO ticket 1304, position 4; earlier timing tickets must run first; waiting (361s so far)
+build-slot: FIFO ticket 1304, position 4; earlier timing tickets must run first; waiting (421s so far)
+build-slot: FIFO ticket 1304, position 3; earlier timing tickets must run first; waiting (481s so far)
+build-slot: timing slot 1, FIFO ticket 1304 after 501s
+{
+  "zig-fast": {
+    "seconds": {
+      "median": 0.062581443,
+      "min": 0.060914459,
+      "max": 0.063388023,
+      "samples": [
+        0.062055458,
+        0.062127003,
+        0.063388023,
+        0.063252753,
+        0.063055977,
+        0.062623809,
+        0.062581443,
+        0.061499751,
+        0.060914459
+      ]
+    }
+  },
+  "mylang-c1": {
+    "seconds": {
+      "median": 0.102629502,
+      "min": 0.102252534,
+      "max": 0.113798282,
+      "samples": [
+        0.102629502,
+        0.102515969,
+        0.103812268,
+        0.113798282,
+        0.103935314,
+        0.102252534,
+        0.10254883,
+        0.103184557,
+        0.102345707
+      ]
+    }
+  },
+  "mylang-candidate": {
+    "seconds": {
+      "median": 0.101871723,
+      "min": 0.101276104,
+      "max": 0.111889437,
+      "samples": [
+        0.101631393,
+        0.101871723,
+        0.111889437,
+        0.103514326,
+        0.102654522,
+        0.101566859,
+        0.101393805,
+        0.104199109,
+        0.101276104
+      ]
+    }
+  }
+}
