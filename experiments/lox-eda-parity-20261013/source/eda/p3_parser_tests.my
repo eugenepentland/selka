@@ -1,0 +1,20 @@
+import sexpr_tokenizer as tk
+
+# Exhaust every byte against the public suffix tables. A following delimiter
+# makes scale/unit acceptance observable without exporting private predicates.
+public func test_scalar_suffix_classification_matches_public_tables() -> bool:
+    for c in range(256):
+        mut expected = c == tk.PERCENT_SIGN
+        for scale in tk.si_scales():
+            if scale.bare and scale.letter == c:
+                expected = True
+        if tk.si_unit_letters().find(bytes([c])) >= 0:
+            expected = True
+        mut input = b"1" + bytes([c]) + b" "
+        mut t = tk.tokenizer_init(input)
+        match tk.next(mut t):
+            case Ok(token):
+                assert (token.tag == tk.TokenTag.si_val) == expected
+            case Err(_):
+                assert not expected
+    return True

@@ -136,23 +136,17 @@ func is_operator_char(c: int) -> bool:
 
 
 func is_unit_letter(c: int) -> bool:
-    return c >= 0 and si_unit_letters().find(bytes([c])) >= 0
+    return c == ord("V") or c == ord("A") or c == ord("F") or c == ord("H") or c == ord("R")
 
 
 # Scale letters that stand on their own (`4.7k`).
 func is_scale_letter(c: int) -> bool:
-    for s in si_scales():
-        if s.bare and s.letter == c:
-            return True
-    return False
+    return c == ord("k") or c == ord("M") or c == ord("G") or c == ord("u") or c == ord("n") or c == ord("p")
 
 
 # Scale letters that are only a scale when a unit letter follows (`10mA`).
 func is_unit_required_scale(c: int) -> bool:
-    for s in si_scales():
-        if not s.bare and s.letter == c:
-            return True
-    return False
+    return c == ord("m")
 
 
 func make_token(src: bytes, tag: TokenTag, start: int, end: int, s: ast.Span) -> Token:
