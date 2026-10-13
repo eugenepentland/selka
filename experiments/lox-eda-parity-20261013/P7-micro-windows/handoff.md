@@ -1,0 +1,25 @@
+# Prepared bounded micro windows
+
+No actual benchmark, native build or timing admission was run. Frozen P4 scripts/specs remain unchanged; future final compiler needs fresh specs. Wrapper accepts explicit --spec and --tools (exact text-gaps measure.py), output restricted to this worker.
+
+Reuses pinned measure helpers: execute/validate, runtime_environment, counters, balanced_order, registry.checksum, summarize, cpu_snapshot/stamp. Independent guest-boundary state machine retains the exact seven-arm inventory, adaptive31-start/up-to10pilot calibration, three warmups, fifteen rotated/reversed rounds, three separate RSS rounds and each spec-declared counted arm. Failed/refused arms remain inventoried; counted statuses cannot invalidate or supply timing samples. Kernel/process/RSS/counter metrics and text-gap-cell-v1 summary schema are preserved. No merging across compiler/spec identities.
+
+Controller obtains one shared exclusive build-slot timing lease per window, never nested. CPU8/guestdeadline120 defaults preserved. A window stops launching guests when55seconds have elapsed (including preparation/checkpoint work); a guest already running finishes or reaches its original deadline. No suspension, no truncated measured kernel clock, no fake ratios. Post-guest validation/checkpoint/hash I/O still completes before lease release; actual duration is recorded. A long guest can extend a window by up to its current deadline plus bounded receipt I/O. --window-seconds may lower55; --max-windows permits staged preparation/resume. Queue waiting occurs outside measured guest clocks.
+
+Durable full-state JSONL checkpoints bracket every step with a start marker and completed state. Resume uses the last checkpoint, not a potentially older convenience state.json. A crash during a guest, partial JSONL write or ambiguous active marker refuses resume; preserve that attempt and use a fresh output, never pool/rerun an uncertain measured invocation. Window receipts form an immutable SHA256 chain; counted files are pinned and rechecked on resume. Exact spec/all files/binaries/tools/self/Python/time/dev-env/slot script and all registry lazy oracle dependencies hashed at initial read and pre/post every window. Imports/checksum lazy loads cannot write root bytecode. Inputs changing cause refusal before another window/report publication. Final cell.json has COMPLETE.json hash marker; incomplete/failed arms still report incomplete denominators.
+
+Host snapshots: current C3 specs declare a future P4-owned host-before path. Wrapper safely refuses to create it. Fresh C4 specs should list exactly the desired missing `OUTPUT/cell.host-before.json` in spec.files; wrapper reuses pinned observe_cell.snapshot to create it once inside owned output before identity freezing. Historical existing snapshots remain immutable inputs. No missing arbitrary input is created, and no foreign path is written.
+
+Prepared invocation, after coordinator timing authorization and new specs:
+```
+python3 experiments/lox-eda-parity-20261013/P7-micro-windows/windows.py \
+  --spec /absolute/fresh/spec.json \
+  --tools /absolute/frozen/experiments/text-gaps-20261012/bench/tools/measure.py \
+  --output .tmp/lox-eda-parity/P7-micro-windows/campaign-001/cell-name \
+  --cpu 8 --timeout 120 --window-seconds 55
+```
+Run controller outside any lease; it sources dev-env and uses this worker scripts/build-slot.sh timing. Subsequent invocation resumes completed guest boundaries. Final receipt path OUTPUT/cell.json is compatible in shape with text-gap report methodology; existing frozen schedule/report scripts are not altered. Reports may require a separate new campaign manifest/results inventory, not historical P4root writes.
+
+Synthetic guards exercise seven tiny Python commands only: exact3×7warmups/15×7samples/3×7RSS, three separate counted observations, arm-order/round preservation over multiple windows, receipt-chain/hash integrity, failed-output status and counted independence, changed inputs/interrupted guest refusal, outer-admission requirement, missing foreign snapshot refusal, kernel calibration budget/reason boundary. No shared benchmark timing request or real micro guest execution was submitted. Synthetic tests spoof only the internal admission marker to unit-test worker logic; production controller always acquires the real shared lease and rejects nested admissions.
+
+Seven final synthetic guards passed in13.466s. Earlier ultra-short70ms synthetic windows exposed an inefficient full-journal reread and exhausted the test window-count cap; those logs are retained. Resume now reads only the final checkpoint record, and final tests use150ms windows. Production launch-budget cap remains55seconds. preparation-receipt.json pins exact historical six specs/manifests/helpers; historical-input-snapshots.json.gz preserves manifest bytes. No final compiler/results claim is made.
