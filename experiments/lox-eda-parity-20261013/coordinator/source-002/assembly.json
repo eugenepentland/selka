@@ -33,12 +33,21 @@
       "proposed_commit": "e340f9d5e95946793b5d1afaf6e813c9cb3a606f",
       "patch": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/P1/call-env-001/getters-only-heap.my.patch",
       "patch_sha256": "2270fbae55218a21ab9daac680df1f3fe970f04176a618a7eb1170a4fd7872dc"
+    },
+    {
+      "name": "P1 discarded resolved local expressions",
+      "proposed_commit": "e4747427c",
+      "patch": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/P1/discard-local-001/interpreter.my.patch",
+      "patch_sha256": "d163459e461a3ceea2e87a2ee7869a3005ea450772dff5c59c32a909fdd7aa7f",
+      "diagnostic_evidence_commit": "d756bce5ab883e32c5ac921657034cd3db3367ba",
+      "decision": "consistent14.77% isolated string-equality improvement; control changes below1%; combined qualification pending"
     }
   ],
   "new_tests": {
     "lox/p2_scalar_reader_test.my": "9608acda0a354e3206b7e1070e7378679806c62dd727fd81d0317e8eb2c0f6f9",
     "eda/p5_followup_001_textbox_tests.my": "970d99c8d1cff649f130cfb90cd63b4fb3b110d2f616765cb6b3759a218efda3",
-    "lox/p1_call_env_test.my": "8a8647d809412a694917f28fff49cebc31f14761c7ef4ec17a6a1f77ea6e5dac"
+    "lox/p1_call_env_test.my": "8a8647d809412a694917f28fff49cebc31f14761c7ef4ec17a6a1f77ea6e5dac",
+    "lox/p1_discard_local_test.my": "fe1555b353c0ded7869063681418a128ad2133cfefeea4a3acfb29b956f2e90a"
   },
   "runtime_selection": {
     "adopt": "ee0509f45bedeb0dffe942f5ada5d354d78acdde",

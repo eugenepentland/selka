@@ -503,6 +503,17 @@ func execute(program: ast.Program, mut rt: heap.Runtime, mut o: output.Output, m
         case ast.Stmt.class_decl(value=node):
             try class_declaration(program, mut rt, mut o, mut it, node, clock)
         case ast.Stmt.expression(value=expr):
+            # A resolved local read cannot allocate or invoke user code. Check
+            # the same environment/slot and transient stack bound, then discard
+            # its scalar value without publishing an otherwise unused result.
+            match program.exprs[expr]:
+                case ast.Expr.variable(value=node):
+                    if node.hops != ast.GLOBAL:
+                        _ = heap.env_slot(rt, env_at(rt, node.hops), node.slot)
+                        _ = rt.stack[rt.stack_top]
+                        return Ok(Flow.NORMAL)
+                case _:
+                    pass
             try evaluate(program, mut rt, mut o, mut it, expr, clock)
             _ = heap.pop(mut rt)
         case ast.Stmt.function(value=index):
