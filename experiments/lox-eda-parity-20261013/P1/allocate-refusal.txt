@@ -1,0 +1,6 @@
+Observed compiler diagnostic, SHA256 2dcba1cb1a98846bb8c1319575da1b3564e60af70162e195c2fbb6ec3af0f329:
+experiments/lox-eda-parity-20261013/P1/allocate-probe.my:9:20: error[E_SINGLE_OWNER_BORROW]: a borrowed value cannot be stored or returned; make an explicit .copy()
+      objects.append(obj)
+                     ^
+
+This record transcribes tool output; it is not a rerun.

@@ -90,18 +90,45 @@ public func peek(rt: Runtime, distance: int) -> value.Value:
 # Charges the object's cost, collects if stress mode or the threshold says
 # so, then stores it in a free slot (most recently freed first) or a new one.
 # Whatever the caller still needs must already be rooted.
-public func allocate(mut rt: Runtime, obj: object.Obj) -> value.ObjRef:
-    rt.bytes_allocated = rt.bytes_allocated + object.cost(obj)
+func reserve_object(mut rt: Runtime, cost: int) -> value.ObjRef:
+    rt.bytes_allocated = rt.bytes_allocated + cost
     if rt.gc_stress or rt.bytes_allocated > rt.next_gc:
         collect(mut rt)
     mut slot = len(rt.objects)
     if len(rt.free_slots) > 0:
         slot = rt.free_slots.pop()
-        rt.objects[slot] = obj.copy()
     else:
-        rt.objects.append(obj.copy())
+        rt.objects.append(object.Obj.free)
         rt.marker.marks.append(False)
     rt.allocations = rt.allocations + 1
+    return slot
+
+
+public func allocate(mut rt: Runtime, obj: object.Obj) -> value.ObjRef:
+    const cost = object.cost(obj)
+    const slot = reserve_object(mut rt, cost)
+    rt.objects[slot] = obj.copy()
+    return slot
+
+
+# Fresh scalar-input constructors publish their owned payload directly. The
+# collection runs before construction; callers root every referenced handle.
+# Existing allocate and snapshot accessors retain independent-copy contracts.
+public func allocate_instance(mut rt: Runtime, klass: value.ObjRef) -> value.ObjRef:
+    const slot = reserve_object(mut rt, 48)
+    rt.objects[slot] = object.Obj.instance(value=object.InstanceObj(klass=klass, fields=table.new_table()))
+    return slot
+
+
+public func allocate_class(mut rt: Runtime, name: value.ObjRef) -> value.ObjRef:
+    const slot = reserve_object(mut rt, 48)
+    rt.objects[slot] = object.Obj.klass(value=object.ClassObj(name=name, methods=table.new_table()))
+    return slot
+
+
+public func allocate_env(mut rt: Runtime, enclosing: value.ObjRef, slot_count: int) -> value.ObjRef:
+    const slot = reserve_object(mut rt, 32 + 16 * max(slot_count, 0))
+    rt.objects[slot] = object.Obj.env(value=object.new_env(enclosing, slot_count))
     return slot
 
 
@@ -154,19 +181,43 @@ public func class_obj(rt: Runtime, ref: value.ObjRef) -> object.ClassObj:
 # ObjRef, rather than a shared class payload, carries object identity. Every
 # changed payload is written back into its object-table slot.
 public func set_class_methods(mut rt: Runtime, ref: value.ObjRef, methods: table.Table):
-    mut klass = class_obj(rt, ref)
-    klass.methods = methods.copy()
-    rt.objects[ref] = object.Obj.klass(value=klass)
+    const name = class_name(rt, ref)
+    rt.objects[ref] = object.Obj.klass(value=object.ClassObj(name=name, methods=methods.copy()))
 
 
 public func set_instance_fields(mut rt: Runtime, ref: value.ObjRef, fields: table.Table):
-    match rt.objects[ref].copy():
-        case object.Obj.instance(value=instance):
-            mut updated = instance.copy()
-            updated.fields = fields.copy()
-            rt.objects[ref] = object.Obj.instance(value=updated)
+    const klass = instance_class(rt, ref)
+    rt.objects[ref] = object.Obj.instance(value=object.InstanceObj(klass=klass, fields=fields.copy()))
+
+
+# Scoped writes publish once through the stable handle. Until enum payloads
+# support bounded owned extraction, each helper takes one independent snapshot.
+func instance_snapshot(rt: Runtime, ref: value.ObjRef) -> object.InstanceObj:
+    match rt.objects[ref]:
+        case object.Obj.instance(value=payload):
+            return payload.copy()
         case _:
             assert False, "object is not an instance"
+            return object.InstanceObj(klass=value.NO_OBJ, fields=table.new_table())
+
+
+public func set_instance_field(mut rt: Runtime, ref: value.ObjRef, key: value.ObjRef, hash: u32, item: value.Value):
+    mut updated = instance_snapshot(rt, ref)
+    _ = table.set(mut updated.fields, key, hash, item)
+    rt.objects[ref] = object.Obj.instance(value=updated)
+
+
+public func set_class_method(mut rt: Runtime, ref: value.ObjRef, key: value.ObjRef, hash: u32, item: value.Value):
+    mut updated = class_obj(rt, ref)
+    _ = table.set(mut updated.methods, key, hash, item)
+    rt.objects[ref] = object.Obj.klass(value=updated)
+
+
+public func inherit_class_methods(mut rt: Runtime, ref: value.ObjRef, parent: value.ObjRef):
+    mut inherited = class_obj(rt, parent)
+    mut updated = class_obj(rt, ref)
+    table.add_all(inherited.methods, mut updated.methods)
+    rt.objects[ref] = object.Obj.klass(value=updated)
 
 
 public func env_obj(rt: Runtime, ref: value.ObjRef) -> object.EnvObj:
@@ -249,8 +300,9 @@ public func function_instruction(rt: Runtime, ref: value.ObjRef, index: int) -> 
         case object.Obj.function(value=payload):
             return payload.code.code[index]
         case _:
-            assert False, "object is not a function"
-            return 0
+            pass
+    assert False, "object is not a function"
+    return 0
 
 
 public func function_line(rt: Runtime, ref: value.ObjRef, index: int) -> int:
@@ -258,8 +310,9 @@ public func function_line(rt: Runtime, ref: value.ObjRef, index: int) -> int:
         case object.Obj.function(value=payload):
             return payload.code.lines[index]
         case _:
-            assert False, "object is not a function"
-            return 0
+            pass
+    assert False, "object is not a function"
+    return 0
 
 
 public func function_constant(rt: Runtime, ref: value.ObjRef, index: int) -> value.Value:
@@ -267,8 +320,9 @@ public func function_constant(rt: Runtime, ref: value.ObjRef, index: int) -> val
         case object.Obj.function(value=payload):
             return payload.code.constants[index]
         case _:
-            assert False, "object is not a function"
-            return value.Value.nil
+            pass
+    assert False, "object is not a function"
+    return value.Value.nil
 
 
 public func closure_function(rt: Runtime, ref: value.ObjRef) -> value.ObjRef:

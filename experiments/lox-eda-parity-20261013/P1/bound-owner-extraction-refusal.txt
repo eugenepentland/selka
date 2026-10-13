@@ -1,0 +1,6 @@
+Observed compiler diagnostic, SHA256 2dcba1cb1a98846bb8c1319575da1b3564e60af70162e195c2fbb6ec3af0f329:
+experiments/lox-eda-parity-20261013/P1/extraction-probe.my:12:27: error[E_SINGLE_OWNER_OVERLAP]: a value cannot be moved or mutated while another argument or iteration borrows it
+              mut updated = payload
+                            ^
+
+The initial extraction-probe.my was preserved as bound-owner-extraction-refusal.my before trying immediate fresh match. This record transcribes tool output; it is not a rerun.

@@ -1,0 +1,11 @@
+{
+  "p1_allocation_probe.my": "464fe242c352b07f819ae39761b0a7a5ee80de68d7ce5c733424fe19f84df6dc",
+  "heap.my": "49a4b0f88ca3e5a363569efe8b014cb26fdaf884a73e6d8a43c739a1b8743ab9",
+  "object.my": "d7676af7b94ffecfa563e2aa1cbdda39f9dc15934e0268aa168cb8630a111f93",
+  "table.my": "09997c3fbc7461e5698c16de1b186ba755f98b94951b54dadfad0dc7268dfa98",
+  "value.my": "be66ac3375e327f4bdf1759177519fd95a45bcd1f60070af0bf70047e8bb8c41",
+  "chunk.my": "d78b6babd52503e76abcd88fe858d11e44ad43cdb45f7a436aa0adabdbf5b731",
+  "compiler_sha256": "2dcba1cb1a98846bb8c1319575da1b3564e60af70162e195c2fbb6ec3af0f329",
+  "binary_sha256": "309a22e94a58295e30dc44776f0f2c742307a79c347e1e8bd93ffc30e9a869ef",
+  "note": "Measured heap source reconstructed from current staging copy by reverting only subsequent negative-slot-count cost clamp; positive-width counters predate that clamp. Other imported source files unchanged."
+}

@@ -1,0 +1,19 @@
+# Reduced allocation counter probe only; no full workload timing claim.
+import heap
+import object
+import value
+
+func main(args: str[], out: Stream) -> int:
+    const width = 1024
+    mut rt = heap.new_runtime(False)
+    mut i = 0
+    while i < 100:
+        mut env = value.NO_OBJ
+        if len(args) > 0:
+            env = heap.allocate(mut rt, object.Obj.env(value=object.new_env(value.NO_OBJ, width)))
+        else:
+            env = heap.allocate_env(mut rt, value.NO_OBJ, width)
+        heap.push(mut rt, value.Value.obj(value=env))
+        i += 1
+    out.print(rt.allocations, heap.env_slot(rt, 0, width - 1) == value.Value.nil)
+    return 0
