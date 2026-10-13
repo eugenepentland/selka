@@ -69,7 +69,31 @@ def coordinator_sample(tree: Path, env: dict, out: Path, label: str, window: flo
             "language": {"state": language.get("state"),
                          "executed": [m.get("executed") for m in language.get("test_telemetry") or []]},
             "snapshot_statistics": report.get("snapshot_statistics"),
+            "executed_actions": sorted(row.get("id") for row in report.get("actions", []) if row.get("state") == "execute"),
+            "test_summaries": test_summaries(out, label),
             "action_keys": {row.get("id"): row.get("action_key") for row in report.get("actions", [])}}
+
+
+SUMMARY = re.compile(r"^(\d+) passed, (\d+) cached, (\d+) failed, (\d+) skipped(.*)$", re.MULTILINE)
+
+
+def test_summaries(out: Path, label: str) -> dict:
+    """The guest-test reuse histogram of a gate: every `mylang test` summary line
+    in its logs, counted, plus the totals."""
+    lines = []
+    for suffix in (".stdout", ".stderr"):
+        try:
+            lines += SUMMARY.findall((out / (label + suffix)).read_text(errors="replace"))
+        except OSError:
+            continue
+    histogram = {}
+    for line in lines:
+        text = "%s passed, %s cached, %s failed, %s skipped%s" % line
+        histogram[text] = histogram.get(text, 0) + 1
+    totals = {"passed": sum(int(l[0]) for l in lines), "cached": sum(int(l[1]) for l in lines),
+              "failed": sum(int(l[2]) for l in lines),
+              "exec_receipt_hits": sum(int(m.group(1)) for l in lines for m in [re.search(r"(\d+) exec-receipt hits", l[4])] if m)}
+    return {"lines": histogram, "totals": totals}
 
 
 F9_TEST = "test_owned_commands_execute_without_nested_admission_and_expiry_cleans_up"
@@ -239,32 +263,107 @@ def c3(target: Path, out: Path, samples: int) -> dict:
     return result
 
 
+def sharing_env(tree: Path, shared: Path, **extra) -> dict:
+    """A worktree's launcher with every shared store named explicitly (the
+    defaults are off): native compiler artifacts, native test receipts and the
+    coordinator's evidence store."""
+    return tree_env(tree, MYLANG_COMPILER_SHARED_CACHE=str(shared / "compiler"),
+                    MYLANG_TEST_SHARED_CACHE=str(shared / "tests"),
+                    MYLANG_VERIFICATION_SHARED_CACHE=str(shared / "verification"), **extra)
+
+
 def c4(target: Path, out: Path, samples: int, shared: Path) -> dict:
-    """One sample per fresh worktree, all sharing one evidence store that the
-    first worktree fills, so later worktrees may reuse what it published."""
+    """One sample per fresh worktree, all sharing one set of stores that the
+    first worktree fills, so later worktrees may reuse what it published. A
+    sample that fails only on F9 is voided and replaced by another fresh tree."""
     shared.mkdir(parents=True, exist_ok=True)
-    rows = []
-    for i in range(1, samples + 1):
-        tree = HERE / ("work/c4-tree-%d" % i)
+    rows, voided = [], []
+    index = 0
+    while len(rows) < samples and index < samples + 3:
+        index += 1
+        tree = HERE / ("work/c4-tree-%d" % index)
         add_worktree(target, tree)
-        env = tree_env(tree, CODEX_THREAD_ID="lane-f-c4-%d" % i, TERM="dumb")
-        status = build(tree, env, out, "build-%d" % i)
-        manifest(target, tree, out, "C4-%d" % i)
-        row = coordinator_sample(tree, env, out, "sample-%d" % i, C3_WINDOW, ("--shared-cache-dir", str(shared)))
+        env = sharing_env(tree, shared, CODEX_THREAD_ID="lane-f-c4-%d" % index, TERM="dumb")
+        status = build(tree, env, out, "build-%d" % index)
+        manifest(target, tree, out, "C4-%d" % index)
+        row = coordinator_sample(tree, env, out, "sample-%d" % index, C3_WINDOW)
         row["build_exit"] = status
-        row["failed_tests"] = failures(out, "sample-%d" % i)
-        rows.append(row)
+        row["failed_tests"] = failures(out, "sample-%d" % index)
         remove_worktree(target, tree)
-    return {"cohort": "C4", "shared": str(shared), "samples": rows,
+        if not row["success"] and row["failed_tests"] and all(F9_TEST in name for name in row["failed_tests"]):
+            row["voided"] = "failed only on F9 (%s)" % F9_TEST
+            voided.append(row)
+            continue
+        rows.append(row)
+    return {"cohort": "C4", "shared": str(shared), "samples": rows, "voided": voided,
             "keys_equal_to_first": [r["action_keys"] == rows[0]["action_keys"] for r in rows],
             "request_seconds": median([r["request_seconds"] for r in rows]),
+            "gate_admitted_seconds": median([r["gate_admitted_seconds"] for r in rows])}
+
+
+def c5(target: Path, out: Path, agents: int, shared: Path) -> dict:
+    """Ten agents, one base commit: AGENTS fresh worktrees, each built under
+    `build` admission (not timed), then every complete verification started at
+    once with its own CODEX_THREAD_ID, all sharing one set of stores, with no
+    timing window. Measures deduplication: how many requests executed each group."""
+    shared.mkdir(parents=True, exist_ok=True)
+    trees = [HERE / ("work/c5-tree-%d" % i) for i in range(1, agents + 1)]
+    builds = []
+    for i, tree in enumerate(trees, 1):
+        add_worktree(target, tree)
+        builds.append(build(tree, sharing_env(tree, shared), out, "build-%d" % i))
+    manifest(target, trees[0], out, "C5")
+    processes = []
+    started = time.monotonic()
+    for i, tree in enumerate(trees, 1):
+        env = sharing_env(tree, shared, CODEX_THREAD_ID="lane-f-c5-%d" % i, TERM="dumb")
+        argv = ["python3", "-B", "scripts/verify_cache.py", "--zig", os.environ["ZIG"], "--profile", "complete"]
+        stdout = open(out / ("agent-%d.stdout" % i), "w")
+        stderr = open(out / ("agent-%d.stderr" % i), "w")
+        processes.append((i, tree, subprocess.Popen(argv, cwd=tree, env=env, stdout=stdout, stderr=stderr), time.monotonic(), stdout, stderr))
+    rows, ends = [], []
+    for i, tree, process, launched, stdout, stderr in processes:
+        status = process.wait()
+        ends.append(time.monotonic())
+        stdout.close()
+        stderr.close()
+        report = matrix.latest_coordinator_report(tree, 0) or {}
+        (out / ("agent-%d.last-run.json" % i)).write_text(json.dumps(report, indent=1, sort_keys=True))
+        states = {}
+        for row in report.get("actions", []):
+            states[row.get("state")] = states.get(row.get("state"), 0) + 1
+        rows.append({"agent": i, "exit": status, "success": report.get("success"),
+                     "request_seconds": report.get("elapsed_seconds"),
+                     "gate_admitted_seconds": report.get("gate_admitted_seconds"),
+                     "build_admitted_seconds": report.get("build_admitted_seconds"),
+                     "admission_waits": [round(a.get("admission_wait_seconds", 0), 3) for a in report.get("admissions", [])],
+                     "harness_seconds_from_launch": round(ends[-1] - launched, 3), "states": states,
+                     "executed_actions": sorted(r.get("id") for r in report.get("actions", []) if r.get("state") == "execute"),
+                     "fresh_actions": sorted(r.get("id") for r in report.get("actions", []) if r.get("state") == "fresh"),
+                     "failed_tests": failures(out, "agent-%d" % i), "test_summaries": test_summaries(out, "agent-%d" % i),
+                     "action_keys": {r.get("id"): r.get("action_key") for r in report.get("actions", [])}})
+    wall = round(max(ends) - started, 3)
+    for tree in trees:
+        remove_worktree(target, tree)
+    executions = {}
+    for row in rows:
+        for name in row["executed_actions"] + row["fresh_actions"]:
+            executions[name] = executions.get(name, 0) + 1
+    always_fresh = sorted(set.intersection(*[set(r["fresh_actions"]) for r in rows])) if rows else []
+    cacheable = {name: count for name, count in executions.items() if name not in always_fresh}
+    return {"cohort": "C5", "agents": agents, "shared": str(shared), "builds": builds, "requests": rows,
+            "wall_seconds_all_requests": wall, "always_fresh": always_fresh,
+            "executions_per_cacheable_group": dict(sorted(cacheable.items())),
+            "groups_executed_once": sum(1 for c in cacheable.values() if c == 1),
+            "groups_executed_more_than_once": {k: c for k, c in cacheable.items() if c > 1},
+            "keys_equal_across_agents": [r["action_keys"] == rows[0]["action_keys"] for r in rows],
             "gate_admitted_seconds": median([r["gate_admitted_seconds"] for r in rows])}
 
 
 def main(argv):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--tree", required=True)
-    parser.add_argument("--cohort", required=True, choices=("C1", "C2", "C3", "C4"))
+    parser.add_argument("--cohort", required=True, choices=("C1", "C2", "C3", "C4", "C5"))
     parser.add_argument("--samples", type=int, default=5)
     parser.add_argument("--shared", help="C4: a shared evidence store warmed by another worktree")
     parser.add_argument("--evidence", default=str(HERE / "evidence-phase2/cohorts"))
@@ -282,10 +381,12 @@ def main(argv):
         result = c2(target, out, args.samples)
     elif args.cohort == "C3":
         result = c3(target, out, args.samples)
-    else:
+    elif args.cohort == "C4":
         result = c4(target, out, args.samples, Path(args.shared).resolve())
+    else:
+        result = c5(target, out, args.samples, Path(args.shared).resolve())
     (out / "result.json").write_text(json.dumps(result, indent=1, sort_keys=True, default=str))
-    print(json.dumps({k: v for k, v in result.items() if k not in ("samples", "c2", "warm", "prime", "voided")},
+    print(json.dumps({k: v for k, v in result.items() if k not in ("samples", "c2", "warm", "prime", "voided", "requests")},
                      indent=1, default=str))
     return 0
 
