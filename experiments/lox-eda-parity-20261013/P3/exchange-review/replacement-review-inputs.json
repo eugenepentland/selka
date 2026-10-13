@@ -1,0 +1,17 @@
+{
+  "reviewed_tree": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7",
+  "captured_utc": "2026-10-13T04:11:06.920834+00:00",
+  "source_sha256": {
+    "src/core/flags.zig": "ffd341488eca06c4b490e5c075e283282455f5d41d6d85495902a7565c2de5e8",
+    "src/core/own.zig": "85fdc3a6d4b8444e36a9f8278fcee8d202be231cd8421783e215efaecccf69bd",
+    "src/core/stores.zig": "0e6f87431bbca169d0e27b19d65478d19efa9ac895af3eb342d8c89e2329d333",
+    "src/core/elements.zig": "d306e841b44e9fe224e2ae9755e4aa8b7a0d6ebe3c25cc97da258b3154112ad3",
+    "src/core/emit_llvm.zig": "d6227a053fe3a8f3faf4478f3ecede7b77d4ba558080da299686ea9eccde3c35",
+    "src/core/emit_dict.zig": "8e8bb9a4d75818d6de6a51ac426977001449d706c7acaf76591ad8a41ffe2204",
+    "src/core/facts.zig": "631307d14a550b92736b5980e86bcfd5170afa640f468e77a289ad0d0d63be95",
+    "src/core/build_dict.zig": "3fbdeef049eb39b49d9e40e6459e90b7a3715f4eb9842f85ddd8d60b754f3d11",
+    "src/core/build.zig": "52fc08b4418d8cf2e6579588c28727557ec9d5c380f837c50f801a98552ab70d"
+  },
+  "executed_compiler_or_guest_jobs_by_P3": false,
+  "classification": "static algorithm/IR findings; no new native outcomes"
+}
