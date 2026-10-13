@@ -12,6 +12,10 @@ import tempfile
 import time
 
 
+class WindowDeferred(Exception):
+    """Setup crossed the window boundary before any child was launched."""
+
+
 def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
@@ -88,8 +92,14 @@ def advance_round(state, tools):
         results = state['pilot_results']
         count, pilot = state['count'], state['round']
         state['document']['pilots'].append({'iterations': count, 'arms': results})
-        fastest = min((r['kernel_ns'] for r in results), default=None)
-        slowest = max((r['kernel_ns'] for r in results), default=None)
+        if results:
+            fastest = min(r['kernel_ns'] for r in results)
+            slowest = max(r['kernel_ns'] for r in results)
+            state['last_pilot_fastest'] = fastest
+            state['last_pilot_slowest'] = slowest
+        else:
+            fastest = state.get('last_pilot_fastest')
+            slowest = state.get('last_pilot_slowest')
         reason = 'target'
         next_count = None
         if not results:
@@ -128,7 +138,7 @@ def advance_round(state, tools):
         state['document']['expected'] = expected(tools, spec, state['count'])
 
 
-def execute_one(state, tools, output):
+def execute_one(state, tools, output, launch_deadline=None):
     names = order(state, tools)
     if state['position'] == len(names):
         advance_round(state, tools)
@@ -153,7 +163,10 @@ def execute_one(state, tools, output):
         env['MYLANG_COUNTERS'] = str(counter_path.resolve())
     with tempfile.NamedTemporaryFile() as rss_file:
         command = ['/usr/bin/time', '-f', '%M', '-o', rss_file.name, *argv] if phase == 'rss' else argv
-        result = tools.validate(tools.execute(command, doc['timeout_seconds'], env, spec.get('cwd')), expected(tools, spec, count), spec['protocol'])
+        want = expected(tools, spec, count)
+        if launch_deadline is not None and time.monotonic() >= launch_deadline:
+            raise WindowDeferred()
+        result = tools.validate(tools.execute(command, doc['timeout_seconds'], env, spec.get('cwd')), want, spec['protocol'])
         if result['status'] == 'ok' and phase == 'rss':
             value = Path(rss_file.name).read_text().strip()
             if not value.isdigit() or int(value) <= 0:
@@ -251,6 +264,8 @@ def window(args):
         assert state['document']['cpu'] == args.cpu and state['document']['timeout_seconds'] == args.timeout
         assert state['document']['spec'] == json.loads(args.spec.read_text())
         assert str(args.spec.resolve()) in state['document']['identities'] and str(args.tools.resolve()) in state['document']['identities']
+    expected_receipts = {'window-%04d.json' % r['index'] for r in state['windows']}
+    assert {p.name for p in args.output.glob('window-*.json')} == expected_receipts, 'orphan immutable window receipt; preserve attempt before any new guest'
     for r in state['windows']:
         path = args.output / ('window-%04d.json' % r['index'])
         assert json.loads(path.read_text()) == r, 'window receipt changed'
@@ -265,7 +280,12 @@ def window(args):
     while state['phase'] != 'complete' and time.monotonic() - start < args.window_seconds:
         state['active'] = {'phase': state['phase'], 'round': state['round'], 'position': state['position']}
         save(state, args.output, 'start')
-        execute_one(state, tools, args.output)
+        try:
+            execute_one(state, tools, args.output, start + args.window_seconds)
+        except WindowDeferred:
+            state['active'] = None
+            save(state, args.output, 'unexecuted_boundary')
+            break
         state['sequence'] += 1
         state['active'] = None
         save(state, args.output, 'completed_step')
@@ -274,7 +294,8 @@ def window(args):
     previous = state['windows'][-1] if state['windows'] else None
     elapsed = time.monotonic() - start
     receipt = {'index': len(state['windows']), 'first_sequence': sequence, 'next_sequence': state['sequence'],
-        'launch_window_seconds': args.window_seconds, 'guest_deadline_seconds': args.timeout, 'elapsed_seconds': elapsed,
+        'launch_window_seconds': args.window_seconds, 'guest_deadline_seconds': args.timeout, 'prepublication_elapsed_seconds': elapsed,
+        'elapsed_scope': 'through post-guest input validation, excluding immutable receipt/state/COMPLETE publication',
         'previous_receipt_sha256': sha(args.output / ('window-%04d.json' % previous['index'])) if previous else None,
         'identities': state['document']['identities'], 'admission': {'kind': os.environ['MYLANG_ADMISSION_KIND'], 'directory': os.environ.get('MYLANG_ADMISSION_DIR')}}
     path = args.output / ('window-%04d.json' % receipt['index'])

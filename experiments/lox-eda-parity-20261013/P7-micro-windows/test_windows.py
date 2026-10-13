@@ -34,7 +34,7 @@ print('bad' if 'bad' in sys.argv else 'done')
           'files':[str(self.guest)], 'arms':{str(n):{'status':'ok','binary':binary,'sha256':w.sha(binary),'args':[str(self.guest)]} for n in range(7)},
           'counted':{str(n):{'status':'ok','binary':binary,'sha256':w.sha(binary),'args':[str(self.guest)],'zero_rc':True} for n in range(3)}}
         self.path = self.folder / 'spec.json'; self.path.write_text(json.dumps(self.data))
-        self.args = argparse.Namespace(spec=self.path,tools=TOOLS,output=self.folder/'out',cpu=min(os.sched_getaffinity(0)),timeout=2,window_seconds=.15)
+        self.args = argparse.Namespace(spec=self.path,tools=TOOLS,output=self.folder/'out',cpu=min(os.sched_getaffinity(0)),timeout=2,window_seconds=.4)
         affinity = os.sched_getaffinity(0); self.addCleanup(os.sched_setaffinity,0,affinity)
         self.tools = w.load_tools(TOOLS)
 
@@ -60,7 +60,7 @@ print('bad' if 'bad' in sys.argv else 'done')
         self.assertTrue(all(v['complete'] for v in result['summary'].values()))
         self.assertTrue(all(v['metrics']['live_bytes_at_exit']==0 for v in result['counted'].values()))
         self.assertGreater(len(result['windows']),1)
-        self.assertTrue(all(r['elapsed_seconds'] <= r['launch_window_seconds'] + r['guest_deadline_seconds'] + .5 for r in result['windows']))
+        self.assertTrue(all(r['prepublication_elapsed_seconds'] <= r['launch_window_seconds'] + r['guest_deadline_seconds'] + .5 for r in result['windows']))
         for i,r in enumerate(result['windows'][1:],1):self.assertEqual(r['previous_receipt_sha256'],w.sha(self.args.output/('window-%04d.json'%(i-1))))
         self.assertEqual(result['identities'],result['identities_after'])
         with self.assertRaises(AssertionError):self.run_window()
@@ -87,6 +87,7 @@ print('bad' if 'bad' in sys.argv else 'done')
         self.assertFalse(foreign.exists())
 
     def test_post_window_identity_change_and_receipt_tampering_refuse(self):
+        self.args.window_seconds = 55
         marker = self.folder / 'marker.txt'; marker.write_text('initial')
         self.data['files'].append(str(marker)); self.path.write_text(json.dumps(self.data))
         self.guest.write_text('open(' + repr(str(marker)) + ', \"w\").write(\"changed\")\n' + self.guest.read_text())
@@ -94,10 +95,63 @@ print('bad' if 'bad' in sys.argv else 'done')
         self.assertFalse((self.args.output / 'cell.json').exists())
         self.assertFalse((self.args.output / 'window-0000.json').exists())
 
+    def test_delayed_setup_defers_without_launch_or_ambiguous_marker(self):
+        self.args.window_seconds = .03
+        original_expected = w.expected
+        clock = [0.0]
+        def delayed_expected(*args):
+            clock[0] = 1.0
+            return original_expected(*args)
+        with patch.object(w.time, 'monotonic', side_effect=lambda: clock[0]), patch.object(w, 'load_tools', return_value=self.tools), patch.object(w, 'expected', side_effect=delayed_expected) as setup, patch.object(self.tools, 'execute') as execute:
+            self.run_window()
+            execute.assert_not_called()
+            self.assertTrue(setup.called)
+        state = json.loads((self.args.output / 'state.json').read_text())
+        self.assertIsNone(state['active'])
+        self.assertEqual(state['position'], 0)
+        self.assertEqual(state['sequence'], 0)
+        self.assertFalse((self.args.output / 'cell.json').exists())
+
+    def test_delayed_start_checkpoint_rechecks_before_execute(self):
+        self.args.window_seconds = .03
+        original_save = w.save
+        clock = [0.0]
+        def delayed_save(state, output, kind):
+            original_save(state, output, kind)
+            if kind == 'start': clock[0] = 1.0
+        with patch.object(w.time, 'monotonic', side_effect=lambda: clock[0]), patch.object(w, 'load_tools', return_value=self.tools), patch.object(w, 'save', side_effect=delayed_save), patch.object(self.tools, 'execute') as execute:
+            self.run_window()
+            execute.assert_not_called()
+        records = [json.loads(line) for line in (self.args.output / 'checkpoint.jsonl').read_text().splitlines()]
+        self.assertIn('unexecuted_boundary', [r['kind'] for r in records])
+        self.assertIsNone(records[-1]['state']['active'])
+        self.assertEqual(records[-1]['state']['sequence'],0)
+
+    def test_orphan_receipt_refuses_before_launch(self):
+        self.run_window()
+        state = json.loads((self.args.output / 'state.json').read_text())
+        (self.args.output / 'window-0001.json').write_text('{}')
+        with patch.object(w, 'load_tools', return_value=self.tools), patch.object(self.tools, 'execute') as execute:
+            with self.assertRaisesRegex(AssertionError, 'orphan'): self.run_window()
+            execute.assert_not_called()
+        self.assertEqual(json.loads((self.args.output / 'state.json').read_text())['sequence'], state['sequence'])
+
     def test_outer_admission_required(self):
         with patch.dict(os.environ,{},clear=True):
             with self.assertRaises(AssertionError):w.window(self.args)
         self.assertFalse(self.args.output.exists())
+
+    def test_later_no_surviving_pilot_retains_previous_extrema(self):
+        s = {'document': {'spec': {'protocol':'kernel','case':'synthetic','size':1,'seed':42,'max_slowest_kernel_ms':100,'target_fastest_kernel_ms':10,'max_iterations':1000}, 'pilots': []}, 'phase':'pilot','round':0,'position':7,'count':31,'pilot_results':[{'kernel_ns':2_000_000},{'kernel_ns':4_000_000}]}
+        w.advance_round(s,self.tools)
+        self.assertEqual(s['phase'],'pilot')
+        s['pilot_results']=[]
+        self.tools.registry=type('R',(),{'checksum':staticmethod(lambda *a:123)})
+        w.advance_round(s,self.tools)
+        self.assertEqual(s['document']['calibration']['reason'],'no_admitted_arm')
+        self.assertEqual(s['document']['calibration']['fastest_ns'],2_000_000)
+        self.assertEqual(s['document']['calibration']['slowest_ns'],4_000_000)
+        self.assertEqual(s['phase'],'warmups')
 
     def test_kernel_pilot_matches_original_adjustment_boundaries(self):
         s={'document':{'spec':{'max_slowest_kernel_ms':100,'target_fastest_kernel_ms':10,'max_iterations':1000},'pilots':[]},'phase':'pilot','round':0,'position':7,'count':31,'pilot_results':[{'kernel_ns':200_000_000}]}

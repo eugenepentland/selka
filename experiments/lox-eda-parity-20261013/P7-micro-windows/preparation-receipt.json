@@ -20,9 +20,10 @@
     "rss_rounds": 3
   },
   "tests": {
-    "final": "micro-window-tests-final-003.log.gz",
-    "passed": 7,
-    "guest_scope": "cheap synthetic Python commands only"
+    "final": "micro-window-review-tests-004.log.gz",
+    "passed": 11,
+    "guest_scope": "cheap synthetic Python commands only; no benchmark/timing admission",
+    "review_closure": "launch-boundary deferral, retained pilot extrema, orphan-receipt prelaunch refusal and explicit elapsed scope"
   },
   "logs": [
     {
@@ -60,10 +61,34 @@
       "raw_sha256": "eb0e2bca0fafaac224729951f81a69ab5335c82f9802784f5b27b0caa094886f",
       "archive": "micro-window-tests-002.log.gz",
       "archive_sha256": "495b7124947c2e0c41633fb886ec6062e504182e0f9ce2dec5e757a909ab316c"
+    },
+    {
+      "original": ".tmp/lox-eda-parity/P7-stack/micro-window-review-tests-001.log",
+      "raw_sha256": "4aae5ba3fa19a771714f38205784458b1fdc10cd9fce3438a566fe253962f556",
+      "archive": "micro-window-review-tests-001.log.gz",
+      "archive_sha256": "373ef610fe40c1c281f419af30d1b9f4e2c0de10a3247cfc6390831770671a1d"
+    },
+    {
+      "original": ".tmp/lox-eda-parity/P7-stack/micro-window-review-tests-004.log",
+      "raw_sha256": "73deb7a8098ceaf13bff3adda3c5c42a7f55f24feeed5ffb739b601fa2266980",
+      "archive": "micro-window-review-tests-004.log.gz",
+      "archive_sha256": "b487786f2015a6abf835457bdb0c7e5db0f1d74c7cddb05597dcea0fa8b848d7"
+    },
+    {
+      "original": ".tmp/lox-eda-parity/P7-stack/micro-window-review-tests-002.log",
+      "raw_sha256": "d58e78db538f177d0e946c026acb49e37b75d861ae078380d827767c0f5cc139",
+      "archive": "micro-window-review-tests-002.log.gz",
+      "archive_sha256": "665d6f0ba23f2cd7d73b8533cc4e0772f5fa2b7c54de32018eab8c2f61ba193c"
+    },
+    {
+      "original": ".tmp/lox-eda-parity/P7-stack/micro-window-review-tests-003.log",
+      "raw_sha256": "96c3dcda959c04c6b4a40a58f775f3bb99dd473e55416a44168908edd31c0fa3",
+      "archive": "micro-window-review-tests-003.log.gz",
+      "archive_sha256": "537626e7c084be252b488dbab4cdead7594bc31e5bd9d552fd5915f1cdeecd7c"
     }
   ],
   "source_files": {
-    "windows.py": "77352448a097c2fd5a0aa389d9b336d726a144be8df7396333a91d914923b8a4",
-    "test_windows.py": "0b4e0537724b3ee5795d862c65ef2d498ecfa64bf1cb0c4b382a86f3f5285b66"
+    "windows.py": "65c59c9a3c476c7326f01008263d3bef7a58a0d032ef0242425e528c140f5945",
+    "test_windows.py": "6db9a5de00ded2b9ee4a0b5dd0ce5e73e147b087b20b174c69acdc26ccf57e17"
   }
 }
