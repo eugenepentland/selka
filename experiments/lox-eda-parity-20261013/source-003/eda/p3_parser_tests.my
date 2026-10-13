@@ -1,0 +1,111 @@
+import sexpr_ast as ast
+import sexpr_parser as parser
+import sexpr_tokenizer as tk
+
+# Exhaust every byte against the public suffix tables. A following delimiter
+# makes scale/unit acceptance observable without exporting private predicates.
+public func test_scalar_suffix_classification_matches_public_tables() -> bool:
+    for c in range(256):
+        mut expected = c == tk.PERCENT_SIGN
+        for scale in tk.si_scales():
+            if scale.bare and scale.letter == c:
+                expected = True
+        if tk.si_unit_letters().find(bytes([c])) >= 0:
+            expected = True
+        mut input = b"1" + bytes([c]) + b" "
+        mut t = tk.tokenizer_init(input)
+        match tk.next(mut t):
+            case Ok(token):
+                assert (token.tag == tk.TokenTag.si_val) == expected
+            case Err(_):
+                assert not expected
+    return True
+
+# Both scanner entrypoints must describe identical text, spans and cursor
+# movement, including quoted Unicode, escape bytes, dimension suffixes and EOF.
+public func test_offset_scanner_matches_owned_tokens() -> bool:
+    mut source = b"; comment\n(form \"h\xc3\xa9\\\"llo\" -2 3.5 10mil 1mm 100nF 10% pad-1 + <=)"
+    mut owned = tk.tokenizer_init(source)
+    mut cur = tk.Cursor(pos=0, line=1, col=1, error_span=owned.cur.error_span)
+    while True:
+        match tk.next(mut owned):
+            case Err(_):
+                assert False, "valid owned scanner fixture"
+            case Ok(token):
+                match tk.next_offset(source, mut cur):
+                    case Err(_):
+                        assert False, "valid offset scanner fixture"
+                    case Ok(offset):
+                        assert token.tag == offset.tag
+                        assert token.text == source[offset.start:offset.end]
+                        assert token.span == offset.span
+                        assert owned.cur == cur
+                        if token.tag == tk.TokenTag.eof:
+                            return True
+    return False
+
+
+public func test_offset_scanner_preserves_error_locations() -> bool:
+    for source in [b"\n @", b"\n \"unterminated", b"\n \"escape\\"]:
+        mut owned = tk.tokenizer_init(source)
+        mut cur = tk.Cursor(pos=0, line=1, col=1, error_span=owned.cur.error_span)
+        match tk.next(mut owned):
+            case Ok(_):
+                assert False, "invalid owned fixture"
+            case Err(err):
+                match tk.next_offset(source, mut cur):
+                    case Ok(_):
+                        assert False, "invalid offset fixture"
+                    case Err(offset_err):
+                        assert err == offset_err
+                        assert owned.cur == cur
+    return True
+
+
+public func test_parser_and_token_text_remain_independent() -> bool:
+    mut source = b"(a \"b\" 100nF)"
+    match parser.parse(source):
+        case Err(_):
+            assert False, "valid independent AST source"
+        case Ok(nodes):
+            assert len(nodes) == 1
+            source = b"(z \"q\" 900nF)"
+            match nodes[0].tag:
+                case ast.Tag.list(value=children):
+                    assert ast.as_atom(children[0]).unwrap_or(b"") == b"a"
+                    assert ast.as_string(children[1]).unwrap_or(b"") == b"b"
+                    assert children[2].literal.unwrap_or(b"") == b"100nF"
+                case _:
+                    assert False, "owned list output"
+    mut tokenizer = tk.tokenizer_init(b"keep")
+    match tk.next(mut tokenizer):
+        case Ok(token):
+            tokenizer.source = b"xxxx"
+            assert token.text == b"keep"
+        case Err(_):
+            assert False, "owned token output"
+    return True
+
+public func test_offset_parser_numeric_and_raw_string_golden() -> bool:
+    match parser.parse(b"(v -3.5mA -10mil 0.25mm \"\xff\xc3\xa9\\n\")"):
+        case Err(_):
+            return False
+        case Ok(nodes):
+            match nodes[0].tag:
+                case ast.Tag.list(value=children):
+                    assert abs(ast.as_number(children[1]).unwrap_or(0.0) + 0.0035) < 1e-12
+                    assert children[1].literal.unwrap_or(b"") == b"-3.5mA"
+                    assert abs(ast.as_number(children[2]).unwrap_or(0.0) + 0.254) < 1e-12
+                    assert ast.as_number(children[3]).unwrap_or(0.0) == 0.25
+                    assert ast.as_string(children[4]).unwrap_or(b"") == b"\xff\xc3\xa9\\n"
+                case _:
+                    return False
+    mut diag = parser.new_diagnostic()
+    match parser.parse_diag(b"\n 99999999999999999999999999999999999999999999", mut diag):
+        case Ok(_):
+            return False
+        case Err(err):
+            assert err == parser.ParseError.invalid_number
+            assert diag.span.line == 2 and diag.span.col == 2 and diag.span.offset == 2
+            assert diag.message == parser.error_message(err)
+    return True

@@ -1,0 +1,153 @@
+
+import kicad_sch_verify as m
+import support_expect as ex
+
+# std.mem.replaceOwned for byte fixtures; bytes has no replace method.
+func replace_owned(source: bytes, old: bytes, new: bytes) -> bytes:
+    mut parts: bytes[] = []
+    mut cursor = 0
+    while cursor < len(source):
+        mut relative = source[cursor:len(source)].find(old)
+        if relative < 0:
+            break
+        mut index = cursor + relative
+        parts.append(source[cursor:index])
+        parts.append(new.copy())
+        cursor = index + len(old)
+    parts.append(source[cursor:])
+    return b"".join(parts)
+
+
+func minimal_doc() -> bytes:
+    mut parts = [b"(kicad_sch\n  (version 20260306)\n  (lib_symbols\n    (symbol \"netlisp:BOX\"\n      (symbol \"BOX_1_1\"\n", b"        (pin passive line (at -15.24 1.27 0) (length 2.54)\n          (name \"A\" (effects)) (number \"1\" (effects)))\n", b"        (pin passive line (at 15.24 1.27 180) (length 2.54)\n          (name \"B\" (effects)) (number \"2\" (effects))))))\n", b"  (symbol (lib_id \"netlisp:BOX\") (at 63.5 38.1 0)\n    (uuid \"aaaa\"))\n  (global_label \"NETA\" (at 43.18 36.83 180))\n  (no_connect (at 78.74 36.83))\n)"]
+    return b"".join(parts)
+
+
+func minimal_expect() -> m.Expect:
+    return m.Expect(uuids=[b"aaaa"], lib_ids=[b"netlisp:BOX"], labels=[b"NETA"], rail_values=[], no_connects=1, sheets=[])
+
+
+func wired_doc() -> bytes:
+    mut base = minimal_doc()
+    mut start = base.find(b"  (symbol (lib_id")
+    mut parts = [base[0:start], b"  (symbol (lib_id \"netlisp:BOX\") (at 63.5 38.1 0) (unit 1)\n    (uuid \"aaaa\"))\n", b"  (wire (pts (xy 48.26 36.83) (xy 43.18 36.83)))\n  (wire (pts (xy 43.18 36.83) (xy 43.18 27.94)))\n", b"  (wire (pts (xy 43.18 36.83) (xy 43.18 46.99)))\n  (wire (pts (xy 78.74 36.83) (xy 83.82 36.83)))\n", b"  (junction (at 43.18 36.83))\n  (global_label \"NETA\" (at 43.18 46.99 180))\n  (global_label \"NETB\" (at 83.82 36.83 0))\n)"]
+    return b"".join(parts)
+
+
+func wired_expect() -> m.Expect:
+    return m.Expect(uuids=[b"aaaa"], lib_ids=[b"netlisp:BOX"], labels=[b"NETA", b"NETB"], rail_values=[], no_connects=0, sheets=[], wires=4)
+
+
+func hier_doc() -> bytes:
+    mut parts = [b"(kicad_sch\n  (version 20260306)\n  (lib_symbols\n    (symbol \"netlisp:PWR_GND\"\n      (symbol \"PWR_GND_1_1\"\n", b"        (pin power_in line (at 0 0 270) (length 0)\n          (name \"\" (effects)) (number \"1\" (effects))))))\n", b"  (symbol (lib_id \"netlisp:PWR_GND\") (at 63.5 38.1 0)\n    (uuid \"pwr-1\")\n    (property \"Reference\" \"#PWR01\" (at 63.5 31.75 0))\n    (property \"Value\" \"GND\" (at 63.5 44.45 0)))\n", b"  (sheet (at 25.4 25.4 0) (size 63.5 25.4)\n    (uuid \"sheet-1\")\n    (property \"Sheetname\" \"Core\" (at 25.4 24.13 0))\n    (property \"Sheetfile\" \"board-core.kicad_sch\" (at 25.4 52.07 0)))\n)"]
+    return b"".join(parts)
+
+
+func hier_expect() -> m.Expect:
+    return m.Expect(uuids=[b"pwr-1"], lib_ids=[b"netlisp:PWR_GND"], labels=[], rail_values=[b"GND"], no_connects=0, sheets=[b"board-core.kicad_sch"])
+
+
+func passes(out: Stream, source: bytes, want: m.Expect) -> bool:
+    match m.check(source, want):
+        case Ok(_):
+            return True
+        case Err(e):
+            return ex.eq_str(out, "good document", e, "")
+
+
+func fails(out: Stream, source: bytes, want: m.Expect, error: str) -> bool:
+    match m.check(source, want):
+        case Err(e):
+            return ex.eq_str(out, "specific verifier error", e, error)
+        case Ok(_):
+            return ex.ok(out, "damaged document fails", False)
+
+
+# test "kicad-sch: verify passes a good document and catches a dropped symbol"
+public func test_kicad_sch_verify_passes_a_good_document_and_catches_a_dropped_symbol(out: Stream) -> bool:
+    mut source = minimal_doc()
+    mut want = minimal_expect()
+    if not passes(out, source, want):
+        return False
+    mut cut_start = source.find(b"  (symbol (lib_id")
+    mut cut_end = source.find(b"  (global_label")
+    mut damaged = source[0:cut_start] + source[cut_end:]
+    return fails(out, damaged, want, m.err_symbol_count_mismatch)
+
+
+# test "kicad-sch: verify catches label, no-connect, and lib_id damage"
+public func test_kicad_sch_verify_catches_label_no_connect_and_lib_id_damage(out: Stream) -> bool:
+    mut source = minimal_doc()
+    mut want = minimal_expect()
+    return fails(out, replace_owned(source, b"  (global_label \"NETA\" (at 43.18 36.83 180))\n", b""), want, m.err_label_count_mismatch) and fails(out, replace_owned(source, b"(global_label \"NETA\"", b"(global_label \"NETB\""), want, m.err_missing_net_label) and fails(out, replace_owned(source, b"  (no_connect (at 78.74 36.83))\n", b""), want, m.err_no_connect_count_mismatch) and fails(out, replace_owned(source, b"(symbol \"netlisp:BOX\"", b"(symbol \"netlisp:OTHER\""), want, m.err_unknown_lib_id)
+
+
+# test "kicad-sch: verify catches off-grid coordinates and duplicate pads"
+public func test_kicad_sch_verify_catches_off_grid_coordinates_and_duplicate_pads(out: Stream) -> bool:
+    mut source = minimal_doc()
+    mut want = minimal_expect()
+    return fails(out, replace_owned(source, b"(at 63.5 38.1 0)", b"(at 63.4 38.1 0)"), want, m.err_off_grid) and fails(out, replace_owned(source, b"(number \"2\"", b"(number \"1\""), want, m.err_duplicate_pad)
+
+
+# test "kicad-sch: verify passes off-grid body art but not an off-grid pin"
+public func test_kicad_sch_verify_passes_off_grid_body_art_but_not_an_off_grid_pin(out: Stream) -> bool:
+    mut source = minimal_doc()
+    mut parts = [b"      (symbol \"BOX_1_1\"\n", b"        (polyline (pts (xy -15.239 1.219) (xy -1.1 2.2))\n          (stroke (width 0.254) (type default)) (fill (type none)))\n", b"        (arc (start 7.62 0) (mid 6.35 1.219) (end 5.08 0)\n          (stroke (width 0.254) (type default)) (fill (type none)))\n"]
+    mut art = replace_owned(source, b"      (symbol \"BOX_1_1\"\n", b"".join(parts))
+    if not passes(out, art, minimal_expect()):
+        return False
+    return fails(out, replace_owned(source, b"(at -15.24 1.27 0)", b"(at -15.239 1.27 0)"), minimal_expect(), m.err_off_grid)
+
+
+# test "kicad-sch: verify catches a wire through a pin, a diagonal, and a missing segment"
+public func test_kicad_sch_verify_catches_a_wire_through_a_pin_a_diagonal_and_a_missing_segment(out: Stream) -> bool:
+    mut source = wired_doc()
+    mut want = wired_expect()
+    return passes(out, source, want) and fails(out, replace_owned(source, b"(xy 78.74 36.83)", b"(xy 73.66 36.83)"), want, m.err_wire_through_pin) and fails(out, replace_owned(source, b"(xy 43.18 27.94)", b"(xy 40.64 27.94)"), want, m.err_wire_not_orthogonal) and fails(out, replace_owned(source, b"  (wire (pts (xy 43.18 36.83) (xy 43.18 46.99)))\n", b""), want, m.err_wire_count_mismatch)
+
+
+# test "kicad-sch: verify catches a label caught mid-wire"
+public func test_kicad_sch_verify_catches_a_label_caught_mid_wire(out: Stream) -> bool:
+    mut inside = replace_owned(wired_doc(), b"(global_label \"NETB\" (at 83.82 36.83 0))", b"(global_label \"NETB\" (at 81.28 36.83 0))")
+    return fails(out, inside, wired_expect(), m.err_label_on_wire_interior)
+
+
+# test "kicad-sch: verify matches junction dots to the points wire ends actually meet at"
+public func test_kicad_sch_verify_matches_junction_dots_to_the_points_wire_ends_actually_meet_at(out: Stream) -> bool:
+    mut source = wired_doc()
+    mut want = wired_expect()
+    return fails(out, replace_owned(source, b"  (junction (at 43.18 36.83))\n", b""), want, m.err_missing_junction) and fails(out, replace_owned(source, b"(junction (at 43.18 36.83))", b"(junction (at 43.18 27.94))"), want, m.err_stray_junction)
+
+
+# test "kicad-sch: verify matches child sheet files and rail symbol values"
+public func test_kicad_sch_verify_matches_child_sheet_files_and_rail_symbol_values(out: Stream) -> bool:
+    mut source = hier_doc()
+    mut want = hier_expect()
+    return passes(out, source, want) and fails(out, replace_owned(source, b"board-core.kicad_sch", b"board-other.kicad_sch"), want, m.err_sheet_link_mismatch) and fails(out, replace_owned(source, b"(property \"Sheetfile\"", b"(property \"Other\""), want, m.err_sheet_link_mismatch) and fails(out, replace_owned(source, b"\"Value\" \"GND\"", b"\"Value\" \"AGND\""), want, m.err_missing_net_label)
+
+
+# test "kicad-sch: verifier preserves repeated label and rail multiplicities"
+public func test_p5_verifier_repeated_label_and_rail_multiplicities(out: Stream) -> bool:
+    mut label = b"  (global_label \"NETA\" (at 43.18 36.83 180))\n"
+    mut labels = replace_owned(minimal_doc(), label, label + label)
+    mut label_want = minimal_expect()
+    label_want.labels.append(b"NETA")
+    if not passes(out, labels, label_want):
+        return False
+    mut second = b"  (symbol (lib_id \"netlisp:PWR_GND\") (at 63.5 38.1 0) (uuid \"pwr-2\") (property \"Reference\" \"#PWR02\" (at 63.5 31.75 0)) (property \"Value\" \"GND\" (at 63.5 44.45 0)))\n"
+    mut rails = replace_owned(hier_doc(), b"  (sheet ", second + b"  (sheet ")
+    mut rail_want = hier_expect()
+    rail_want.uuids.append(b"pwr-2")
+    rail_want.lib_ids.append(b"netlisp:PWR_GND")
+    rail_want.rail_values.append(b"GND")
+    return passes(out, rails, rail_want)
+
+
+# test "kicad-sch: verifier grid errors precede UUID errors and quoted heads stay inert"
+public func test_p5_verifier_grid_error_priority_and_quoted_heads(out: Stream) -> bool:
+    mut uuid_bad = replace_owned(minimal_doc(), b"\"aaaa\"", b"\"wrong\"")
+    mut both_bad = replace_owned(uuid_bad, b"(at 63.5 38.1 0)", b"(at 63.4 38.1 0)")
+    if not fails(out, both_bad, minimal_expect(), m.err_off_grid):
+        return False
+    mut inert = replace_owned(minimal_doc(), b"  (version 20260306)", b"  (version 20260306) (\"at\" 0.01 0.01) ()")
+    return passes(out, inert, minimal_expect())

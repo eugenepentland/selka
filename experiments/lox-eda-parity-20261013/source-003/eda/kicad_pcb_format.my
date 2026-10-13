@@ -1,0 +1,52 @@
+
+import sexpr_ast as ast
+
+public const prop_reference: bytes = b"Reference"
+
+
+public const prop_value: bytes = b"Value"
+
+
+public const prop_canopy_uuid: bytes = b"canopy_uuid"
+
+
+public func pad_number_text(n: ast.Node) -> bytes?:
+    mut string_ = ast.as_string(n)
+    if string_ is not None:
+        return Some(string_.copy())
+    mut atom = ast.as_atom(n)
+    if atom is not None:
+        return Some(atom.copy())
+    match n.tag:
+        case ast.Tag.int(value=value):
+            return Some(str(value).encode())
+        case _:
+            return None
+
+
+public func needs_sexpr_escape(s: bytes) -> bool:
+    return s.find(b"\"") >= 0 or s.find(b"\\") >= 0
+
+
+public func sexpr_escape(s: bytes) -> bytes:
+    if not needs_sexpr_escape(s):
+        return s.copy()
+    mut out: int[] = []
+    for c in s:
+        if c == 34 or c == 92:
+            out.append(92)
+        out.append(c)
+    return bytes(out)
+
+
+public func sexpr_unescape(s: bytes) -> bytes:
+    if s.find(b"\\") < 0:
+        return s.copy()
+    mut out: int[] = []
+    mut i = 0
+    while i < len(s):
+        if s[i] == 92 and i + 1 < len(s):
+            i += 1
+        out.append(s[i])
+        i += 1
+    return bytes(out)

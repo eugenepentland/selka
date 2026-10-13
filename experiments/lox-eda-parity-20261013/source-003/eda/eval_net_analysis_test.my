@@ -1,0 +1,115 @@
+
+import eval_net_analysis as m
+import eval_env as env
+import support_expect as ex
+
+# Independent witness tables are literal former consumer vocabularies. Deriving
+# them from the production tables would make the assertions circular.
+# test "the ground-net vocabulary tables keep the spellings their consumers had"
+public func test_the_ground_net_vocabulary_tables_keep_the_spellings_their_consumers_had(out: Stream) -> bool:
+    mut tokens: bytes[] = [b"GNDA", b"GNDD", b"AGND", b"PGND", b"DGND", b"VSSA", b"GND", b"VSS"]
+    mut functions: bytes[] = [b"GND", b"VSS", b"AGND", b"DGND", b"PGND", b"SGND"]
+    mut bases: bytes[] = [b"GND", b"AGND", b"DGND", b"PGND"]
+    mut stems: bytes[] = [b"GND_", b"AGND_", b"DGND_", b"PGND_", b"VSS"]
+    mut schematic: bytes[] = [b"GND", b"AGND", b"DGND"]
+    if not ex.ok(out, "ground tokens", m.ground_tokens() == tokens):
+        return False
+    if not ex.ok(out, "function prefixes", m.ground_fn_prefixes() == functions):
+        return False
+    if not ex.ok(out, "base names", m.ground_base_names() == bases):
+        return False
+    if not ex.ok(out, "stem prefixes", m.ground_stem_prefixes() == stems):
+        return False
+    if not ex.ok(out, "schematic names", m.schematic_ground_names() == schematic):
+        return False
+    if not ex.eq_bytes(out, "analog", m.analog_ground, b"AGND"):
+        return False
+    if not ex.eq_bytes(out, "digital", m.digital_ground, b"DGND"):
+        return False
+    return ex.eq_bytes(out, "power", m.power_ground, b"PGND")
+
+
+# test "isRatingZeroVolts adds only the chassis node to the ground tokens"
+public func test_isratingzerovolts_adds_only_the_chassis_node_to_the_ground_tokens(out: Stream) -> bool:
+    if not ex.ok(out, "chassis", m.is_rating_zero_volts(b"CHASSIS_GND")):
+        return False
+    if not ex.ok(out, "numbered chassis", m.is_rating_zero_volts(b"CHASSIS_GND2")):
+        return False
+    if not ex.ok(out, "ground", m.is_rating_zero_volts(b"GND")):
+        return False
+    if not ex.ok(out, "analog", m.is_rating_zero_volts(b"AGND3")):
+        return False
+    # Named chassis derivative is distinct from a numbered twin.
+    if not ex.ok(out, "isolated chassis", not m.is_rating_zero_volts(b"CHASSIS_GND_ISO")):
+        return False
+    if not ex.ok(out, "rail", not m.is_rating_zero_volts(b"V_12V")):
+        return False
+    # Keep the barrier open to pour, plane stitcher, and DRC.
+    if not ex.ok(out, "no chassis pour", not m.is_ground_name(m.chassis_ground)):
+        return False
+    for token in m.ground_tokens():
+        if not ex.ok(out, "not a chassis token", token != m.chassis_ground):
+            return False
+    return True
+
+
+# test "isGroundBase accepts the base names in any case and only those"
+public func test_isgroundbase_accepts_the_base_names_in_any_case_and_only_those(out: Stream) -> bool:
+    mut yes: bytes[] = [b"GND", b"gnd", b"AGND", b"dgnd", b"PGND", b"VSS", b"GND_ISO", b"vss_a"]
+    for name in yes:
+        if not ex.ok(out, "accepted", m.is_ground_base(name)):
+            return False
+    # The suffix spellings are deliberately omitted from this table.
+    mut no: bytes[] = [b"GNDA", b"GNDSW", b"VDD"]
+    for name2 in no:
+        if not ex.ok(out, "rejected", not m.is_ground_base(name2)):
+            return False
+    return True
+
+
+func input_port() -> env.Port:
+    mut port = env.port_default(b"VIN", b"VDD", b"in")
+    port.kind = b"power"
+    return port
+
+
+func ic() -> env.Instance:
+    mut part = env.instance_default(b"U1")
+    part.component = b"ic"
+    part.value = b"ic"
+    part.footprint = b"x"
+    part.symbol = b"ic"
+    return part
+
+
+# test "top-level input power ports require decoupling"
+public func test_top_level_input_power_ports_require_decoupling(out: Stream) -> bool:
+    mut block = env.design_block_default(b"top power port")
+    block.instances = [ic()]
+    block.nets = [env.Net(name=b"VDD", pins=[env.pin_ref_default(b"U1", b"1")])]
+    block.ports = [input_port()]
+    mut missing = m.find_missing_decoupling_nets(block)
+    if not ex.eq_int(out, "missing count", len(missing), 1):
+        return False
+    return ex.eq_bytes(out, "missing rail", missing[0], b"VDD")
+
+
+# test "supply capacitor without a ground leg is not decoupling"
+public func test_supply_capacitor_without_a_ground_leg_is_not_decoupling(out: Stream) -> bool:
+    mut cap = env.instance_default(b"C1")
+    cap.component = b"cap"
+    cap.value = b"100nF"
+    cap.footprint = b"x"
+    cap.symbol = b"cap"
+    mut wrong_nets = [env.Net(name=b"VDD", pins=[env.pin_ref_default(b"U1", b"1"), env.pin_ref_default(b"C1", b"1")]), env.Net(name=b"SENSE", pins=[env.pin_ref_default(b"C1", b"2")])]
+    mut block = env.design_block_default(b"wrong return")
+    block.instances = [ic(), cap]
+    block.nets = wrong_nets
+    block.ports = [input_port()]
+    mut missing = m.find_missing_decoupling_nets(block)
+    if not ex.eq_int(out, "missing count", len(missing), 1):
+        return False
+    mut valid_nets = [env.Net(name=b"VDD", pins=[env.pin_ref_default(b"U1", b"1"), env.pin_ref_default(b"C1", b"1")]), env.Net(name=b"GND", pins=[env.pin_ref_default(b"C1", b"2")])]
+    block.nets = valid_nets
+    mut satisfied = m.find_missing_decoupling_nets(block)
+    return ex.eq_int(out, "satisfied", len(satisfied), 0)

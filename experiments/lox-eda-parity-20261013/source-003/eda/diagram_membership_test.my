@@ -1,0 +1,43 @@
+
+import diagram_membership as m
+import eval_env as env
+import support_expect as ex
+
+# test "computeSubBlockAttachments keeps a power producer out of a consuming section"
+public func test_computesubblockattachments_keeps_a_power_producer_out_of_a_consuming_section(out: Stream) -> bool:
+    # The LDO consumes the buck's shared power rail; USB consumes an independent
+    # signal from the USB module. Adoption must follow signal, never shared rail.
+    mut ldo_port = env.section_port_default(b"V_RF_3P3")
+    ldo_port.direction = env.PortDirection.in_
+    ldo_port.signal_type = env.SignalType.power
+    ldo_port.voltage = Some(3.3)
+    mut usb_port = env.section_port_default(b"USB_DP")
+    usb_port.signal_type = env.SignalType.differential
+    mut ldo_section = env.section_default(b"TPS7A2018 1.8 V LDO")
+    ldo_section.ports = [ldo_port]
+    mut usb_section = env.section_default(b"USB")
+    usb_section.ports = [usb_port]
+    mut block = env.design_block_default(b"board-b-analog")
+    block.sections = [ldo_section, usb_section]
+    block.sub_blocks = [env.SubBlock(name=b"buck33", block=env.design_block_default(b"tps63806-rail"), source=b""), env.SubBlock(name=b"usb", block=env.design_block_default(b"usb-c-hs"), source=b"")]
+    block.net_ties = [env.NetTie(a=b"buck33/VOUT", b=b"V_RF_3P3"), env.NetTie(a=b"usb/DP", b=b"USB_DP")]
+    mut attachments = m.compute_sub_block_attachments(block)
+    if not ex.ok(out, "power producer unattached", attachments[0].is_none()):
+        return False
+    mut attached = attachments[1]
+    if attached is None:
+        return ex.ok(out, "USB attached", False)
+    return ex.eq_int(out, "USB section", attached, 1)
+
+
+# test "attachedSubBlocks reports a section's own modules in declaration order"
+public func test_attachedsubblocks_reports_a_section_s_own_modules_in_declaration_order(out: Stream) -> bool:
+    mut block = env.design_block_default(b"board")
+    block.sub_blocks = [env.SubBlock(name=b"one", block=env.design_block_default(b"mod-a"), source=b""), env.SubBlock(name=b"two", block=env.design_block_default(b"mod-b"), source=b""), env.SubBlock(name=b"three", block=env.design_block_default(b"mod-c"), source=b"")]
+    mut attachments: int?[] = [Some(0), Some(1), Some(0)]
+    mut owned = m.attached_sub_blocks(block, attachments, 0)
+    mut expected: int[] = [0, 2]
+    if not ex.ok(out, "declaration order", owned == expected):
+        return False
+    mut none = m.attached_sub_blocks(block, attachments, 7)
+    return ex.eq_int(out, "empty section", len(none), 0)

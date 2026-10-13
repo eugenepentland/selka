@@ -1,0 +1,325 @@
+
+import kicad_sch_shape as shape_mod
+import support_sort as srt
+
+public const grid: int = 127
+
+
+public const max_span: int = 12700
+
+
+public record Point:
+    x: int
+    y: int
+
+
+public record Seg:
+    a: Point
+    b: Point
+
+
+public record Box:
+    x0: int
+    y0: int
+    x1: int
+    y1: int
+
+
+public record End:
+    at: Point
+    side: shape_mod.Side
+
+
+public record Path:
+    key: bytes
+    pts: Point[]
+
+
+public record Field:
+    stops: Point[]
+    bodies: Box[]
+    segs: Seg[]
+
+
+public func same_point(a: Point, b: Point) -> bool:
+    return a.x == b.x and a.y == b.y
+
+
+public func span(a: Point, b: Point) -> int:
+    return abs(a.x - b.x) + abs(a.y - b.y)
+
+
+public func route(a: End, b: End, field: Field, key: bytes) -> Path?:
+    return route_parts(a, b, field.stops, field.bodies, field.segs, key)
+
+
+public func route_parts(a: End, b: End, stops: Point[], bodies: Box[], segs: Seg[], key: bytes) -> Path?:
+    mut distance = span(a.at, b.at)
+    if distance > max_span or distance == 0:
+        return None
+    for i in range(30):
+        mut pts = compact(candidate(i, a, b))
+        if clean(pts, a.at, b.at, stops, bodies, segs):
+            return Some(Path(key=key.copy(), pts=pts))
+    return None
+
+
+public func junctions(segs: Seg[]) -> Point[]:
+    mut counts: dict[int, int] = {}
+    for s in segs:
+        bump(mut counts, s.a)
+        bump(mut counts, s.b)
+    mut out: Point[] = []
+    for k in counts:
+        if counts[k] >= 3:
+            out.append(unkey(k))
+    srt.sort_by(mut out, less_point)
+    return out
+
+
+public func append_segs(mut out: Seg[], pts: Point[]):
+    for i in range(len(pts) - 1):
+        out.append(Seg(a=pts[i], b=pts[i + 1]))
+
+
+# Straight, the two L routes, two jogs, then progressively wider escape lanes.
+func candidate(i: int, a: End, b: End) -> Point[]:
+    if i < 5:
+        return basic(i, a.at, b.at)
+    mut k = i - 5
+    mut steps = [2, 4, 6, 8, 12]
+    return escaped(k % 5, a, b, steps[k // 5] * grid)
+
+
+func escaped(join: int, a: End, b: End, step: int) -> Point[]:
+    mut a2 = outward(a, step)
+    mut b2 = outward(b, step)
+    mut pts = [a.at, a2]
+    pts.extend(join_lane(join, a2, b2))
+    pts.append(b2)
+    pts.append(b.at)
+    return pts
+
+
+func join_lane(join: int, a2: Point, b2: Point) -> Point[]:
+    if join == 0:
+        return []
+    if join == 1:
+        return [Point(x=b2.x, y=a2.y)]
+    if join == 2:
+        return [Point(x=a2.x, y=b2.y)]
+    if join == 3:
+        mut m = mid(a2.x, b2.x)
+        return [Point(x=m, y=a2.y), Point(x=m, y=b2.y)]
+    mut n = mid(a2.y, b2.y)
+    return [Point(x=a2.x, y=n), Point(x=b2.x, y=n)]
+
+
+func outward(e: End, step: int) -> Point:
+    match e.side:
+        case shape_mod.Side.left:
+            return Point(x=e.at.x - step, y=e.at.y)
+        case shape_mod.Side.right:
+            return Point(x=e.at.x + step, y=e.at.y)
+        case shape_mod.Side.top:
+            return Point(x=e.at.x, y=e.at.y - step)
+        case shape_mod.Side.bottom:
+            return Point(x=e.at.x, y=e.at.y + step)
+
+
+func basic(i: int, a: Point, b: Point) -> Point[]:
+    if i == 0:
+        return [a, b]
+    if i == 1:
+        return [a, Point(x=b.x, y=a.y), b]
+    if i == 2:
+        return [a, Point(x=a.x, y=b.y), b]
+    if i == 3:
+        mut m = mid(a.x, b.x)
+        return [a, Point(x=m, y=a.y), Point(x=m, y=b.y), b]
+    mut n = mid(a.y, b.y)
+    return [a, Point(x=a.x, y=n), Point(x=b.x, y=n), b]
+
+
+func point_count(i: int) -> int:
+    if i == 0:
+        return 2
+    if i == 1 or i == 2:
+        return 3
+    return 4
+
+
+func mid(u: int, v: int) -> int:
+    return ((u + v) // 2 // grid) * grid
+
+
+func compact(pts: Point[]) -> Point[]:
+    mut out = [pts[0]]
+    for p in pts[1:]:
+        if not same_point(out[len(out) - 1], p):
+            out.append(p)
+    return out
+
+
+func clean(pts: Point[], a: Point, b: Point, stops: Point[], bodies: Box[], segs: Seg[]) -> bool:
+    if len(pts) < 2:
+        return False
+    for i in range(len(pts) - 1):
+        mut s = Seg(a=pts[i], b=pts[i + 1])
+        if not legal(s) or hits_stop(s, stops, a, b) or hits_body(s, bodies) or hits_wire(s, segs, a, b):
+            return False
+    return True
+
+
+func legal(s: Seg) -> bool:
+    return not same_point(s.a, s.b) and (horizontal(s) or vertical(s)) and on_grid(s.a) and on_grid(s.b)
+
+
+func horizontal(s: Seg) -> bool:
+    return s.a.y == s.b.y
+
+
+func vertical(s: Seg) -> bool:
+    return s.a.x == s.b.x
+
+
+func on_grid(p: Point) -> bool:
+    return p.x % grid == 0 and p.y % grid == 0
+
+
+func hits_stop(s: Seg, stops: Point[], a: Point, b: Point) -> bool:
+    for p in stops:
+        if same_point(p, a) or same_point(p, b):
+            continue
+        if on_seg(p, s):
+            return True
+    return False
+
+
+func on_seg(p: Point, s: Seg) -> bool:
+    return within(p.x, s.a.x, s.b.x) and within(p.y, s.a.y, s.b.y)
+
+
+func within(v: int, lo: int, hi: int) -> bool:
+    return v >= min(lo, hi) and v <= max(lo, hi)
+
+
+func hits_body(s: Seg, bodies: Box[]) -> bool:
+    for box in bodies:
+        if enters_box(s, box):
+            return True
+    return False
+
+
+func enters_box(s: Seg, box: Box) -> bool:
+    if horizontal(s):
+        return strictly(s.a.y, box.y0, box.y1) and crosses_x(s, box)
+    return strictly(s.a.x, box.x0, box.x1) and crosses_y(s, box)
+
+
+func crosses_x(s: Seg, box: Box) -> bool:
+    return max(min(s.a.x, s.b.x), box.x0) < min(max(s.a.x, s.b.x), box.x1)
+
+
+func crosses_y(s: Seg, box: Box) -> bool:
+    return max(min(s.a.y, s.b.y), box.y0) < min(max(s.a.y, s.b.y), box.y1)
+
+
+func strictly(v: int, lo: int, hi: int) -> bool:
+    return v > lo and v < hi
+
+
+func hits_wire(s: Seg, segs: Seg[], a: Point, b: Point) -> bool:
+    for o in segs:
+        if conflict(s, o, a, b):
+            return True
+    return False
+
+
+func conflict(s: Seg, o: Seg, a: Point, b: Point) -> bool:
+    if collinear(s, o):
+        return overlaps(s, o, a, b)
+    return touches(s, o, a, b)
+
+
+func collinear(s: Seg, o: Seg) -> bool:
+    if horizontal(s) and horizontal(o):
+        return s.a.y == o.a.y
+    return vertical(s) and vertical(o) and s.a.x == o.a.x
+
+
+func overlaps(s: Seg, o: Seg, a: Point, b: Point) -> bool:
+    mut es = axis_span(s)
+    mut eo = axis_span(o)
+    mut lo = max(es[0], eo[0])
+    mut hi = min(es[1], eo[1])
+    if lo > hi:
+        return False
+    if lo < hi:
+        return True
+    return not shared_end(s, o, point_at(s, lo), a, b)
+
+
+func axis_span(s: Seg) -> int[]:
+    if horizontal(s):
+        return [min(s.a.x, s.b.x), max(s.a.x, s.b.x)]
+    return [min(s.a.y, s.b.y), max(s.a.y, s.b.y)]
+
+
+func point_at(s: Seg, v: int) -> Point:
+    if horizontal(s):
+        return Point(x=v, y=s.a.y)
+    return Point(x=s.a.x, y=v)
+
+
+# Interior crossings are legal; a tee or a foreign end meeting is not.
+func touches(s: Seg, o: Seg, a: Point, b: Point) -> bool:
+    mut p = cross_point(s, o)
+    if p is None:
+        return False
+    if not is_end(s, p) and not is_end(o, p):
+        return False
+    return not shared_end(s, o, p, a, b)
+
+
+func shared_end(s: Seg, o: Seg, p: Point, a: Point, b: Point) -> bool:
+    return (same_point(p, a) or same_point(p, b)) and is_end(s, p) and is_end(o, p)
+
+
+func cross_point(s: Seg, o: Seg) -> Point?:
+    mut p = try meet(s, o)
+    if not on_seg(p, s) or not on_seg(p, o):
+        return None
+    return Some(p)
+
+
+func meet(s: Seg, o: Seg) -> Point?:
+    if horizontal(s) and vertical(o):
+        return Some(Point(x=o.a.x, y=s.a.y))
+    if vertical(s) and horizontal(o):
+        return Some(Point(x=s.a.x, y=o.a.y))
+    return None
+
+
+func is_end(s: Seg, p: Point) -> bool:
+    return same_point(p, s.a) or same_point(p, s.b)
+
+
+func bump(mut counts: dict[int, int], p: Point):
+    mut k = point_key(p)
+    counts[k] = counts.get(k, 0) + 1
+
+
+# Private in Zig; exposed for the split sign-round-trip test.
+public func point_key(p: Point) -> int:
+    return (p.x + 1048576) * 2097152 + p.y + 1048576
+
+
+public func unkey(k: int) -> Point:
+    return Point(x=k // 2097152 - 1048576, y=k % 2097152 - 1048576)
+
+
+func less_point(a: Point, b: Point) -> bool:
+    if a.x != b.x:
+        return a.x < b.x
+    return a.y < b.y

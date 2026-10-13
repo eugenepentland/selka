@@ -1,0 +1,166 @@
+
+import eval_rails as m
+import eval_env as env
+import support_expect as ex
+
+# Literal former consumer lists independently witness table behaviour.
+# test "the supply-rail vocabulary tables keep the spellings their consumers had"
+public func test_the_supply_rail_vocabulary_tables_keep_the_spellings_their_consumers_had(out: Stream) -> bool:
+    mut rails: bytes[] = [b"VDD", b"VCC", b"VOUT", b"VBUS", b"VPWR", b"VREG", b"VBAT", b"VSYS", b"VRAW", b"V_"]
+    mut input: bytes[] = [b"VIN", b"PVIN", b"VBUS", b"VBAT", b"VSYS", b"VDCIN", b"HVIN"]
+    mut pads: bytes[] = [b"VCC", b"VDD", b"AVDD", b"DVDD", b"PVDD", b"VBAT", b"VBUS", b"VIN", b"VOUT", b"VEE", b"VPP", b"VREF"]
+    mut schematic: bytes[] = [b"VDD", b"VCC", b"VSS", b"VIN", b"VBAT", b"AVDD", b"DVDD", b"PVDD", b"V_"]
+    mut diagram: bytes[] = [b"VDD", b"VCC", b"AVDD", b"DVDD", b"VBAT", b"VREG", b"VPOS", b"VBUS", b"VLX", b"V_"]
+    mut module_: bytes[] = [b"VDD", b"VCC", b"AVDD", b"DVDD", b"VREG", b"VPOS", b"VOUT", b"VEXT", b"VANA", b"VREF", b"VPP", b"V_"]
+    if not ex.ok(out, "rail prefixes", m.rail_prefixes() == rails):
+        return False
+    if not ex.ok(out, "input prefixes", m.input_rail_prefixes() == input):
+        return False
+    if not ex.ok(out, "pad prefixes", m.supply_pad_prefixes() == pads):
+        return False
+    if not ex.ok(out, "schematic prefixes", m.schematic_supply_prefixes() == schematic):
+        return False
+    if not ex.ok(out, "diagram prefixes", m.diagram_supply_prefixes() == diagram):
+        return False
+    if not ex.ok(out, "module prefixes", m.module_supply_prefixes() == module_):
+        return False
+    if not ex.eq_bytes(out, "analog", m.analog_supply, b"AVDD"):
+        return False
+    if not ex.eq_bytes(out, "digital", m.digital_supply, b"DVDD"):
+        return False
+    return ex.eq_bytes(out, "system", m.system_rail, b"VSYS")
+
+
+func out_port(name: bytes, nominal: float?) -> env.Port:
+    mut port = env.port_default(name, name, b"out")
+    port.nominal = nominal
+    port.current_typ = Some(1.0)
+    port.current_max = Some(1.5)
+    return port
+
+
+func outer_with_source(name: bytes, port: env.Port, net: bytes) -> env.DesignBlock:
+    mut inner = env.design_block_default(name)
+    inner.ports = [port.copy()]
+    mut outer = env.design_block_default(b"outer")
+    outer.sub_blocks = [env.SubBlock(name=name.copy(), block=inner, source=b"")]
+    outer.net_ties = [env.NetTie(a=name + b"/" + port.name, b=net.copy())]
+    return outer
+
+
+func nominal_equals(out: Stream, got: float?, want: float) -> bool:
+    if got is None:
+        return ex.ok(out, "nominal exists", False)
+    return ex.near(out, "nominal", got, want, 0.0)
+
+
+# test "build derives one rail per power output port"
+public func test_build_derives_one_rail_per_power_output_port(out: Stream) -> bool:
+    mut nominal: float? = Some(3.3)
+    mut outer = outer_with_source(b"buck", out_port(b"VOUT", nominal), b"VDD")
+    mut rails = m.build(outer)
+    if not ex.eq_int(out, "rail count", len(rails), 1):
+        return False
+    return ex.eq_bytes(out, "rail name", rails[0].name, b"VDD")
+
+
+# test "build recognizes a bare VOUT tied to a rail-named net"
+public func test_build_recognizes_a_bare_vout_tied_to_a_rail_named_net(out: Stream) -> bool:
+    # Generic regulators have no specs: VOUT is power, PG is a signal.
+    mut inner = env.design_block_default(b"buck")
+    inner.ports = [env.port_default(b"VOUT", b"VOUT", b"out"), env.port_default(b"PG", b"PG", b"out")]
+    mut outer = env.design_block_default(b"outer")
+    outer.sub_blocks = [env.SubBlock(name=b"buck", block=inner, source=b"")]
+    outer.net_ties = [env.NetTie(a=b"buck/VOUT", b=b"VDD5"), env.NetTie(a=b"buck/PG", b=b"PG_3V3")]
+    mut rails = m.build(outer)
+    if not ex.eq_int(out, "rail count", len(rails), 1):
+        return False
+    return ex.eq_bytes(out, "rail name", rails[0].name, b"VDD5")
+
+
+# test "build collapses ferrite-bridged nets into single rail"
+public func test_build_collapses_ferrite_bridged_nets_into_single_rail(out: Stream) -> bool:
+    mut nominal: float? = Some(1.8)
+    mut outer = outer_with_source(b"ldo", out_port(b"VOUT", nominal), b"V1P8")
+    mut ferrite = env.instance_default(b"FB1")
+    ferrite.component = b"ferrite-0402"
+    outer.instances = [ferrite]
+    outer.nets = [env.Net(name=b"V1P8", pins=[env.pin_ref_default(b"FB1", b"1")]), env.Net(name=b"VDDA18USB", pins=[env.pin_ref_default(b"FB1", b"2")])]
+    mut rails = m.build(outer)
+    if not ex.eq_int(out, "rail count", len(rails), 1):
+        return False
+    if not ex.eq_bytes(out, "rail name", rails[0].name, b"V1P8"):
+        return False
+    if not ex.eq_int(out, "alias count", len(rails[0].aliases), 1):
+        return False
+    return ex.eq_bytes(out, "alias", rails[0].aliases[0], b"VDDA18USB")
+
+
+# test "build uses sub-block port nominal for voltage"
+public func test_build_uses_sub_block_port_nominal_for_voltage(out: Stream) -> bool:
+    mut nominal: float? = Some(3.3)
+    mut rails = m.build(outer_with_source(b"buck", out_port(b"VOUT", nominal), b"VDD"))
+    return nominal_equals(out, rails[0].nominal, 3.3)
+
+
+# test "build falls back to section power port voltage"
+public func test_build_falls_back_to_section_power_port_voltage(out: Stream) -> bool:
+    mut outer = outer_with_source(b"buck", out_port(b"VOUT", None), b"VDD")
+    mut port = env.section_port_default(b"VDD")
+    port.direction = env.PortDirection.in_
+    port.signal_type = env.SignalType.power
+    port.voltage = Some(3.3)
+    mut section = env.section_default(b"VDD Power")
+    section.ports = [port]
+    outer.sections = [section]
+    mut rails = m.build(outer)
+    return nominal_equals(out, rails[0].nominal, 3.3)
+
+
+# test "build falls back to top-level design port nominal"
+public func test_build_falls_back_to_top_level_design_port_nominal(out: Stream) -> bool:
+    mut outer = outer_with_source(b"buck", out_port(b"VOUT", None), b"VDD")
+    mut port = env.port_default(b"VDD", b"VDD", b"out")
+    port.nominal = Some(3.3)
+    outer.ports = [port]
+    mut rails = m.build(outer)
+    return nominal_equals(out, rails[0].nominal, 3.3)
+
+
+# test "build preserves top-level rated maximum"
+public func test_build_preserves_top_level_rated_maximum(out: Stream) -> bool:
+    mut port = env.port_default(b"V_12V", b"V_12V", b"in")
+    port.kind = b"power"
+    port.rated_min = Some(11.4)
+    port.rated_max = Some(12.6)
+    mut outer = env.design_block_default(b"outer")
+    outer.ports = [port]
+    mut built = m.build(outer)
+    if not ex.eq_int(out, "rail count", len(built), 1):
+        return False
+    return nominal_equals(out, built[0].rated_voltage.max, 12.6)
+
+
+# test "build excludes GND"
+public func test_build_excludes_gnd(out: Stream) -> bool:
+    mut nominal: float? = Some(3.3)
+    # A bizarre output tied to GND must not become a rail.
+    mut rails = m.build(outer_with_source(b"buck", out_port(b"VOUT", nominal), b"GND"))
+    return ex.eq_int(out, "rail count", len(rails), 0)
+
+
+# test "build records source_ref_des and source_port"
+public func test_build_records_source_ref_des_and_source_port(out: Stream) -> bool:
+    mut nominal: float? = Some(3.3)
+    mut rails = m.build(outer_with_source(b"buck", out_port(b"VOUT", nominal), b"VDD"))
+    if not ex.eq_bytes(out, "source ref", rails[0].source_ref_des, b"buck"):
+        return False
+    if not ex.eq_bytes(out, "source port", rails[0].source_port, b"VOUT"):
+        return False
+    return ex.eq_bytes(out, "source path", rails[0].source_path, b"buck/VOUT")
+
+
+# test "build returns empty slice when no rails declared"
+public func test_build_returns_empty_slice_when_no_rails_declared(out: Stream) -> bool:
+    mut rails = m.build(env.design_block_default(b"outer"))
+    return ex.eq_int(out, "rail count", len(rails), 0)

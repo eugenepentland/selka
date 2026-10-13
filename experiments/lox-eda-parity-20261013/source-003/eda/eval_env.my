@@ -1,0 +1,1812 @@
+
+import sexpr_ast as ast
+import pad_neck_profile
+import numeric
+import math
+import support_crc32 as crc32
+import support_strs as strs
+
+# Core data vocabulary of the evaluated design. Strings that come from a model
+# stay bytes; only lookup keys are decoded once to str.
+public enum Value:
+    number(value: float)
+    string(value: bytes)
+    boolean(value: bool)
+    component(value: bytes)
+    component_instance(value: ValueComponentInstance)
+    block_def(value: BlockDef)
+    design_block(value: DesignBlock)
+    nil
+
+
+public record ValueComponentInstance:
+    family: bytes
+    value: bytes
+    attrs: bytes[]
+    typed_attrs: Property[]
+
+
+# A module definition retains its import scope after loading. Defaults are
+# parallel to params: None marks required arguments, otherwise the stored AST
+# is evaluated only when the caller omits that argument. source_file is restored
+# when the body is evaluated so diagnostics name the defining module, not its
+# caller; empty means a definition read from a buffer without a path.
+public record BlockDef:
+    name: bytes
+    params: bytes[]
+    defaults: ast.Node?[]
+    body: ast.Node[]
+    imports: Env
+    source_file: bytes
+
+
+# A pin reference in a net. asserted_fns are the alternate functions explicitly
+# asserted by (as "FN1" "FN2" ...), including simultaneous firmware roles.
+# i_typ/i_max are amperes from the pin form, attached to only the first physical
+# pin of a group so sums count each instance once. load_label names the actual
+# budget consumer when the annotation rides on a cap/bead; empty falls back to
+# the instance component.
+public record PinRef:
+    ref_des: bytes
+    pin: bytes
+    asserted_fns: bytes[]
+    load_label: bytes
+    i_typ: float? = None
+    i_max: float? = None
+
+
+# A named net and its ordered pin references within one design block.
+public record Net:
+    name: bytes
+    pins: PinRef[]
+
+
+# A boundary port. rated_min/rated_max and nominal are volts; current_typ and
+# current_max are expected/deliverable amperes. efficiency is a 0..1 conversion
+# ratio used to charge upstream current as Iout * Vout/Vin / efficiency; linear
+# means derive efficiency = Vout/Vin, so input current is approximately Iout.
+# enable_net records the bring-up dependency; optional allows an open port.
+# kind is its declared signal category, and side overrides direction-based board
+# edge orientation. electrical is a virtual driver/receiver for cross-board ERC.
+# diff_pair_of is the shared base key of the P/N ports expanded by diff-port;
+# empty identifies an ordinary hand-written port.
+public record Port:
+    name: bytes
+    net: bytes
+    direction: bytes
+    enable_net: bytes
+    kind: bytes
+    side: bytes
+    diff_pair_of: bytes
+    rated_min: float? = None
+    rated_max: float? = None
+    nominal: float? = None
+    current_typ: float? = None
+    current_max: float? = None
+    efficiency: float? = None
+    efficiency_linear: bool = False
+    optional: bool = False
+    electrical: ElectricalDecl? = None
+
+
+# One expanded lane of a port-group: signal is the interface spelling, port is
+# the expanded or renamed port, net is its physical net, and optional means ERC
+# never requires the lane. Group membership lives beside ordinary ports because
+# bundle validation and bridge-interface ask for the group's lanes.
+public record PortGroupMember:
+    signal: bytes
+    port: bytes
+    net: bytes
+    optional: bool = False
+
+
+# A boundary bus. name is the declared prefix (or interface name for an empty
+# prefix), interface names its definition, and role is peripheral or controller
+# with mirrored directions. Members refer to ordinary DesignBlock.ports.
+public record PortGroup:
+    name: bytes
+    interface: bytes
+    role: bytes
+    members: PortGroupMember[]
+
+
+# A note annotation attached to a reference designator.
+public record Note:
+    ref_des: bytes
+    text: bytes
+
+
+# A cited datasheet in lib/datasheets. page is 1-based; 0 links the whole PDF.
+# quote is short verbatim source text auto-highlighted by the PDF viewer. Shared
+# by section notes and library component requirements.
+public record NoteRef:
+    pdf: bytes
+    page: int = 0
+    quote: bytes? = None
+
+
+# An intentionally inapplicable datasheet category. Strict preflight requires
+# a rationale so an omitted topic cannot hide behind an unexplained N/A.
+public record DatasheetReviewNa:
+    category: bytes
+    rationale: bytes
+
+
+public enum DatasheetReviewStatus:
+    draft
+    complete
+    stale
+
+
+# Digest-bound evidence of an active component's datasheet review: its PDF,
+# SHA-256, draft/complete/stale status, reviewer, ISO date, included categories
+# and explicit category-na rationales. Preflight rehashes the current PDF, so
+# replacing it makes the review stale even when the form was left unchanged.
+public record DatasheetReview:
+    datasheet: bytes
+    sha256: bytes
+    status: DatasheetReviewStatus
+    reviewed_by: bytes
+    date: bytes
+    categories: bytes[]
+    not_applicable: DatasheetReviewNa[]
+
+
+# Design-specific section prose with an optional datasheet page reference.
+public record SectionNote:
+    text: bytes
+    ref: NoteRef? = None
+
+
+# A design-side sign-off answering a library or design rule. ref_des and
+# stable target_id are alternatives; target_id survives renumbering and module
+# renames. For design_rule both are empty and req_id identifies DesignRule.id.
+# A failing machine check stays fail-with-override: prose cannot silently turn
+# it into verified. A requirement without a check, or with an NA check, becomes
+# verified on a matching sign-off. rationale is mandatory prose; signed_by/date
+# retain optional signer and ISO-date provenance.
+public record Verification:
+    ref_des: bytes
+    target_id: bytes
+    req_id: bytes
+    rationale: bytes
+    signed_by: bytes
+    date: bytes
+    design_rule: bool = False
+
+
+# A named virtual stub pin: class_ is a diagram wire category and net connects
+# parts sharing the same net. Stubs expose logical signals, not physical pads.
+public record PartSignal:
+    name: bytes
+    class_: bytes
+    net: bytes
+
+
+# A (stub ...) placeholder auto-places with ref_des and stable id, draws a
+# categorized node wired through signals, and exports a padless width*height-mm
+# box for floor planning (0 dimensions mean unset). A later real import of the
+# same name supersedes it while keeping id and KiCad identity. role/mpn/category
+# retain author intent; absent category permits name heuristics. channels draws
+# stacked identical-channel cards; signals represent one channel.
+public record PlaceholderPart:
+    ref_des: bytes
+    name: bytes
+    role: bytes
+    mpn: bytes
+    category: bytes
+    id: bytes
+    signals: PartSignal[]
+    width: float = 0.0
+    height: float = 0.0
+    channels: int = 1
+
+
+# A library rule for using a component, with optional datasheet ref and a
+# machine check. id is explicit source hex when provided, otherwise CRC32(text)
+# written as eight lowercase hex digits. Sign-offs depend on it: freeze ids
+# before editing linked requirement text to preserve verifies targets.
+public record Requirement:
+    text: bytes
+    id: bytes
+    ref: NoteRef? = None
+    check: Check? = None
+
+
+# Library rules are inherited datasheet obligations; design rules are authored
+# by this board/module. Both are gated identically, retaining authority for review.
+public enum RuleSource:
+    library
+    design
+
+
+# One predicate of a design-owned net-rule, checked on every matched net:
+# min_bulk_uf sums capacitors bridging the net to ground, declared_envelope
+# requires an authored/derived envelope, in_net_class requires declared class
+# membership, and max_fanout bounds its number of pins.
+public enum NetPredicate:
+    min_bulk_uf(value: float)
+    declared_envelope
+    in_net_class
+    max_fanout(value: int)
+
+
+# on_instance targets a part in the containing block (or sub/REF inside a
+# sub-block) with an ordinary check. net_scoped requires every matched net from
+# any glob to satisfy every predicate.
+public enum DesignRuleBody:
+    on_instance(target: bytes, check: Check)
+    net_scoped(globs: bytes[], predicates: NetPredicate[])
+
+
+# A rule owned by a design/block/section/module, entering the same result and
+# verifies pipeline as a library requirement. id uses the same explicit-or-CRC
+# scheme. scope is the authored section path for display; checking always uses
+# the containing block regardless of that section path.
+public record DesignRule:
+    text: bytes
+    id: bytes
+    scope: bytes
+    body: DesignRuleBody
+    ref: NoteRef? = None
+
+
+# Automated-check primitives attached to one placement's requirement. Pin
+# references name pinout FUNCTIONS, not physical pad ids, because a pad's role
+# and net depend on how that particular design wires it.
+public enum Check:
+    connected(pin_a: bytes, pin_b: bytes)
+    decoupling(value: CheckDecoupling)
+    pullup_range(pin: bytes, target_net: bytes, min_ohms: float, max_ohms: float)
+    voltage_range(value: CheckVoltageRange)
+    tied_to_net(pin: bytes, target_net: bytes)
+    not_connected(pin: bytes)
+    pin_not_floating(pin: bytes)
+    pins_on_same_net(pins: bytes[])
+    decoupling_per_pin(return_pin: bytes, pins: bytes[], min_uf: float, count: int)
+    series_element(kind: SeriesKind, pin: bytes, target_net: bytes, min: float, max: float)
+    feedback_divider(pin: bytes, return_net: bytes, reference_v: float, tolerance_pct: float)
+    set_resistor_output(pin: bytes, return_net: bytes, output_pin: bytes, current_ua: float, tolerance_pct: float)
+    cap_rating(pin_a: bytes, pin_b: bytes, min_ratio: float, min_v: float)
+    max_distance(value: CheckMaxDistance)
+    sequence(value: CheckSequence)
+
+
+public record CheckDecoupling:
+    pin_a: bytes
+    pin_b: bytes
+    min_uf: float
+    max_uf: float? = None
+
+
+public record CheckVoltageRange:
+    pin: bytes
+    min_v: float
+    max_v: float
+    not_above_pin: bytes
+    margin_v: float = 0.0
+
+
+public record CheckMaxDistance:
+    pin: bytes
+    kind: DistanceKind
+    max_mm: float
+    min_value: float? = None
+    max_value: float? = None
+
+
+public record CheckSequence:
+    pin_a: bytes
+    pin_b: bytes
+    margin_ms: float = 0.0
+
+
+public enum DistanceKind:
+    C
+    R
+    L
+    any
+
+
+# A max-distance requirement resolved to a physical pad and candidate ref-des
+# list. The layout lint can measure its budget without reparsing component values
+# or loading pinouts; req_id/what retain the requirement and candidate meaning.
+public record DistanceRule:
+    req_id: bytes
+    pad: bytes
+    candidates: bytes[]
+    max_mm: float
+    what: bytes
+
+
+public enum SeriesKind:
+    R
+    L
+    C
+
+
+# A named collection of member references.
+public record Group:
+    name: bytes
+    members: bytes[]
+
+
+# A functional super-block for the system view: name, what-it-does caption,
+# authored section/sheet hosts (including synthetic Power), and optional stacked
+# identical channels. stack > 1 draws offset cards.
+public record FunctionSpec:
+    name: bytes
+    caption: bytes
+    hosts: bytes[]
+    stack: int = 1
+
+
+# A part grouping inside an instance, for multi-part schematic symbols.
+public record Part:
+    name: bytes
+    pins: PartPin[]
+
+
+# A physical pin and its net, with optional pinout function pin_name and feature
+# group label for the schematic master table's leftmost column.
+public record PartPin:
+    pin: bytes
+    net: bytes
+    pin_name: bytes
+    group: bytes
+
+
+# An authored component/instance key-value attribute, surfaced verbatim in the
+# BOM and KiCad netlist (manufacturer, mpn and similar properties).
+public record Property:
+    key: bytes
+    value: bytes
+
+
+# An assembly variant changes population and value on the same PCB/netlist/
+# footprint set. Structural changes require another board. doc is optional prose;
+# one is_default declaration selects the variant when the user does not choose.
+public record VariantDecl:
+    name: bytes
+    doc: bytes
+    is_default: bool = False
+
+
+# only_in permits population only in its variants; dnp_in excludes population;
+# value_in overrides a populated part's value in exactly one variant.
+public enum VariantRuleKind:
+    only_in
+    dnp_in
+    value_in
+
+
+# An instance-level clause retained for the whole population matrix. variant
+# is validated against the root declarations; value is populated only by value_in.
+public record VariantRule:
+    kind: VariantRuleKind
+    variant: bytes
+    value: bytes
+
+
+# Source-order rules survive materialization even though Instance.dnp/value
+# already reflect the selected variant. base_value preserves the authored value
+# before an override (empty when none applied), so BOM ledger fingerprints do
+# not change just because a non-default assembly was built.
+public record InstanceVariants:
+    rules: VariantRule[]
+    base_value: bytes
+
+
+# The root design's variant space shared by every module evaluation and copied
+# onto the finished block. active indexes decls; None means the implicit base.
+public record VariantScope:
+    decls: VariantDecl[]
+    active: int? = None
+
+
+# One placed library component, value/footprint/symbol and per-part pin breakup.
+# label is source prose; origin_key is stable module-local source/structural
+# identity, never rewritten by ref-des renumbering. pinout falls back to symbol/
+# component. docs and requirements are copied from the library; ignored records
+# an explicit opt-out. electrical stays sparse. attrs/typed_attrs retain authored
+# ratings as well as merged properties, so a parts-table override can report a
+# disagreement. distance_rules are resolved pad/candidate budgets. source_offset
+# locates the family token; id is source hex and uuid is its KiCad/BOM identity.
+# placeholder bypasses physical pad checks and warns until a real part replaces
+# it. dnp retains copper/pads while excluding assembly population; variants
+# explain the selected population/value. bind retains placement intent.
+# strap_oks/nc_oks are physical-pad sign-offs with nonempty human reasons, never
+# implicit suppressions. thermal and pinout_facts carry resolved evidence so
+# consumers need no evaluator or second library read.
+public record Instance:
+    ref_des: bytes
+    label: bytes
+    origin_key: bytes
+    component: bytes
+    value: bytes
+    footprint: bytes
+    symbol: bytes
+    pinout: bytes
+    properties: Property[]
+    docs: ComponentDocs
+    requirements: Requirement[]
+    electrical: ElectricalDecl[]
+    attrs: bytes[]
+    typed_attrs: Property[]
+    distance_rules: DistanceRule[]
+    parts: Part[]
+    id: bytes
+    uuid: bytes
+    variants: InstanceVariants
+    bind: InstanceBinds
+    strap_oks: StrapOk[]
+    nc_oks: NcOk[]
+    thermal: InstanceThermal
+    pinout_facts: PinoutFacts
+    requirements_ignored: bool = False
+    source_offset: int = 0
+    placeholder: bool = False
+    dnp: bool = False
+
+
+# Structural evidence from the library pinout, rather than a weak ref-des
+# letter (importers label many connectors/mechanical parts U). known=False means
+# no evidence, not absence of a supply. has_supply excludes straps; has_ground
+# includes exposed returns. positional means every function is merely its pad
+# number. pin_count counts distinct pads and saturates instead of wrapping.
+public record PinoutFacts:
+    known: bool = False
+    has_supply: bool = False
+    has_ground: bool = False
+    positional: bool = False
+    pin_count: int = 0
+
+
+# The part's lib/datasheets PDF names and digest-bound review, carried together
+# through the cache/resolved component/instance. Legacy review=None warns during
+# authoring and gates strict preflight until completeness is proven.
+public record ComponentDocs:
+    datasheets: bytes[]
+    review: DatasheetReview? = None
+
+
+public record ThermalDeclThetaJc:
+    generic: float? = None
+    top: float? = None
+    bottom: float? = None
+
+
+public record ThermalDeclPsi:
+    jt: float? = None
+    jb: float? = None
+
+
+# Optional datasheet thermal envelope. Resistances are degrees C/W and
+# temperatures degrees C. Missing theta_ja permits a package screening estimate;
+# theta_jb supplies the junction-to-copper field path. theta_jc generic never
+# guesses top/bottom direction; top/bottom are heat-flow resistances. psi values
+# are characterization parameters retained for measurements, not resistances.
+# tj_max is absolute junction maximum; operating_min/max bound rated ambient.
+public record ThermalDecl:
+    theta_jc: ThermalDeclThetaJc
+    psi: ThermalDeclPsi
+    theta_ja: float? = None
+    theta_jb: float? = None
+    tj_max: float? = None
+    operating_min: float? = None
+    operating_max: float? = None
+
+
+# Authored instance dissipation in watts (typ alone or typ/max). It outranks
+# derived current/regulator-loss estimates because it is the author's declaration.
+public record PowerDecl:
+    typ: float? = None
+    max: float? = None
+
+
+# Library thermal data and authored instance power, grouped because analyzers
+# read them together. Missing power permits deriving dissipation from currents
+# or regulator loss; missing decl means no library thermal declaration.
+public record InstanceThermal:
+    decl: ThermalDecl? = None
+    power: PowerDecl? = None
+
+
+# Bind a bypass capacitor to one named IC pad. Part and pad travel together:
+# a bare pad number is ambiguous on a shared rail. Empty ic/pin means no binding
+# (or automatic lowest supply pad); post-build resolution uses the TARGET pinout.
+# rail=True deliberately serves the whole rail and opts out of per-pin binding,
+# which differs from having no decouples form on a multi-pad supply.
+public record DecoupleBind:
+    ic: bytes
+    pin: bytes
+    rail: bool = False
+
+
+# Adjacency to a named target pad for termination/feedback/matching/bulk parts.
+# This has no return loop and never enters the inductance or plane-stitch score;
+# a part carrying both near and decouple is an ERC error. The target pinout
+# resolves ref/pin after build. Empty own infers the leg sharing the target net;
+# author it when both legs share that net.
+public record NearBind:
+    ref: bytes
+    pin: bytes
+    own: bytes
+
+
+# The authored decouple/near placement bindings, read together by all consumers.
+public record InstanceBinds:
+    decouple: DecoupleBind
+    near: NearBind
+
+
+# A physical-pad blessing for an intentional strap-to-rail tie. reason must be
+# nonempty to suppress the strap_tied_to_rail error.
+public record StrapOk:
+    pin: bytes
+    reason: bytes
+
+
+# A physical-pad blessing for an intentional no-connect. A nonempty reason is
+# required to suppress a finding for a declared input or config strap.
+public record NcOk:
+    pin: bytes
+    reason: bytes
+
+
+# A sub-block's name and design. source is its module key or project-relative
+# file path for source/module viewers, empty when provenance is unavailable.
+# reflow lets the parent's placer move the internal parts freely instead of
+# docking the module's placement as one rigid macro.
+public record SubBlock:
+    name: bytes
+    block: DesignBlock
+    source: bytes
+    reflow: bool = False
+
+
+# Top-level instance pins referenced inside a section, with an optional feature label.
+public record PinGroup:
+    ref_des: bytes
+    pins: PartPin[]
+    group: bytes
+
+
+# Signal categories for section interfaces.
+public enum SignalType:
+    power
+    signal
+    clock
+    data
+    differential
+    rf
+
+
+# Section port flow: in_ consumes, out produces, io is bidirectional.
+public enum PortDirection:
+    in_
+    out
+    io
+
+
+# An evaluated and ordered rated-voltage window (min <= max).
+public record RatedWindow:
+    min: float
+    max: float
+
+
+# A section boundary interface. voltage is evaluated nominal volts; rated is
+# an optional pair recording authored bounds without seeding a rail envelope
+# (the section is not the source). group groups bus/differential lanes; role and
+# protocol are annotations. class_ is authoritative diagram edge class before
+# signal_type/name heuristics. optional permits an open connection; electrical
+# supplies virtual boundary driver/receiver evidence for voltage-domain ERC.
+public record SectionPort:
+    name: bytes
+    direction: PortDirection
+    signal_type: SignalType
+    group: bytes[]
+    role: bytes
+    protocol: bytes
+    class_: bytes
+    voltage: float? = None
+    rated: RatedWindow? = None
+    optional: bool = False
+    electrical: ElectricalDecl? = None
+
+
+# A named calculation with key-value results for section review display.
+public record CalcBlock:
+    name: bytes
+    results: CalcResult[]
+
+
+# One named scalar result showing design intent beside its implementing parts.
+public record CalcResult:
+    name: bytes
+    value: float
+
+
+# Concept has interfaces only; implemented has components; review flags an implementation.
+public enum SectionStatus:
+    concept
+    implemented
+    review
+
+
+# An authored section of instances/pin groups/interfaces/protocols/calcs. category
+# is authoritative before block_role/name heuristics; notes link design prose to
+# datasheet pages. Subsections show schematic detail but merge in block diagrams.
+# status can be inferred from content. diagram_hidden removes noisy mechanical/
+# instrumentation groups from overview. hosts explicitly folds named sub-blocks
+# into this node, overriding the layout-independent net-count attachment heuristic.
+public record Section:
+    name: bytes
+    description: bytes
+    category: bytes
+    notes: SectionNote[]
+    instances: Instance[]
+    pin_groups: PinGroup[]
+    ports: SectionPort[]
+    protocols: bytes[]
+    calcs: CalcBlock[]
+    sub_sections: Section[]
+    status: SectionStatus
+    block_role: BlockRole
+    hosts: bytes[]
+    diagram_hidden: bool = False
+
+
+# Block-diagram placement role: automatic, input source or output sink.
+public enum BlockRole:
+    auto
+    input
+    output
+
+
+# Merge the named net b onto net a.
+public record NetTie:
+    a: bytes
+    b: bytes
+
+
+# Library pin role for driver/receiver voltage-domain ERC and future signal analysis.
+public enum ElectricalType:
+    input
+    output
+    io
+    power_in
+    power_out
+    passive
+    nc
+
+
+# Output style: open-drain needs an external pull-up for a high level.
+public enum Drive:
+    push_pull
+    open_drain
+    open_emitter
+
+
+# Sparse electrical metadata indexed by pin FUNCTION name, surviving pinout
+# regeneration. No entry means skip that pin. Optional levels are volts;
+# max_voltage is absolute maximum and domain_ names digital/analog/rf provenance.
+public record ElectricalDecl:
+    pin: bytes
+    domain_: bytes
+    electrical_type: ElectricalType? = None
+    drive: Drive? = None
+    v_ih_min: float? = None
+    v_il_max: float? = None
+    v_oh_typ: float? = None
+    v_ol_typ: float? = None
+    max_voltage: float? = None
+
+
+# Categories driving coverage requirements such as a point on each power rail/clock.
+public enum TestPointTag:
+    bring_up
+    power
+    clock
+    reset
+    debug
+    signal
+
+
+# A first-class test-point form creates a physical instance unless virtual is
+# explicitly authored. Purpose/required_for remain alongside the instance for
+# coverage, review and ERC.
+public record TestPoint:
+    ref_des: bytes
+    net: bytes
+    purpose: bytes
+    required_for: TestPointTag[]
+    virtual: bool = False
+
+
+public record PowerRailRatedVoltage:
+    min: float? = None
+    max: float? = None
+
+
+# Canonical first-class supply derived once from source ports and ferrite
+# union-find, shared by all budget/sequencing/coverage consumers. name is the
+# source-side net; aliases are bridged downstream names. nominal resolves from
+# sub-block output, then section power voltage, then top-level nominal/rated
+# midpoint. rated_voltage preserves authored bounds for maximum-rating checks.
+# source_ref_des/port/path identify the producer (empty ref for a board input).
+# capacity_typ/max are deliverable amperes; enable_net retains bring-up gating.
+public record PowerRail:
+    name: bytes
+    aliases: bytes[]
+    rated_voltage: PowerRailRatedVoltage
+    source_ref_des: bytes
+    source_port: bytes
+    source_path: bytes
+    enable_net: bytes
+    nominal: float? = None
+    capacity_typ: float? = None
+    capacity_max: float? = None
+
+
+# An authored module-policy net criticality class, overriding net-name heuristics.
+public record NetClassPin:
+    net: bytes
+    class_: bytes
+
+
+# derived follows proven declarations/topology; declared is an authored assertion.
+public enum NetEnvelopeOrigin:
+    derived
+    declared
+
+
+# Human/JSON audit text; downstream algorithms never branch on rule/why/root.
+# rule states the authority, why is declared prose, and root is the ferrite DC node.
+public record NetEnvelopeProvenance:
+    rule: bytes
+    why: bytes
+    root: bytes
+
+
+# Proven worst-case DC potential on a FLATTENED, tie-canonicalized net. A
+# claimed envelope failing to cover the derived one is a contradiction. domain_
+# correlates nodes connected through series R/L: shared nonzero domains bound
+# voltage across a conductor by IR drop, not independent interval widths; zero
+# claims no such correlation. bounded marks a device-supply feasibility bound
+# that may prove rating safety but must never be reported as actual exposure.
+public record NetEnvelope:
+    net: bytes
+    min: float
+    max: float
+    origin: NetEnvelopeOrigin
+    provenance: NetEnvelopeProvenance
+    domain_: int = 0
+    bounded: bool = False
+
+
+# Authored net-envelope bounds plus rationale, unresolved at its block's scope.
+# rule identifies who claimed it; module declarations are restamped as parents
+# lift them under their instantiated path.
+public record NetEnvelopeDecl:
+    net: bytes
+    min: float
+    max: float
+    rationale: bytes
+    rule: bytes
+
+
+# published is the resolved worst-case voltage answer per flat net; declared
+# is this block's own unresolved forms, lifted by parents with sub-block prefixes.
+# An envelope describes copper potential and is distinct from a rail's supply-tree,
+# current budget, testpoint and PDN identity.
+public record NetEnvelopeTable:
+    published: NetEnvelope[]
+    declared: NetEnvelopeDecl[]
+
+
+# Transient intent for one physical power copper node. Unlike a DC budget,
+# PDN screening never collapses physical domains through ferrite beads.
+public record PdnIntent:
+    net: bytes
+    ripple_v: float
+    step_current_a: float? = None
+    rise_time_s: float? = None
+    source_resistance_ohm: float? = None
+    source_inductance_h: float? = None
+    f_min_hz: float = 1.0e3
+    f_max_hz: float = 1.0e9
+
+
+# Horizontal relations set columns, vertical relations set rows; one of each pins both.
+public enum PlaceRel:
+    right_of
+    left_of
+    above
+    below
+
+
+# Position a block one box-plus-gap in rel from the named reference.
+public record PlaceConstraint:
+    rel: PlaceRel
+    reference: bytes
+
+
+# A layout place directive. No constraints makes an anchor; relative placement
+# resolves only when every referenced block is placed, supporting recursive dependencies.
+public record Placement:
+    name: bytes
+    constraints: PlaceConstraint[]
+
+
+# Authored ordered horizontal band: rows top-to-bottom, members left-to-right.
+public record LayoutRow:
+    members: bytes[]
+
+
+# A labeled padded bounding box behind already-placed blocks; cosmetic, never moves them.
+public record LayoutGroup:
+    label: bytes
+    members: bytes[]
+
+
+public enum EdgeSide:
+    left
+    right
+
+
+# Resolve pinned left/right columns after other layout, then center vertical stacks.
+public record LayoutEdge:
+    side: EdgeSide
+    members: bytes[]
+
+
+# Declarative relative placements, row bands, cosmetic groups and edge stacks.
+# Empty placements and rows retain the category-column diagram layout.
+public record LayoutSpec:
+    placements: Placement[]
+    rows: LayoutRow[]
+    groups: LayoutGroup[]
+    edges: LayoutEdge[]
+
+
+# Physical board edge receiving authored docked parts.
+public enum PlacementSide:
+    left
+    right
+    top
+    bottom
+
+
+# Ref-des plus optional CCW degrees; None lets the solver choose pads-inward rotation.
+public record PlacementItem:
+    ref: bytes
+    rot: float? = None
+
+
+# Parts docked flush inside one board edge in authored order.
+public record PlacementSideSpec:
+    side: PlacementSide
+    items: PlacementItem[]
+
+
+# Absent board-role defaults to subcircuit; board marks the fabrication role.
+public enum BoardRole:
+    subcircuit
+    board
+
+
+# Explicit backing board face, independent of the placement engine.
+public enum FabricationSide:
+    top
+    bottom
+
+
+# board follows the exact manufactured outline; polygon is an authored world-mm contour.
+public enum FabricationRegion:
+    board
+    polygon(value: FixedArray[float, 2][])
+
+
+# Remove footprint projections from backing regions on the backing face.
+# all_sides explicitly opts into clearance through the board regardless of assembly face.
+public record FabricationFootprintExclusion:
+    refs: bytes[]
+    enabled: bool = False
+    all_sides: bool = False
+    clearance: float = 0.0
+
+
+# A separately fabricated backing (adhesive/stiffener), outside electrical
+# StackupSpec: its thickness adds to the finished PCB and its own .gbr basename
+# owns the application regions. Empty excluded refs selects every footprint in
+# the chosen face scope; clearance enlarges the subtraction.
+public record FabricationLayerSpec:
+    name: bytes
+    kind: bytes
+    side: FabricationSide
+    material: bytes
+    thickness: float
+    regions: FabricationRegion[]
+    exclude_footprints: FabricationFootprintExclusion
+
+
+# Feature families reserved by a keepout. planes means poured copper from
+# planes/outer pours/module zones and requires an explicit authored interior
+# keepout request: ordinary mechanical regions still need ground beneath mask.
+# Perimeter copper pullback instead belongs to the copper-edge design rule.
+public record PerimeterKeepoutBlocks:
+    components: bool = False
+    tracks: bool = False
+    vias: bool = False
+    planes: bool = False
+
+
+# Perimeter-fence keepout clearance starts at a fence via's inward copper edge.
+# Allowed named nets can still cross the reserved band.
+public record PerimeterKeepoutSpec:
+    blocks: PerimeterKeepoutBlocks
+    allow_nets: bytes[]
+    clearance: float = 0.0
+
+
+# both reserves the full thickness for mechanical obstruction; top/bottom reserve one face.
+public enum BoardKeepoutSide:
+    top
+    bottom
+    both
+
+
+public record BoardKeepoutSpecRect:
+    x: float
+    y: float
+    w: float
+    h: float
+
+
+# Copper selection for a planes carve. all=True reaches every layer; list
+# stores 1-based physical copper positions. With neither, top selects first,
+# bottom last and both every layer, the only face selection reaching inner planes.
+public record BoardKeepoutLayers:
+    list: bytes
+    all: bool = False
+
+
+# Authored interior rectangle in board-local mm from the outline's top-left,
+# the same mechanical frame as heatsinks. Its position is independent of the
+# outline/fence. name/reason follow every report. Defaults block components,
+# tracks and vias; planes carving is explicit. allow_nets admits intentional
+# copper such as a bonded ground. layers can override face-based copper selection.
+public record BoardKeepoutSpec:
+    name: bytes
+    rect: BoardKeepoutSpecRect
+    side: BoardKeepoutSide
+    blocks: PerimeterKeepoutBlocks
+    allow_nets: bytes[]
+    reason: bytes
+    layers: BoardKeepoutLayers
+
+
+# Continuous plated-through outline fence, dimensions in mm. edge_offset is
+# edge to via center; mask_width is the bare band inward from the edge on both
+# faces. All-zero geometry means undeclared; default net is GND.
+public record PerimeterFenceSpec:
+    net: bytes
+    keepout: PerimeterKeepoutSpec
+    via_dia: float = 0.0
+    via_drill: float = 0.0
+    spacing: float = 0.0
+    edge_offset: float = 0.0
+    mask_width: float = 0.0
+
+
+public record BoardHeatsinkSpecRect:
+    x: float
+    y: float
+    w: float
+    h: float
+
+
+public record BoardHeatsinkSpecTarget:
+    scope: bytes
+    origin: bytes
+
+
+public record BoardHeatsinkSpecGeometry:
+    shape: bytes
+    fin_axis: bytes
+    base_mm: float = 2.0
+    fin_height_mm: float = 10.0
+    fin_thickness_mm: float = 1.0
+    fin_gap_mm: float = 1.5
+    lower_width_mm: float = 0.0
+    lower_length_mm: float = 0.0
+    lower_height_mm: float = 0.0
+
+
+public record BoardHeatsinkSpecPad:
+    thickness_mm: float = 0.5
+    conductivity_w_mk: float = 6.0
+
+
+# Board-owned physical heatsink in top-left board-local mm. Its target uses
+# sub-block scope and module-local origin, so renumbering cannot attach cooling
+# to a recycled ref-des. Material/fin geometry and thermal pad retain the
+# physical assembly; a saved layout may override it.
+public record BoardHeatsinkSpec:
+    rect: BoardHeatsinkSpecRect
+    side: FabricationSide
+    target: BoardHeatsinkSpecTarget
+    material: bytes
+    geometry: BoardHeatsinkSpecGeometry
+    pad: BoardHeatsinkSpecPad
+
+
+public record BoardFanSpecRect:
+    x: float
+    y: float
+    w: float
+    h: float
+
+
+# Axial fan normal to a board face. rect is its outlet's board projection;
+# distance_mm is outlet-plane to board-face. Catalog free-air flow and shutoff
+# pressure remain distinct; operating_flow_fraction states the installed-flow
+# screening assumption.
+public record BoardFanSpec:
+    model: bytes
+    rect: BoardFanSpecRect
+    side: FabricationSide
+    distance_mm: float
+    free_air_flow_m3_s: float
+    max_static_pressure_pa: float
+    operating_flow_fraction: float
+
+
+# Optional authored board cooling assemblies: one heatsink and one fan.
+public record BoardThermalAssemblySpec:
+    heatsink: BoardHeatsinkSpec? = None
+    fan: BoardFanSpec? = None
+
+
+# Physical outline plus edge-docked parts and TL/TR/BR/BL corner hardware in
+# authored order. A missing size (zero w/h) is inert and reported by lint.
+# part_number is the shop-floor identity beside the geometry hash. corner_radius
+# rounds the outline in every shape consumer. outline_approved accepts one exact
+# saved profile digest and becomes stale after redraw; size remains checked.
+# perimeter_fence and keepouts retain optional physical restrictions. Absent
+# present means an unbounded part cluster. power_plane=False drops non-ground
+# planes without changing physical copper construction or ground planes.
+public record BoardSpec:
+    part_number: bytes
+    outline_approved: bytes
+    sides: PlacementSideSpec[]
+    corners: PlacementItem[]
+    perimeter_fence: PerimeterFenceSpec
+    keepouts: BoardKeepoutSpec[]
+    thermal: BoardThermalAssemblySpec
+    role: BoardRole
+    w: float = 0.0
+    h: float = 0.0
+    corner_radius: float = 0.0
+    power_plane: bool = True
+    present: bool = False
+
+
+# One solid-plane net at a 1-based physical copper position (top=1, bottom=layers).
+public record StackupPlane:
+    index: int
+    net: bytes
+
+
+public enum StackupCopperNarrowSide:
+    up
+    down
+
+
+# Physical foil details, separate from electrical plane/routing role. Material
+# normally Copper; width_reduction models the etched trapezoid's base minus
+# finished narrow width in mm. narrow_side points up to layer 1 or down to bottom;
+# zero reduction retains rectangular geometry.
+public record StackupCopper:
+    index: int
+    thickness: float
+    material: bytes
+    narrow_side: StackupCopperNarrowSide
+    width_reduction: float = 0.0
+
+
+# One face's process-aware coating profile. Height over laminate differs from
+# height over copper, preserving the stepped cross-section used by impedance tables.
+public record StackupSoldermask:
+    side: FabricationSide
+    material: bytes
+    er: float
+    substrate_thickness: float
+    copper_thickness: float
+
+
+# Fabricator dielectric construction category: prepreg or core.
+public enum StackupDielectricKind:
+    prepreg
+    core
+
+
+# Dielectric gap immediately after_layer and before after_layer+1. thickness
+# is mm; er is electrical relative permittivity, with zero selecting the generic
+# FR-4 default 4.4. Construction/routing ignore er but impedance solving needs it.
+public record StackupDielectric:
+    after_layer: int
+    kind: StackupDielectricKind
+    material: bytes
+    thickness: float
+    er: float = 0.0
+
+
+# Authored copper stack: positions not listed in planes remain signal layers.
+# present=False keeps the legacy four-layer ground/dominant-supply implicit
+# model. An explicit two-layer stack has no planes. copper/dielectrics/soldermasks
+# retain physical buildup; preset names the fabricator, empty for custom.
+# thickness is nominal finished-board mm (zero uses the 1.6mm fab default),
+# while construction_thickness sums authored copper and dielectric intervals.
+public record StackupSpec:
+    planes: StackupPlane[]
+    copper: StackupCopper[]
+    dielectrics: StackupDielectric[]
+    soldermasks: StackupSoldermask[]
+    preset: bytes
+    layers: int = 0
+    present: bool = False
+    thickness: float = 0.0
+
+
+# Maximum source-to-load copper-loop loss in volts. Zero disables it;
+# return_net defaults GND, conductor temperature 35C (25 ambient plus 10 rise).
+# Validity requires a finite positive limit, finite temperature -50..200C and
+# a nonempty return net.
+public record NetClassSpecVoltageDrop:
+    return_net: bytes
+    limit_v: float = 0.0
+    copper_temperature_c: float = 35.0
+
+
+# Routing geometry/order for named nets: a profile may have no nets and class
+# membership may carry no numbers, allowing a module's semantic class to inherit
+# board geometry. Zero preserves defaults; names match case-insensitively.
+# Higher priority routes first in a maze without rip-up. voltage_drop bounds
+# loop loss; max_route_length_mm counts centerlines and via barrels (0 absent,
+# -1 invalid). pad_neck narrows only near SMD lands before tapering to the trunk,
+# and carries independent power-branch width. diff_gap<0 disables pairing, 0
+# uses clearance, positive is explicit edge gap. resolution_mm chooses rescue
+# window raster pitch. rf, match_ and return_path group their coupled policies.
+public record NetClassSpec:
+    name: bytes
+    voltage_drop: NetClassSpecVoltageDrop
+    pad_neck: pad_neck_profile.Profile
+    nets: bytes[]
+    rf: ClassRf
+    match_: ClassMatch
+    return_path: ClassReturnPath
+    width: float = 0.0
+    max_route_length_mm: float = 0.0
+    clearance: float = 0.0
+    via_dia: float = 0.0
+    via_drill: float = 0.0
+    priority: int = 0
+    diff_gap: float = -1.0
+    resolution_mm: float = 0.0
+
+
+# A declared return-path opts even ordinary signals into plane-gap/transition
+# audit. Empty reference_net picks the nearest declared plane per layer;
+# zero stitch radius uses 2mm, zero loop-area budget emits no area warning.
+public record ClassReturnPath:
+    reference_net: bytes
+    declared: bool = False
+    stitch_radius_mm: float = 0.0
+    max_loop_area_mm2: float = 0.0
+
+
+# A named length-match leg from one pad to another, resolved against flat
+# ref-des names later. It can cross multiple nets and series parts, unlike
+# matching each net separately. Alternatively nets lists distinct two-terminal
+# copper runs plus crossed via barrels, inferring no intervening component length;
+# the explicit nets form is exclusive with from_/to.
+public record MatchPath:
+    name: bytes
+    from_: PinRef
+    to: PinRef
+    nets: bytes[]
+
+
+# Length-match membership joins on group name across classes, regardless of
+# their differing geometry. Zero tolerance uses the measurement default;
+# min_gap_mm=0 leaves same-net meander spacing undeclared. Empty paths measures
+# per net; two or more paths measures per authored leg, and class nets only
+# select geometry membership.
+public record ClassMatch:
+    group: bytes
+    paths: MatchPath[]
+    tolerance_mm: float = 0.0
+    min_gap_mm: float = 0.0
+
+
+public record ClassFenceRows:
+    generated: int = 1
+    mask_open: int = 0
+
+
+# Explicit opt-in flanking stitching-via rows. Zero/empty values are unresolved
+# sentinels, not invented author values: pitch derives guided-wavelength/10,
+# offset derives clearance plus fab margin, via geometry inherits class/board,
+# and empty net resolves the first ground/plane. rows.generated defaults one;
+# mask_open=0 means expose every generated row for compatibility.
+public record ClassFence:
+    rows: ClassFenceRows
+    net: bytes
+    declared: bool = False
+    pitch_mm: float = 0.0
+    offset_mm: float = 0.0
+    via_dia: float = 0.0
+    via_drill: float = 0.0
+
+
+public record ClassRfElectrical:
+    band_start_hz: float = 0.0
+    return_loss_target_db: float = 0.0
+
+
+public record ClassRfImpedance:
+    ohms: float = 0.0
+    diff_ohms: float = 0.0
+    layer: int = 0
+    ground_gap_mm: float = 0.0
+    ground_gap_max_mm: float = 0.0
+
+
+# Electrical declarations imply routing discipline. band_start=0 uses the
+# compatibility max_freq/100..max_freq band; return_loss_target=0 resolves to
+# 20dB. max_freq=0 is undeclared, otherwise bends have at least 3*width radius.
+# escape_mm<0 defaults to 1mm for RF; explicit 0 disables straight escape.
+# min_bend_ratio=0 uses the 3x floor; larger values also raise smoothing aim.
+# mask_relief_mm<0 defaults on at mask margin for RF, off for ordinary classes;
+# 0 tents, positive pulls mask back. keepout_mm is a same-layer foreign-copper
+# halo (through vias reach every layer). keepout_escape<0 inherits resolved
+# escape, 0 permits no pad exemption. Declared impedance derives width against
+# buildup unless authored width wins and becomes a mismatch check. diff_ohms
+# sets paired-trace impedance, layer=0 selects first usable signal layer;
+# positive ground_gap selects coplanar analysis above copper clearance, optional
+# max gap permits slot widening along tapers, otherwise the gap is fixed.
+public record ClassRf:
+    electrical: ClassRfElectrical
+    fence: ClassFence
+    impedance: ClassRfImpedance
+    max_freq_hz: float = 0.0
+    escape_mm: float = -1.0
+    min_bend_ratio: float = 0.0
+    mask_relief_mm: float = -1.0
+    keepout_mm: float = 0.0
+    keepout_escape_mm: float = -1.0
+
+
+# One ordered routing point, absolute x/y/layer or placement-relative guide.
+public record PlanWaypoint:
+    layer: bytes
+    x: float = 0.0
+    y: float = 0.0
+    guide: PlanGuide? = None
+
+
+# One hard limb corridor of a shared-root multi-drop guide tree, without root
+# or served pad endpoints. Geometric matching decides which terminal it serves;
+# authored branch order cannot assume the flattening's terminal order.
+public record PlanBranch:
+    waypoints: PlanWaypoint[]
+
+
+# A cardinal side of a placed part courtyard.
+public enum PlanGuideSide:
+    north
+    south
+    east
+    west
+
+
+# Routing intent stable when parts move: escape_from leaves a named pad to its
+# nearest edge one clearance beyond copper; between_pins uses two pad centers'
+# midpoint; beside goes just outside a courtyard side. Resolution lowers them
+# to ordinary placement-grid waypoints.
+public enum PlanGuide:
+    escape_from(ref: bytes, pin: bytes, layer: bytes)
+    between_pins(from_ref: bytes, from_pin: bytes, to_ref: bytes, to_pin: bytes, layer: bytes)
+    beside(ref: bytes, side: PlanGuideSide, layer: bytes)
+
+
+# Joint assignment gives contending wave nets parallel escape lanes at their
+# shared hub's tightest corridor. Optional layer/hub override hub side and the
+# part hosting most selected nets. pin_side schedules a common nearby exit with
+# via pitch; with_nets adds peers without moving their own wave/layer/via budgets.
+# reserve hard-excludes other nets for the run; without it the guides only bias
+# cost, avoiding reservation's potential expense to excluded nets.
+public record PlanEscapeSpec:
+    layer: bytes
+    hub: bytes
+    with_nets: bytes[]
+    pin_side: bool = False
+    reserve: bool = False
+
+
+# Shared waypoints, jointly assigned escapes and global topology compose.
+# repair_waypoints are tried after the broad attempt fails and during residual
+# repair, never replacing the first broad attempt. branches give separate hard
+# limb paths to multi-drop terminals, instead of reusing a single trunk.
+# seed_first makes a bounded waypoint-only claim before whole-board routing.
+public record PlanWaveCorridor:
+    waypoints: PlanWaypoint[]
+    repair_waypoints: PlanWaypoint[]
+    branches: PlanBranch[]
+    assign_escapes: PlanEscapeSpec? = None
+    topology: bool = False
+    seed_first: bool = False
+
+
+# An authored unit of placement/routing completion. Place waves fill refs/
+# sections/sub_blocks; route waves classes/net_classes/nets; invalid opposite
+# selectors are warned and dropped. rest means unclaimed members after earlier
+# waves. reason is optional rationale. preferred layers bias cost; allowed layers
+# hard-constrain trace layers while allowing terminal breakout. max_vias is an
+# optional budget and corridor retains steering intent.
+public record PlanWave:
+    name: bytes
+    refs: bytes[]
+    sections: bytes[]
+    sub_blocks: bytes[]
+    classes: bytes[]
+    net_classes: bytes[]
+    nets: bytes[]
+    preferred_layers: bytes[]
+    allowed_layers: bytes[]
+    corridor: PlanWaveCorridor
+    reason: bytes? = None
+    max_vias: int? = None
+    rest: bool = False
+
+
+# one_shot is one deterministic pass with immediate diagnosis for failed nets;
+# standard keeps historical escalation, rip-up, rescue and rerouting.
+public enum PlanEffort:
+    one_shot
+    standard
+
+
+# Authored place-then-route wave order, resolved to member sets later, without
+# parse-time existence checks. At most one form: warn and keep first; no form
+# means None on DesignBlock. effort bounds retries; max_route_seconds bounds the
+# whole route transaction including connectivity/candidate gates. topology enables
+# wave-wide planning for every route wave. module_budget_weighted is experimental
+# join-weighted module slices; equal shares retain the default scheduler.
+public record PcbPlanSpec:
+    place: PlanWave[]
+    route: PlanWave[]
+    module_signals_guided: bool = False
+    module_budget_weighted: bool = False
+    effort: PlanEffort? = None
+    max_route_seconds: int? = None
+    topology: bool = False
+
+
+# Grouped soldermask fabrication dimensions: margin grows pad openings, web
+# must survive between them, relief_corner_radius fillets an RF opening's pad-dam
+# termination (zero preserves square corners) without changing that web.
+public record MaskRules:
+    margin: float
+    web: float
+    relief_corner_radius: float = 0.0
+
+
+# Finished-outline spacing in mm for copper features and component courtyard/body proxies.
+public record EdgeRules:
+    copper: float
+    component: float
+
+
+# Default via copper-land diameter and drilled-hole diameter in mm, with
+# minimum finished wall copper plating; zero plating keeps built-in 25 micrometers.
+public record ViaRules:
+    dia: float
+    drill: float
+    plating: float = 0.0
+
+
+# Manufacturing controls for computed pours. clearance_outer is the outer
+# photo-defined pour isolation gap, paired with the inner-plane gap by one
+# authored pour-clearance knob. ground_via_max bounds SMD return-pad to same-net
+# plane-via center distance only on declared plane nets; default protects 1mm.
+# neck_current_density=0 keeps per-neck IPC-style foil/width-derived allowance.
+public record PourRules:
+    min_width: float = 0.0
+    corner_radius: float = 0.0
+    clearance_outer: float = 0.2
+    ground_via_max: float = 1.0
+    neck_current_density: float = 0.0
+
+
+# Global optional fabrication/routing defaults; zero/unset preserves tool
+# constants. Per-net classes override width/clearance/vias, other dimensions are
+# board-wide. clearance is copper spacing; min_drill smallest hole; mask margin/
+# web/fillet, edge copper/component, hole wall spacing and minimum annulus retain
+# their physical budgets. via_to_via is same-net copper spacing, defaulting to
+# resolved clearance. min_width is legal track width. pour_clearance sets inner
+# and outer base isolation together, without overriding RF-specific exceptions;
+# pour min-width/corner-radius/ground-via protect computed copper. Omitted routing
+# geometry remains track 0.127mm, via 0.4 diameter/0.2 drill; component edge uses
+# 2.5mm assembly default. Grouping related rules stays below field-count ceilings.
+public record DesignRulesSpec:
+    mask: MaskRules
+    edge: EdgeRules
+    via: ViaRules
+    pour: PourRules
+    clearance: float = 0.0
+    min_drill: float = 0.0
+    hole_to_hole: float = 0.0
+    via_to_via: float = 0.0
+    min_annular: float = 0.0
+    track_width: float = 0.0
+    min_width: float = 0.0
+    pour_clearance: float = 0.0
+    present: bool = False
+
+
+# In-file changelog item; convention is newest first and id is the shipping revision.
+public record RevisionChange:
+    id: bytes
+    summary: bytes
+
+
+# Human-authored manufacturing spin id/date/changelog for headers/review/title
+# blocks. This differs from per-save snapshot counters. present=False means unversioned.
+public record Revision:
+    id: bytes
+    date: bytes
+    changes: RevisionChange[]
+    present: bool = False
+
+
+# Named priority tier, not a spatial cluster. Earlier groups pack first and
+# closest; members still land on their connected IC side. Member refs/origin keys
+# match exactly or by the final hierarchical leaf.
+public record RoughGroup:
+    name: bytes
+    members: bytes[]
+
+
+# Authored rough-placement seed: anchor and ordered tiers plus compact
+# critical-loop member sets. Empty anchor selects the most-connected hub;
+# present=False retains heuristic anchor/pad-count priority.
+public record RoughSpec:
+    anchor: bytes
+    groups: RoughGroup[]
+    critical_loops: RoughGroup[]
+    present: bool = False
+
+
+# Root design or embedded defmodule materialization, separate from board role.
+# Embedded roots enable role-based auto-placement and module composition; full
+# designs keep the overall force solve.
+public enum BlockOrigin:
+    design_root
+    embedded
+
+
+# A supported retired spelling with resolved file/line/column, including module
+# source provenance. message names the old spelling and replacement; consumers
+# need no AST and emit info findings rather than release-promoted warnings.
+public record DeprecatedForm:
+    file: bytes
+    line: int
+    col: int
+    message: bytes
+
+
+# Fully evaluated design: instances/nets/ports, section/sub-block hierarchy,
+# notes/groups, boundary port_groups, authored functional system blocks and all
+# review metadata. module_name is stable source provenance rather than the title.
+# net_ties join cross-block ports; verifications/authored_rules keep sign-offs and
+# rules judged against this block even when authored under a section. rails are
+# post-evaluation canonical supplies; envelopes retain both declarations and
+# published bounds so a parent can reproduce them. net_class_pins precede name
+# heuristics. pdn_intents preserve AC nodes despite ferrite DC merging; test_points
+# retain physical/virtual markers and legacy instances. kicad_pcb_path explicitly
+# authorizes the file target; absent target refuses file-based sync. deprecations
+# are source ordered, the root covers all nested uses. parts are padless sketch
+# placeholders. layout resolves relative diagram placement; board/revision/rough/
+# stackup/design_rules retain authored physical intent or their documented absent
+# fallbacks. fabrication_layers are extra artwork, outside electrical thickness.
+# First net_class naming a net wins. pcb_plan is optional ordered completion;
+# variants retain root declarations and selection, already reflected by every
+# instance's value/population.
+public record DesignBlock:
+    name: bytes
+    instances: Instance[]
+    nets: Net[]
+    ports: Port[]
+    notes: Note[]
+    groups: Group[]
+    sub_blocks: SubBlock[]
+    sections: Section[]
+    port_groups: PortGroup[]
+    functions: FunctionSpec[]
+    origin: BlockOrigin
+    module_name: bytes
+    net_ties: NetTie[]
+    verifications: Verification[]
+    authored_rules: DesignRule[]
+    rails: PowerRail[]
+    envelopes: NetEnvelopeTable
+    net_class_pins: NetClassPin[]
+    pdn_intents: PdnIntent[]
+    test_points: TestPoint[]
+    deprecations: DeprecatedForm[]
+    parts: PlaceholderPart[]
+    layout: LayoutSpec
+    board: BoardSpec
+    revision: Revision
+    rough: RoughSpec
+    stackup: StackupSpec
+    fabrication_layers: FabricationLayerSpec[]
+    net_classes: NetClassSpec[]
+    design_rules: DesignRulesSpec
+    variants: VariantScope
+    kicad_pcb_path: bytes? = None
+    pcb_plan: PcbPlanSpec? = None
+
+
+# Check result with warning flag, text and source span/file. message_owned is
+# retained from allocator bookkeeping but mylang values own their bytes. Empty
+# file and zero span mean a synthesized assertion; reporting uses the design path.
+public record AssertionResult:
+    passed: bool
+    message: bytes
+    span: ast.Span
+    file: bytes
+    is_warning: bool = False
+    message_owned: bool = False
+
+
+# Env references preserve the parent scope's identity without pointer aliasing.
+# BlockDef.imports carries the same handle; callers keep one EnvPool alive.
+public record Env:
+    index: int
+
+
+public record EnvScope:
+    bindings: dict[str, Value]
+    parent: Env? = None
+
+
+public record EnvPool:
+    scopes: EnvScope[]
+
+
+public func value_as_number(self: Value) -> float?:
+    match self:
+        case Value.number(value=n):
+            return Some(n)
+        case _:
+            return None
+
+
+public func value_as_string(self: Value) -> bytes?:
+    match self:
+        case Value.string(value=s):
+            return Some(s.copy())
+        case _:
+            return None
+
+
+public func value_as_bool(self: Value) -> bool?:
+    match self:
+        case Value.boolean(value=b):
+            return Some(b)
+        case _:
+            return None
+
+
+public func value_is_truthy(self: Value) -> bool:
+    match self:
+        case Value.boolean(value=b):
+            return b
+        case Value.nil:
+            return False
+        case Value.number(value=n):
+            return n != 0.0
+        case _:
+            return True
+
+
+public func port_is_power_source(self: Port) -> bool:
+    return self.nominal is not None or self.rated_min is not None or self.rated_max is not None or self.current_typ is not None or self.current_max is not None or self.efficiency is not None or self.efficiency_linear
+
+
+public func port_is_declared_non_power(self: Port) -> bool:
+    return len(self.kind) > 0 and not strs.eql_ignore_case(self.kind, b"power")
+
+
+public func net_predicate_source_name(self: NetPredicate) -> bytes:
+    match self:
+        case NetPredicate.min_bulk_uf(value=_):
+            return b"min-bulk-uf"
+        case NetPredicate.declared_envelope:
+            return b"declared-envelope"
+        case NetPredicate.in_net_class:
+            return b"in-net-class"
+        case NetPredicate.max_fanout(value=_):
+            return b"max-fanout"
+
+
+public func requirement_id_for_text(text: bytes) -> bytes:
+    return strs.hex_pad(crc32.crc32(text), 8).encode()
+
+
+public func contains_string(haystack: bytes[], needle: bytes) -> bool:
+    for item in haystack:
+        if item == needle:
+            return True
+    return False
+
+
+public func parse_note_ref(node: ast.Node) -> NoteRef?:
+    match node.tag:
+        case ast.Tag.list(value=children):
+            if len(children) < 2:
+                return None
+            mut head = try ast.as_atom(children[0])
+            if head != b"ref":
+                return None
+            mut pdf = try ast.as_string(children[1])
+            mut page = 0
+            mut quote: bytes? = None
+            for child_index_0 in range(len(children)):
+                if child_index_0 < 2:
+                    continue
+                match children[child_index_0].tag:
+                    case ast.Tag.list(value=subs):
+                        if len(subs) < 2:
+                            continue
+                        mut sub_head = ast.as_atom(subs[0])
+                        if sub_head is None:
+                            continue
+                        if sub_head == b"page":
+                            mut n = ast.as_number(subs[1])
+                            if n is not None:
+                                mut p = numeric.checked_u32(n)
+                                if p is not None:
+                                    page = int(p)
+                        elif sub_head == b"quote":
+                            mut s = ast.as_string(subs[1])
+                            if s is not None:
+                                quote = Some(s.copy())
+                    case _:
+                        continue
+            return Some(NoteRef(pdf=pdf, page=page, quote=quote))
+        case _:
+            return None
+
+
+public func instance_variants_base_value(self: InstanceVariants, value: bytes) -> bytes:
+    if len(self.base_value) > 0:
+        return self.base_value.copy()
+    return value.copy()
+
+
+public func variant_scope_active_name(self: VariantScope) -> bytes:
+    mut active = self.active
+    if active is None:
+        return b""
+    return self.decls[active].name.copy()
+
+
+public func variant_scope_find(self: VariantScope, name: bytes) -> int?:
+    mut i = 0
+    while i < len(self.decls):
+        if self.decls[i].name == name:
+            return Some(i)
+        i += 1
+    return None
+
+
+public func variant_scope_default_index(self: VariantScope) -> int?:
+    mut i = 0
+    while i < len(self.decls):
+        if self.decls[i].is_default:
+            return Some(i)
+        i += 1
+    return None
+
+
+public func is_test_point(component: bytes) -> bool:
+    return component == b"testpoint" or component.startswith(b"testpoint-")
+
+
+public func stackup_spec_has_planes(self: StackupSpec) -> bool:
+    return len(self.planes) > 0
+
+
+public func stackup_spec_construction_thickness(self: StackupSpec) -> float:
+    mut total = 0.0
+    for layer in self.copper:
+        total += layer.thickness
+    for layer2 in self.dielectrics:
+        total += layer2.thickness
+    return total
+
+
+public func net_class_spec_voltage_drop_valid(self: NetClassSpecVoltageDrop) -> bool:
+    mut valid_limit = math.is_finite(self.limit_v) and self.limit_v > 0.0
+    mut valid_temperature = math.is_finite(self.copper_temperature_c) and self.copper_temperature_c >= -50.0 and self.copper_temperature_c <= 200.0
+    return valid_limit and valid_temperature and len(self.return_net) > 0
+
+
+public func default_via_plating_mm() -> float:
+    return 0.025
+
+
+public func default_clearance_mm() -> float:
+    return 0.127
+
+
+public func default_pour_clearance_mm() -> float:
+    return 0.3
+
+
+public func default_outer_pour_clearance_mm() -> float:
+    return 0.2
+
+
+public func env_init(mut pool: EnvPool, parent: Env?) -> Env:
+    mut scope = Env(index=len(pool.scopes))
+    pool.scopes.append(EnvScope(bindings={}, parent=parent))
+    return scope
+
+
+public func env_put(mut pool: EnvPool, self: Env, name: bytes, value: Value):
+    pool.scopes[self.index].bindings[strs.text(name)] = value.copy()
+
+
+public func env_get(pool: EnvPool, self: Env, name: bytes) -> Value?:
+    mut key = strs.text(name)
+    if key in pool.scopes[self.index].bindings:
+        return Some(pool.scopes[self.index].bindings[key].copy())
+    mut parent = pool.scopes[self.index].parent
+    if parent is None:
+        return None
+    return env_get(pool, parent, name)
+
+
+# Construction helpers supply Zig's non-scalar defaults explicitly (guide D6).
+public func instance_default(ref_des: bytes) -> Instance:
+    return Instance(ref_des=ref_des.copy(), label=b"", origin_key=b"", component=b"", value=b"", footprint=b"", symbol=b"", pinout=b"", properties=[], docs=ComponentDocs(datasheets=[]), requirements=[], electrical=[], attrs=[], typed_attrs=[], distance_rules=[], parts=[], id=b"", uuid=b"", variants=InstanceVariants(rules=[], base_value=b""), bind=InstanceBinds(decouple=DecoupleBind(ic=b"", pin=b""), near=NearBind(ref=b"", pin=b"", own=b"")), strap_oks=[], nc_oks=[], thermal=InstanceThermal(), pinout_facts=PinoutFacts())
+
+
+public func section_default(name: bytes) -> Section:
+    return Section(name=name.copy(), description=b"", category=b"", notes=[], instances=[], pin_groups=[], ports=[], protocols=[], calcs=[], sub_sections=[], status=SectionStatus.implemented, block_role=BlockRole.auto, hosts=[])
+
+
+public func port_default(name: bytes, net: bytes, direction: bytes) -> Port:
+    return Port(name=name.copy(), net=net.copy(), direction=direction.copy(), enable_net=b"", kind=b"", side=b"", diff_pair_of=b"")
+
+
+public func section_port_default(name: bytes) -> SectionPort:
+    return SectionPort(name=name.copy(), direction=PortDirection.io, signal_type=SignalType.signal, group=[], role=b"", protocol=b"", class_=b"")
+
+
+public func pin_ref_default(ref_des: bytes, pin: bytes) -> PinRef:
+    return PinRef(ref_des=ref_des.copy(), pin=pin.copy(), asserted_fns=[], load_label=b"")
+
+
+public func power_rail_default(name: bytes) -> PowerRail:
+    return PowerRail(name=name.copy(), aliases=[], rated_voltage=PowerRailRatedVoltage(), source_ref_des=b"", source_port=b"", source_path=b"", enable_net=b"")
+
+
+public func design_block_default(name: bytes) -> DesignBlock:
+    return DesignBlock(name=name.copy(), instances=[], nets=[], ports=[], notes=[], groups=[], sub_blocks=[], sections=[], port_groups=[], functions=[], origin=BlockOrigin.design_root, module_name=b"", net_ties=[], verifications=[], authored_rules=[], rails=[], envelopes=NetEnvelopeTable(published=[], declared=[]), net_class_pins=[], pdn_intents=[], test_points=[], deprecations=[], parts=[], layout=LayoutSpec(placements=[], rows=[], groups=[], edges=[]), board=BoardSpec(part_number=b"", outline_approved=b"", sides=[], corners=[], perimeter_fence=PerimeterFenceSpec(net=b"GND", keepout=PerimeterKeepoutSpec(blocks=PerimeterKeepoutBlocks(), allow_nets=[])), keepouts=[], thermal=BoardThermalAssemblySpec(), role=BoardRole.subcircuit), revision=Revision(id=b"", date=b"", changes=[]), rough=RoughSpec(anchor=b"", groups=[], critical_loops=[]), stackup=StackupSpec(planes=[], copper=[], dielectrics=[], soldermasks=[], preset=b""), fabrication_layers=[], net_classes=[], design_rules=DesignRulesSpec(mask=MaskRules(margin=0.0, web=0.0), edge=EdgeRules(copper=0.0, component=0.0), via=ViaRules(dia=0.0, drill=0.0), pour=PourRules()), variants=VariantScope(decls=[]))

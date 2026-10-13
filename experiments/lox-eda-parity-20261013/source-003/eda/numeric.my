@@ -1,0 +1,88 @@
+
+# Port of zig/src/numeric.zig: safe float -> int narrowing. Zig's
+# `checkedInt(comptime T, f)` is generic over the integer type; mylang has no
+# comptime type parameter, so it is one range-checked core plus one typed
+# wrapper per width the slice uses.
+#
+# The range check runs in float space before the conversion, and the upper
+# bound is the EXCLUSIVE limit maxInt(T)+1 (a power of two, exact in f64 at
+# every width).
+import math
+
+# Round `f` to the nearest integer (half away from zero, like Zig @round) and
+# return it as a float, or None when `f` is non-finite or rounds outside
+# [lo, hi_excl).
+public func checked_round(f: float, lo: float, hi_excl: float) -> float?:
+    if not math.is_finite(f):
+        return None
+    mut r = round(f)
+    if r < lo or r >= hi_excl:
+        return None
+    return Some(r)
+
+
+# Convert an already range-checked, integral float in [0, 2^64) to u64. mylang
+# has no float -> u64 cast, so the upper half goes through int by subtracting
+# 2^63 (exact in f64 there).
+func float_to_u64(r: float) -> u64:
+    if r < 9223372036854775808.0:
+        return u64(int(r))
+    return u64(int(r - 9223372036854775808.0)) + 9223372036854775808u64
+
+
+public func checked_i64(f: float) -> int?:
+    match checked_round(f, -9223372036854775808.0, 9223372036854775808.0):
+        case Some(r):
+            return Some(int(r))
+        case None:
+            return None
+
+
+public func checked_u64(f: float) -> u64?:
+    match checked_round(f, 0.0, 18446744073709551616.0):
+        case Some(r):
+            return Some(float_to_u64(r))
+        case None:
+            return None
+
+
+public func checked_i32(f: float) -> i32?:
+    match checked_round(f, -2147483648.0, 2147483648.0):
+        case Some(r):
+            return Some(i32(int(r)))
+        case None:
+            return None
+
+
+public func checked_u32(f: float) -> u32?:
+    match checked_round(f, 0.0, 4294967296.0):
+        case Some(r):
+            return Some(u32(int(r)))
+        case None:
+            return None
+
+
+public func checked_i8(f: float) -> i8?:
+    match checked_round(f, -128.0, 128.0):
+        case Some(r):
+            return Some(i8(int(r)))
+        case None:
+            return None
+
+
+public func checked_u8(f: float) -> u8?:
+    match checked_round(f, 0.0, 256.0):
+        case Some(r):
+            return Some(u8(int(r)))
+        case None:
+            return None
+
+
+# Narrow `f` to a non-negative count/index (Zig usize), collapsing a non-finite
+# or out-of-range value to 0.
+public func to_count(f: float) -> u64:
+    match checked_u64(f):
+        case Some(v):
+            return v
+        case None:
+            return 0u64

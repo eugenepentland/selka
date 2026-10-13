@@ -1,0 +1,69 @@
+# Zig float formatting for the ported writers (no Zig counterpart file).
+#
+# Zig's `{d}` prints the shortest round-trip digits in plain notation and drops
+# the ".0" of an integral value.  Zig's `{d:.N}` takes those same shortest
+# digits and rounds half up at the Nth decimal, looking only at the first
+# dropped digit (reference: `round()` in zig/lib/std/fmt/float.zig).  mylang's
+# `str(float)` already yields the shortest digits in plain notation with a
+# trailing ".0" on integral values, "-0.0", "inf" and "nan", so both formats are
+# string surgery on `str(x)`.  Verified against 300,012 values printed by the pinned
+# Zig toolchain, `{d}` and `{d:.N}` for N = 0, 1, 2, 3, 4, 6: 0 mismatches
+# (`python3 mylang/tools/float_fmt_verify.py`).
+#
+# `strings.format_float(x, n)` is NOT a substitute: it rounds the exact binary
+# value, which is what Go and Rust do and what PORTING.md warns about.
+
+
+# Zig `{d}`.
+public func fmt_float(x: float) -> str:
+    mut text = str(x)
+    if text.endswith(".0"):
+        return text[:len(text) - 2]
+    return text
+
+
+# Add one to a string of decimal digits; may grow it by one digit ("99" -> "100").
+func add_one(digits: str) -> str:
+    mut ds = [for c in digits yield ord(c) - 48]
+    mut i = len(ds) - 1
+    mut carry = True
+    while carry and i >= 0:
+        if ds[i] == 9:
+            ds[i] = 0
+            i = i - 1
+        else:
+            ds[i] = ds[i] + 1
+            carry = False
+    mut text = "".join([for d in ds yield chr(48 + d)])
+    if carry:
+        return "1" + text
+    return text
+
+
+# Zig `{d:.N}`.
+public func fmt_float_prec(x: float, n: int) -> str:
+    mut text = str(x)
+    if text == "inf" or text == "-inf" or text == "nan":
+        return text
+    mut negative = text.startswith("-")
+    if negative:
+        text = text[1:]
+    mut dot = text.find(".")
+    mut whole = text[:dot]
+    mut frac = text[dot + 1:]
+    if len(frac) > n:
+        mut round_up = ord(frac[n]) >= 53
+        mut digits = whole + frac[:n]
+        if round_up:
+            digits = add_one(digits)
+        whole = digits[:len(digits) - n]
+        frac = digits[len(digits) - n:]
+    else:
+        while len(frac) < n:
+            frac = frac + "0"
+    mut out = whole
+    if n > 0:
+        out = out + "." + frac
+    if negative:
+        out = "-" + out
+    return out

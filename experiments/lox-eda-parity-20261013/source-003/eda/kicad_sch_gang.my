@@ -1,0 +1,108 @@
+
+import kicad_sch_shape as shape_mod
+import kicad_sch_wire as wire
+import support_sort as srt
+import support_strs as strs
+
+public const min_members: int = 2
+
+
+public record PinAt:
+    index: int
+    side: shape_mod.Side
+    net: bytes
+    at: wire.Point
+
+
+public record Gang:
+    net: bytes
+    side: shape_mod.Side
+    pins: PinAt[]
+
+
+public func plan(pins: PinAt[]) -> Gang[]:
+    mut by_net: dict[str, PinAt[]] = {}
+    for p in pins:
+        if len(p.net) == 0:
+            continue
+        mut key = side_key(p.side) + "\x00" + strs.text(p.net)
+        if key not in by_net:
+            by_net[key.copy()] = []
+        by_net[key].append(p.copy())
+    mut out: Gang[] = []
+    for run in by_net.values():
+        if len(run) < min_members:
+            continue
+        mut sorted_run = run.copy()
+        srt.sort_by(mut sorted_run, before)
+        cut_runs(mut out, pins, sorted_run)
+    return out
+
+
+func side_key(s: shape_mod.Side) -> str:
+    match s:
+        case shape_mod.Side.left:
+            return "0"
+        case shape_mod.Side.right:
+            return "1"
+        case shape_mod.Side.top:
+            return "2"
+        case shape_mod.Side.bottom:
+            return "3"
+
+
+# Cut at foreign tips and column changes, preserving every clean stretch.
+func cut_runs(mut out: Gang[], all_: PinAt[], sorted_: PinAt[]):
+    mut start = 0
+    for i in range(1, len(sorted_)):
+        if joinable(all_, sorted_[i - 1], sorted_[i]):
+            continue
+        keep_run(mut out, sorted_[start:i])
+        start = i
+    keep_run(mut out, sorted_[start:])
+
+
+func joinable(all_: PinAt[], a: PinAt, b: PinAt) -> bool:
+    return across(a) == across(b) and adjacent(all_, a, b)
+
+
+func keep_run(mut out: Gang[], run: PinAt[]):
+    if len(run) >= min_members:
+        out.append(Gang(net=run[0].net.copy(), side=run[0].side, pins=run.copy()))
+
+
+func across(p: PinAt) -> int:
+    if p.side == shape_mod.Side.left or p.side == shape_mod.Side.right:
+        return p.at.x
+    return p.at.y
+
+
+func along_of(p: PinAt) -> int:
+    if p.side == shape_mod.Side.left or p.side == shape_mod.Side.right:
+        return p.at.y
+    return p.at.x
+
+
+func before(a: PinAt, b: PinAt) -> bool:
+    if along_of(a) != along_of(b):
+        return along_of(a) < along_of(b)
+    return a.index < b.index
+
+
+func adjacent(all_: PinAt[], a: PinAt, b: PinAt) -> bool:
+    for p in all_:
+        if p.index == a.index or p.index == b.index:
+            continue
+        if across(p) != across(a):
+            continue
+        if along_of(p) < along_of(a) or along_of(p) > along_of(b):
+            continue
+        return False
+    return True
+
+
+public func run_pts(g: Gang) -> wire.Point[]:
+    mut pts: wire.Point[] = []
+    for p in g.pins:
+        pts.append(p.at)
+    return pts

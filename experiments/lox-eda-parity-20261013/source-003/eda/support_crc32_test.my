@@ -1,0 +1,28 @@
+
+import support_crc32 as crc
+import support_expect as ex
+
+# Expected values come from Python's `zlib.crc32`; 3421780262 (0xCBF43926) is the standard
+# check value of "123456789".
+public func test_empty_and_check_value(out: Stream) -> bool:
+    if not ex.eq_int(out, "empty", crc.crc32(b""), 0):
+        return False
+    return ex.eq_int(out, "123456789", crc.crc32(b"123456789"), 3421780262)
+
+
+public func test_text_and_binary(out: Stream) -> bool:
+    if not ex.eq_int(out, "hello world", crc.crc32(b"hello world"), 222957957):
+        return False
+    mut ramp: int[] = []
+    mut i = 0
+    while i < 256:
+        ramp.append(i)
+        i += 1
+    return ex.eq_int(out, "0..255", crc.crc32(bytes(ramp)), 688229491)
+
+
+public func test_running_value_continues(out: Stream) -> bool:
+    mut first = crc.crc32(b"hello ")
+    if not ex.eq_int(out, "hello ", first, 3984718326):
+        return False
+    return ex.eq_int(out, "continued", crc.crc32_update(first, b"world"), crc.crc32(b"hello world"))

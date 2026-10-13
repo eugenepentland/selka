@@ -1,0 +1,260 @@
+
+import eval_env as env_mod
+import eval_net_analysis as na
+import support_strs as strs
+import support_sha256 as sha256
+import uuid
+
+# Neutral flattened-netlist currency used by export and placement layers.
+# Ref-des, net names, and references inside placement bindings are prefixed
+# together; a pad number alone never identifies the part that owns it.
+public record FlatInstance:
+    ref_des: bytes
+    component: bytes
+    symbol: bytes
+    pinout: bytes
+    origin_key: bytes
+    value: bytes
+    footprint: bytes
+    properties: env_mod.Property[]
+    uuid: bytes
+    variants: env_mod.InstanceVariants
+    bind: env_mod.InstanceBinds
+    distance_rules: env_mod.DistanceRule[]
+    dnp: bool = False
+
+
+public record FlatNet:
+    name: bytes
+    pins: FlatPin[]
+
+
+public record FlatPin:
+    ref_des: bytes
+    pin: bytes
+
+
+public record FlatTie:
+    a: bytes
+    b: bytes
+
+
+# CanonicalNetMap is dict[str, bytes]: decoded keys and byte-exact names.
+public func uuid_from_id(id: bytes) -> bytes:
+    mut hash = sha256.sha256(b"canopy:" + id)
+    return uuid.format(hash[:16], uuid.Version.name_v5)
+
+
+func prefixed(prefix: bytes, name: bytes) -> bytes:
+    if len(prefix) == 0:
+        return name.copy()
+    return prefix + b"/" + name
+
+
+# A binding that names nothing must never become the bare sub-block prefix.
+func prefixed_or_empty(prefix: bytes, name: bytes) -> bytes:
+    if len(name) == 0:
+        return b""
+    return prefixed(prefix, name)
+
+
+# Every candidate is a sibling in the naming part's own block.
+func prefixed_distance_rules(prefix: bytes, rules: env_mod.DistanceRule[]) -> env_mod.DistanceRule[]:
+    if len(rules) == 0 or len(prefix) == 0:
+        return rules.copy()
+    mut result: env_mod.DistanceRule[] = []
+    for rule in rules:
+        mut refs: bytes[] = []
+        for ref in rule.candidates:
+            refs.append(prefixed(prefix, ref))
+        mut slot = rule.copy()
+        slot.candidates = refs
+        result.append(slot)
+    return result
+
+
+public func flat_instance_default(ref_des: bytes, component: bytes, value: bytes, footprint: bytes, properties: env_mod.Property[], uuid_: bytes) -> FlatInstance:
+    return FlatInstance(ref_des=ref_des.copy(), component=component.copy(), value=value.copy(), footprint=footprint.copy(), properties=properties.copy(), uuid=uuid_.copy(), symbol=b"", pinout=b"", origin_key=b"", variants=env_mod.InstanceVariants(rules=[], base_value=b""), bind=env_mod.InstanceBinds(decouple=env_mod.DecoupleBind(ic=b"", pin=b""), near=env_mod.NearBind(ref=b"", pin=b"", own=b"")), distance_rules=[])
+
+
+# BOM-assigned identity wins; otherwise derive it from the stable source id.
+public func collect_instances(block: env_mod.DesignBlock, prefix: bytes, mut list_: FlatInstance[]):
+    for inst in block.instances:
+        mut ref = prefixed(prefix, inst.ref_des)
+        mut effective_uuid = b""
+        if len(inst.uuid) > 0:
+            effective_uuid = inst.uuid.copy()
+        elif len(inst.id) > 0:
+            effective_uuid = uuid_from_id(inst.id)
+        list_.append(FlatInstance(ref_des=ref, component=inst.component.copy(), symbol=inst.symbol.copy(), pinout=inst.pinout.copy(), origin_key=inst.origin_key.copy(), value=inst.value.copy(), footprint=inst.footprint.copy(), properties=inst.properties.copy(), uuid=effective_uuid, dnp=inst.dnp, variants=inst.variants.copy(), bind=env_mod.InstanceBinds(decouple=env_mod.DecoupleBind(pin=inst.bind.decouple.pin.copy(), ic=prefixed_or_empty(prefix, inst.bind.decouple.ic), rail=inst.bind.decouple.rail), near=env_mod.NearBind(ref=prefixed_or_empty(prefix, inst.bind.near.ref), pin=inst.bind.near.pin.copy(), own=inst.bind.near.own.copy())), distance_rules=prefixed_distance_rules(prefix, inst.distance_rules)))
+    for sb in block.sub_blocks:
+        mut sub_prefix = prefixed(prefix, sb.name)
+        collect_instances(sb.block, sub_prefix, mut list_)
+
+
+public func collect_nets(block: env_mod.DesignBlock, prefix: bytes, mut list_: FlatNet[]):
+    for net in block.nets:
+        mut net_name = prefixed(prefix, net.name)
+        mut pins: FlatPin[] = []
+        for pin in net.pins:
+            pins.append(FlatPin(ref_des=prefixed(prefix, pin.ref_des), pin=pin.pin.copy()))
+        list_.append(FlatNet(name=net_name, pins=pins))
+    for sb in block.sub_blocks:
+        mut sub_prefix = prefixed(prefix, sb.name)
+        collect_nets(sb.block, sub_prefix, mut list_)
+
+
+public func collect_net_ties(block: env_mod.DesignBlock, prefix: bytes, mut list_: FlatTie[]):
+    for tie in block.net_ties:
+        list_.append(FlatTie(a=prefixed(prefix, tie.a), b=prefixed(prefix, tie.b)))
+    for sb in block.sub_blocks:
+        mut sub_prefix = prefixed(prefix, sb.name)
+        collect_net_ties(sb.block, sub_prefix, mut list_)
+
+
+# Prefer topmost (fewest slashes), then shortest, then lexicographic.
+func prefer_name(candidate: bytes, incumbent: bytes) -> bool:
+    mut cs = candidate.count(b"/")
+    mut incumbent_slashes = incumbent.count(b"/")
+    if cs != incumbent_slashes:
+        return cs < incumbent_slashes
+    if len(candidate) != len(incumbent):
+        return len(candidate) < len(incumbent)
+    return strs.bytes_less(candidate, incumbent)
+
+
+record NetTieSets:
+    index: dict[str, int]
+    names: bytes[]
+    parent: int[]
+
+
+func net_tie_sets_get_or_add(mut self: NetTieSets, name: bytes) -> int:
+    mut key = strs.text(name)
+    if key in self.index:
+        return self.index[key]
+    mut i = len(self.names)
+    self.names.append(name.copy())
+    self.parent.append(i)
+    self.index[key] = i
+    return i
+
+
+func net_tie_sets_find(mut self: NetTieSets, idx: int) -> int:
+    mut i = idx
+    while self.parent[i] != i:
+        i = self.parent[i]
+    mut j = idx
+    while self.parent[j] != i:
+        mut next_ = self.parent[j]
+        self.parent[j] = i
+        j = next_
+    return i
+
+
+func write_canonical_aliases(mut out: dict[str, bytes], mut sets: NetTieSets, canonical: dict[int, int], nets: FlatNet[], per_pin: dict[str, bytes]):
+    mut i = 0
+    while i < len(sets.names):
+        mut name = sets.names[i].copy()
+        mut root = net_tie_sets_find(mut sets, i)
+        if root in canonical:
+            out[strs.text(name)] = sets.names[canonical[root]].copy()
+        i += 1
+    for net in nets:
+        mut key = strs.text(net.name)
+        if key in per_pin:
+            out[key] = per_pin[key].copy()
+
+
+# Merge electrical aliases while keeping per-pin micro-nets separate and
+# renaming their base: buck/VIN.U12.VIN_1 follows buck/VIN -> VBATT.
+public func apply_net_ties(mut nets: FlatNet[], ties: FlatTie[]):
+    mut aliases: dict[str, bytes] = {}
+    apply_net_ties_mapped(mut nets, ties, mut aliases)
+
+
+# A supplied map receives unchanged names too. Plain wrappers discard a local
+# map instead of passing Zig's optional pointer (value-semantics adaptation).
+public func apply_net_ties_mapped(mut nets: FlatNet[], ties: FlatTie[], mut aliases: dict[str, bytes]):
+    if len(ties) == 0 and len(nets) == 0:
+        return
+    mut sets = NetTieSets(index={}, names=[], parent=[])
+    # All listed nets and the LHS of each tie are eligible preferred names.
+    # RHS-only names from pin-function aliases ("1", "5") must not hijack them.
+    mut live_names: set[str] = set()
+    for net in nets:
+        _ = net_tie_sets_get_or_add(mut sets, net.name)
+        live_names.add(strs.text(net.name))
+    for tie in ties:
+        mut ai = net_tie_sets_get_or_add(mut sets, tie.a)
+        mut bi = net_tie_sets_get_or_add(mut sets, tie.b)
+        live_names.add(strs.text(tie.a))
+        mut ra = net_tie_sets_find(mut sets, ai)
+        mut rb = net_tie_sets_find(mut sets, bi)
+        if ra != rb:
+            sets.parent[rb] = ra
+    # Canonical live name per root.
+    mut canonical: dict[int, int] = {}
+    mut i = 0
+    while i < len(sets.names):
+        mut nm = sets.names[i].copy()
+        if strs.text(nm) in live_names:
+            mut root = net_tie_sets_find(mut sets, i)
+            if root in canonical:
+                mut best_i = canonical[root]
+                if prefer_name(nm, sets.names[best_i]):
+                    canonical[root] = i
+            else:
+                canonical[root] = i
+        i += 1
+    # Only differing names are in the rename map; skip roots with no live name.
+    mut rename_map: dict[str, bytes] = {}
+    mut j = 0
+    while j < len(sets.names):
+        mut nm2 = sets.names[j].copy()
+        mut root2 = net_tie_sets_find(mut sets, j)
+        if root2 in canonical:
+            mut canon_name = sets.names[canonical[root2]].copy()
+            if nm2 != canon_name:
+                rename_map[strs.text(nm2)] = canon_name
+        j += 1
+    mut per_pin_renames: dict[str, bytes] = {}
+    for net2 in nets:
+        mut base = na.base_net_name(net2.name)
+        if len(base) == len(net2.name):
+            continue
+        mut suffix = net2.name[len(base):]
+        mut base_key = strs.text(base)
+        if base_key not in rename_map:
+            continue
+        per_pin_renames[strs.text(net2.name)] = rename_map[base_key] + suffix
+    write_canonical_aliases(mut aliases, mut sets, canonical, nets, per_pin_renames)
+    # Ordered-map rebuilding retains first-seen net order and all pin order.
+    mut merged: dict[str, FlatPin[]] = {}
+    for net3 in nets:
+        mut key3 = strs.text(net3.name)
+        mut canon = net3.name.copy()
+        if key3 in per_pin_renames:
+            canon = per_pin_renames[key3].copy()
+        elif key3 in rename_map:
+            canon = rename_map[key3].copy()
+        mut canon_key = strs.text(canon)
+        if canon_key not in merged:
+            merged[canon_key.copy()] = []
+        for p in net3.pins:
+            merged[canon_key].append(p.copy())
+    nets.clear()
+    for name3 in merged:
+        nets.append(FlatNet(name=name3.encode(), pins=merged[name3].copy()))
+
+
+public func flatten_and_merge_nets(block: env_mod.DesignBlock, mut nets: FlatNet[]):
+    mut aliases: dict[str, bytes] = {}
+    flatten_and_merge_nets_mapped(block, mut nets, mut aliases)
+
+
+public func flatten_and_merge_nets_mapped(block: env_mod.DesignBlock, mut nets: FlatNet[], mut aliases: dict[str, bytes]):
+    collect_nets(block, b"", mut nets)
+    mut ties: FlatTie[] = []
+    collect_net_ties(block, b"", mut ties)
+    apply_net_ties_mapped(mut nets, ties, mut aliases)

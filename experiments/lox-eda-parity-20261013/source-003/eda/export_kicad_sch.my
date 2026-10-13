@@ -1,0 +1,731 @@
+
+import eval_env as env_mod
+import flat_netlist as flat_netlist
+import infra_log as log
+import diagram_membership as membership
+import decouple_key
+import export_kicad_netlist as netlist
+import kicad_sch_compose as compose
+import kicad_sch_emit as emit
+import kicad_sch_plan as plan
+import kicad_sch_project as project
+import kicad_sch_shape as shape_mod
+import kicad_sch_stagger as stagger
+import kicad_sch_stub as stub
+import kicad_sch_textbox as textbox
+import kicad_sch_vendor as vendor
+import kicad_sch_verify as verify
+import kicad_sym_library as sym_library
+import lib_limits
+import stdlib
+import net_name
+import support_strs as strs
+import byte_builder
+
+public const flat_max_parts: int = 24
+
+
+public const err_pin_not_drawn: str = "PinNotDrawn"
+
+
+public record Options:
+    flat: bool = False
+    vendor: bool = True
+
+
+public record SchFile:
+    name: bytes
+    bytes: bytes
+
+
+public record Stats:
+    components: int = 0
+    vendor_bodies: int = 0
+    instances: int = 0
+
+
+public record Output:
+    files: SchFile[]
+    sidecars: SchFile[]
+    stats: Stats
+
+
+public func export_sch(fs: Filesystem, err: Stream, block: env_mod.DesignBlock, project_dir: str, design_name: bytes, opts: Options) -> Result[Output, str]:
+    mut instances: flat_netlist.FlatInstance[] = []
+    mut nets: flat_netlist.FlatNet[] = []
+    flat_netlist.collect_instances(block, b"", mut instances)
+    flat_netlist.flatten_and_merge_nets(block, mut nets)
+    mut sym_lib: sym_library.Library? = None
+    if opts.vendor:
+        sym_lib = Some(sym_library.load(fs, err, project_dir))
+    mut builder = builder_init(block, project_dir, design_name, opts, instances, nets, sym_lib)
+    mut files = try build(fs, err, mut builder)
+    mut side = project_sidecars(builder)
+    return Ok(Output(files=files, sidecars=side, stats=builder.stats))
+
+
+record FpInfo:
+    kicad_name: bytes
+    pads: bytes[]
+
+
+record PadNets:
+    ref: bytes
+    net: dict[str, bytes]
+
+
+record Comp:
+    names: shape_mod.Names
+    footprint: bytes
+    glyph: shape_mod.Class
+    parts: shape_mod.PartSpec[]
+    pins: PadNets
+    used: bytes[]
+    seen: set[str]
+    shape: int = 0
+
+
+public enum SheetKind:
+    section
+    module_
+    unsectioned
+
+
+record SheetItems:
+    items: compose.Placeable[]
+    shapes: shape_mod.Shape[]
+
+
+record SheetPlan:
+    title: bytes
+    file: bytes
+    uuid: bytes
+    members: int[]
+
+
+record Builder:
+    block: env_mod.DesignBlock
+    project_dir: str
+    design: bytes
+    opts: Options
+    instances: flat_netlist.FlatInstance[]
+    nets: flat_netlist.FlatNet[]
+    pin_net: dict[str, bytes]
+    binds: dict[str, compose.Bind]
+    net_pins: dict[str, int]
+    labels: dict[str, bytes]
+    ref_inst: dict[str, int]
+    fp: dict[str, FpInfo]
+    comps: dict[str, Comp]
+    shapes: shape_mod.Shape[]
+    src: env_mod.Instance[]
+    keys: bytes[]
+    sec_of_ref: dict[str, int]
+    owners: int?[]
+    attach: int?[]
+    captions: dict[int, bytes]
+    stats: Stats
+    sym_lib: sym_library.Library? = None
+    seq: int = 0
+    overlaps: int = 0
+
+
+func builder_init(block: env_mod.DesignBlock, project_dir: str, design: bytes, opts: Options, instances: flat_netlist.FlatInstance[], nets: flat_netlist.FlatNet[], sym_lib: sym_library.Library?) -> Builder:
+    return Builder(block=block.copy(), project_dir=project_dir.copy(), design=design.copy(), opts=opts.copy(), instances=instances.copy(), nets=nets.copy(), pin_net={}, binds={}, net_pins={}, labels={}, ref_inst={}, fp={}, comps={}, shapes=[], src=[], keys=[], sec_of_ref={}, owners=[], attach=[], captions={}, stats=Stats(), sym_lib=sym_lib.copy())
+
+
+func build(fs: Filesystem, err: Stream, mut self: Builder) -> Result[SchFile[], str]:
+    index_nets(err, mut self)
+    load_footprints(fs, mut self)
+    index_groups(mut self)
+    index_wiring(mut self)
+    build_components(fs, err, mut self)
+    mut sheets = partition(self)
+    mut files: SchFile[] = []
+    if self.opts.flat or len(sheets) < 2 or len(self.instances) <= flat_max_parts:
+        files = try build_flat(err, mut self)
+    else:
+        files = try build_hierarchy(err, mut self, sheets)
+    if self.overlaps > 0:
+        log.progress(err, b"export-kicad-sch: " + self.design + f": {self.overlaps} overlapping text pairs across {len(files)} sheets".encode())
+    return Ok(files)
+
+
+func index_nets(err: Stream, mut self: Builder):
+    for i in range(len(self.instances)):
+        mut inst = self.instances[i].copy()
+        mut key = strs.text(inst.ref_des)
+        if key not in self.ref_inst:
+            self.ref_inst[key] = i
+    mut pin_net = self.pin_net.copy()
+    for net in self.nets:
+        for pin in net.pins:
+            mut pk = pin_key(pin.ref_des, pin.pin)
+            if pk not in pin_net:
+                pin_net[pk] = net.name.copy()
+    self.pin_net = pin_net
+    mut labels = self.labels.copy()
+    mut n = stub.collapse(self.nets, self.ref_inst, mut labels)
+    self.labels = labels
+    if n > 0:
+        log.progress(err, b"export-kicad-sch: " + self.design + f": {n} per-pin bypass-stub nets labelled as their base rail".encode())
+
+
+func label_of(self: Builder, net: bytes) -> bytes:
+    return self.labels.get(strs.text(net), net).copy()
+
+
+func index_wiring(mut self: Builder):
+    for i in range(len(self.instances)):
+        mut inst = self.instances[i].copy()
+        mut bind = bind_of(self, inst, self.src[i])
+        if bind is not None:
+            self.binds[strs.text(inst.ref_des)] = bind.copy()
+    mut net_pins = self.net_pins.copy()
+    for net in self.nets:
+        net_pins[strs.text(net.name)] = len(net.pins)
+
+    self.net_pins = net_pins
+
+func bind_of(self: Builder, inst: flat_netlist.FlatInstance, src: env_mod.Instance) -> compose.Bind?:
+    if len(src.bind.decouple.pin) > 0 and len(src.bind.decouple.ic) > 0:
+        return Some(compose.Bind(ref=qualify(inst.ref_des, src.bind.decouple.ic), pad=src.bind.decouple.pin.copy()))
+    mut pad = try decouple_key.pin_from_origin(inst.origin_key)
+    return hub_on_supply_net(self, inst.ref_des, pad)
+
+
+func hub_on_supply_net(self: Builder, ref: bytes, pad: bytes) -> compose.Bind?:
+    for net in self.nets:
+        if compose.is_rail_net(net.name) or not net_touches(net, ref):
+            continue
+        for pin in net.pins:
+            if plan.is_passive_ref(pin.ref_des) or pin.pin != pad:
+                continue
+            return Some(compose.Bind(ref=pin.ref_des.copy(), pad=pad.copy()))
+    return None
+
+
+func net_facts(self: Builder) -> compose.NetFacts:
+    return compose.NetFacts(binds=Some(self.binds.copy()), net_pins=Some(self.net_pins.copy()), labels=Some(self.labels.copy()))
+
+
+func load_footprints(fs: Filesystem, mut self: Builder):
+    mut fp = self.fp.copy()
+    for inst in self.instances:
+        mut key = strs.text(inst.footprint)
+        if len(inst.footprint) == 0 or key in fp:
+            continue
+        mut info = FpInfo(kicad_name=inst.footprint.copy(), pads=[])
+        mut src = stdlib.read(fs, self.project_dir, "lib/footprints/" + key + ".sexp", lib_limits.max_footprint_bytes)
+        if src is not None:
+            match netlist.extract_footprint_name(src):
+                case Ok(name):
+                    info.kicad_name = name
+                case Err(_):
+                    pass
+            match netlist.extract_pad_names(src):
+                case Ok(pads):
+                    info.pads = pads
+                case Err(_):
+                    pass
+        fp[key] = info.copy()
+
+    self.fp = fp
+
+func build_components(fs: Filesystem, err: Stream, mut self: Builder):
+    for i in range(len(self.instances)):
+        mut key = component_key(self.instances[i], self.src[i])
+        mut lookup = strs.text(key)
+        self.keys.append(key)
+        if lookup not in self.comps:
+            self.comps[lookup] = component_from_instance(self.instances[i], self.src[i])
+    mut comps = self.comps.copy()
+    for net in self.nets:
+        for pin in net.pins:
+            mut ref = strs.text(pin.ref_des)
+            if ref not in self.ref_inst:
+                continue
+            mut inst_i = self.ref_inst[ref]
+            mut comp_key = strs.text(self.keys[inst_i])
+            mut comp = comps[comp_key].copy()
+            note_pad_net(self, mut comp, pin, net.name)
+            mut pad = strs.text(pin.pin)
+            if pad not in comp.seen:
+                comp.seen.add(pad)
+                comp.used.append(pin.pin.copy())
+            comps[comp_key] = comp
+    self.comps = comps
+    synth_shapes(fs, err, mut self)
+
+
+func component_from_instance(inst: flat_netlist.FlatInstance, src: env_mod.Instance) -> Comp:
+    return Comp(names=shape_mod.Names(component=base_name(inst), symbol=inst.symbol.copy(), pinout=inst.pinout.copy()), footprint=inst.footprint.copy(), glyph=shape_mod.classify(base_name(inst), inst.symbol, inst.ref_des), parts=part_specs(src), pins=PadNets(ref=inst.ref_des.copy(), net={}), used=[], seen=set())
+
+
+func note_pad_net(self: Builder, mut comp: Comp, pin: flat_netlist.FlatPin, net: bytes):
+    if comp.pins.ref != pin.ref_des:
+        return
+    mut key = strs.text(pin.pin)
+    if key not in comp.pins.net:
+        comp.pins.net[key] = label_of(self, net)
+
+
+func component_key(inst: flat_netlist.FlatInstance, src: env_mod.Instance) -> bytes:
+    mut base = base_name(inst)
+    if len(src.parts) == 0:
+        return base
+    mut sig = byte_builder.create()
+    byte_builder.append(mut sig, base)
+    for part in src.parts:
+        byte_builder.append(mut sig, b"#" + part.name)
+        for p in part.pins:
+            byte_builder.append(mut sig, b"," + p.pin)
+    return byte_builder.finish(sig)
+
+
+func part_specs(src: env_mod.Instance) -> shape_mod.PartSpec[]:
+    return [for part in src.parts yield shape_mod.PartSpec(title=part.name.copy(), pads=[for p in part.pins yield p.pin.copy()])]
+
+
+func synth_shapes(fs: Filesystem, err: Stream, mut self: Builder):
+    mut names: set[str] = set()
+    mut drawn = 0
+    mut comp_keys = list(self.comps.keys())
+    for i in range(len(comp_keys)):
+        mut key = comp_keys[i].copy()
+        mut comp = self.comps[key].copy()
+        mut pads: bytes[] = []
+        mut fpkey = strs.text(comp.footprint)
+        if fpkey in self.fp:
+            pads = self.fp[fpkey].pads.copy()
+        mut req = shape_mod.Request(names=comp.names.copy(), project_dir=self.project_dir.copy(), fp_pads=pads, used=comp.used.copy(), parts=comp.parts.copy(), glyph=comp.glyph, nets=Some(comp.pins.net.copy()))
+        mut body = vendor.synth(fs, err, self.sym_lib, req)
+        mut s = stagger.spread(body, Some(comp.pins.net.copy()))
+        if s.vendor:
+            drawn += 1
+        mut suffix = 1
+        while strs.text(s.lib_name) in names:
+            s.lib_name = s.lib_name + b"_" + str(suffix).encode()
+            suffix += 1
+        names.add(strs.text(s.lib_name))
+        comp.shape = i
+        self.comps[key] = comp
+        self.shapes.append(s)
+    self.stats = Stats(components=len(self.comps), vendor_bodies=drawn, instances=len(self.instances))
+    mut lib = self.sym_lib.copy()
+    if lib is not None:
+        if lib.files > 0:
+            log.progress(err, b"export-kicad-sch: " + self.design + f": {drawn}/{len(self.comps)} components drawn from vendor symbols ({lib.files} libraries indexed)".encode())
+
+
+func shape_of(self: Builder, idx: int) -> int:
+    mut key = strs.text(self.keys[idx])
+    if key not in self.comps:
+        return 0
+    return self.comps[key].shape
+
+
+func index_groups(mut self: Builder):
+    for i in range(len(self.block.sections)):
+        const section = self.block.sections[i].copy()
+        index_section(mut self, section, i)
+    mut owners = self.owners.copy()
+    mut src = self.src.copy()
+    walk_tree(self.block, None, mut owners, mut src)
+    self.owners = owners
+    self.src = src
+    self.attach = membership.compute_sub_block_attachments(self.block)
+
+
+func index_section(mut self: Builder, sec: env_mod.Section, index: int):
+    for inst in sec.instances:
+        mut key = strs.text(inst.ref_des)
+        if key not in self.sec_of_ref:
+            self.sec_of_ref[key] = index
+    for pg in sec.pin_groups:
+        mut pkey = strs.text(pg.ref_des)
+        if pkey not in self.sec_of_ref:
+            self.sec_of_ref[pkey] = index
+    for sub in sec.sub_sections:
+        index_section(mut self, sub, index)
+
+
+func sheet_key_of(self: Builder, idx: int) -> int:
+    mut owner: int? = None
+    if idx < len(self.owners):
+        owner = self.owners[idx]
+    if owner is not None:
+        mut sec: int? = None
+        if owner < len(self.attach):
+            sec = self.attach[owner]
+        if sec is not None:
+            return sheet_key(SheetKind.section, sec)
+        return sheet_key(SheetKind.module_, owner)
+    mut key = strs.text(self.instances[idx].ref_des)
+    if key in self.sec_of_ref:
+        return sheet_key(SheetKind.section, self.sec_of_ref[key])
+    return sheet_key(SheetKind.unsectioned, 0)
+
+
+func group_of(self: Builder, idx: int) -> int:
+    mut n_sec = len(self.block.sections)
+    mut owner: int? = None
+    if idx < len(self.owners):
+        owner = self.owners[idx]
+    if owner is not None:
+        mut sec: int? = None
+        if owner < len(self.attach):
+            sec = self.attach[owner]
+        mut high = n_sec
+        if sec is not None:
+            high = sec
+        return high * 4294967296 + owner + 1
+    mut key = strs.text(self.instances[idx].ref_des)
+    mut high2 = n_sec + 1
+    if key in self.sec_of_ref:
+        high2 = self.sec_of_ref[key]
+    return high2 * 4294967296
+
+
+func caption_for(mut self: Builder, key: int) -> bytes:
+    if key in self.captions:
+        return self.captions[key].copy()
+    mut n_sec = len(self.block.sections)
+    mut sec = key // 4294967296
+    mut sub = key % 4294967296
+    mut sec_name = b""
+    if sec < n_sec:
+        sec_name = self.block.sections[sec].name.copy()
+    mut text = b"Unsectioned"
+    if sub > 0:
+        mut sb_name = self.block.sub_blocks[sub - 1].name.copy()
+        if len(sec_name) > 0:
+            text = sec_name + b" / " + sb_name
+        else:
+            text = b"sub-block " + sb_name
+    elif len(sec_name) > 0:
+        text = sec_name
+    self.captions[key] = text.copy()
+    return text
+
+
+func partition(self: Builder) -> SheetPlan[]:
+    mut order: int[] = []
+    mut members: dict[int, int[]] = {}
+    for i in range(len(self.instances)):
+        mut key = sheet_key_of(self, i)
+        if key not in members:
+            members[key] = []
+            order.append(key)
+        members[key].append(i)
+    order.sort()
+    mut seen: set[str] = set()
+    mut result: SheetPlan[] = []
+    for key2 in order:
+        mut title = sheet_title(self, key2)
+        mut stem = plan.unique_name(plan.slugify(title, b"sheet"), mut seen)
+        result.append(SheetPlan(title=title, file=self.design + b"-" + stem + b".kicad_sch", uuid=emit.element_uuid(self.design, b"sheet", stem), members=members[key2].copy()))
+    return result
+
+
+func sheet_title(self: Builder, key: int) -> bytes:
+    mut idx = key % 4294967296
+    mut kind = key // 4294967296
+    if kind == 0:
+        if idx < len(self.block.sections) and len(self.block.sections[idx].name) > 0:
+            return self.block.sections[idx].name.copy()
+        return f"Section {idx + 1}".encode()
+    if kind == 1:
+        return b"sub-block " + self.block.sub_blocks[idx].name
+    return b"Unsectioned"
+
+
+func rail_nets(self: Builder) -> bytes[]:
+    mut seen: set[str] = set()
+    mut result: bytes[] = []
+    for net in self.nets:
+        mut name = label_of(self, net.name)
+        if not compose.is_rail_net(name) or not draws_any_pin(self, net):
+            continue
+        mut key = strs.text(name)
+        if key in seen:
+            continue
+        seen.add(key)
+        result.append(name)
+    return result
+
+
+func project_sidecars(self: Builder) -> SchFile[]:
+    mut rails = [for net in rail_nets(self) yield compose.rail_for(net)]
+    mut side = project.sidecars(self.design, self.shapes, rails)
+    return [for s in side yield SchFile(name=s.name.copy(), bytes=s.bytes.copy())]
+
+
+func draws_any_pin(self: Builder, net: flat_netlist.FlatNet) -> bool:
+    for pin in net.pins:
+        if strs.text(pin.ref_des) in self.ref_inst:
+            return True
+    return False
+
+
+func build_flat(err: Stream, mut self: Builder) -> Result[SchFile[], str]:
+    mut all_ = [for i in range(len(self.instances)) yield i]
+    mut root_uuid = emit.element_uuid(self.design, b"root", b"")
+    mut flat_items = sheet_items(mut self, all_)
+    mut req = compose.Request(sheet=emit.Sheet(design=self.design.copy(), title=b"", root_uuid=root_uuid.copy(), sheet_uuid=root_uuid.copy(), page_w=0, page_h=0, is_root=True), shapes=flat_items.shapes.copy(), items=flat_items.items.copy(), children=[], flag_nets=rail_nets(self), seq=self.seq, facts=net_facts(self))
+    mut data = try render_sheet(err, mut self, req)
+    try check_coverage(err, self, all_)
+    return Ok([SchFile(name=self.design + b".kicad_sch", bytes=data)])
+
+
+func build_hierarchy(err: Stream, mut self: Builder, sheets: SheetPlan[]) -> Result[SchFile[], str]:
+    mut root_uuid = emit.element_uuid(self.design, b"root", b"")
+    mut files = [SchFile(name=b"", bytes=b"")]
+    mut children: emit.SheetRef[] = []
+    for i in range(len(sheets)):
+        mut s = sheets[i].copy()
+        mut drawn = sheet_items(mut self, s.members)
+        children.append(emit.SheetRef(name=s.title.copy(), file=s.file.copy(), uuid=s.uuid.copy(), page=i + 2, at=emit.Rect(x=0, y=0, w=0, h=0)))
+        mut req = compose.Request(sheet=emit.Sheet(design=self.design.copy(), title=s.title.copy(), root_uuid=root_uuid.copy(), sheet_uuid=s.uuid.copy(), page_w=0, page_h=0, is_root=False), shapes=drawn.shapes.copy(), items=drawn.items.copy(), children=[], flag_nets=[], seq=self.seq, facts=net_facts(self))
+        mut data = try render_sheet(err, mut self, req)
+        files.append(SchFile(name=s.file.copy(), bytes=data))
+    mut root_req = compose.Request(sheet=emit.Sheet(design=self.design.copy(), title=self.block.name.copy(), root_uuid=root_uuid.copy(), sheet_uuid=root_uuid.copy(), page_w=0, page_h=0, is_root=True), shapes=[], items=[], children=children, flag_nets=rail_nets(self), seq=self.seq, facts=compose.NetFacts())
+    mut root = try render_sheet(err, mut self, root_req)
+    files[0] = SchFile(name=self.design + b".kicad_sch", bytes=root)
+    mut all_ = [for j in range(len(self.instances)) yield j]
+    try check_coverage(err, self, all_)
+    return Ok(files)
+
+
+func render_sheet(err: Stream, mut self: Builder, req: compose.Request) -> Result[bytes, str]:
+    mut request = req.copy()
+    mut result = compose.compose(mut request)
+    self.seq = request.seq
+    mut data = emit.render(result.doc)
+    mut report = try verify.check(data, result.expect)
+    note_overlaps(err, mut self, req.sheet.title, report)
+    return Ok(data)
+
+
+func div_trunc(x: int, y: int) -> int:
+    if x < 0:
+        return -((-x) // y)
+    return x // y
+
+
+func kind_name(kind: textbox.Kind) -> bytes:
+    if kind == textbox.Kind.caption:
+        return b"caption"
+    if kind == textbox.Kind.label:
+        return b"label"
+    if kind == textbox.Kind.field:
+        return b"field"
+    if kind == textbox.Kind.pin_name:
+        return b"pin_name"
+    return b"pin_number"
+
+
+func note_overlaps(err: Stream, mut self: Builder, title: bytes, report: textbox.Report):
+    self.overlaps += report.overlaps
+    mut pair = report.first.copy()
+    if pair is None:
+        return
+    mut label = title.copy()
+    if len(label) == 0:
+        label = b"root"
+    mut message = b"export-kicad-sch: " + self.design + b": " + label
+    message += f": {report.overlaps} overlapping text pairs of {report.texts} drawn texts".encode()
+    message += b" (e.g. " + kind_name(pair.kind_a) + b" \"" + pair.a + b"\" over " + kind_name(pair.kind_b) + b" \"" + pair.b
+    message += f"\" at {div_trunc(pair.x, 100)},{div_trunc(pair.y, 100)})".encode()
+    log.progress(err, message)
+
+
+func placeables(mut self: Builder, members: int[]) -> compose.Placeable[]:
+    mut raw: compose.Placeable[] = []
+    for m in members:
+        units_of(mut self, m, mut raw)
+    mut buckets: dict[int, compose.Placeable[]] = {}
+    mut order: int[] = []
+    for it in raw:
+        if it.group not in buckets:
+            buckets[it.group] = []
+            order.append(it.group)
+        buckets[it.group].append(it.copy())
+    order.sort()
+    mut result: compose.Placeable[] = []
+    for g in order:
+        cluster_group(self, buckets[g], mut result)
+    return result
+
+
+func sheet_items(mut self: Builder, members: int[]) -> SheetItems:
+    mut items = placeables(mut self, members)
+    mut shapes = subset_shapes(self, mut items)
+    return SheetItems(items=items, shapes=shapes)
+
+
+func subset_shapes(self: Builder, mut items: compose.Placeable[]) -> shape_mod.Shape[]:
+    mut index: dict[int, int] = {}
+    mut used: shape_mod.Shape[] = []
+    for i in range(len(items)):
+        mut it = items[i].copy()
+        if it.shape not in index:
+            index[it.shape] = len(used)
+            used.append(self.shapes[it.shape].copy())
+        it.shape = index[it.shape]
+        items[i] = it
+    return used
+
+
+func cluster_group(self: Builder, group: compose.Placeable[], mut out: compose.Placeable[]):
+    mut members = [for it in group yield member_of(self, it)]
+    mut placement = plan.cluster(members)
+    for k in range(len(placement.order)):
+        mut i = placement.order[k]
+        mut it = group[i].copy()
+        it.cluster = placement.cluster[k]
+        out.append(it)
+
+
+func member_of(self: Builder, it: compose.Placeable) -> plan.Member:
+    mut idx = self.ref_inst.get(strs.text(it.id.ref), 0)
+    mut src: env_mod.Instance? = None
+    if idx < len(self.src):
+        src = Some(self.src[idx].copy())
+    mut nets: bytes[] = []
+    for n in it.nets:
+        if len(n) == 0 or compose.is_rail_net(n):
+            continue
+        nets.append(n.copy())
+    mut bound_ref = b""
+    mut order = b""
+    if src is not None:
+        bound_ref = qualify(it.id.ref, src.bind.decouple.ic)
+        order = src.bind.decouple.pin.copy()
+    return plan.Member(hub=not plan.is_passive_ref(it.id.ref), ref=it.id.ref.copy(), bound_ref=bound_ref, order=order, nets=nets)
+
+
+func units_of(mut self: Builder, idx: int, mut out: compose.Placeable[]):
+    mut inst = self.instances[idx].copy()
+    mut shape_idx = shape_of(self, idx)
+    mut group = group_of(self, idx)
+    mut caption = caption_for(mut self, group)
+    mut id = identity_of(self, inst)
+    mut units = self.shapes[shape_idx].units.copy()
+    for ui in range(len(units)):
+        mut u = units[ui].copy()
+        mut nets = [for pin in u.pins yield net_of(self, inst.ref_des, pin.pad)]
+        mut unit_id = id.copy()
+        if ui > 0:
+            unit_id.uuid = unit_uuid(self, inst.ref_des, u.number)
+        out.append(compose.Placeable(id=unit_id, shape=shape_idx, unit=ui, group=group, caption=caption.copy(), nets=nets, cluster=0))
+
+
+func identity_of(self: Builder, inst: flat_netlist.FlatInstance) -> emit.Identity:
+    mut uuid = inst.uuid.copy()
+    if len(uuid) == 0:
+        uuid = emit.element_uuid(self.design, b"sym", inst.ref_des)
+    return emit.Identity(ref=inst.ref_des.copy(), value=inst.value.copy(), footprint=footprint_field(self, inst), properties=inst.properties.copy(), uuid=uuid, dnp=inst.dnp)
+
+
+func unit_uuid(self: Builder, ref: bytes, number: int) -> bytes:
+    return emit.element_uuid(self.design, b"unit", ref + b":" + str(number).encode())
+
+
+func net_of(self: Builder, ref: bytes, pad: bytes) -> bytes:
+    return self.pin_net.get(pin_key(ref, pad), b"").copy()
+
+
+func footprint_field(self: Builder, inst: flat_netlist.FlatInstance) -> bytes:
+    if len(inst.footprint) == 0:
+        return b""
+    mut key = strs.text(inst.footprint)
+    mut name = inst.footprint.copy()
+    if key in self.fp:
+        name = self.fp[key].kicad_name.copy()
+    return b"footprints:" + name
+
+
+func check_coverage(err: Stream, self: Builder, members: int[]) -> Result[Unit, str]:
+    mut drawn: set[str] = set()
+    for m in members:
+        mut inst = self.instances[m].copy()
+        for u in self.shapes[shape_of(self, m)].units:
+            for pin in u.pins:
+                drawn.add(pin_key(inst.ref_des, pin.pad))
+    warn_orphan_pins(err, self)
+    mut missing = first_undrawn(self.nets, self.ref_inst, drawn)
+    if missing is not None:
+        log.warn(err, b"export-kicad-sch: pin " + missing.ref_des + b"." + missing.pin + b" is on a net but has no symbol pin")
+        return Err(err_pin_not_drawn)
+    return Ok(())
+
+
+func warn_orphan_pins(err: Stream, self: Builder):
+    mut seen: set[str] = set()
+    for net in self.nets:
+        for pin in net.pins:
+            mut key = strs.text(pin.ref_des)
+            if key in self.ref_inst or key in seen:
+                continue
+            seen.add(key)
+            log.warn(err, b"export-kicad-sch: net '" + net.name + b"' references '" + pin.ref_des + b"' which has no instance \xe2\x80\x94 pin not drawn")
+
+
+# Private Zig helpers are public solely for their original sibling counterparts.
+public func first_undrawn(nets: flat_netlist.FlatNet[], known: dict[str, int], drawn: set[str]) -> flat_netlist.FlatPin?:
+    for net in nets:
+        for pin in net.pins:
+            if strs.text(pin.ref_des)not in known or pin_key(pin.ref_des, pin.pin) in drawn:
+                continue
+            return Some(pin.copy())
+    return None
+
+
+public func sheet_key(kind: SheetKind, index: int) -> int:
+    mut high = 2
+    if kind == SheetKind.section:
+        high = 0
+    elif kind == SheetKind.module_:
+        high = 1
+    return high * 4294967296 + index
+
+
+public func pin_key(ref: bytes, pad: bytes) -> str:
+    return strs.text(ref + b"\x00" + pad)
+
+
+func base_name(inst: flat_netlist.FlatInstance) -> bytes:
+    if len(inst.component) > 0:
+        return inst.component.copy()
+    if len(inst.symbol) > 0:
+        return inst.symbol.copy()
+    return b"unnamed-part"
+
+
+func net_touches(net: flat_netlist.FlatNet, ref: bytes) -> bool:
+    for pin in net.pins:
+        if pin.ref_des == ref:
+            return True
+    return False
+
+
+public func qualify(ref: bytes, local: bytes) -> bytes:
+    if len(local) == 0:
+        return b""
+    mut path = net_name.parent(ref)
+    if path is None:
+        return local.copy()
+    return path + b"/" + local
+
+
+func walk_tree(block: env_mod.DesignBlock, top: int?, mut owners: int?[], mut src: env_mod.Instance[]):
+    for inst in block.instances:
+        owners.append(top)
+        src.append(inst.copy())
+    for i in range(len(block.sub_blocks)):
+        mut sb = block.sub_blocks[i].copy()
+        mut next_top = top.copy()
+        if next_top is None:
+            next_top = Some(i)
+        walk_tree(sb.block, next_top, mut owners, mut src)

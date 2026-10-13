@@ -1,0 +1,26 @@
+import heap
+import output
+import vm
+
+# Calls resume at their operand-complete IP; errors use the current opcode's
+# source line even after a return, jump, and nested property assignment.
+func resumed_trace(out: Stream, stress: bool) -> bool:
+    mut rt = heap.new_runtime(stress)
+    mut o = output.capture(out)
+    const result = vm.interpret(mut rt, mut o, b"fun identity(x) { return x; }\nfun fail() {\n var x = identity(1);\n if (x == 1) x = x + 2;\n print -\"bad\";\n}\nfail();", None)
+    return result == vm.InterpretResult.RUNTIME_ERROR and bytes(o.stderr) == b"Operand must be a number.\n[line 5] in fail()\n[line 7] in script\n" and rt.frame_count == 0 and rt.stack_top == 0
+
+public func test_resumed_trace(out: Stream) -> bool:
+    return resumed_trace(out, False) and resumed_trace(out, True)
+
+public func test_field_assignment_and_inherited_method(out: Stream) -> bool:
+    mut rt = heap.new_runtime(True)
+    mut o = output.capture(out)
+    const result = vm.interpret(mut rt, mut o, b"class A { init(x) { this.x = x; } value() { return this.x; } } class B < A {} var b = B(1); print b.x = 42; print b.value(); b.value = 3; print b.value;", None)
+    return result == vm.InterpretResult.OK and bytes(o.stdout) == b"42\n42\n3\n" and rt.frame_count == 0 and rt.stack_top == 0
+
+public func test_invalid_field_target_trace(out: Stream) -> bool:
+    mut rt = heap.new_runtime(True)
+    mut o = output.capture(out)
+    const result = vm.interpret(mut rt, mut o, b"fun fail() {\n var n = 1;\n n.x = 2;\n}\nfail();", None)
+    return result == vm.InterpretResult.RUNTIME_ERROR and bytes(o.stderr) == b"Only instances have fields.\n[line 3] in fail()\n[line 5] in script\n"

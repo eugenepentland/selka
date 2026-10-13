@@ -1,0 +1,20 @@
+import driver
+
+func prints(source: bytes, expected: bytes, out: Stream) -> bool:
+    mut normal = driver.run_source(source, driver.Engine.TREE, False, out, None)
+    mut stress = driver.run_source(source, driver.Engine.TREE, True, out, None)
+    return normal.status == 0 and stress.status == 0 and normal.stdout == expected and stress.stdout == expected and stress.collections == stress.allocations
+
+public func test_p1_discard_nested_captured_locals(out: Stream) -> bool:
+    return prints(b"fun make(n) { fun read() { { n; { n; } } return n; } n; return read; } var read = make(41); { var x = read(); x; { x; print x; } } print read();", b"41\n41\n", out)
+
+public func test_p1_discard_objects_remain_rooted(out: Stream) -> bool:
+    return prints(b"class Box {} fun f() { var a = Box(); a.n = 7; a; { a; var b = Box(); b; print a.n; } a; print a.n; } f();", b"7\n7\n", out)
+
+public func test_p1_discard_global_error_unchanged(out: Stream) -> bool:
+    mut normal = driver.run_source(b"{ var x = 1; x; missing; print 99; }", driver.Engine.TREE, False, out, None)
+    mut stress = driver.run_source(b"{ var x = 1; x; missing; print 99; }", driver.Engine.TREE, True, out, None)
+    return normal.status == 70 and stress.status == 70 and normal.stdout == b"" and stress.stdout == b"" and normal.stderr == b"Undefined variable 'missing'.\n[line 1]\n" and stress.stderr == normal.stderr
+
+public func test_p1_discard_other_expressions_keep_effects(out: Stream) -> bool:
+    return prints(b"var g = 2; g; fun f() { var a = 3; (a); a = a + 1; fun side() { print a; return a; } side(); print a; } f(); print g;", b"4\n4\n2\n", out)

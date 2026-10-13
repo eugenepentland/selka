@@ -1,0 +1,63 @@
+
+# Guest tests translated from the `test "..."` blocks of zig/src/escape.zig.
+# `std.Io.Writer.Allocating` is a `byte_builder.Builder` here.
+import byte_builder
+import escape
+
+func every_byte() -> bytes:
+    return bytes([for i in range(256) yield i])
+
+
+# test "writeXml escapes markup and both quote styles"
+public func test_writexml_escapes_markup_and_both_quote_styles() -> bool:
+    mut out = byte_builder.create()
+    escape.write_xml(mut out, b"a<b>&\"'c")
+    assert byte_builder.finish(out) == b"a&lt;b&gt;&amp;&quot;&#39;c", "escaped text"
+    return True
+
+
+# test "writeXml neutralizes a script/attribute breakout"
+public func test_writexml_neutralizes_a_script_attribute_breakout() -> bool:
+    mut out = byte_builder.create()
+    escape.write_xml(mut out, b"\"><script>alert(1)</script>")
+    mut written = byte_builder.finish(out)
+    # No literal '<', '>' or '"' survives, so neither an attribute nor a tag can be closed.
+    assert written.find(b"<") < 0, "no <"
+    assert written.find(b">") < 0, "no >"
+    assert written.find(b"\"") < 0, "no quote"
+    return True
+
+
+# test "the two apostrophe spellings differ in nothing but the apostrophe"
+public func test_the_two_apostrophe_spellings_differ_in_nothing_but_the_apostrophe() -> bool:
+    mut all_bytes = every_byte()
+    mut decimal_out = byte_builder.create()
+    mut hex_out = byte_builder.create()
+    escape.write_xml(mut decimal_out, all_bytes)
+    escape.write_xml_hex_apos(mut hex_out, all_bytes)
+    mut decimal = byte_builder.finish(decimal_out)
+    mut hexed = byte_builder.finish(hex_out)
+    mut at = decimal.find(b"&#39;")
+    assert at >= 0, "decimal apostrophe present"
+    assert decimal[0:at] == hexed[0:at], "prefix identical"
+    assert decimal[at:at + 5] == b"&#39;", "decimal spelling"
+    assert hexed[at:at + 6] == b"&#x27;", "hex spelling"
+    assert decimal[at + 5:len(decimal)] == hexed[at + 6:len(hexed)], "suffix identical"
+    return True
+
+
+# test "decodeXmlAlloc round-trips every byte writeXml can escape"
+public func test_decodexmlalloc_round_trips_every_byte_writexml_can_escape() -> bool:
+    mut all_bytes = every_byte()
+    mut out = byte_builder.create()
+    escape.write_xml(mut out, all_bytes)
+    mut back = escape.decode_xml_alloc(byte_builder.finish(out))
+    assert back == all_bytes, "round trip"
+    return True
+
+
+# test "decodeXmlAlloc copies an entity it does not know through verbatim"
+public func test_decodexmlalloc_copies_an_entity_it_does_not_know_through_verbatim() -> bool:
+    mut got = escape.decode_xml_alloc(b"a &nbsp; b &amp; c &")
+    assert got == b"a &nbsp; b & c &", "unknown entity passes through"
+    return True

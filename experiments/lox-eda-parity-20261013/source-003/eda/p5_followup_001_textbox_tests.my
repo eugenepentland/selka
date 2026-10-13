@@ -1,0 +1,73 @@
+
+import kicad_sch_textbox as m
+import sexpr_parser as parser
+import support_expect as ex
+import byte_builder
+
+func replace_bytes(src: bytes, old: bytes, new: bytes) -> bytes:
+    mut w = byte_builder.create()
+    mut pos = 0
+    while pos < len(src):
+        if src[pos:pos + len(old)] == old:
+            byte_builder.append(mut w, new)
+            pos += len(old)
+        else:
+            _ = byte_builder.append_byte(mut w, src[pos])
+            pos += 1
+    return byte_builder.finish(w)
+
+
+func scan_text(src: bytes) -> m.Report?:
+    match parser.parse(src):
+        case Err(_):
+            return None
+        case Ok(nodes):
+            if len(nodes) == 0:
+                return None
+            return Some(m.scan(nodes[0]))
+
+
+func p5_followup_named_doc(value: bytes) -> bytes:
+    mut doc = b"".join([b"(kicad_sch (lib_symbols (symbol \"netlisp:BOX\" (pin_names (offset 0.254))\n", b"(symbol \"BOX_1_1\" (pin passive line (at -15.24 0 0) (length 2.54)\n", b"(name ", value.copy(), b" (effects (font (size 1.27 1.27))))\n", b"(number \"H14\" (effects (font (size 0 0))))))))\n", b"(symbol (lib_id \"netlisp:BOX\") (at 63.5 38.1 0) (unit 1)))\n"])
+    mut placement = b"(symbol (lib_id \"netlisp:BOX\") (at 63.5 38.1 0) (unit 1))\n"
+    return replace_bytes(doc, b"(symbol (lib_id \"netlisp:BOX\") (at 63.5 38.1 0) (unit 1)))\n", placement + placement + b")\n")
+
+
+# test "P5 follow-up: named pin atom/string ownership survives AST destruction"
+public func test_p5_followup_named_pin_owned_values() -> bool:
+    for input in [b"ALPHA", b"\"ALPHA\""]:
+        mut report = scan_text(p5_followup_named_doc(input))
+        if report is None or report.texts != 2 or report.overlaps != 1 or report.first is None:
+            return False
+        mut want = b"ALPHA"
+        if not p5_followup_pair_is(report, want):
+            return False
+    mut long = b"".join([for i in range(512) yield b"ABCDEFGH"])
+    mut report = scan_text(p5_followup_named_doc(b"\"" + long + b"\""))
+    return report is not None and report.first is not None and p5_followup_pair_is(report, long)
+
+
+# test "P5 follow-up: unsupported named pin nodes preserve empty fallback"
+public func test_p5_followup_named_pin_empty_fallback() -> bool:
+    for input in [b"7", b"1.5", b"()"]:
+        mut report = scan_text(p5_followup_named_doc(input))
+        if report is None or report.texts != 0 or report.overlaps != 0 or report.first is not None:
+            return False
+    return True
+
+
+# test "P5 follow-up: library selection retains the first duplicate ID"
+public func test_p5_followup_first_library_match() -> bool:
+    mut original = p5_followup_named_doc(b"FIRST")
+    mut duplicate = b"".join([b"(lib_symbols (symbol \"netlisp:BOX\" (symbol \"BOX_1_1\" ", b"(pin passive line (at -15.24 0 0) (length 2.54) (name \"WRONG\" ", b"(effects (font (size 1.27 1.27)))) (number \"H14\" (effects (font (size 0 0))))))))\n"])
+    mut doc = replace_bytes(original, b"(symbol (lib_id", duplicate + b"(symbol (lib_id")
+    mut report = scan_text(doc)
+    return report is not None and report.texts == 2 and report.overlaps == 1 and report.first is not None and p5_followup_pair_is(report, b"FIRST")
+
+
+func p5_followup_pair_is(report: m.Report, want: bytes) -> bool:
+    match report.first:
+        case Some(pair):
+            return pair.a == want and pair.b == want
+        case None:
+            return False
