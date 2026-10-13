@@ -12,7 +12,7 @@ test "live iteration refreshes shared elements, appends, mut callees and record 
         var dir = std.testing.tmpDir(.{});
         defer dir.cleanup();
         const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
-        var environment = try std.testing.environ.createMap(a);
+        var environment = try options.privateEnvironment(a);
         try environment.put("MYL_CORE_LEAKCHECK", "1");
         var argv: std.ArrayList([]const u8) = .empty;
         try argv.appendSlice(a, &.{ options.corePath(), "test", try std.fs.path.join(a, &.{ options.fixtures, "i_live_place.my" }), "--cache-dir", root });
@@ -36,7 +36,7 @@ test "gap_words checked split iteration preserves stored keys and control flow" 
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
-    var environment = try std.testing.environ.createMap(a);
+    var environment = try options.privateEnvironment(a);
     try environment.put("MYL_CORE_LEAKCHECK", "1");
     for ([_][]const []const u8{ &.{"--experimental-zero-rc"}, &.{ "--experimental-zero-rc", "--release", "--verify-facts" } }) |flags| {
         var argv: std.ArrayList([]const u8) = .empty;
@@ -58,7 +58,7 @@ test "gap_words empty separator traps before loop effects and early exit" {
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
-    var environment = try std.testing.environ.createMap(a);
+    var environment = try options.privateEnvironment(a);
     try environment.put("MYL_CORE_LEAKCHECK", "1");
     const fixture = try std.fs.path.join(a, &.{ options.fixtures, "gap_words_empty.my" });
     const argv: []const []const u8 = &.{ options.corePath(), "run", fixture, "--cache-dir", root, "--experimental-zero-rc", "--release", "--verify-facts" };

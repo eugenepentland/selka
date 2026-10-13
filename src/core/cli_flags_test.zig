@@ -34,8 +34,10 @@ const Context = struct {
         try std.testing.expectEqual(@as(u8, 0), result.status);
     }
 
+    // The flag tests count this project's own replays and receipts: no shared store.
     fn spawn(self: Context, argv: []const []const u8) !Outcome {
-        const result = try std.process.run(self.arena, std.testing.io, .{ .argv = argv, .cwd = .{ .path = self.root } });
+        var environment = try tools.privateEnvironment(self.arena);
+        const result = try std.process.run(self.arena, std.testing.io, .{ .argv = argv, .cwd = .{ .path = self.root }, .environ_map = &environment });
         const status: u8 = switch (result.term) {
             .exited => |code| code,
             else => 255,

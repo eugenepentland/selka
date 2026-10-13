@@ -248,7 +248,7 @@ fn runFixture(command: []const u8, text: []const u8, options: []const []const u8
     defer testing.allocator.free(cache);
     if (std.mem.eql(u8, command, "test")) try args.appendSlice(testing.allocator, &.{ "--cache-dir", cache });
     try args.appendSlice(testing.allocator, options);
-    return std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
+    return privateRun(testing.allocator, args.items);
 }
 
 /// A receipt cache beside a fixture, removed with its temporary directory. Receipt
@@ -277,7 +277,7 @@ fn runProjectFixture(command: []const u8, text: []const u8, options: []const []c
     defer testing.allocator.free(cache);
     if (std.mem.eql(u8, command, "test")) try args.appendSlice(testing.allocator, &.{ "--cache-dir", cache });
     try args.appendSlice(testing.allocator, options);
-    return std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
+    return privateRun(testing.allocator, args.items);
 }
 
 fn invokeProject(command: []const u8, text: []const u8, expected_status: u8, expected_stdout: []const u8, stderr_part: []const u8) !void {
@@ -1313,7 +1313,7 @@ test "CLI test reports a Result test's Err with its error return trace in text a
     defer a.free(entry);
     const cache = try std.fmt.allocPrint(a, "{s}/cache", .{std.fs.path.dirname(entry).?});
     defer a.free(cache);
-    const text = try std.process.run(a, testing.io, .{ .argv = &.{ compilerPath(), "test", entry, "--cache-dir", cache, tools[0] } });
+    const text = try privateRun(a, &.{ compilerPath(), "test", entry, "--cache-dir", cache, tools[0] });
     defer a.free(text.stdout);
     defer a.free(text.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, text.term);
@@ -1324,7 +1324,7 @@ test "CLI test reports a Result test's Err with its error return trace in text a
         \\  config_test.my:7:16  config_test::test_port   try propagated
         \\
     ) != null);
-    const json = try std.process.run(a, testing.io, .{ .argv = &.{ compilerPath(), "test", entry, "--json", "--cache-dir", cache, tools[0] } });
+    const json = try privateRun(a, &.{ compilerPath(), "test", entry, "--json", "--cache-dir", cache, tools[0] });
     defer a.free(json.stdout);
     defer a.free(json.stderr);
     const parsed = try std.json.parseFromSlice(std.json.Value, a, json.stdout, .{});
@@ -3470,7 +3470,7 @@ test "CLI formatter and test agree on headerless sibling test imports" {
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, checked.term);
     const cache = try privateTestCache(path);
     defer testing.allocator.free(cache);
-    const tested = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compilerPath(), "test", path, "--cache-dir", cache } });
+    const tested = try privateRun(testing.allocator, &.{ compilerPath(), "test", path, "--cache-dir", cache });
     defer testing.allocator.free(tested.stdout);
     defer testing.allocator.free(tested.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, tested.term);
@@ -3486,7 +3486,7 @@ test "CLI empty test selection names an unloaded sibling and preserves JSON" {
     try temp.dir.writeFile(testing.io, .{ .sub_path = "helper_test.my", .data = "import helper\n\npublic func test_value() -> bool:\n    return helper.value() == 7\n" });
     const path = try temp.dir.realPathFileAlloc(testing.io, "helper.my", testing.allocator);
     defer testing.allocator.free(path);
-    const empty = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compilerPath(), "test", path, "--json" } });
+    const empty = try privateRun(testing.allocator, &.{ compilerPath(), "test", path, "--json" });
     defer testing.allocator.free(empty.stdout);
     defer testing.allocator.free(empty.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, empty.term);
@@ -3497,14 +3497,14 @@ test "CLI empty test selection names an unloaded sibling and preserves JSON" {
     try testing.expectEqualStrings("native-tests-v1", parsed.value.object.get("version").?.string);
     try testing.expectEqual(@as(usize, 0), parsed.value.object.get("tests").?.array.items.len);
     try temp.dir.deleteFile(testing.io, "helper_test.my");
-    const absent = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compilerPath(), "test", path } });
+    const absent = try privateRun(testing.allocator, &.{ compilerPath(), "test", path });
     defer testing.allocator.free(absent.stdout);
     defer testing.allocator.free(absent.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, absent.term);
     try testing.expectEqualStrings("", absent.stderr);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "helper_test.my", .data = "\npublic func value() -> int:\n    return 7\n\n\npublic func test_value() -> bool:\n    return True\n" });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "import helper_test\n\nfunc main() -> int:\n    return helper_test.value()\n" });
-    const loaded = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compilerPath(), "test", path, "--filter", "does_not_exist" } });
+    const loaded = try privateRun(testing.allocator, &.{ compilerPath(), "test", path, "--filter", "does_not_exist" });
     defer testing.allocator.free(loaded.stdout);
     defer testing.allocator.free(loaded.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, loaded.term);
@@ -3761,7 +3761,7 @@ test "CLI test discovers a test_ function without an explicit export" {
     defer testing.allocator.free(root);
     const cache = try std.fs.path.join(testing.allocator, &.{ root, ".mylang-test-cache" });
     defer testing.allocator.free(cache);
-    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compilerPath(), "test", path, "--cache-dir", cache } });
+    const result = try privateRun(testing.allocator, &.{ compilerPath(), "test", path, "--cache-dir", cache });
     defer testing.allocator.free(result.stdout);
     defer testing.allocator.free(result.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
@@ -3827,7 +3827,7 @@ test "mylang test inside a build.zig project compiles its runner without a Zig c
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "checks.my", .data = "public func test_adds() -> bool:\n    return 1 + 1 == 2\n" });
     const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compilerPath(), testing.allocator);
     defer testing.allocator.free(compiler);
-    var environment = try std.process.Environ.createMap(testing.environ, testing.allocator);
+    var environment = try @import("test_paths").privateEnvironment(testing.allocator);
     defer environment.deinit();
     _ = environment.swapRemove("ZIG_LOCAL_CACHE_DIR");
     // A fresh cache directory makes this run compile the runner harness itself.
@@ -3866,7 +3866,7 @@ test "CLI test ignores unexported test_ helpers that cannot default" {
     defer testing.allocator.free(root);
     const cache = try std.fs.path.join(testing.allocator, &.{ root, ".mylang-test-cache" });
     defer testing.allocator.free(cache);
-    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compilerPath(), "test", path, "--cache-dir", cache } });
+    const result = try privateRun(testing.allocator, &.{ compilerPath(), "test", path, "--cache-dir", cache });
     defer testing.allocator.free(result.stdout);
     defer testing.allocator.free(result.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
@@ -3889,21 +3889,21 @@ test "CLI directory test applies each entry's own cases file and lets a test fil
     defer testing.allocator.free(cache);
     // Without its cases file the parameterized test is a property test
     // (PROPERTY-TEST-1), which an `int` result cannot be.
-    const bare = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compilerPath(), "test", root, "--cache-dir", cache } });
+    const bare = try privateRun(testing.allocator, &.{ compilerPath(), "test", root, "--cache-dir", cache });
     defer testing.allocator.free(bare.stdout);
     defer testing.allocator.free(bare.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, bare.term);
     try testing.expect(std.mem.indexOf(u8, bare.stdout, "passed scanner_test::test_helper") != null);
     try testing.expect(std.mem.indexOf(u8, bare.stdout, "a property test returns bool or Result[bool, E]") != null);
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "scaled_test.cases.json", .data = "{\"scaled_test::test_scaled\": {\"arguments\": {\"n\": \"21\"}, \"expected\": \"42\"}}" });
-    const cased = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compilerPath(), "test", root, "--cache-dir", cache } });
+    const cased = try privateRun(testing.allocator, &.{ compilerPath(), "test", root, "--cache-dir", cache });
     defer testing.allocator.free(cased.stdout);
     defer testing.allocator.free(cased.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, cased.term);
     try testing.expect(std.mem.indexOf(u8, cased.stdout, "scaled_test::test_scaled") != null);
     try testing.expect(std.mem.indexOf(u8, cased.stdout, "0 failed") != null);
     // An explicit `--cases` still names one project, so a directory refuses it.
-    const explicit = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compilerPath(), "test", root, "--cases", "scaled_test.cases.json", "--cache-dir", cache } });
+    const explicit = try privateRun(testing.allocator, &.{ compilerPath(), "test", root, "--cases", "scaled_test.cases.json", "--cache-dir", cache });
     defer testing.allocator.free(explicit.stdout);
     defer testing.allocator.free(explicit.stderr);
     try testing.expect(explicit.term.exited != 0);
@@ -3932,7 +3932,7 @@ test "CLI test reports an exported ill-shaped test as a failed case" {
     defer testing.allocator.free(root);
     const cache = try std.fs.path.join(testing.allocator, &.{ root, ".mylang-test-cache" });
     defer testing.allocator.free(cache);
-    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compilerPath(), "test", path, "--cache-dir", cache } });
+    const result = try privateRun(testing.allocator, &.{ compilerPath(), "test", path, "--cache-dir", cache });
     defer testing.allocator.free(result.stdout);
     defer testing.allocator.free(result.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, result.term);
@@ -5337,14 +5337,14 @@ test "CLI test affected selects tests that reach a changed declaration" {
     defer testing.allocator.free(cache);
     // An unchanged tree derives nothing: the selection is empty and exits 3,
     // exactly as a filter that matches nothing does.
-    const empty = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compilerPath(), "test", path, "--affected", "--against=HEAD", "--cache-dir", cache } });
+    const empty = try privateRun(testing.allocator, &.{ compilerPath(), "test", path, "--affected", "--against=HEAD", "--cache-dir", cache });
     defer testing.allocator.free(empty.stdout);
     defer testing.allocator.free(empty.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, empty.term);
     try testing.expect(std.mem.indexOf(u8, empty.stderr, "affected: 0 selected, 2 skipped against HEAD") != null);
     // Editing the helper selects only the test that reaches it.
     try temp.dir.writeFile(testing.io, .{ .sub_path = "app.my", .data = after });
-    const selected = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compilerPath(), "test", path, "--affected", "--against=HEAD", "--cache-dir", cache } });
+    const selected = try privateRun(testing.allocator, &.{ compilerPath(), "test", path, "--affected", "--against=HEAD", "--cache-dir", cache });
     defer testing.allocator.free(selected.stdout);
     defer testing.allocator.free(selected.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, selected.term);
@@ -5352,15 +5352,15 @@ test "CLI test affected selects tests that reach a changed declaration" {
     try testing.expect(std.mem.indexOf(u8, selected.stderr, "skipped app::test_unrelated") != null);
     // The two switches are only meaningful together, and a bad reference is a
     // host failure rather than an empty selection.
-    const without = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compilerPath(), "test", path, "--against=HEAD", "--cache-dir", cache } });
+    const without = try privateRun(testing.allocator, &.{ compilerPath(), "test", path, "--against=HEAD", "--cache-dir", cache });
     defer testing.allocator.free(without.stdout);
     defer testing.allocator.free(without.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, without.term);
-    const alone = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compilerPath(), "test", path, "--affected", "--cache-dir", cache } });
+    const alone = try privateRun(testing.allocator, &.{ compilerPath(), "test", path, "--affected", "--cache-dir", cache });
     defer testing.allocator.free(alone.stdout);
     defer testing.allocator.free(alone.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, alone.term);
-    const unresolvable = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compilerPath(), "test", path, "--affected", "--against=no-such-revision", "--cache-dir", cache } });
+    const unresolvable = try privateRun(testing.allocator, &.{ compilerPath(), "test", path, "--affected", "--against=no-such-revision", "--cache-dir", cache });
     defer testing.allocator.free(unresolvable.stdout);
     defer testing.allocator.free(unresolvable.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, unresolvable.term);
@@ -6819,7 +6819,7 @@ fn projectCacheCheck(entry: []const u8, cache_dir: []const u8, expected_status: 
     var args: std.ArrayList([]const u8) = .empty;
     defer args.deinit(testing.allocator);
     try args.appendSlice(testing.allocator, &.{ compilerPath(), "check-project", entry, "--report", cache_dir });
-    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
+    const outcome = try privateRun(testing.allocator, args.items);
     defer testing.allocator.free(outcome.stdout);
     defer testing.allocator.free(outcome.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = expected_status }, outcome.term);
@@ -7093,7 +7093,7 @@ const named_constraint_main =
 fn acceptNamedConstraintFake(testing_: *std.testing.TmpDir, allocator: std.mem.Allocator) !void {
     const entry = try testing_.dir.realPathFileAlloc(testing.io, "fake_tests.my", allocator);
     defer allocator.free(entry);
-    const result = try std.process.run(allocator, testing.io, .{ .argv = &.{ compilerPath(), "test", entry, "--filter", "test_checkout" } });
+    const result = try privateRun(allocator, &.{ compilerPath(), "test", entry, "--filter", "test_checkout" });
     defer allocator.free(result.stdout);
     defer allocator.free(result.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
@@ -7456,21 +7456,21 @@ test "loadConfiguredPolicy policy applies to native test preparation ProjectConf
     const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
     defer testing.allocator.free(cache_argument);
 
-    const allowed = try runCompiler(testing.allocator, &.{ compilerPath(), "test", entry, "--filter", "test_policy", cache_argument });
+    const allowed = try privateRun(testing.allocator, &.{ compilerPath(), "test", entry, "--filter", "test_policy", cache_argument });
     defer testing.allocator.free(allowed.stdout);
     defer testing.allocator.free(allowed.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, allowed.term);
     try testing.expect(std.mem.indexOf(u8, allowed.stdout, "test_policy") != null);
 
     try writeProjectFile(&temp, "policy.json", policy_deny);
-    const denied = try runCompiler(testing.allocator, &.{ compilerPath(), "test", entry, "--filter", "test_policy", cache_argument });
+    const denied = try privateRun(testing.allocator, &.{ compilerPath(), "test", entry, "--filter", "test_policy", cache_argument });
     defer testing.allocator.free(denied.stdout);
     defer testing.allocator.free(denied.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, denied.term);
     try testing.expect(std.mem.indexOf(u8, denied.stderr, "tests -> helper: deny") != null);
 
     try writeProjectFile(&temp, "mylang.json", "{");
-    const malformed = try runCompiler(testing.allocator, &.{ compilerPath(), "test", entry, "--filter", "test_policy", cache_argument });
+    const malformed = try privateRun(testing.allocator, &.{ compilerPath(), "test", entry, "--filter", "test_policy", cache_argument });
     defer testing.allocator.free(malformed.stdout);
     defer testing.allocator.free(malformed.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, malformed.term);
@@ -7535,7 +7535,7 @@ test "loadConfiguredPolicy policy discovery above the native test entry enforces
     const cache_argument = try std.fmt.allocPrint(testing.allocator, "--cache-dir={s}", .{cache});
     defer testing.allocator.free(cache_argument);
 
-    const denied = try runCompiler(testing.allocator, &.{ compilerPath(), "test", entry, "--filter", "test_policy", cache_argument });
+    const denied = try privateRun(testing.allocator, &.{ compilerPath(), "test", entry, "--filter", "test_policy", cache_argument });
     defer testing.allocator.free(denied.stdout);
     defer testing.allocator.free(denied.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, denied.term);
@@ -7719,7 +7719,7 @@ fn p1Invoke(entry: []const u8, cases_path: ?[]const u8, cache: []const u8) !std.
     try args.appendSlice(testing.allocator, &.{ compilerPath(), "test", entry, "--filter", "test_checkout", "--json", cache_arg });
     if (cases_path) |path| try args.appendSlice(testing.allocator, &.{ "--cases", path });
     try args.appendSlice(testing.allocator, &tools);
-    return runCompiler(testing.allocator, args.items);
+    return privateRun(testing.allocator, args.items);
 }
 
 // spec: NATIVE-TEST-5
@@ -7923,7 +7923,7 @@ fn r3TestInvoke(entry: []const u8, cases_path: ?[]const u8, cache: []const u8) !
     try args.appendSlice(testing.allocator, &.{ compilerPath(), "test", entry, "--json", cache_arg });
     if (cases_path) |path| try args.appendSlice(testing.allocator, &.{ "--cases", path });
     try args.appendSlice(testing.allocator, &tools);
-    return runCompiler(testing.allocator, args.items);
+    return privateRun(testing.allocator, args.items);
 }
 fn r3WriteCases(dir: *std.testing.TmpDir, name: []const u8, qualified: []const u8, key: []const u8, source: []const u8) !void {
     const a = testing.allocator;
@@ -8950,7 +8950,7 @@ fn contractFixture(precondition: []const u8, invariant: []const u8) ![]u8 {
 
 /// Run one compiler command and hand back its result; the caller frees it.
 fn contractCommand(argv: []const []const u8) !std.process.RunResult {
-    return std.process.run(testing.allocator, testing.io, .{ .argv = argv });
+    return privateRun(testing.allocator, argv);
 }
 
 fn freeResult(result: std.process.RunResult) void {
@@ -9772,17 +9772,17 @@ test "mylang test runs a module that embeds and reruns it when only the fixture 
     const entry = try std.fs.path.join(a, &.{ root, "emb.my" });
     const cache = try std.fs.path.join(a, &.{ root, "cache" });
     const argv = [_][]const u8{ compilerPath(), "test", entry, "--cache-dir", cache, tools[0] };
-    const first = try std.process.run(a, testing.io, .{ .argv = &argv });
+    const first = try privateRun(a, &argv);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, first.term);
     try testing.expect(std.mem.indexOf(u8, first.stdout, "passed emb::test_nul") != null);
-    const again = try std.process.run(a, testing.io, .{ .argv = &argv });
+    const again = try privateRun(a, &argv);
     try testing.expect(std.mem.indexOf(u8, again.stdout, "cached emb::test_nul") != null);
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "fixtures/nul.bin", .data = "a\x00bc" });
-    const changed = try std.process.run(a, testing.io, .{ .argv = &argv });
+    const changed = try privateRun(a, &argv);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, changed.term);
     try testing.expect(std.mem.indexOf(u8, changed.stdout, "failed emb::test_nul") != null);
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "fixtures/nul.bin", .data = "a\x00b" });
-    const restored = try std.process.run(a, testing.io, .{ .argv = &argv });
+    const restored = try privateRun(a, &argv);
     try testing.expect(std.mem.indexOf(u8, restored.stdout, "cached emb::test_nul") != null);
 }
 
@@ -9897,7 +9897,7 @@ test "CLI directory tests forward the installed host receipt when modes are alre
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = "public func test_ok() -> bool:\n    return True\n" });
     const root = try temporary.dir.realPathFileAlloc(testing.io, ".", a);
     const cache = try std.fs.path.join(a, &.{ root, "cache" });
-    var environment = try std.process.Environ.createMap(testing.environ, a);
+    var environment = try @import("test_paths").privateEnvironment(a);
     try environment.put("MYLANG_HOST_MEMORY_LIMIT", "8G");
     _ = environment.swapRemove("MYLANG_HOST_LIMIT_CHECKPOINT");
     _ = environment.swapRemove("MYLANG_HOST_LIMIT_RESTORE");
@@ -9914,7 +9914,7 @@ const snapshot_embed_data = "\npublic const C: bytes = embed_bytes(\"data.bin\")
 
 /// Run a real snapshot test and preserve the located budget diagnostic on refusal.
 fn expectSnapshotBudget(allocator: std.mem.Allocator, entry: []const u8, cache: []const u8, expected_status: u8) !void {
-    const result = try std.process.run(allocator, testing.io, .{ .argv = &(.{ compilerPath(), "test", entry, "--cache-dir", cache, "--force" } ++ tools) });
+    const result = try privateRun(allocator, &(.{ compilerPath(), "test", entry, "--cache-dir", cache, "--force" } ++ tools));
     testing.expectEqual(std.process.Child.Term{ .exited = expected_status }, result.term) catch |err| {
         std.debug.print("snapshot embed budget: {s}\n{s}\n", .{ result.stdout, result.stderr });
         return err;

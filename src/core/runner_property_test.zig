@@ -8,7 +8,7 @@ fn run(a: std.mem.Allocator, fixture: []const u8, flags: []const []const u8) !Ru
     var directory = std.testing.tmpDir(.{});
     defer directory.cleanup();
     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
-    var environment = try std.testing.environ.createMap(a);
+    var environment = try options.privateEnvironment(a);
     try environment.put("MYL_CORE_LEAKCHECK", "1");
     var argv: std.ArrayList([]const u8) = .empty;
     try argv.appendSlice(a, &.{ options.corePath(), "test", try std.fs.path.join(a, &.{ options.fixtures, fixture }), "--json", "--seed", "7", "--property-runs", "12", "--cache-dir", root });

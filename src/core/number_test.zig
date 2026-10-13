@@ -9,7 +9,7 @@ fn numberRun(allocator: std.mem.Allocator, flags: []const []const u8) !void {
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
-    var environment = try std.testing.environ.createMap(a);
+    var environment = try options.privateEnvironment(a);
     try environment.put("MYL_CORE_LEAKCHECK", "1");
     var argv: std.ArrayList([]const u8) = .empty;
     try argv.appendSlice(a, &.{ options.corePath(), "test", try std.fs.path.join(a, &.{ options.fixtures, "n_numbers.my" }), "--cache-dir", root });

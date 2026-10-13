@@ -285,7 +285,7 @@ test "a store sunk several blocks down keeps its operands: the guest tests that 
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", a);
     const source = try std.fmt.allocPrint(a, "{s}/rc_counted_receivers.my", .{options.lang_tests});
     const cache = try std.fmt.allocPrint(a, "{s}/cache", .{root});
-    var environment = try std.testing.environ.createMap(a);
+    var environment = try options.privateEnvironment(a);
     try environment.put("MYL_CORE_LEAKCHECK", "1");
     // Each sinking copies the store's operands to a new place in `extra`; a copy taken from
     // under an append that moved it read freed memory (a compiler panic, at --verify-facts).

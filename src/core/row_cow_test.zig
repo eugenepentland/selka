@@ -101,7 +101,7 @@ test "every aliased-row shape prints the same at debug, release and verify-facts
     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
     const source = try std.fs.path.join(a, &.{ options.fixtures, "row_cow.my" });
     const expected = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, try std.fs.path.join(a, &.{ options.fixtures, "row_cow.expected" }), a, .limited(1 << 20));
-    var environment = try std.testing.environ.createMap(a);
+    var environment = try options.privateEnvironment(a);
     try environment.put("MYL_CORE_LEAKCHECK", "1");
     const modes = [_][]const []const u8{ &.{}, &.{"--release"}, &.{ "--release", "--verify-facts" } };
     for (modes, 0..) |flags, index| {
