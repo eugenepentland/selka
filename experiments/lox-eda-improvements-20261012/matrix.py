@@ -62,9 +62,7 @@ def main():
         previous_path = ROOT / 'experiments/lox-eda-rerun-20261012/build/lox/build-receipt.json'
         previous = json.loads(previous_path.read_text())['binaries']['zero-rc']
         assert sha(previous['path']) == previous['sha256']
-        providers = {str(Path(source['root']) / 'driver_cases.json'): sha(Path(source['root']) / 'driver_cases.json'),
-                     str(HERE / 'P2/cases.json'): sha(HERE / 'P2/cases.json'),
-                     str(HERE / 'P1/verify.py'): sha(HERE / 'P1/verify.py')}
+        providers = {str(HERE / 'P1/verify.py'): sha(HERE / 'P1/verify.py')}
         (dest / 'provider-inputs.json').write_text(json.dumps(providers, indent=2) + '\n')
     for mode, flags in MODES.items():
         options = ['--experimental-zero-rc', *flags,
@@ -75,12 +73,11 @@ def main():
             rows[mode + '-units'] = {'reused_qualification': str(verified), 'sha256': sha(verified),
                                     'result': json.loads(verified.read_text())}
         else:
-            run(mode + '-units', [compiler, 'test', source['root'], *options], expected=69 if app == 'lox' else 317)
+            run(mode + '-units', [compiler, 'test', source['root'], *options], expected=75 if app == 'lox' else 317)
         if app == 'lox':
-            for name, cases, count in [('driver', Path(source['root']) / 'driver_cases.json', 13),
-                                       ('p2_tree', HERE / 'P2/cases.json', 6)]:
-                run(mode + '-' + name, [compiler, 'test', str(Path(source['root']) / (name + '_tests.my')),
-                                       '--cases', str(cases), *options], expected=count)
+            # Directory discovery includes the 13 driver tests and all six P2
+            # tests with real production imports. Provider overrides repeat those
+            # guest cases and are not needed for this application mode matrix.
             binary = Path(build['binaries']['zero-rc']['path']) if mode == 'release' else work / (mode + '-lox')
             if mode != 'release':
                 run(mode + '-build', [compiler, 'build', str(Path(source['root']) / 'main.my'),

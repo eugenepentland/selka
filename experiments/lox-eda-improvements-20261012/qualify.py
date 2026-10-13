@@ -17,17 +17,19 @@ HERE = Path(__file__).resolve().parent
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('manifest', type=Path)
+    p.add_argument('--resume-after-units', action='store_true',
+                   help='Continue an exactly matching successful unit command after a harness-only stop; preserve its output.')
     a = p.parse_args()
     manifest = validate_build(a.manifest)
     app = manifest['application']
     dest = HERE / 'qualification' / app
-    dest.mkdir(parents=True, exist_ok=False)
+    dest.mkdir(parents=True, exist_ok=a.resume_after_units)
     work = ROOT / '.tmp/lox-eda-improvements-20261012/qualification' / app
-    work.mkdir(parents=True, exist_ok=False)
+    work.mkdir(parents=True, exist_ok=a.resume_after_units)
     common = json.loads(Path(manifest['common_receipt']).read_text())
     env = dict(os.environ, MYL_CORE_LEAKCHECK='1', TMPDIR=str(work),
                MYLANG_COMPONENT_DIR=str(Path(common['installation']) / 'libexec/mylang/components'))
-    commands = []
+    commands = json.loads((dest / 'commands.json').read_text()) if a.resume_after_units else []
     def run(name, command):
         with (dest / (name + '.stdout')).open('w') as out, (dest / (name + '.stderr')).open('w') as err:
             result = subprocess.run([str(ROOT / 'scripts/build-slot.sh'), 'build', *command], cwd=ROOT, env=env, stdout=out, stderr=err)
@@ -42,9 +44,19 @@ def main():
     unit = [compiler, 'test', source, '--experimental-zero-rc', '--release', '--verify-facts',
             '--jobs', '4', '--max-steps', '1000000000', '--max-frames', '40000',
             '--max-memory', '2G', '--timeout-ms', '120000', '--cache-dir', str(work / 'cache'), '--json']
-    run('checked-tests', unit)
+    if a.resume_after_units:
+        assert commands == [{'name': 'checked-tests', 'command': unit, 'returncode': 0}]
+        resume = dest / 'resume-after-units.json'
+        assert not resume.exists()
+        (dest / 'commands-before-resume.json').write_bytes((dest / 'commands.json').read_bytes())
+        resume.write_text(json.dumps({'reason': 'Harness expected 69 Lox tests; all 75 passed, including six new P2 tests.',
+            'manifest_sha256': sha(a.manifest),
+            'preserved_evidence': {str(dest / name): sha(dest / name)
+                for name in ('commands-before-resume.json', 'checked-tests.stdout', 'checked-tests.stderr')}}, indent=2) + '\n')
+    else:
+        run('checked-tests', unit)
     tests = json.loads((dest / 'checked-tests.stdout').read_text())
-    assert tests['passed'] == (69 if app == 'lox' else 317), 'integrated unit-test denominator changed'
+    assert tests['passed'] == (75 if app == 'lox' else 317), 'integrated unit-test denominator changed'
     assert all(tests[key] == 0 for key in ('failed', 'skipped', 'unsupported'))
     if app == 'lox':
         harness = Path('/home/epentland/ai/canopy/mylang-worktrees/claude-parity-measure/.mylang-cache/lox/harness/lox_bench.py')

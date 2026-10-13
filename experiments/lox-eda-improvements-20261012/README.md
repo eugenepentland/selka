@@ -39,3 +39,11 @@ tradeoff: P4's depth-24 parser probe reduces cumulative managed traffic from
 45,472 to 15,136 bytes while peak live managed bytes rise from 5,536 to 10,880.
 Fresh child transfer preserves spare list capacity. This is not a process RSS
 measurement; capacity tuning is deferred.
+
+The integrated Lox directory discovers 75 tests: the prior 65 plus six P2 and
+four P3 tests. All passed with leak checking. The earlier P2 handoff's claim that
+its `_tests.my` module required a separate provider run was incorrect: directory
+discovery includes it, and these tests never invoke the clock native. The mode
+matrix uses the actual production imports and retains the separate P1 CLI cases.
+The initial qualification harness expected 69; its successful 75-test output is
+preserved with an immutable command journal before resuming conformance.

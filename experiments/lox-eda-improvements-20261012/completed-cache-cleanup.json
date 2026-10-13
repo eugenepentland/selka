@@ -1,0 +1,80 @@
+{
+  "utc": "2026-10-13T00:00:09Z",
+  "removed": [
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.mylang-cache/core",
+      "bytes": 260173303,
+      "reason": "Completed full gate cache; receipt/log retained. No active application or compiler install cache."
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.mylang-cache/frontend",
+      "bytes": 1849562,
+      "reason": "Completed full gate cache; receipt/log retained. No active application or compiler install cache."
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.mylang-cache/guest-tests",
+      "bytes": 8908958,
+      "reason": "Completed full gate cache; receipt/log retained. No active application or compiler install cache."
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.mylang-cache/lang-tests",
+      "bytes": 215341122,
+      "reason": "Completed full gate cache; receipt/log retained. No active application or compiler install cache."
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.mylang-cache/lang-tests-release",
+      "bytes": 221146111,
+      "reason": "Completed full gate cache; receipt/log retained. No active application or compiler install cache."
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.mylang-cache/lang-tests-unoptimized",
+      "bytes": 228921778,
+      "reason": "Completed full gate cache; receipt/log retained. No active application or compiler install cache."
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.mylang-cache/ported-tests",
+      "bytes": 13748048,
+      "reason": "Completed full gate cache; receipt/log retained. No active application or compiler install cache."
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.mylang-cache/ported-tests-release",
+      "bytes": 17257331,
+      "reason": "Completed full gate cache; receipt/log retained. No active application or compiler install cache."
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.mylang-cache/ported-tests-unoptimized",
+      "bytes": 15186502,
+      "reason": "Completed full gate cache; receipt/log retained. No active application or compiler install cache."
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.mylang-cache/semantic",
+      "bytes": 1507941,
+      "reason": "Completed full gate cache; receipt/log retained. No active application or compiler install cache."
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.mylang-cache/unit-tests",
+      "bytes": 835205864,
+      "reason": "Completed full gate cache; receipt/log retained. No active application or compiler install cache."
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.mylang-cache/value-semantics-tests",
+      "bytes": 13869916,
+      "reason": "Completed full gate cache; receipt/log retained. No active application or compiler install cache."
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.mylang-cache/value-semantics-tests-release",
+      "bytes": 14764337,
+      "reason": "Completed full gate cache; receipt/log retained. No active application or compiler install cache."
+    },
+    {
+      "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.mylang-cache/value-semantics-tests-unoptimized",
+      "bytes": 15503532,
+      "reason": "Completed full gate cache; receipt/log retained. No active application or compiler install cache."
+    }
+  ],
+  "retained": [
+    ".mylang-cache/verification-v2",
+    ".tmp",
+    "experiments"
+  ]
+}
