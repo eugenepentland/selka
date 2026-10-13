@@ -1,7 +1,7 @@
 {
   "baseline_commit": "53dd221c3ccd6f1b69fae75a08873fc381fe0012",
   "scope": "All 60 Lox tree/VM and EDA cases; individual runtime target <= Zig ReleaseFast",
-  "status": "combined third candidate integrated; build and qualification pending",
+  "status": "C3 applications qualified; full gate found compact-sret caller-destination regression; timing held before measurement",
   "constraints": [
     "checked ownership",
     "same outputs and inputs",
@@ -22,8 +22,8 @@
   "seed_commit": "2525a66f61838086f5327d74db7412926ce4a221",
   "milestones": {
     "implementation": "Third application snapshot frozen; bounded reader inliner, compact aligned sret and initialized worklist metadata integrated. Isolated correctness and controlled diagnostics passed; combined qualification pending.",
-    "individual_parity": "C1 complete runtime sweep: 0/60 parity, 59 completed, VM string equality censored at 3x Zig; C2 combined runtime pending",
-    "verification": "C1 full gate fixes integrated; complete rerun pending. Both C2 applications passed primary qualification and all five modes; selected guest ABI audit passed."
+    "individual_parity": "C1:0/60. C3 runtime/compile003 cancelled while queued before any measurement; no C3 parity result.",
+    "verification": "C3 application matrices/ABI audit passed. Full registered gate002 failed two steps: formatting (fixed) and CE2 no-copy return construction (P4 fix in progress). Inputs stable;12reused/34selected."
   },
   "harness_checks": {
     "timeout_tests": 8,
@@ -31,21 +31,21 @@
     "recovered_identical_lox_corpus_files": 254,
     "profile_status": "P2 native CPU profile and P5 leaf profile completed; attribution limitations recorded in their evidence"
   },
-  "updated_utc": "2026-10-13T08:41:21.963179+00:00",
+  "updated_utc": "2026-10-13T08:58:15.512070+00:00",
   "candidate": {
-    "source_root": "source-002",
-    "compiler_source_commit": "fbeba4eed7b549a3feef14c8b8dd620e41494139",
-    "compiler_sha256": "9bedb835438615d79ed8f2985352877a8c844eebeb74cd95a1d276332b6b0c6a",
-    "native_attempt": "native-002",
-    "next_source_root": "source-003",
-    "next_compiler": "common-003 build pending"
+    "source_root": "source-003",
+    "compiler_source_commit": "91f5b5d3010893e7642a8fbee90fa910aa7fabab",
+    "compiler_sha256": "6842cc711ca6f6eadf2967a76ca60f57044ec06e0c9c2cf15b2834fd3cdebbaf",
+    "native_attempt": "native-003"
   },
   "current_followups": {
-    "C3": "Freeze complete common-003 compiler installation; combined native matrices, full gate, full60 comparisons, compile measurements and six micros."
+    "P4": "Restore CE2 caller-destination construction without losing compact-sret ABI correctness; fix must pass original regression, compact/narrow/alias tests and final combined checks.",
+    "coordinator": "Freeze new compiler after any production fix; rerun affected native qualification, complete gate and all final measurements; preserve C3 archive and cancelled timing preparation."
   },
   "evidence_archives": {
     "native-001": "archives/native-001.json",
     "native-002": "archives/native-002.json",
-    "runtime-001": "archives/runtime-001.json"
+    "runtime-001": "archives/runtime-001.json",
+    "native-003": "archives/native-003.json"
   }
 }

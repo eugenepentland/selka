@@ -1,0 +1,24 @@
+{
+  "gate_commit": "7186b5b82954087798c6b179358a0e885b9d5ab6",
+  "compiler_source_commit": "91f5b5d3010893e7642a8fbee90fa910aa7fabab",
+  "compiler_sha256": "6842cc711ca6f6eadf2967a76ca60f57044ec06e0c9c2cf15b2834fd3cdebbaf",
+  "compiler_source_manifest_matches": true,
+  "common_receipt_sha256": "2d353fd1c7a702f338bf322197a82d82900b0c990c98a6c467e649de6b2c824b",
+  "command": [
+    "python3",
+    "-B",
+    "scripts/verify_cache.py",
+    "--zig",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "--",
+    "-j4",
+    "--maxrss",
+    "8589934592",
+    "-Dcomponent-owned-compiler-pin=/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+    "-Dcomponent-seed-source=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar"
+  ],
+  "note": "Run directly; verification coordinator owns admission. Admission-inclusive elapsed is not a compiler benchmark.",
+  "returncode": 1,
+  "elapsed_seconds_including_admission": 567.9078962740023,
+  "compiler_source_manifest_matches_after": true
+}

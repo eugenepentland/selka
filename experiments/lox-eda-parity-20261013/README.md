@@ -1,10 +1,11 @@
 # Lox/EDA individual Zig parity work
 
-Implementation and qualification are in progress. The first combined candidate
-has passed the application correctness matrices, but its completed runtime cases
-remain slower than Zig. A second candidate includes measured follow-up changes;
-it has passed both applications in all five build modes. Individual parity
-and the final complete verification gate are still open.
+Implementation and qualification are in progress. C3 passes both application
+matrices and selected guest ABI checks, but the complete compiler gate found a
+regression in caller-destination return construction. That regression is being
+fixed; a separate formatting failure is corrected. C3 timing requests were
+cancelled while queued, before any measurement. Individual parity and the final
+complete verification gate remain open.
 
 The target is each of the existing 60 cases at or below Zig ReleaseFast runtime:
 13 Lox tree cases, 13 Lox VM cases and 34 EDA cases. A favorable aggregate does
@@ -169,3 +170,16 @@ The wrapper also pins its own source. Its `validation.json` is the completion
 marker. Eight guard tests pass, and both archived wrapper revisions reproduced
 the complete C1 report byte for byte; see `coordinator/report-validation-001/`.
 No timing, counters, ratios or case inclusion rules change.
+
+## C3 gate and measurement hold
+
+The combined C3 compiler is revision `91f5b5d3010893e7642a8fbee90fa910aa7fabab`,
+binary SHA-256 `6842cc711ca6f6eadf2967a76ca60f57044ec06e0c9c2cf15b2834fd3cdebbaf`.
+It passed 103 Lox and 328 EDA tests in each of five modes, all three Lox
+conformance/GC controls, 102 EDA golden sets, nine error cases and 50 additional
+private EDA helper checks. `archives/native-003.json` preserves that evidence.
+The full gate had stable inputs, 12 reused and 34 selected actions, with two
+failed steps: fixture formatting and one CE2 zero-copy return-construction
+regression. The latter is a real preservation requirement, not an assertion to
+weaken. No C3 runtime or compilation measurement started; the queued requests
+were cancelled and their preparation is retained under `attempts/runtime-003/`.

@@ -1,0 +1,26 @@
+{
+  "status": "failed",
+  "inputs_stable": true,
+  "action_states": {
+    "fresh": 11,
+    "execute": 23,
+    "reused": 12
+  },
+  "failures": [
+    {
+      "owner": "P4/coordinator",
+      "reproducer": "scripts/check_my_format.py --compiler ./zig-out/bin/mylang",
+      "file": "src/core/compact_sret_narrow.my",
+      "cause": "Missing blank lines between top-level declarations; five-line whitespace fix prepared as311f5c7cf."
+    },
+    {
+      "owner": "P4",
+      "reproducer": "zig build test-core -Dtest-filter='a value a ret stores inside the result' using pinned environment and shared admission",
+      "file": "src/core/ce2_results_test.zig:132",
+      "cause": "compact internal return transport introduces one memcpy in next_in where the CE2 caller-destination contract requires zero; investigation open."
+    }
+  ],
+  "full_gate_test_summary": "3137 passed,27236 shard-skipped,1failed (30374total);123/127build steps,2failed",
+  "C3_measurements": "No runtime003 or compilation observations started; own queued measurement tasks cancelled before admission and preserved in timing-hold.json. Completed native003 qualification remains C3 evidence.",
+  "action_accounting": "Verification coordinator reports12reused/34selected. Per-action state names record reuse/admission decisions and do not by themselves establish each selected action passed. Fullgate failed2steps."
+}

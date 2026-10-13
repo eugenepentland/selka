@@ -1,0 +1,57 @@
+{
+  "source_commit": "91f5b5d3010893e7642a8fbee90fa910aa7fabab",
+  "compiler": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-003/install/bin/mylang",
+  "compiler_sha256": "6842cc711ca6f6eadf2967a76ca60f57044ec06e0c9c2cf15b2834fd3cdebbaf",
+  "installation": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-003/install",
+  "installation_files": [
+    {
+      "path": "bin/mylang",
+      "sha256": "6842cc711ca6f6eadf2967a76ca60f57044ec06e0c9c2cf15b2834fd3cdebbaf",
+      "bytes": 240299256
+    },
+    {
+      "path": "libexec/mylang/components/cache-plan-06fcac93b85a468ebc9c66322a4773386453954d6dd4319e812587fd8aaa147c",
+      "sha256": "06fcac93b85a468ebc9c66322a4773386453954d6dd4319e812587fd8aaa147c",
+      "bytes": 373640
+    },
+    {
+      "path": "libexec/mylang/components/cache-plan.json",
+      "sha256": "2f48bd821be4fee59b1dad62450aa025188c97063d0b64964802b928f99362c3",
+      "bytes": 327
+    },
+    {
+      "path": "libexec/mylang/components/test-index-0d91707258aef88fb651129fe18a84e505d3fe6c083af68cc308dcef954a05b8",
+      "sha256": "0d91707258aef88fb651129fe18a84e505d3fe6c083af68cc308dcef954a05b8",
+      "bytes": 308304
+    },
+    {
+      "path": "libexec/mylang/components/test-index.json",
+      "sha256": "58fddecf56237e81d06273d99a5f6e3fb5597681b1566ad161a55a0837fa9116",
+      "bytes": 327
+    },
+    {
+      "path": "tools/selka-components",
+      "sha256": "c2d1186c661e06d4e33de54ad04a70b4700e60737a4774e4045444db2cd35172",
+      "bytes": 4526416
+    }
+  ],
+  "inputs": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/coordinator/common-003/inputs.json",
+  "inputs_sha256": "9ab11c7d21e233c871b9d96f3080772f4787fe25475bae8f38d5457a815ee0ff",
+  "build_command": [
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "build",
+    "-p",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-003/install",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-003/zig-cache",
+    "-j4",
+    "--maxrss",
+    "8589934592",
+    "-Dcomponent-owned-compiler-pin=/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+    "-Dcomponent-seed-source=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar"
+  ],
+  "qualification": "Build and Guardian passed; application and complete registered qualification remain separate.",
+  "compile_time_note": "Admission-inclusive build log is not a compiler performance sample."
+}

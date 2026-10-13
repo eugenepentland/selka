@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-10-13T08:41:21.963179+00:00",
+  "updated_utc": "2026-10-13T08:58:15.512070+00:00",
   "items": [
     {
       "id": "P1-payload-exchange-and-construction",
@@ -81,18 +81,28 @@
     },
     {
       "id": "final-verification",
-      "status": "open",
+      "status": "blocked by concrete CE2 emitted-copy regression; formatting fix integrated",
       "owner": "coordinator",
       "evidence": [
-        "coordinator/gate-001/failure-analysis.json"
+        "coordinator/gate-002/failure-analysis.json"
       ],
-      "remaining": "C1 gate fixes integrated; run complete registered verification/Guardian on frozen final sources; record fresh/reused actions."
+      "remaining": "P4 must preserve existing CE2 caller-destination win, then coordinator reruns complete registered verification. C3 application correctness passes do not replace gate."
     },
     {
       "id": "final-performance",
       "status": "open",
       "owner": "coordinator/P4",
-      "remaining": "All60 final cases,3xZig censors retained, allocation/peak/exit-live/RSS, three paired cold/warm compile observations, six text microbenchmarks. No individual parity completion claim before all60pass."
+      "remaining": "Timing held before any C3 measurement because full gate exposed CE2 regression. Rebuild final compiler after fix, then all60 comparisons,3xZig censors, separate metrics and six micros."
+    },
+    {
+      "id": "C3-applications",
+      "status": "passed primary qualification, all five modes and selected ABI audit; fullgate failed",
+      "owner": "coordinator",
+      "evidence": [
+        "coordinator/native-003/qualification-summary.json",
+        "archives/native-003.json"
+      ],
+      "remaining": "Requalify after production fix; do not relabel this compiler as later revision."
     }
   ],
   "publication": "Integration branch only; no push or main advancement in this batch."
