@@ -1,0 +1,131 @@
+{
+  "commands_exitcode": 0,
+  "checks": [
+    {
+      "log": "component-debug.log",
+      "sha256": "aa54c53b725bc6b17b6feb1a4781f4fcc19eca078655da21604d8eb3cfe009d6",
+      "passed": 4,
+      "failed": 0,
+      "cached": 0,
+      "test_names": [
+        "export_kicad_sch::test_p5_component_export_reuses_input_and_is_deterministic",
+        "export_kicad_sch::test_p5_component_owned_parts_and_fields_survive_input_destruction",
+        "export_kicad_sch::test_p5_component_pad_net_filter_order_and_dedup",
+        "export_kicad_sch::test_p5_component_repeated_key_preserves_first_fields_and_order"
+      ]
+    },
+    {
+      "log": "component-no-facts.log",
+      "sha256": "919553d619bcf8f1c01722bb54301fe7e0595b63424d409b77851dbe54c52ba0",
+      "passed": 4,
+      "failed": 0,
+      "cached": 0,
+      "test_names": [
+        "export_kicad_sch::test_p5_component_export_reuses_input_and_is_deterministic",
+        "export_kicad_sch::test_p5_component_owned_parts_and_fields_survive_input_destruction",
+        "export_kicad_sch::test_p5_component_pad_net_filter_order_and_dedup",
+        "export_kicad_sch::test_p5_component_repeated_key_preserves_first_fields_and_order"
+      ]
+    },
+    {
+      "log": "component-optimized-debug.log",
+      "sha256": "8b1020fa6435e0273333ec942317d3677050361b8572432bdd53938a8c5d6ee4",
+      "passed": 4,
+      "failed": 0,
+      "cached": 0,
+      "test_names": [
+        "export_kicad_sch::test_p5_component_export_reuses_input_and_is_deterministic",
+        "export_kicad_sch::test_p5_component_owned_parts_and_fields_survive_input_destruction",
+        "export_kicad_sch::test_p5_component_pad_net_filter_order_and_dedup",
+        "export_kicad_sch::test_p5_component_repeated_key_preserves_first_fields_and_order"
+      ]
+    },
+    {
+      "log": "component-release.log",
+      "sha256": "102fd50f1ba9680d794a8433d6c090e9969d3061ea4b3a37d3c7c519d68f5df8",
+      "passed": 4,
+      "failed": 0,
+      "cached": 0,
+      "test_names": [
+        "export_kicad_sch::test_p5_component_export_reuses_input_and_is_deterministic",
+        "export_kicad_sch::test_p5_component_owned_parts_and_fields_survive_input_destruction",
+        "export_kicad_sch::test_p5_component_pad_net_filter_order_and_dedup",
+        "export_kicad_sch::test_p5_component_repeated_key_preserves_first_fields_and_order"
+      ]
+    },
+    {
+      "log": "component-verified-release.log",
+      "sha256": "b8f9960906d3862313421dadd4eb05205b1b1c74dcfb93df41d9da3eed087704",
+      "passed": 4,
+      "failed": 0,
+      "cached": 0,
+      "test_names": [
+        "export_kicad_sch::test_p5_component_export_reuses_input_and_is_deterministic",
+        "export_kicad_sch::test_p5_component_owned_parts_and_fields_survive_input_destruction",
+        "export_kicad_sch::test_p5_component_pad_net_filter_order_and_dedup",
+        "export_kicad_sch::test_p5_component_repeated_key_preserves_first_fields_and_order"
+      ]
+    },
+    {
+      "log": "gangable-debug.log",
+      "sha256": "93e752788205a7ad70f68ee243f3dca91251d320985fc1e34073a49da7ae029b",
+      "passed": 3,
+      "failed": 0,
+      "cached": 0,
+      "test_names": [
+        "kicad_sch_compose::test_p5_bind_large_payload_remains_independent_and_unchanged",
+        "kicad_sch_compose::test_p5_bind_membership_matches_owned_snapshot_oracle",
+        "kicad_sch_compose::test_p5_bind_none_and_empty_preserve_supply_fallback"
+      ]
+    },
+    {
+      "log": "gangable-no-facts.log",
+      "sha256": "ee07886ba62dd9256197554a51aef0810c737104ddda6a55db3bfea3f11eb45d",
+      "passed": 3,
+      "failed": 0,
+      "cached": 0,
+      "test_names": [
+        "kicad_sch_compose::test_p5_bind_large_payload_remains_independent_and_unchanged",
+        "kicad_sch_compose::test_p5_bind_membership_matches_owned_snapshot_oracle",
+        "kicad_sch_compose::test_p5_bind_none_and_empty_preserve_supply_fallback"
+      ]
+    },
+    {
+      "log": "gangable-optimized-debug.log",
+      "sha256": "d16b47abc4d7e93dae429486620020557f42ce2126f232092fae1c42fec6f457",
+      "passed": 3,
+      "failed": 0,
+      "cached": 0,
+      "test_names": [
+        "kicad_sch_compose::test_p5_bind_large_payload_remains_independent_and_unchanged",
+        "kicad_sch_compose::test_p5_bind_membership_matches_owned_snapshot_oracle",
+        "kicad_sch_compose::test_p5_bind_none_and_empty_preserve_supply_fallback"
+      ]
+    },
+    {
+      "log": "gangable-release.log",
+      "sha256": "4fff082c560fe59fa6bfaef1c874128c904f74f493b1af2cefb82cf86d46b4a8",
+      "passed": 3,
+      "failed": 0,
+      "cached": 0,
+      "test_names": [
+        "kicad_sch_compose::test_p5_bind_large_payload_remains_independent_and_unchanged",
+        "kicad_sch_compose::test_p5_bind_membership_matches_owned_snapshot_oracle",
+        "kicad_sch_compose::test_p5_bind_none_and_empty_preserve_supply_fallback"
+      ]
+    },
+    {
+      "log": "gangable-verified-release.log",
+      "sha256": "60c90868c329bad86e7d142e201292d66d95e4535721f36565c71c0d90993ae7",
+      "passed": 3,
+      "failed": 0,
+      "cached": 0,
+      "test_names": [
+        "kicad_sch_compose::test_p5_bind_large_payload_remains_independent_and_unchanged",
+        "kicad_sch_compose::test_p5_bind_membership_matches_owned_snapshot_oracle",
+        "kicad_sch_compose::test_p5_bind_none_and_empty_preserve_supply_fallback"
+      ]
+    }
+  ],
+  "total_fresh_contract_executions": 35
+}
