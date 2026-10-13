@@ -1,0 +1,12 @@
+{
+  "reviewed_tree": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7",
+  "captured_utc": "2026-10-13T04:26:58.015486+00:00",
+  "source_sha256": {
+    "src/core/transfers.zig": "c865ca5e012b0013726b55df00181386ecbadc1b7a4dab4436823d2a3af13da4",
+    "src/core/transfers_test.zig": "50724f376d3a27901027bfafbdac25d34d73e8bfb5c136832ccfb7b5df67bf7b",
+    "src/core/flags.zig": "fe849c9322ab334631caf271f030cfebcc3f72c83373bd2306b090a3bd6c9ac4",
+    "src/core/ir.zig": "594ef6e802a787d33026e62b0e657ebb7518dc8e4a1dbed5d869d3f87abf8a2d"
+  },
+  "executed_compiler_or_guest_jobs_by_P3": false,
+  "classification": "read-only token dataflow review; no source/native failures demonstrated"
+}
