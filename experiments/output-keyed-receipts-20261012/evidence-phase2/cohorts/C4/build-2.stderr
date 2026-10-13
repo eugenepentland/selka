@@ -1,9 +1,8 @@
-build-slot: FIFO ticket 2557, position 9; earlier build tickets must run first; waiting (0s so far)
-build-slot: FIFO ticket 2557, position 3; earlier build tickets must run first; waiting (61s so far)
-build-slot: build slot 1, FIFO ticket 2557 after 91s
+build-slot: FIFO ticket 2756, position 4; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 2756 after 30s
 guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
-guardian: diff-scoped vs 4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9: 75/693 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
-guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: diff-scoped vs 1994cb76e266080d971be6f41e98fba5707234dd: 92/749 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 18 finding(s) — report-only (--verbose for detail)
 guardian: function-length: 1 finding(s) — report-only (--verbose for detail)
-guardian: line-length: 1331 finding(s) — report-only (--verbose for detail)
-guardian: run-all: 88 check(s) passed — diff-scoped vs 4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9, 75 file(s) in scope
+guardian: line-length: 1636 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 1994cb76e266080d971be6f41e98fba5707234dd, 92 file(s) in scope

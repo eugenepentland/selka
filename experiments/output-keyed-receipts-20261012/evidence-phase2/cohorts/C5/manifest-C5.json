@@ -1,0 +1,59 @@
+{
+ "compiler": "/home/epentland/ai/canopy/mylang-lane-f-cohorts-20261013/experiments/output-keyed-receipts-20261012/work/c5-tree-1/zig-out/bin/mylang",
+ "compiler_sha256": "0f39fc327696121c3eb3a513d82fd518dcdaadf46e053414a06e9c69319e3f8c",
+ "environment": {
+  "launcher_sha256_16": {
+   "CODEX_THREAD_ID": null,
+   "PWD": "f92b7c7ec95166a2",
+   "TERM": "7f44899d0925ec2c"
+  },
+  "values": {
+   "HOME": "/home/epentland",
+   "LANG": "en_US.UTF-8",
+   "MYLANG_BUILD_MEM": "8G",
+   "MYLANG_BUILD_SLOTS": "3",
+   "MYLANG_DEV_JOBS": "4",
+   "MYLANG_DEV_MAXRSS": "8589934592",
+   "MYLANG_GATE_SLOTS": "2",
+   "MYLANG_SLOT_DIR": "/home/epentland/.cache/mylang/slots",
+   "MYLANG_ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+   "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-cohorts-20261013/.tmp/work",
+   "ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+   "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+   "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-cohorts-20261013/.zig-cache"
+  }
+ },
+ "features": {
+  "build_env": true,
+  "coordinator_path_free": true,
+  "coordinator_v3": true,
+  "exec_receipts": true,
+  "exec_receipts_opt_in": false,
+  "execution_key_report": true,
+  "fact_leak_receipts": true,
+  "mismatch_counter": true,
+  "runner_identity": true,
+  "test_v3_namespaces": true
+ },
+ "harness_sha256": "73901f9dd8a030bbf8de20e9a11ae9f3d586197ab7dd2c6e4946dbf5d05c1264",
+ "label": "C5",
+ "options": {
+  "build_env": null,
+  "dry_run": false,
+  "evidence": "/home/epentland/ai/canopy/mylang-lane-f-cohorts-20261013/experiments/output-keyed-receipts-20261012/evidence-phase2/cohorts/C5",
+  "keep_work": false,
+  "lang_entry": null,
+  "old_ref": "f6971a623",
+  "small_entry": "tests/lang/frontend_numbers.my",
+  "tree": "/home/epentland/ai/canopy/mylang-lane-f-cohorts-20261013/experiments/output-keyed-receipts-20261012/work/c5-tree-1",
+  "work": null
+ },
+ "plan": "docs/audits/output-keyed-shared-receipts-plan-2026-10-12.md",
+ "schema": "output-keyed-matrix-v1",
+ "slot_dir": "/home/epentland/.cache/mylang/slots",
+ "tree": "/home/epentland/ai/canopy/mylang-lane-f-cohorts-20261013/experiments/output-keyed-receipts-20261012/work/c5-tree-1",
+ "tree_dirty_sha256": null,
+ "tree_head": "7ebb73aae4d8683319b58354beba9e2a776e36d8",
+ "written": "2026-10-13T04:24:44.505+00:00",
+ "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+}

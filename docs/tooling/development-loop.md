@@ -198,16 +198,21 @@ On the merged output-keyed tree, all under exclusive timing windows:
 | Same, gate occupancy | 14.4 s | 13.8 to 24.8 s | 23 to 28 s |
 | Comment edit in `src/parser.zig`, then `mylang test tests/lang` (5) | 14.15 s | 7.75 to 16.17 s | 78 s, nothing reused |
 | Same edit, then complete verification (2) | 762.6 s | 737.8 to 787.4 s | 596 to 1,034 s |
-| First verification in a fresh worktree (3) | 941.5 s | 902.5 to 1,096.8 s | 600 to 1,000 s |
+| First verification in a fresh worktree, after another published its evidence (2 of 3; the first ran cold, 828.7 s) | 83.5 s | 79.3 to 87.6 s | 600 to 1,000 s (941.5 s median before cross-worktree sharing) |
+| Ten complete verifications started at once, one shared evidence store, total wall | 6,527 s | gate 720 to 1,044 s each | ten cold gates |
 
 After a comment edit, 1,544 of 1,549 eligible language tests are answered from
 execution receipts; the five that run call `function_digest`, which binds the
 compiler identity. The complete verification after the edit still reruns the
 Zig roots and drivers whose input is the compiler (19 actions), while every
-guest and language member answers from receipts. A fresh worktree reuses
-nothing yet: its action keys and cache-plan component differ from other
-worktrees'. A timed request (`--timing-window-seconds`) and an untimed one have
-separate receipts, because the window is part of the action identity. The
+guest and language member answers from receipts. A fresh worktree that names
+the shared evidence store (`MYLANG_VERIFICATION_SHARED_CACHE`) reuses every
+action another worktree published except `tooling_unit` and `text_scalar_unit`,
+whose test binaries carry the debug compile directory (F15); its guest and
+language members still run every test unless the native test store is shared
+too, which the gate does not yet tolerate (F18). Ten identical requests started
+together do not share work: each looks up the evidence before it queues for the
+gate and not again after, so all ten execute every group (F19). The
 qualification and its findings are in
 `experiments/output-keyed-receipts-20261012/` and the
 [plan's outcome](../audits/output-keyed-shared-receipts-plan-2026-10-12.md#outcome-12-october).
