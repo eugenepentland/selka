@@ -1,0 +1,24 @@
+{
+  "admission": false,
+  "cpu_affinity": [
+    0
+  ],
+  "clock_basis": "UTC filesystem birth/mtime boundaries, not explicit process-clock receipts; exact process timestamps unavailable",
+  "analysis": {
+    "start_bound": "2026-10-13T09:40:56.969985432Z",
+    "finish_output_bound": "2026-10-13T09:41:06.331040725Z",
+    "basis": "report stdoutlog birth/lastwrite and report.json creation; bootstrap report executed pinned CPU0, no shared admission"
+  },
+  "compression": {
+    "start_file_birth": "2026-10-13T09:44:41.099427500Z",
+    "finish_archive_lastwrite": "2026-10-13T09:44:45.020575194Z",
+    "basis": "raw-windows.tar.gz birth/mtime; archive script set affinity0 before opening archive, no shared admission"
+  },
+  "archive_verification": {
+    "start_lower_bound": "2026-10-13T09:44:45.036490944Z",
+    "finish_upper_bound": "2026-10-13T09:47:03.617795604Z",
+    "basis": "verification follows raw-log-index publication and completed before subsequent handoff creation; exact finish not logged, conservative upper bound only"
+  },
+  "micro_finished_before_analysis": "2026-10-13T09:39:19.139149Z",
+  "limitation": "May overlap coordinator application samples. CPU0 affinity does not rule out shared-cache/memory/I/O effects. Preserve all samples and review overlap/noise; no reruns performed. Future substantial compression/verification uses shared admission or waits for application timings."
+}

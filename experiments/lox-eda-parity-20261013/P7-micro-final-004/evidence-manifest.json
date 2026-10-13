@@ -1,0 +1,30 @@
+{
+  "status": "complete",
+  "scope": 6,
+  "complete_cells": 6,
+  "wrapper_commit": "acbe8d8d357daf5dcbdb04f8eee24aa1845821e1",
+  "files": {
+    "experiments/lox-eda-parity-20261013/P7-micro-final-004/micro-final-004-report.log.gz": "06862f9475e084fc1f33f876184c41f21c02080970bfa3f210c84e150fa13bc3",
+    "experiments/lox-eda-parity-20261013/P7-micro-final-004/json_transform.large.cycle000.log.gz": "f14d364a2530e81b1c23cae3a0f72fc6b08e2ea0054c81cb7339e3137b7b59c2",
+    "experiments/lox-eda-parity-20261013/P7-micro-final-004/csv_aggregate.large.cycle000.log.gz": "2910bd78e63074c2b3c4075820df7c7c8198ccb43bb93ee72fece5b2aa0c597f",
+    "experiments/lox-eda-parity-20261013/P7-micro-final-004/run.py": "e0618ff3f6965121bfe78b769c9208c58b62f3f9bf25a1ed4214a23c5cfe9ecf",
+    "experiments/lox-eda-parity-20261013/P7-micro-final-004/micro-final-004-run.log.gz": "b3aa2382a0cef9a72961e5ff35a3e634c592762b77e2cf2c2110d2449a42b65b",
+    "experiments/lox-eda-parity-20261013/P7-micro-final-004/initial-receipt.json": "477f5caa128a6557498a9182a90cda99a0defbcc797e46af44175b1f76e1377e",
+    "experiments/lox-eda-parity-20261013/P7-micro-final-004/raw-window-index.json": "361b31108df484b02f425df7eddae63d1c7acfcb8fc399a41a2dbaeff0e9d07a",
+    "experiments/lox-eda-parity-20261013/P7-micro-final-004/.gitignore": "6c68a0856fec76102fcc07f3f50df89b55becf17cb092e0f28c4829a52e33ccd",
+    "experiments/lox-eda-parity-20261013/P7-micro-final-004/execution.json": "8822157f389eab4d25f5213bf5f1a7d18fd81f34a0d0a20db33c17702e3aca6c",
+    "experiments/lox-eda-parity-20261013/P7-micro-final-004/handoff.md": "f879ccd924ee8a1000f1d5270bcbc7b3c5ba0b80aa5a8929c86cc1d5b06eea0c",
+    "experiments/lox-eda-parity-20261013/P7-micro-final-004/report.py": "aae3287615f2b9a86ebfc1aa0b8e2a8f55c3da98740fb702b592bd64469640ca",
+    "experiments/lox-eda-parity-20261013/P7-micro-final-004/raw-windows.tar.gz": "6a6a6a5bc0b851957a2916afe8e8a4475b92cf1fe52beddf969cfc449c339ece",
+    "experiments/lox-eda-parity-20261013/P7-micro-final-004/json_transform.small.cycle000.log.gz": "7b9ad971b7741d9bf7c575b5654a8305d386a4d15e8df5ee06090fb305013e9c",
+    "experiments/lox-eda-parity-20261013/P7-micro-final-004/REPORT.md": "41919aa21490f1ba2f3450154fd7e8cee1aef6d26c44d5fe5190a0400cb941ec",
+    "experiments/lox-eda-parity-20261013/P7-micro-final-004/report.json": "a2a20c2341c662305e37e6b0478431dbe1ac8676e395e2eb0b60eeff3c72bc21",
+    "experiments/lox-eda-parity-20261013/P7-micro-final-004/initial-manifest-snapshots.json.gz": "ce54341b93cac9365c868e8c4f43cd8b92310edd0d52e4aa2ea1db487f9537a9",
+    "experiments/lox-eda-parity-20261013/P7-micro-final-004/completed-receipt.json": "d682f4e9f256dd5132bea41350b1c9840a87a5ec29caa39532c64027721c6357",
+    "experiments/lox-eda-parity-20261013/P7-micro-final-004/string_split.small.cycle000.log.gz": "307f893d0203bf05f25559c0a453c96b0a7812df878deda012267fffe054be6d",
+    "experiments/lox-eda-parity-20261013/P7-micro-final-004/csv_aggregate.small.cycle000.log.gz": "22b1f4c2fc35343e6df80cd39af9835147d1a7e957939546f4a58f8bd8a86b87",
+    "experiments/lox-eda-parity-20261013/P7-micro-final-004/string_split.large.cycle000.log.gz": "6f42be69972180303412627f3e6e7e0dea351d8e7f24077096690725481ce5ff",
+    "experiments/lox-eda-parity-20261013/P7-micro-final-004/raw-log-index.json": "d4a4282fa3d7461a51c57f965ccf8700f726632ac4c87c0570a31e50fa0cd7e1",
+    "experiments/lox-eda-parity-20261013/P7-micro-final-004/concurrent-analysis-context.json": "89377c037736575d21b7d1262ed4cad91b4dfd08abe033c9b9e739184e81f61c"
+  }
+}
