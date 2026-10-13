@@ -1,0 +1,89 @@
+{
+  "status": "two C3 builds and6 frozen specs qualified; timing held",
+  "compiler_source_commit": "91f5b5d3010893e7642a8fbee90fa910aa7fabab",
+  "compiler_sha256": "6842cc711ca6f6eadf2967a76ca60f57044ec06e0c9c2cf15b2834fd3cdebbaf",
+  "entries": [
+    {
+      "kind": "runtime",
+      "binary": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/micro-regression-final-003/text-runtime",
+      "sha256": "3bd744c7048ac7ba1a745b88b62cea5e4848fe184de27a03bd443786781637af",
+      "source": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+      "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+      "flags": [
+        "--release",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/micro-regression-final-003/cache-runtime",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/micro-regression-final-003/text-runtime",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/benchmarks/runtime/ports/native_clock.c"
+      ],
+      "command": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-003/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+        "--release",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/micro-regression-final-003/cache-runtime",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/micro-regression-final-003/text-runtime",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/benchmarks/runtime/ports/native_clock.c"
+      ],
+      "status": "ok",
+      "zero_rc": true
+    },
+    {
+      "kind": "counted",
+      "binary": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/micro-regression-final-003/text-counted",
+      "sha256": "a1fdfec7218124dbebda7431b287d81bb90b44e05e30c0e66c8cec7c03ae8392",
+      "source": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+      "source_sha256": "71f5e74e25f894e779c6248b9f52c144e9d53a8c482c0121e4249374dbe05754",
+      "flags": [
+        "--release",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/micro-regression-final-003/cache-counted",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/micro-regression-final-003/text-counted",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--counters"
+      ],
+      "command": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-003/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/micro-ownership-20261012/expanded/migrated/text.my",
+        "--release",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/micro-regression-final-003/cache-counted",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p4/.tmp/lox-eda-parity/P4/micro-regression-final-003/text-counted",
+        "--link",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/benchmarks/runtime/ports/native_clock.c",
+        "--counters"
+      ],
+      "status": "ok",
+      "zero_rc": true
+    }
+  ],
+  "spec_sha256": {
+    "csv_aggregate.large.json": "a68d37c8aff994d82508d3e412c941fe4b181fa4bc048da3e885bd0ab0715c8f",
+    "csv_aggregate.small.json": "f6098316b798876a8ed4d394159a5af71cb8f6ebc11987dc23b31c9bb1c138d2",
+    "json_transform.large.json": "6c381508447967f9707c7b815e8d255ca332f61d2240b92b4b1c422a64a2779b",
+    "json_transform.small.json": "cedc6f208f49a2c5a4c80a77cea9dc5ec1ca0ae83a344d2efef9564809fbf2b0",
+    "string_split.large.json": "46909568d31d93f5b3387898dc2cd2fdfede8f38642b62be2bdfd4c6a10254af",
+    "string_split.small.json": "d3c419a798b054eed3b947f330e6e882e568f71670e9a18a65fa94838f0e2130"
+  },
+  "untimed_runtime_controls": 42,
+  "untimed_counted_controls": 18,
+  "all_original_pins_unchanged": true,
+  "installation_pins_unchanged": true
+}
