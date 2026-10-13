@@ -1,0 +1,5 @@
+heap.my:211:12: error[R_ASSERT]: native execution failed: object is not an instance
+  in heap::require_instance at heap.my:211:12
+  in heap::set_instance_field at heap.my:227:5
+  in p1_mutation_failure_probe::main at p1_mutation_failure_probe.my:20:9
+MYLANG-TRAP {"version":1,"operation":"object is not an instance"}

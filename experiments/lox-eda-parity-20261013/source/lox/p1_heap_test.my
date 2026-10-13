@@ -100,3 +100,21 @@ public func test_fresh_environment_negative_slot_count_matches_existing_construc
     mut rt = heap.new_runtime(False)
     const env = heap.allocate_env(mut rt, value.NO_OBJ, -1)
     return rt.bytes_allocated == 32 and len(heap.env_obj(rt, env).slots) == 0 and rt.allocations == 1
+
+public func test_owned_class_self_inheritance_keeps_methods_and_snapshot() -> bool:
+    mut rt = heap.new_runtime(False)
+    const name = lox_strings.copy_string(mut rt, b"self")
+    const hash = heap.string_hash(rt, name)
+    const klass = heap.allocate_class(mut rt, name)
+    heap.set_class_method(mut rt, klass, name, hash, value.Value.number(value=1.0))
+    const before = heap.class_obj(rt, klass)
+    heap.inherit_class_methods(mut rt, klass, klass)
+    heap.set_class_method(mut rt, klass, name, hash, value.Value.number(value=2.0))
+    return table.get(before.methods, name, hash) == Some(value.Value.number(value=1.0)) and heap.class_method(rt, klass, name, hash) == Some(value.Value.number(value=2.0))
+
+public func test_owned_environment_negative_index_and_snapshot() -> bool:
+    mut rt = heap.new_runtime(False)
+    const env = heap.allocate_env(mut rt, value.NO_OBJ, 2)
+    const before = heap.env_obj(rt, env)
+    heap.set_env_slot(mut rt, env, -1, value.Value.number(value=1.0))
+    return before.slots[1] == value.Value.nil and heap.env_slot(rt, env, 1) == value.Value.number(value=1.0) and heap.env_slot(rt, env, 0) == value.Value.nil

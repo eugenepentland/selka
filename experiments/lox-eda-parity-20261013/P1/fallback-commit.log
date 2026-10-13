@@ -1,0 +1,39 @@
+build-slot: FIFO ticket 2736, position 11; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 2736, position 2; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 2736, position 1; waiting for measurement or memory-accounting settle delay; waiting (121s so far)
+build-slot: build slot 1, FIFO ticket 2736 after 141s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 18 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10579 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/lox-eda-parity-20261013-p1 fef914d0d] Reduce Lox fresh heap copies and scope payload updates
+ 27 files changed, 1340 insertions(+), 18 deletions(-)
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/allocate-probe.my
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/allocate-refusal.txt
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/allocation-build-input-sha256.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/allocation-build.log
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/allocation-fresh-counters.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/allocation-fresh.stderr
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/allocation-fresh.stdout
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/allocation-probe.my
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/allocation-run.log
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/allocation-snapshot-counters.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/allocation-snapshot.stderr
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/allocation-snapshot.stdout
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/allocation-summary.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/bound-owner-extraction-refusal.my
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/bound-owner-extraction-refusal.txt
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/extraction-counters.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/extraction-probe.my
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/extraction-run.stderr
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/extraction-run.stdout
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/fallback-final-tests.log
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/fallback-first-tests.log
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/fallback-second-tests.log
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/fallback-source-sha256.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/handoff.md
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/run-allocation-probe.py
+ create mode 100644 experiments/lox-eda-parity-20261013/source/lox/p1_heap_test.my

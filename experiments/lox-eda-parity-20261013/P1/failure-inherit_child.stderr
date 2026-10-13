@@ -1,0 +1,5 @@
+heap.my:206:12: error[R_ASSERT]: native execution failed: object is not a class
+  in heap::require_class at heap.my:206:12
+  in heap::inherit_class_methods at heap.my:263:5
+  in p1_mutation_failure_probe::main at p1_mutation_failure_probe.my:32:9
+MYLANG-TRAP {"version":1,"operation":"object is not a class"}

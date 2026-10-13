@@ -190,34 +190,89 @@ public func set_instance_fields(mut rt: Runtime, ref: value.ObjRef, fields: tabl
     rt.objects[ref] = object.Obj.instance(value=object.InstanceObj(klass=klass, fields=fields.copy()))
 
 
-# Scoped writes publish once through the stable handle. Until enum payloads
-# support bounded owned extraction, each helper takes one independent snapshot.
-func instance_snapshot(rt: Runtime, ref: value.ObjRef) -> object.InstanceObj:
+# Checked extraction never crosses a Lox GC, callback, or early return. Validate
+# handles and kinds before replacing a slot with the temporary free case.
+func require_ref(rt: Runtime, ref: value.ObjRef):
+    assert ref >= 0 and ref < len(rt.objects), "invalid object handle"
+
+
+func require_class(rt: Runtime, ref: value.ObjRef):
+    require_ref(rt, ref)
     match rt.objects[ref]:
-        case object.Obj.instance(value=payload):
-            return payload.copy()
+        case object.Obj.klass(value=_):
+            return
         case _:
-            assert False, "object is not an instance"
-            return object.InstanceObj(klass=value.NO_OBJ, fields=table.new_table())
+            pass
+    assert False, "object is not a class"
+
+
+func require_instance(rt: Runtime, ref: value.ObjRef):
+    require_ref(rt, ref)
+    assert is_instance(rt, ref), "object is not an instance"
+
+
+func require_env_slot(rt: Runtime, ref: value.ObjRef, index: int):
+    require_ref(rt, ref)
+    match rt.objects[ref]:
+        case object.Obj.env(value=payload):
+            const count = len(payload.slots)
+            assert index >= -count and index < count, "environment slot index out of bounds"
+            return
+        case _:
+            pass
+    assert False, "object is not an env"
 
 
 public func set_instance_field(mut rt: Runtime, ref: value.ObjRef, key: value.ObjRef, hash: u32, item: value.Value):
-    mut updated = instance_snapshot(rt, ref)
-    _ = table.set(mut updated.fields, key, hash, item)
-    rt.objects[ref] = object.Obj.instance(value=updated)
+    require_instance(rt, ref)
+    match rt.objects.exchange(ref, object.Obj.free):
+        case object.Obj.instance(value=payload):
+            mut updated = payload
+            _ = table.set(mut updated.fields, key, hash, item)
+            rt.objects[ref] = object.Obj.instance(value=updated)
+            return
+        case _:
+            pass
+    assert False, "validated instance changed kind"
 
 
 public func set_class_method(mut rt: Runtime, ref: value.ObjRef, key: value.ObjRef, hash: u32, item: value.Value):
-    mut updated = class_obj(rt, ref)
-    _ = table.set(mut updated.methods, key, hash, item)
-    rt.objects[ref] = object.Obj.klass(value=updated)
+    require_class(rt, ref)
+    match rt.objects.exchange(ref, object.Obj.free):
+        case object.Obj.klass(value=payload):
+            mut updated = payload
+            _ = table.set(mut updated.methods, key, hash, item)
+            rt.objects[ref] = object.Obj.klass(value=updated)
+            return
+        case _:
+            pass
+    assert False, "validated class changed kind"
+
+
+func add_class_methods(rt: Runtime, parent: value.ObjRef, mut methods: table.Table):
+    match rt.objects[parent]:
+        case object.Obj.klass(value=payload):
+            table.add_all(payload.methods, mut methods)
+            return
+        case _:
+            pass
+    assert False, "validated superclass changed kind"
 
 
 public func inherit_class_methods(mut rt: Runtime, ref: value.ObjRef, parent: value.ObjRef):
-    mut inherited = class_obj(rt, parent)
-    mut updated = class_obj(rt, ref)
-    table.add_all(inherited.methods, mut updated.methods)
-    rt.objects[ref] = object.Obj.klass(value=updated)
+    require_class(rt, ref)
+    require_class(rt, parent)
+    if ref == parent:
+        return
+    match rt.objects.exchange(ref, object.Obj.free):
+        case object.Obj.klass(value=payload):
+            mut updated = payload
+            add_class_methods(rt, parent, mut updated.methods)
+            rt.objects[ref] = object.Obj.klass(value=updated)
+            return
+        case _:
+            pass
+    assert False, "validated subclass changed kind"
 
 
 public func env_obj(rt: Runtime, ref: value.ObjRef) -> object.EnvObj:
@@ -229,11 +284,18 @@ public func env_obj(rt: Runtime, ref: value.ObjRef) -> object.EnvObj:
             return object.new_env(value.NO_OBJ, 0)
 
 
-# Publish a changed environment through its stable object-table handle.
+# A checked owned payload is restored before any allocation can run the GC.
 public func set_env_slot(mut rt: Runtime, ref: value.ObjRef, index: int, item: value.Value):
-    mut env = env_obj(rt, ref)
-    env.slots[index] = item
-    rt.objects[ref] = object.Obj.env(value=env)
+    require_env_slot(rt, ref, index)
+    match rt.objects.exchange(ref, object.Obj.free):
+        case object.Obj.env(value=payload):
+            mut updated = payload
+            updated.slots[index] = item
+            rt.objects[ref] = object.Obj.env(value=updated)
+            return
+        case _:
+            pass
+    assert False, "validated environment changed kind"
 
 
 public func string_hash(rt: Runtime, ref: value.ObjRef) -> u32:

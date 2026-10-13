@@ -1,0 +1,36 @@
+# All failures must be detected before any object-table payload is extracted.
+import heap
+import value
+
+func main(args: str[], out: Stream) -> int:
+    assert len(args) == 1
+    mut rt = heap.new_runtime(True)
+    const env = heap.allocate_env(mut rt, value.NO_OBJ, 2)
+    rt.current_env = env
+    const klass = heap.allocate_class(mut rt, value.NO_OBJ)
+    heap.push(mut rt, value.Value.obj(value=klass))
+    const instance = heap.allocate_instance(mut rt, klass)
+    heap.push(mut rt, value.Value.obj(value=instance))
+    if args[0] == "negative_handle":
+        heap.set_env_slot(mut rt, -1, 0, value.Value.nil)
+    elif args[0] == "high_handle":
+        const bad = len(rt.objects)
+        heap.set_instance_field(mut rt, bad, value.NO_OBJ, 0u32, value.Value.nil)
+    elif args[0] == "instance_kind":
+        heap.set_instance_field(mut rt, env, value.NO_OBJ, 0u32, value.Value.nil)
+    elif args[0] == "class_kind":
+        heap.set_class_method(mut rt, instance, value.NO_OBJ, 0u32, value.Value.nil)
+    elif args[0] == "env_kind":
+        heap.set_env_slot(mut rt, klass, 0, value.Value.nil)
+    elif args[0] == "high_slot":
+        heap.set_env_slot(mut rt, env, 2, value.Value.nil)
+    elif args[0] == "negative_slot":
+        heap.set_env_slot(mut rt, env, -3, value.Value.nil)
+    elif args[0] == "inherit_parent":
+        heap.inherit_class_methods(mut rt, klass, env)
+    elif args[0] == "inherit_child":
+        heap.inherit_class_methods(mut rt, env, klass)
+    else:
+        return 98
+    out.print("unexpected validation success")
+    return 99

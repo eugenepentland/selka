@@ -1,0 +1,18 @@
+{
+  "compiler_path": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-002/bin/mylang",
+  "compiler_sha256": "d51abcb0b2cefc6922e4a90afbf0822ecfe01151f8c7e1b89fdb82481b0b3273",
+  "sources": {
+    "heap.my": "0fee35652bf52adeb179705f1f27d63bc899fe0d0ff5e3116121732fde8c6639",
+    "object.my": "d7676af7b94ffecfa563e2aa1cbdda39f9dc15934e0268aa168cb8630a111f93",
+    "table.my": "09997c3fbc7461e5698c16de1b186ba755f98b94951b54dadfad0dc7268dfa98",
+    "value.my": "be66ac3375e327f4bdf1759177519fd95a45bcd1f60070af0bf70047e8bb8c41",
+    "chunk.my": "d78b6babd52503e76abcd88fe858d11e44ad43cdb45f7a436aa0adabdbf5b731",
+    "lox_strings.my": "277c69c5abf81d3db8a51b4d64858bd2eb7ccd1a406b3cfe3eeb949567cdb843",
+    "p1_mutation_probe.my": "dfc1d7e2e9a072901d646524bbbd38c831e59223b3d05f4cbc7a684a4aa20539",
+    "p1_mutation_failure_probe.my": "32066caf9d3c3853d94aa96c516cf10e0c545deb34d4cba38d14466bb10f031d"
+  },
+  "binaries": {
+    "mutation-probe": "6f4c0e10ad522ace849b237ab146d9d8bb0aae6e32b69fb6b70874da94c0f19a",
+    "mutation-failure-probe": "0228e90cf83a162759bdd728862640cfb87b57ba3ced2adf109d5db6111363ac"
+  }
+}

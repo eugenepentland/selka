@@ -57,3 +57,37 @@ Constructor domain correction after the positive-width counter run: existing `ob
 Final fallback qualification PASSED: **82 passed,0 cached,0 failed,0 skipped**, using the pinned compiler, checked zero RC, release, force and private cache. This includes all75 existing cases plus7 P1 regressions. Exact final source hashes are in `fallback-source-sha256.json`; raw successful suite output is in `fallback-final-tests.log`. Positive-width allocation counters and direct fresh-extraction probe both passed as recorded above. The constructor/scoped-helper/cold-query fallback is ready for integration; eliminating the remaining payload snapshots remains a separate checked-exchange change after compiler qualification.
 
 No compiler source, historical experiment source/reports, peer-owned caller files, or Guardian feedback log was changed by P1.
+
+Fallback implementation/evidence commit: `fef914d0d774a25586499dece4c42a014172ba53`. The normal Guardian hook passed88 checks (raw `fallback-commit.log`, copied after the implementation commit). No feedback-log write was made. Checked-exchange work starts from this preserved fallback commit.
+
+# Separate checked-exchange candidate (green002 evidence; final qualification pending)
+
+Compiler installation: `/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7/.tmp/lox-eda-parity/P7/green-install-002/bin/mylang`.
+SHA256: `d51abcb0b2cefc6922e4a90afbf0822ecfe01151f8c7e1b89fdb82481b0b3273`.
+The entire immutable prefix includes bin/libexec/tools. The first three queued jobs targeting mutable `/P7/install` were cancelled before admission, only P1's wrappers were stopped, and their queue logs were preserved. No mixed-prefix result is counted.
+
+`set_instance_field`, `set_class_method`, and `set_env_slot` now immediately match the owned result of `rt.objects.exchange(ref, object.Obj.free)`, mutate the transferred payload and restore the same stable slot. Handle bounds, expected kind and environment index bounds are validated before extraction. There is no Lox allocation/collection, callback or return while the placeholder is active. Returns follow restoration; wrong-kind assertions are outside the match to avoid duplicating cold sites. `inherit_class_methods` validates both classes, treats self inheritance as a semantic no-op, extracts the child and borrows the parent table only into the independent local child methods, then restores the child before returning. Public snapshot accessors and replacement-table contracts retain independent copies.
+
+Green002 full candidate suite **84 passed,0 cached,0 failed,0 skipped** (`exchange-tests-green002.log`). It includes the prior82 tests plus self inheritance/snapshot and negative environment index/snapshot regressions. Both counted probes compiled successfully (`mutation-build-green002.log`, `mutation-failure-build-green002.log`). Exact compiler/imported-source/binary hashes: `exchange-input-sha256-green002.json`.
+
+Reduced mutation evidence:100 writes each to the environment, instance and class, starting with1024 populated table keys and1024 environment slots. Both arms share owned setup; the snapshot arm reproduces the preserved fallback one-snapshot setters. Raw counters and selected per-function evidence are in `mutation-*-counters.json` and `mutation-summary.json`.
+
+| arm | allocations | allocated bytes | list copies | copied bytes |
+|---|---:|---:|---:|---:|
+| checked owned exchange |5,181|747,632|0|0|
+| snapshot fallback |5,482|15,514,928|300|14,745,600|
+
+The owned setter counter rows report0 copies/0 allocations across1,124 instance writes,1,124 class writes and100 environment writes, including the common setup writes. In the snapshot arm, the instance snapshot and class/environment snapshot accessors each perform100 full array copies:6,553,600 bytes each for instance/class tables and1,638,400 bytes for environment slots. Overall totals include setup and an extra command-line argument allocation in the snapshot arm; no claim treats every allocation difference as helper traffic. Both arms print `True True True`, have retain/release0 and live bytes at exit0. This is reduced allocation evidence, not runtime timing or full60-case parity.
+
+All9 invalid-input subprocess checks passed with exit1 and the expected pre-extraction validation message: negative/high handle, wrong instance/class/env kind, positive/negative out-of-bounds environment index, and wrong inheritance parent/child kind. Exact stdout/stderr/counters and summary are retained in `failure-*` and `mutation-failure-summary.json`. Fatal assertions terminate before normal scope cleanup and each reports269,344 setup bytes live at process exit; no zero-live or unwound-cleanup claim is made for those fatal failures. These failures occur before any payload is removed, so no placeholder or transferred payload exists when they terminate. Normal paths and Lox error behavior remain covered by the full suite.
+
+Commands, with the compiler above, private P1 caches/TMPDIR and shared build slots:
+
+```sh
+scripts/build-slot.sh build "$compiler" test experiments/lox-eda-parity-20261013/source/lox --experimental-zero-rc --release --force --cache-dir .tmp/lox-eda-parity/P1/caches/exchange-core
+scripts/build-slot.sh build "$compiler" build .tmp/lox-eda-parity/P1/exchange-probe-source/p1_mutation_probe.my -o .tmp/lox-eda-parity/P1/mutation-probe --experimental-zero-rc --release --counters --cache-dir .tmp/lox-eda-parity/P1/caches/mutation
+scripts/build-slot.sh build "$compiler" build .tmp/lox-eda-parity/P1/exchange-probe-source/p1_mutation_failure_probe.my -o .tmp/lox-eda-parity/P1/mutation-failure-probe --experimental-zero-rc --release --counters --cache-dir .tmp/lox-eda-parity/P1/caches/mutation-failure
+scripts/build-slot.sh build python3 experiments/lox-eda-parity-20261013/P1/run-mutation-probes.py .tmp/lox-eda-parity/P1/mutation-probe .tmp/lox-eda-parity/P1/mutation-failure-probe
+```
+
+**Integration dependency: the final P7 compiler must finish its cleanup-matching and explicit-route qualification. Full integrated tests and counters must repeat on that final compiler. These green002 results are prototype evidence, not final compiler qualification or a60-case benchmark result.** The coordinator requested committing the source and honest green002 evidence now to prepare the common candidate; final integration qualification remains pending.

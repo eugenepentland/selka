@@ -1,0 +1,6 @@
+heap.my:196:12: error[R_ASSERT]: native execution failed: invalid object handle
+  in heap::require_ref at heap.my:196:12
+  in heap::require_env_slot at heap.my:215:5
+  in heap::set_env_slot at heap.my:289:5
+  in p1_mutation_failure_probe::main at p1_mutation_failure_probe.my:15:9
+MYLANG-TRAP {"version":1,"operation":"invalid object handle"}
