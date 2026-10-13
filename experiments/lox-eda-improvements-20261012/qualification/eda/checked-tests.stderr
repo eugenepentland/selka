@@ -1,0 +1,5 @@
+build-slot: FIFO ticket 2624, position 3; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 2624, position 3; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 2624, position 3; earlier build tickets must run first; waiting (120s so far)
+build-slot: build slot 3, FIFO ticket 2624 after 140s
+mylang test: no tests selected; sibling test file /home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/source/eda/main_test.my is not included by this entry. Run that file explicitly with mylang test, or test its directory.

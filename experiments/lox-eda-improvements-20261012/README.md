@@ -3,8 +3,10 @@
 All five implementations are integrated. The complete registered verification
 gate passed all 46 selected actions with stable inputs and no reused actions;
 see [summary](verification-summary.json) and the [full receipt](verification-receipt.json.gz).
-Combined application qualification and full-workload measurements are still
-pending. Focused worker results do not replace those checks.
+Both integrated applications passed the primary qualification: 75 Lox and 317 EDA
+unit tests with leak checking, three 974-case Lox conformance runs plus smoke/GC
+checks, 102 EDA golden comparisons and nine error cases across three arms.
+The remaining build-mode matrix and full-workload measurements are in progress.
 
 Implements the [audited plan](../../docs/audits/lox-eda-improvement-plan-2026-10-12.md)
 from audit commit `b854dbcd895bf81061b33bebc30328ceaa986972`.
@@ -47,3 +49,10 @@ discovery includes it, and these tests never invoke the clock native. The mode
 matrix uses the actual production imports and retains the separate P1 CLI cases.
 The initial qualification harness expected 69; its successful 75-test output is
 preserved with an immutable command journal before resuming conformance.
+
+EDA's first directory attempt recorded 184 passes and 133 native exit-70 failures.
+That attempt is preserved in `qualification/eda-attempt1/`. The original cause is
+unproven. The unchanged board module passed baseline, candidate and exact cached
+protocol replays ([diagnosis](P4/diagnosis/README.md)); a fresh full run using a
+private cache on `/tmp` passed all 317 tests with the same compiler, sources,
+flags and leak checking. No tests were removed or assertions weakened.

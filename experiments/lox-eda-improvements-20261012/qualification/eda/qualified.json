@@ -1,0 +1,67 @@
+{
+  "manifest": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/build/eda/build-receipt.json",
+  "manifest_sha256": "67aaa3e1efe1b56a6bc939cac70f46b44b631f6f47143c679c925550de150419",
+  "status": "passed",
+  "commands": [
+    {
+      "name": "checked-tests",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/source/eda",
+        "--experimental-zero-rc",
+        "--release",
+        "--verify-facts",
+        "--jobs",
+        "4",
+        "--max-steps",
+        "1000000000",
+        "--max-frames",
+        "40000",
+        "--max-memory",
+        "2G",
+        "--timeout-ms",
+        "120000",
+        "--cache-dir",
+        "/tmp/mylang-lox-eda-improvements-20261012-eda-qualification-2/cache",
+        "--json"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "goldens",
+      "command": [
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/qualify_goldens.py",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/build/eda/build-receipt.json",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/qualification/eda/goldens.json",
+        "/tmp/mylang-lox-eda-improvements-20261012-eda-qualification-2/golden-work"
+      ],
+      "returncode": 0
+    },
+    {
+      "name": "error-paths",
+      "command": [
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/check-error-paths.py",
+        "original-rc=/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-rerun-20261012/eda-2/original-rc",
+        "migrated-rc=/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/eda/migrated-rc",
+        "zero-rc=/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/eda/zero-rc"
+      ],
+      "returncode": 0
+    }
+  ],
+  "evidence": {
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/qualification/eda/checked-tests.stderr": "7abfcfafc51d1827d87a30151c4bd51b46a9097c3d358b42f0a64eef388eaba0",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/qualification/eda/checked-tests.stdout": "739adbd3ce202c7f7657372dd0f40b9aee625ccd2f791ef2a991b78053f36a06",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/qualification/eda/commands.json": "80a2f982bc394fd07cefd699f3d59042a10c3b3ca71c01f38f01900f6fa877f7",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/qualification/eda/error-paths.stderr": "88513e9ad2c99162ed7502c480d208989bfb285c743365ceb0145ed3dcc82c00",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/qualification/eda/error-paths.stdout": "1479da111ab85bf1e057944da6b1d0a1162a81a4f5728ffbfd3ba4106f7e67f5",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/qualification/eda/goldens.json": "b3fd235759ed0fc91cf56007acaed92951c4c858b4d090ac5130321ee8195a9a",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/qualification/eda/goldens.stderr": "4067388c0ac38c0d4b32acb8407308164c5eb67f91234d934069448b048cf1a7",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/qualification/eda/goldens.stdout": "19af32c1a4b4a7b5671f59c41d9a6a71f1cbfd3cce17d06cfc7c5fc9fb253903",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/error-paths.json": "089a2fa947013283e55ce40065494904037b6669e29e033efa3d7af111707f05"
+  }
+}

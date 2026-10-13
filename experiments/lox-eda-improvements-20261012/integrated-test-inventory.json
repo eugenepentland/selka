@@ -1,0 +1,55 @@
+{
+  "lox": {
+    "before": 65,
+    "after": 75,
+    "added": [
+      "p2_tree_tests::test_p2_error_unwinds_blocks",
+      "p2_tree_tests::test_p2_inheritance_and_receiver_rhs",
+      "p2_tree_tests::test_p2_nested_closure_printing",
+      "p2_tree_tests::test_p2_recursion_depth_error",
+      "p2_tree_tests::test_p2_recursive_repeated_body",
+      "p2_tree_tests::test_p2_short_circuit_and_return",
+      "p3_queries_test::test_p3_environment_snapshot_and_alias",
+      "p3_queries_test::test_p3_function_closure_selected_reads",
+      "p3_queries_test::test_p3_string_owned_snapshot_stress_and_reuse",
+      "p3_queries_test::test_p3_tables_growth_missing_and_alias"
+    ],
+    "missing": [],
+    "counts": {
+      "passed": 75,
+      "failed": 0,
+      "skipped": 0,
+      "unsupported": 0,
+      "cached": 0
+    },
+    "previous_result": "experiments/lox-eda-rerun-20261012/qualification/lox/checked-tests.stdout",
+    "previous_sha256": "476246c47b83eeeb81ebb975ebd6be4df057a3f5b29edc53e761a7b801c1d01e",
+    "current_result": "experiments/lox-eda-improvements-20261012/qualification/lox/checked-tests.stdout",
+    "current_sha256": "e7bf9dc6c5596a0bf11c4a3c1333eb648d3a687d4002cf82fad9302932f0e717"
+  },
+  "eda": {
+    "before": 310,
+    "after": 317,
+    "added": [
+      "kicad_sch_textbox_test::test_p5_overlap_boundaries_ties_and_owned_report",
+      "kicad_sch_textbox_test::test_p5_overlap_sort_order_and_first_qualifying_at",
+      "kicad_sch_textbox_test::test_p5_overlap_sparse_y_boundary_and_long_text",
+      "sexpr_borrowed_test::test_owned_ast_accessors_remain_independent",
+      "sexpr_borrowed_test::test_parser_source_and_selected_output_independence",
+      "sexpr_borrowed_test::test_parser_width_and_depth_borrowed_walk",
+      "sexpr_borrowed_test::test_symbol_selected_output_outlives_ast"
+    ],
+    "missing": [],
+    "counts": {
+      "passed": 317,
+      "failed": 0,
+      "skipped": 0,
+      "unsupported": 0,
+      "cached": 0
+    },
+    "previous_result": "experiments/lox-eda-rerun-20261012/qualification/eda/checked-tests.stdout",
+    "previous_sha256": "5731056ba51b2e64f3df0f70e8b4c0b84ed641f35148c28d4c5bc11c688c3eac",
+    "current_result": "experiments/lox-eda-improvements-20261012/qualification/eda/checked-tests.stdout",
+    "current_sha256": "739adbd3ce202c7f7657372dd0f40b9aee625ccd2f791ef2a991b78053f36a06"
+  }
+}
