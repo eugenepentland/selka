@@ -47,3 +47,7 @@ Current production module hashes:
 - core_rt.c: `1da897c92854f2615dab2935a1f0c81f712cae15cbb5fe1c19e304a0f00a6ace`
 
 Timing complete: see timing-combined-001/results.md and report.json. Scalar-only recommended for fresh-install/full qualification; pointer held, bulk/all rejected for current adoption. Neither selected case reaches Zig parity.
+
+Permanent regression source/registration commit315e37c0766c3ea40789465088644932c1d7af6f adds owned_aggregate_copy_test.zig and runtime/owned_aggregate_copy_fixture.c, with one root_test import. The registered filtered test build and run both exited0/PASS1; both ABIs, NaN/scalar bits, primitive+managed arrays, primitive+managed union arms, nested owner independence, root/container initialization, zero-sized values, tag/resource/descriptor refusals. All subprocess counters and cwd are isolated in test tempdirs. Normal Guardian88 passed. Local registered runtime includes the three worker prototypes; permanent-regression-002 separately validates the exact selected scalar-only bundle. Coordinator full C2 gate remains required.
+
+First direct Zig test lacked the core module imports; preserved regression-test.log.gz. First source commit Guardian rejected orphan/reachability/spec coverage until coordinator added registration, and one debug-print call was aliased per policy; preserved commit-permanent.log.gz. Final registered process statuses are0, without parsed-PASS-only inference.

@@ -1,0 +1,112 @@
+[
+  {
+    "abi": "rc",
+    "mode": "build",
+    "argv": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "cc",
+      "-O2",
+      "-std=c11",
+      "-pthread",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/regression-scalar/rc/harness",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/regression-scalar/rc/harness.c"
+    ],
+    "returncode": 0,
+    "expected": 0
+  },
+  {
+    "abi": "rc",
+    "mode": "run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/regression-scalar/rc/harness"
+    ],
+    "returncode": 0,
+    "expected": 0
+  },
+  {
+    "abi": "rc",
+    "mode": "tag",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/regression-scalar/rc/harness",
+      "tag"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "abi": "rc",
+    "mode": "resource",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/regression-scalar/rc/harness",
+      "resource"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "abi": "rc",
+    "mode": "descriptor",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/regression-scalar/rc/harness",
+      "descriptor"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "abi": "zero-rc",
+    "mode": "build",
+    "argv": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "cc",
+      "-O2",
+      "-std=c11",
+      "-pthread",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/regression-scalar/zero-rc/harness",
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/regression-scalar/zero-rc/harness.c"
+    ],
+    "returncode": 0,
+    "expected": 0
+  },
+  {
+    "abi": "zero-rc",
+    "mode": "run",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/regression-scalar/zero-rc/harness"
+    ],
+    "returncode": 0,
+    "expected": 0
+  },
+  {
+    "abi": "zero-rc",
+    "mode": "tag",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/regression-scalar/zero-rc/harness",
+      "tag"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "abi": "zero-rc",
+    "mode": "resource",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/regression-scalar/zero-rc/harness",
+      "resource"
+    ],
+    "returncode": -6,
+    "expected": -6
+  },
+  {
+    "abi": "zero-rc",
+    "mode": "descriptor",
+    "argv": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/regression-scalar/zero-rc/harness",
+      "descriptor"
+    ],
+    "returncode": -6,
+    "expected": -6
+  }
+]

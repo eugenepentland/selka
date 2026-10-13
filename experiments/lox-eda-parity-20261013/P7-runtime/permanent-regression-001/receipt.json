@@ -1,0 +1,14 @@
+{
+  "status": "passed",
+  "commands": 10,
+  "source_pins": {
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/owned_aggregate_copy_fixture.c": "199315e289268cb884aeae5bd259ca16776507726e923a3a7ed492ae5e925d26",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/owned_aggregate_copy_test.zig": "61c6cd09e14137eadc24428b7c6b39e73810001dcaac47713dc7d800d12c32a9",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+  },
+  "scalar_runtime_sha256": "3a987f8d229c6dee4c060a11a3cd1fbeb5a53bb7cb6d3f0a2d8fe6c32c5019aa",
+  "outer_lease": {
+    "kind": "build",
+    "directory": "/home/epentland/.cache/mylang/slots"
+  }
+}

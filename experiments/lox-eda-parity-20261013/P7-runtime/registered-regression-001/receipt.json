@@ -1,0 +1,36 @@
+{
+  "source_commit": "315e37c0766c3ea40789465088644932c1d7af6f",
+  "build_returncode": 0,
+  "run_returncode": 0,
+  "tests_passed": 1,
+  "guardian_checks_passed": 88,
+  "source_and_tool_hashes": {
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/owned_aggregate_copy_test.zig": "d14f08b72b69e884ff8f05e220cb82ba482bd089dfc92c6bc125a1844259404e",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/runtime/owned_aggregate_copy_fixture.c": "82430bb9d765547cd42f4be0fdbe30b3f1a3fd942ed1bf86b32694a80504eb3c",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/src/core/root_test.zig": "2e7110971ee516fdfdbb695730c58595e8c0870594160b9533211c2e7471389d",
+    "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/.tmp/lox-eda-parity/P7-runtime/registered-tests/focus/core-tests": "2807bfa5956e19cd23d8de13c43ed401f1eccf5e11c16d7f134a06bc0506ef3a",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig": "1d314883fd8cf4490c1c29dd73ad8b64e319a8a53c4d9087d1135b52977df37f"
+  },
+  "runtime_scope": "Registered local test embeds worker runtime with all3 isolated prototypes; separately exact selected scalar-only runtime passed permanent-regression-002. Coordinator C2 full gate embeds scalar-only runtime.",
+  "build_argv": [
+    "scripts/build-slot.sh",
+    "build",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "build",
+    "core-test-binary",
+    "-Dtest-filter=aggregate copies preserve primitive bits arrays union arms and independent nested owners in both ABIs",
+    "--prefix",
+    ".tmp/lox-eda-parity/P7-runtime/registered-tests",
+    "-j4",
+    "--maxrss",
+    "8589934592"
+  ],
+  "run_argv": [
+    "scripts/build-slot.sh",
+    "build",
+    ".tmp/lox-eda-parity/P7-runtime/registered-tests/focus/core-tests",
+    "--guardian-filter=aggregate copies preserve primitive bits arrays union arms and independent nested owners in both ABIs"
+  ],
+  "registration": "src/core/root_test.zig imports owned_aggregate_copy_test.zig",
+  "counter_and_cwd_isolation": "Every C compile/run/refusal uses its temporary root as cwd and MYLANG_COUNTERS points inside that root."
+}

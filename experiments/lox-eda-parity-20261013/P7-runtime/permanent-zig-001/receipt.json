@@ -1,0 +1,22 @@
+{
+  "returncode": 0,
+  "tests": 1,
+  "purpose": "Focused permanent test body with private selected scalar-only runtime embed replacing driver import; production root registration remains required",
+  "files": {
+    "experiments/lox-eda-parity-20261013/P7-runtime/permanent-zig-001/test.zig": "18be2740ff10732a8c50f45d65f3fbd363e3acb2605d7248117e118f7682bc78",
+    "experiments/lox-eda-parity-20261013/P7-runtime/permanent-zig-001/runtime.c": "3a987f8d229c6dee4c060a11a3cd1fbeb5a53bb7cb6d3f0a2d8fe6c32c5019aa",
+    "experiments/lox-eda-parity-20261013/P7-runtime/permanent-zig-001/owned_aggregate_copy_fixture.c": "82430bb9d765547cd42f4be0fdbe30b3f1a3fd942ed1bf86b32694a80504eb3c"
+  },
+  "argv": [
+    "scripts/build-slot.sh",
+    "build",
+    "ZIG",
+    "test",
+    ".tmp/lox-eda-parity/P7-runtime/permanent-zig/test.zig",
+    "-j4",
+    "--cache-dir",
+    ".tmp/lox-eda-parity/P7-runtime/permanent-zig/cache",
+    "--global-cache-dir",
+    ".tmp/lox-eda-parity/P7-runtime/regression-zig-global"
+  ]
+}

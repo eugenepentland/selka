@@ -1,0 +1,8 @@
+{
+  "returncode": 0,
+  "commands": 10,
+  "native_abis": [
+    "rc",
+    "zero-rc"
+  ]
+}
