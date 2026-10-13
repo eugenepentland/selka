@@ -1,0 +1,29 @@
+{
+ "cohort": "C4",
+ "stores": "all",
+ "status": "abandoned after two samples; the third worktree's request was cancelled",
+ "reason": "F18: with MYLANG_TEST_SHARED_CACHE set for the gate, src/core/entry_path_test.zig:75 panics (cache.execution_key is null because the second root's test is served from the shared store), so every gate fails and publishes nothing",
+ "samples": [
+  {
+   "label": "sample-1",
+   "success": false,
+   "request_seconds": 790.7,
+   "gate_admitted_seconds": 766.3,
+   "states": {
+    "execute": 35,
+    "fresh": 11
+   }
+  },
+  {
+   "label": "sample-2",
+   "success": false,
+   "request_seconds": 836.1,
+   "gate_admitted_seconds": 813.6,
+   "states": {
+    "execute": 35,
+    "fresh": 11
+   },
+   "action_keys_equal_to_sample_1": "44 of 46"
+  }
+ ]
+}

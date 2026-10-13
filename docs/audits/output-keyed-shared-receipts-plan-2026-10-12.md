@@ -466,17 +466,45 @@ SHA-256 unchanged across each cohort.
   every guest and language member answered from execution receipts (8 tests
   executed per `tests/lang` mode). Baseline 596 to 1,034 s, every group.
 - **C4, first verification in a fresh worktree, 3 worktrees sharing one
-  evidence store:** request 1,096.8 s, 902.5 s and 941.5 s (median 941.5),
-  gate 1,069.0, 877.9 and 910.7 s; window queue 5.1 s, 331.7 s and 456.7 s
-  (other teams' timing runs). Every worktree executed 35 actions and reused
-  none; worktrees two and three had different action keys from the first
-  (F3), and every gate failed on F8 (the first also on F9), so nothing was
-  published to share. Snapshot work per worktree: 28,912 files, 2.33 GB,
-  2,294 directories, 763,484 metadata observations. Baseline: a cold gate plus
-  2.33 GB hashed, 600 to 1,000 s. This is the pre-Lane-G baseline.
+  evidence store.** Before Lane G (`385c46bae`, `cohorts/C4-pre-lane-g/`): request 1,096.8 s, 902.5 s
+  and 941.5 s (median 941.5), gate 1,069.0, 877.9 and 910.7 s; window queue
+  5.1, 331.7 and 456.7 s; every worktree executed 35 actions and reused none
+  (F3; every gate also failed on F8, the first on F9). On the Lane G tree
+  (`3759f7415`, `MYLANG_VERIFICATION_SHARED_CACHE` naming one store): the
+  first worktree ran cold, 828.7 s request and 787.6 s gate; the second and
+  third reused 33 actions and executed 2, `tooling_unit` and
+  `text_scalar_unit`, whose keys bind test-binary bytes carrying the debug
+  compile directory (F15): 87.6 s and 79.3 s request, 58.2 s and 56.6 s
+  gate. Median 87.6 s request, 58.2 s gate (79.3 to 828.7); window queue
+  120.4, 0.1 and 70.3 s; all three gates passed, none voided. Snapshot work
+  per worktree: 29,096 files, 2.33 GB, 2,295 directories; metadata
+  observations 4,063,840 in the first and 986,425 in the others. The always
+  fresh guest and language members ran every test in every worktree (5,532
+  passed, 0 cached), because only the evidence store was shared: with the
+  native test store also named for the gate, `src/core/entry_path_test.zig:75`
+  panics (`cache.execution_key` is null when the second root's test is served
+  from the store), so every gate fails and publishes nothing (F18; two such
+  samples are under `cohorts/C4-native-stores/`). Row 7 measured the test
+  store directly: 1,495 of 1,589 tests served, the other 94 refused by
+  `shareable()` on purpose (F17).
+- **C5, ten agents at one commit, all ten complete verifications started at
+  once (Lane G tree, one shared evidence store, no window):** no
+  deduplication. Every one of the 35 cacheable groups executed in all ten
+  requests, plus the 11 always-fresh groups; nine passed and one failed on a
+  load-sensitive test (`durable_test`, SIGKILL recovery), which cannot be
+  replaced inside one concurrent run. Total wall 6,527 s for the ten (a cold
+  gate is 788 to 1,044 s here, so ten in sequence is about 8,400 s); gate
+  occupancy median 841 s (720 to 1,044); gate admission waits 0.4 to
+  5,218 s, the request windows 1,111 to 6,526 s. Each request looks up the
+  shared evidence before it queues (`scripts/verify_cache.py:1361`) and does
+  not look again after its gate admission (`:1428`), so nine of ten wait for
+  the slot and then repeat the first one's work (F19). Action keys differed
+  between agents only in the F15 pair.
 
 The warm floor moved by the fact/leak share (C1); a compiler edit no longer
-reruns guest tests (C2, C3); nothing is yet shared between worktrees (C4).
+reruns guest tests (C2, C3); a second worktree now reuses all but the F15
+actions from a published store (C4, 79 to 88 s against a 829 s cold gate),
+but concurrent identical requests still each execute everything (C5, F19).
 
 **F14 (Lane D).** `measurement_window_seconds` is part of
 `common.execution_limits` (`scripts/verify_cache.py`, the `common` dictionary
