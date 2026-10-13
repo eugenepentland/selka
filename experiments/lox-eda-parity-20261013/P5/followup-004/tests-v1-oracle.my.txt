@@ -1,0 +1,39 @@
+import kicad_sch_compose as m
+import kicad_sch_bank as bank
+
+
+public func test_p5_bind_membership_matches_owned_snapshot_oracle() -> bool:
+    mut binds: dict[str, m.Bind]? = Some({"C1": m.Bind(ref=b"U1", pad=b"P1"), "branch/C2": m.Bind(ref=b"U2", pad=b"P2")})
+    for ref in [b"C1", b"branch/C2", b"C2", b"missing", b""]:
+        for power in [b"SIG", b"VDD3V3", b"branch/VDDA", b""]:
+            assert m.gangable_with_binds(binds, ref, power) == old_gangable(binds, ref, power)
+    return True
+
+
+public func test_p5_bind_none_and_empty_preserve_supply_fallback() -> bool:
+    mut empty: dict[str, m.Bind]? = Some({})
+    for power in [b"SIG", b"VDD", b"branch/VDD3V3", b"GND", b""]:
+        assert m.gangable_with_binds(None, b"C1", power) == old_gangable(None, b"C1", power)
+        assert m.gangable_with_binds(empty, b"C1", power) == old_gangable(empty, b"C1", power)
+    return True
+
+
+public func test_p5_bind_large_payload_remains_independent_and_unchanged() -> bool:
+    mut payload = b"".join([for i in range(512) yield b"ABCDEFGH"])
+    mut binds: dict[str, m.Bind]? = Some({"C1": m.Bind(ref=payload.copy(), pad=payload.copy())})
+    assert m.gangable_with_binds(binds, b"C1", b"SIG")
+    assert not m.gangable_with_binds(binds, b"missing", b"SIG")
+    assert binds is not None
+    if binds is not None:
+        assert binds["C1"].ref == payload and binds["C1"].pad == payload
+        binds["C2"] = m.Bind(ref=b"NEXT", pad=b"2")
+        assert len(binds) == 2 and m.gangable_with_binds(binds, b"C2", b"SIG")
+    return True
+
+
+func old_gangable(binds: dict[str, m.Bind]?, ref: bytes, power: bytes) -> bool:
+    mut owned = binds.copy()
+    if owned is not None:
+        if str(ref) in owned:
+            return True
+    return bank.is_supply_net(power)

@@ -1,0 +1,24 @@
+{
+  "baseline": {
+    "production_module": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/.tmp/lox-eda-parity/P5/followup-004/baseline/kicad_sch_compose.my",
+    "production_prefix_sha256": "0555edd5a67e90526ffd98105fb2c40acdc1e5e32f113977b2c797dc434bc4d5",
+    "production_prefix_bytes": 26265,
+    "fixture": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/.tmp/lox-eda-parity/P5/followup-004/checked-baseline/kicad_sch_compose.my",
+    "fixture_sha256": "5e51aca02be51677fdf71e39ccabc4e2b549d5cfad3960e8e7950b743d29e269",
+    "test_appendix_sha256": "b4c085c2e84fa7d15c642c1fec518db7a861c74e7688b5e1c7895046098bc685",
+    "test_appendix_bytes": 1826,
+    "new_case_count": 3,
+    "private_api_unchanged": true
+  },
+  "candidate": {
+    "production_module": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/.tmp/lox-eda-parity/P5/followup-004/candidate/kicad_sch_compose.my",
+    "production_prefix_sha256": "43c613705338b483f2672eaaf7b22e5a7436ed7fdbf72ffe5a730a64e2d1ee51",
+    "production_prefix_bytes": 26373,
+    "fixture": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/.tmp/lox-eda-parity/P5/followup-004/checked-v3/kicad_sch_compose.my",
+    "fixture_sha256": "496b2e57c259601a875ac79c6cf8541b1793fd9d7ec8c109977c64c2f26613a9",
+    "test_appendix_sha256": "6f37984905a62efa5a4a64cd946151fa5a217527cd3423bface9df92a6b2af0b",
+    "test_appendix_bytes": 1694,
+    "new_case_count": 3,
+    "private_api_unchanged": true
+  }
+}

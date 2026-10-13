@@ -1,0 +1,19 @@
+build-slot: FIFO ticket 2982, position 8; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 2982, position 7; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 2982, position 7; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 2982, position 7; earlier build tickets must run first; waiting (180s so far)
+build-slot: FIFO ticket 2982, position 7; earlier build tickets must run first; waiting (240s so far)
+build-slot: FIFO ticket 2982, position 4; earlier build tickets must run first; waiting (300s so far)
+build-slot: build slot 2, FIFO ticket 2982 after 325s
+p5_followup_004_binds_tests.my:10:20: error[E_PRIVATE_SYMBOL]: declaration is private to its module
+              assert m.gangable_with_binds(binds, ref, power) == old_gangable(binds, ref, power)
+                     ^
+  note: kicad_sch_compose.my:261:6: declaration is here
+p5_followup_004_binds_tests.my:17:16: error[E_PRIVATE_SYMBOL]: declaration is private to its module
+          assert m.gangable_with_binds(None, b"C1", power) == old_gangable(None, b"C1", power)
+                 ^
+  note: kicad_sch_compose.my:261:6: declaration is here
+p5_followup_004_binds_tests.my:25:12: error[E_PRIVATE_SYMBOL]: declaration is private to its module
+      assert m.gangable_with_binds(binds, b"C1", b"SIG")
+             ^
+  note: kicad_sch_compose.my:261:6: declaration is here

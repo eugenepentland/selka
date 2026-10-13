@@ -1,0 +1,69 @@
+{
+  "compiler_sha256": "9bedb835438615d79ed8f2985352877a8c844eebeb74cd95a1d276332b6b0c6a",
+  "tests": {
+    "baseline": {
+      "canonical": {
+        "passed": 328,
+        "cached": 0,
+        "failed": 0,
+        "log": "full-tests-v2-baseline.log",
+        "log_sha256": "65f9c2adf396bda339830ce0ab1f93c99f5a0a8e4a747dab05a2dfbbbc221ec0",
+        "unique_test_names": 328
+      },
+      "contracts": {
+        "passed": 3,
+        "cached": 0,
+        "failed": 0,
+        "log": "focus-v4-baseline.log",
+        "log_sha256": "aacc3767301af1848a34bdcb89083e1fab7ed956274bbcaebe96e79cac797b81",
+        "unique_test_names": 3
+      }
+    },
+    "candidate": {
+      "canonical": {
+        "passed": 328,
+        "cached": 0,
+        "failed": 0,
+        "log": "full-tests-v2-candidate.log",
+        "log_sha256": "48be4aed980c91040f3d33cda54ea091e9d0aa31f68766b2829acdc82d341433",
+        "unique_test_names": 328
+      },
+      "contracts": {
+        "passed": 3,
+        "cached": 0,
+        "failed": 0,
+        "log": "focus-v4-candidate.log",
+        "log_sha256": "021df4850e1915a32425d4e3805a14eaedefaef13a4c529450e05cb70c9adc8d",
+        "unique_test_names": 3
+      }
+    }
+  },
+  "flags": [
+    "--release",
+    "--verify-facts",
+    "--experimental-zero-rc",
+    "--jobs",
+    "4",
+    "--max-steps",
+    "1000000000",
+    "--max-frames",
+    "40000",
+    "--max-memory",
+    "2G",
+    "--timeout-ms",
+    "120000",
+    "--json"
+  ],
+  "environment": {
+    "MYL_CORE_LEAKCHECK": "1"
+  },
+  "shared_admission": "scripts/build-slot.sh build",
+  "logical_inventory_per_variant": 331,
+  "canonical_app_cases": 328,
+  "explicit_private_contract_cases": 3,
+  "full_source_manifest_sha256": "1f055067bbb859daa711c91cca353fee63b41d4a856cde895b17b1799523eae5",
+  "explicit_fixture_manifests_sha256": "76bf2d053bb90cd6ab6239b425b39b86a3f2c5dc39a8ea54f25d6bb54073d8ee",
+  "matched_comparison_sha256": "432a809429f2afff2b121cbd1123ad2c3cab9fdf2466b433dc2ceaefa15cabd2",
+  "accepted_change": "transient dict snapshot removed; full source003/five-mode qualification remains coordinator work",
+  "timing": "held; no admission requested"
+}

@@ -1,0 +1,16 @@
+diff --git a/experiments/lox-eda-parity-20261013/source/eda/kicad_sch_compose.my b/experiments/lox-eda-parity-20261013/source/eda/kicad_sch_compose.my
+index d4fb954c9..9105a7ac9 100644
+--- a/experiments/lox-eda-parity-20261013/source/eda/kicad_sch_compose.my
++++ b/experiments/lox-eda-parity-20261013/source/eda/kicad_sch_compose.my
+@@ -255,7 +255,10 @@ func candidate_of(self: State, it: Placeable, i: int) -> bank.Candidate?:
+ 
+ 
+ func gangable(self: State, ref: bytes, power: bytes) -> bool:
+-    mut binds = self.req.facts.binds.copy()
++    return gangable_with_binds(self.req.facts.binds, ref, power)
++
++
++func gangable_with_binds(binds: dict[str, Bind]?, ref: bytes, power: bytes) -> bool:
+     if binds is not None:
+         if strs.text(ref) in binds:
+             return True

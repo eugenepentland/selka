@@ -1,0 +1,11 @@
+{
+  "source_commit": "6ebbe76e46dcd52bbcc88ff3e93489e368beed9b",
+  "source_modules": [
+    "experiments/lox-eda-parity-20261013/source/eda/kicad_sch_compose.my"
+  ],
+  "source_sha256": "43c613705338b483f2672eaaf7b22e5a7436ed7fdbf72ffe5a730a64e2d1ee51",
+  "production_patch_sha256": "79cc29b499747b7586a998ef52202143c462336ffd4d5dbbaed186ee01a06b54",
+  "guardian_checks_passed": 88,
+  "guardian_log_sha256": "ea991771c4dcaf6036c69ebeeeb93a39627d0d6fb60ef4152106c77b03f8293c",
+  "no_feedback_or_push": true
+}

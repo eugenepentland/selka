@@ -1,0 +1,68 @@
+{
+  "status": "held; no queue or native timing guest executed; explicit coordinator release required after current sweep/report/pins",
+  "qualification": "both variants passed canonical328 + explicit3,0 failures/cached, qualified quotas",
+  "cases": [
+    {
+      "case": "rds3+flat",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/scripts/build-slot.sh",
+        "timing",
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/measure.py",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/experiments/lox-eda-parity-20261013/P5/followup-004/timing-rds3+flat.json",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/experiments/lox-eda-parity-20261013/P5/followup-004/timing-rds3+flat-result.json",
+        "--cpu",
+        "8",
+        "--rounds",
+        "9",
+        "--warmups",
+        "2",
+        "--rss-rounds",
+        "0",
+        "--zig-factor",
+        "3",
+        "--calibration-rounds",
+        "5",
+        "--calibration-warmups",
+        "2",
+        "--guest-timeout",
+        "120"
+      ],
+      "spec_sha256": "84fc926a45a9878d31c1dbc78bdc8e4585acdc8a93a9c2970beb051665d014a9"
+    },
+    {
+      "case": "rds3",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/scripts/build-slot.sh",
+        "timing",
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/measure.py",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/experiments/lox-eda-parity-20261013/P5/followup-004/timing-rds3.json",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/experiments/lox-eda-parity-20261013/P5/followup-004/timing-rds3-result.json",
+        "--cpu",
+        "8",
+        "--rounds",
+        "9",
+        "--warmups",
+        "2",
+        "--rss-rounds",
+        "0",
+        "--zig-factor",
+        "3",
+        "--calibration-rounds",
+        "5",
+        "--calibration-warmups",
+        "2",
+        "--guest-timeout",
+        "120"
+      ],
+      "spec_sha256": "a622c1bc241a55207150054ae52a267486df65023d8844f1247ded36fa7afd26"
+    }
+  ],
+  "pins_sha256": "397bac0037d05a10aa4069e7b6d3d602724272c04c1312899eec7a8c33a262e0",
+  "settings": "CPU8;2warmups;9 alternating paired rounds;fresh5-sample Zig median \u00d73 cutoff;120s absolute ceiling;0RSS",
+  "admission": "coordinator must wrap each case in bounded <=60s lease with owned-guest cleanup, no nested admission",
+  "qualification_sha256": "8f8e20b7548ca76b72c94c81c789c756e1341e1ab8e096b1ac805d2e6cf23e41"
+}

@@ -1,0 +1,8 @@
+{
+  "patch_sha256": "79cc29b499747b7586a998ef52202143c462336ffd4d5dbbaed186ee01a06b54",
+  "source_sha256": "43c613705338b483f2672eaaf7b22e5a7436ed7fdbf72ffe5a730a64e2d1ee51",
+  "production_modules": [
+    "kicad_sch_compose.my"
+  ],
+  "matched_comparison_sha256": "432a809429f2afff2b121cbd1123ad2c3cab9fdf2466b433dc2ceaefa15cabd2"
+}

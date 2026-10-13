@@ -1,0 +1,32 @@
+{
+  "baseline": {
+    "llvm_sha256": "1ea938db3768dce1601a5d4fa3566d29400a9bac06a817649b2d7c2817f6ac0d",
+    "functions": {
+      "gangable": {
+        "line": 583851,
+        "sha256": "7e596e4cb6783de4b95c68455c11ff69f348969df220db7a7cb1d5fdb9be49a3",
+        "copy_or_helper_calls": [
+          "%v14 = notail call fastcc ptr @myl_core_owned_copy_330(ptr %v13), !dbg !1022594"
+        ]
+      }
+    }
+  },
+  "candidate": {
+    "llvm_sha256": "20eb2cc384efcd1a2790f7cb4c49e36e7df55c9a78887e849edea1acc25838a5",
+    "functions": {
+      "gangable": {
+        "line": 583851,
+        "sha256": "ad0e4ae2895ecd1d45b798b8a739378a9166fabcc415f157bbe14580a2e240d0",
+        "copy_or_helper_calls": [
+          "%v6 = notail call fastcc i1 @\"my.kicad_sch_compose::gangable_with_binds\"(ptr %v5, ptr %p1, ptr %p2), !dbg !1022594"
+        ]
+      },
+      "gangable_with_binds": {
+        "line": 590050,
+        "sha256": "ac4054396e3bed9b8f0c9793aecee1f60b1e23a6037afb89255c8cf1c72e7c2d",
+        "copy_or_helper_calls": []
+      }
+    }
+  },
+  "interpretation": "Static copy-call removal demonstrated; current C2 dynamic savings must come from matched full-input counters. No CPU-caller or timing attribution."
+}

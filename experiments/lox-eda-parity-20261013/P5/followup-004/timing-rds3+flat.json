@@ -1,0 +1,73 @@
+{
+  "cell": "P5-gangable-diagnostic/rds3+flat",
+  "cwd": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore",
+  "arms": {
+    "zig-fast": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-zig-fast",
+      "--model",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/rds3+flat/model.sexp",
+      "--project-dir",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+      "--out-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/.tmp/lox-eda-parity/P5/followup-004/timing-outputs/rds3+flat",
+      "--flat"
+    ],
+    "mylang-c2": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/.tmp/lox-eda-parity/P5/followup-004/untimed-baseline",
+      "--model",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/rds3+flat/model.sexp",
+      "--project-dir",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+      "--out-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/.tmp/lox-eda-parity/P5/followup-004/timing-outputs/rds3+flat",
+      "--flat"
+    ],
+    "mylang-borrow-binds": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/.tmp/lox-eda-parity/P5/followup-004/untimed-candidate",
+      "--model",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/rds3+flat/model.sexp",
+      "--project-dir",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+      "--out-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/.tmp/lox-eda-parity/P5/followup-004/timing-outputs/rds3+flat",
+      "--flat"
+    ]
+  },
+  "oracle": "zig-fast",
+  "relative_timeout_arms": [
+    "mylang-c2",
+    "mylang-borrow-binds"
+  ],
+  "files": [
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/rds3+flat/model.sexp"
+  ],
+  "out_dir": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/.tmp/lox-eda-parity/P5/followup-004/timing-outputs/rds3+flat",
+  "golden_dir": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/rds3+flat/expected",
+  "identity_dirs": [
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/rds3+flat/expected"
+  ],
+  "expected_output": {
+    "stdout_sha256": "8252e32fd878510b55978b452ddb5813882028d0291406d0fb8f15c2e2f85283",
+    "stderr_sha256": "57a1b67ae8ea6141c8ca3f134146fe8f0fa6078880f9c9809db3cd5c532c5532",
+    "golden_tree": {
+      "rds3.kicad_sch": "75cfc2d50ac3006dfa76292442dd295b3032625c4b155b16805757bdcf699ca2",
+      "netlisp.kicad_sym": "6e048a0dfba96cbc9a26b09d44b2c19ae8dadb8ff40dda9ff92f3d9d3a3ca34e",
+      "rds3.kicad_pro": "64e8a5183c9ef167b76251655a7f5f4d7ec899186c2e6c6c9ac058d10b8ec362",
+      "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+      "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+      "rds3.net": "f6bd49787a8945a8581055517c2ba4267b90d4e98298c57dbd345608d8295868"
+    }
+  },
+  "oracle_provenance": {
+    "receipt": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/runtime/eda-rds3+flat.chunk01.json",
+    "sha256": "00e3059e3ad67ef7225ca86b2ef71a72fa8c1e294591cd7f31bead016d9d937a",
+    "arm": "mylang-zero-rc",
+    "round": 0
+  },
+  "provenance": {
+    "compiler_sha256": "9bedb835438615d79ed8f2985352877a8c844eebeb74cd95a1d276332b6b0c6a",
+    "single_source_difference": "kicad_sch_compose.my: gangable readonly optional bindings helper",
+    "scope": "two-case diagnostic; no full EDA parity claim"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "production_prefix_sha256": "43c613705338b483f2672eaaf7b22e5a7436ed7fdbf72ffe5a730a64e2d1ee51",
+  "matches_candidate_compose": true,
+  "test_fragment_sha256": "bf0218f67c0f8318c382abe7d50d74d40f3154b7c5b1e4a27f7bd4adf8b75462",
+  "checked_module_sha256": "496b2e57c259601a875ac79c6cf8541b1793fd9d7ec8c109977c64c2f26613a9",
+  "test_method": "append three public test functions to exact private production module in fresh checked scratch; no production visibility change"
+}

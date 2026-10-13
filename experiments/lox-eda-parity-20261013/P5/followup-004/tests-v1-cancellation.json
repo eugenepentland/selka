@@ -1,0 +1,5 @@
+{
+  "wrapper_pid": 613870,
+  "reason": "test oracle used a generic str conversion; change to exact original strs.text before native admission",
+  "native_admitted": false
+}
