@@ -355,7 +355,7 @@ test "DIAG-ORACLE-1 unknown list methods name the accepted spellings" {
         \\    mut items = [1, 2]
         \\    items.appnd(3)
         \\    return 0
-    , "E_LIST_METHOD", "unknown method for a int[] receiver; accepted methods: append, clear, copy, extend, index, insert, pop, remove, reverse, snapshot, sort");
+    , "E_LIST_METHOD", "unknown method for a int[] receiver; accepted methods: append, clear, copy, exchange, extend, index, insert, pop, remove, reverse, snapshot, sort");
 }
 
 /// Assert the first diagnostic's code and the accepted spelling it carries under
