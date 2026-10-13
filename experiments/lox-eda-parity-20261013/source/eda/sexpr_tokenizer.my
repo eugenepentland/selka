@@ -26,6 +26,14 @@ public record Token:
     span: ast.Span
 
 
+# Scalar scanner metadata used by the parser. No source storage escapes.
+public record OffsetToken:
+    tag: TokenTag
+    start: int
+    end: int
+    span: ast.Span
+
+
 # One SI scale suffix: the letter (as a byte) and its multiplier. `bare` means
 # the letter is a scale even with no unit letter following (`m` is not).
 public record SiScale:
@@ -135,22 +143,22 @@ func is_operator_char(c: int) -> bool:
     return c == ord("+") or c == ord("-") or c == ord("/") or c == ord("%") or c == ord(">") or c == ord("<") or c == ord("=") or c == ord("!")
 
 
-func is_unit_letter(c: int) -> bool:
+func is_unit_letter(c: int) -> bool noalloc:
     return c == ord("V") or c == ord("A") or c == ord("F") or c == ord("H") or c == ord("R")
 
 
 # Scale letters that stand on their own (`4.7k`).
-func is_scale_letter(c: int) -> bool:
+func is_scale_letter(c: int) -> bool noalloc:
     return c == ord("k") or c == ord("M") or c == ord("G") or c == ord("u") or c == ord("n") or c == ord("p")
 
 
 # Scale letters that are only a scale when a unit letter follows (`10mA`).
-func is_unit_required_scale(c: int) -> bool:
+func is_unit_required_scale(c: int) -> bool noalloc:
     return c == ord("m")
 
 
-func make_token(src: bytes, tag: TokenTag, start: int, end: int, s: ast.Span) -> Token:
-    return Token(tag=tag, text=src[start:end], span=s)
+func make_token(tag: TokenTag, start: int, end: int, s: ast.Span) -> OffsetToken:
+    return OffsetToken(tag=tag, start=start, end=end, span=s)
 
 
 # Length (1 or 2) of an SI value suffix starting at the cursor, or 0 when the
@@ -178,7 +186,7 @@ func si_suffix_len(src: bytes, t: Cursor) -> int:
     return 0
 
 
-func read_string(src: bytes, mut t: Cursor, s: ast.Span) -> Result[Token, LexError]:
+func read_string(src: bytes, mut t: Cursor, s: ast.Span) -> Result[OffsetToken, LexError]:
     advance(src, mut t)
     mut start = t.pos
     while peek(src, t) != -1:
@@ -190,13 +198,13 @@ func read_string(src: bytes, mut t: Cursor, s: ast.Span) -> Result[Token, LexErr
         if ch == ord("\""):
             mut end = t.pos
             advance(src, mut t)
-            return Ok(make_token(src, TokenTag.string, start, end, s))
+            return Ok(make_token(TokenTag.string, start, end, s))
         advance(src, mut t)
     t.error_span = s
     return Err(LexError.unterminated_string)
 
 
-func read_number(src: bytes, mut t: Cursor, s: ast.Span) -> Token:
+func read_number(src: bytes, mut t: Cursor, s: ast.Span) -> OffsetToken:
     mut start = t.pos
     if peek(src, t) == ord("-"):
         advance(src, mut t)
@@ -214,67 +222,77 @@ func read_number(src: bytes, mut t: Cursor, s: ast.Span) -> Token:
         if ch2 == ord("m") and not is_atom_continue(peek_at(src, t, 2)):
             advance(src, mut t)
             advance(src, mut t)
-            return make_token(src, TokenTag.unit_val, start, num_end, s)
+            return make_token(TokenTag.unit_val, start, num_end, s)
         if ch2 == ord("i"):
             mut ch3 = peek_at(src, t, 2)
             if ch3 == ord("l") and not is_atom_continue(peek_at(src, t, 3)):
                 advance(src, mut t)
                 advance(src, mut t)
                 advance(src, mut t)
-                return make_token(src, TokenTag.unit_val, start, num_end, s)
+                return make_token(TokenTag.unit_val, start, num_end, s)
     mut suffix_len = si_suffix_len(src, t)
     if suffix_len > 0:
         for _ in range(suffix_len):
             advance(src, mut t)
-        return make_token(src, TokenTag.si_val, start, t.pos, s)
+        return make_token(TokenTag.si_val, start, t.pos, s)
     if peek(src, t) == PERCENT_SIGN and not is_atom_continue(peek_at(src, t, 1)):
         advance(src, mut t)
-        return make_token(src, TokenTag.si_val, start, t.pos, s)
+        return make_token(TokenTag.si_val, start, t.pos, s)
     if is_atom_continue(peek(src, t)):
         while is_atom_continue(peek(src, t)):
             advance(src, mut t)
-        return make_token(src, TokenTag.atom, start, t.pos, s)
+        return make_token(TokenTag.atom, start, t.pos, s)
     if is_float:
-        return make_token(src, TokenTag.float, start, t.pos, s)
-    return make_token(src, TokenTag.int, start, t.pos, s)
+        return make_token(TokenTag.float, start, t.pos, s)
+    return make_token(TokenTag.int, start, t.pos, s)
 
 
-func read_atom(src: bytes, mut t: Cursor, s: ast.Span) -> Token:
+func read_atom(src: bytes, mut t: Cursor, s: ast.Span) -> OffsetToken:
     mut start = t.pos
     while is_atom_continue(peek(src, t)):
         advance(src, mut t)
-    return make_token(src, TokenTag.atom, start, t.pos, s)
+    return make_token(TokenTag.atom, start, t.pos, s)
 
 
-func read_operator(src: bytes, mut t: Cursor, s: ast.Span) -> Token:
+func read_operator(src: bytes, mut t: Cursor, s: ast.Span) -> OffsetToken:
     mut start = t.pos
     advance(src, mut t)
     if peek(src, t) == ord("="):
         advance(src, mut t)
-    return make_token(src, TokenTag.atom, start, t.pos, s)
+    return make_token(TokenTag.atom, start, t.pos, s)
 
 
 # The next token, or a LexError (with `t.cur.error_span` set) for a bad
 # character or an unterminated string.
 public func next(mut t: Tokenizer) -> Result[Token, LexError]:
     mut cur = t.cur
-    mut r = next_in(t.source, mut cur)
+    mut result = next_offset(t.source, mut cur)
     t.cur = cur
-    return r
+    match result:
+        case Ok(token):
+            return Ok(Token(tag=token.tag, text=t.source[token.start:token.end], span=token.span))
+        case Err(err):
+            return Err(err)
 
 
-func next_in(src: bytes, mut t: Cursor) -> Result[Token, LexError]:
+# Shared scalar scanner for parser internals. The source remains caller-owned;
+# the returned metadata contains only offsets and classification.
+public func next_offset(src: bytes, mut cur: Cursor) -> Result[OffsetToken, LexError] noalloc:
+    return next_in(src, mut cur)
+
+
+func next_in(src: bytes, mut t: Cursor) -> Result[OffsetToken, LexError]:
     skip_whitespace_and_comments(src, mut t)
     mut s = span_here(t)
     mut c = peek(src, t)
     if c < 0:
-        return Ok(Token(tag=TokenTag.eof, text=b"", span=s))
+        return Ok(OffsetToken(tag=TokenTag.eof, start=t.pos, end=t.pos, span=s))
     if c == ord("("):
         advance(src, mut t)
-        return Ok(make_token(src, TokenTag.lparen, s.offset, t.pos, s))
+        return Ok(make_token(TokenTag.lparen, s.offset, t.pos, s))
     if c == ord(")"):
         advance(src, mut t)
-        return Ok(make_token(src, TokenTag.rparen, s.offset, t.pos, s))
+        return Ok(make_token(TokenTag.rparen, s.offset, t.pos, s))
     if c == ord("\""):
         return read_string(src, mut t, s)
     if is_digit(c) or (c == ord("-") and is_digit(peek_at(src, t, 1))):
