@@ -281,13 +281,16 @@ fn materializationMetrics(stages: *stage_metrics.Report, lazy: ?*lowering_cache.
     }
 }
 
-/// Report the new core's refusal of a construct at `refusal`, as text or as a
-/// `diagnostic-v1` record.
 /// Entry metadata shared by ordinary builds and cost's identical LLVM emission.
-pub fn unitFor(a: std.mem.Allocator, checked: frontend.Checked, absolute: []const u8, single: bool) std.mem.Allocator.Error!Unit {
+/// The unit's `source_path` never names the checkout: a header-less `entry` file
+/// goes by its basename, its path relative to its own directory (the root its
+/// receipts key it under), and a module-headed entry by its module-root-relative
+/// path (`shownPath`), so the program's bytes do not depend on where the tree sits
+/// (ENTRY-PATH-1).
+pub fn unitFor(a: std.mem.Allocator, checked: frontend.Checked, entry: []const u8, single: bool) std.mem.Allocator.Error!Unit {
     return .{
         .src = checked.src,
-        .source_path = if (single) absolute else shownPath(checked.src, checked.program),
+        .source_path = if (single) std.fs.path.basename(entry) else shownPath(checked.src, checked.program),
         .main = .{
             .parameters = try mainParameters(a, checked.program),
             .result = mainResult(checked.program),
@@ -297,6 +300,8 @@ pub fn unitFor(a: std.mem.Allocator, checked: frontend.Checked, absolute: []cons
     };
 }
 
+/// Report the new core's refusal of a construct at `refusal`, as text or as a
+/// `diagnostic-v1` record.
 fn refused(allocator: std.mem.Allocator, src: language.source.Source, refusal: build_ir.Refusal, diagnostics: Diagnostics, report: *std.ArrayList(u8)) Error!void {
     const message = try std.fmt.allocPrint(allocator, "the new core does not support {s} yet", .{refusal.reason});
     if (diagnostics == .json) {
@@ -363,8 +368,8 @@ fn cacheReport(allocator: std.mem.Allocator, form: CacheReport, outcome: ?driver
 pub const Unit = struct {
     /// The merged source trap positions are located in.
     src: language.source.Source,
-    /// The path traps and error traces report: the entry file's, as the old core shows it
-    /// (`shownPath`).
+    /// The entry file's path as LLVM's `source_filename` and the entry's `DIFile`
+    /// name it: root-relative, never absolute (`unitFor`, ENTRY-PATH-1).
     source_path: []const u8,
     /// The entry function's parameter names (which pick stdout or stderr for a
     /// `Stream`) and, when it returns a `Result`, its case tags.

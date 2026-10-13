@@ -288,11 +288,12 @@ The shared program key (`core-shared-program-v2`, SHARED-PROGRAM-2) binds the
 exact ordered object bytes and qualified toolchain/link settings, including
 `SOURCE_DATE_EPOCH` and `ZERO_AR_DATE`, and no longer the compiler identity: the
 objects determine the bytes and the store's byte verification guards the rest. Existing logical module paths can produce identical objects
-across roots. Absolute source provenance may change their bytes and miss: an
-entry built without a project root (no `mylang.json`) names its absolute path in
-the entry unit's `source_filename` and debug information, so two checkouts link
-different programs from it;
-source paths and literal strings are never rewritten to manufacture a hit.
+across roots. An entry built without a project root (no `mylang.json`) names
+itself by its basename in the entry unit's `source_filename` and debug
+information (ENTRY-PATH-1), so two checkouts building it by the same relative
+spelling link identical programs. Trap sites still carry the path the command
+was given, so an absolute spelling on the command line changes the bytes and
+misses; source paths and literal strings are never rewritten to manufacture a hit.
 Foreign `--link` inputs and unqualified tools do not use shared programs.
 
 With an empty private cache, a hit still performs frontend validation, lowering

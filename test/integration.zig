@@ -4817,7 +4817,7 @@ fn wideContextModel(allocator: std.mem.Allocator, extra: usize) ![]u8 {
     while (line < extra) : (line += 1) {
         try source.appendSlice(allocator, "    total = total + 1\n");
     }
-    try source.appendSlice(allocator, "    return check(total)\n\n\npublic def entry_value() -> int:\n    return 1\n\n\ndef check(value: int) -> int:\n    return value + 1\n");
+    try source.appendSlice(allocator, "    return check(total)\n\n\npublic func entry_value() -> int:\n    return 1\n\n\nfunc check(value: int) -> int:\n    return value + 1\n");
     return source.toOwnedSlice(allocator);
 }
 
@@ -4991,7 +4991,13 @@ test "CLI context keeps emitted bytes within the requested budget" {
     defer testing.allocator.free(model);
     const path = try writeContextProject(&temp, model);
     defer testing.allocator.free(path);
-    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compilerPath(), "context", path, "--symbol", "model::validate", "--context-bytes=1200" } });
+    // The response repeats the entry as given (`entry` and the continuation), so
+    // name it relative to the project: an absolute temporary path would make the
+    // budget's headroom depend on where the checkout sits.
+    const root = std.fs.path.dirname(path).?;
+    const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compilerPath(), testing.allocator);
+    defer testing.allocator.free(compiler);
+    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler, "context", "main.my", "--symbol", "model::validate", "--context-bytes=1200" }, .cwd = .{ .path = root } });
     defer testing.allocator.free(outcome.stdout);
     defer testing.allocator.free(outcome.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
@@ -5005,6 +5011,7 @@ test "CLI context keeps emitted bytes within the requested budget" {
     try testing.expect((try contextString(answer.value, "status")).len > 0);
     const omissions = try contextArray(answer.value, "omissions");
     try testing.expect(omissions.len > 0);
+    try testing.expectEqualStrings("main.my", try contextString(answer.value, "entry"));
     try testing.expect((try contextString(answer.value, "continuation")).len > 0);
 }
 
