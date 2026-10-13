@@ -1,0 +1,10 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+  "compiler_sha256": "2dcba1cb1a98846bb8c1319575da1b3564e60af70162e195c2fbb6ec3af0f329",
+  "baseline": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/eda/zero-rc",
+  "baseline_sha256": "1a7967a2fb1d79d2a01feb42cd5b36ea8bc677bc937f1994358a76a0f3c3a100",
+  "historical_build_receipt": "experiments/lox-eda-improvements-20261012/build/eda/build-receipt.json",
+  "historical_build_receipt_sha256": "67aaa3e1efe1b56a6bc939cac70f46b44b631f6f47143c679c925550de150419",
+  "label": "diagnostic source-copy removal; no performance claims",
+  "historical_binary_identity_verified": true
+}

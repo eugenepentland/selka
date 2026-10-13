@@ -350,11 +350,14 @@ public func pin_text_size(u: shape_mod.ShapeUnit, i: int) -> int:
 
 public func edge_spacing(u: shape_mod.ShapeUnit, i: int) -> int?:
     mut result: int? = None
+    if len(u.pins) == 0:
+        return result
+    mut side = u.pins[i].side
+    mut origin = along_edge(u.pins[i], side)
     for k in range(len(u.pins)):
-        mut p = u.pins[k].copy()
-        if k == i or p.side != u.pins[i].side:
+        if k == i or u.pins[k].side != side:
             continue
-        mut d = abs(along_edge(p, p.side) - along_edge(u.pins[i], p.side))
+        mut d = abs(along_edge(u.pins[k], side) - origin)
         if d == 0:
             continue
         result = Some(min(result.unwrap_or(d), d))

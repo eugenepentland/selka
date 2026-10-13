@@ -1,0 +1,44 @@
+{
+  "llvm_path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/eda/zero-rc.ll",
+  "llvm_sha256": "6d022e29f80874405ab0c219fbc99a81d07bdab440635bb94816fcbec7ea7ac7",
+  "direct_copy_calls": {
+    "kicad_sch_compose::add_wire": [
+      "%v4 = call ptr @myl_core_owned_octets_copy(ptr %p1), !dbg !1019446",
+      "%v5 = call ptr @myl_core_list_copy(ptr %p2, i64 16)",
+      "%v11 = call ptr @myl_core_list_copy(ptr %v10, i64 32)"
+    ],
+    "kicad_sch_compose::join_sites": [
+      "%v200 = call ptr @myl_core_list_copy(ptr %v199, i64 16)",
+      "%v202 = call ptr @myl_core_list_copy(ptr %v201, i64 32)",
+      "%v204 = call ptr @myl_core_list_copy(ptr %v203, i64 32)",
+      "%v91 = call ptr @myl_core_owned_octets_copy(ptr %v90), !dbg !1019538",
+      "%v93 = call ptr @myl_core_list_copy(ptr %v92, i64 16)",
+      "%v99 = call ptr @myl_core_list_copy(ptr %v98, i64 32)"
+    ],
+    "kicad_sch_compose::pad_of": [
+      "%v16 = call ptr @myl_core_owned_octets_copy(ptr %v15), !dbg !1021791",
+      "%v18 = call ptr @myl_core_owned_octets_copy(ptr %v17), !dbg !1021793",
+      "%v20 = call ptr @myl_core_owned_octets_copy(ptr %v19), !dbg !1021795",
+      "%v22 = notail call fastcc ptr @myl_core_owned_copy_25(ptr %v21), !dbg !1021797",
+      "%v24 = call ptr @myl_core_owned_octets_copy(ptr %v23), !dbg !1021799",
+      "%v32 = notail call fastcc ptr @myl_core_owned_copy_27(ptr %v31), !dbg !1021801",
+      "%v78 = call ptr @myl_core_owned_octets_copy(ptr %v77), !dbg !1021809"
+    ],
+    "kicad_sch_compose::obstacles": [
+      "%v2 = call ptr @myl_core_list_copy(ptr %v1, i64 16)",
+      "%v4 = call ptr @myl_core_list_copy(ptr %v3, i64 32)",
+      "%v6 = call ptr @myl_core_list_copy(ptr %v5, i64 32)"
+    ],
+    "kicad_sch_emit::edge_spacing": [
+      "%v25 = call ptr @myl_core_owned_octets_copy(ptr %v24), !dbg !1020379",
+      "%v27 = call ptr @myl_core_owned_octets_copy(ptr %v26), !dbg !1020381",
+      "%v174 = call ptr @myl_core_owned_octets_copy(ptr %v173), !dbg !1020409",
+      "%v176 = call ptr @myl_core_owned_octets_copy(ptr %v175), !dbg !1020411",
+      "%v306 = call ptr @myl_core_owned_octets_copy(ptr %v305), !dbg !1020441",
+      "%v308 = call ptr @myl_core_owned_octets_copy(ptr %v307), !dbg !1020443",
+      "%v437 = call ptr @myl_core_owned_octets_copy(ptr %v436), !dbg !1020469",
+      "%v439 = call ptr @myl_core_owned_octets_copy(ptr %v438), !dbg !1020471"
+    ]
+  },
+  "label": "static calls; not runtime attribution"
+}

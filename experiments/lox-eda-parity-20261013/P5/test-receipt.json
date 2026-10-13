@@ -1,0 +1,31 @@
+{
+  "status": "passed",
+  "completed": [
+    {
+      "label": "emit",
+      "passed": 8,
+      "failed": 0,
+      "returncode": 0,
+      "log": "experiments/lox-eda-parity-20261013/P5/emit-tests.log",
+      "log_sha256": "32191cc0deb6200daa075e24a24a35cf595e5a14d62dc5c17e4b91c0429847e2"
+    },
+    {
+      "label": "wire",
+      "passed": 6,
+      "failed": 0,
+      "returncode": 0,
+      "log": "experiments/lox-eda-parity-20261013/P5/wire-tests.log",
+      "log_sha256": "0e96b7ecae3e3f4aa341f6847cc800cf23e38bed508bdab34a13928a3f7591c8"
+    },
+    {
+      "label": "compose",
+      "passed": 2,
+      "failed": 0,
+      "returncode": 0,
+      "log": "experiments/lox-eda-parity-20261013/P5/compose-tests.log",
+      "log_sha256": "62886f0996074289026beefdd8912c47e3aa57235799e30c46c56465f389db52"
+    }
+  ],
+  "source_manifest_sha256": "878f5477974e673493afc496fe1c7cfce0e709398ab8f6f157ad627d1c248efd",
+  "compiler_identity": "identity.json"
+}

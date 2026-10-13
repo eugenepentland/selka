@@ -1,0 +1,60 @@
+[
+  {
+    "label": "emit",
+    "command": [
+      "scripts/build-slot.sh",
+      "build",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+      "test",
+      "experiments/lox-eda-parity-20261013/source/eda/kicad_sch_emit_test.my",
+      "--release",
+      "--verify-facts",
+      "--experimental-zero-rc",
+      "--cache-dir",
+      ".tmp/lox-eda-parity/P5/test-cache",
+      "--json"
+    ],
+    "status": "passed",
+    "returncode": 0
+  },
+  {
+    "label": "compose",
+    "command": [
+      "scripts/build-slot.sh",
+      "build",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+      "test",
+      "experiments/lox-eda-parity-20261013/source/eda/kicad_sch_compose_test.my",
+      "--release",
+      "--verify-facts",
+      "--experimental-zero-rc",
+      "--cache-dir",
+      ".tmp/lox-eda-parity/P5/compose-test-cache",
+      "--json"
+    ],
+    "status": "passed",
+    "initial_returncode": 1,
+    "environment": {
+      "MYL_CORE_LEAKCHECK": "1"
+    },
+    "returncode": 0
+  },
+  {
+    "label": "wire",
+    "command": [
+      "scripts/build-slot.sh",
+      "build",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+      "test",
+      "experiments/lox-eda-parity-20261013/source/eda/kicad_sch_wire_test.my",
+      "--release",
+      "--verify-facts",
+      "--experimental-zero-rc",
+      "--cache-dir",
+      ".tmp/lox-eda-parity/P5/wire-test-cache",
+      "--json"
+    ],
+    "status": "passed",
+    "returncode": 0
+  }
+]

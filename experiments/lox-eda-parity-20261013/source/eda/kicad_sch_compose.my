@@ -374,9 +374,7 @@ func bank_terminals(mut self: State, f: bank.Frame, b: bank.Bank, ic: bytes):
 
 func add_wire(mut self: State, key: bytes, pts: wire.Point[]):
     self.paths.append(wire.Path(key=key.copy(), pts=pts.copy()))
-    mut segs = self.segs.copy()
-    wire.append_segs(mut segs, pts)
-    self.segs = segs
+    wire.append_segs(mut self.segs, pts)
     self.stops.extend(pts)
 
 
@@ -573,22 +571,16 @@ func join_run(mut self: State, mut sites: Site[], run: int[]):
 
 func join_sites(mut self: State, mut sites: Site[], ai: int, si: int) -> bool:
     mut key = wire_key(self, sites[ai], sites[si])
-    mut path = wire.route(sites[ai].end, sites[si].end, obstacles(self), key)
+    mut path = wire.route_parts(sites[ai].end, sites[si].end, self.stops, self.bodies, self.segs, key)
     if path is None:
         return False
     self.paths.append(path.copy())
-    mut segs = self.segs.copy()
-    wire.append_segs(mut segs, path.pts)
-    self.segs = segs
+    wire.append_segs(mut self.segs, path.pts)
     self.no_label.append(sites[si].end.at)
     if sites[ai].role == Role.free:
         sites[ai].role = Role.anchor
     sites[si].role = Role.spoke
     return True
-
-
-func obstacles(self: State) -> wire.Field:
-    return wire.Field(stops=self.stops.copy(), bodies=self.bodies.copy(), segs=self.segs.copy())
 
 
 func wire_key(self: State, from_: Site, to: Site) -> bytes:
@@ -600,8 +592,9 @@ func ref_of(self: State, s: Site) -> bytes:
 
 
 func pad_of(self: State, s: Site) -> bytes:
-    mut p = self.parts[s.part].copy()
-    return self.req.shapes[p.shape].units[p.unit].pins[s.pin].pad.copy()
+    mut shape = self.parts[s.part].shape
+    mut unit = self.parts[s.part].unit
+    return self.req.shapes[shape].units[unit].pins[s.pin].pad.copy()
 
 
 func rail_pin(mut self: State, net: bytes, x: int, y: int, angle: int):

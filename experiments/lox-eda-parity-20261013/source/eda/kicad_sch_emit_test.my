@@ -82,6 +82,20 @@ public func test_kicad_sch_pin_text_shrinks_on_a_fine_pitch_edge_and_stays_full_
     return True
 
 
+# test "kicad-sch: edge spacing skips duplicate positions and uses the edge axis"
+public func test_p5_edge_spacing_duplicate_positions_and_axis() -> bool:
+    mut empty = shape.ShapeUnit(number=1, title=b"", pins=[], half_w=0, half_h=0, graphics=[], stubs=[])
+    assert m.edge_spacing(empty, 0) is None
+    mut pins = [shape.Pin(pad=b"1", name=b"A", side=shape.Side.top, x=-127, y=999), shape.Pin(pad=b"2", name=b"B", side=shape.Side.top, x=-127, y=0), shape.Pin(pad=b"3", name=b"C", side=shape.Side.top, x=127, y=999), shape.Pin(pad=b"4", name=b"D", side=shape.Side.bottom, x=-126, y=999)]
+    mut unit = shape.ShapeUnit(number=1, title=b"", pins=pins, half_w=0, half_h=0, graphics=[], stubs=[])
+    mut want: int? = Some(254)
+    assert m.edge_spacing(unit, 0) == want
+    assert m.edge_spacing(unit, 1) == want
+    assert m.edge_spacing(unit, 2) == want
+    assert m.edge_spacing(unit, 3) is None
+    return True
+
+
 # test "kicad-sch: the instance path gains a sheet segment on a child file"
 public func test_kicad_sch_the_instance_path_gains_a_sheet_segment_on_a_child_file() -> bool:
     mut root = m.Sheet(design=b"d", title=b"", root_uuid=b"R", sheet_uuid=b"R", page_w=1, page_h=1, is_root=True)

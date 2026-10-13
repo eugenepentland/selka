@@ -50,12 +50,16 @@ public func span(a: Point, b: Point) -> int:
 
 
 public func route(a: End, b: End, field: Field, key: bytes) -> Path?:
+    return route_parts(a, b, field.stops, field.bodies, field.segs, key)
+
+
+public func route_parts(a: End, b: End, stops: Point[], bodies: Box[], segs: Seg[], key: bytes) -> Path?:
     mut distance = span(a.at, b.at)
     if distance > max_span or distance == 0:
         return None
     for i in range(30):
         mut pts = compact(candidate(i, a, b))
-        if clean(pts, a.at, b.at, field):
+        if clean(pts, a.at, b.at, stops, bodies, segs):
             return Some(Path(key=key.copy(), pts=pts))
     return None
 
@@ -157,12 +161,12 @@ func compact(pts: Point[]) -> Point[]:
     return out
 
 
-func clean(pts: Point[], a: Point, b: Point, field: Field) -> bool:
+func clean(pts: Point[], a: Point, b: Point, stops: Point[], bodies: Box[], segs: Seg[]) -> bool:
     if len(pts) < 2:
         return False
     for i in range(len(pts) - 1):
         mut s = Seg(a=pts[i], b=pts[i + 1])
-        if not legal(s) or hits_stop(s, field.stops, a, b) or hits_body(s, field.bodies) or hits_wire(s, field.segs, a, b):
+        if not legal(s) or hits_stop(s, stops, a, b) or hits_body(s, bodies) or hits_wire(s, segs, a, b):
             return False
     return True
 
