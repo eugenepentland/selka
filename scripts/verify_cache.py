@@ -58,13 +58,57 @@ DEFAULT_SHARING = False
 SHARED_CACHE_VARIABLE = "MYLANG_VERIFICATION_SHARED_CACHE"
 REPORT_VERSION = 1
 INVENTORY_VERSION = 2
-# Explicit review of the complete CONFIG_INPUTS-only closure, without the
-# declarative list file. None keeps every action conservatively broad. Never
-# auto-update this qualification after consumer changes.
-# Qualified by coordinator + delegated consumer review; only the developer
-# telemetry channel changed across the previously qualified 212-file closure.
-# Evidence: experiments/telemetry-cache-invalidation-20261012/REPORT.md
-DECLARATIVE_CONFIG_SHA256 = "6e21ce1c64e0d3e82e2ce1fee75053579b67221706d4aeb46f128691049801c6"
+# The declarative list file. `build_test_inputs.zig` is data only (see
+# `declared_input_lists`), and an action's configuration identity omits its
+# bytes while every use of those lists in the build configuration is one of the
+# reviewed consumer sites below: each feeds a list into action registration
+# (the inventory's groups and exported `input_lists`), the per-list input
+# manifests, or producer recipes (`artifacts.json`), all of which reach the
+# action keys by themselves, so an edit to one list re-keys only the actions
+# that declare it. A site is one logical line (a statement joined across its
+# wrapped lines, comments dropped, whitespace collapsed) of a configuration Zig
+# file that names the file or an identifier bound to its import. An added,
+# removed or edited site keeps the file in every action's identity until it is
+# reviewed here; `DeclarativeConsumers` in verify_cache_test.py fails until
+# then, and every report states whether the exclusion applied.
+# This replaces DECLARATIVE_CONFIG_SHA256, a digest of the whole configuration
+# closure (qualified by coordinator + delegated consumer review, evidence:
+# experiments/telemetry-cache-invalidation-20261012/REPORT.md), which went
+# stale with the next build-file edit and silently stopped applying (F12).
+# None keeps every action conservatively broad.
+DECLARATIVE_INPUTS = "build_test_inputs.zig"
+DECLARATIVE_CONSUMERS: tuple[tuple[str, str], ...] | None = (
+    ("build.zig", 'const test_inputs = @import("build_test_inputs.zig");'),
+    ("build.zig", "inline for (comptime std.meta.declarations(test_inputs)) |name| {"),
+    ("build.zig", "run.addArgs(&@field(test_inputs, name));"),
+    ("build.zig", 'verification_registry.?.register("component-preparation", &component_build.step, '
+                  '&test_inputs.component_inputs, false, "component manifests and installed outputs require validation");'),
+    ("build.zig", 'verification_registry.?.register("component-support", &run_component_support.step, '
+                  '&test_inputs.component_builder, true, "exact native support executable and declared inputs");'),
+    ("build.zig", 'verification_registry.?.register("juice", &juice_native_run.step, &test_inputs.juice, false, '
+                  '"native performance collectors and host state require fresh execution");'),
+    ("build.zig", 'verification_registry.?.register("juice-runtime", &juice_runtime_run.step, &test_inputs.juice_runtime, '
+                  'false, "runtime collectors observe CPU, scheduler and current host state");'),
+    ("build.zig", 'verification_registry.?.register("coverage", &coverage_run.step, &test_inputs.coverage, false, '
+                  '"fixture membership and negative path lookups outside source recipes require freshness");'),
+    ("build.zig", 'verification_registry.?.register("doc-coverage", &doc_coverage.step, &test_inputs.doc_coverage, true, '
+                  '"complete document and feature-contract scope");'),
+    ("build.zig", 'const fmt = b.addFmt(.{ .paths = &.{ b.path("build.zig"), b.path("build_env.zig"), '
+                  'b.path("build_identity.zig"), b.path("build_test_inputs.zig"), b.path("build_verification.zig"), '
+                  'b.path("src"), b.path("tests"), b.path("test"), b.path("selfhost") }, .check = true });'),
+    ("build.zig", 'verification_registry.?.register("zig-format", &fmt.step, &test_inputs.zig_format, true, '
+                  '"exact formatter and complete source-format scope");'),
+    ("build_verification.zig", 'const test_inputs = @import("build_test_inputs.zig");'),
+    ("build_verification.zig", "inline for (comptime std.meta.declarations(test_inputs)) |name| {"),
+    ("build_verification.zig", 'self.register(name, step, &@field(test_inputs, name), true, "complete declared whole-action inputs");'),
+    ("build_verification.zig", 'if (std.mem.eql(u8, label, "tooling-units")) return compiled(b, &test_inputs.tooling_unit);'),
+    ("build_verification.zig", 'if (std.mem.eql(u8, label, "text-scalar-units")) return compiled(b, &test_inputs.text_scalar_unit);'),
+    ("build_verification.zig", "if (listed(entry, &test_inputs.environment_contract)) continue;"),
+    ("build_verification.zig", 'const inputs: []const []const u8 = if (std.mem.eql(u8, artifact.label, "tooling-units")) '
+                               '&test_inputs.tooling_unit else &test_inputs.text_scalar_unit;'),
+    ("build_verification.zig", "inline for (comptime std.meta.declarations(test_inputs)) |name| {"),
+    ("build_verification.zig", 'lists.append(a, .{ .name = name, .inputs = &@field(test_inputs, name) }) catch @panic("verification allocation");'),
+)
 RETRY = 75
 # `--integration` (plan D3): a shared-store determinism mismatch fails the
 # integrated commit with its own status, distinct from a failing test (1).
@@ -75,13 +119,16 @@ NATIVE_SHARED_VARIABLES = ("MYLANG_COMPILER_SHARED_CACHE", "MYLANG_TEST_SHARED_C
 FACT_LEAK_MEMBER = re.compile(r"mylang test (\S+) --release --verify-facts \(leak check\)")
 COMPONENT_SOURCE_OPTIONS = {"-Dcomponent-owned-compiler-pin", "-Dcomponent-seed-source"}
 MAX_RECORD = 32 * 1024 * 1024
-# The build runner's own compile closure. `build.zig` imports `build_env.zig`,
-# whose `build-env` host tool wraps every cached test step (`withTools`); the
-# build graph registers that tool's compile step as prepared infrastructure,
-# not as an action, so its `src/` imports are bound here, in every action's
+# The build runner's own compile closure: every file `build.zig` imports,
+# transitively (`BuildToolIdentity` in verify_cache_test.py names any file
+# missing here). `build_env.zig`'s `build-env` host tool wraps every cached test
+# step (`withTools`) and `build_identity.zig` keys the compiler build; the build
+# graph registers their compile steps as prepared infrastructure, not as
+# actions, so their `src/` imports are bound here, in every action's
 # `build_configuration`, beside `src/environment_identity.zon` below.
 CONFIG_INPUTS = ["./*.zig", "build.zig.zon", ".zigversion", "guardian.toml",
                  "src/user_docs.zig", "src/environment_identity.zig", "src/build_env_rules.zig",
+                 "src/build_identity_rules.zig", "src/semantic_cache_format.zig",
                  "selfhost/*.zig", "../guardian-zig/build.zig",
                  "../guardian-zig/build.zig.zon", "../guardian-zig/src/"]
 PREPARE_INPUTS = ["src/", "test/", "tests/", "selfhost/",
@@ -317,30 +364,104 @@ def declared_input_lists(path: Path) -> dict | None:
         return None
 
 
-def action_configuration(identity: dict, plan: dict, root: Path, configuration_identity: dict | None = None) -> dict:
-    """Exclude a proven declarative list file; retain all unfamiliar semantics."""
-    if DECLARATIVE_CONFIG_SHA256 is None or configuration_identity is None:
-        return identity
-    qualified = dict(configuration_identity, files=[item for item in configuration_identity.get('files', [])
-                                                   if item['path'] != 'build_test_inputs.zig'])
-    if key(qualified) != DECLARATIVE_CONFIG_SHA256:
-        return identity
-    lists = declared_input_lists(root / 'build_test_inputs.zig')
-    exported = plan.get('input_lists')
-    if lists is None or not isinstance(exported, list):
-        return identity
+_ZIG_TOKEN = re.compile(r'"(?:[^"\\]|\\.)*"|\'(?:[^\'\\]|\\.)*\'|//.*|[^"\'/]+|.')
+
+
+def zig_logical_lines(text: str) -> list[str]:
+    """Statements of a Zig file joined across wrapped lines, comments dropped and
+    whitespace collapsed; a logical line ends where its (), [] nesting closes."""
+    lines, pending, depth = [], [], 0
+    for line in text.splitlines():
+        kept, code = [], []
+        if line.lstrip().startswith("\\\\"):
+            kept = [line]  # A multiline string line: no comments, no nesting.
+        else:
+            for token in _ZIG_TOKEN.findall(line):
+                if token.startswith("//"):
+                    break
+                kept.append(token)
+                if token[0] not in "\"'":
+                    code.append(token)
+        text_line = " ".join("".join(kept).split())
+        if not text_line:
+            continue
+        pending.append(text_line)
+        code_text = "".join(code)
+        depth += sum(map(code_text.count, "([")) - sum(map(code_text.count, ")]"))
+        if depth <= 0:
+            lines.append(" ".join(pending))
+            pending, depth = [], 0
+    if pending:
+        lines.append(" ".join(pending))
+    return lines
+
+
+def declarative_consumers(root: Path, configuration_identity: dict) -> list[tuple[str, str]] | None:
+    """Every logical line of a configuration Zig file that names the declarative
+    list file or an identifier bound to its import, in snapshot order; None when
+    a file's bytes are no longer the watched ones."""
+    found = []
+    for item in configuration_identity.get("files", []):
+        path = item["path"]
+        if not path.endswith(".zig") or path == DECLARATIVE_INPUTS:
+            continue
+        try:
+            raw = (root / path).read_bytes()
+        except OSError:
+            return None
+        if hashlib.sha256(raw).hexdigest() != item.get("sha256"):
+            return None
+        if DECLARATIVE_INPUTS.encode() not in raw:
+            continue
+        lines = zig_logical_lines(raw.decode("utf-8", "replace"))
+        names = set()
+        for line in lines:
+            names.update(re.findall(r'\bconst\s+([A-Za-z_]\w*)\s*(?::[^=]*)?=\s*@import\("(?:[^"]*/)?'
+                                    + re.escape(DECLARATIVE_INPUTS) + r'"\)', line))
+        pattern = re.compile("|".join([re.escape(DECLARATIVE_INPUTS)] + [r"\b%s\b" % name for name in sorted(names)]))
+        found.extend((path, line) for line in lines if pattern.search(line))
+    return found
+
+
+def declarative_exclusion(identity: dict, plan: dict, root: Path, configuration_identity: dict | None) -> str | None:
+    """Why the declarative list file must stay in the action configuration, or
+    None when every consumer is reviewed and its lists are the exported ones."""
+    if DECLARATIVE_CONSUMERS is None or configuration_identity is None:
+        return "no reviewed consumer sites"
+    consumers = declarative_consumers(root, configuration_identity)
+    if consumers is None:
+        return "configuration changed while its consumers were read"
+    if sorted(consumers) != sorted(DECLARATIVE_CONSUMERS):
+        return "unreviewed consumer sites of %s" % DECLARATIVE_INPUTS
+    lists = declared_input_lists(root / DECLARATIVE_INPUTS)
+    exported = plan.get("input_lists")
+    if lists is None:
+        return "%s is not data-only" % DECLARATIVE_INPUTS
+    if not isinstance(exported, list):
+        return "the inventory exports no input lists"
     try:
-        expected = {entry['name']: entry['inputs'] for entry in exported}
+        expected = {entry["name"]: entry["inputs"] for entry in exported}
         if len(expected) != len(exported) or expected != lists:
-            return identity
+            return "the inventory's input lists differ from %s" % DECLARATIVE_INPUTS
     except (KeyError, TypeError):
-        return identity
-    files = identity.get('files', [])
-    if not any(item['path'] == 'build_test_inputs.zig' and 'resolved' not in item for item in files):
+        return "the inventory's input lists are malformed"
+    if not any(item["path"] == DECLARATIVE_INPUTS and "resolved" not in item for item in identity.get("files", [])):
+        return "%s is absent or a symbolic link" % DECLARATIVE_INPUTS
+    return None
+
+
+def action_configuration(identity: dict, plan: dict, root: Path, configuration_identity: dict | None = None,
+                         notes: dict | None = None) -> dict:
+    """Exclude a proven declarative list file; retain all unfamiliar semantics.
+
+    `notes["declarative_configuration"]` records "excluded" or why not."""
+    reason = declarative_exclusion(identity, plan, root, configuration_identity)
+    if notes is not None:
+        notes["declarative_configuration"] = reason or "excluded"
+    if reason is not None:
         return identity
     # All snapshots still watch this file; only action reuse omits its data bytes.
-    return dict(identity, files=[item for item in files if item['path'] != 'build_test_inputs.zig'])
-
+    return dict(identity, files=[item for item in identity["files"] if item["path"] != DECLARATIVE_INPUTS])
 
 
 def normalized_environment(root: Path, source: Mapping[str, str] | None = None) -> dict[str, str]:
@@ -730,22 +851,94 @@ def artifact_identities(record: dict | None, providers: dict[str, list[dict]],
     return identities, report
 
 
+def located_bytes(providers: dict[str, list[dict]], root: Path, report: dict) -> None:
+    """Record, per narrowed provider whose key binds its bytes (a qualified
+    producer identity also binds the artifact content), whether those bytes name
+    the checkout (`bytes_name_root`), which no search of the key can see."""
+    needle = os.fsencode(str(root))
+    for label in sorted(set(providers) & set(verification_producers.CLOSURES)):
+        named = False
+        for item in providers[label]:
+            try:
+                named = named or needle in (root / item["path"]).read_bytes()
+            except OSError:
+                named = True
+        report.setdefault(label, {})["bytes_name_root"] = named
+
+
 def mentions(value: object, text: str) -> bool:
     """Whether `text` occurs anywhere in a JSON-serializable value."""
     return json.dumps(text, ensure_ascii=False)[1:-1] in json.dumps(value, sort_keys=True, ensure_ascii=False)
 
 
+# How `path_free` shows each `common` facet independent of the checkout path.
+# "value": the payload holds the value itself, which the root search sees.
+# "preimage": a digest whose hashed document is searched (`facets_path_free`).
+# "loaded_code": loaded-code digests, which hold no path text; their code
+#   objects are rehashed as if loaded from another directory
+#   (`location_dependent_code`), which the root search cannot do.
+# "artifacts": prepared providers, judged per provider (producer identities).
+# A facet missing here cannot be shown path-free, so path_free reports false.
+COMMON_FACETS = {"version": "value", "options": "value", "platform": "value", "execution_limits": "value",
+                 "component_sources": "value", "action_controls": "value",
+                 "environment": "preimage", "tools": "preimage", "build_configuration": "preimage",
+                 "inventory": "preimage", "loaded_code_format": "loaded_code", "implementation": "loaded_code",
+                 "artifacts": "artifacts"}
+
+
+def implementation_code() -> list[tuple[str, str, object]]:
+    """(module, bound digest, loaded code) of each coordinator module whose
+    digest enters `common["implementation"]`, in key order."""
+    modules = [("verification_measurement", verification_measurement),
+               ("build_admission", verification_measurement.build_admission),
+               ("verification_snapshot", verification_snapshot), ("fuzz_campaign_store", fuzz_campaign_store),
+               ("verification_process", verification_process), ("verification_producers", verification_producers),
+               ("verification_profiles", verification_profiles),
+               ("verification_qualification", verification_qualification)]
+    return [("verify_cache", LOADED_CODE_SHA256, _LOADED_CODE_OBJECT)] + [
+        (name, module.LOADED_CODE_SHA256, module._LOADED_CODE_OBJECT) for name, module in modules]
+
+
+RELOCATION_PROBE = "/selka-verification-relocation-probe"
+
+
+def location_dependent_code(code: list[tuple[str, str, object]] | None = None) -> list[str]:
+    """Modules whose bound loaded-code digest would differ had the same code been
+    loaded from another checkout: the digest is recomputed with every file name
+    moved under RELOCATION_PROBE. Includes the identity helper itself."""
+    rows = (implementation_code() if code is None else code) + [
+        ("verification_code_identity", code_identity.LOADED_CODE_SHA256, code_identity._LOADED_CODE_OBJECT)]
+    dependent = []
+    for name, digest, loaded in rows:
+        try:
+            moved = code_identity.loaded_code_sha256(code_identity.relocated(loaded, RELOCATION_PROBE))
+        except code_identity.CodeIdentityError:
+            moved = None
+        if moved != digest:
+            dependent.append(name)
+    return dependent
+
+
 def path_free(payload: dict, root: Path, facets_path_free: bool, report: dict) -> bool:
     """Whether no checkout path entered an action key.
 
-    The worktree path must occur neither in the payload nor in the facets
-    hashed into it (`facets_path_free`: tools, build configuration, keyed
-    environment values), and every prepared provider the action depends on must
-    have a producer identity: its narrowed selection, else all of them.
+    Every `common` facet must be classified in COMMON_FACETS. The worktree path
+    must occur neither in the payload nor in the documents hashed into its
+    digest facets, and no loaded-code digest may depend on where the code was
+    loaded from (`facets_path_free` covers both). Every prepared provider the
+    action depends on must have a producer identity: its narrowed selection,
+    else all of them; a narrowed identity that also binds artifact bytes needs
+    bytes that do not name the checkout (`located_bytes`).
     """
+    if any(name not in COMMON_FACETS for name in payload["common"]):
+        return False
     if not facets_path_free or mentions(payload, str(root)):
         return False
     artifacts = payload["common"].get("artifacts")
+    if isinstance(artifacts, dict) and any(
+            isinstance(value, dict) and "artifacts" in value and report.get(label, {}).get("bytes_name_root") is not False
+            for label, value in artifacts.items()):
+        return False  # A narrowed identity binds artifact bytes that name the checkout.
     labels = artifacts.keys() if isinstance(artifacts, dict) else report.keys()
     return all(report.get(label, {}).get("identity") == "producer" for label in labels)
 
@@ -911,7 +1104,8 @@ def authenticate_code_identity(root, watched, snapshots, stack, digest_session=N
 def prepare(root: Path, cache: Path, zig: Path, options: list[str], env: dict[str, str],
             common: dict, snapshots: list[Snapshot], stack: ExitStack,
             timings: list[dict] | None = None, phases: dict | None = None,
-            digest_session=None, limits: ProcessLimits | None = None) -> tuple[dict, Snapshot, float]:
+            digest_session=None, limits: ProcessLimits | None = None,
+            notes: dict | None = None) -> tuple[dict, Snapshot, float]:
     configuration = snapshot_role(stack.enter_context(Snapshot(root, CONFIG_INPUTS, digest_session=digest_session)), "configuration")
     snapshots.append(configuration)
     config = snapshot_role(stack.enter_context(Snapshot(root, CONFIG_INPUTS + COORDINATOR_INPUTS, digest_session=digest_session)), "coordinator")
@@ -941,7 +1135,7 @@ def prepare(root: Path, cache: Path, zig: Path, options: list[str], env: dict[st
                                     124 if status == 124 else 2)
         plan = inventory(plan_path)
         publish_checked(plan_receipt, {"key": config_key, "inventory": key(plan)}, snapshots)
-    common["build_configuration"] = key(action_configuration(config.identity, plan, root, configuration.identity))
+    common["build_configuration"] = key(action_configuration(config.identity, plan, root, configuration.identity, notes))
     common["action_controls"] = plan["configuration"]
     source_started = time.monotonic()
     sources = snapshot_role(stack.enter_context(Snapshot(root, PREPARE_INPUTS, digest_session=digest_session)), "preparation_sources")
@@ -1040,9 +1234,12 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
             gate_timeout: float | None = None, warn_after: float | None = None,
             budget_policy: Path | None = None, profile: str = "complete", quick_actions: int = 3,
             qualification_targets=None, qualification_max_actions=4,
-            qualification_timeout=300, qualification_fuzz_steps=8, shared_cache_source: str | None = None) -> int:
+            qualification_timeout=300, qualification_fuzz_steps=8, shared_cache_source: str | None = None,
+            dry_run: bool = False) -> int:
     if profile not in verification_profiles.PROFILES or type(quick_actions) is not int or not 1 <= quick_actions <= 1024:
         raise ValueError("invalid verification profile or quick action bound")
+    if dry_run and force:
+        raise ValueError("a dry run cannot force reruns")
     qualification_controls = {"targets": list(verification_qualification.OBLIGATIONS if qualification_targets is None else qualification_targets),
         "max_actions": qualification_max_actions, "action_timeout": qualification_timeout, "fuzz_steps": qualification_fuzz_steps}
     verification_qualification.validate_options(**qualification_controls)
@@ -1095,21 +1292,19 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
         common = {"version": VERSION, "options": options,
                   "environment": environment_identity(env, tools, tool_files, root), "platform": host.identity,
                   "tools": key(tools.identity),
+                  # A timing window schedules the request; it is no input to
+                  # any action's result, so it stays out of every key (F14) and
+                  # is reported as `measurement_window` in last-run.json.
                   "execution_limits": {"build": build_limits.execution_identity(),
-                                       "gate": gate_limits.execution_identity(),
-                                       "measurement_window_seconds": None if measurement is None else measurement.seconds},
+                                       "gate": gate_limits.execution_identity()},
                   "loaded_code_format": [code_identity.FORMAT_VERSION, code_identity.LOADED_CODE_SHA256],
-                  "implementation": [LOADED_CODE_SHA256, verification_measurement.LOADED_CODE_SHA256,
-                                     verification_measurement.build_admission.LOADED_CODE_SHA256, verification_snapshot.LOADED_CODE_SHA256,
-                                     fuzz_campaign_store.LOADED_CODE_SHA256,
-                                     verification_process.LOADED_CODE_SHA256,
-                                     verification_producers.LOADED_CODE_SHA256,
-                                     verification_profiles.LOADED_CODE_SHA256, verification_qualification.LOADED_CODE_SHA256]}
+                  "implementation": [digest for _, digest, _ in implementation_code()]}
         if component_sources is not None:
             common["component_sources"] = component_sources.identity
         try:
+            configuration_notes = {}
             plan, artifacts, build_seconds = prepare(root, cache, zig, options, env, common, snapshots, stack,
-                                                    admissions, phases, session, build_limits)
+                                                    admissions, phases, session, build_limits, configuration_notes)
         except VerificationError as error:
             diagnostic_record(cache / "last-run.json", {"version": REPORT_VERSION, "success": False,
                 "status": error.status, "stage": "preparation", "error": str(error), "actions": [],
@@ -1126,13 +1321,16 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
         recipe_sources = [item for snapshot in snapshots if getattr(snapshot, "verification_role", "")
                           in ("configuration", "preparation_sources") for item in snapshot.identity["files"]]
         labels, artifact_report = artifact_identities(producer_manifest, providers, recipe_sources, root)
+        located_bytes(providers, root, artifact_report)
         common["artifacts"] = key({"version": producer_manifest.get("version") if producer_manifest else None,
                                    "providers": labels})
         environment_names = identity_variables(env)
-        facets_path_free = not mentions({"tools": tools.identity, "environment": {name: env[name] for name in environment_names},
-                                         "configuration": [snapshot.identity for snapshot in snapshots
-                                                           if getattr(snapshot, "verification_role", "") == "coordinator"]},
-                                        str(root))
+        relocation_dependent = location_dependent_code()
+        facets_path_free = not relocation_dependent and not mentions(
+            {"tools": tools.identity, "environment": {name: env[name] for name in environment_names},
+             "configuration": [snapshot.identity for snapshot in snapshots
+                               if getattr(snapshot, "verification_role", "") == "coordinator"],
+             "inventory": plan}, str(root))
         groups = plan["groups"]
         recipes = sorted({entry for group in groups for entry in group["inputs"]})
         input_started = time.monotonic()
@@ -1141,7 +1339,7 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
         snapshots.append(inputs)
         unsupported = [name for name in UNTRACKED_ENV if env.get(name)]
         force = force or "-Dtest-rerun=true" in options or bool(plan.get("configuration", {}).get("filtered"))
-        if force:
+        if force and not dry_run:
             # A failed explicit rerun must not leave an older success available.
             # This is a local evidence store; deleting evidence only causes work.
             for path in (cache / "actions").glob("*.json"):
@@ -1178,7 +1376,7 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                             "environment_variables": environment_names})
             print("verification: %s %s (%s)" % (state, group["id"], reason), flush=True)
             if not hit:
-                if shared is not None:
+                if shared is not None and not dry_run:
                     shared.invalidate_success(action_key)
                 selected.append(group)
         profile_plan = verification_profiles.schedule(plan, results, profile, quick_actions=quick_actions)
@@ -1198,6 +1396,18 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                 "admissions": admissions, "timings": phases,
                 "elapsed_seconds": time.monotonic() - started})
             raise VerificationError("inputs changed during cache lookup; rerun verification", RETRY)
+        if dry_run:
+            # The plan export: identities and reuse verdicts after preparation,
+            # with no gate admission, publication or advisory summary writes.
+            diagnostic_record(cache / "dry-run.json", {"version": REPORT_VERSION, "dry_run": True, "profile": profile,
+                "common": common, "budget_context": key({name: value for name, value in common.items() if name != "inventory"}),
+                "actions": results, "profile_plan": profile_plan, "artifact_identities": artifact_report,
+                "declarative_configuration": configuration_notes.get("declarative_configuration"),
+                "relocation_dependent_code": relocation_dependent,
+                "admissions": admissions, "elapsed_seconds": time.monotonic() - started})
+            print("verification: dry run; %d reused, %d would run; report %s" %
+                  (sum(row["state"] == "reused" for row in results), len(selected), cache / "dry-run.json"), flush=True)
+            return 0
         phases["prepare_lookup_outside_admission_seconds"] = (time.monotonic() - started
                                                               - sum(event["elapsed_seconds"] for event in admissions))
         status, gate_seconds = 0, 0.0
@@ -1324,6 +1534,9 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                                      "default_sharing": DEFAULT_SHARING,
                                      "root": str(shared.root if shared is not None else cache / "actions")},
                   "artifact_identities": artifact_report,
+                  "declarative_configuration": configuration_notes.get("declarative_configuration"),
+                  "relocation_dependent_code": relocation_dependent,
+                  "measurement_window_seconds": None if measurement is None else measurement.seconds,
                   "elapsed_seconds": elapsed}
         if measurement is not None:
             report["measurement_window"] = measurement.report()
@@ -1553,6 +1766,9 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--qualification-timeout", type=float, default=300)
     parser.add_argument("--qualification-fuzz-steps", type=int, default=8)
     parser.add_argument("--force", action="store_true", help="Ignore prior successes for the requested profile")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Prepare and compute every action key and reuse verdict, write %s/dry-run.json, "
+                             "and run no gate" % CACHE_DIRECTORY)
     parser.add_argument("--shared-cache-dir", help="Shared success evidence (default: $%s, else off; an empty value disables); inventory and runs stay private" % SHARED_CACHE_VARIABLE)
     parser.add_argument("--build-timeout-seconds", type=float, help="Optional deadline per admitted preparation command; excludes queue time")
     parser.add_argument("--gate-timeout-seconds", type=float, help="Optional deadline for the admitted selected gate; excludes queue time")
@@ -1565,6 +1781,9 @@ def main(argv: list[str]) -> int:
                              "members (D1), failing with status %d on any shared-store mismatch (D3)" % INTEGRATION_MISMATCH_STATUS)
     parser.add_argument("options", nargs=argparse.REMAINDER)
     args = parser.parse_args(argv)
+    if args.dry_run and (args.integration or args.force):
+        print("verification: FAIL: --dry-run runs nothing; it takes neither --integration nor --force", file=sys.stderr)
+        return 2
     if args.integration and (args.profile != "complete" or args.timing_window_seconds is not None):
         print("verification: FAIL: --integration runs the complete profile without a timing window", file=sys.stderr)
         return 2
@@ -1604,7 +1823,7 @@ def main(argv: list[str]) -> int:
                                qualification_max_actions=args.qualification_max_actions,
                                qualification_timeout=args.qualification_timeout,
                                qualification_fuzz_steps=args.qualification_fuzz_steps,
-                               shared_cache_source=shared_cache_source)
+                               shared_cache_source=shared_cache_source, dry_run=args.dry_run)
                 if args.integration:
                     status = integrate(ROOT, cache, status, before, os.environ)
                 return status

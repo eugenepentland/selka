@@ -58,8 +58,12 @@ and retains it through execution, publication and reporting. Checkout-lock and
 admission waits are reported separately. The report's elapsed scope ends at final
 report assembly; an external harness must measure report writing, final output
 and session startup for end-to-end latency. Deadline expiry or holder failure
-revokes new receipts and reports failure. This explicit bound changes execution
-identity; the 5-second feedback and 15-second p95 targets never become implicit
+revokes new receipts and reports failure. The window schedules the request and is
+no input to any action's result, so it stays out of every action key: a windowed
+request reuses receipts a plain request published and the reverse, and windows of
+different lengths share receipts (`last-run.json` records its length as
+`measurement_window_seconds`). The command deadlines above remain identity
+inputs. The 5-second feedback and 15-second p95 targets never become implicit
 deadlines. Long qualification owns separate phase admissions and cannot be
 combined with this request-wide measurement option.
 
@@ -127,10 +131,15 @@ Inventory v2 binds each receipt to its own registered action membership. Global
 coverage is still validated on every request; adding inventory metadata alone
 does not invalidate unrelated groups. The coordinator recognizes the existing
 data-only `build_test_inputs.zig` declarations and binds their expanded local
-recipes. This projection also requires the reviewed build-configuration fingerprint;
-changes to its consumers disable projection until requalified. Unrecognized syntax
+recipes, so editing one list re-keys only the groups that declare it. This
+projection also requires every build-configuration line that uses the lists to be
+one of the reviewed consumer sites (`DECLARATIVE_CONSUMERS` in
+`scripts/verify_cache.py`); an added or edited site disables projection until it
+is reviewed, `verify_cache_test.py` fails until then, and `last-run.json` reports
+`declarative_configuration` (`excluded`, or why not). Unrecognized syntax
 retains broad configuration identity. Changes to `build.zig` and other common
-execution semantics still invalidate all groups.
+execution semantics still invalidate all groups; every file `build.zig` compiles
+from, transitively, is in `CONFIG_INPUTS`, which a test checks.
 
 The independent `tooling_unit` group runs 27 named pure tooling tests (plus the
 root import test) without linking the compiler. Its prepared artifact and declared
@@ -321,7 +330,11 @@ An action key is path- and environment-free by construction:
 `last-run.json` names the choice per provider in `artifact_identities`
 (`{"identity": "producer", "sources": N}` or `{"identity": "bytes", "reason": ...}`)
 and, per action, `path_free` (true when the checkout path occurs in no part of
-the key and every provider the action depends on has a producer identity) and
+the key or of the documents its digests hash, no loaded-code digest changes when
+the coordinator's code is rehashed as if loaded from another directory
+(`relocation_dependent_code` names any that do), every `common` facet is one
+the check knows how to judge, and every provider the action depends on has a
+producer identity) and
 `environment_variables` (the sorted names, never values, of the keyed and host
 variables in its identity). A retained `cache_session.py` restores its startup
 environment before each request and the coordinator projects it the same way,
@@ -330,6 +343,8 @@ dropped variables.
 
 Schema 2 separated canonical loaded-code identities from older marshal-based
 identities; schema 3 keeps that encoder. The canonical encoder binds actual
-loaded code, typed constants and source locations; retained bootstrap guards
+loaded code, typed constants and source locations; since loaded-code format 2
+(`loaded_code_format`) a file name enters by its base name only, so one commit
+checked out twice binds one coordinator implementation. Retained bootstrap guards
 separately authenticate its source. Neither migration changes deterministic fuzz
 seed derivation or rewrites existing content stores.

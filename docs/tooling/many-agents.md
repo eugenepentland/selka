@@ -158,7 +158,10 @@ decisions remain fresh. Guest suites retain their compiler-managed per-test
 receipts (both receipt tiers of [guest tests](guest-tests.md#reusing-unaffected-results),
 so an unchanged request executes no guest test); fact/leak runs keep receipts
 under their own modes. `--force` discards prior action evidence and executes the
-full inventory. `--integration` is the integration gate: the complete request,
+full inventory. `--dry-run` prepares, computes every action key and reuse verdict,
+writes them with the full `common` identity to
+`.mylang-cache/verification-v3/dry-run.json` and runs no gate; comparing two
+worktrees' exports shows whether they would share evidence. `--integration` is the integration gate: the complete request,
 then one forced fact/leak run and a shared-store mismatch check
 ([integration gate](development-loop.md#integration-gate)). Filtered and explicit
 `-Dtest-rerun=true` requests cannot supply ordinary full-gate receipts.
