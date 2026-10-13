@@ -1,0 +1,60 @@
+build-slot: FIFO ticket 2761, position 3; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 2761, position 3; earlier build tickets must run first; waiting (61s so far)
+build-slot: FIFO ticket 2761, position 1; waiting for measurement or memory-accounting settle delay; waiting (121s so far)
+build-slot: build slot 1, FIFO ticket 2761 after 126s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: file-size: 18 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10579 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/lox-eda-parity-20261013-p1 b0d6034c8] Mutate Lox heap payloads through checked owned exchange
+ 51 files changed, 3164 insertions(+), 21 deletions(-)
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/exchange-input-sha256-green002.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/exchange-mutable-prefix-cancelled.log
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/exchange-source-sha256.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/exchange-tests-green002.log
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-class_kind-counters.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-class_kind.stderr
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-class_kind.stdout
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-env_kind-counters.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-env_kind.stderr
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-env_kind.stdout
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-high_handle-counters.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-high_handle.stderr
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-high_handle.stdout
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-high_slot-counters.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-high_slot.stderr
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-high_slot.stdout
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-inherit_child-counters.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-inherit_child.stderr
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-inherit_child.stdout
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-inherit_parent-counters.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-inherit_parent.stderr
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-inherit_parent.stdout
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-instance_kind-counters.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-instance_kind.stderr
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-instance_kind.stdout
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-mutable-prefix-cancelled.log
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-negative_handle-counters.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-negative_handle.stderr
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-negative_handle.stdout
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-negative_slot-counters.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-negative_slot.stderr
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/failure-negative_slot.stdout
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/fallback-commit.log
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/mutation-build-green002.log
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/mutation-failure-build-green002.log
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/mutation-failure-probe.my
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/mutation-failure-summary.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/mutation-mutable-prefix-cancelled.log
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/mutation-owned-counters.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/mutation-owned.stderr
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/mutation-owned.stdout
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/mutation-probe.my
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/mutation-run-green002.log
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/mutation-snapshot-counters.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/mutation-snapshot.stderr
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/mutation-snapshot.stdout
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/mutation-summary.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P1/run-mutation-probes.py

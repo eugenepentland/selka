@@ -91,3 +91,5 @@ scripts/build-slot.sh build python3 experiments/lox-eda-parity-20261013/P1/run-m
 ```
 
 **Integration dependency: the final P7 compiler must finish its cleanup-matching and explicit-route qualification. Full integrated tests and counters must repeat on that final compiler. These green002 results are prototype evidence, not final compiler qualification or a60-case benchmark result.** The coordinator requested committing the source and honest green002 evidence now to prepare the common candidate; final integration qualification remains pending.
+
+Exchange implementation/green002 evidence commit: `b0d6034c8617b32f7f8ff799ab54f9b3080c81bc`. The normal Guardian hook passed88 checks (`exchange-commit.log`, copied after the implementation commit). The worktree was clean after that commit. This receipt does not change the explicit pending final-compiler/integrated qualification above. No Guardian feedback log was written.
