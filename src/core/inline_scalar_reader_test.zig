@@ -293,7 +293,7 @@ test "scalar reader five native modes and RC control retain discarded checks and
     var environment = try std.testing.environ.createMap(a);
     try environment.put("MYL_CORE_LEAKCHECK", "1");
     try environment.put("MYLANG_COUNTERS", try std.fs.path.join(a, &.{ root, "counters.json" }));
-    const compiler_path = try std.Io.Dir.cwd().realPathFileAlloc(std.testing.io, options.core_path, a);
+    const compiler_path = try std.Io.Dir.cwd().realPathFileAlloc(std.testing.io, options.corePath(), a);
     const fixture_path = try std.fs.path.join(a, &.{ options.fixtures, fixture_name });
     const source = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, fixture_path, a, .limited(1 << 20));
     const prefix = source[0..std.mem.indexOf(u8, source, "func main(out:").?];

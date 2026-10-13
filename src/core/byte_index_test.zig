@@ -380,7 +380,7 @@ fn nativeSpan(a: std.mem.Allocator, root: []const u8, mode: []const []const u8) 
     const output = try std.fs.path.join(a, &.{ root, "span-index" });
     const source = try std.fs.path.join(a, &.{ options.fixtures, span_fixture });
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(a, &.{ options.core_path, "build", source, "-o", output, "--cache-dir", root, "--experimental-zero-rc" });
+    try argv.appendSlice(a, &.{ options.corePath(), "build", source, "-o", output, "--cache-dir", root, "--experimental-zero-rc" });
     try argv.appendSlice(a, mode);
     const built = try std.process.run(a, std.testing.io, .{ .argv = argv.items });
     if (built.term != .exited or built.term.exited != 0) report("span build flags {any}, term {any}\nstdout:\n{s}\nstderr:\n{s}\n", .{ mode, built.term, built.stdout, built.stderr });
