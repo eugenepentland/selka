@@ -6,25 +6,30 @@ record Big:
     e: int
     f: int
 
+
 func bool_step(mut big: Big, mut scalar: int) -> bool:
     big.a += 1
     scalar += 2
     return True
+
 
 func byte_step(mut big: Big, mut scalar: float) -> u8:
     big.a += 2
     scalar += 1.5
     return u8(255)
 
+
 func word_step(mut big: Big, mut scalar: bytes) -> u16:
     big.a += 3
     scalar = b"updated"
     return u16(65535)
 
+
 func dword_step(mut big: Big, mut scalar: int) -> u32:
     big.a += 4
     scalar += 3
     return u32(4294967295)
+
 
 func main(out: Stream) -> int:
     mut big = Big(a=1, b=2, c=3, d=4, e=5, f=6)
