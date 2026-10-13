@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/experiments/lox-eda-parity-20261013/P5/verify_probe.py", line 96, in <module>
+    main()
+    ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/experiments/lox-eda-parity-20261013/P5/verify_probe.py", line 87, in main
+    assert result.returncode == 0 and result.stdout == expected, result
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: CompletedProcess(args=['/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/scripts/build-slot.sh', 'build', 'timeout', '30', '/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/.tmp/lox-eda-parity/P5/verify-candidate/probe', 'unused', '16'], returncode=1, stdout='', stderr='build-slot: FIFO ticket 2790, position 4; earlier build tickets must run first; waiting (0s so far)\nbuild-slot: build slot 2, FIFO ticket 2790 after 26s\nkicad_sch_verify_test.my:170:20: error[R_ASSERT]: native execution failed: report.texts == n\n  in kicad_sch_verify_test::p5_count_labels at kicad_sch_verify_test.my:170:20\n  in kicad_sch_verify_test::main at kicad_sch_verify_test.my:189:12\n\x1eMYLANG-TRAP {"version":1,"operation":"report.texts == n"}\n')

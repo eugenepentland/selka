@@ -87,8 +87,7 @@ public func check(source: bytes, want: Expect) -> Result[textbox.Report, str]:
                 if found.uuids[i] != want.uuids[i]:
                     return Err(err_symbol_uuid_mismatch)
             for j in range(len(found.lib_ids)):
-                mut got = found.lib_ids[j].copy()
-                if got != want.lib_ids[j] or strs.text(got)not in found.lib_names:
+                if found.lib_ids[j] != want.lib_ids[j] or strs.text(found.lib_ids[j])not in found.lib_names:
                     return Err(err_unknown_lib_id)
             if found.no_connects != want.no_connects:
                 return Err(err_no_connect_count_mismatch)
@@ -415,9 +414,7 @@ func scan_label(node: ast.Node, mut found: Found):
             mut label = ast.as_text(cl[1])
             if label is None:
                 return
-            mut labels = found.labels.copy()
-            multiset_add(mut labels, label)
-            found.labels = labels
+            multiset_add(mut found.labels, label)
             mut p = point_of(node)
             if p is not None:
                 found.geom.label_pts.append(p)
@@ -552,20 +549,19 @@ func scan_placed(node: ast.Node, mut found: Found):
                 found.geom.placed.append(Placed(lib=lib_id.copy(), unit=unit_of(node), at=at, angle=angle_of(node)))
             mut ref = property(node, b"Reference")
             if ref is not None and ref.startswith(b"#PWR"):
-                mut rails = found.rail_values.copy()
-                multiset_add(mut rails, property(node, b"Value").unwrap_or(b""))
-                found.rail_values = rails
+                multiset_add(mut found.rail_values, property(node, b"Value").unwrap_or(b""))
         case _:
             return
 
 
 # Drawing-only body art is exempt; text and every connection anchor are not.
 func grid_scan(node: ast.Node) -> Result[Unit, str]:
-    if is_graphic_form(node):
+    mut kind = grid_form_kind(node)
+    if kind == 1:
         return Ok(())
     match node.tag:
         case ast.Tag.list(value=cl):
-            if len(cl) >= 3 and is_point_form(node):
+            if len(cl) >= 3 and kind == 2:
                 try on_grid(cl[1])
                 try on_grid(cl[2])
             for child in cl:
@@ -575,12 +571,23 @@ func grid_scan(node: ast.Node) -> Result[Unit, str]:
             return Ok(())
 
 
-func is_point_form(node: ast.Node) -> bool:
-    return ast.is_form(node, b"at") or ast.is_form(node, b"xy") or ast.is_form(node, b"start") or ast.is_form(node, b"end")
-
-
-func is_graphic_form(node: ast.Node) -> bool:
-    return ast.is_form(node, b"rectangle") or ast.is_form(node, b"polyline") or ast.is_form(node, b"circle") or ast.is_form(node, b"arc") or ast.is_form(node, b"bezier")
+# Select the scalar class while the form head remains scoped to its owner.
+func grid_form_kind(node: ast.Node) -> int:
+    match node.tag:
+        case ast.Tag.list(value=children):
+            if len(children) == 0:
+                return 0
+            match children[0].tag:
+                case ast.Tag.atom(value=name):
+                    if name == b"rectangle" or name == b"polyline" or name == b"circle" or name == b"arc" or name == b"bezier":
+                        return 1
+                    if name == b"at" or name == b"xy" or name == b"start" or name == b"end":
+                        return 2
+                    return 0
+                case _:
+                    return 0
+        case _:
+            return 0
 
 
 func on_grid(node: ast.Node) -> Result[Unit, str]:

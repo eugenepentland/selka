@@ -124,3 +124,30 @@ public func test_kicad_sch_verify_matches_child_sheet_files_and_rail_symbol_valu
     mut source = hier_doc()
     mut want = hier_expect()
     return passes(out, source, want) and fails(out, replace_owned(source, b"board-core.kicad_sch", b"board-other.kicad_sch"), want, m.err_sheet_link_mismatch) and fails(out, replace_owned(source, b"(property \"Sheetfile\"", b"(property \"Other\""), want, m.err_sheet_link_mismatch) and fails(out, replace_owned(source, b"\"Value\" \"GND\"", b"\"Value\" \"AGND\""), want, m.err_missing_net_label)
+
+
+# test "kicad-sch: verifier preserves repeated label and rail multiplicities"
+public func test_p5_verifier_repeated_label_and_rail_multiplicities(out: Stream) -> bool:
+    mut label = b"  (global_label \"NETA\" (at 43.18 36.83 180))\n"
+    mut labels = replace_owned(minimal_doc(), label, label + label)
+    mut label_want = minimal_expect()
+    label_want.labels.append(b"NETA")
+    if not passes(out, labels, label_want):
+        return False
+    mut second = b"  (symbol (lib_id \"netlisp:PWR_GND\") (at 63.5 38.1 0) (uuid \"pwr-2\") (property \"Reference\" \"#PWR02\" (at 63.5 31.75 0)) (property \"Value\" \"GND\" (at 63.5 44.45 0)))\n"
+    mut rails = replace_owned(hier_doc(), b"  (sheet ", second + b"  (sheet ")
+    mut rail_want = hier_expect()
+    rail_want.uuids.append(b"pwr-2")
+    rail_want.lib_ids.append(b"netlisp:PWR_GND")
+    rail_want.rail_values.append(b"GND")
+    return passes(out, rails, rail_want)
+
+
+# test "kicad-sch: verifier grid errors precede UUID errors and quoted heads stay inert"
+public func test_p5_verifier_grid_error_priority_and_quoted_heads(out: Stream) -> bool:
+    mut uuid_bad = replace_owned(minimal_doc(), b"\"aaaa\"", b"\"wrong\"")
+    mut both_bad = replace_owned(uuid_bad, b"(at 63.5 38.1 0)", b"(at 63.4 38.1 0)")
+    if not fails(out, both_bad, minimal_expect(), m.err_off_grid):
+        return False
+    mut inert = replace_owned(minimal_doc(), b"  (version 20260306)", b"  (version 20260306) (\"at\" 0.01 0.01) ()")
+    return passes(out, inert, minimal_expect())

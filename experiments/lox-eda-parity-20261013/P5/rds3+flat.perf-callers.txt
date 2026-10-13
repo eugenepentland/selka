@@ -1,0 +1,29 @@
+build-slot: FIFO ticket 2766, position 4; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 2766 after 25s
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 679  of event 'cpu_core/cycles/u'
+# Event count (approx.): 3690095322
+#
+# Children      Self  Symbol                                        IPC   [IPC Coverage]
+# ........  ........  ............................................  ....................
+#
+    14.32%    14.32%  [.] block_alloc                               -      -            
+     9.63%     9.63%  [.] myl_core_values_copy_box                  -      -            
+     9.07%     9.07%  [.] myl_core_drop_owned                       -      -            
+     9.00%     9.00%  [.] core_owned_child                          -      -            
+     5.48%     5.48%  [.] my.sexpr_parser::parse_node               -      -            
+     5.17%     5.17%  [.] my.sexpr_parser::next_token               -      -            
+     4.95%     4.95%  [.] my.kicad_sch_compose::join_sites          -      -            
+     4.78%     4.78%  [.] my.kicad_sch_verify::check                -      -            
+     3.61%     3.61%  [.] myl_core_owned_octets_copy                -      -            
+     2.83%     2.83%  [k] 0xffffffffbae00b90                        -      -            
+     2.08%     2.08%  [.] myl_core_str_eq                           -      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

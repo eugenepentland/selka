@@ -1,0 +1,25 @@
+{
+  "passed": 10,
+  "failed": 0,
+  "skipped": 0,
+  "unsupported": 0,
+  "returncode": 0,
+  "environment": {
+    "MYL_CORE_LEAKCHECK": "1"
+  },
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+    "test",
+    "experiments/lox-eda-parity-20261013/source/eda/kicad_sch_verify_test.my",
+    "--release",
+    "--verify-facts",
+    "--experimental-zero-rc",
+    "--cache-dir",
+    ".tmp/lox-eda-parity/P5/verify-test-cache",
+    "--json"
+  ],
+  "log_sha256": "489964cb27900decf66382e60dfa249fd6edcfda4a7edcc340d774bb37505b29",
+  "source_manifest_sha256": "0551a2c20aeb2e091c004c726cbe362e9951d36013ae8c76ab3a0c1402f79aa5"
+}

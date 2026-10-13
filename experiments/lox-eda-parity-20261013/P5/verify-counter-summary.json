@@ -1,0 +1,59 @@
+{
+  "label": "bounded counters, not full benchmark timing/RSS",
+  "rows": [
+    {
+      "labels": 16,
+      "baseline-v2": {
+        "allocation_bytes": 1031160,
+        "reallocation_added_bytes": 0,
+        "peak_live_bytes": 38000,
+        "buffer_copies": 1852,
+        "calls": 129594,
+        "bounds_checks": 54008,
+        "is_form_calls": 18515,
+        "check_buffer_copies": 22,
+        "scan_label_allocation_bytes": 2848,
+        "scan_placed_allocation_bytes": 15648
+      },
+      "candidate-v2": {
+        "allocation_bytes": 1029752,
+        "reallocation_added_bytes": 0,
+        "peak_live_bytes": 38000,
+        "buffer_copies": 1830,
+        "calls": 114033,
+        "bounds_checks": 49038,
+        "is_form_calls": 3501,
+        "check_buffer_copies": 0,
+        "scan_label_allocation_bytes": 2848,
+        "scan_placed_allocation_bytes": 15648
+      }
+    },
+    {
+      "labels": 64,
+      "baseline-v2": {
+        "allocation_bytes": 1176160,
+        "reallocation_added_bytes": 4608,
+        "peak_live_bytes": 105896,
+        "buffer_copies": 2092,
+        "calls": 150426,
+        "bounds_checks": 62168,
+        "is_form_calls": 21347,
+        "check_buffer_copies": 22,
+        "scan_label_allocation_bytes": 4456,
+        "scan_placed_allocation_bytes": 15648
+      },
+      "candidate-v2": {
+        "allocation_bytes": 1174752,
+        "reallocation_added_bytes": 4608,
+        "peak_live_bytes": 105896,
+        "buffer_copies": 2070,
+        "calls": 132609,
+        "bounds_checks": 56574,
+        "is_form_calls": 4173,
+        "check_buffer_copies": 0,
+        "scan_label_allocation_bytes": 4456,
+        "scan_placed_allocation_bytes": 15648
+      }
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "timing_ticket": 942,
+  "driver_returncode": 1,
+  "perf_event_available": true,
+  "cpu_affinity": [
+    8
+  ],
+  "driver_sha256": "b29c674c965c81a1887e288626aaf9c0f90934dc4c20053a19aa6552631db721",
+  "cells": [
+    {
+      "cell": "rds3+flat",
+      "record_returncode": 0,
+      "record_status_evidence": "driver entered report branch guarded by status == 0",
+      "native_samples": 679,
+      "lost_samples": 0,
+      "event": "cpu_core/cycles/u",
+      "raw_sha256": "5f0ec52b08b25ac4c7e86acf8cc26cc2020e6807f17e3d507927a016a75de422",
+      "gzip_sha256": "3e0a488c77c4fb15aa5f05abafcd0873e3e026cab8531683da517ee9a61cd614",
+      "initial_report_status": "timeout after5s; raw traceback preserved",
+      "offline_report_returncode": 0,
+      "caller_reconstruction": "unavailable; children equals self, no call graphs"
+    },
+    {
+      "cell": "cyclops-digital-pcb",
+      "record_status": "not run after report timeout"
+    }
+  ],
+  "label": "CPU attribution only; no comparative runtime/RSS claim",
+  "offline_report_commands": [
+    [
+      "scripts/build-slot.sh",
+      "build",
+      "timeout",
+      "45",
+      "taskset",
+      "-c",
+      "8",
+      "perf",
+      "report",
+      "--stdio",
+      "--no-children",
+      "--comms",
+      "zero-rc",
+      "--sort",
+      "symbol",
+      "--percent-limit",
+      "0.5",
+      "--call-graph",
+      "none",
+      "-i",
+      "rds3+flat.perf.data"
+    ],
+    [
+      "scripts/build-slot.sh",
+      "build",
+      "timeout",
+      "45",
+      "taskset",
+      "-c",
+      "8",
+      "perf",
+      "report",
+      "--stdio",
+      "--children",
+      "--comms",
+      "zero-rc",
+      "--sort",
+      "symbol",
+      "--percent-limit",
+      "2",
+      "--call-graph",
+      "flat,2,caller",
+      "-i",
+      "rds3+flat.perf.data"
+    ]
+  ],
+  "offline_report_environment": {
+    "DEBUGINFOD_URLS": "",
+    "PERF_BUILDID_DIR": "private P5/perf-buildid"
+  },
+  "raw_log_hashes": {
+    "profile-admission.log": "2fae97c6a400b0d8a5eb07f90ad4622078cc5fe8e734c09489c6c6621d67dd0c",
+    "rds3+flat.perf.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "rds3+flat.perf-report-timeout5s.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "rds3+flat.perf-report.txt": "db39253b688e1a4483f5f264633c8991158be29e07e8155b005a05a9d2e52094",
+    "rds3+flat.perf-callers.txt": "7338ac3e63e000b7a3d68b24f26ad4fec474f9b20d068aefd1b0a5d9a10e303b",
+    "perf-build-options.txt": "7611017cfe8749fb88c911dd090828ee78774028acefdef3a2dcb65502311ec3",
+    "profile-inputs.json": "dfb2cd35572b8150d5110bd0bc3a4b0769a0a936f14ff94104d124840bc7a513"
+  },
+  "private_raw_path": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/.tmp/lox-eda-parity/P5/profile942/rds3+flat.perf.data",
+  "committed_raw_storage": "rds3+flat.perf.data.gz; decompress for perf report"
+}

@@ -1,0 +1,6 @@
+build-slot: FIFO ticket 2789, position 4; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 3, FIFO ticket 2789 after 20s
+kicad_sch_verify_test.my:170:20: error[R_ASSERT]: native execution failed: report.texts == n
+  in kicad_sch_verify_test::p5_count_labels at kicad_sch_verify_test.my:170:20
+  in kicad_sch_verify_test::main at kicad_sch_verify_test.my:189:12
+MYLANG-TRAP {"version":1,"operation":"report.texts == n"}

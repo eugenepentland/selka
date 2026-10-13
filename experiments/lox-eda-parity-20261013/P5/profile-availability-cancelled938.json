@@ -1,0 +1,8 @@
+{
+  "event": "cycles:u",
+  "cpu": 8,
+  "perf": "perf version 7.0.14",
+  "perf_event_paranoid": "1",
+  "uid": 1000,
+  "label": "availability before admitted diagnostic profile; success determined by perf return status/logs"
+}

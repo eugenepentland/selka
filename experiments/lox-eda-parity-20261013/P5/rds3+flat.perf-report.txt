@@ -1,0 +1,48 @@
+build-slot: FIFO ticket 2759, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: FIFO ticket 2759, position 1; waiting for measurement or memory-accounting settle delay; waiting (61s so far)
+build-slot: FIFO ticket 2759, position 1; waiting for measurement or memory-accounting settle delay; waiting (121s so far)
+build-slot: FIFO ticket 2759, position 1; waiting for measurement or memory-accounting settle delay; waiting (181s so far)
+build-slot: build slot 1, FIFO ticket 2759 after 196s
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 679  of event 'cpu_core/cycles/u'
+# Event count (approx.): 3690095322
+#
+# Overhead  Symbol                                        IPC   [IPC Coverage]
+# ........  ............................................  ....................
+#
+    14.32%  [.] block_alloc                               -      -            
+     9.63%  [.] myl_core_values_copy_box                  -      -            
+     9.07%  [.] myl_core_drop_owned                       -      -            
+     9.00%  [.] core_owned_child                          -      -            
+     5.48%  [.] my.sexpr_parser::parse_node               -      -            
+     5.17%  [.] my.sexpr_parser::next_token               -      -            
+     4.95%  [.] my.kicad_sch_compose::join_sites          -      -            
+     4.78%  [.] my.kicad_sch_verify::check                -      -            
+     3.61%  [.] myl_core_owned_octets_copy                -      -            
+     2.83%  [k] 0xffffffffbae00b90                        -      -            
+     2.08%  [.] myl_core_str_eq                           -      -            
+     1.99%  [.] my.kicad_sch_verify::grid_scan            -      -            
+     1.59%  [.] myl_core_bytes_slice                      -      -            
+     1.50%  [.] 0x0000000000197d07                        -      -            
+     1.47%  [.] my.support_sha256::compress               -      -            
+     1.37%  [.] my.kicad_sch_textbox::hidden              -      -            
+     1.37%  [.] myl_core_parse_float_range                -      -            
+     1.35%  [.] myl_core_bytes_concat                     -      -            
+     1.11%  [.] memcpy@plt                                -      -            
+     0.95%  [.] myl_core_list_grow                        -      -            
+     0.93%  [.] fmt.parse_float.parseFloat__anon_1373     -      -            
+     0.73%  [.] my.kicad_sch_emit::render                 -      -            
+     0.67%  [.] myl_core_bytes_valid_list                 -      -            
+     0.53%  [.] myl_core_ir_str_append                    -      -            
+     0.53%  [.] myl_core_buffer_push_checked              -      -            
+     0.52%  [.] my.kicad_sch_emit::mm                     -      -            
+     0.52%  [.] myl_core_span_utf8_count                  -      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

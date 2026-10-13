@@ -1,0 +1,18 @@
+[
+  {
+    "cell": "rds3+flat",
+    "files": {
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/rds3+flat/model.sexp": "535232c04103e230546bf26e7a30c0433d524c03e0d296cfb11b56aabdede9eb",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/manifest.json": "4077dc7240898167b9080063bb811e11a54f52d1f486fdbec9f07138975109c0"
+    },
+    "frozen_spec_sha256": "af7a5a2516942be175a0d17274d991f1fa808176c6664fba1e8cf392abbe0dfe"
+  },
+  {
+    "cell": "cyclops-digital-pcb",
+    "files": {
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/cyclops-digital-pcb/model.sexp": "78eeb1a93a77de0fb1e4e1dd05a72fb18e22d1d2b0eddeb81e192a3d7b5109df",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/manifest.json": "4077dc7240898167b9080063bb811e11a54f52d1f486fdbec9f07138975109c0"
+    },
+    "frozen_spec_sha256": "ce178fe2dbd9ec1dfca8a4c93532565bcda054f2b75019a18edf457ebbdbc0e2"
+  }
+]

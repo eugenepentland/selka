@@ -1,0 +1,22 @@
+{
+  "timing_ticket": 938,
+  "wrapper_pid": 1249455,
+  "returncode": 143,
+  "status": "cancelled before admission by coordinator request",
+  "perf_executed": false,
+  "blocking_condition": "external gate1 lock; external job untouched",
+  "log_sha256": "34685500e8e3517ee380e1fd9fed55b7a1ceed98765a426dfcf82ed7344868be",
+  "prepared_command": [
+    "scripts/build-slot.sh",
+    "timing",
+    "timeout",
+    "60",
+    "taskset",
+    "-c",
+    "8",
+    "python3",
+    "experiments/lox-eda-parity-20261013/P5/profile.py"
+  ],
+  "log": "profile-admission-cancelled938.log",
+  "availability": "profile-availability-cancelled938.json"
+}

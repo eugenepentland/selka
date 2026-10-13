@@ -1,0 +1,12 @@
+{
+  "event": "cycles:u",
+  "cpu": 8,
+  "perf": "perf version 7.0.14",
+  "perf_event_paranoid": "1",
+  "uid": 1000,
+  "label": "availability before admitted diagnostic profile; success determined by perf return status/logs",
+  "admitted_cpu_affinity": [
+    8
+  ],
+  "driver_sha256": "b29c674c965c81a1887e288626aaf9c0f90934dc4c20053a19aa6552631db721"
+}
