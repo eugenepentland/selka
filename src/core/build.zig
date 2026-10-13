@@ -1355,7 +1355,7 @@ const FnBuilder = struct {
 
     /// `list` with element `index` replaced by `value`; the index is checked, and ownership
     /// releases the element that is replaced.
-    fn listSet(self: *FnBuilder, list: ir.Ref, index: ir.Ref, value: ir.Ref, span: u32) Error!ir.Ref {
+    pub fn listSet(self: *FnBuilder, list: ir.Ref, index: ir.Ref, value: ir.Ref, span: u32) Error!ir.Ref {
         const list_type = self.typeOfRef(list);
         if (self.mb.module.kind(list_type) == .dict) return self.emit(.{ .op = .dict_set_value, .ty = list_type, .a = list, .b = index, .data = try self.extraSlice(&.{value}), .span = span });
         if (self.mb.module.kind(list_type) != .list) return self.mb.refuse("element write of a non-list", span);
@@ -2468,7 +2468,7 @@ const FnBuilder = struct {
                     return result;
                 }
                 switch (operation.kind) {
-                    .extend, .reverse, .index_of, .insert, .pop_at, .remove, .slice_step, .clear => {
+                    .extend, .reverse, .index_of, .insert, .exchange, .pop_at, .remove, .slice_step, .clear => {
                         const result = try build_list_methods.operation(@TypeOf(self), self, operation, ty, span);
                         return result;
                     },

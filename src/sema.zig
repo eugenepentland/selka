@@ -597,7 +597,10 @@ const Checker = struct {
     /// it leaves scope.
     pub fn requireHandled(self: *Checker, first: usize, span: source.Span) Error!void {
         for (self.locals.items[first..], first..) |local, index| {
-            if (self.pendingObligation(local) and self.active.get(local.name) == @as(typed.LocalId, @fromBackingInt(index))) return self.sink.failRelated(
+            // Remaining mut-list elements return to the caller; overwrite checks
+            // still use pendingObligation and require explicit acknowledgement.
+            const caller_writeback = local.origin == .parameter and local.mutable and @import("record_layouts.zig").pendingList(self.catalog.records, local.ty);
+            if (!caller_writeback and self.pendingObligation(local) and self.active.get(local.name) == @as(typed.LocalId, @fromBackingInt(index))) return self.sink.failRelated(
                 "E_RESULT_UNHANDLED",
                 span,
                 "result-bearing value leaves scope without being handled, returned, transferred, or explicitly discarded",

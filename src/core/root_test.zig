@@ -16,6 +16,8 @@ comptime {
     _ = @import("a02_capacity_test.zig");
     _ = @import("a02_mut_call_test.zig");
     _ = @import("a02_list_methods_test.zig");
+    _ = @import("list_exchange_test.zig");
+    _ = @import("transfers_test.zig");
     _ = @import("a06_nested_write_test.zig");
     _ = @import("a04_extrema_test.zig");
     _ = @import("a04_render_test.zig");

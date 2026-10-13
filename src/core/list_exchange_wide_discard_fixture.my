@@ -1,0 +1,27 @@
+record Payload:
+    a: str
+    b: bytes
+    c: int[]
+    d: int
+    e: int
+
+enum Value:
+    empty
+    wide(value: Payload)
+
+func direct_discard():
+    mut values = [Value.wide(value=Payload(a="old", b=b"data", c=[1, 2], d=3, e=4))]
+    _ = values.exchange(0, Value.empty)
+    values[0] = Value.wide(value=Payload(a="replacement", b=b"new", c=[5], d=6, e=7))
+
+func wildcard_return() -> int:
+    mut values = [Value.wide(value=Payload(a="wildcard", b=b"data", c=[1, 2], d=3, e=4))]
+    match values.exchange(0, Value.empty):
+        case _:
+            return 9
+
+func main(out: Stream) -> int:
+    direct_discard()
+    assert wildcard_return() == 9
+    out.print("wide discard passed")
+    return 0

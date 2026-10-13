@@ -116,7 +116,7 @@ pub fn operationType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Spa
     if (kind == .borrow_view) return preludeType(catalog, if (schema.collection.kind == .string) "TextView" else "ByteView", span);
     if (try viewOwnedResult(catalog, owner, kind, span)) |result| return result;
     if (schema.collection.kind == .list) return switch (kind) {
-        .read, .pop, .pop_at => element,
+        .read, .pop, .pop_at, .exchange => element,
         .index_of => .i64,
         .copy, .snapshot => owner,
         .contains => .bool,

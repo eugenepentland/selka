@@ -1,0 +1,117 @@
+record Wide:
+    name: str
+    values: int[]
+    data: bytes
+    number: int
+
+enum Obj:
+    free
+    wide(value: Wide)
+    chain(label: str, rest: Obj)
+
+func indices(mut calls: int[]) -> int:
+    calls.append(1)
+    return -1
+
+func replacement(mut calls: int[]) -> int[]:
+    calls.append(2)
+    return [7, 8]
+
+func generic[T: storable](mut values: T[], index: int, value: T) -> T:
+    return values.exchange(index, value)
+
+func handle_pending() -> int:
+    mut pending: Result[int, str][] = [Ok(4)]
+    match pending.exchange(0, Ok(5)):
+        case Ok(value):
+            _ = pending
+            return value
+        case Err(reason):
+            _ = pending
+            return len(reason)
+
+func early() -> int:
+    mut items: Obj[] = [Obj.chain(label="outer", rest=Obj.chain(label="inner", rest=Obj.free))]
+    match items.exchange(0, Obj.free):
+        case Obj.chain(label=label, rest=child):
+            return len(label) + len(f"{child}")
+        case _:
+            return 0
+
+func main(args: str[], out: Stream) -> int:
+    if len(args) > 0:
+        mut numbers = [1, 2]
+        if args[0] == "negative":
+            _ = numbers.exchange(-3, 9)
+        if args[0] == "positive":
+            _ = numbers.exchange(2, 9)
+        if args[0] == "unsigned-max":
+            const maximum: u64 = 18446744073709551615
+            _ = numbers.exchange(maximum, 9)
+        if args[0] == "empty":
+            mut empty: int[] = []
+            _ = empty.exchange(0, 9)
+        return 0
+    mut narrow = [21, 22]
+    const from_end: i8 = -1
+    const from_start: u8 = 0
+    assert narrow.exchange(from_end, 23) == 22
+    assert narrow.exchange(from_start, 24) == 21
+    assert narrow == [24, 23]
+    mut calls: int[] = []
+    mut rows = [[1, 2], [3, 4]]
+    const before = rows.copy()
+    mut old = rows.exchange(indices(mut calls), replacement(mut calls))
+    old.append(5)
+    assert calls == [1, 2]
+    assert old == [3, 4, 5]
+    assert before == [[1, 2], [3, 4]]
+    assert rows == [[1, 2], [7, 8]]
+    _ = rows.exchange(0, [6])
+    mut numbers = [17, 18]
+    const selected = generic(mut numbers, -1, 19)
+    assert selected == 18 and numbers == [17, 19]
+    mut units: Unit[] = [()]
+    _ = units.exchange(-1, ())
+    mut values: Obj[] = [Obj.wide(value=Wide(name="old", values=[11], data=b"bytes", number=3))]
+    match values.exchange(0, Obj.free):
+        case Obj.wide(value=payload):
+            mut changed = payload
+            changed.values.append(12)
+            changed.number = 4
+            values[0] = Obj.wide(value=changed)
+        case _:
+            return 7
+    match values[0]:
+        case Obj.wide(value=payload):
+            assert payload.values == [11, 12] and payload.number == 4
+        case _:
+            return 8
+    assert early() > 0
+    assert handle_pending() == 4
+    mut generic_pending: Result[int, int][] = [Ok(31)]
+    const generic_replacement: Result[int, int] = Ok(32)
+    match generic(mut generic_pending, 0, generic_replacement):
+        case Ok(value):
+            assert value == 31
+        case Err(reason):
+            _ = generic_pending
+            return reason
+    _ = generic_pending
+    mut repeated = [[1]]
+    mut first = repeated.exchange(0, [2])
+    repeated[0] = [3]
+    _ = repeated.exchange(0, [4])
+    repeated[0] = [5]
+    first.append(6)
+    assert first == [1, 6] and repeated == [[5]]
+    mut rotating = [[13, 14]]
+    mut donor = [15, 16]
+    mut i = 0
+    while i < 1000:
+        donor = rotating.exchange(0, donor)
+        i += 1
+    assert donor == [15, 16]
+    assert rotating[0] == [13, 14]
+    out.print("exchange passed")
+    return 0

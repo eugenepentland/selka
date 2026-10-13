@@ -1,0 +1,18 @@
+# Read-only audit fixture: both arms remain live because take comes from argv.
+# The index is one shared unsigned parameter, avoiding signed normalization.
+func replace(mut rows: int[][], index: u64, take: bool):
+    if take:
+        _ = rows.exchange(index, [2])
+    else:
+        rows[index] = [3]
+
+func main(args: str[], out: Stream) -> int:
+    mut rows = [[1]]
+    const take = len(args) > 0
+    replace(mut rows, 0, take)
+    if take:
+        assert rows == [[2]]
+    else:
+        assert rows == [[3]]
+    out.print("sibling overwrite passed")
+    return 0

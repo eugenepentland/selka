@@ -31,6 +31,7 @@
 const std = @import("std");
 const ir = @import("ir.zig");
 const effects = @import("effects.zig");
+const transfers = @import("transfers.zig");
 const flags = @import("flags.zig");
 
 /// The pass only allocates.
@@ -478,6 +479,7 @@ const Context = struct {
 
     fn deadStores(self: *Context, stats: *Stats) Error!void {
         const f = self.fun();
+        const transferred = try transfers.slots(self.scratch, f);
         var stores: std.ArrayList(ir.Ref) = .empty;
         for (f.blocks.items, 0..) |block, b| {
             if (b != 0 and block.preds.items.len == 0) continue;
@@ -485,7 +487,7 @@ const Context = struct {
                 if (f.inst(ref).op != .list_set) continue;
                 // A store paired with a read that took its slot's owner puts that owner back:
                 // it is never removed, moved or narrowed.
-                if (flags.transferredSlot(f, f.inst(ref))) continue;
+                if (transferred[ref.index()]) continue;
                 try stores.append(self.scratch, ref);
             }
         }
@@ -960,6 +962,7 @@ const Context = struct {
     fn narrowStores(self: *Context, stats: *Stats) Error!void {
         const f = self.fun();
         const m = self.mod();
+        const transferred = try transfers.slots(self.scratch, f);
         var stores: std.ArrayList(ir.Ref) = .empty;
         for (f.blocks.items, 0..) |block, b| {
             if (b != 0 and block.preds.items.len == 0) continue;
@@ -967,7 +970,7 @@ const Context = struct {
                 const inst = f.inst(ref);
                 if (inst.op != .list_set) continue;
                 if (m.kind(m.compound(inst.ty).list) != .record) continue;
-                if (flags.transferredSlot(f, inst)) continue;
+                if (transferred[ref.index()]) continue;
                 try stores.append(self.scratch, ref);
             }
         }

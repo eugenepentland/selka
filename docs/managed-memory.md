@@ -80,7 +80,7 @@ while a view is still used is rejected. Files and dependent capabilities use
 It does not make a deep copy. `match` on a fresh call result also transfers its
 payload, so `match load(): case Ok(value): return value` needs no copy. Matching
 a named value (`match saved`) or a field/index continues to borrow, even at its
-last use. A fresh constructor, `.copy()` or `.pop()` result follows the
+last use. A fresh constructor, `.copy()`, `.pop()` or `.exchange()` result follows the
 same transfer rule as a call, as do fresh results from text/byte decoding,
 validation and numeric parsing. A named-field pattern on a fresh owned match
 splits the whole payload: `case Pair.parts(left=a, right=b)` gives `a` and `b`
@@ -204,13 +204,31 @@ A list answers the everyday vocabulary. `append(value)` and `extend(other)` add
 one element or copy another list's elements to the end; `insert(index, value)`
 inserts at a position, counting a negative index from the end and clamping to the
 bounds; `pop()` removes and returns the final element and `pop(index)` removes and
-returns an indexed element; `remove(value)` deletes the first equal element;
+returns an indexed element; `exchange(index, replacement)` replaces an existing
+element and returns its former value without changing length or order;
+`remove(value)` deletes the first equal element;
 `reverse()` reverses in place; `sort()` orders integer, `float`, `str` or `bytes`
 elements ascending, and `sort(key=f, reverse=True)` orders any list by a key, in
 place and stably ([keyed sorting](python-syntax.md#keyed-sorting)); `copy()` returns a fresh shallow list; `clear()` empties the list; and
 `index(value)` returns the first equal position. Length stays the free function
-`len(values)`. Every mutating method returns unit, so a discarded `pop` or `index`
-result needs its own binding or `_ =`. An absent `remove` or `index` traps with
+`len(values)`. Mutators other than `pop` and `exchange` return unit. A discarded
+`pop`, `exchange` or `index` result needs its own binding or `_ =`.
+In checked ownership mode, `exchange` moves the replacement into the list and
+transfers the former element to its result. It evaluates the index and replacement
+once in that order, then updates the receiver. Negative indices count from the
+end, and an out-of-range exchange traps with `R_LIST_BOUNDS`.
+
+```mylang
+# doc: expect 42
+func main() -> int:
+    mut rows = [[1], [2, 3]]
+    mut old = rows.exchange(-1, [8])
+    old.append(4)
+    assert rows == [[1], [8]]
+    assert old == [2, 3, 4]
+    return 42
+```
+An absent `remove` or `index` traps with
 `R_LIST_VALUE`, `pop` on an empty list traps with `R_LIST_BOUNDS`, and `sort`
 without a key rejects an element type that is not an integer, `float`, `str` or `bytes`. The legacy `push` is
 gone: it reports `E_REMOVED_SPELLING` and names `append`.

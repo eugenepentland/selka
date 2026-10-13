@@ -180,6 +180,8 @@ pub const Kind = enum {
     snapshot,
     /// A nonowning text/byte range, checked by the zero-RC source contract.
     borrow_view,
+    /// Replace one slot and transfer its former element to the caller.
+    exchange,
 
     /// Return the required source argument count for this buffer builtin.
     pub fn arity(self: Kind) usize {
@@ -194,7 +196,7 @@ pub const Kind = enum {
             .count, .zfill => 1,
             .extend, .pop_at, .remove, .index_of, .pop_key, .update => 1,
             .buffer_append_range => 3,
-            .replace, .insert, .setdefault, .pop_default => 2,
+            .replace, .insert, .exchange, .setdefault, .pop_default => 2,
             .iteration_check, .key_at, .value_at, .read, .append, .take, .truncate, .contains, .split, .join, .starts_with, .ends_with, .find => 1,
             .text_chr, .text_format => 1,
             .number_format, .float_round => 2,
@@ -220,7 +222,7 @@ pub const Kind = enum {
     /// a caller sees it: its elements, its length or its reserved capacity.
     pub fn writesReceiver(self: Kind) bool {
         return switch (self) {
-            .write, .append, .resize, .reserve, .take, .truncate, .extend, .insert, .pop, .pop_at, .remove, .reverse, .sort, .sort_keyed, .clear => true,
+            .write, .append, .resize, .reserve, .take, .truncate, .extend, .insert, .exchange, .pop, .pop_at, .remove, .reverse, .sort, .sort_keyed, .clear => true,
             .update, .setdefault, .pop_key, .pop_default => true,
             .buffer_reserve, .buffer_append_byte, .buffer_append_range, .buffer_append_utf8, .buffer_append_int, .buffer_append_float => true,
             else => false,
@@ -280,6 +282,7 @@ const methods = [_]Method{
     .{ .spelling = "discard", .kind = .set_discard, .set = true },
     .{ .spelling = "encode", .kind = .encode, .string = true },
     .{ .spelling = "endswith", .kind = .ends_with, .string = true, .bytes = true },
+    .{ .spelling = "exchange", .kind = .exchange, .list = true },
     .{ .spelling = "extend", .kind = .extend, .list = true },
     .{ .spelling = "find", .kind = .find, .string = true, .bytes = true },
     .{ .spelling = "find_any", .kind = .find_any, .bytes = true },
@@ -492,6 +495,7 @@ fn signatureBody(allocator: std.mem.Allocator, kind: Kind, names: SignatureNames
             try std.fmt.allocPrint(allocator, "(index: int, value: {s}) -> None", .{element}),
         .append, .remove => try std.fmt.allocPrint(allocator, element_signature, .{element}),
         .extend => try std.fmt.allocPrint(allocator, other_signature, .{receiver}),
+        .exchange => try std.fmt.allocPrint(allocator, "(index: int, replacement: {s}) -> {s}", .{ element, element }),
         .insert => try std.fmt.allocPrint(allocator, "(index: int, value: {s}) -> None", .{element}),
         .pop => try std.fmt.allocPrint(allocator, fresh_signature, .{element}),
         .pop_at => try std.fmt.allocPrint(allocator, index_signature, .{element}),
@@ -583,7 +587,7 @@ pub fn unionMethodSpellings(allocator: std.mem.Allocator) std.mem.Allocator.Erro
 /// arity and element rules live in the checker rather than the eager desugaring.
 pub fn vocabulary(kind: Kind) bool {
     return switch (kind) {
-        .extend, .insert, .pop, .remove, .index_of, .reverse, .sort, .copy, .snapshot, .clear => true,
+        .extend, .insert, .exchange, .pop, .remove, .index_of, .reverse, .sort, .copy, .snapshot, .clear => true,
         .items, .update, .setdefault, .pop_key, .pop_default => true,
         else => false,
     };

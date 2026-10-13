@@ -92,36 +92,11 @@ pub const dict_take_mask: u64 = dict_take_key | dict_take_value;
 pub fn transferredRead(inst: ir.Inst) bool {
     return switch (inst.op) {
         .list_get => inst.data == place_read,
-        .dict_entry_key, .dict_entry_value => inst.data == place_read or inst.data & dict_take_mask != 0,
+        .dict_entry_key => inst.data == place_read or inst.data & dict_take_key != 0,
+        .dict_entry_value => inst.data == place_read or inst.data & dict_take_value != 0,
         .list_get_field => inst.data & 0xf <= 4 and inst.data & place_read != 0,
         else => false,
     };
-}
-
-/// A replacement paired with a transferred read must not release its old slot: a whole-element
-/// store after a transferred element read, or a `list_set_field` after a transferred read of
-/// the same field.
-pub fn transferredSlot(function: *const ir.Function, inst: ir.Inst) bool {
-    const field: ?u64 = switch (inst.op) {
-        .list_set, .dict_set_value => null,
-        .list_set_field => storedPath(function, inst) orelse return false,
-        else => return false,
-    };
-    for (function.blocks.items) |block| for (block.insts.items) |ref| {
-        const read = function.inst(ref);
-        if (!transferredRead(read) or function.resolve(read.a) != function.resolve(inst.a) or function.resolve(read.b) != function.resolve(inst.b)) continue;
-        const read_field: ?u64 = if (read.op == .list_get_field) read.data & ~place_read else null;
-        if (read_field == field) return true;
-    };
-    return false;
-}
-
-/// The packed field path of a `list_set_field` (the `u64` constant in `extra[1]`).
-fn storedPath(function: *const ir.Function, inst: ir.Inst) ?u64 {
-    const operands = function.operands(inst.data);
-    if (operands.len != 2) return null;
-    const constant = function.inst(function.resolve(operands[1]));
-    return if (constant.op == .iconst and constant.ty == .u64) constant.data else null;
 }
 
 /// Heap fill loops reserve a bounded prefix without changing their empty length.

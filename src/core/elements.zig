@@ -288,7 +288,7 @@ const Tracing = struct { stack: [16]ir.Ref = undefined, len: usize = 0 };
 
 /// The store-back form of `inst` (a `list_set`, or a `list_set_field` of a block-pointer
 /// field reached without crossing a union), or null when it is an ordinary store.
-pub fn storeBack(module: *const ir.Module, f: *const ir.Function, inst: ir.Inst) ?StoreBack {
+pub fn storeBack(module: *const ir.Module, f: *const ir.Function, inst: ir.Inst, transferred: bool) ?StoreBack {
     const element = module.compound(inst.ty).list;
     const field: ?u64 = switch (inst.op) {
         .list_set => blk: {
@@ -303,7 +303,7 @@ pub fn storeBack(module: *const ir.Module, f: *const ir.Function, inst: ir.Inst)
         },
         else => return null,
     };
-    if (!flags.transferredSlot(f, inst)) return null;
+    if (!transferred) return null;
     const match: Match = .{ .list = f.resolve(inst.a), .index = f.resolve(inst.b), .field = field };
     var tracing: Tracing = .{};
     const found = trace(f, match, f.operands(inst.data)[0], &tracing, 0) orelse return null;

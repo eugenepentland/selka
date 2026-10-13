@@ -42,6 +42,7 @@
 const std = @import("std");
 const ir = @import("ir.zig");
 const facts = @import("facts.zig");
+const transfers = @import("transfers.zig");
 const flags = @import("flags.zig");
 const promotion = @import("promote.zig");
 const elements = @import("elements.zig");
@@ -167,9 +168,10 @@ pub fn functionWithScratch(arena: std.mem.Allocator, backing: std.mem.Allocator,
     if (options.effects) |summaries| _ = try stores.run(arena, module, f, summaries);
     // Popped elements are found (or read) before anything moves.
     try markPops(.{ .arena = arena, .f = f, .origin = marks.origin }, scratch, module, &marks);
+    const transferred = try transfers.slots(scratch, f);
     for (f.insts.items, 0..) |inst, index| {
         if (flags.transferredRead(inst) and module.managed(inst.ty)) try marks.owned_get.put(scratch, @intCast(index), {});
-        if (flags.transferredSlot(f, inst)) try marks.taken.put(scratch, @intCast(index), {});
+        if (transferred[index]) try marks.taken.put(scratch, @intCast(index), {});
     }
     if (options.effects) |summaries| try @import("borrow_fields.zig").run(arena, module, f, summaries, marks.origin);
     try mergeFieldReads(scratch, f);

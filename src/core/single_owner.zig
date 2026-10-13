@@ -30,6 +30,7 @@ pub fn matchOwnsTemporary(nodes: []const typed.Node, id: typed.NodeId) bool {
         .buffer_operation => |operation| switch (operation.kind) {
             .copy,
             .pop,
+            .exchange,
             .pop_key,
             .pop_default,
             .decode,
@@ -970,7 +971,7 @@ const Checker = struct {
                     .write, .setdefault => true,
                     .pop_default => index == 1,
                     else => false,
-                } else operation.kind == .append or (operation.kind == .write and index == 1) or (operation.kind == .insert and index == 1);
+                } else operation.kind == .append or (operation.kind == .write and index == 1) or ((operation.kind == .insert or operation.kind == .exchange) and index == 1);
                 const writeback = schema.collection.kind == .list and operation.kind == .write and index == 1 and c.sameSlotWriteback(operation.owner, operation.arguments[0], argument);
                 try c.expression(argument, if (writeback) .writeback else if (consumes) .move else .read);
                 if (c.zero_rc and schema.collection.kind == .list and operation.kind == .extend)

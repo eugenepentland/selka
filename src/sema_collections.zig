@@ -796,7 +796,7 @@ fn checkCollectionAccess(comptime Checker: type, self: *Checker, node: ast.Node,
         return checkManagedAccess(Checker, self, node, .{ .base = base, .kind = kind, .inputs = inputs }, temporaries);
     }
     if (switch (kind) {
-        .extend, .insert, .pop, .pop_at, .remove, .index_of, .reverse, .sort, .copy, .snapshot, .clear => true,
+        .extend, .insert, .exchange, .pop, .pop_at, .remove, .index_of, .reverse, .sort, .copy, .snapshot, .clear => true,
         else => false,
     }) return checkListMethod(Checker, self, node, .{ .base = base, .kind = kind, .inputs = inputs, .temporaries = temporaries });
     const supported = switch (kind) {
@@ -859,7 +859,7 @@ fn checkListMethod(comptime Checker: type, self: *Checker, node: ast.Node, call:
             arguments[0] = try self.expressionWithTemporaries(inputs[0], temporaries);
             try self.requireArgument(.{ .actual = self.nodes.items[@backingInt(arguments[0])].ty, .expected = owner_type, .span = node.span, .kind = kind, .names = names });
         },
-        .insert => {
+        .insert, .exchange => {
             try self.hint(inputs[0], .i64);
             arguments[0] = try self.expressionWithTemporaries(inputs[0], temporaries);
             try self.requireInteger(self.nodes.items[@backingInt(arguments[0])].ty, node.span);
@@ -1201,7 +1201,7 @@ fn checkBufferOperation(comptime Checker: type, self: *Checker, _: ast.Node, ope
         return self.sink.fail(eCellEquality, operation.owner, "list membership over Cell-bearing values requires equality, which Cell does not define");
     switch (operation.kind) {
         .append, .read, .write, .length, .capacity, .contains, .iteration_check => {},
-        .extend, .insert, .pop, .pop_at, .remove, .index_of, .reverse, .sort, .copy, .snapshot, .clear => {
+        .extend, .insert, .exchange, .pop, .pop_at, .remove, .index_of, .reverse, .sort, .copy, .snapshot, .clear => {
             try checkListBufferMethod(Checker, self, operation, owner, out);
             return;
         },
@@ -1247,7 +1247,7 @@ fn checkListBufferMethod(comptime Checker: type, self: *Checker, operation: @Fie
         const span = self.syntax.nodes.items[@backingInt(input)].span;
         switch (kind) {
             .extend => try self.requireArgument(.{ .actual = actual, .expected = owner_type, .span = span, .kind = kind, .names = names }),
-            .insert => if (index == 0) try self.requireInteger(actual, span) else try self.requireArgument(.{ .actual = actual, .expected = element, .span = span, .kind = kind, .names = names }),
+            .insert, .exchange => if (index == 0) try self.requireInteger(actual, span) else try self.requireArgument(.{ .actual = actual, .expected = element, .span = span, .kind = kind, .names = names }),
             .pop_at => try self.requireInteger(actual, span),
             .remove, .index_of => try self.requireArgument(.{ .actual = actual, .expected = element, .span = span, .kind = kind, .names = names }),
             else => {},
@@ -1342,7 +1342,7 @@ fn checkPythonText(comptime Checker: type, self: *Checker, operation: @FieldType
 fn pendingListOperation(comptime Checker: type, self: *Checker, owner: typed.Type, kind: BufferKind, span: source.Span) Error!void {
     if (!record_layouts.pendingList(self.catalog.records, owner)) return;
     switch (kind) {
-        .append, .pop, .pop_at, .copy, .read, .length, .capacity, .iteration_check => {},
+        .append, .pop, .pop_at, .exchange, .copy, .read, .length, .capacity, .iteration_check => {},
         else => return self.sink.fail(eResultOperation, span, "this operation would implicitly discard or copy pending Results; handle elements or explicitly discard the whole list"),
     }
 }

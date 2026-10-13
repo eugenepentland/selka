@@ -61,7 +61,7 @@ pub fn instruction(comptime Context: type, c: Context, out: *@import("std").Arra
         },
         .dict_set_value => {
             const scalar = shape.value.integer() != null or shape.value == .bool or shape.value == .f64 or shape.value == .void;
-            if (scalar or @import("flags.zig").transferredSlot(c.function, inst)) {
+            if (scalar or c.transferredSlot()) {
                 try scalarSet(c, out, name, inst, .{ .stride = stride, .offset = value_offset, .value = shape.value });
                 return;
             }

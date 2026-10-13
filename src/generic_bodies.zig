@@ -76,6 +76,7 @@ const Local = struct {
     name: source.Span,
     ty: Symbolic,
     mutable: bool,
+    caller_writeback: bool = false,
     transfer_span: ?source.Span = null,
     available: bool = true,
 };
@@ -151,6 +152,7 @@ const Checker = struct {
             const parameter_type = try self.ty(parameter.ty);
             if (parameter.default_value) |value| try self.compatible(try self.expressionExpected(value, parameter_type), parameter_type, parameter.ty);
             try self.bindMode(parameter.name, parameter_type, parameter.mut and function.policy.host == null);
+            self.locals.items[self.locals.items.len - 1].caller_writeback = parameter.mut and function.policy.host == null and self.shapes().collectionKind(parameter_type) == .list;
         }
         const implicit_unit = symbolic.same(success, .{ .concrete = .unit }, self.catalog);
         const terminates = try self.statement(function.body);
@@ -388,7 +390,7 @@ const Checker = struct {
     }
     fn requireHandled(self: *Checker, first: usize, span: source.Span) Error!void {
         for (self.locals.items[first..]) |binding| {
-            if ((try self.pendingObligation(binding)))
+            if (!binding.caller_writeback and (try self.pendingObligation(binding)))
                 return self.sink.failRelated("E_RESULT_UNHANDLED", span, "result-bearing binding leaves scope without handling or transfer", .{ .span = binding.name, .message = "unhandled result-bearing binding" });
         }
     }
@@ -1083,6 +1085,9 @@ const Checker = struct {
         self.seedEffect(.managed_allocation);
         return owner;
     }
+    fn requireExchangeList(self: *Checker, kind: BufferKind, family: @import("runtime_values.zig").ManagedKind, span: source.Span) Error!void {
+        if (kind == .exchange and family != .list) return self.sink.fail(eListMethod, span, "exchange requires a list receiver");
+    }
     fn collectionOperation(self: *Checker, owner: Symbolic, operation: struct { kind: BufferKind, inputs: []const ast.NodeId, span: source.Span, owner_node: ?ast.NodeId = null }) Error!Symbolic {
         if (self.shapes().isSet(owner)) {
             const input = if (operation.owner_node) |node_id| self.parameterIndex(node_id, 0) else null;
@@ -1092,6 +1097,7 @@ const Checker = struct {
         const element = try self.collectionElement(owner, operation.span);
         const key = if (family == .dictionary) try self.shapes().collectionKey(owner, operation.span) else element;
         const kind = buffer_operations.forFamily(operation.kind, family);
+        try self.requireExchangeList(kind, family, operation.span);
         try self.checkPendingOperation(owner, kind, operation.span);
         if (operation.inputs.len != kind.arity()) return self.sink.fail("E_ARITY", operation.span, "collection argument count differs from its signature");
         if (buffer_operations.search(kind) != null or buffer_operations.trim(kind) != null)
@@ -1107,7 +1113,7 @@ const Checker = struct {
             .length, .capacity => .{ .concrete = .i64 },
             .parse_int, .parse_int_range => try self.optionType(.{ .concrete = .i64 }),
             .parse_float, .parse_float_range => try self.optionType(self.floatType()),
-            .read, .get, .pop, .pop_at => element,
+            .read, .get, .pop, .pop_at, .exchange => element,
             .contains => .{ .concrete = .bool },
             .append, .write => .{ .concrete = .unit },
             .keys, .values, .split => try self.shapes().nominal(self.catalog.templates.store.?.index.names.get("List").?, &.{if (kind == .keys) key else if (kind == .split) owner else element}),
@@ -1129,7 +1135,7 @@ const Checker = struct {
         if (family != .dictionary and (kind == .keys or kind == .values or kind == .get)) return self.sink.fail(eListType, operation.span, "mapping operation requires a dictionary");
         const range_bound = kind == .view or kind == .borrow_view or kind == .slice or kind == .parse_int_range or kind == .parse_float_range;
         for (operation.inputs, 0..) |input, index| {
-            const indexed = index == 0 and (kind == .read or kind == .write or kind == .pop_at);
+            const indexed = index == 0 and (kind == .read or kind == .write or kind == .pop_at or kind == .exchange);
             const integer = family != .dictionary and (range_bound or indexed);
             const expected = if (family == .dictionary) (if (index == 0) key else element) else if (kind == .join) try self.shapes().nominal(self.catalog.templates.store.?.index.names.get("List").?, &.{owner}) else element;
             if (integer) try self.supports(try self.expression(input), .integer, operation.span) else try self.compatible(try self.expressionExpected(input, expected), expected, operation.span);
@@ -2168,7 +2174,7 @@ const Checker = struct {
             // belongs at this position is decided by the concrete specialization,
             // which re-checks every call with the declared footprint and the
             // full origin analysis.
-            .mut_argument => |inner| try self.expression(inner),
+            .mut_argument => |inner| try self.borrowList(inner),
             .match_expression => |match| blk: {
                 const previous = self.match_yield;
                 defer self.match_yield = previous;
@@ -2288,7 +2294,7 @@ const Checker = struct {
     }
     fn pendingListOperation(self: *Checker, kind: BufferKind, span: source.Span) Error!void {
         switch (kind) {
-            .append, .pop, .pop_at, .copy, .read, .length, .capacity, .iteration_check => {},
+            .append, .pop, .pop_at, .exchange, .copy, .read, .length, .capacity, .iteration_check => {},
             else => return self.sink.fail(eResultOperation, span, "this operation would implicitly discard or copy pending Results; handle elements or explicitly discard the whole list"),
         }
     }
@@ -2320,7 +2326,7 @@ const Checker = struct {
         const element = shape.element;
         if (operation.kind == .read) try self.supports(element, .storable, operation.owner);
         for (operation.arguments, 0..) |input, index| {
-            const writes_element = index == 1 and operation.kind == .write;
+            const writes_element = index == 1 and (operation.kind == .write or operation.kind == .exchange);
             const value = if (operation.kind == .append or writes_element) try self.expressionExpected(input, element) else try self.expression(input);
             const at = self.program.nodes.items[@backingInt(input)].span;
             if (operation.kind == .append or writes_element) try self.compatible(value, element, at) else try self.supports(value, .integer, at);
@@ -2329,7 +2335,7 @@ const Checker = struct {
         if (operation.kind == .append) self.seedEffect(.managed_allocation);
         const dictionary = (self.shapes().collectionKind(owner.ty) orelse .list) == .dictionary;
         self.seedCollectionWrite(operation.kind, dictionary, self.parameterIndexAt(operation.owner));
-        if (operation.kind == .pop or operation.kind == .pop_at) return element;
+        if (operation.kind == .pop or operation.kind == .pop_at or operation.kind == .exchange) return element;
         if (operation.kind.mutates()) return .{ .concrete = .unit };
         const success: Symbolic = if (operation.kind == .read) element else .{ .concrete = .u64 };
         return self.symbolicOperationResult(null, success, eListType);

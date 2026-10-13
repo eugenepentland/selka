@@ -16,6 +16,7 @@ const facts = @import("facts.zig");
 const index_keys = @import("index_keys.zig");
 const vector = @import("vector.zig");
 const c_abi = @import("c_abi.zig");
+const transfers = @import("transfers.zig");
 const flags = @import("flags.zig");
 const elements = @import("elements.zig");
 const emit_dict = @import("emit_dict.zig");
@@ -854,6 +855,8 @@ const MemoryState = struct {
     uses: []u32 = &.{},
     /// Per instruction: a list element over four words lent to calls where it lies (CE2-B).
     borrowed: []bool = &.{},
+    /// Per instruction: an old slot transferred by a dominating earlier read.
+    transferred: []bool = &.{},
     /// The lists and buffers whose length a loop keeps in slots while it appends (`emit_state.zig`).
     states: emit_state.Plan = .{},
     /// Per instruction: the index the program wrote, when it is a Python index normalization
@@ -1315,6 +1318,7 @@ const FunctionEmitter = struct {
         }
         try self.inOutCalls();
         mem.borrowed = try self.lentElements();
+        mem.transferred = try transfers.slots(self.a(), f);
     }
 
     /// The home plan of the function (`emit_homes.zig`). With `share_calls`, a call to a callee whose
@@ -3112,14 +3116,19 @@ const FunctionEmitter = struct {
         return capacity;
     }
 
+    /// Whether the current overwrite follows a read that took its slot owner.
+    pub fn transferredSlot(self: *const FunctionEmitter) bool {
+        return self.memory.transferred[self.current.index()];
+    }
+
     fn listSet(self: *FunctionEmitter, out: *Out, name: []const u8, inst: ir.Inst) !void {
         const m = self.state.module;
         const list = try self.value(inst.a);
         const element = m.compound(inst.ty).list;
         const index = try self.checkedIndex(out, inst, list, try self.value(inst.b));
         const slot = try self.elementSlot(out, list, index, element);
-        if (elements.storeBack(m, self.function, inst)) |back| return self.storeBackPointer(out, name, inst, back, slot);
-        const managed = m.managed(element) and !flags.transferredSlot(self.function, inst);
+        if (elements.storeBack(m, self.function, inst, self.transferredSlot())) |back| return self.storeBackPointer(out, name, inst, back, slot);
+        const managed = m.managed(element) and !self.transferredSlot();
         var held: std.ArrayList(Held) = .empty;
         const saved = self.tagElements(true);
         defer _ = self.tagElements(saved);
@@ -3146,13 +3155,13 @@ const FunctionEmitter = struct {
         const path = elements.setPath(self.function, inst) orelse return error.UnsupportedInstruction;
         const target = m.pathTarget(element, path) orelse return error.UnsupportedInstruction;
         const at = try self.offsetPointer(out, slot, target.offset);
-        if (elements.storeBack(m, self.function, inst)) |back| return self.storeBackPointer(out, name, inst, back, at);
+        if (elements.storeBack(m, self.function, inst, self.transferredSlot())) |back| return self.storeBackPointer(out, name, inst, back, at);
         const saved = self.tagElements(!m.pathCrossesUnion(element, path));
         defer _ = self.tagElements(saved);
         var held: std.ArrayList(Held) = .empty;
         self.count_detail = if (self.count_fn != null) "list_set_field.old" else null;
         // A field a transferred read took over (`xs[i].items.append(v)`, CE2-B) is not released.
-        if (!flags.transferredSlot(self.function, inst)) try self.holdManaged(out, target.ty, at, &held, null);
+        if (!self.transferredSlot()) try self.holdManaged(out, target.ty, at, &held, null);
         self.count_detail = null;
         try self.storeOperand(out, target.ty, self.function.operands(inst.data)[0], at);
         // The releases read their own blocks, not this element: generic tags again.

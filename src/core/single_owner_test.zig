@@ -490,3 +490,49 @@ test "single owner shared child outlives its exclusive parent and empty snapshot
         \\    return 0
     , "7 8 0 1\n");
 }
+
+// spec-case: OWNED-LIST-EXCHANGE-1
+test "single owner exchange consumes replacements and rejects borrowed or overlapping donors" {
+    try refuses(std.testing.allocator,
+        \\func main() -> int:
+        \\    mut rows = [[1]]
+        \\    const donor = [2]
+        \\    _ = rows.exchange(0, donor)
+        \\    return len(donor)
+    , "E_SINGLE_OWNER_MOVED");
+    try refuses(std.testing.allocator,
+        \\func main() -> int:
+        \\    mut rows = [[1], [2]]
+        \\    _ = rows.exchange(0, rows[1])
+        \\    return 0
+    , "E_SINGLE_OWNER_BORROW");
+}
+
+// spec-case: OWNED-LIST-EXCHANGE-1
+test "single owner exchange refuses receiver relocation while evaluating arguments" {
+    try rejectsExchangeRelocation(std.testing.allocator,
+        \\func grow(mut xs: int[]) -> int:
+        \\    xs.append(3)
+        \\    return -1
+        \\func main() -> int:
+        \\    mut xs = [1, 2]
+        \\    _ = xs.exchange(grow(mut xs), 9)
+        \\    return 0
+    , "E_MUTATION_OVERLAP");
+    try rejectsExchangeRelocation(std.testing.allocator,
+        \\func replacement(mut xs: int[]) -> int:
+        \\    xs.append(3)
+        \\    return 9
+        \\func main() -> int:
+        \\    mut xs = [1, 2]
+        \\    _ = xs.exchange(0, replacement(mut xs))
+        \\    return 0
+    , "E_MUTATION_OVERLAP");
+}
+
+fn rejectsExchangeRelocation(allocator: std.mem.Allocator, text: []const u8, code: []const u8) !void {
+    var c = try language.Compilation.init(allocator, "exchange-relocation.my", text);
+    defer c.deinit();
+    try std.testing.expectError(error.SourceError, c.check());
+    try std.testing.expectEqualStrings(code, c.diagnostics.items[0].code);
+}

@@ -23,6 +23,7 @@ pub fn operation(comptime Context: type, b: Context, node: Operation, result_ty:
             return b.emit(.{ .op = .convert, .ty = .i64, .a = index, .span = span });
         },
         .insert => return insert(Context, b, node, span),
+        .exchange => return exchange(Context, b, node, result_ty, span),
         .pop_at, .remove => return remove(Context, b, node, result_ty, span),
         .slice_step => return slice(Context, b, node, span),
         .extend => {
@@ -131,6 +132,30 @@ fn find(comptime Context: type, b: Context, source: ir.Ref, needle: ir.Ref, span
     const count = try length(Context, b, source, span);
     try checks.require(Context, b, try compare(Context, b, .lt, found, count, span), 18, span);
     return found;
+}
+
+/// Exchange evaluates index and replacement once before refreshing the receiver.
+/// The owned read and overwrite share exact SSA operands, transferring the old slot.
+fn exchange(comptime Context: type, b: Context, node: Operation, result_ty: ir.Type, span: u32) Error!ir.Ref {
+    const input = try b.expression(node.arguments[0]);
+    if (b.current == null) return .none;
+    var replacement = try b.expression(node.arguments[1]);
+    if (b.current == null) return .none;
+    if (replacement == .none or b.typeOfRef(replacement) == .void) replacement = try b.constant(.bool, 0);
+    var source = try b.writableReceiverOf(node.owner, span);
+    // Detach a shared RC parent before taking its child; zero RC is already unique.
+    if (!b.module().zero_rc) source = try b.emit(.{ .op = .list_copy, .ty = b.typeOfRef(source), .a = source, .data = flags.place_copy, .span = span });
+    const integer = b.typeOfRef(input).integer() orelse return b.mb.refuse("exchange index is not an integer", span);
+    const wide = try b.emit(.{ .op = .convert, .ty = if (integer.signed) .i64 else .u64, .a = input, .span = span });
+    var index = wide;
+    if (integer.signed) {
+        const count = try b.emit(.{ .op = .convert, .ty = .i64, .a = try length(Context, b, source, span), .span = span });
+        index = try select(Context, b, try compare(Context, b, .lt, wide, try b.constant(.i64, 0), span), try b.emit(.{ .op = .add, .ty = .i64, .a = wide, .b = count, .span = span }), wide, span);
+    }
+    const element = b.module().compound(b.typeOfRef(source)).list;
+    const old = try b.emit(.{ .op = .list_get, .ty = element, .a = source, .b = index, .data = flags.place_read, .check = .exact, .span = span });
+    try b.writeOwner(node.owner, try b.listSet(source, index, replacement, span), span);
+    return if (result_ty == .void) .none else old;
 }
 
 /// Python's negative insertion positions clamp into [0, length].

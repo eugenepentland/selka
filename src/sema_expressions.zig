@@ -79,7 +79,7 @@ fn hintBufferArguments(comptime Checker: type, self: *Checker, operation: @Field
             const element = self.catalog.records[owner_type.recordIndex()].shape.buffer.?;
             switch (operation.kind) {
                 .append, .remove, .index_of => if (operation.arguments.len == 1) try self.hint(operation.arguments[0], element),
-                .insert => if (operation.arguments.len == 2) {
+                .insert, .exchange => if (operation.arguments.len == 2) {
                     try self.hint(operation.arguments[0], .i64);
                     try self.hint(operation.arguments[1], element);
                 },
@@ -603,7 +603,7 @@ fn queueExpression(comptime Checker: type, self: *Checker, work: *std.ArrayList(
         // own, and the node itself reuses the resolved target's type and data.
         .mut_argument => |inner| {
             try work.append(self.allocator, .{ .id = id, .mode = .emit });
-            try work.append(self.allocator, .{ .id = inner });
+            try work.append(self.allocator, .{ .id = inner, .mode = .borrow_result_list });
             return true;
         },
         else => {},
