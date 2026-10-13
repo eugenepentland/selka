@@ -142,3 +142,13 @@ regress: RDS3+flat ratio 1.011355 (95% paired CI 1.003598–1.025534), Cyclops
 prototype patch, hashes, raw counters, calibration/warmup/pair journals, and
 read-only native comparison are in P3/c2-001. These compare against C2, not
 final integrated parity. Stop further scanner prototypes for this batch.
+
+Diagram attachment follow-up accepted by coordinator: source4164ab016.
+Fresh focused baseline/candidate3/3 and candidatecanonical328/328 pass;
+baselinefive-mode328 receipts reused with exactC2 source/install hashes.
+Final flags-matched RDS3-flat removes119,422allocations/8,222,080bytes,
+peak/realloc unchanged, zeroRC/exit-live, exactoutputs; nativecopy sites83→2.
+Nine-pair C2 diagnostics: RDS ratio0.980847(CI0.972462–0.987725); Cyclops
+0.994447(CI0.986632–1.009076). Not final integratedparity. Full mixed/final
+receipts and privateC3 five-mode prefix setup are in P3/dm-001/handoff.md.
+No further prototypes; C3 compiler binding/nativecontracts remain pending.

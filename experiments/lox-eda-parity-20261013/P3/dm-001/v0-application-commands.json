@@ -1,0 +1,19 @@
+[
+  {
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/dm-001/candidate/eda/main.my",
+      "--release",
+      "--experimental-zero-rc",
+      "--verify-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/dm-001/cache-application",
+      "-o",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/dm-001/candidate",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/dm-001/candidate.ll"
+    ],
+    "returncode": 2
+  }
+]

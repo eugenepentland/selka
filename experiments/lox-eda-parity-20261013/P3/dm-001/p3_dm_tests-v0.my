@@ -1,0 +1,60 @@
+import diagram_membership as m
+import eval_env as env
+
+func sub(name: bytes) -> env.SubBlock:
+    return env.SubBlock(name=name.copy(), block=env.design_block_default(b"module"), source=b"")
+
+public func test_empty_attachment_inputs_and_independent_results() -> bool:
+    mut block = env.design_block_default(b"empty")
+    assert m.compute_sub_block_attachments(block) == []
+    block.sub_blocks = [sub(b"one"), sub(b"two")]
+    mut first = m.compute_sub_block_attachments(block)
+    mut second = m.compute_sub_block_attachments(block)
+    first[0] = Some(7)
+    assert second == [None, None]
+    assert m.compute_sub_block_attachments(block) == [None, None]
+    block.sections = [env.section_default(b"Analog")]
+    assert m.compute_sub_block_attachments(block) == [None, None]
+    return True
+
+public func test_hosts_power_ambiguous_nets_and_stable_connector_ties() -> bool:
+    mut connector = env.section_default(b"Header")
+    connector.hosts = [b"explicit"]
+    mut power = env.section_port_default(b"VCC")
+    power.signal_type = env.SignalType.power
+    connector.ports = [env.section_port_default(b"SIG"), power, env.section_port_default(b"AMB")]
+    mut functional = env.section_default(b"Analog")
+    functional.hosts = [b"explicit"]
+    functional.ports = [env.section_port_default(b"SIG"), env.section_port_default(b"VCC"), env.section_port_default(b"AMB")]
+    mut same_tie = env.section_default(b"Analog second")
+    same_tie.ports = [env.section_port_default(b"SIG")]
+    mut zero = env.section_default(b"Header unused")
+    zero.ports = [env.section_port_default(b"UNUSED")]
+    mut block = env.design_block_default(b"ties")
+    block.sections = [connector, functional, same_tie, zero]
+    block.sub_blocks = [sub(b"explicit"), sub(b"signal"), sub(b"power"), sub(b"ambiguous")]
+    block.net_ties = [env.NetTie(a=b"signal/S", b=b"SIG"), env.NetTie(a=b"VCC", b=b"power/P"), env.NetTie(a=b"ambiguous/A", b=b"AMB"), env.NetTie(a=b"AMB", b=b"signal/A"), env.NetTie(a=b"local", b=b"other"), env.NetTie(a=b"signal/X", b=b"power/X")]
+    mut before = block.copy()
+    mut expected: int?[] = [Some(0), Some(1), None, None]
+    mut first = m.compute_sub_block_attachments(block)
+    assert first == expected
+    assert block == before
+    first[1] = None
+    assert m.compute_sub_block_attachments(block) == expected
+    assert block == before
+    return True
+
+public func test_duplicate_pin_group_nets_count_once_and_retain_section_order() -> bool:
+    mut one = env.section_default(b"Analog first")
+    one.pin_groups = [env.PinGroup(ref_des=b"U1", pins=[env.PartPin(pin=b"1", net=b"N", pin_name=b"", group=b""), env.PartPin(pin=b"2", net=b"N", pin_name=b"", group=b"")], group=b"")]
+    one.ports = [env.section_port_default(b"N")]
+    mut two = env.section_default(b"Analog second")
+    two.ports = [env.section_port_default(b"N")]
+    mut block = env.design_block_default(b"duplicate")
+    block.sections = [one, two]
+    block.sub_blocks = [sub(b"signal"), sub(b"unconnected")]
+    block.net_ties = [env.NetTie(a=b"signal/N", b=b"N"), env.NetTie(a=b"N", b=b"signal/N")]
+    mut before = block.copy()
+    assert m.compute_sub_block_attachments(block) == [Some(0), None]
+    assert block == before
+    return True

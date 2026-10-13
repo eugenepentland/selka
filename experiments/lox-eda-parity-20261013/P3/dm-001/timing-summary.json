@@ -1,0 +1,697 @@
+{
+  "label": "P3 diagram membership diagnostic against frozen C2; not final integrated parity",
+  "zig_note": "Zig is a fresh deadline calibration/oracle, not nine paired Zig timings",
+  "ci_method": "95% percentile paired bootstrap of candidate median / baseline median, 100000 resamples, seed 20261013",
+  "cases": {
+    "rds3+flat": {
+      "arm_statuses": [
+        {
+          "zig-fast": {
+            "status": "ok"
+          },
+          "baseline": {
+            "status": "ok"
+          },
+          "candidate": {
+            "status": "ok"
+          }
+        },
+        {
+          "zig-fast": {
+            "status": "ok"
+          },
+          "baseline": {
+            "status": "ok"
+          },
+          "candidate": {
+            "status": "ok"
+          }
+        },
+        {
+          "zig-fast": {
+            "status": "ok"
+          },
+          "baseline": {
+            "status": "ok"
+          },
+          "candidate": {
+            "status": "ok"
+          }
+        }
+      ],
+      "receipts": [
+        {
+          "path": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p3/experiments/lox-eda-parity-20261013/P3/dm-001/rds3+flat.lease0.json",
+          "sha256": "3078da42720dba133e5725e1674c8124960a52f7db1bf644326462d83dc67a37"
+        },
+        {
+          "path": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p3/experiments/lox-eda-parity-20261013/P3/dm-001/rds3+flat.lease1.json",
+          "sha256": "dd0edbe95e411d6854228e99b204976a43abfaddea85b802cbc3652aee61e038"
+        },
+        {
+          "path": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p3/experiments/lox-eda-parity-20261013/P3/dm-001/rds3+flat.lease2.json",
+          "sha256": "6e1fd5f51ce16c510092ed835980a9822466db87842b25ee88af4b28f406aba2"
+        }
+      ],
+      "pairs": {
+        "0": {
+          "baseline": 0.098448381,
+          "candidate": 0.095619986
+        },
+        "1": {
+          "candidate": 0.095542326,
+          "baseline": 0.097640521
+        },
+        "2": {
+          "baseline": 0.099206421,
+          "candidate": 0.096159501
+        },
+        "3": {
+          "candidate": 0.096206975,
+          "baseline": 0.097297576
+        },
+        "4": {
+          "baseline": 0.097991668,
+          "candidate": 0.09493677
+        },
+        "5": {
+          "candidate": 0.096162042,
+          "baseline": 0.097904454
+        },
+        "6": {
+          "baseline": 0.098247854,
+          "candidate": 0.095397937
+        },
+        "7": {
+          "candidate": 0.096029253,
+          "baseline": 0.097131163
+        },
+        "8": {
+          "baseline": 0.097402581,
+          "candidate": 0.096661633
+        }
+      },
+      "warmups": [
+        {
+          "kind": "calibration_warmup",
+          "arm": "zig-fast",
+          "value": 0.058987807,
+          "output": {
+            "stdout_sha256": "8252e32fd878510b55978b452ddb5813882028d0291406d0fb8f15c2e2f85283",
+            "artifacts": {},
+            "golden_tree": {
+              "rds3.kicad_sch": "75cfc2d50ac3006dfa76292442dd295b3032625c4b155b16805757bdcf699ca2",
+              "netlisp.kicad_sym": "6e048a0dfba96cbc9a26b09d44b2c19ae8dadb8ff40dda9ff92f3d9d3a3ca34e",
+              "rds3.kicad_pro": "64e8a5183c9ef167b76251655a7f5f4d7ec899186c2e6c6c9ac058d10b8ec362",
+              "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+              "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+              "rds3.net": "f6bd49787a8945a8581055517c2ba4267b90d4e98298c57dbd345608d8295868"
+            }
+          },
+          "stderr": "[W] export-kicad-sch: vendor symbol 'W55RP20-EVB-PICO' does not draw 1 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: rds3: 15/35 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: rds3: root: 1 overlapping text pairs of 4160 drawn texts (e.g. caption \"External Calibration\" over caption \"RF Connector Banks\" at 557,12)\n[I] export-kicad-sch: rds3: 1 overlapping text pairs across 1 sheets\n",
+          "round": 0
+        },
+        {
+          "kind": "calibration_warmup",
+          "arm": "zig-fast",
+          "value": 0.058850402,
+          "output": {
+            "stdout_sha256": "8252e32fd878510b55978b452ddb5813882028d0291406d0fb8f15c2e2f85283",
+            "artifacts": {},
+            "golden_tree": {
+              "rds3.kicad_sch": "75cfc2d50ac3006dfa76292442dd295b3032625c4b155b16805757bdcf699ca2",
+              "netlisp.kicad_sym": "6e048a0dfba96cbc9a26b09d44b2c19ae8dadb8ff40dda9ff92f3d9d3a3ca34e",
+              "rds3.kicad_pro": "64e8a5183c9ef167b76251655a7f5f4d7ec899186c2e6c6c9ac058d10b8ec362",
+              "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+              "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+              "rds3.net": "f6bd49787a8945a8581055517c2ba4267b90d4e98298c57dbd345608d8295868"
+            }
+          },
+          "stderr": "[W] export-kicad-sch: vendor symbol 'W55RP20-EVB-PICO' does not draw 1 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: rds3: 15/35 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: rds3: root: 1 overlapping text pairs of 4160 drawn texts (e.g. caption \"External Calibration\" over caption \"RF Connector Banks\" at 557,12)\n[I] export-kicad-sch: rds3: 1 overlapping text pairs across 1 sheets\n",
+          "round": 1
+        },
+        {
+          "kind": "warmup",
+          "arm": "baseline",
+          "value": 0.098041315,
+          "output": {
+            "stdout_sha256": "8252e32fd878510b55978b452ddb5813882028d0291406d0fb8f15c2e2f85283",
+            "artifacts": {},
+            "golden_tree": {
+              "rds3.kicad_sch": "75cfc2d50ac3006dfa76292442dd295b3032625c4b155b16805757bdcf699ca2",
+              "netlisp.kicad_sym": "6e048a0dfba96cbc9a26b09d44b2c19ae8dadb8ff40dda9ff92f3d9d3a3ca34e",
+              "rds3.kicad_pro": "64e8a5183c9ef167b76251655a7f5f4d7ec899186c2e6c6c9ac058d10b8ec362",
+              "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+              "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+              "rds3.net": "f6bd49787a8945a8581055517c2ba4267b90d4e98298c57dbd345608d8295868"
+            }
+          },
+          "stderr": "[W] export-kicad-sch: vendor symbol 'W55RP20-EVB-PICO' does not draw 1 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: rds3: 15/35 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: rds3: root: 1 overlapping text pairs of 4160 drawn texts (e.g. caption \"External Calibration\" over caption \"RF Connector Banks\" at 557,12)\n[I] export-kicad-sch: rds3: 1 overlapping text pairs across 1 sheets\n",
+          "round": 0
+        },
+        {
+          "kind": "warmup",
+          "arm": "candidate",
+          "value": 0.095399746,
+          "output": {
+            "stdout_sha256": "8252e32fd878510b55978b452ddb5813882028d0291406d0fb8f15c2e2f85283",
+            "artifacts": {},
+            "golden_tree": {
+              "rds3.kicad_sch": "75cfc2d50ac3006dfa76292442dd295b3032625c4b155b16805757bdcf699ca2",
+              "netlisp.kicad_sym": "6e048a0dfba96cbc9a26b09d44b2c19ae8dadb8ff40dda9ff92f3d9d3a3ca34e",
+              "rds3.kicad_pro": "64e8a5183c9ef167b76251655a7f5f4d7ec899186c2e6c6c9ac058d10b8ec362",
+              "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+              "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+              "rds3.net": "f6bd49787a8945a8581055517c2ba4267b90d4e98298c57dbd345608d8295868"
+            }
+          },
+          "stderr": "[W] export-kicad-sch: vendor symbol 'W55RP20-EVB-PICO' does not draw 1 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: rds3: 15/35 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: rds3: root: 1 overlapping text pairs of 4160 drawn texts (e.g. caption \"External Calibration\" over caption \"RF Connector Banks\" at 557,12)\n[I] export-kicad-sch: rds3: 1 overlapping text pairs across 1 sheets\n",
+          "round": 0
+        },
+        {
+          "kind": "warmup",
+          "arm": "candidate",
+          "value": 0.093800642,
+          "output": {
+            "stdout_sha256": "8252e32fd878510b55978b452ddb5813882028d0291406d0fb8f15c2e2f85283",
+            "artifacts": {},
+            "golden_tree": {
+              "rds3.kicad_sch": "75cfc2d50ac3006dfa76292442dd295b3032625c4b155b16805757bdcf699ca2",
+              "netlisp.kicad_sym": "6e048a0dfba96cbc9a26b09d44b2c19ae8dadb8ff40dda9ff92f3d9d3a3ca34e",
+              "rds3.kicad_pro": "64e8a5183c9ef167b76251655a7f5f4d7ec899186c2e6c6c9ac058d10b8ec362",
+              "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+              "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+              "rds3.net": "f6bd49787a8945a8581055517c2ba4267b90d4e98298c57dbd345608d8295868"
+            }
+          },
+          "stderr": "[W] export-kicad-sch: vendor symbol 'W55RP20-EVB-PICO' does not draw 1 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: rds3: 15/35 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: rds3: root: 1 overlapping text pairs of 4160 drawn texts (e.g. caption \"External Calibration\" over caption \"RF Connector Banks\" at 557,12)\n[I] export-kicad-sch: rds3: 1 overlapping text pairs across 1 sheets\n",
+          "round": 1
+        },
+        {
+          "kind": "warmup",
+          "arm": "baseline",
+          "value": 0.099291824,
+          "output": {
+            "stdout_sha256": "8252e32fd878510b55978b452ddb5813882028d0291406d0fb8f15c2e2f85283",
+            "artifacts": {},
+            "golden_tree": {
+              "rds3.kicad_sch": "75cfc2d50ac3006dfa76292442dd295b3032625c4b155b16805757bdcf699ca2",
+              "netlisp.kicad_sym": "6e048a0dfba96cbc9a26b09d44b2c19ae8dadb8ff40dda9ff92f3d9d3a3ca34e",
+              "rds3.kicad_pro": "64e8a5183c9ef167b76251655a7f5f4d7ec899186c2e6c6c9ac058d10b8ec362",
+              "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+              "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+              "rds3.net": "f6bd49787a8945a8581055517c2ba4267b90d4e98298c57dbd345608d8295868"
+            }
+          },
+          "stderr": "[W] export-kicad-sch: vendor symbol 'W55RP20-EVB-PICO' does not draw 1 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: rds3: 15/35 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: rds3: root: 1 overlapping text pairs of 4160 drawn texts (e.g. caption \"External Calibration\" over caption \"RF Connector Banks\" at 557,12)\n[I] export-kicad-sch: rds3: 1 overlapping text pairs across 1 sheets\n",
+          "round": 1
+        }
+      ],
+      "calibration": {
+        "reference_arm": "zig-fast",
+        "factor": 3.0,
+        "calibration_samples": [
+          {
+            "arm": "zig-fast",
+            "value": 0.058421652,
+            "output": {
+              "stdout_sha256": "8252e32fd878510b55978b452ddb5813882028d0291406d0fb8f15c2e2f85283",
+              "artifacts": {},
+              "golden_tree": {
+                "rds3.kicad_sch": "75cfc2d50ac3006dfa76292442dd295b3032625c4b155b16805757bdcf699ca2",
+                "netlisp.kicad_sym": "6e048a0dfba96cbc9a26b09d44b2c19ae8dadb8ff40dda9ff92f3d9d3a3ca34e",
+                "rds3.kicad_pro": "64e8a5183c9ef167b76251655a7f5f4d7ec899186c2e6c6c9ac058d10b8ec362",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+                "rds3.net": "f6bd49787a8945a8581055517c2ba4267b90d4e98298c57dbd345608d8295868"
+              }
+            },
+            "stderr": "[W] export-kicad-sch: vendor symbol 'W55RP20-EVB-PICO' does not draw 1 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: rds3: 15/35 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: rds3: root: 1 overlapping text pairs of 4160 drawn texts (e.g. caption \"External Calibration\" over caption \"RF Connector Banks\" at 557,12)\n[I] export-kicad-sch: rds3: 1 overlapping text pairs across 1 sheets\n",
+            "round": 0
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.058658701,
+            "output": {
+              "stdout_sha256": "8252e32fd878510b55978b452ddb5813882028d0291406d0fb8f15c2e2f85283",
+              "artifacts": {},
+              "golden_tree": {
+                "rds3.kicad_sch": "75cfc2d50ac3006dfa76292442dd295b3032625c4b155b16805757bdcf699ca2",
+                "netlisp.kicad_sym": "6e048a0dfba96cbc9a26b09d44b2c19ae8dadb8ff40dda9ff92f3d9d3a3ca34e",
+                "rds3.kicad_pro": "64e8a5183c9ef167b76251655a7f5f4d7ec899186c2e6c6c9ac058d10b8ec362",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+                "rds3.net": "f6bd49787a8945a8581055517c2ba4267b90d4e98298c57dbd345608d8295868"
+              }
+            },
+            "stderr": "[W] export-kicad-sch: vendor symbol 'W55RP20-EVB-PICO' does not draw 1 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: rds3: 15/35 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: rds3: root: 1 overlapping text pairs of 4160 drawn texts (e.g. caption \"External Calibration\" over caption \"RF Connector Banks\" at 557,12)\n[I] export-kicad-sch: rds3: 1 overlapping text pairs across 1 sheets\n",
+            "round": 1
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.058864898,
+            "output": {
+              "stdout_sha256": "8252e32fd878510b55978b452ddb5813882028d0291406d0fb8f15c2e2f85283",
+              "artifacts": {},
+              "golden_tree": {
+                "rds3.kicad_sch": "75cfc2d50ac3006dfa76292442dd295b3032625c4b155b16805757bdcf699ca2",
+                "netlisp.kicad_sym": "6e048a0dfba96cbc9a26b09d44b2c19ae8dadb8ff40dda9ff92f3d9d3a3ca34e",
+                "rds3.kicad_pro": "64e8a5183c9ef167b76251655a7f5f4d7ec899186c2e6c6c9ac058d10b8ec362",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+                "rds3.net": "f6bd49787a8945a8581055517c2ba4267b90d4e98298c57dbd345608d8295868"
+              }
+            },
+            "stderr": "[W] export-kicad-sch: vendor symbol 'W55RP20-EVB-PICO' does not draw 1 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: rds3: 15/35 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: rds3: root: 1 overlapping text pairs of 4160 drawn texts (e.g. caption \"External Calibration\" over caption \"RF Connector Banks\" at 557,12)\n[I] export-kicad-sch: rds3: 1 overlapping text pairs across 1 sheets\n",
+            "round": 2
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.05894014,
+            "output": {
+              "stdout_sha256": "8252e32fd878510b55978b452ddb5813882028d0291406d0fb8f15c2e2f85283",
+              "artifacts": {},
+              "golden_tree": {
+                "rds3.kicad_sch": "75cfc2d50ac3006dfa76292442dd295b3032625c4b155b16805757bdcf699ca2",
+                "netlisp.kicad_sym": "6e048a0dfba96cbc9a26b09d44b2c19ae8dadb8ff40dda9ff92f3d9d3a3ca34e",
+                "rds3.kicad_pro": "64e8a5183c9ef167b76251655a7f5f4d7ec899186c2e6c6c9ac058d10b8ec362",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+                "rds3.net": "f6bd49787a8945a8581055517c2ba4267b90d4e98298c57dbd345608d8295868"
+              }
+            },
+            "stderr": "[W] export-kicad-sch: vendor symbol 'W55RP20-EVB-PICO' does not draw 1 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: rds3: 15/35 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: rds3: root: 1 overlapping text pairs of 4160 drawn texts (e.g. caption \"External Calibration\" over caption \"RF Connector Banks\" at 557,12)\n[I] export-kicad-sch: rds3: 1 overlapping text pairs across 1 sheets\n",
+            "round": 3
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.059091382,
+            "output": {
+              "stdout_sha256": "8252e32fd878510b55978b452ddb5813882028d0291406d0fb8f15c2e2f85283",
+              "artifacts": {},
+              "golden_tree": {
+                "rds3.kicad_sch": "75cfc2d50ac3006dfa76292442dd295b3032625c4b155b16805757bdcf699ca2",
+                "netlisp.kicad_sym": "6e048a0dfba96cbc9a26b09d44b2c19ae8dadb8ff40dda9ff92f3d9d3a3ca34e",
+                "rds3.kicad_pro": "64e8a5183c9ef167b76251655a7f5f4d7ec899186c2e6c6c9ac058d10b8ec362",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+                "rds3.net": "f6bd49787a8945a8581055517c2ba4267b90d4e98298c57dbd345608d8295868"
+              }
+            },
+            "stderr": "[W] export-kicad-sch: vendor symbol 'W55RP20-EVB-PICO' does not draw 1 pad(s) the design uses \u2014 adding them as unit 2\n[I] export-kicad-sch: rds3: 15/35 components drawn from vendor symbols (138 libraries indexed)\n[I] export-kicad-sch: rds3: root: 1 overlapping text pairs of 4160 drawn texts (e.g. caption \"External Calibration\" over caption \"RF Connector Banks\" at 557,12)\n[I] export-kicad-sch: rds3: 1 overlapping text pairs across 1 sheets\n",
+            "round": 4
+          }
+        ],
+        "calibration_warmups": 2,
+        "reference_median_seconds": 0.058864898,
+        "absolute_ceiling_seconds": 120.0,
+        "budget_seconds": 0.176594694,
+        "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+        "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+      },
+      "status": "all nine pairs completed",
+      "baseline_seconds": {
+        "samples": [
+          0.098448381,
+          0.097640521,
+          0.099206421,
+          0.097297576,
+          0.097991668,
+          0.097904454,
+          0.098247854,
+          0.097131163,
+          0.097402581
+        ],
+        "median": 0.097904454,
+        "min": 0.097131163,
+        "max": 0.099206421
+      },
+      "candidate_seconds": {
+        "samples": [
+          0.095619986,
+          0.095542326,
+          0.096159501,
+          0.096206975,
+          0.09493677,
+          0.096162042,
+          0.095397937,
+          0.096029253,
+          0.096661633
+        ],
+        "median": 0.096029253,
+        "min": 0.09493677,
+        "max": 0.096661633
+      },
+      "candidate_over_baseline": 0.9808466221567407,
+      "candidate_over_baseline_95pct_ci": [
+        0.972462217851598,
+        0.9877251096662418
+      ]
+    },
+    "cyclops-digital-pcb": {
+      "arm_statuses": [
+        {
+          "zig-fast": {
+            "status": "ok"
+          },
+          "baseline": {
+            "status": "ok"
+          },
+          "candidate": {
+            "status": "ok"
+          }
+        },
+        {
+          "zig-fast": {
+            "status": "ok"
+          },
+          "baseline": {
+            "status": "ok"
+          },
+          "candidate": {
+            "status": "ok"
+          }
+        },
+        {
+          "zig-fast": {
+            "status": "ok"
+          },
+          "baseline": {
+            "status": "ok"
+          },
+          "candidate": {
+            "status": "ok"
+          }
+        }
+      ],
+      "receipts": [
+        {
+          "path": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p3/experiments/lox-eda-parity-20261013/P3/dm-001/cyclops-digital-pcb.lease0.json",
+          "sha256": "c1bac0733d047636e0f265176f1bab41cc3a5df738e0ff4bdb8d0c4416b20256"
+        },
+        {
+          "path": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p3/experiments/lox-eda-parity-20261013/P3/dm-001/cyclops-digital-pcb.lease1.json",
+          "sha256": "d79e03af7c7732525eeb6518135768b58c84f7a71207459f1c879d453d37112d"
+        },
+        {
+          "path": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p3/experiments/lox-eda-parity-20261013/P3/dm-001/cyclops-digital-pcb.lease2.json",
+          "sha256": "9cd2b1adbe7b3a15e0436c72062611068527e263aef492ea47822dc70aaf20e6"
+        }
+      ],
+      "pairs": {
+        "0": {
+          "baseline": 0.045814856,
+          "candidate": 0.046394784
+        },
+        "1": {
+          "candidate": 0.045881266,
+          "baseline": 0.046390127
+        },
+        "2": {
+          "baseline": 0.046289596,
+          "candidate": 0.046663239
+        },
+        "3": {
+          "candidate": 0.046086517,
+          "baseline": 0.046322222
+        },
+        "4": {
+          "baseline": 0.046448286,
+          "candidate": 0.046132513
+        },
+        "5": {
+          "candidate": 0.046742576,
+          "baseline": 0.045977515
+        },
+        "6": {
+          "baseline": 0.046556066,
+          "candidate": 0.045786465
+        },
+        "7": {
+          "candidate": 0.045672383,
+          "baseline": 0.046406819
+        },
+        "8": {
+          "baseline": 0.047241401,
+          "candidate": 0.046912031
+        }
+      },
+      "warmups": [
+        {
+          "kind": "calibration_warmup",
+          "arm": "zig-fast",
+          "value": 0.028866458,
+          "output": {
+            "stdout_sha256": "8a7313b85f5520c219137308facf0a1553dacd720a601b52cf1cba76b4aee59b",
+            "artifacts": {},
+            "golden_tree": {
+              "cyclops-digital-pcb.kicad_pro": "a00a4f6036efd4b93a16e79a4548d49f0553576691daab49954c2e29b0623a78",
+              "cyclops-digital-pcb.kicad_sch": "468ed6ded0b389ccea7f529944435bf40fe07c242682e15eed5b0e2923ac155b",
+              "netlisp.kicad_sym": "f35498d7cc5217cdfd40cdc17c1e787fba57e864cb2672d5ac981d04f9dff585",
+              "cyclops-digital-pcb.net": "6ddd15389e2a275d3c82f7da336610053626a64cbd6f98b9f2820dd26221fc82",
+              "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+              "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+            }
+          },
+          "stderr": "[I] export-kicad-sch: cyclops-digital-pcb: 0/86 components drawn from vendor symbols (138 libraries indexed)\n",
+          "round": 0
+        },
+        {
+          "kind": "calibration_warmup",
+          "arm": "zig-fast",
+          "value": 0.028700254,
+          "output": {
+            "stdout_sha256": "8a7313b85f5520c219137308facf0a1553dacd720a601b52cf1cba76b4aee59b",
+            "artifacts": {},
+            "golden_tree": {
+              "cyclops-digital-pcb.kicad_pro": "a00a4f6036efd4b93a16e79a4548d49f0553576691daab49954c2e29b0623a78",
+              "cyclops-digital-pcb.kicad_sch": "468ed6ded0b389ccea7f529944435bf40fe07c242682e15eed5b0e2923ac155b",
+              "netlisp.kicad_sym": "f35498d7cc5217cdfd40cdc17c1e787fba57e864cb2672d5ac981d04f9dff585",
+              "cyclops-digital-pcb.net": "6ddd15389e2a275d3c82f7da336610053626a64cbd6f98b9f2820dd26221fc82",
+              "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+              "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+            }
+          },
+          "stderr": "[I] export-kicad-sch: cyclops-digital-pcb: 0/86 components drawn from vendor symbols (138 libraries indexed)\n",
+          "round": 1
+        },
+        {
+          "kind": "warmup",
+          "arm": "baseline",
+          "value": 0.047719796,
+          "output": {
+            "stdout_sha256": "8a7313b85f5520c219137308facf0a1553dacd720a601b52cf1cba76b4aee59b",
+            "artifacts": {},
+            "golden_tree": {
+              "cyclops-digital-pcb.kicad_pro": "a00a4f6036efd4b93a16e79a4548d49f0553576691daab49954c2e29b0623a78",
+              "cyclops-digital-pcb.kicad_sch": "468ed6ded0b389ccea7f529944435bf40fe07c242682e15eed5b0e2923ac155b",
+              "netlisp.kicad_sym": "f35498d7cc5217cdfd40cdc17c1e787fba57e864cb2672d5ac981d04f9dff585",
+              "cyclops-digital-pcb.net": "6ddd15389e2a275d3c82f7da336610053626a64cbd6f98b9f2820dd26221fc82",
+              "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+              "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+            }
+          },
+          "stderr": "[I] export-kicad-sch: cyclops-digital-pcb: 0/86 components drawn from vendor symbols (138 libraries indexed)\n",
+          "round": 0
+        },
+        {
+          "kind": "warmup",
+          "arm": "candidate",
+          "value": 0.046220998,
+          "output": {
+            "stdout_sha256": "8a7313b85f5520c219137308facf0a1553dacd720a601b52cf1cba76b4aee59b",
+            "artifacts": {},
+            "golden_tree": {
+              "cyclops-digital-pcb.kicad_pro": "a00a4f6036efd4b93a16e79a4548d49f0553576691daab49954c2e29b0623a78",
+              "cyclops-digital-pcb.kicad_sch": "468ed6ded0b389ccea7f529944435bf40fe07c242682e15eed5b0e2923ac155b",
+              "netlisp.kicad_sym": "f35498d7cc5217cdfd40cdc17c1e787fba57e864cb2672d5ac981d04f9dff585",
+              "cyclops-digital-pcb.net": "6ddd15389e2a275d3c82f7da336610053626a64cbd6f98b9f2820dd26221fc82",
+              "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+              "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+            }
+          },
+          "stderr": "[I] export-kicad-sch: cyclops-digital-pcb: 0/86 components drawn from vendor symbols (138 libraries indexed)\n",
+          "round": 0
+        },
+        {
+          "kind": "warmup",
+          "arm": "candidate",
+          "value": 0.047457558,
+          "output": {
+            "stdout_sha256": "8a7313b85f5520c219137308facf0a1553dacd720a601b52cf1cba76b4aee59b",
+            "artifacts": {},
+            "golden_tree": {
+              "cyclops-digital-pcb.kicad_pro": "a00a4f6036efd4b93a16e79a4548d49f0553576691daab49954c2e29b0623a78",
+              "cyclops-digital-pcb.kicad_sch": "468ed6ded0b389ccea7f529944435bf40fe07c242682e15eed5b0e2923ac155b",
+              "netlisp.kicad_sym": "f35498d7cc5217cdfd40cdc17c1e787fba57e864cb2672d5ac981d04f9dff585",
+              "cyclops-digital-pcb.net": "6ddd15389e2a275d3c82f7da336610053626a64cbd6f98b9f2820dd26221fc82",
+              "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+              "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+            }
+          },
+          "stderr": "[I] export-kicad-sch: cyclops-digital-pcb: 0/86 components drawn from vendor symbols (138 libraries indexed)\n",
+          "round": 1
+        },
+        {
+          "kind": "warmup",
+          "arm": "baseline",
+          "value": 0.046053396,
+          "output": {
+            "stdout_sha256": "8a7313b85f5520c219137308facf0a1553dacd720a601b52cf1cba76b4aee59b",
+            "artifacts": {},
+            "golden_tree": {
+              "cyclops-digital-pcb.kicad_pro": "a00a4f6036efd4b93a16e79a4548d49f0553576691daab49954c2e29b0623a78",
+              "cyclops-digital-pcb.kicad_sch": "468ed6ded0b389ccea7f529944435bf40fe07c242682e15eed5b0e2923ac155b",
+              "netlisp.kicad_sym": "f35498d7cc5217cdfd40cdc17c1e787fba57e864cb2672d5ac981d04f9dff585",
+              "cyclops-digital-pcb.net": "6ddd15389e2a275d3c82f7da336610053626a64cbd6f98b9f2820dd26221fc82",
+              "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+              "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+            }
+          },
+          "stderr": "[I] export-kicad-sch: cyclops-digital-pcb: 0/86 components drawn from vendor symbols (138 libraries indexed)\n",
+          "round": 1
+        }
+      ],
+      "calibration": {
+        "reference_arm": "zig-fast",
+        "factor": 3.0,
+        "calibration_samples": [
+          {
+            "arm": "zig-fast",
+            "value": 0.02893951,
+            "output": {
+              "stdout_sha256": "8a7313b85f5520c219137308facf0a1553dacd720a601b52cf1cba76b4aee59b",
+              "artifacts": {},
+              "golden_tree": {
+                "cyclops-digital-pcb.kicad_pro": "a00a4f6036efd4b93a16e79a4548d49f0553576691daab49954c2e29b0623a78",
+                "cyclops-digital-pcb.kicad_sch": "468ed6ded0b389ccea7f529944435bf40fe07c242682e15eed5b0e2923ac155b",
+                "netlisp.kicad_sym": "f35498d7cc5217cdfd40cdc17c1e787fba57e864cb2672d5ac981d04f9dff585",
+                "cyclops-digital-pcb.net": "6ddd15389e2a275d3c82f7da336610053626a64cbd6f98b9f2820dd26221fc82",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+              }
+            },
+            "stderr": "[I] export-kicad-sch: cyclops-digital-pcb: 0/86 components drawn from vendor symbols (138 libraries indexed)\n",
+            "round": 0
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.028903085,
+            "output": {
+              "stdout_sha256": "8a7313b85f5520c219137308facf0a1553dacd720a601b52cf1cba76b4aee59b",
+              "artifacts": {},
+              "golden_tree": {
+                "cyclops-digital-pcb.kicad_pro": "a00a4f6036efd4b93a16e79a4548d49f0553576691daab49954c2e29b0623a78",
+                "cyclops-digital-pcb.kicad_sch": "468ed6ded0b389ccea7f529944435bf40fe07c242682e15eed5b0e2923ac155b",
+                "netlisp.kicad_sym": "f35498d7cc5217cdfd40cdc17c1e787fba57e864cb2672d5ac981d04f9dff585",
+                "cyclops-digital-pcb.net": "6ddd15389e2a275d3c82f7da336610053626a64cbd6f98b9f2820dd26221fc82",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+              }
+            },
+            "stderr": "[I] export-kicad-sch: cyclops-digital-pcb: 0/86 components drawn from vendor symbols (138 libraries indexed)\n",
+            "round": 1
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.028844134,
+            "output": {
+              "stdout_sha256": "8a7313b85f5520c219137308facf0a1553dacd720a601b52cf1cba76b4aee59b",
+              "artifacts": {},
+              "golden_tree": {
+                "cyclops-digital-pcb.kicad_pro": "a00a4f6036efd4b93a16e79a4548d49f0553576691daab49954c2e29b0623a78",
+                "cyclops-digital-pcb.kicad_sch": "468ed6ded0b389ccea7f529944435bf40fe07c242682e15eed5b0e2923ac155b",
+                "netlisp.kicad_sym": "f35498d7cc5217cdfd40cdc17c1e787fba57e864cb2672d5ac981d04f9dff585",
+                "cyclops-digital-pcb.net": "6ddd15389e2a275d3c82f7da336610053626a64cbd6f98b9f2820dd26221fc82",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+              }
+            },
+            "stderr": "[I] export-kicad-sch: cyclops-digital-pcb: 0/86 components drawn from vendor symbols (138 libraries indexed)\n",
+            "round": 2
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.028959146,
+            "output": {
+              "stdout_sha256": "8a7313b85f5520c219137308facf0a1553dacd720a601b52cf1cba76b4aee59b",
+              "artifacts": {},
+              "golden_tree": {
+                "cyclops-digital-pcb.kicad_pro": "a00a4f6036efd4b93a16e79a4548d49f0553576691daab49954c2e29b0623a78",
+                "cyclops-digital-pcb.kicad_sch": "468ed6ded0b389ccea7f529944435bf40fe07c242682e15eed5b0e2923ac155b",
+                "netlisp.kicad_sym": "f35498d7cc5217cdfd40cdc17c1e787fba57e864cb2672d5ac981d04f9dff585",
+                "cyclops-digital-pcb.net": "6ddd15389e2a275d3c82f7da336610053626a64cbd6f98b9f2820dd26221fc82",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+              }
+            },
+            "stderr": "[I] export-kicad-sch: cyclops-digital-pcb: 0/86 components drawn from vendor symbols (138 libraries indexed)\n",
+            "round": 3
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.028238872,
+            "output": {
+              "stdout_sha256": "8a7313b85f5520c219137308facf0a1553dacd720a601b52cf1cba76b4aee59b",
+              "artifacts": {},
+              "golden_tree": {
+                "cyclops-digital-pcb.kicad_pro": "a00a4f6036efd4b93a16e79a4548d49f0553576691daab49954c2e29b0623a78",
+                "cyclops-digital-pcb.kicad_sch": "468ed6ded0b389ccea7f529944435bf40fe07c242682e15eed5b0e2923ac155b",
+                "netlisp.kicad_sym": "f35498d7cc5217cdfd40cdc17c1e787fba57e864cb2672d5ac981d04f9dff585",
+                "cyclops-digital-pcb.net": "6ddd15389e2a275d3c82f7da336610053626a64cbd6f98b9f2820dd26221fc82",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+              }
+            },
+            "stderr": "[I] export-kicad-sch: cyclops-digital-pcb: 0/86 components drawn from vendor symbols (138 libraries indexed)\n",
+            "round": 4
+          }
+        ],
+        "calibration_warmups": 2,
+        "reference_median_seconds": 0.028903085,
+        "absolute_ceiling_seconds": 120.0,
+        "budget_seconds": 0.086709255,
+        "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+        "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+      },
+      "status": "all nine pairs completed",
+      "baseline_seconds": {
+        "samples": [
+          0.045814856,
+          0.046390127,
+          0.046289596,
+          0.046322222,
+          0.046448286,
+          0.045977515,
+          0.046556066,
+          0.046406819,
+          0.047241401
+        ],
+        "median": 0.046390127,
+        "min": 0.045814856,
+        "max": 0.047241401
+      },
+      "candidate_seconds": {
+        "samples": [
+          0.046394784,
+          0.045881266,
+          0.046663239,
+          0.046086517,
+          0.046132513,
+          0.046742576,
+          0.045786465,
+          0.045672383,
+          0.046912031
+        ],
+        "median": 0.046132513,
+        "min": 0.045672383,
+        "max": 0.046912031
+      },
+      "candidate_over_baseline": 0.9944467925254871,
+      "candidate_over_baseline_95pct_ci": [
+        0.9866322662624214,
+        1.0090755013619157
+      ]
+    }
+  }
+}

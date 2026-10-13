@@ -1,0 +1,52 @@
+[
+  {
+    "arm": "focused-baseline",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+      "test",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/dm-001/focused-baseline/eda/p3_dm_tests.my",
+      "--experimental-zero-rc",
+      "--verify-facts",
+      "--force",
+      "--jobs",
+      "4",
+      "--max-steps",
+      "1000000000",
+      "--max-frames",
+      "40000",
+      "--max-memory",
+      "2G",
+      "--timeout-ms",
+      "120000",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/dm-001/cache-suite-focused-baseline",
+      "--json"
+    ],
+    "returncode": 0
+  },
+  {
+    "arm": "candidate",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+      "test",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/dm-001/candidate/eda",
+      "--experimental-zero-rc",
+      "--verify-facts",
+      "--force",
+      "--jobs",
+      "4",
+      "--max-steps",
+      "1000000000",
+      "--max-frames",
+      "40000",
+      "--max-memory",
+      "2G",
+      "--timeout-ms",
+      "120000",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/dm-001/cache-suite-candidate",
+      "--json"
+    ],
+    "returncode": 0
+  }
+]

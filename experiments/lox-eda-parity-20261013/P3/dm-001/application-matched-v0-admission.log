@@ -1,0 +1,15 @@
+build-slot: build slot 1, FIFO ticket 3097 after 0s
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p3/experiments/lox-eda-parity-20261013/P3/dm-001/qualify_application_matched.py", line 33, in <module>
+    receipt = {'compiler': str(COMPILER), 'compiler_sha256': sha(COMPILER), 'baseline_reuse_sha256': sha(HERE / 'baseline-reuse.json'), 'sources': pins, 'arms': {}, 'comparison_flags': ['--release', '--experimental-zero-rc'], 'counted_extra_flag': '--counters'}
+                                                                                                     ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p3/experiments/lox-eda-parity-20261013/P3/dm-001/qualify_application_matched.py", line 11, in sha
+    return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+                          ~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 778, in read_bytes
+    with self.open(mode='rb', buffering=0) as f:
+         ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/pathlib/__init__.py", line 772, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p3/experiments/lox-eda-parity-20261013/P3/dm-001/matched/baseline-reuse.json'

@@ -1,0 +1,223 @@
+{
+  "flags": [
+    "--release",
+    "--experimental-zero-rc"
+  ],
+  "counted_extra": "--counters",
+  "matched_native_receipt_sha256": "044355072c66fa4f00e54713747e2be8f92f534bb7ddd312156b2ba2e5035036",
+  "note": "Same output path and parent filesystem state for both arms; no timing collected",
+  "cases": {
+    "rds3+flat": {
+      "spec": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/specs/eda-rds3+flat.json",
+      "spec_sha256": "37c1e16b9ca8c9a1f583f12ea483aef343e4e5328703e4a33d90e770e4792df1",
+      "arms": {
+        "baseline": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/eda/zero-rc-counted",
+            "--model",
+            "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/rds3+flat/model.sexp",
+            "--project-dir",
+            "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+            "--out-dir",
+            "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/dm-001/qualified-rds3+flat",
+            "--flat"
+          ],
+          "binary_sha256": "00724f31b570209fb2448dfd425972d558f5b7e41842b1c827057ec388633013",
+          "returncode": 0,
+          "stdout_sha256": "8252e32fd878510b55978b452ddb5813882028d0291406d0fb8f15c2e2f85283",
+          "stderr_sha256": "57a1b67ae8ea6141c8ca3f134146fe8f0fa6078880f9c9809db3cd5c532c5532",
+          "outputs": {
+            "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+            "netlisp.kicad_sym": "6e048a0dfba96cbc9a26b09d44b2c19ae8dadb8ff40dda9ff92f3d9d3a3ca34e",
+            "rds3.kicad_pro": "64e8a5183c9ef167b76251655a7f5f4d7ec899186c2e6c6c9ac058d10b8ec362",
+            "rds3.kicad_sch": "75cfc2d50ac3006dfa76292442dd295b3032625c4b155b16805757bdcf699ca2",
+            "rds3.net": "f6bd49787a8945a8581055517c2ba4267b90d4e98298c57dbd345608d8295868",
+            "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+          },
+          "totals": {
+            "calls": 49991602,
+            "allocs": 2275675,
+            "alloc_bytes": 227997712,
+            "frees": 2275675,
+            "free_bytes": 233809856,
+            "list_grows": 213327,
+            "list_grow_bytes": 6035456,
+            "reallocs": 534,
+            "realloc_added_bytes": 5812144,
+            "realloc_moves": 417,
+            "realloc_moved_bytes": 4215646,
+            "list_copies": 158395,
+            "list_copy_bytes": 9381256,
+            "dict_copies": 7058,
+            "dict_copy_bytes": 1814584,
+            "buffer_copies": 918470,
+            "buffer_copy_bytes": 8900096,
+            "text_copies": 107088,
+            "text_copy_bytes": 702044,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 399,
+            "dict_grow_bytes": 951168,
+            "buffer_grows": 307,
+            "buffer_grow_bytes": 2989,
+            "text_grows": 58204,
+            "text_grow_bytes": 311276,
+            "text_appends": 132849,
+            "text_append_bytes": 317137,
+            "buffer_pushes": 214714,
+            "buffer_appends": 384,
+            "buffer_append_bytes": 3142,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 56973768,
+            "live_bytes_at_exit": 0
+          },
+          "counter_sha256": "0275920ee39bc9d1ad60324bd1a5d020e733e50e8e20d54b5c2c61caff1e5d75"
+        },
+        "candidate": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/dm-001/candidate-matched-counted",
+            "--model",
+            "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/rds3+flat/model.sexp",
+            "--project-dir",
+            "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+            "--out-dir",
+            "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/dm-001/qualified-rds3+flat",
+            "--flat"
+          ],
+          "binary_sha256": "1d01c6ece34723bab52f985bf524f4c448fa92a07b6a062789d3bebe7b1ce9cd",
+          "returncode": 0,
+          "stdout_sha256": "8252e32fd878510b55978b452ddb5813882028d0291406d0fb8f15c2e2f85283",
+          "stderr_sha256": "57a1b67ae8ea6141c8ca3f134146fe8f0fa6078880f9c9809db3cd5c532c5532",
+          "outputs": {
+            "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+            "netlisp.kicad_sym": "6e048a0dfba96cbc9a26b09d44b2c19ae8dadb8ff40dda9ff92f3d9d3a3ca34e",
+            "rds3.kicad_pro": "64e8a5183c9ef167b76251655a7f5f4d7ec899186c2e6c6c9ac058d10b8ec362",
+            "rds3.kicad_sch": "75cfc2d50ac3006dfa76292442dd295b3032625c4b155b16805757bdcf699ca2",
+            "rds3.net": "f6bd49787a8945a8581055517c2ba4267b90d4e98298c57dbd345608d8295868",
+            "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+          },
+          "totals": {
+            "calls": 49991613,
+            "allocs": 2156253,
+            "alloc_bytes": 219775632,
+            "frees": 2156253,
+            "free_bytes": 225587776,
+            "list_grows": 213327,
+            "list_grow_bytes": 6035456,
+            "reallocs": 534,
+            "realloc_added_bytes": 5812144,
+            "realloc_moves": 417,
+            "realloc_moved_bytes": 3265442,
+            "list_copies": 109714,
+            "list_copy_bytes": 7317712,
+            "dict_copies": 7058,
+            "dict_copy_bytes": 1814584,
+            "buffer_copies": 847729,
+            "buffer_copy_bytes": 8714846,
+            "text_copies": 107088,
+            "text_copy_bytes": 702044,
+            "runtime_retains": 0,
+            "runtime_releases": 0,
+            "dict_grows": 399,
+            "dict_grow_bytes": 951168,
+            "buffer_grows": 307,
+            "buffer_grow_bytes": 2989,
+            "text_grows": 58204,
+            "text_grow_bytes": 311276,
+            "text_appends": 132849,
+            "text_append_bytes": 317137,
+            "buffer_pushes": 214714,
+            "buffer_appends": 384,
+            "buffer_append_bytes": 3142,
+            "shared_retains": 0,
+            "shared_releases": 0,
+            "share_marks": 0,
+            "share_bytes": 0,
+            "peak_live_bytes": 56973768,
+            "live_bytes_at_exit": 0
+          },
+          "counter_sha256": "b5a2677c899ecc99f21b5ecfa0cd556ce10c400a4b419c7763fbd67cf3b9da0b"
+        }
+      }
+    },
+    "cyclops-digital-pcb": {
+      "spec": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/specs/eda-cyclops-digital-pcb.json",
+      "spec_sha256": "f00f66572b618958b5030478fc129c0bf1012c839465fc9e0bc1e135fbab73fb",
+      "arms": {
+        "zig": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-zig-fast",
+            "--model",
+            "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/cyclops-digital-pcb/model.sexp",
+            "--project-dir",
+            "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+            "--out-dir",
+            "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/dm-001/qualified-cyclops-digital-pcb"
+          ],
+          "binary_sha256": "a67a28006cf5815b76ff658564118cbb13d22df729ad4df19a8f6ac73a129138",
+          "returncode": 0,
+          "stdout_sha256": "8a7313b85f5520c219137308facf0a1553dacd720a601b52cf1cba76b4aee59b",
+          "stderr_sha256": "6ce1c8cc4f4fc540bbde71c99d99e1c85477c006d09bbe1c4eb06a03371b7477",
+          "outputs": {
+            "cyclops-digital-pcb.kicad_pro": "a00a4f6036efd4b93a16e79a4548d49f0553576691daab49954c2e29b0623a78",
+            "cyclops-digital-pcb.kicad_sch": "468ed6ded0b389ccea7f529944435bf40fe07c242682e15eed5b0e2923ac155b",
+            "cyclops-digital-pcb.net": "6ddd15389e2a275d3c82f7da336610053626a64cbd6f98b9f2820dd26221fc82",
+            "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+            "netlisp.kicad_sym": "f35498d7cc5217cdfd40cdc17c1e787fba57e864cb2672d5ac981d04f9dff585",
+            "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+          }
+        },
+        "baseline": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/eda/zero-rc",
+            "--model",
+            "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/cyclops-digital-pcb/model.sexp",
+            "--project-dir",
+            "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+            "--out-dir",
+            "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/dm-001/qualified-cyclops-digital-pcb"
+          ],
+          "binary_sha256": "e76f28fdf040335897ebee0f5a76a4505ae5444fda3ba71004101dd6a8a1b99d",
+          "returncode": 0,
+          "stdout_sha256": "8a7313b85f5520c219137308facf0a1553dacd720a601b52cf1cba76b4aee59b",
+          "stderr_sha256": "6ce1c8cc4f4fc540bbde71c99d99e1c85477c006d09bbe1c4eb06a03371b7477",
+          "outputs": {
+            "cyclops-digital-pcb.kicad_pro": "a00a4f6036efd4b93a16e79a4548d49f0553576691daab49954c2e29b0623a78",
+            "cyclops-digital-pcb.kicad_sch": "468ed6ded0b389ccea7f529944435bf40fe07c242682e15eed5b0e2923ac155b",
+            "cyclops-digital-pcb.net": "6ddd15389e2a275d3c82f7da336610053626a64cbd6f98b9f2820dd26221fc82",
+            "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+            "netlisp.kicad_sym": "f35498d7cc5217cdfd40cdc17c1e787fba57e864cb2672d5ac981d04f9dff585",
+            "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+          }
+        },
+        "candidate": {
+          "argv": [
+            "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/dm-001/candidate-matched",
+            "--model",
+            "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/cyclops-digital-pcb/model.sexp",
+            "--project-dir",
+            "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+            "--out-dir",
+            "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/dm-001/qualified-cyclops-digital-pcb"
+          ],
+          "binary_sha256": "ac09e301b7be93d0a52c5bc37d05bbff5a2b2afdd4c7f41e803648bc99ae8b8f",
+          "returncode": 0,
+          "stdout_sha256": "8a7313b85f5520c219137308facf0a1553dacd720a601b52cf1cba76b4aee59b",
+          "stderr_sha256": "6ce1c8cc4f4fc540bbde71c99d99e1c85477c006d09bbe1c4eb06a03371b7477",
+          "outputs": {
+            "cyclops-digital-pcb.kicad_pro": "a00a4f6036efd4b93a16e79a4548d49f0553576691daab49954c2e29b0623a78",
+            "cyclops-digital-pcb.kicad_sch": "468ed6ded0b389ccea7f529944435bf40fe07c242682e15eed5b0e2923ac155b",
+            "cyclops-digital-pcb.net": "6ddd15389e2a275d3c82f7da336610053626a64cbd6f98b9f2820dd26221fc82",
+            "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+            "netlisp.kicad_sym": "f35498d7cc5217cdfd40cdc17c1e787fba57e864cb2672d5ac981d04f9dff585",
+            "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8"
+          }
+        }
+      }
+    }
+  },
+  "status": "passed"
+}

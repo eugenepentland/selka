@@ -1,0 +1,6 @@
+build-slot: build slot 3, FIFO ticket 3080 after 0s
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p3/experiments/lox-eda-parity-20261013/P3/dm-001/qualify_application.py", line 45, in <module>
+    assert result.returncode == 0
+           ^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

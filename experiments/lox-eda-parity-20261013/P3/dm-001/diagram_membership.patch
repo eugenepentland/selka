@@ -1,0 +1,70 @@
+--- source-002/eda/diagram_membership.my
++++ candidate/eda/diagram_membership.my
+@@ -72,6 +72,22 @@
+         map_[text] = nid
+ 
+ 
++# Read the section in a bounded call; only independently owned keys leave it.
++func attachment_section_nets(sec: env_mod.Section) -> set[str]:
++    mut nets: set[str] = set()
++    for pg in sec.pin_groups:
++        for pin in pg.pins:
++            nets.add(strs.text(pin.net))
++    for port in sec.ports:
++        nets.add(strs.text(port.name))
++    return nets
++
++
++# The caller needs a scalar category, never an owned section snapshot.
++func attachment_section_is_connector(sec: env_mod.Section) -> bool:
++    return rb.classify_by_name(sec.name, sec.instances) == rb.Category.connector
++
++
+ # Attach to the section sharing most signal nets. Explicit hosts override;
+ # connector sections lose ties to a functional section. Power is excluded.
+ public func compute_sub_block_attachments(block: env_mod.DesignBlock) -> int?[]:
+@@ -127,28 +143,20 @@
+         count_idx += 1
+     mut sec_idx2 = 0
+     while sec_idx2 < sec_count:
+-        mut sec2 = block.sections[sec_idx2].copy()
+-        mut sec_nets: set[str] = set()
+-        for pg in sec2.pin_groups:
+-            for p in pg.pins:
+-                sec_nets.add(strs.text(p.net))
+-        for port2 in sec2.ports:
+-            sec_nets.add(strs.text(port2.name))
++        mut sec_nets = attachment_section_nets(block.sections[sec_idx2])
+         for net in sec_nets:
+             if net in power_nets or net not in net_to_subs:
+                 continue
+-            mut subs = net_to_subs[net].copy()
+-            if len(subs) != 1:
++            if len(net_to_subs[net]) != 1:
+                 continue
+-            for sub_name in subs:
++            for sub_name in net_to_subs[net]:
+                 if sub_name in sb_name_to_idx:
+                     mut sb_idx = sb_name_to_idx[sub_name]
+                     counts[sb_idx * sec_count + sec_idx2] += 1
+         sec_idx2 += 1
+     mut sb_idx2 = 0
+     while sb_idx2 < sb_count:
+-        mut sb2 = block.sub_blocks[sb_idx2].copy()
+-        mut sb_key = strs.text(sb2.name)
++        mut sb_key = strs.text(block.sub_blocks[sb_idx2].name)
+         if sb_key in explicit_host:
+             result[sb_idx2] = Some(explicit_host[sb_key])
+             sb_idx2 += 1
+@@ -158,10 +166,9 @@
+         mut best_is_conn = True
+         mut sec_idx3 = 0
+         while sec_idx3 < sec_count:
+-            mut sec3 = block.sections[sec_idx3].copy()
+             mut c = counts[sb_idx2 * sec_count + sec_idx3]
+             if c > 0:
+-                mut is_conn = rb.classify_by_name(sec3.name, sec3.instances) == rb.Category.connector
++                mut is_conn = attachment_section_is_connector(block.sections[sec_idx3])
+                 # A module belongs with its subsystem, not the connector its
+                 # I/O happens to pass through. Count first, functional tie next.
+                 mut better = c > best_count or (c == best_count and best_is_conn and not is_conn)

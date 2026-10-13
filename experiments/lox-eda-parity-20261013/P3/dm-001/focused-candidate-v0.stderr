@@ -1,0 +1,13 @@
+build-slot: FIFO ticket 3059, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 3059, position 2; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 3059, position 2; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 3059, position 2; earlier build tickets must run first; waiting (180s so far)
+build-slot: FIFO ticket 3059, position 2; earlier build tickets must run first; waiting (240s so far)
+build-slot: FIFO ticket 3059, position 2; earlier build tickets must run first; waiting (300s so far)
+build-slot: build slot 1, FIFO ticket 3059 after 325s
+p3_dm_tests.my:9:54: error[E_LIST_INFERENCE]: empty list requires an expected List type
+      assert m.compute_sub_block_attachments(block) == []
+                                                       ^
+p3_dm_tests.my:58:55: error[E_OPTION_INFERENCE]: Some requires an expected Option type
+      assert m.compute_sub_block_attachments(block) == [Some(0), None]
+                                                        ^

@@ -1,0 +1,28 @@
+build-slot: FIFO ticket 1469, position 1; waiting for memory-accounting settle delay or another measurement; waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 1469 after 25s
+{
+  "baseline": {
+    "seconds": {
+      "median": 0.098448381,
+      "min": 0.097640521,
+      "max": 0.099206421,
+      "samples": [
+        0.098448381,
+        0.097640521,
+        0.099206421
+      ]
+    }
+  },
+  "candidate": {
+    "seconds": {
+      "median": 0.095619986,
+      "min": 0.095542326,
+      "max": 0.096159501,
+      "samples": [
+        0.095619986,
+        0.095542326,
+        0.096159501
+      ]
+    }
+  }
+}

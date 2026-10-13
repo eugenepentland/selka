@@ -1,0 +1,2 @@
+build-slot: build slot 1, FIFO ticket 3099 after 0s
+full RDS3-flat outputs match, counters have zero RC/exit-live, native copy callsites retained

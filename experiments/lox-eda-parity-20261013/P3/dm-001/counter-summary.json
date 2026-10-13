@@ -1,0 +1,62 @@
+{
+  "allocs": {
+    "baseline": 2275680,
+    "candidate": 2156256,
+    "delta": -119424
+  },
+  "alloc_bytes": {
+    "baseline": 227997904,
+    "candidate": 219775856,
+    "delta": -8222048
+  },
+  "reallocs": {
+    "baseline": 534,
+    "candidate": 534,
+    "delta": 0
+  },
+  "realloc_added_bytes": {
+    "baseline": 5812144,
+    "candidate": 5812144,
+    "delta": 0
+  },
+  "peak_live_bytes": {
+    "baseline": 56973768,
+    "candidate": 56973768,
+    "delta": 0
+  },
+  "live_bytes_at_exit": {
+    "baseline": 0,
+    "candidate": 0,
+    "delta": 0
+  },
+  "list_copies": {
+    "baseline": 158395,
+    "candidate": 109714,
+    "delta": -48681
+  },
+  "list_copy_bytes": {
+    "baseline": 9381256,
+    "candidate": 7317712,
+    "delta": -2063544
+  },
+  "buffer_copies": {
+    "baseline": 918470,
+    "candidate": 847729,
+    "delta": -70741
+  },
+  "buffer_copy_bytes": {
+    "baseline": 8900096,
+    "candidate": 8714846,
+    "delta": -185250
+  },
+  "calls": {
+    "baseline": 49991602,
+    "candidate": 49991613,
+    "delta": 11
+  },
+  "native_copy_call_sites": {
+    "baseline": 83,
+    "candidate": 2
+  },
+  "note": "managed counters and static native sites only; no runtime claim"
+}
