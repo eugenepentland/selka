@@ -5,6 +5,8 @@ const pipeline = @import("pipeline.zig");
 const property = @import("test_runner_property.zig");
 const campaign_contract = @import("property_campaign_contract.zig");
 const budget = @import("memory_budget");
+const policy = @import("mylang").shared_cache_policy;
+const shared_store = @import("test_shared_store.zig");
 
 /// Execution settings beyond one file's test selection.
 pub const Controls = struct {
@@ -82,6 +84,60 @@ pub const shared_cache_variable = "MYLANG_TEST_SHARED_CACHE";
 pub fn sharedCache(requested: ?[]const u8, environment: *const std.process.Environ.Map) ?[]const u8 {
     const directory = requested orelse environment.get(shared_cache_variable) orelse return null;
     return if (directory.len == 0) null else directory;
+}
+
+/// Resolve the receipt store once per command. An explicit flag or variable is
+/// returned unchanged (an unusable one fails later, as before); an unset one takes
+/// the per-user default only while `default_sharing` is on, and an unusable
+/// default prints one warning and disables sharing ("").
+pub fn resolveShared(init: std.process.Init, requested: ?[]const u8) error{OutOfMemory}!?[]const u8 {
+    return resolveSharedWith(init, requested, policy.default_sharing);
+}
+
+fn resolveSharedWith(init: std.process.Init, requested: ?[]const u8, sharing: bool) error{OutOfMemory}!?[]const u8 {
+    const a = init.arena.allocator();
+    const selection = try policy.resolveWith(a, init.environ_map, .tests, requested, sharing) orelse return requested;
+    if (selection.origin == .explicit) return requested;
+    _ = shared_store.Store.open(a, init.io, selection.path) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        var buffer: [512]u8 = undefined;
+        const warning = std.fmt.bufPrint(&buffer, "warning: shared test cache {s}: {s}; sharing disabled\n", .{ selection.path, @errorName(err) }) catch "warning: shared test cache unusable; sharing disabled\n";
+        std.Io.File.stderr().writeStreamingAll(init.io, warning) catch return "";
+        return "";
+    };
+    return selection.path;
+}
+
+// spec-case: SHARED-STORE-4
+test "an unusable default receipt store disables sharing while explicit settings pass through" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try temporary.dir.realPathFileAlloc(std.testing.io, ".", a);
+    try temporary.dir.writeFile(std.testing.io, .{ .sub_path = ".cache", .data = "a file where the cache directory belongs" });
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    try environment.put("HOME", root);
+    const init: std.process.Init = .{
+        .minimal = .{ .environ = .empty, .args = .{ .vector = &.{} } },
+        .arena = &arena,
+        .gpa = std.testing.allocator,
+        .io = std.testing.io,
+        .environ_map = &environment,
+        .preopens = .empty,
+    };
+    try std.testing.expectEqual(@as(?[]const u8, null), try resolveSharedWith(init, null, false));
+    try std.testing.expectEqualStrings("", (try resolveSharedWith(init, null, true)).?);
+    try std.testing.expectEqualStrings("explicit-store", (try resolveSharedWith(init, "explicit-store", true)).?);
+    try std.testing.expectEqualStrings("", (try resolveSharedWith(init, "", true)).?);
+    try temporary.dir.deleteFile(std.testing.io, ".cache");
+    const expected = try std.fs.path.join(a, &.{ root, ".cache", "mylang", "native-tests" });
+    try std.testing.expectEqualStrings(expected, (try resolveSharedWith(init, null, true)).?);
+    try environment.put(shared_cache_variable, "");
+    try std.testing.expectEqual(@as(?[]const u8, null), try resolveSharedWith(init, null, true));
+    try std.testing.expectEqualStrings(policy.Tier.tests.variable(), shared_cache_variable);
 }
 
 // spec-case: NEW-CORE-TEST-SHARED-1

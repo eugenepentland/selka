@@ -21,7 +21,7 @@ test "zero RC A05 scalar mut calls preserve sibling writes and argument order" {
     const modes = [_][]const []const u8{ &.{"--release"}, &.{"--unoptimized"}, &.{ "--release", "--verify-facts" }, &.{"--optimize-debug"}, &.{ "--release", "--no-facts" } };
     for (modes) |mode| {
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(a, &.{ options.core_path, "build", source, "--experimental-zero-rc", "--counters", "--cache-dir", root, "--emit-llvm", llvm, "-o", binary });
+        try argv.appendSlice(a, &.{ options.corePath(), "build", source, "--experimental-zero-rc", "--counters", "--cache-dir", root, "--emit-llvm", llvm, "-o", binary });
         try argv.appendSlice(a, mode);
         const built = try std.process.run(a, io, .{ .argv = argv.items });
         if (built.term != .exited or built.term.exited != 0) std.debug.print("A05 scalar mut calls build: {s}{s}\n", .{ built.stdout, built.stderr });
@@ -78,7 +78,7 @@ test "zero RC A05 scalar mut calls retain managed root loan refusals" {
     try dir.dir.writeFile(io, .{ .sub_path = "overlap.my", .data = source });
     const root = try dir.dir.realPathFileAlloc(io, ".", a);
     const path = try std.fs.path.join(a, &.{ root, "overlap.my" });
-    const checked = try std.process.run(a, io, .{ .argv = &.{ options.core_path, "check", path, "--experimental-zero-rc" } });
+    const checked = try std.process.run(a, io, .{ .argv = &.{ options.corePath(), "check", path, "--experimental-zero-rc" } });
     try std.testing.expect(checked.term == .exited and checked.term.exited == 1);
     try std.testing.expect(std.mem.indexOf(u8, checked.stderr, "E_SINGLE_OWNER_OVERLAP") != null);
 }
@@ -104,7 +104,7 @@ test "zero RC A05 scalar mut calls keep borrowed inputs read-only" {
     try dir.dir.writeFile(io, .{ .sub_path = "borrowed.my", .data = source });
     const root = try dir.dir.realPathFileAlloc(io, ".", a);
     const path = try std.fs.path.join(a, &.{ root, "borrowed.my" });
-    const checked = try std.process.run(a, io, .{ .argv = &.{ options.core_path, "check", path, "--experimental-zero-rc" } });
+    const checked = try std.process.run(a, io, .{ .argv = &.{ options.corePath(), "check", path, "--experimental-zero-rc" } });
     try std.testing.expect(checked.term == .exited and checked.term.exited == 1);
     try std.testing.expect(std.mem.indexOf(u8, checked.stderr, "E_IMMUTABLE") != null);
 }

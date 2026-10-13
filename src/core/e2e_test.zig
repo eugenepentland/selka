@@ -100,8 +100,8 @@ test "mylang-core builds the integer_math slice at debug and release with the ol
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     const root = try scratch(arena.allocator(), dir);
-    const debug = try sliceChecksums(arena.allocator(), try buildFixture(arena.allocator(), root, "int_math", .{ .compiler = options.core_path, .release = false }));
-    const release_build = try buildFixture(arena.allocator(), root, "int_math", .{ .compiler = options.core_path, .release = true });
+    const debug = try sliceChecksums(arena.allocator(), try buildFixture(arena.allocator(), root, "int_math", .{ .compiler = options.corePath(), .release = false }));
+    const release_build = try buildFixture(arena.allocator(), root, "int_math", .{ .compiler = options.corePath(), .release = true });
     const release = try sliceChecksums(arena.allocator(), release_build);
     try std.testing.expectEqualStrings("561601106", debug[0]);
     try std.testing.expectEqualStrings("8773872", debug[1]);
@@ -120,8 +120,8 @@ test "the control-flow program prints and exits like the old core at debug and r
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     const root = try scratch(arena.allocator(), dir);
-    const debug = try controlRuns(arena.allocator(), try buildFixture(arena.allocator(), root, "control", .{ .compiler = options.core_path, .release = false }));
-    const release = try controlRuns(arena.allocator(), try buildFixture(arena.allocator(), root, "control", .{ .compiler = options.core_path, .release = true }));
+    const debug = try controlRuns(arena.allocator(), try buildFixture(arena.allocator(), root, "control", .{ .compiler = options.corePath(), .release = false }));
+    const release = try controlRuns(arena.allocator(), try buildFixture(arena.allocator(), root, "control", .{ .compiler = options.corePath(), .release = true }));
     try std.testing.expectEqualStrings(control_plain, debug[0].stdout);
     try std.testing.expectEqual(@as(u8, 215), debug[0].status);
     try std.testing.expectEqualStrings(control_args, debug[1].stdout);
@@ -140,8 +140,8 @@ test "appending to a copy of a list parameter or of a local leaves the original 
     defer dir.cleanup();
     const root = try scratch(arena.allocator(), dir);
     // The old core's output; S0 freed the caller's block on the first grow and printed garbage.
-    const debug = try run(arena.allocator(), try buildFixture(arena.allocator(), root, "list_alias", .{ .compiler = options.core_path, .release = false }), &.{});
-    const release = try run(arena.allocator(), try buildFixture(arena.allocator(), root, "list_alias", .{ .compiler = options.core_path, .release = true }), &.{});
+    const debug = try run(arena.allocator(), try buildFixture(arena.allocator(), root, "list_alias", .{ .compiler = options.corePath(), .release = false }), &.{});
+    const release = try run(arena.allocator(), try buildFixture(arena.allocator(), root, "list_alias", .{ .compiler = options.corePath(), .release = true }), &.{});
     try std.testing.expectEqualStrings("53 3 3 323 51\n", debug.stdout);
     try std.testing.expectEqualStrings("53 3 3 323 51\n", release.stdout);
 }
@@ -153,8 +153,8 @@ test "an overflow or bounds failure flushes stdout, reports like the old core an
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     const root = try scratch(arena.allocator(), dir);
-    const overflow = try run(arena.allocator(), try buildFixture(arena.allocator(), root, "overflow", .{ .compiler = options.core_path, .release = false }), &.{});
-    const bounds = try run(arena.allocator(), try buildFixture(arena.allocator(), root, "bounds", .{ .compiler = options.core_path, .release = true }), &.{});
+    const overflow = try run(arena.allocator(), try buildFixture(arena.allocator(), root, "overflow", .{ .compiler = options.corePath(), .release = false }), &.{});
+    const bounds = try run(arena.allocator(), try buildFixture(arena.allocator(), root, "bounds", .{ .compiler = options.corePath(), .release = true }), &.{});
     try std.testing.expectEqualStrings("1\n", overflow.stdout);
     try std.testing.expectEqual(@as(u8, 1), overflow.status);
     try std.testing.expect(std.mem.indexOf(u8, overflow.stderr, "overflow.my:2:14: error[R_OVERFLOW]: native execution failed (mul: left 9300000, right 1000000000000, width 64)\n") != null);
@@ -176,7 +176,7 @@ test "a negative index past the start traps with the index the program wrote, in
     const kinds = [_][]const u8{ "list-read", "list-write", "array-read", "array-write" };
     const statuses = [_]u8{ 20, 10, 40, 30 };
     for ([_]bool{ false, true }) |release| {
-        const program = try buildFixture(a, root, "negative_index", .{ .compiler = options.core_path, .release = release });
+        const program = try buildFixture(a, root, "negative_index", .{ .compiler = options.corePath(), .release = release });
         for (kinds, lines, statuses) |kind, line, status| {
             const trapped = try run(a, program, &.{ kind, "-5" });
             try std.testing.expectEqual(@as(u8, 1), trapped.status);
@@ -196,7 +196,7 @@ test "a negative index past the start traps with the index the program wrote, in
 /// The old and new builds of one fixture, run the same way: equal stdout and status.
 fn sameAsOld(arena: std.mem.Allocator, root: []const u8, name: []const u8, args: []const []const u8) !bool {
     if (!options.differential) return true;
-    const new = try run(arena, try buildFixture(arena, root, name, .{ .compiler = options.core_path, .release = true }), args);
+    const new = try run(arena, try buildFixture(arena, root, name, .{ .compiler = options.corePath(), .release = true }), args);
     const old = try run(arena, try buildFixture(arena, root, name, .{ .compiler = options.old_path, .release = true, .old = true }), args);
     const timed = !std.mem.eql(u8, name, "control") and !std.mem.eql(u8, name, "overflow") and !std.mem.eql(u8, name, "bounds") and !std.mem.eql(u8, name, "list_alias");
     const same_out = if (timed) std.mem.eql(u8, firstField(new.stdout), firstField(old.stdout)) else std.mem.eql(u8, new.stdout, old.stdout);
@@ -226,7 +226,7 @@ test "with -Dcore-diff=true every fixture matches the old compiler's build of it
 
 /// One kernel's checksums at 4096 and 64 elements (300 iterations, seed 7), from one build.
 fn kernelChecksums(arena: std.mem.Allocator, root: []const u8, name: []const u8, release: bool) ![2][]const u8 {
-    const executable = try buildFixture(arena, root, name, .{ .compiler = options.core_path, .release = release });
+    const executable = try buildFixture(arena, root, name, .{ .compiler = options.corePath(), .release = release });
     const large = firstField((try run(arena, executable, &.{ "4096", "300", "7" })).stdout);
     const small = firstField((try run(arena, executable, &.{ "64", "300", "7" })).stdout);
     return .{ large, small };
@@ -261,7 +261,7 @@ fn verified(arena: std.mem.Allocator, root: []const u8, mode: []const u8, flag: 
     const output = try std.fmt.allocPrint(arena, "{s}/int_math{s}", .{ root, flag });
     const source = try std.fmt.allocPrint(arena, "{s}/int_math.my", .{options.fixtures});
     const cache = try std.fmt.allocPrint(arena, cache_format, .{root});
-    const result = try std.process.run(arena, std.testing.io, .{ .argv = &.{ options.core_path, "build", source, "-o", output, mode, flag, "--link", options.clock_path, cache_flag, cache } });
+    const result = try std.process.run(arena, std.testing.io, .{ .argv = &.{ options.corePath(), "build", source, "-o", output, mode, flag, "--link", options.clock_path, cache_flag, cache } });
     try std.testing.expect(result.term == .exited and result.term.exited == 0);
     return run(arena, output, &.{ "4096", "300", "7" });
 }
@@ -288,7 +288,7 @@ fn verifiedKernel(arena: std.mem.Allocator, root: []const u8, name: []const u8, 
     const output = try std.fmt.allocPrint(arena, "{s}/{s}{s}", .{ root, name, flag });
     const source = try std.fmt.allocPrint(arena, fixture_format, .{ options.fixtures, name });
     const cache = try std.fmt.allocPrint(arena, cache_format, .{root});
-    const result = try std.process.run(arena, std.testing.io, .{ .argv = &.{ options.core_path, "build", source, "-o", output, optimize_flag, flag, "--link", options.clock_path, cache_flag, cache } });
+    const result = try std.process.run(arena, std.testing.io, .{ .argv = &.{ options.corePath(), "build", source, "-o", output, optimize_flag, flag, "--link", options.clock_path, cache_flag, cache } });
     try std.testing.expect(result.term == .exited and result.term.exited == 0);
     return run(arena, output, &.{ "4096", "300", "7" });
 }
@@ -336,8 +336,8 @@ test "the multi-kind compute program, dispatching on an invariant kind per eleme
     var dir = std.testing.tmpDir(.{});
     defer dir.cleanup();
     const root = try scratch(arena.allocator(), dir);
-    const debug = try computeChecksums(arena.allocator(), try buildFixture(arena.allocator(), root, "compute_s0", .{ .compiler = options.core_path, .release = false }));
-    const release = try computeChecksums(arena.allocator(), try buildFixture(arena.allocator(), root, "compute_s0", .{ .compiler = options.core_path, .release = true }));
+    const debug = try computeChecksums(arena.allocator(), try buildFixture(arena.allocator(), root, "compute_s0", .{ .compiler = options.corePath(), .release = false }));
+    const release = try computeChecksums(arena.allocator(), try buildFixture(arena.allocator(), root, "compute_s0", .{ .compiler = options.corePath(), .release = true }));
     try std.testing.expect(sameSums(debug));
     try std.testing.expect(sameSums(release));
 }
@@ -358,7 +358,7 @@ fn genericChecksum(arena: std.mem.Allocator, root: []const u8, name: []const u8)
     const source = try std.fmt.allocPrint(arena, fixture_format, .{ options.fixtures, name });
     const output = try std.fmt.allocPrint(arena, "{s}/{s}-generic", .{ root, name });
     const cache = try std.fmt.allocPrint(arena, cache_format, .{root});
-    const result = try std.process.run(arena, std.testing.io, .{ .argv = &.{ options.core_path, "build", source, "-o", output, optimize_flag, "--generic-vectors", "--link", options.clock_path, cache_flag, cache } });
+    const result = try std.process.run(arena, std.testing.io, .{ .argv = &.{ options.corePath(), "build", source, "-o", output, optimize_flag, "--generic-vectors", "--link", options.clock_path, cache_flag, cache } });
     try std.testing.expect(result.term == .exited and result.term.exited == 0);
     return firstField((try run(arena, output, &.{ "4100", "300", "7" })).stdout);
 }

@@ -78,8 +78,55 @@ pub fn isolated(environment: *const std.process.Environ.Map) bool {
     return std.mem.eql(u8, environment.get("MYLANG_TEST_ISOLATE") orelse "", "1");
 }
 
+/// What the execution tier looks receipts up under: the run's receipt context and
+/// the built program's exact key (`driver.Outcome.program_key`).
+pub const Linked = struct { context: receipt.Context, program_key: [32]u8 };
+
+/// One built program's execution-tier keys (EXEC-RECEIPT-1): each consulted test's
+/// position in the run's selection and its key, and the whole-program key over all
+/// of them (EXEC-RECEIPT-3).
+pub const Executed = struct { positions: []const usize, keys: []const [32]u8, whole: [32]u8 };
+
+/// Before the first trial of a linked program, look up the whole-program execution
+/// receipt and then each test's for `chosen[positions]` (tests without live effects).
+/// A hit is `cached` with `whole-exec-receipt-hit` or `exec-receipt-hit` and runs no
+/// trial. A forced run looks nothing up but still keys its tests, so its passes
+/// refresh their receipts. Null when the execution tier is not admitted: `--link`,
+/// loader overrides, an unproved toolchain or an indexed property campaign.
+pub fn reuse(linked: Linked, chosen: []Selected, positions: []const usize) Error!?Executed {
+    const context = linked.context;
+    var unforced = context;
+    unforced.options.controls.force = false;
+    if (positions.len == 0 or context.options.properties.policy != .legacy or !receipt.executionReusable(unforced)) return null;
+    const a = context.arena;
+    const settings = try receipt.executionSettings(context);
+    const keys = try a.alloc([32]u8, positions.len);
+    const names = try a.alloc([]const u8, positions.len);
+    for (positions, keys, names) |position, *key, *name| {
+        name.* = chosen[position].case.name;
+        key.* = try receipt.executionKey(context, .{ .program_key = linked.program_key, .name = name.*, .settings = settings });
+    }
+    const whole = try receipt.wholeExecutionKey(context, linked.program_key, names, settings);
+    const every = try receipt.executionHit(context, whole);
+    for (positions, keys) |position, key| {
+        const reason = if (every) "whole-exec-receipt-hit" else if (try receipt.executionHit(context, key)) "exec-receipt-hit" else continue;
+        const item = &chosen[position];
+        item.verdict = .{ .name = item.case.name, .status = .cached };
+        item.ready = false;
+        item.cache_reason = reason;
+    }
+    return .{ .positions = positions, .keys = keys, .whole = whole };
+}
+
+/// Whether `reason` names an execution-tier hit.
+pub fn executionHit(reason: ?[]const u8) bool {
+    const found = reason orelse return false;
+    return std.mem.eql(u8, found, "exec-receipt-hit") or std.mem.eql(u8, found, "whole-exec-receipt-hit");
+}
+
 /// Run `chosen[positions]` with `workers`. The test at `positions[i]` is row `i` of the
-/// executable's dispatch table.
+/// executable's dispatch table; a test no longer `ready` (an execution receipt
+/// answered it) keeps its row and runs no trial.
 pub fn run(resources: Resources, options: Options, executable: Executable, chosen: []Selected, positions: []const usize, workers: Workers) Error!void {
     const a = resources.arena;
     const shared: Shared = .{
@@ -99,9 +146,11 @@ pub fn run(resources: Resources, options: Options, executable: Executable, chose
     var plains: std.ArrayList(Pending) = .empty;
     for (positions, 0..) |position, row| {
         const selected = &chosen[position];
+        if (!selected.ready) continue;
         const pending = try shared.prepare(selected, row) orelse continue;
         try (if (pending.search) &searches else &plains).append(a, pending);
     }
+    if (searches.items.len + plains.items.len == 0) return;
     const width = @max(1, @min(workers.width, searches.items.len + plains.items.len));
     var queue: Queue = .{ .shared = &shared, .searches = searches.items, .plains = plains.items, .workers = .{ .width = width, .batch = @max(1, workers.batch), .permits = workers.permits } };
     // NEW-CORE-TEST-QUEUE-1: each thread takes the next work as soon as its last ends.
@@ -513,4 +562,70 @@ test "property checkpoint source guard propagates ReadFailed instead of publishi
     try temporary.dir.createDir(std.testing.io, "app.my", .default_dir);
     try std.testing.expectError(error.ReadFailed, guard.unchanged());
     try std.testing.expectError(error.ReadFailed, Checkpoint.init(guard, root, @splat(7), 32));
+}
+
+/// Two ready plain tests and a receipt context admitting both tiers, under `root`.
+const ReuseFixture = struct {
+    context: receipt.Context,
+    chosen: [2]Selected,
+
+    fn init(a: std.mem.Allocator, root: []const u8, environment: *const std.process.Environ.Map) !ReuseFixture {
+        const path = try std.fs.path.join(a, &.{ root, "app.my" });
+        return .{
+            .context = .{
+                .arena = a,
+                .io = std.testing.io,
+                .environment = environment,
+                .options = .{ .path = path, .build = .{ .zig = "pinned-zig", .cache = root } },
+                .entry = .{ .path = path, .root = root, .name = "app" },
+                .identity = .{ .tool = .{ .path = "pinned-zig", .digest = @splat(1), .generation = @splat(0), .native_target = @splat(2), .inputs = 0, .memo_hit = false, .cacheable = true } },
+            },
+            .chosen = .{ ready("app::test_one"), ready("app::test_two") },
+        };
+    }
+
+    fn ready(name: []const u8) Selected {
+        return .{ .case = .{ .name = name, .function = @fromBackingInt(@intCast(0)), .shape = .boolean, .other_parameters = 0, .streams = &.{} }, .verdict = .{ .name = name, .status = .failed, .reason = "not run" }, .ready = true };
+    }
+
+    fn reuseAll(self: *ReuseFixture, context: receipt.Context) Error!?Executed {
+        self.chosen = .{ ready("app::test_one"), ready("app::test_two") };
+        return reuse(.{ .context = context, .program_key = @splat(9) }, &self.chosen, &.{ 0, 1 });
+    }
+};
+
+// spec-case: EXEC-RECEIPT-1
+test "reuse answers linked tests from execution receipts before any trial and a forced run only keys them" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    var fixture = try ReuseFixture.init(a, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a), &environment);
+    var forced = fixture.context;
+    forced.options.controls.force = true;
+    const keyed = (try fixture.reuseAll(forced)).?;
+    try std.testing.expectEqual(@as(usize, 2), keyed.keys.len);
+    try std.testing.expect(fixture.chosen[0].ready and fixture.chosen[1].ready);
+    try receipt.save(fixture.context, keyed.keys[0]);
+    try std.testing.expect((try fixture.reuseAll(forced)).?.keys.len == 2);
+    try std.testing.expect(fixture.chosen[0].ready);
+    const one = (try fixture.reuseAll(fixture.context)).?;
+    try std.testing.expectEqual(keyed.whole, one.whole);
+    try std.testing.expect(!fixture.chosen[0].ready and fixture.chosen[1].ready);
+    try std.testing.expectEqual(report.Status.cached, fixture.chosen[0].verdict.status);
+    try std.testing.expectEqualStrings("exec-receipt-hit", fixture.chosen[0].cache_reason.?);
+    try receipt.save(fixture.context, keyed.whole);
+    _ = try fixture.reuseAll(fixture.context);
+    try std.testing.expect(!fixture.chosen[0].ready and !fixture.chosen[1].ready);
+    try std.testing.expectEqualStrings("whole-exec-receipt-hit", fixture.chosen[1].cache_reason.?);
+    try std.testing.expect(executionHit(fixture.chosen[1].cache_reason) and !executionHit("receipt-hit") and !executionHit(null));
+    var linked = fixture.context;
+    linked.options.build.links = &.{"native.c"};
+    try std.testing.expect(try fixture.reuseAll(linked) == null);
+    var indexed = fixture.context;
+    indexed.options.properties.policy = .indexed_v1;
+    try std.testing.expect(try fixture.reuseAll(indexed) == null);
 }

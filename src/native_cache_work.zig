@@ -20,7 +20,20 @@ pub const Claim = struct {
 
     /// Lease the namespace before waiting; acquire batches in sorted unique key order.
     pub fn acquire(a: std.mem.Allocator, io: std.Io, root: []const u8, key: [32]u8) Error!Claim {
-        const namespace_lease = try lease(a, io, root);
+        return held(a, io, root, key, try lease(a, io, root));
+    }
+
+    /// Like `acquire`, but return null instead of waiting while a collection holds
+    /// the namespace: the caller then works unclaimed and never waits on a sweep.
+    pub fn attempt(a: std.mem.Allocator, io: std.Io, root: []const u8, key: [32]u8) Error!?Claim {
+        std.Io.Dir.cwd().createDirPath(io, root) catch return error.WriteFailed;
+        const context = retention.Context.init(a, io, root, .compiler);
+        const namespace_lease = (context.tryLease() catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else error.WriteFailed) orelse return null;
+        const claim = try held(a, io, root, key, namespace_lease);
+        return claim;
+    }
+
+    fn held(a: std.mem.Allocator, io: std.Io, root: []const u8, key: [32]u8, namespace_lease: std.Io.File) Error!Claim {
         errdefer namespace_lease.close(io);
         const directory = try std.fs.path.join(a, &.{ root, "work" });
         defer a.free(directory);

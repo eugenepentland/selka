@@ -21,7 +21,7 @@ test "zero RC A02 indirect calls transfer owned result and mutable writeback" {
     const modes = [_][]const []const u8{ &.{"--release"}, &.{"--unoptimized"}, &.{ "--release", "--verify-facts" }, &.{"--optimize-debug"}, &.{ "--release", "--no-facts" } };
     for (modes) |mode| {
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(a, &.{ options.core_path, "build", source, "--experimental-zero-rc", "--counters", "--cache-dir", root, "--emit-llvm", llvm, "-o", binary });
+        try argv.appendSlice(a, &.{ options.corePath(), "build", source, "--experimental-zero-rc", "--counters", "--cache-dir", root, "--emit-llvm", llvm, "-o", binary });
         try argv.appendSlice(a, mode);
         const built = try std.process.run(a, io, .{ .argv = argv.items });
         if (built.term != .exited or built.term.exited != 0) std.debug.print("A02 indirect calls build: {s}{s}\n", .{ built.stdout, built.stderr });
@@ -87,7 +87,7 @@ test "zero RC A02 indirect calls retain borrowed-return refusals" {
     };
     for (cases) |source| {
         try dir.dir.writeFile(io, .{ .sub_path = "borrowed.my", .data = source });
-        const checked = try std.process.run(a, io, .{ .argv = &.{ options.core_path, "check", path, "--experimental-zero-rc" } });
+        const checked = try std.process.run(a, io, .{ .argv = &.{ options.corePath(), "check", path, "--experimental-zero-rc" } });
         try std.testing.expect(checked.term == .exited and checked.term.exited == 1);
         try std.testing.expect(std.mem.indexOf(u8, checked.stderr, "E_SINGLE_OWNER_BORROW") != null);
     }

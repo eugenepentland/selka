@@ -29,6 +29,7 @@ import sys
 import sysconfig
 import tempfile
 import time
+from typing import Mapping
 
 from verification_snapshot import Snapshot, SnapshotError
 import verification_snapshot
@@ -39,26 +40,96 @@ import verification_profiles
 import verification_qualification
 import verification_process
 import verification_producers
+import verification_environment
 import verification_telemetry
 import verification_measurement
 from verification_process import BoundedProcessLogs, ProcessLimits, terminate_owned, wait_owned
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = 2
+# Receipt schema 3: path-free, projected-environment identities. The directory
+# carries the same number, so schema-2 receipts are never opened, let alone misread.
+VERSION = 3
+CACHE_DIRECTORY = Path(".mylang-cache/verification-v3")
+ACTION_DOMAIN = "selka-verification-action-v6"
+# Shared success evidence at the per-user default location (D2: same user, same
+# machine). Off until the week-3 rollout; MYLANG_VERIFICATION_SHARED_CACHE or
+# --shared-cache-dir still select a store explicitly, and an empty value disables.
+DEFAULT_SHARING = False
+SHARED_CACHE_VARIABLE = "MYLANG_VERIFICATION_SHARED_CACHE"
 REPORT_VERSION = 1
 INVENTORY_VERSION = 2
-# Explicit review of the complete CONFIG_INPUTS-only closure, without the
-# declarative list file. None keeps every action conservatively broad. Never
-# auto-update this qualification after consumer changes.
-# Qualified by coordinator + delegated consumer review; only the developer
-# telemetry channel changed across the previously qualified 212-file closure.
-# Evidence: experiments/telemetry-cache-invalidation-20261012/REPORT.md
-DECLARATIVE_CONFIG_SHA256 = "6e21ce1c64e0d3e82e2ce1fee75053579b67221706d4aeb46f128691049801c6"
+# The declarative list file. `build_test_inputs.zig` is data only (see
+# `declared_input_lists`), and an action's configuration identity omits its
+# bytes while every use of those lists in the build configuration is one of the
+# reviewed consumer sites below: each feeds a list into action registration
+# (the inventory's groups and exported `input_lists`), the per-list input
+# manifests, or producer recipes (`artifacts.json`), all of which reach the
+# action keys by themselves, so an edit to one list re-keys only the actions
+# that declare it. A site is one logical line (a statement joined across its
+# wrapped lines, comments dropped, whitespace collapsed) of a configuration Zig
+# file that names the file or an identifier bound to its import. An added,
+# removed or edited site keeps the file in every action's identity until it is
+# reviewed here; `DeclarativeConsumers` in verify_cache_test.py fails until
+# then, and every report states whether the exclusion applied.
+# This replaces DECLARATIVE_CONFIG_SHA256, a digest of the whole configuration
+# closure (qualified by coordinator + delegated consumer review, evidence:
+# experiments/telemetry-cache-invalidation-20261012/REPORT.md), which went
+# stale with the next build-file edit and silently stopped applying (F12).
+# None keeps every action conservatively broad.
+DECLARATIVE_INPUTS = "build_test_inputs.zig"
+DECLARATIVE_CONSUMERS: tuple[tuple[str, str], ...] | None = (
+    ("build.zig", 'const test_inputs = @import("build_test_inputs.zig");'),
+    ("build.zig", "inline for (comptime std.meta.declarations(test_inputs)) |name| {"),
+    ("build.zig", "run.addArgs(&@field(test_inputs, name));"),
+    ("build.zig", 'verification_registry.?.register("component-preparation", &component_build.step, '
+                  '&test_inputs.component_inputs, false, "component manifests and installed outputs require validation");'),
+    ("build.zig", 'verification_registry.?.register("component-support", &run_component_support.step, '
+                  '&test_inputs.component_builder, true, "exact native support executable and declared inputs");'),
+    ("build.zig", 'verification_registry.?.register("juice", &juice_native_run.step, &test_inputs.juice, false, '
+                  '"native performance collectors and host state require fresh execution");'),
+    ("build.zig", 'verification_registry.?.register("juice-runtime", &juice_runtime_run.step, &test_inputs.juice_runtime, '
+                  'false, "runtime collectors observe CPU, scheduler and current host state");'),
+    ("build.zig", 'verification_registry.?.register("coverage", &coverage_run.step, &test_inputs.coverage, false, '
+                  '"fixture membership and negative path lookups outside source recipes require freshness");'),
+    ("build.zig", 'verification_registry.?.register("doc-coverage", &doc_coverage.step, &test_inputs.doc_coverage, true, '
+                  '"complete document and feature-contract scope");'),
+    ("build.zig", 'const fmt = b.addFmt(.{ .paths = &.{ b.path("build.zig"), b.path("build_env.zig"), '
+                  'b.path("build_identity.zig"), b.path("build_test_inputs.zig"), b.path("build_verification.zig"), '
+                  'b.path("src"), b.path("tests"), b.path("test"), b.path("selfhost") }, .check = true });'),
+    ("build.zig", 'verification_registry.?.register("zig-format", &fmt.step, &test_inputs.zig_format, true, '
+                  '"exact formatter and complete source-format scope");'),
+    ("build_verification.zig", 'const test_inputs = @import("build_test_inputs.zig");'),
+    ("build_verification.zig", "inline for (comptime std.meta.declarations(test_inputs)) |name| {"),
+    ("build_verification.zig", 'self.register(name, step, &@field(test_inputs, name), true, "complete declared whole-action inputs");'),
+    ("build_verification.zig", 'if (std.mem.eql(u8, label, "tooling-units")) return compiled(b, &test_inputs.tooling_unit);'),
+    ("build_verification.zig", 'if (std.mem.eql(u8, label, "text-scalar-units")) return compiled(b, &test_inputs.text_scalar_unit);'),
+    ("build_verification.zig", "if (listed(entry, &test_inputs.environment_contract)) continue;"),
+    ("build_verification.zig", 'const inputs: []const []const u8 = if (std.mem.eql(u8, artifact.label, "tooling-units")) '
+                               '&test_inputs.tooling_unit else &test_inputs.text_scalar_unit;'),
+    ("build_verification.zig", "inline for (comptime std.meta.declarations(test_inputs)) |name| {"),
+    ("build_verification.zig", 'lists.append(a, .{ .name = name, .inputs = &@field(test_inputs, name) }) catch @panic("verification allocation");'),
+)
 RETRY = 75
+# `--integration` (plan D3): a shared-store determinism mismatch fails the
+# integrated commit with its own status, distinct from a failing test (1).
+INTEGRATION_MISMATCH_STATUS = 5
+# The native shared stores whose `<namespace>/mismatches.log` the integration
+# check reads; only stores this request's environment selects are "used".
+NATIVE_SHARED_VARIABLES = ("MYLANG_COMPILER_SHARED_CACHE", "MYLANG_TEST_SHARED_CACHE")
+FACT_LEAK_MEMBER = re.compile(r"mylang test (\S+) --release --verify-facts \(leak check\)")
 COMPONENT_SOURCE_OPTIONS = {"-Dcomponent-owned-compiler-pin", "-Dcomponent-seed-source"}
 MAX_RECORD = 32 * 1024 * 1024
+# The build runner's own compile closure: every file `build.zig` imports,
+# transitively (`BuildToolIdentity` in verify_cache_test.py names any file
+# missing here). `build_env.zig`'s `build-env` host tool wraps every cached test
+# step (`withTools`) and `build_identity.zig` keys the compiler build; the build
+# graph registers their compile steps as prepared infrastructure, not as
+# actions, so their `src/` imports are bound here, in every action's
+# `build_configuration`, beside `src/environment_identity.zon` below.
 CONFIG_INPUTS = ["./*.zig", "build.zig.zon", ".zigversion", "guardian.toml",
-                 "src/user_docs.zig", "selfhost/*.zig", "../guardian-zig/build.zig",
+                 "src/user_docs.zig", "src/environment_identity.zig", "src/build_env_rules.zig",
+                 "src/build_identity_rules.zig", "src/semantic_cache_format.zig",
+                 "selfhost/*.zig", "../guardian-zig/build.zig",
                  "../guardian-zig/build.zig.zon", "../guardian-zig/src/"]
 PREPARE_INPUTS = ["src/", "test/", "tests/", "selfhost/",
                   "docs/", "README.md", "SPEC.md", "benchmarks/runtime/ports/native_clock.c"]
@@ -66,6 +137,7 @@ COORDINATOR_INPUTS = ["scripts/verification_qualification.py", "scripts/verifica
                       "scripts/verification_process.py",
                       "scripts/cache_session.py",
                       "scripts/verification_artifacts.py", "scripts/verification_producers.py",
+                      "scripts/verification_environment.py", "src/environment_identity.zon",
                       "scripts/verification_telemetry.py", "scripts/build_admission.py",
                       "scripts/verification_measurement.py",
                       "scripts/fuzz_campaign_store.py", "scripts/build-slot.sh"]
@@ -143,6 +215,17 @@ def valid_receipt(path: Path, action_key: str) -> bool:
     record = read_record(path)
     return (record is not None and type(record.get("version")) is int and
             record == {"version": VERSION, "kind": "verification-success", "key": action_key})
+
+
+def prior_success(shared, cache: Path, action_key: str) -> bool:
+    """Whether a valid success for exactly this action key exists.
+
+    With a shared evidence store open, only its validated success counts (an
+    invalidation marker or a conflict is a miss); without one, the local receipt.
+    """
+    if shared is not None:
+        return shared.load_success(action_key) == {"version": VERSION, "kind": "verification-success", "key": action_key}
+    return valid_receipt(cache / "actions" / (action_key + ".json"), action_key)
 
 
 def save_receipt(path: Path, action_key: str) -> None:
@@ -292,36 +375,117 @@ def declared_input_lists(path: Path) -> dict | None:
         return None
 
 
-def action_configuration(identity: dict, plan: dict, root: Path, configuration_identity: dict | None = None) -> dict:
-    """Exclude a proven declarative list file; retain all unfamiliar semantics."""
-    if DECLARATIVE_CONFIG_SHA256 is None or configuration_identity is None:
-        return identity
-    qualified = dict(configuration_identity, files=[item for item in configuration_identity.get('files', [])
-                                                   if item['path'] != 'build_test_inputs.zig'])
-    if key(qualified) != DECLARATIVE_CONFIG_SHA256:
-        return identity
-    lists = declared_input_lists(root / 'build_test_inputs.zig')
-    exported = plan.get('input_lists')
-    if lists is None or not isinstance(exported, list):
-        return identity
+_ZIG_TOKEN = re.compile(r'"(?:[^"\\]|\\.)*"|\'(?:[^\'\\]|\\.)*\'|//.*|[^"\'/]+|.')
+
+
+def zig_logical_lines(text: str) -> list[str]:
+    """Statements of a Zig file joined across wrapped lines, comments dropped and
+    whitespace collapsed; a logical line ends where its (), [] nesting closes."""
+    lines, pending, depth = [], [], 0
+    for line in text.splitlines():
+        kept, code = [], []
+        if line.lstrip().startswith("\\\\"):
+            kept = [line]  # A multiline string line: no comments, no nesting.
+        else:
+            for token in _ZIG_TOKEN.findall(line):
+                if token.startswith("//"):
+                    break
+                kept.append(token)
+                if token[0] not in "\"'":
+                    code.append(token)
+        text_line = " ".join("".join(kept).split())
+        if not text_line:
+            continue
+        pending.append(text_line)
+        code_text = "".join(code)
+        depth += sum(map(code_text.count, "([")) - sum(map(code_text.count, ")]"))
+        if depth <= 0:
+            lines.append(" ".join(pending))
+            pending, depth = [], 0
+    if pending:
+        lines.append(" ".join(pending))
+    return lines
+
+
+def declarative_consumers(root: Path, configuration_identity: dict) -> list[tuple[str, str]] | None:
+    """Every logical line of a configuration Zig file that names the declarative
+    list file or an identifier bound to its import, in snapshot order; None when
+    a file's bytes are no longer the watched ones."""
+    found = []
+    for item in configuration_identity.get("files", []):
+        path = item["path"]
+        if not path.endswith(".zig") or path == DECLARATIVE_INPUTS:
+            continue
+        try:
+            raw = (root / path).read_bytes()
+        except OSError:
+            return None
+        if hashlib.sha256(raw).hexdigest() != item.get("sha256"):
+            return None
+        if DECLARATIVE_INPUTS.encode() not in raw:
+            continue
+        lines = zig_logical_lines(raw.decode("utf-8", "replace"))
+        names = set()
+        for line in lines:
+            names.update(re.findall(r'\bconst\s+([A-Za-z_]\w*)\s*(?::[^=]*)?=\s*@import\("(?:[^"]*/)?'
+                                    + re.escape(DECLARATIVE_INPUTS) + r'"\)', line))
+        pattern = re.compile("|".join([re.escape(DECLARATIVE_INPUTS)] + [r"\b%s\b" % name for name in sorted(names)]))
+        found.extend((path, line) for line in lines if pattern.search(line))
+    return found
+
+
+def declarative_exclusion(identity: dict, plan: dict, root: Path, configuration_identity: dict | None) -> str | None:
+    """Why the declarative list file must stay in the action configuration, or
+    None when every consumer is reviewed and its lists are the exported ones."""
+    if DECLARATIVE_CONSUMERS is None or configuration_identity is None:
+        return "no reviewed consumer sites"
+    consumers = declarative_consumers(root, configuration_identity)
+    if consumers is None:
+        return "configuration changed while its consumers were read"
+    if sorted(consumers) != sorted(DECLARATIVE_CONSUMERS):
+        return "unreviewed consumer sites of %s" % DECLARATIVE_INPUTS
+    lists = declared_input_lists(root / DECLARATIVE_INPUTS)
+    exported = plan.get("input_lists")
+    if lists is None:
+        return "%s is not data-only" % DECLARATIVE_INPUTS
+    if not isinstance(exported, list):
+        return "the inventory exports no input lists"
     try:
-        expected = {entry['name']: entry['inputs'] for entry in exported}
+        expected = {entry["name"]: entry["inputs"] for entry in exported}
         if len(expected) != len(exported) or expected != lists:
-            return identity
+            return "the inventory's input lists differ from %s" % DECLARATIVE_INPUTS
     except (KeyError, TypeError):
-        return identity
-    files = identity.get('files', [])
-    if not any(item['path'] == 'build_test_inputs.zig' and 'resolved' not in item for item in files):
+        return "the inventory's input lists are malformed"
+    if not any(item["path"] == DECLARATIVE_INPUTS and "resolved" not in item for item in identity.get("files", [])):
+        return "%s is absent or a symbolic link" % DECLARATIVE_INPUTS
+    return None
+
+
+def action_configuration(identity: dict, plan: dict, root: Path, configuration_identity: dict | None = None,
+                         notes: dict | None = None) -> dict:
+    """Exclude a proven declarative list file; retain all unfamiliar semantics.
+
+    `notes["declarative_configuration"]` records "excluded" or why not."""
+    reason = declarative_exclusion(identity, plan, root, configuration_identity)
+    if notes is not None:
+        notes["declarative_configuration"] = reason or "excluded"
+    if reason is not None:
         return identity
     # All snapshots still watch this file; only action reuse omits its data bytes.
-    return dict(identity, files=[item for item in files if item['path'] != 'build_test_inputs.zig'])
+    return dict(identity, files=[item for item in identity["files"] if item["path"] != DECLARATIVE_INPUTS])
 
 
+def normalized_environment(root: Path, source: Mapping[str, str] | None = None) -> dict[str, str]:
+    """The environment every worker runs in: the projected launcher plus fixed settings.
 
-def normalized_environment(root: Path) -> dict[str, str]:
-    env = dict(os.environ)
-    # Deliberately normalize these in the worker too, rather than omit live inputs.
-    env.pop("_", None)
+    The live environment (or `source`) is projected through the environment
+    identity contract, so workers receive only keyed, host and placement
+    variables; a dropped one (PWD, TERM, CODEX_*, GIT_*, BASH_FUNC_*, ...) can
+    neither reach a test nor enter a key. The coordinator then applies its own
+    constant settings, which the coordinator's implementation identity covers.
+    Workers take their working directory from the process, never from PWD.
+    """
+    env = verification_environment.project(os.environ if source is None else source)
     # Diagnostic placement must not enter native test receipt settings. Scrub
     # legacy callers too; only the private per-request channel is forwarded.
     env.pop("MYLANG_TEST_TELEMETRY_DIR", None)
@@ -330,18 +494,11 @@ def normalized_environment(root: Path) -> dict[str, str]:
     # markers are installed only on admitted children, never trusted as proof.
     for marker in ("MYLANG_ADMISSION_DIR", "MYLANG_ADMISSION_KIND"):
         env.pop(marker, None)
-    env["SHLVL"] = "0"
-    env["PWD"] = str(root)
     env["PYTHONNOUSERSITE"] = "1"
     env["PYTHONDONTWRITEBYTECODE"] = "1"
     # -B alone still reads timestamp-based .pyc files. A non-directory prefix
     # makes workers load the hashed source even after same-size/mtime edits.
     env["PYTHONPYCACHEPREFIX"] = "/dev/null"
-    # Non-interactive shells may otherwise read an arbitrary startup file, and
-    # exported Bash functions can replace the host tools identified below.
-    for name in list(env):
-        if name in ("BASH_ENV", "ENV") or name.startswith("BASH_FUNC_"):
-            del env[name]
     # Execute with the same existing PATH directories we can watch. A missing
     # earlier entry must not acquire a shadow executable while admission waits.
     env["PATH"] = os.pathsep.join(str(directory) for entry in env.get("PATH", os.defpath).split(os.pathsep)
@@ -349,15 +506,32 @@ def normalized_environment(root: Path) -> dict[str, str]:
     if not env["PATH"]:
         raise VerificationError("verification PATH has no existing directories")
     # Fixture git repositories must not inherit signing, hooks, includes,
-    # external diff drivers, alternate object stores, or user templates.
-    for name in list(env):
-        if name.startswith("GIT_"):
-            del env[name]
+    # external diff drivers, alternate object stores, or user templates. The
+    # projection removed every inherited GIT_* variable; these are constants.
     env.update(GIT_CONFIG_GLOBAL="/dev/null", GIT_CONFIG_SYSTEM="/dev/null",
                GIT_CONFIG_NOSYSTEM="1", GIT_TEMPLATE_DIR="",
                GIT_AUTHOR_NAME="Selka verification", GIT_AUTHOR_EMAIL="verification@example.invalid",
                GIT_COMMITTER_NAME="Selka verification", GIT_COMMITTER_EMAIL="verification@example.invalid")
     return env
+
+
+def identity_variables(env: Mapping[str, str]) -> list[str]:
+    """Sorted names of the keyed and host variables the host-scope digest takes."""
+    return sorted(name for name in env if verification_environment.host_keyed(name))
+
+
+def environment_identity(env: Mapping[str, str], tools: Snapshot | None, tool_files: list[Path], root: Path) -> str:
+    """Host-scope digest of the worker environment and the content of each resolved tool.
+
+    Tools are named by their snapshot label (absolute for host tools, relative
+    for anything inside the checkout) and identified by the digest the tools
+    snapshot already computed; nothing is hashed twice.
+    """
+    wanted = {os.path.abspath(path) for path in tool_files}
+    digests = {} if tools is None else {
+        item["path"]: item["sha256"] for item in tools.identity["files"]
+        if os.path.abspath(root / item["path"]) in wanted}
+    return verification_environment.digest(env, digests, scope="host")
 
 
 def host_contract() -> dict:
@@ -462,8 +636,14 @@ def admitted_child(fd: int) -> int:
 
 def run_admitted(root: Path, kind: str, argv: list[str], env: dict[str, str], unchanged,
                  timings: list[dict] | None = None, *, limits: ProcessLimits | None = None,
-                 log_dir: Path | None = None) -> tuple[int, float]:
-    """Hold the normal slot only for selected work, checking again after queueing."""
+                 log_dir: Path | None = None, revise=None) -> tuple[int, float]:
+    """Hold the normal slot only for selected work, checking again after queueing.
+
+    `revise`, when given, runs once admission is granted and the inputs are
+    revalidated; it returns the command to run instead of `argv`, or None when
+    no work remains (evidence published while queueing covers it), which
+    releases the slot with status 0 and runs nothing.
+    """
     measurement = verification_measurement.current()
     if measurement is not None:
         env = verification_measurement.worker_environment(env)
@@ -501,6 +681,7 @@ def run_admitted(root: Path, kind: str, argv: list[str], env: dict[str, str], un
     admitted_at = None
     validation_seconds = 0.0
     worker_at = None
+    withdrawn = False
     try:
         if logs is not None:
             logs.start(process)
@@ -519,14 +700,19 @@ def run_admitted(root: Path, kind: str, argv: list[str], env: dict[str, str], un
             admitted_at = time.monotonic()
             valid = unchanged()
             validation_seconds = time.monotonic() - admitted_at
-            if valid:
+            if valid and revise is not None:
+                argv = revise()
+                withdrawn = argv is None
+            if valid and not withdrawn:
                 parent.sendall(encoded({"argv": argv, "env": env, "cwd": str(root)}))
                 worker_at = time.monotonic()
             parent.shutdown(socket.SHUT_WR)
         parent.close()
         outcome = wait_owned(process, limits=limits if worker_at is not None else ProcessLimits(),
                              execution_started=worker_at, logs=logs)
-        status = outcome.returncode
+        # A withdrawn request sent the admitted child nothing to run; its
+        # empty-handshake exit status describes no work.
+        status = 0 if withdrawn else outcome.returncode
         ended_at = time.monotonic()
         held = 0.0 if admitted_at is None else ended_at - admitted_at
         if timings is not None:
@@ -536,6 +722,7 @@ def run_admitted(root: Path, kind: str, argv: list[str], env: dict[str, str], un
                             "validation_seconds": validation_seconds,
                             "worker_seconds": 0.0 if worker_at is None else ended_at - worker_at,
                             "observed_held_seconds": held, "elapsed_seconds": ended_at - submitted_at,
+                            "withdrawn": withdrawn,
                             "timed_out": outcome.timed_out, "cancelled": outcome.cancelled,
                             "incomplete": outcome.incomplete,
                             "execution_limits": limits.execution_identity(),
@@ -561,15 +748,28 @@ def run_admitted(root: Path, kind: str, argv: list[str], env: dict[str, str], un
                 stream.close()
 
 
-def artifact_paths(root: Path) -> list[Path]:
-    record = read_record(root / "zig-out/verification/artifacts.json")
-    if not record or type(record.get("version")) is not int or record["version"] not in (1, 2) or not isinstance(record.get("artifacts"), dict):
+def artifact_locations(record: dict | None) -> dict[str, str]:
+    """Map each prepared label to its exact absolute path, for inventory versions 1 to 3.
+
+    Version 3 may write an artifact as {"path": ..., "producer": {...}}; the
+    producer is read separately by verification_producers.native_producer.
+    """
+    if (not record or type(record.get("version")) is not int or record["version"] not in (1, 2, 3)
+            or not isinstance(record.get("artifacts"), dict)):
         raise VerificationError("missing or malformed prepared artifact inventory")
-    artifacts = record["artifacts"]
+    locations = {}
+    for label, entry in record["artifacts"].items():
+        path = entry.get("path") if record["version"] == 3 and isinstance(entry, dict) else entry
+        if not isinstance(path, str) or not Path(path).is_absolute():
+            raise VerificationError("prepared artifacts must have exact absolute paths")
+        locations[label] = path
+    return locations
+
+
+def artifact_paths(root: Path) -> list[Path]:
+    artifacts = artifact_locations(read_record(root / "zig-out/verification/artifacts.json"))
     if not {"mylang", "units", "cli", "core"} <= artifacts.keys():
         raise VerificationError("prepared inventory omits native test executables")
-    if not all(isinstance(p, str) and Path(p).is_absolute() for p in artifacts.values()):
-        raise VerificationError("prepared artifacts must have exact absolute paths")
     paths = [Path(p) for p in artifacts.values()]
     paths.extend([root / "zig-out/bin/mylang", root / "zig-out/verification/artifacts.json"])
     for name in ("test-index", "cache-plan"):
@@ -583,10 +783,11 @@ def artifact_paths(root: Path) -> list[Path]:
 
 def artifact_providers(root: Path, snapshot: Snapshot) -> dict[str, list[dict]]:
     """Project only declared providers; retain the complete snapshot for ABA checks."""
-    record = read_record(root / "zig-out/verification/artifacts.json")
-    if not record or not isinstance(record.get("artifacts"), dict):
-        raise VerificationError("prepared artifact inventory changed during provider selection")
-    paths = {name: [Path(path)] for name, path in record["artifacts"].items()}
+    try:
+        locations = artifact_locations(read_record(root / "zig-out/verification/artifacts.json"))
+    except VerificationError as error:
+        raise VerificationError("prepared artifact inventory changed during provider selection") from error
+    paths = {name: [Path(path)] for name, path in locations.items()}
     paths["mylang"].append(root / "zig-out/bin/mylang")
     paths["components"] = []
     for name in ("test-index", "cache-plan"):
@@ -605,25 +806,171 @@ def artifact_providers(root: Path, snapshot: Snapshot) -> dict[str, list[dict]]:
     return providers
 
 
-def matches_recipe(path: str, recipe: str, root: Path) -> bool:
-    """Select a cohort's members from the single watched, hashed union."""
-    normalized = os.path.normpath(os.path.join(root, path))
+def recipe_predicate(recipe: str, root: Path):
+    """Compile one input recipe into a test of a normalized absolute path (see matches_recipe)."""
     value = os.path.normpath(os.path.join(root, recipe))
     if recipe.endswith("/"):
-        return normalized.startswith(value + os.sep)
+        return lambda normalized: normalized.startswith(value + os.sep)
     for marker, recursive in (("/**/*", True), ("/*", False)):
         if marker in recipe:
             base, suffix = recipe.split(marker, 1)
             prefix = os.path.normpath(os.path.join(root, base)) + os.sep
-            if not normalized.startswith(prefix) or not normalized.endswith(suffix):
-                return False
-            return recursive or os.sep not in normalized[len(prefix):]
-    return normalized == value
+            return lambda normalized: (normalized.startswith(prefix) and normalized.endswith(suffix)
+                                       and (recursive or os.sep not in normalized[len(prefix):]))
+    return lambda normalized: normalized == value
+
+
+def matches_recipe(path: str, recipe: str, root: Path) -> bool:
+    """Select a cohort's members from the single watched, hashed union."""
+    return recipe_predicate(recipe, root)(os.path.normpath(os.path.join(root, path)))
+
+
+def recipe_selector(files: list[dict], root: Path):
+    """Return select(recipe) over watched records, normalizing each path once and caching per recipe."""
+    normalized = [(os.path.normpath(os.path.join(root, item["path"])), item) for item in files]
+    cache: dict[str, list[dict]] = {}
+
+    def select(recipe: str) -> list[dict]:
+        if recipe not in cache:
+            matches = recipe_predicate(recipe, root)
+            cache[recipe] = [item for path, item in normalized if matches(path)]
+        return cache[recipe]
+    return select
+
+
+# Providers whose files are several distinct outputs of one producer.
+MULTI_OUTPUT_PROVIDERS = frozenset({"components"})
+
+
+def artifact_identities(record: dict | None, providers: dict[str, list[dict]],
+                        sources: list[dict], root: Path) -> tuple[dict, dict]:
+    """Identify every prepared provider, by producer where declared, else by bytes.
+
+    Returns (identities, report). A producer identity replaces the bytes, which
+    embed the checkout path in their debug information, so two worktrees at one
+    commit agree. An installed copy (zig-out/bin/mylang) must equal the produced
+    bytes, or the provider falls back to bytes. The report names, per label,
+    which identity was used and why a fallback happened.
+    """
+    select = recipe_selector(sources, root)
+    identities, report = {}, {}
+    for label in sorted(providers):
+        producer, reason = verification_producers.native_producer(record, label)
+        # A provider is copies of one artifact (zig-out/bin/mylang beside the
+        # produced binary), which must agree, except `components`: its two
+        # manifests and the two executables they name are distinct outputs.
+        if (producer is not None and label not in MULTI_OUTPUT_PROVIDERS
+                and len({item["sha256"] for item in providers[label]}) != 1):
+            producer, reason = None, "installed copy differs from the produced artifact"
+        if producer is None:
+            identities[label] = {"identity": "bytes", "artifacts": providers[label]}
+            report[label] = {"identity": "bytes", "reason": reason}
+            continue
+        try:
+            identity = verification_producers.native_identity(label, producer, select)
+        except verification_producers.ProducerError as error:
+            raise VerificationError(str(error)) from error
+        identities[label] = {"identity": "producer", "sha256": key(identity)}
+        report[label] = {"identity": "producer", "sources": len(identity["sources"])}
+    return identities, report
+
+
+def located_bytes(providers: dict[str, list[dict]], root: Path, report: dict) -> None:
+    """Record, per narrowed provider whose key binds its bytes (a qualified
+    producer identity also binds the artifact content), whether those bytes name
+    the checkout (`bytes_name_root`), which no search of the key can see."""
+    needle = os.fsencode(str(root))
+    for label in sorted(set(providers) & set(verification_producers.CLOSURES)):
+        named = False
+        for item in providers[label]:
+            try:
+                named = named or needle in (root / item["path"]).read_bytes()
+            except OSError:
+                named = True
+        report.setdefault(label, {})["bytes_name_root"] = named
+
+
+def mentions(value: object, text: str) -> bool:
+    """Whether `text` occurs anywhere in a JSON-serializable value."""
+    return json.dumps(text, ensure_ascii=False)[1:-1] in json.dumps(value, sort_keys=True, ensure_ascii=False)
+
+
+# How `path_free` shows each `common` facet independent of the checkout path.
+# "value": the payload holds the value itself, which the root search sees.
+# "preimage": a digest whose hashed document is searched (`facets_path_free`).
+# "loaded_code": loaded-code digests, which hold no path text; their code
+#   objects are rehashed as if loaded from another directory
+#   (`location_dependent_code`), which the root search cannot do.
+# "artifacts": prepared providers, judged per provider (producer identities).
+# A facet missing here cannot be shown path-free, so path_free reports false.
+COMMON_FACETS = {"version": "value", "options": "value", "platform": "value", "execution_limits": "value",
+                 "component_sources": "value", "action_controls": "value",
+                 "environment": "preimage", "tools": "preimage", "build_configuration": "preimage",
+                 "inventory": "preimage", "loaded_code_format": "loaded_code", "implementation": "loaded_code",
+                 "artifacts": "artifacts"}
+
+
+def implementation_code() -> list[tuple[str, str, object]]:
+    """(module, bound digest, loaded code) of each coordinator module whose
+    digest enters `common["implementation"]`, in key order."""
+    modules = [("verification_measurement", verification_measurement),
+               ("build_admission", verification_measurement.build_admission),
+               ("verification_snapshot", verification_snapshot), ("fuzz_campaign_store", fuzz_campaign_store),
+               ("verification_process", verification_process), ("verification_producers", verification_producers),
+               ("verification_profiles", verification_profiles),
+               ("verification_qualification", verification_qualification)]
+    return [("verify_cache", LOADED_CODE_SHA256, _LOADED_CODE_OBJECT)] + [
+        (name, module.LOADED_CODE_SHA256, module._LOADED_CODE_OBJECT) for name, module in modules]
+
+
+RELOCATION_PROBE = "/selka-verification-relocation-probe"
+
+
+def location_dependent_code(code: list[tuple[str, str, object]] | None = None) -> list[str]:
+    """Modules whose bound loaded-code digest would differ had the same code been
+    loaded from another checkout: the digest is recomputed with every file name
+    moved under RELOCATION_PROBE. Includes the identity helper itself."""
+    rows = (implementation_code() if code is None else code) + [
+        ("verification_code_identity", code_identity.LOADED_CODE_SHA256, code_identity._LOADED_CODE_OBJECT)]
+    dependent = []
+    for name, digest, loaded in rows:
+        try:
+            moved = code_identity.loaded_code_sha256(code_identity.relocated(loaded, RELOCATION_PROBE))
+        except code_identity.CodeIdentityError:
+            moved = None
+        if moved != digest:
+            dependent.append(name)
+    return dependent
+
+
+def path_free(payload: dict, root: Path, facets_path_free: bool, report: dict) -> bool:
+    """Whether no checkout path entered an action key.
+
+    Every `common` facet must be classified in COMMON_FACETS. The worktree path
+    must occur neither in the payload nor in the documents hashed into its
+    digest facets, and no loaded-code digest may depend on where the code was
+    loaded from (`facets_path_free` covers both). Every prepared provider the
+    action depends on must have a producer identity: its narrowed selection,
+    else all of them; a narrowed identity that also binds artifact bytes needs
+    bytes that do not name the checkout (`located_bytes`).
+    """
+    if any(name not in COMMON_FACETS for name in payload["common"]):
+        return False
+    if not facets_path_free or mentions(payload, str(root)):
+        return False
+    artifacts = payload["common"].get("artifacts")
+    if isinstance(artifacts, dict) and any(
+            isinstance(value, dict) and "artifacts" in value and report.get(label, {}).get("bytes_name_root") is not False
+            for label, value in artifacts.items()):
+        return False  # A narrowed identity binds artifact bytes that name the checkout.
+    labels = artifacts.keys() if isinstance(artifacts, dict) else report.keys()
+    return all(report.get(label, {}).get("identity") == "producer" for label in labels)
 
 
 def action_payload(group: dict, snapshot: Snapshot, common: dict, root: Path,
                    providers: dict[str, list[dict]] | None = None, membership: dict | None = None,
-                   producer_manifest: dict | None = None) -> dict:
+                   producer_manifest: dict | None = None, labels: dict | None = None) -> dict:
+    """The exact document an action key hashes; `labels` are artifact_identities' per-provider identities."""
     files = snapshot.selected_files(lambda path: any(
         matches_recipe(path, recipe, root) for recipe in group["inputs"]))
     selected = group.get("artifacts")
@@ -641,14 +988,14 @@ def action_payload(group: dict, snapshot: Snapshot, common: dict, root: Path,
                     break
                 identities[name] = {"producer": producer, "artifacts": providers[name]}
             elif name in legacy:
-                identities[name] = providers[name]
+                identities[name] = labels[name] if labels is not None else providers[name]
             else:
                 break  # New narrowing needs an explicit closure review.
         else:
             common = dict(common, artifacts=identities)
     if membership is not None:
         common = {name: value for name, value in common.items() if name != "inventory"}
-    return {"domain": "selka-verification-action-v5", "contract": group, "common": common,
+    return {"domain": ACTION_DOMAIN, "contract": group, "common": common,
             "files": files, "membership": membership}
 
 
@@ -781,7 +1128,8 @@ def authenticate_code_identity(root, watched, snapshots, stack, digest_session=N
 def prepare(root: Path, cache: Path, zig: Path, options: list[str], env: dict[str, str],
             common: dict, snapshots: list[Snapshot], stack: ExitStack,
             timings: list[dict] | None = None, phases: dict | None = None,
-            digest_session=None, limits: ProcessLimits | None = None) -> tuple[dict, Snapshot, float]:
+            digest_session=None, limits: ProcessLimits | None = None,
+            notes: dict | None = None) -> tuple[dict, Snapshot, float]:
     configuration = snapshot_role(stack.enter_context(Snapshot(root, CONFIG_INPUTS, digest_session=digest_session)), "configuration")
     snapshots.append(configuration)
     config = snapshot_role(stack.enter_context(Snapshot(root, CONFIG_INPUTS + COORDINATOR_INPUTS, digest_session=digest_session)), "coordinator")
@@ -811,7 +1159,7 @@ def prepare(root: Path, cache: Path, zig: Path, options: list[str], env: dict[st
                                     124 if status == 124 else 2)
         plan = inventory(plan_path)
         publish_checked(plan_receipt, {"key": config_key, "inventory": key(plan)}, snapshots)
-    common["build_configuration"] = key(action_configuration(config.identity, plan, root, configuration.identity))
+    common["build_configuration"] = key(action_configuration(config.identity, plan, root, configuration.identity, notes))
     common["action_controls"] = plan["configuration"]
     source_started = time.monotonic()
     sources = snapshot_role(stack.enter_context(Snapshot(root, PREPARE_INPUTS, digest_session=digest_session)), "preparation_sources")
@@ -845,6 +1193,51 @@ def prepare(root: Path, cache: Path, zig: Path, options: list[str], env: dict[st
     return plan, artifacts, held
 
 
+def shared_cache_location(flag: str | None, environ: Mapping[str, str],
+                          default_sharing: bool | None = None) -> tuple[Path | None, str]:
+    """Resolve the shared evidence store and how it was chosen.
+
+    Precedence: --shared-cache-dir, then MYLANG_VERIFICATION_SHARED_CACHE, then,
+    only when default sharing is on, $XDG_CACHE_HOME/mylang/verification-shared
+    or ~/.cache/mylang/verification-shared. An explicitly empty value disables
+    sharing. The source is "flag", "environment", "default" or "none".
+    """
+    if flag is not None:
+        return (Path(flag) if flag else None), "flag"
+    value = environ.get(SHARED_CACHE_VARIABLE)
+    if value is not None:
+        return (Path(value) if value else None), "environment"
+    if not (DEFAULT_SHARING if default_sharing is None else default_sharing):
+        return None, "none"
+    base = environ.get("XDG_CACHE_HOME", "")
+    if not os.path.isabs(base):
+        home = environ.get("HOME", "")
+        if not os.path.isabs(home):
+            return None, "none"
+        base = os.path.join(home, ".cache")
+    return Path(base) / "mylang" / "verification-shared", "default"
+
+
+def open_shared_store(location: Path | None, source: str, stack: ExitStack):
+    """Open and lease the shared evidence store, or None.
+
+    An unusable default store warns once and verification proceeds unshared;
+    an unusable store the caller named explicitly stays an error.
+    """
+    if location is None:
+        return None
+    try:
+        store = fuzz_campaign_store.Store(location)
+        stack.enter_context(store.lease())
+        return store
+    except (OSError, fuzz_campaign_store.FormatError) as error:
+        if source != "default":
+            raise
+        print("verification: warning: default shared evidence store %s is unusable (%s); continuing without sharing"
+              % (location, error), file=sys.stderr)
+        return None
+
+
 def component_source_files(options: list[str]) -> list[Path]:
     """Explicit packaging inputs; preserve logical paths for symlink watches."""
     sources = {}
@@ -865,9 +1258,12 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
             gate_timeout: float | None = None, warn_after: float | None = None,
             budget_policy: Path | None = None, profile: str = "complete", quick_actions: int = 3,
             qualification_targets=None, qualification_max_actions=4,
-            qualification_timeout=300, qualification_fuzz_steps=8) -> int:
+            qualification_timeout=300, qualification_fuzz_steps=8, shared_cache_source: str | None = None,
+            dry_run: bool = False) -> int:
     if profile not in verification_profiles.PROFILES or type(quick_actions) is not int or not 1 <= quick_actions <= 1024:
         raise ValueError("invalid verification profile or quick action bound")
+    if dry_run and force:
+        raise ValueError("a dry run cannot force reruns")
     qualification_controls = {"targets": list(verification_qualification.OBLIGATIONS if qualification_targets is None else qualification_targets),
         "max_actions": qualification_max_actions, "action_timeout": qualification_timeout, "fuzz_steps": qualification_fuzz_steps}
     verification_qualification.validate_options(**qualification_controls)
@@ -883,9 +1279,10 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
     env["MYLANG_ZIG"] = str(zig)
     tool_recipes, tool_files = tool_contract(zig, env)
     with ExitStack() as stack:
-        shared = None if shared_cache_dir is None else fuzz_campaign_store.Store(shared_cache_dir)
+        shared_source = shared_cache_source or ("none" if shared_cache_dir is None else "flag")
+        shared = open_shared_store(shared_cache_dir, shared_source, stack)
         if shared is not None:
-            stack.enter_context(shared.lease())
+            # Mutual exclusion only: the real checkout path never enters a key.
             coordinator = key({"domain": "verification-coordinator-v1", "root": str(root)})
             stack.enter_context(shared.coordinator_lock(coordinator))
         session = verification_snapshot.DigestSession()
@@ -916,24 +1313,22 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
             # watches through admission, execution, and receipt publication.
             component_sources = stack.enter_context(Snapshot(root, [], files, digest_session=session))
             snapshots.append(component_sources)
-        common = {"version": VERSION, "root": str(root), "options": options,
-                  "environment": key(env), "platform": host.identity,
+        common = {"version": VERSION, "options": options,
+                  "environment": environment_identity(env, tools, tool_files, root), "platform": host.identity,
                   "tools": key(tools.identity),
+                  # A timing window schedules the request; it is no input to
+                  # any action's result, so it stays out of every key (F14) and
+                  # is reported as `measurement_window` in last-run.json.
                   "execution_limits": {"build": build_limits.execution_identity(),
-                                       "gate": gate_limits.execution_identity(),
-                                       "measurement_window_seconds": None if measurement is None else measurement.seconds},
+                                       "gate": gate_limits.execution_identity()},
                   "loaded_code_format": [code_identity.FORMAT_VERSION, code_identity.LOADED_CODE_SHA256],
-                  "implementation": [LOADED_CODE_SHA256, verification_measurement.LOADED_CODE_SHA256,
-                                     verification_measurement.build_admission.LOADED_CODE_SHA256, verification_snapshot.LOADED_CODE_SHA256,
-                                     fuzz_campaign_store.LOADED_CODE_SHA256,
-                                     verification_process.LOADED_CODE_SHA256,
-                                     verification_producers.LOADED_CODE_SHA256,
-                                     verification_profiles.LOADED_CODE_SHA256, verification_qualification.LOADED_CODE_SHA256]}
+                  "implementation": [digest for _, digest, _ in implementation_code()]}
         if component_sources is not None:
             common["component_sources"] = component_sources.identity
         try:
+            configuration_notes = {}
             plan, artifacts, build_seconds = prepare(root, cache, zig, options, env, common, snapshots, stack,
-                                                    admissions, phases, session, build_limits)
+                                                    admissions, phases, session, build_limits, configuration_notes)
         except VerificationError as error:
             diagnostic_record(cache / "last-run.json", {"version": REPORT_VERSION, "success": False,
                 "status": error.status, "stage": "preparation", "error": str(error), "actions": [],
@@ -941,10 +1336,25 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                 "stability_diagnostics": stability_diagnostics(snapshots),
                 "elapsed_seconds": time.monotonic() - started})
             raise
-        common["artifacts"] = key(artifacts.identity)
         common["inventory"] = key(plan)
         providers = artifact_providers(root, artifacts)
         producer_manifest = read_record(root / "zig-out/verification/artifacts.json")
+        # Producer identities come from the preparation snapshots, which every
+        # recipe must fall inside; artifacts.json's own bytes hold only paths
+        # and producer metadata, both represented here without a location.
+        recipe_sources = [item for snapshot in snapshots if getattr(snapshot, "verification_role", "")
+                          in ("configuration", "preparation_sources") for item in snapshot.identity["files"]]
+        labels, artifact_report = artifact_identities(producer_manifest, providers, recipe_sources, root)
+        located_bytes(providers, root, artifact_report)
+        common["artifacts"] = key({"version": producer_manifest.get("version") if producer_manifest else None,
+                                   "providers": labels})
+        environment_names = identity_variables(env)
+        relocation_dependent = location_dependent_code()
+        facets_path_free = not relocation_dependent and not mentions(
+            {"tools": tools.identity, "environment": {name: env[name] for name in environment_names},
+             "configuration": [snapshot.identity for snapshot in snapshots
+                               if getattr(snapshot, "verification_role", "") == "coordinator"],
+             "inventory": plan}, str(root))
         groups = plan["groups"]
         recipes = sorted({entry for group in groups for entry in group["inputs"]})
         input_started = time.monotonic()
@@ -953,7 +1363,7 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
         snapshots.append(inputs)
         unsupported = [name for name in UNTRACKED_ENV if env.get(name)]
         force = force or "-Dtest-rerun=true" in options or bool(plan.get("configuration", {}).get("filtered"))
-        if force:
+        if force and not dry_run:
             # A failed explicit rerun must not leave an older success available.
             # This is a local evidence store; deleting evidence only causes work.
             for path in (cache / "actions").glob("*.json"):
@@ -962,7 +1372,8 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
         results, selected, keys, summaries = [], [], {}, {}
         failure_context.update(stage="cache_lookup", actions=results)
         for group in groups:
-            payload = action_payload(group, inputs, common, root, providers, metadata[group["id"]], producer_manifest)
+            payload = action_payload(group, inputs, common, root, providers, metadata[group["id"]],
+                                     producer_manifest, labels)
             action_key = key(payload)
             keys[group["id"]] = action_key
             summary = verification_report.dependency_summary(group, payload["files"], dict(payload["common"], membership=metadata[group["id"]]))
@@ -970,10 +1381,7 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
             previous = verification_report.read_summary(summary_path)
             summaries[group["id"]] = (summary_path, summary)
             reusable = group["cacheable"] and not force and not unsupported
-            expected_receipt = {"version": VERSION, "kind": "verification-success", "key": action_key}
-            saved = shared.load_success(action_key) if reusable and shared is not None else None
-            hit = reusable and (saved == expected_receipt if shared is not None else
-                                valid_receipt(cache / "actions" / (action_key + ".json"), action_key))
+            hit = reusable and prior_success(shared, cache, action_key)
             state = "reused" if hit else "execute" if reusable else "fresh"
             reason = "valid prior success" if hit else "no valid receipt" if reusable else group["reason"]
             if unsupported:
@@ -984,10 +1392,12 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                           else {"status": "policy", "reason": reason, "changes": [], "truncated": False})
             diagnostic["comparison_scope"] = "previous stable request; not necessarily the receipt-producing success"
             results.append({"id": group["id"], "action_key": action_key, "state": state, "reason": reason,
-                            "invalidation": diagnostic})
+                            "invalidation": diagnostic,
+                            "path_free": path_free(payload, root, facets_path_free, artifact_report),
+                            "environment_variables": environment_names})
             print("verification: %s %s (%s)" % (state, group["id"], reason), flush=True)
             if not hit:
-                if shared is not None:
+                if shared is not None and not dry_run:
                     shared.invalidate_success(action_key)
                 selected.append(group)
         profile_plan = verification_profiles.schedule(plan, results, profile, quick_actions=quick_actions)
@@ -997,6 +1407,9 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
         for row in results:
             if row["state"] != "reused" and row["id"] not in selected_ids:
                 row.update(state="skipped", reason="deferred by partial feedback profile")
+        # Where each reuse was found: before the gate queue, or after admission
+        # (evidence another request published while this one queued).
+        reuse_lookups = {"pre_queue": sum(row["state"] == "reused" for row in results), "post_admission": 0}
         print("verification: profile %s; %d pending, %d selected, %d deferred%s" %
               (profile, len(profile_plan["pending"]), len(selected), len(profile_plan["deferred"]),
                "; heuristic partial selection" if profile_plan["heuristic"] else ""), flush=True)
@@ -1007,6 +1420,18 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                 "admissions": admissions, "timings": phases,
                 "elapsed_seconds": time.monotonic() - started})
             raise VerificationError("inputs changed during cache lookup; rerun verification", RETRY)
+        if dry_run:
+            # The plan export: identities and reuse verdicts after preparation,
+            # with no gate admission, publication or advisory summary writes.
+            diagnostic_record(cache / "dry-run.json", {"version": REPORT_VERSION, "dry_run": True, "profile": profile,
+                "common": common, "budget_context": key({name: value for name, value in common.items() if name != "inventory"}),
+                "actions": results, "profile_plan": profile_plan, "artifact_identities": artifact_report,
+                "declarative_configuration": configuration_notes.get("declarative_configuration"),
+                "relocation_dependent_code": relocation_dependent,
+                "admissions": admissions, "elapsed_seconds": time.monotonic() - started})
+            print("verification: dry run; %d reused, %d would run; report %s" %
+                  (sum(row["state"] == "reused" for row in results), len(selected), cache / "dry-run.json"), flush=True)
+            return 0
         phases["prepare_lookup_outside_admission_seconds"] = (time.monotonic() - started
                                                               - sum(event["elapsed_seconds"] for event in admissions))
         status, gate_seconds = 0, 0.0
@@ -1020,14 +1445,36 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                 gate_environment["SELKA_VERIFICATION_TELEMETRY_DIR"] = str(telemetry_directory)
             except OSError:
                 pass  # Diagnostic storage cannot change test selection or verdict.
-            # Force chosen Run steps: an outer miss (tool/environment/ABA) must not
-            # be accidentally satisfied by a weaker, older inner Zig verdict.
-            targets = (plan["required_targets"] if len(selected) == len(groups)
-                       else [group["target"] for group in selected])
-            status, gate_seconds = run_admitted(root, "gate",
-                zig_command(zig, targets, options, rerun=True),
+            rows = {row["id"]: row for row in results}
+
+            def gate_command():
+                # Force chosen Run steps: an outer miss (tool/environment/ABA) must not
+                # be accidentally satisfied by a weaker, older inner Zig verdict.
+                targets = (plan["required_targets"] if len(selected) == len(groups)
+                           else [group["target"] for group in selected])
+                return zig_command(zig, targets, options, rerun=True)
+
+            def recheck_after_admission():
+                # The inputs were revalidated just now, so every key still names
+                # this request's inputs: a success another request published for
+                # one of them while this one queued is this action's evidence.
+                late = {group["id"] for group in selected if rows[group["id"]]["state"] == "execute"
+                        and prior_success(shared, cache, keys[group["id"]])}
+                for name in sorted(late):
+                    rows[name].update(state="reused", reason="valid prior success published while queued",
+                                      invalidation={"status": "policy", "reason": "valid prior success published while queued",
+                                                    "changes": [], "truncated": False,
+                                                    "comparison_scope": rows[name]["invalidation"]["comparison_scope"]})
+                    print("verification: reused %s (published while queued)" % name, flush=True)
+                reuse_lookups["post_admission"] = len(late)
+                selected[:] = [group for group in selected if group["id"] not in late]
+                for field in ("selected", "pending"):
+                    profile_plan[field] = [name for name in profile_plan[field] if name not in late]
+                return gate_command() if selected else None
+
+            status, gate_seconds = run_admitted(root, "gate", gate_command(),
                 gate_environment, lambda: check_all(snapshots), timings=admissions,
-                limits=gate_limits, log_dir=cache / "last-logs/gate")
+                limits=gate_limits, log_dir=cache / "last-logs/gate", revise=recheck_after_admission)
         validation_started = time.monotonic()
         stable = check_all(snapshots)
         phases["final_validation_seconds"] = time.monotonic() - validation_started
@@ -1116,7 +1563,7 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
         report = {"version": REPORT_VERSION, "success": report_status == 0, "status": report_status,
                   "long_qualification": None if qualification_run is None else qualification_run.report(),
                   "selected_success": status == 0, "profile_plan": profile_plan, "profile_coverage": profile_coverage,
-                  "actions": results, "inputs_stable": stable,
+                  "actions": results, "inputs_stable": stable, "reuse_lookups": reuse_lookups,
                   "stability_diagnostics": stability_diagnostics(snapshots) if not stable or status == RETRY else None,
                   "component_sources": common.get("component_sources"),
                   "action_metadata": plan["action_metadata"],
@@ -1129,8 +1576,13 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                                         "per-group execution duration is unavailable for the shared gate",
                                         "common identity changes name digest facets, not individual tool/environment members"],
                   "snapshot_statistics": snapshot_statistics(snapshots),
-                  "evidence_store": {"shared": shared is not None,
+                  "evidence_store": {"shared": shared is not None, "source": shared_source,
+                                     "default_sharing": DEFAULT_SHARING,
                                      "root": str(shared.root if shared is not None else cache / "actions")},
+                  "artifact_identities": artifact_report,
+                  "declarative_configuration": configuration_notes.get("declarative_configuration"),
+                  "relocation_dependent_code": relocation_dependent,
+                  "measurement_window_seconds": None if measurement is None else measurement.seconds,
                   "elapsed_seconds": elapsed}
         if measurement is not None:
             report["measurement_window"] = measurement.report()
@@ -1192,6 +1644,162 @@ def parse_options(options: list[str]) -> list[str]:
     return options
 
 
+def native_default_sharing(root: Path = ROOT) -> bool:
+    """The compiler's rollout switch, `default_sharing` in src/shared_cache_policy.zig."""
+    try:
+        text = (root / "src/shared_cache_policy.zig").read_text()
+    except OSError:
+        return False
+    return re.search(r"^pub const default_sharing = true;", text, re.MULTILINE) is not None
+
+
+def native_store_roots(environment: Mapping[str, str], default_sharing: bool) -> list[Path]:
+    """The native shared store roots ENVIRONMENT selects, as the compiler resolves
+    them: a set variable names a store and an empty one disables it; an unset one
+    selects `$XDG_CACHE_HOME/mylang/<leaf>` or `~/.cache/mylang/<leaf>` only while
+    the compiler's default sharing is on."""
+    roots = []
+    for name, leaf in zip(NATIVE_SHARED_VARIABLES, ("compiler-artifacts", "native-tests")):
+        value = environment.get(name)
+        if value is not None:
+            if value:
+                roots.append(Path(value))
+            continue
+        if not default_sharing:
+            continue
+        base = environment.get("XDG_CACHE_HOME") or ""
+        if not os.path.isabs(base):
+            home = environment.get("HOME") or ""
+            base = os.path.join(home, ".cache") if os.path.isabs(home) else ""
+        if base:
+            roots.append(Path(base) / "mylang" / leaf)
+    return roots
+
+
+def mismatch_logs(environment: Mapping[str, str], default_sharing: bool = False) -> list[Path]:
+    """Every `mismatches.log` of the native shared stores ENVIRONMENT selects.
+
+A store logs one line per determinism mismatch in its namespace directory
+(`<root>/<namespace>/mismatches.log`).
+"""
+    logs = []
+    for root in native_store_roots(environment, default_sharing):
+        logs.extend(sorted(root.glob("*/mismatches.log")))
+    return logs
+
+
+def mismatch_counts(environment: Mapping[str, str], default_sharing: bool = False) -> dict[str, int]:
+    """Non-blank lines per mismatch log of the stores ENVIRONMENT selects."""
+    counts = {}
+    for path in mismatch_logs(environment, default_sharing):
+        try:
+            counts[str(path)] = sum(1 for line in path.read_text(errors="replace").splitlines() if line.strip())
+        except OSError:
+            counts[str(path)] = 0
+    return counts
+
+
+def mismatch_verdict(before: Mapping[str, int], after: Mapping[str, int]) -> dict:
+    """D3: fail when any used store's log grew during the request or is non-empty."""
+    grew = {path: count - before.get(path, 0) for path, count in after.items() if count > before.get(path, 0)}
+    nonzero = {path: count for path, count in after.items() if count}
+    return {"logs": dict(after), "grew": grew, "nonzero": nonzero, "passed": not grew and not nonzero}
+
+
+def fact_leak_suites(action_metadata: list) -> list[str]:
+    """The suites of the `language` action's fact-verification/leak-check members."""
+    suites = []
+    for action in action_metadata or []:
+        if not isinstance(action, dict) or action.get("id") != "language":
+            continue
+        for step in action.get("steps") or []:
+            label = step.get("original_label") if isinstance(step, dict) else None
+            found = FACT_LEAK_MEMBER.fullmatch(label) if isinstance(label, str) else None
+            if found and found.group(1) not in suites:
+                suites.append(found.group(1))
+    return suites
+
+
+def forced_fact_leak_run(root: Path, compiler: Path, suites: list[str], environment: Mapping[str, str],
+                         scratch: Path, run=subprocess.run, admission=None) -> dict:
+    """D1: one fresh fact-verification and leak-check run of every suite.
+
+The run uses `--force` and a private cache directory removed afterwards, so it
+neither reads nor replaces the receipts ordinary requests reuse. It holds one
+gate admission for all suites.
+"""
+    if admission is None:
+        import build_admission
+        admission = build_admission.admission
+    child = dict(environment, MYL_CORE_LEAKCHECK="1")
+    results = []
+    scratch.mkdir(parents=True, exist_ok=True)
+    private = Path(tempfile.mkdtemp(prefix="integration-fact-leak-", dir=scratch))
+    try:
+        with admission("gate"):
+            for suite in suites:
+                argv = [str(compiler), "test", suite, "--release", "--verify-facts", "--force", "--json",
+                        "--cache-dir", str(private / re.sub(r"[^A-Za-z0-9_.-]", "_", suite))]
+                completed = run(argv, cwd=root, env=child, capture_output=True, text=True, errors="replace")
+                counts = {}
+                for line in reversed(completed.stdout.splitlines()):
+                    if line.startswith("{"):
+                        try:
+                            parsed = json.loads(line)
+                        except json.JSONDecodeError:
+                            continue
+                        counts = {key: parsed.get(key) for key in ("passed", "failed", "cached", "skipped", "unsupported")}
+                        break
+                fresh = completed.returncode == 0 and counts.get("failed") == 0 and counts.get("cached") == 0
+                results.append({"suite": suite, "argv": argv[1:], "exit": completed.returncode, "counts": counts,
+                                "fresh_and_passed": fresh, "stderr_tail": completed.stderr[-2000:]})
+    finally:
+        shutil.rmtree(private, ignore_errors=True)
+    return {"suites": results, "passed": bool(results) and all(row["fresh_and_passed"] for row in results)}
+
+
+def integration_status(status: int, forced: dict | None, mismatches: dict) -> int:
+    """The request's status after the integration checks; a mismatch is distinct."""
+    if not mismatches["passed"]:
+        return INTEGRATION_MISMATCH_STATUS
+    if status != 0:
+        return status
+    return 0 if forced is not None and forced["passed"] else 1
+
+
+def integrate(root: Path, cache: Path, status: int, before: Mapping[str, int],
+              environment: Mapping[str, str], run=subprocess.run, admission=None) -> int:
+    """Apply D1 and D3 after a complete request; record them in last-run.json."""
+    report = read_record(cache / "last-run.json") or {}
+    forced = None
+    if status == 0:
+        suites = fact_leak_suites(report.get("action_metadata"))
+        if suites:
+            forced = forced_fact_leak_run(root, root / "zig-out/bin/mylang", suites, environment,
+                                          cache / "integration", run=run, admission=admission)
+        else:
+            forced = {"suites": [], "passed": False, "error": "inventory has no fact/leak language members"}
+    mismatches = mismatch_verdict(before, mismatch_counts(environment, native_default_sharing(root)))
+    final = integration_status(status, forced, mismatches)
+    integration = {"version": 1, "request_status": status, "status": final,
+                   "forced_fact_leak": forced, "shared_mismatches": mismatches}
+    if report:
+        report["integration"] = integration
+        report["success"] = report.get("success") is True and final == 0
+        report["status"] = final if final != 0 else report.get("status", 0)
+        diagnostic_record(cache / "last-run.json", report)
+    diagnostic_record(cache / "integration-last-run.json", integration)
+    if forced is not None:
+        for row in forced["suites"]:
+            print("verification: integration forced fact/leak %s: exit %d, %s" % (
+                row["suite"], row["exit"], json.dumps(row["counts"], sort_keys=True)), flush=True)
+    if not mismatches["passed"]:
+        print("verification: FAIL: shared-store determinism mismatches: " + json.dumps(mismatches["nonzero"], sort_keys=True),
+              file=sys.stderr)
+    print("verification: integration %s (status %d)" % ("PASS" if final == 0 else "FAIL", final), flush=True)
+    return final
+
+
 def main(argv: list[str]) -> int:
     if argv[:1] == ["--admitted"]:
         return admitted_child(int(argv[1]))
@@ -1204,15 +1812,27 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--qualification-timeout", type=float, default=300)
     parser.add_argument("--qualification-fuzz-steps", type=int, default=8)
     parser.add_argument("--force", action="store_true", help="Ignore prior successes for the requested profile")
-    parser.add_argument("--shared-cache-dir", type=Path, help="Explicit local shared success evidence; inventory and runs stay private")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="Prepare and compute every action key and reuse verdict, write %s/dry-run.json, "
+                             "and run no gate" % CACHE_DIRECTORY)
+    parser.add_argument("--shared-cache-dir", help="Shared success evidence (default: $%s, else off; an empty value disables); inventory and runs stay private" % SHARED_CACHE_VARIABLE)
     parser.add_argument("--build-timeout-seconds", type=float, help="Optional deadline per admitted preparation command; excludes queue time")
     parser.add_argument("--gate-timeout-seconds", type=float, help="Optional deadline for the admitted selected gate; excludes queue time")
     parser.add_argument("--warn-after-seconds", type=float, help="Advisory total work target excluding admission queues; never changes reuse or pass/fail")
     parser.add_argument("--budget-policy", type=Path, help="Optional v1/v2 report-only scoped policy; never changes reuse or pass/fail")
     parser.add_argument("--timing-window-seconds", type=float,
                         help="Own an exclusive bounded request measurement; run directly, never under a slot")
+    parser.add_argument("--integration", action="store_true",
+                        help="Integration gate: the complete profile, then one forced fact/leak run of the language "
+                             "members (D1), failing with status %d on any shared-store mismatch (D3)" % INTEGRATION_MISMATCH_STATUS)
     parser.add_argument("options", nargs=argparse.REMAINDER)
     args = parser.parse_args(argv)
+    if args.dry_run and (args.integration or args.force):
+        print("verification: FAIL: --dry-run runs nothing; it takes neither --integration nor --force", file=sys.stderr)
+        return 2
+    if args.integration and (args.profile != "complete" or args.timing_window_seconds is not None):
+        print("verification: FAIL: --integration runs the complete profile without a timing window", file=sys.stderr)
+        return 2
     cancellation = 130
     def cancel(signum, _frame):
         nonlocal cancellation
@@ -1227,7 +1847,8 @@ def main(argv: list[str]) -> int:
         resolved = shutil.which(args.zig)
         if resolved is None:
             raise VerificationError("cannot find Zig: " + args.zig)
-        cache = ROOT / ".mylang-cache/verification-v2"
+        cache = ROOT / CACHE_DIRECTORY
+        shared_cache_dir, shared_cache_source = shared_cache_location(args.shared_cache_dir, os.environ)
         cache.mkdir(parents=True, exist_ok=True)
         # Serialize coordinators for this checkout, outside the shared server
         # slots, so preparation and forced invalidation cannot race one another.
@@ -1239,18 +1860,23 @@ def main(argv: list[str]) -> int:
                 if args.timing_window_seconds is not None:
                     stack.enter_context(verification_measurement.timing_window(
                         args.timing_window_seconds, coordinator_lock_wait_seconds=lock_wait))
-                return execute(ROOT, cache, Path(resolved).absolute(), parse_options(args.options), args.force, args.shared_cache_dir,
+                before = mismatch_counts(os.environ, native_default_sharing()) if args.integration else {}
+                status = execute(ROOT, cache, Path(resolved).absolute(), parse_options(args.options), args.force, shared_cache_dir,
                                build_timeout=args.build_timeout_seconds, gate_timeout=args.gate_timeout_seconds,
                                warn_after=args.warn_after_seconds, budget_policy=args.budget_policy,
                                profile=args.profile, quick_actions=args.quick_actions,
                                qualification_targets=args.qualification_target,
                                qualification_max_actions=args.qualification_max_actions,
                                qualification_timeout=args.qualification_timeout,
-                               qualification_fuzz_steps=args.qualification_fuzz_steps)
+                               qualification_fuzz_steps=args.qualification_fuzz_steps,
+                               shared_cache_source=shared_cache_source, dry_run=args.dry_run)
+                if args.integration:
+                    status = integrate(ROOT, cache, status, before, os.environ)
+                return status
     except (verification_measurement.WindowExpired, verification_measurement.WindowLost) as error:
         expired = isinstance(error, verification_measurement.WindowExpired)
         status = 124 if expired else 2
-        diagnostic_record(ROOT / ".mylang-cache/verification-v2/last-run.json",
+        diagnostic_record(ROOT / CACHE_DIRECTORY / "last-run.json",
                           {"version": REPORT_VERSION, "success": False, "status": status,
                            "stage": "measurement_deadline" if expired else "measurement_authority", "error": str(error),
                            "measurement_window_seconds": args.timing_window_seconds})

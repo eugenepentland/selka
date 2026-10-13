@@ -1,6 +1,9 @@
-//! Successful test receipts key the reachable program's IR and source positions and
-//! all execution inputs. A checked-file manifest only bypasses checking while every dependency
-//! still has its recorded bytes. Damaged records are ordinary cache misses.
+//! Successful test receipts, in two tiers. The IR tier keys the reachable program's IR
+//! and source positions, the compiler and all execution inputs; the execution tier keys
+//! the linked program's exact bytes (`driver.Outcome.program_key`), the runner and the
+//! same execution inputs, so a compiler edit that leaves a program unchanged still hits.
+//! No key names an absolute path. A checked-file manifest only bypasses checking while
+//! every dependency still has its recorded bytes. Damaged records are ordinary misses.
 const std = @import("std");
 const frontend = @import("frontend.zig");
 const options = @import("test_runner_options.zig");
@@ -14,6 +17,7 @@ const ir = @import("ir.zig");
 const Error = @import("test_runner_property.zig").Error;
 const Digest = [32]u8;
 const planner = @import("mylang").cache_plan_adapter;
+const environment_identity = @import("mylang").environment_identity;
 
 /// Command resources and freshly resolved project configuration.
 pub const Context = struct {
@@ -23,18 +27,32 @@ pub const Context = struct {
     options: options.Options,
     entry: project_entry.Entry,
     case_bytes: []const u8 = "",
-    identity: struct { tool: tool_identity.Identity, cache_plan: ?planner.Bound = null },
+    identity: Identities,
+};
+
+/// The identities a run's keys bind besides its options: the guest toolchain, the
+/// cache planner, the compiler (`compiler`, which the IR tier binds) and the test
+/// runner (`runner`, which the execution tier binds). Production takes the build's
+/// own; tests substitute others to simulate an edit to either.
+pub const Identities = struct {
+    tool: tool_identity.Identity,
+    cache_plan: ?planner.Bound = null,
+    compiler: []const u8 = frontend.compiler_identity,
+    runner: []const u8 = frontend.runner_identity,
 };
 /// A file's exact identity, including absence for optional generated interfaces.
 pub const Dependency = struct { path: []const u8, digest: ?Digest };
-const Snapshot = struct { base: Digest, dependencies: []const Dependency, report: []const u8, warnings: []const u8 = "" };
+/// A manifest's payload. `root` is where the run that wrote it was, so a manifest
+/// keyed by root-relative paths never replays another root's checked files.
+const Snapshot = struct { base: Digest, root: []const u8, dependencies: []const Dependency, report: []const u8, warnings: []const u8 = "" };
 const Envelope = struct { version: []const u8, payload: []const u8, checksum: Digest };
 
 /// Complete settings, compiler/runtime/toolchain identity, native inputs and the
 /// environment variables that can change an outcome. Field lengths prevent
-/// concatenation ambiguities.
+/// concatenation ambiguities. Every path is relative to the entry's root
+/// (RECEIPT-PATHS-1): the private store and the shared store hold the same key.
 pub fn settings(context: Context, inputs: *std.ArrayList(Dependency)) Error!Digest {
-    return settingsWithBudget(context, inputs, "core-test-settings-v5", context.options.properties.runs);
+    return settingsWithBudget(context, inputs, "core-test-settings-v3", context.options.properties.runs);
 }
 
 /// Budget-independent settings exist only for the explicit stable indexed generator.
@@ -45,21 +63,32 @@ pub fn campaignSettings(context: Context, inputs: *std.ArrayList(Dependency)) Er
     return indexed;
 }
 
-/// Validated project-relative paths for a separate portable receipt domain.
-pub const PortablePaths = struct { entry: []const u8, configuration: ?[]const u8 = null, policy: ?[]const u8 = null, cases: ?[]const u8 = null };
+/// The entry's path relative to its root, as every key names it: the same project
+/// at two absolute locations keys alike (RECEIPT-PATHS-1). A single-file entry's is
+/// its basename within its directory root.
+pub fn entryPath(context: Context) Error![]const u8 {
+    return rooted(context, context.entry.path);
+}
 
-/// Bind portable execution settings without changing ordinary local receipt bytes.
-/// Callers must first prove these paths and every source dependency stay in root.
-pub fn portableSettings(context: Context, paths: PortablePaths) Error!Digest {
-    var hash = std.crypto.hash.Blake3.init(.{});
-    field(&hash, "core-test-portable-settings-v1");
-    field(&hash, frontend.compiler_identity);
-    const bound = context.identity.cache_plan orelse return error.ComponentUnavailable;
-    field(&hash, &bound.identity);
-    field(&hash, &context.identity.tool.digest);
-    field(&hash, &context.identity.tool.native_target);
-    field(&hash, paths.entry);
-    field(&hash, try std.json.Stringify.valueAlloc(context.arena, .{
+/// `path` relative to the entry's root, resolving a relative `path` against the
+/// working directory first. Configuration found above the root keeps its `..`
+/// steps; its bytes are keyed beside the name.
+fn rooted(context: Context, path: []const u8) Error![]const u8 {
+    const a = context.arena;
+    const absolute = if (std.fs.path.isAbsolute(path)) path else std.Io.Dir.cwd().realPathFileAlloc(context.io, path, a) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return path;
+    };
+    return std.fs.path.relativePosix(a, "/", context.entry.root, absolute);
+}
+
+/// The execution settings both tiers bind, as JSON: the ownership mode
+/// (`single_owner`, `zero_rc`), build mode, fact mode (`verify` included), code
+/// generation choices, the property seed and `runs`, the trial
+/// budgets and the leak-check mode (`MYL_CORE_LEAKCHECK`, EXEC-RECEIPT-4), so a
+/// fact-verification, a leak-checked and a plain run never share a receipt.
+fn settingsJson(context: Context, runs: u32) Error![]const u8 {
+    return std.json.Stringify.valueAlloc(context.arena, .{
         .single_owner = context.options.build.show.codegen.single_owner,
         .zero_rc = context.options.build.show.codegen.zero_rc,
         .mode = context.options.build.mode,
@@ -68,28 +97,29 @@ pub fn portableSettings(context: Context, paths: PortablePaths) Error!Digest {
         .frames = context.options.build.show.codegen.trap_frames,
         .counters = context.options.build.show.codegen.counters,
         .seed = context.options.properties.seed,
-        .runs = context.options.properties.runs,
+        .runs = runs,
         .timeout = context.options.controls.timeout_ms,
         .steps = context.options.controls.max_steps,
         .call_frames = context.options.controls.ceilings.frames,
         .memory = context.options.controls.ceilings.memory,
-    }, .{}));
-    optionalPath(&hash, "cases", paths.cases);
-    if (paths.cases != null) field(&hash, context.case_bytes);
-    optionalPath(&hash, "configuration", paths.configuration);
-    if (context.entry.configuration) |configured| field(&hash, configured.bytes);
-    optionalPath(&hash, "policy", paths.policy);
-    if (context.entry.configuration) |configured| if (configured.policy) |policy| field(&hash, policy.bytes);
-    try environmentSettings(context, &hash);
-    var digest: Digest = undefined;
-    hash.final(&digest);
-    return digest;
+        .leakcheck = leakCheck(context),
+    }, .{});
 }
 
-fn optionalPath(hash: *std.crypto.hash.Blake3, role: []const u8, path: ?[]const u8) void {
+/// The leak-check mode of the test processes: `MYL_CORE_LEAKCHECK`, `0` when unset.
+fn leakCheck(context: Context) []const u8 {
+    return context.environment.get("MYL_CORE_LEAKCHECK") orelse "0";
+}
+
+/// The serialized settings an execution key binds (`ExecutionInputs.settings`).
+pub fn executionSettings(context: Context) Error![]const u8 {
+    return settingsJson(context, context.options.properties.runs);
+}
+
+fn optionalBytes(hash: *std.crypto.hash.Blake3, role: []const u8, bytes: ?[]const u8) void {
     field(hash, role);
-    field(hash, if (path != null) "present" else "absent");
-    if (path) |value| field(hash, value);
+    field(hash, if (bytes != null) "present" else "absent");
+    if (bytes) |value| field(hash, value);
 }
 
 fn settingsWithBudget(context: Context, inputs: *std.ArrayList(Dependency), domain: []const u8, runs: u32) Error!Digest {
@@ -97,34 +127,19 @@ fn settingsWithBudget(context: Context, inputs: *std.ArrayList(Dependency), doma
     var hash = std.crypto.hash.Blake3.init(.{});
     field(&hash, domain);
     if (context.identity.cache_plan) |bound| field(&hash, &bound.identity) else field(&hash, "missing-cache-plan");
-    field(&hash, frontend.compiler_identity);
-    field(&hash, context.entry.path);
-    field(&hash, context.entry.root);
+    field(&hash, context.identity.compiler);
+    field(&hash, try entryPath(context));
     field(&hash, context.options.build.zig);
     field(&hash, &context.identity.tool.digest);
-    if (context.options.controls.cases) |path| {
-        field(&hash, path);
-        field(&hash, context.case_bytes);
-    }
-    field(&hash, try std.json.Stringify.valueAlloc(a, .{
-        .single_owner = context.options.build.show.codegen.single_owner,
-        .zero_rc = context.options.build.show.codegen.zero_rc,
-        .mode = context.options.build.mode,
-        .facts = context.options.build.facts,
-        .vectors = context.options.build.show.codegen.generic_vectors,
-        .frames = context.options.build.show.codegen.trap_frames,
-        .seed = context.options.properties.seed,
-        .runs = runs,
-        .timeout = context.options.controls.timeout_ms,
-        .steps = context.options.controls.max_steps,
-        .call_frames = context.options.controls.ceilings.frames,
-        .memory = context.options.controls.ceilings.memory,
-    }, .{}));
+    field(&hash, &context.identity.tool.native_target);
+    optionalBytes(&hash, "cases", if (context.options.controls.cases) |path| try rooted(context, path) else null);
+    if (context.options.controls.cases != null) field(&hash, context.case_bytes);
+    field(&hash, try settingsJson(context, runs));
     if (context.entry.configuration) |configured| {
-        field(&hash, configured.path);
+        field(&hash, try rooted(context, configured.path));
         field(&hash, configured.bytes);
         if (configured.policy) |policy| {
-            field(&hash, policy.path);
+            field(&hash, try rooted(context, policy.path));
             field(&hash, policy.bytes);
         }
     }
@@ -157,30 +172,20 @@ fn environmentSettings(context: Context, hash: *std.crypto.hash.Blake3) Error!vo
     for (environment.items) |item| field(hash, item);
 }
 
-/// The C compiler and Zig toolchain inputs a receipt keys besides every `MYL_` and
-/// `MYLANG_` variable, which the runtime and the core read.
-const toolchain_variables = [_][]const u8{
-    "CCC_OVERRIDE_OPTIONS", "COMPILER_PATH",     "CPATH",             "C_INCLUDE_PATH", "CPLUS_INCLUDE_PATH", "GCC_EXEC_PREFIX",
-    "LIBRARY_PATH",         "OBJC_INCLUDE_PATH", "SOURCE_DATE_EPOCH", "ZIG",            "ZIG_LIB_DIR",        "ZIG_LIBC",
-};
-/// `MYLANG_` variables that place caches, size the worker pool or choose which
-/// process runs a test, and so change no outcome.
-const placement_variables = [_][]const u8{ "MYLANG_JOBS", "MYLANG_CORE_RUNTIME_CACHE", "MYLANG_COMPILER_SHARED_CACHE", tool_ticket.hint, "MYLANG_TEST_ISOLATE", "MYLANG_TEST_CHILDREN", options.shared_cache_variable };
-
-/// Whether a variable can change a test's outcome. A shell's `_` and `OLDPWD` or a
-/// terminal's variables cannot; a test that reads the environment is never reused.
+/// Whether a variable can change a test's outcome: the keyed class of the
+/// environment identity contract (ENV-IDENTITY-1). A shell's `_` and `OLDPWD`, a
+/// terminal's variables, cache and telemetry placement cannot; a test that reads
+/// the environment is never reused.
 fn keyedVariable(name: []const u8) bool {
-    for (placement_variables) |placement| if (std.mem.eql(u8, name, placement)) return false;
-    if (std.mem.startsWith(u8, name, "MYL_") or std.mem.startsWith(u8, name, "MYLANG_")) return true;
-    for (toolchain_variables) |variable| if (std.mem.eql(u8, name, variable)) return true;
-    return false;
+    return environment_identity.keyed(name);
 }
 
 /// What emission reads from one test's program besides the keyed settings.
 pub const Program = struct {
     /// The test's Core IR before passes.
     module: *const ir.Module,
-    /// The entry path traps report when a span has no file of its own.
+    /// The entry's root-relative path (`entryPath`): what traps report when a span
+    /// has no file of its own, named the way every root names it.
     source_path: []const u8,
     /// Where each span is: the only way emission reads the source.
     locator: emit_llvm.Locator,
@@ -192,7 +197,7 @@ pub const Program = struct {
 /// line and column. An edit that only moves code in other files keeps the key.
 pub fn programKey(base: Digest, name: []const u8, program: Program) Digest {
     var walker: Walker = .{ .locator = program.locator };
-    field(&walker.hash, "core-test-ir-v1");
+    field(&walker.hash, "core-test-ir-v3");
     field(&walker.hash, &base);
     field(&walker.hash, name);
     field(&walker.hash, emit_units.native_extension);
@@ -293,10 +298,72 @@ pub fn configuredKey(program: Digest, json: []const u8) Digest {
 /// Only an exact, checksummed success record can bypass execution.
 pub fn hit(context: Context, identity: Digest) Error!bool {
     if (!reusable(context)) return false;
+    return recorded(context, identity);
+}
+
+/// An execution-tier lookup: `hit` without the cache planner, which only the IR
+/// tier's keys depend on.
+pub fn executionHit(context: Context, identity: Digest) Error!bool {
+    if (!executionReusable(context)) return false;
+    return recorded(context, identity);
+}
+
+fn recorded(context: Context, identity: Digest) Error!bool {
     const path = try receiptPath(context, identity);
     const found = std.Io.Dir.cwd().readFileAlloc(context.io, path, context.arena, .limited(4096)) catch return false;
     const expected = try success(context.arena, identity);
     return std.mem.eql(u8, found, expected);
+}
+
+/// What an execution receipt binds besides the run's context: the linked program's
+/// exact key (`driver.Outcome.program_key`), the test and the serialized settings
+/// (`executionSettings`).
+pub const ExecutionInputs = struct { program_key: Digest, name: []const u8, settings: []const u8 };
+
+/// A test's execution-tier key (EXEC-RECEIPT-1): the runner's identity, the linked
+/// program's exact key, the settings, the test's name, the cases, configuration and
+/// policy bytes and the keyed environment. It binds neither the compiler nor the
+/// cache planner nor a path: the program key already covers the toolchain, the
+/// runtime and every object, so a compiler edit that leaves the program's bytes
+/// unchanged keeps it, and a runner edit (EXEC-RECEIPT-2) changes it.
+pub fn executionKey(context: Context, inputs: ExecutionInputs) Error!Digest {
+    var hash = executionHash(context, "core-test-exec-v3", inputs.program_key, inputs.settings);
+    field(&hash, inputs.name);
+    return executionFinal(context, &hash);
+}
+
+/// One program's execution-tier key for all its ready tests at once
+/// (EXEC-RECEIPT-3): `executionKey`'s inputs with the sorted test names in place of
+/// one name, so adding, removing or renaming a test misses.
+pub fn wholeExecutionKey(context: Context, program_key: Digest, names: []const []const u8, settings_json: []const u8) Error!Digest {
+    var hash = executionHash(context, "core-test-whole-exec-v3", program_key, settings_json);
+    const sorted = try context.arena.dupe([]const u8, names);
+    std.mem.sort([]const u8, sorted, {}, before);
+    var count: [8]u8 = undefined;
+    std.mem.writeInt(u64, &count, sorted.len, .little);
+    hash.update(&count);
+    for (sorted) |name| field(&hash, name);
+    return executionFinal(context, &hash);
+}
+
+fn executionHash(context: Context, domain: []const u8, program_key: Digest, settings_json: []const u8) std.crypto.hash.Blake3 {
+    var hash = std.crypto.hash.Blake3.init(.{});
+    field(&hash, domain);
+    field(&hash, context.identity.runner);
+    field(&hash, &program_key);
+    field(&hash, settings_json);
+    optionalBytes(&hash, "cases", if (context.options.controls.cases != null) context.case_bytes else null);
+    const configured = context.entry.configuration;
+    optionalBytes(&hash, "configuration", if (configured) |found| found.bytes else null);
+    optionalBytes(&hash, "policy", if (configured) |found| if (found.policy) |policy| policy.bytes else null else null);
+    return hash;
+}
+
+fn executionFinal(context: Context, hash: *std.crypto.hash.Blake3) Error!Digest {
+    try environmentSettings(context, hash);
+    var digest: Digest = undefined;
+    hash.final(&digest);
+    return digest;
 }
 
 /// Publish successes atomically; a failed run never writes a receipt.
@@ -324,12 +391,13 @@ pub fn replayProvisional(context: Context, base: Digest) Error!?Replay {
     const path = try manifestPath(context);
     const bytes = std.Io.Dir.cwd().readFileAlloc(context.io, path, a, .limited(64 << 20)) catch return null;
     const envelope = std.json.parseFromSliceLeaky(Envelope, a, bytes, .{}) catch return null;
-    if (!std.mem.eql(u8, envelope.version, "core-test-manifest-v2")) return null;
+    if (!std.mem.eql(u8, envelope.version, manifest_version)) return null;
     var checksum: Digest = undefined;
     std.crypto.hash.Blake3.hash(envelope.payload, &checksum, .{});
     if (!std.mem.eql(u8, &checksum, &envelope.checksum)) return null;
     const snapshot = std.json.parseFromSliceLeaky(Snapshot, a, envelope.payload, .{}) catch return null;
-    if (!std.mem.eql(u8, &snapshot.base, &base) or !try unchanged(context, snapshot.dependencies)) return null;
+    if (!std.mem.eql(u8, &snapshot.base, &base) or !std.mem.eql(u8, snapshot.root, context.entry.root)) return null;
+    if (!try unchanged(context, snapshot.dependencies)) return null;
     var value = std.json.parseFromSliceLeaky(std.json.Value, a, snapshot.report, .{}) catch return null;
     if (value != .object) return null;
     const tests = value.object.get("tests") orelse return null;
@@ -351,6 +419,10 @@ pub fn replayProvisional(context: Context, base: Digest) Error!?Replay {
     }
     try value.object.put(a, "passed", .{ .integer = 0 });
     try value.object.put(a, "cached", .{ .integer = @intCast(tests.array.items.len) });
+    var executions: std.json.ObjectMap = .empty;
+    try executions.put(a, "hits", .{ .integer = 0 });
+    try executions.put(a, "saves", .{ .integer = 0 });
+    try value.object.put(a, "exec_receipts", .{ .object = executions });
     try validatePlan(context);
     if (context.options.json) {
         const encoded = try std.fmt.allocPrint(a, "{s}\n", .{try std.json.Stringify.valueAlloc(a, value, .{})});
@@ -368,17 +440,21 @@ pub fn replayProvisional(context: Context, base: Digest) Error!?Replay {
 
 /// Explain the execution contract that prevents reusing successful evidence.
 /// `no-success-receipt` means admission is permitted, subject to receipt lookup.
+/// Fact verification and leak checking are keyed modes, not refusals
+/// (EXEC-RECEIPT-4); `missing-cache-plan` refuses only the IR tier.
 pub fn reuseReason(context: Context) []const u8 {
     if (context.identity.cache_plan == null) return "missing-cache-plan";
+    return admission(context) orelse "no-success-receipt";
+}
+
+/// The refusal both tiers share, or null when a receipt may be looked up.
+fn admission(context: Context) ?[]const u8 {
     if (!context.identity.tool.cacheable) return "uncacheable-toolchain";
     if (context.options.controls.force) return "force";
-    if (context.options.build.facts == .verify) return "verify-facts";
     if (context.options.build.links.len != 0) return "native-links";
-    const checking = context.environment.get("MYL_CORE_LEAKCHECK") orelse "0";
-    if (!std.mem.eql(u8, checking, "0")) return "leak-check";
     var entries = context.environment.iterator();
     while (entries.next()) |entry| if (std.mem.startsWith(u8, entry.key_ptr.*, "LD_") and entry.value_ptr.len != 0) return "untracked-loader-environment";
-    return "no-success-receipt";
+    return null;
 }
 
 /// Revalidate the component deployment before accepting replay or publishing receipts.
@@ -393,17 +469,15 @@ pub fn validatePlan(context: Context) Error!void {
     };
 }
 
+/// Whether the IR tier may look up or replay receipts.
 fn reusable(context: Context) bool {
-    if (context.identity.cache_plan == null) return false;
-    if (!context.identity.tool.cacheable) return false;
-    if (context.options.controls.force or context.options.build.facts == .verify or context.options.build.links.len != 0) return false;
-    const checking = context.environment.get("MYL_CORE_LEAKCHECK") orelse "0";
-    if (!std.mem.eql(u8, checking, "0")) return false;
-    var entries = context.environment.iterator();
-    while (entries.next()) |entry| {
-        if (std.mem.startsWith(u8, entry.key_ptr.*, "LD_") and entry.value_ptr.len != 0) return false;
-    }
-    return true;
+    return context.identity.cache_plan != null and admission(context) == null;
+}
+
+/// Whether the execution tier may look up receipts: the IR tier's admission
+/// without the cache planner.
+pub fn executionReusable(context: Context) bool {
+    return admission(context) == null;
 }
 
 /// Capture identities before execution and check them again before publication.
@@ -496,10 +570,10 @@ pub fn unchanged(context: Context, files: []const Dependency) Error!bool {
 /// Save a manifest only after all selected tests succeeded under unchanged inputs.
 pub fn remember(context: Context, base: Digest, files: []const Dependency, json: []const u8, warnings: []const u8) Error!void {
     if (!try unchanged(context, files) or !try toolUnchanged(context)) return;
-    const payload = try std.json.Stringify.valueAlloc(context.arena, Snapshot{ .base = base, .dependencies = files, .report = json, .warnings = warnings }, .{});
+    const payload = try std.json.Stringify.valueAlloc(context.arena, Snapshot{ .base = base, .root = context.entry.root, .dependencies = files, .report = json, .warnings = warnings }, .{});
     var checksum: Digest = undefined;
     std.crypto.hash.Blake3.hash(payload, &checksum, .{});
-    const envelope: Envelope = .{ .version = "core-test-manifest-v2", .payload = payload, .checksum = checksum };
+    const envelope: Envelope = .{ .version = manifest_version, .payload = payload, .checksum = checksum };
     try atomic(context, try manifestPath(context), try std.json.Stringify.valueAlloc(context.arena, envelope, .{}));
 }
 
@@ -528,20 +602,25 @@ pub fn readDigest(arena: std.mem.Allocator, io: std.Io, path: []const u8) Error!
     std.crypto.hash.Blake3.hash(bytes, &digest, .{});
     return digest;
 }
+const manifest_version = "core-test-manifest-v3";
 fn receiptPath(context: Context, identity: Digest) Error![]const u8 {
-    return std.fmt.allocPrint(context.arena, "{s}/tests/receipts-v2/{s}", .{ context.options.build.cache, std.fmt.bytesToHex(identity, .lower) });
+    return std.fmt.allocPrint(context.arena, "{s}/tests/receipts-v3/{s}", .{ context.options.build.cache, std.fmt.bytesToHex(identity, .lower) });
 }
-fn manifestPath(context: Context) Error![]const u8 {
+/// Which manifest a run reads and writes: its root-relative entry, filter and cases.
+fn manifestKey(context: Context) Error!Digest {
     var hash = std.crypto.hash.Blake3.init(.{});
-    field(&hash, context.entry.path);
+    field(&hash, try entryPath(context));
     field(&hash, context.options.filter);
-    field(&hash, context.options.controls.cases orelse "");
+    field(&hash, if (context.options.controls.cases) |path| try rooted(context, path) else "");
     var digest: Digest = undefined;
     hash.final(&digest);
-    return std.fmt.allocPrint(context.arena, "{s}/tests/manifests-v2/{s}.json", .{ context.options.build.cache, std.fmt.bytesToHex(digest, .lower) });
+    return digest;
+}
+fn manifestPath(context: Context) Error![]const u8 {
+    return std.fmt.allocPrint(context.arena, "{s}/tests/manifests-v3/{s}.json", .{ context.options.build.cache, std.fmt.bytesToHex(try manifestKey(context), .lower) });
 }
 fn success(a: std.mem.Allocator, identity: Digest) Error![]const u8 {
-    const payload = try std.fmt.allocPrint(a, "core-test-receipt-v2\n{s}\npassed\n", .{std.fmt.bytesToHex(identity, .lower)});
+    const payload = try std.fmt.allocPrint(a, "core-test-receipt-v3\n{s}\npassed\n", .{std.fmt.bytesToHex(identity, .lower)});
     var checksum: Digest = undefined;
     std.crypto.hash.Blake3.hash(payload, &checksum, .{});
     return std.fmt.allocPrint(a, "{s}{s}\n", .{ payload, std.fmt.bytesToHex(checksum, .lower) });
@@ -729,6 +808,55 @@ test "receipt settings ignore shell and terminal variables and key toolchain and
     try std.testing.expect(!std.mem.eql(u8, &optioned, &try settings(context, &inputs)));
 }
 
+/// The toolchain variables the receipt keyed through its own list before the
+/// environment identity contract replaced it, two `MYL_`/`MYLANG_` samples, and
+/// the `SELKA_` and `ZERO_AR_DATE` variables the contract's keyed class adds.
+const formerly_keyed = [_][]const u8{
+    "CCC_OVERRIDE_OPTIONS", "COMPILER_PATH",     "CPATH",             "C_INCLUDE_PATH", "CPLUS_INCLUDE_PATH", "GCC_EXEC_PREFIX",
+    "LIBRARY_PATH",         "OBJC_INCLUDE_PATH", "SOURCE_DATE_EPOCH", "ZIG",            "ZIG_LIB_DIR",        "ZIG_LIBC",
+    "MYL_CORE_TEXTWALK",    "MYLANG_OPTIONS",    "SELKA_PROFILE",     "ZERO_AR_DATE",
+};
+/// The placement variables the receipt ignored before the contract, the
+/// verification telemetry directories that once invalidated every receipt, and
+/// host-only variables (Python, locale, time zone) no guest outcome depends on.
+const never_keyed = [_][]const u8{
+    "MYLANG_JOBS",                      "MYLANG_CORE_RUNTIME_CACHE", "MYLANG_COMPILER_SHARED_CACHE", tool_ticket.hint,
+    "MYLANG_TEST_ISOLATE",              "MYLANG_TEST_CHILDREN",      options.shared_cache_variable,  "MYLANG_TEST_TELEMETRY_DIR",
+    "SELKA_VERIFICATION_TELEMETRY_DIR", "_",                         "OLDPWD",                       "PYTHONPATH",
+    "LANG",                             "TZ",
+};
+
+/// The first name whose `keyedVariable` answer differs from `expected`, or "".
+fn firstKeyedMismatch(names: []const []const u8, expected: bool) []const u8 {
+    for (names) |name| if (keyedVariable(name) != expected) return name;
+    return "";
+}
+
+/// `settings` after putting `value` under every name in `names`.
+fn settingsWith(context: Context, environment: *std.process.Environ.Map, names: []const []const u8, value: []const u8) !Digest {
+    for (names) |name| try environment.put(name, value);
+    var inputs: std.ArrayList(Dependency) = .empty;
+    return settings(context, &inputs);
+}
+
+// spec-case: ENV-IDENTITY-1
+test "receipt environment keys what the old lists keyed and never placement, telemetry or host-only variables" {
+    try std.testing.expectEqualStrings("", firstKeyedMismatch(&formerly_keyed, true));
+    try std.testing.expectEqualStrings("", firstKeyedMismatch(&never_keyed, false));
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    const context = try fakeToolContext(a, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a), &environment);
+    const plain = try settingsWith(context, &environment, &.{}, "");
+    try std.testing.expectEqual(plain, try settingsWith(context, &environment, &never_keyed, "/per-request/telemetry-1"));
+    try std.testing.expectEqual(plain, try settingsWith(context, &environment, &never_keyed, "/per-request/telemetry-2"));
+    try std.testing.expect(!std.mem.eql(u8, &plain, &try settingsWith(context, &environment, &.{"MYLANG_MEMORY_LIMIT"}, "1G")));
+}
+
 // spec-case: SELFHOST-CACHE-IDENTITY-1
 test "validatePlan returns ComponentUnavailable when a verified component changes before receipt admission" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
@@ -783,8 +911,42 @@ test "receipt campaignSettings excludes only indexed passing budget and binds se
     try std.testing.expect(!std.mem.eql(u8, &provider, &(try campaignSettings(context, &inputs)).?));
 }
 
+/// `fakeToolContext` with a proved toolchain, so its receipts are admitted.
+fn admittedContext(a: std.mem.Allocator, root: []const u8, environment: *const std.process.Environ.Map) !Context {
+    var context = try fakeToolContext(a, root, environment);
+    context.identity.tool.cacheable = true;
+    return context;
+}
+
+// spec: EXEC-RECEIPT-1
+test "execution receipts key the linked program, not the compiler, and hit after a compiler edit" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    var context = try admittedContext(a, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a), &environment);
+    context.identity.compiler = "compiler before a front-end comment edit";
+    var edited = context;
+    edited.identity.compiler = "compiler after a front-end comment edit";
+    const inputs: ExecutionInputs = .{ .program_key = @splat(4), .name = "app::test_one", .settings = try executionSettings(context) };
+    const key = try executionKey(context, inputs);
+    try std.testing.expectEqual(key, try executionKey(edited, inputs));
+    var ir_inputs: std.ArrayList(Dependency) = .empty;
+    try std.testing.expect(!std.mem.eql(u8, &try settings(context, &ir_inputs), &try settings(edited, &ir_inputs)));
+    try std.testing.expect(!try executionHit(edited, key));
+    try save(context, key);
+    try std.testing.expect(try executionHit(edited, key));
+    edited.identity.cache_plan = null;
+    try std.testing.expect(try executionHit(edited, key));
+    try std.testing.expect(!try hit(edited, key));
+    try std.testing.expectEqualStrings("missing-cache-plan", reuseReason(edited));
+}
+
 // spec-case: NEW-CORE-ZERO-RC-CACHE-1
-test "zero RC test receipts isolate local portable and indexed ownership modes" {
+test "zero RC test receipts isolate local, execution and indexed ownership modes" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
@@ -796,7 +958,7 @@ test "zero RC test receipts isolate local portable and indexed ownership modes" 
     var inputs: std.ArrayList(Dependency) = .empty;
     context.options.properties.policy = .indexed_v1;
     const plain = try settings(context, &inputs);
-    const portable_plain = try portableSettings(context, .{ .entry = "app.my" });
+    const execution_plain = try executionSettings(context);
     const indexed_plain = (try campaignSettings(context, &inputs)).?;
     context.options.build.show.codegen.single_owner = true;
     const single = try settings(context, &inputs);
@@ -805,6 +967,187 @@ test "zero RC test receipts isolate local portable and indexed ownership modes" 
     const owned = try settings(context, &inputs);
     try std.testing.expect(!std.mem.eql(u8, &single, &owned));
     try std.testing.expect(!std.mem.eql(u8, &plain, &owned));
-    try std.testing.expect(!std.mem.eql(u8, &portable_plain, &try portableSettings(context, .{ .entry = "app.my" })));
+    try std.testing.expect(!std.mem.eql(u8, execution_plain, try executionSettings(context)));
     try std.testing.expect(!std.mem.eql(u8, &indexed_plain, &(try campaignSettings(context, &inputs)).?));
+}
+
+// spec: EXEC-RECEIPT-2
+test "execution receipts miss after a runner edit and for another program" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    const context = try admittedContext(a, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a), &environment);
+    const inputs: ExecutionInputs = .{ .program_key = @splat(4), .name = "app::test_one", .settings = try executionSettings(context) };
+    const key = try executionKey(context, inputs);
+    try save(context, key);
+    var runner = context;
+    runner.identity.runner = "runner after an edit to test_runner_execute.zig";
+    const moved = try executionKey(runner, inputs);
+    try std.testing.expect(!std.mem.eql(u8, &key, &moved));
+    try std.testing.expect(!try executionHit(runner, moved));
+    var relinked = inputs;
+    relinked.program_key = @splat(5);
+    try std.testing.expect(!try executionHit(context, try executionKey(context, relinked)));
+    var renamed = inputs;
+    renamed.name = "app::test_two";
+    try std.testing.expect(!try executionHit(context, try executionKey(context, renamed)));
+    var forced = context;
+    forced.options.controls.force = true;
+    try std.testing.expect(!try executionHit(forced, key));
+    try std.testing.expect(try executionHit(context, key));
+}
+
+// spec: EXEC-RECEIPT-3
+test "whole-program execution keys cover the sorted ready test names" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    const context = try admittedContext(a, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a), &environment);
+    const program: Digest = @splat(6);
+    const json = try executionSettings(context);
+    const whole = try wholeExecutionKey(context, program, &.{ "app::test_b", "app::test_a" }, json);
+    try std.testing.expectEqual(whole, try wholeExecutionKey(context, program, &.{ "app::test_a", "app::test_b" }, json));
+    try std.testing.expect(!std.mem.eql(u8, &whole, &try wholeExecutionKey(context, program, &.{ "app::test_a", "app::test_b", "app::test_c" }, json)));
+    try std.testing.expect(!std.mem.eql(u8, &whole, &try wholeExecutionKey(context, @splat(7), &.{ "app::test_a", "app::test_b" }, json)));
+    const single = try wholeExecutionKey(context, program, &.{"app::test_a"}, json);
+    try std.testing.expect(!std.mem.eql(u8, &single, &try executionKey(context, .{ .program_key = program, .name = "app::test_a", .settings = json })));
+    try save(context, whole);
+    try std.testing.expect(try executionHit(context, try wholeExecutionKey(context, program, &.{ "app::test_a", "app::test_b" }, json)));
+    try std.testing.expect(!try executionHit(context, try wholeExecutionKey(context, program, &.{ "app::test_a", "app::test_b", "app::test_c" }, json)));
+}
+
+/// A run's IR settings and execution key for program `@splat(8)`'s `app::test_one`.
+const ModeKeys = struct { settings: Digest, execution: Digest };
+
+fn modeKeys(context: Context) !ModeKeys {
+    var inputs: std.ArrayList(Dependency) = .empty;
+    return .{
+        .settings = try settings(context, &inputs),
+        .execution = try executionKey(context, .{ .program_key = @splat(8), .name = "app::test_one", .settings = try executionSettings(context) }),
+    };
+}
+
+// spec: EXEC-RECEIPT-4
+test "fact-verification, leak-check and plain runs are admitted under three distinct keys" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    const plain = try admittedContext(a, try temporary.dir.realPathFileAlloc(std.testing.io, ".", a), &environment);
+    var verified = plain;
+    verified.options.build.facts = .verify;
+    const plain_keys = try modeKeys(plain);
+    const verified_keys = try modeKeys(verified);
+    try std.testing.expect(reusable(plain) and reusable(verified));
+    try std.testing.expectEqualStrings("no-success-receipt", reuseReason(verified));
+    try environment.put("MYL_CORE_LEAKCHECK", "1");
+    const leak_keys = try modeKeys(plain);
+    try std.testing.expect(reusable(plain) and executionReusable(plain));
+    try std.testing.expectEqualStrings("no-success-receipt", reuseReason(plain));
+    try std.testing.expect(!std.mem.eql(u8, &plain_keys.settings, &verified_keys.settings));
+    try std.testing.expect(!std.mem.eql(u8, &plain_keys.settings, &leak_keys.settings));
+    try std.testing.expect(!std.mem.eql(u8, &verified_keys.settings, &leak_keys.settings));
+    try std.testing.expect(!std.mem.eql(u8, &plain_keys.execution, &verified_keys.execution));
+    try std.testing.expect(!std.mem.eql(u8, &plain_keys.execution, &leak_keys.execution));
+    try std.testing.expect(!std.mem.eql(u8, &verified_keys.execution, &leak_keys.execution));
+    try save(plain, leak_keys.execution);
+    _ = environment.swapRemove("MYL_CORE_LEAKCHECK");
+    try std.testing.expect(!try executionHit(plain, plain_keys.execution));
+    try std.testing.expect(!try executionHit(verified, verified_keys.execution));
+}
+
+/// A context for `root/app.my` with a fixed toolchain identity, a fixed tool path and
+/// a cache directory outside both roots: only the entry's absolute root varies.
+fn rootContext(a: std.mem.Allocator, root: []const u8, cache: []const u8, environment: *const std.process.Environ.Map) !Context {
+    return rootContextWith(a, root, cache, .{ .tool = .{ .path = "pinned-zig", .digest = @splat(5), .generation = @splat(0), .native_target = @splat(6), .inputs = 0, .memo_hit = false, .cacheable = true } }, environment);
+}
+
+/// `rootContext` with given identities; its cache planner is a fixed reference one.
+fn rootContextWith(a: std.mem.Allocator, root: []const u8, cache: []const u8, identities: Identities, environment: *const std.process.Environ.Map) !Context {
+    var identity = identities;
+    identity.cache_plan = .{ .identity = @splat(11), .mode = .reference, .io = std.testing.io, .environ = environment, .directory = null, .artifact = null };
+    return .{
+        .arena = a,
+        .io = std.testing.io,
+        .environment = environment,
+        .options = .{ .path = try std.fs.path.join(a, &.{ root, "app.my" }), .build = .{ .zig = identity.tool.path, .cache = cache }, .controls = .{ .cases = try std.fs.path.join(a, &.{ root, "app.cases.json" }) } },
+        .entry = .{ .path = try std.fs.path.join(a, &.{ root, "app.my" }), .root = root, .name = "app" },
+        .case_bytes = "{}",
+        .identity = identity,
+    };
+}
+
+// spec: RECEIPT-PATHS-1
+test "receipt settings, manifest and IR keys name the entry relative to its root" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var left_root = std.testing.tmpDir(.{});
+    defer left_root.cleanup();
+    var right_root = std.testing.tmpDir(.{});
+    defer right_root.cleanup();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    const cache = "shared-receipt-cache";
+    const left = try rootContext(a, try left_root.dir.realPathFileAlloc(std.testing.io, ".", a), cache, &environment);
+    const right = try rootContext(a, try right_root.dir.realPathFileAlloc(std.testing.io, ".", a), cache, &environment);
+    try std.testing.expect(!std.mem.eql(u8, left.entry.root, right.entry.root));
+    try std.testing.expectEqualStrings("app.my", try entryPath(left));
+    try std.testing.expectEqualStrings("app.my", try entryPath(right));
+    var inputs: std.ArrayList(Dependency) = .empty;
+    const base = try settings(left, &inputs);
+    try std.testing.expectEqual(base, try settings(right, &inputs));
+    try std.testing.expectEqual(try manifestKey(left), try manifestKey(right));
+    const unmoved: Lines = .{ .shift = 0 };
+    const module = try sampleModule(a, 1105, 3);
+    const left_key = programKey(base, "app::test_one", .{ .module = &module, .source_path = try entryPath(left), .locator = .{ .context = &unmoved, .locate = Lines.locate } });
+    const right_key = programKey(try settings(right, &inputs), "app::test_one", .{ .module = &module, .source_path = try entryPath(right), .locator = .{ .context = &unmoved, .locate = Lines.locate } });
+    try std.testing.expectEqual(left_key, right_key);
+    var nested = right;
+    nested.entry.path = try std.fs.path.join(a, &.{ right.entry.root, "inner", "app.my" });
+    try std.testing.expectEqualStrings("inner/app.my", try entryPath(nested));
+    try std.testing.expect(!std.mem.eql(u8, &base, &try settings(nested, &inputs)));
+    try std.testing.expect(!std.mem.eql(u8, &try manifestKey(left), &try manifestKey(nested)));
+}
+
+// spec-case: RECEIPT-PATHS-1
+test "a root-relative manifest never replays another root's checked files" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var left_root = std.testing.tmpDir(.{});
+    defer left_root.cleanup();
+    var right_root = std.testing.tmpDir(.{});
+    defer right_root.cleanup();
+    var cache_root = std.testing.tmpDir(.{});
+    defer cache_root.cleanup();
+    var environment: std.process.Environ.Map = .init(a);
+    defer environment.deinit();
+    const cache = try cache_root.dir.realPathFileAlloc(std.testing.io, ".", a);
+    // One owned fake toolchain, so `remember` can revalidate it before publishing.
+    var tool = (try fakeToolContext(a, cache, &environment)).identity.tool;
+    tool.cacheable = true;
+    const left = try rootContextWith(a, try left_root.dir.realPathFileAlloc(std.testing.io, ".", a), cache, .{ .tool = tool }, &environment);
+    const right = try rootContextWith(a, try right_root.dir.realPathFileAlloc(std.testing.io, ".", a), cache, .{ .tool = tool }, &environment);
+    try left_root.dir.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = "left source" });
+    try right_root.dir.writeFile(std.testing.io, .{ .sub_path = "app.my", .data = "right source" });
+    var inputs: std.ArrayList(Dependency) = .empty;
+    const base = try settings(left, &inputs);
+    const files = try dependencies(left, &.{left.entry.path});
+    const passed = try report.jsonSources(a, &.{.{ .name = "app::test_one", .status = .passed }}, &.{left.entry.path});
+    try remember(left, base, files, passed, "");
+    try std.testing.expect(try replayProvisional(left, base) != null);
+    try std.testing.expectEqualStrings(try manifestPath(left), try manifestPath(right));
+    try std.testing.expect(try replayProvisional(right, base) == null);
 }

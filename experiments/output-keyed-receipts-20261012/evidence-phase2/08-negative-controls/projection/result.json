@@ -1,0 +1,140 @@
+{
+ "checks": [
+  {
+   "check": "control: the probe sees CODEX_THREAD_ID without projection",
+   "expected": 1,
+   "note": "",
+   "observed": 1,
+   "result": "pass"
+  },
+  {
+   "check": "projected: CODEX_THREAD_ID is absent under build-env project",
+   "expected": 0,
+   "note": "",
+   "observed": 0,
+   "result": "pass"
+  }
+ ],
+ "compilers_sha256": {
+  "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/bin/mylang": "27385c43a08071a5144529a376b7afdc7f93e575bb048785990124ac7395b134"
+ },
+ "decision": "pass",
+ "finished": "2026-10-12T15:58:56.602+00:00",
+ "started": "2026-10-12T15:58:40.388+00:00",
+ "steps": {
+  "compile-build-env": {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "build-exe",
+    "build_env.zig",
+    "-OReleaseSafe",
+    "-femit-bin=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/08-negative-controls/projection/build-env"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+   "env_set": {
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache"
+   },
+   "env_unset": [],
+   "exit": 0,
+   "harness_seconds_including_queue": 10.779,
+   "kind": "command",
+   "queue_seconds": 0,
+   "seconds_excluding_queue": 10.779,
+   "started": "2026-10-12T15:58:40.388+00:00",
+   "stderr": "01-compile-build-env.stderr",
+   "stderr_tail": "build-slot: build slot 1, FIFO ticket 2126 after 0s\n",
+   "stdout": "01-compile-build-env.stdout",
+   "step": "compile-build-env"
+  },
+  "control-unprojected": {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/bin/mylang",
+    "run",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/fixtures/env_probe.my",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/08-negative-controls/projection/cache"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+   "env_set": {
+    "CODEX_THREAD_ID": "lane-f-row08-probe",
+    "MYLANG_COMPILER_SHARED_CACHE": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/08-negative-controls/projection/shared-compiler",
+    "MYLANG_TEST_SHARED_CACHE": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/08-negative-controls/projection/shared-tests",
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache"
+   },
+   "env_unset": [],
+   "exit": 1,
+   "harness_seconds_including_queue": 0.142,
+   "kind": "command",
+   "queue_seconds": 0,
+   "seconds_excluding_queue": 0.142,
+   "started": "2026-10-12T15:58:51.336+00:00",
+   "stderr": "03-control-unprojected.stderr",
+   "stderr_tail": "build-slot: build slot 1, FIFO ticket 2127 after 0s\n",
+   "stdout": "03-control-unprojected.stdout",
+   "step": "control-unprojected"
+  },
+  "locate-build-env": {
+   "description": "record the build-env host tool and its SHA-256",
+   "kind": "python",
+   "result": {
+    "build_env": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/08-negative-controls/projection/build-env",
+    "sha256": "a923b76a0adc1acb2b4388922a1902283f96537f4583c499c49e376ce61e9579"
+   },
+   "seconds": 0.003,
+   "started": "2026-10-12T15:58:51.168+00:00",
+   "step": "locate-build-env"
+  },
+  "projected": {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/08-negative-controls/projection/build-env",
+    "project",
+    "--",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/bin/mylang",
+    "run",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/fixtures/env_probe.my",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/08-negative-controls/projection/cache"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+   "env_set": {
+    "CODEX_THREAD_ID": "lane-f-row08-probe",
+    "MYLANG_COMPILER_SHARED_CACHE": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/08-negative-controls/projection/shared-compiler",
+    "MYLANG_TEST_SHARED_CACHE": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/08-negative-controls/projection/shared-tests",
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache"
+   },
+   "env_unset": [],
+   "exit": 0,
+   "harness_seconds_including_queue": 5.124,
+   "kind": "command",
+   "queue_seconds": 5,
+   "seconds_excluding_queue": 0.124,
+   "started": "2026-10-12T15:58:51.478+00:00",
+   "stderr": "04-projected.stderr",
+   "stderr_tail": "build-slot: FIFO ticket 2128, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)\nbuild-slot: build slot 1, FIFO ticket 2128 after 5s\n",
+   "stdout": "04-projected.stdout",
+   "step": "projected"
+  },
+  "reset-work": {
+   "description": "empty the row's private work directory",
+   "kind": "python",
+   "result": {
+    "directory": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/08-negative-controls/projection"
+   },
+   "seconds": 0.0,
+   "started": "2026-10-12T15:58:40.388+00:00",
+   "step": "reset-work"
+  }
+ }
+}

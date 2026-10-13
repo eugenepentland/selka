@@ -22,7 +22,7 @@ fn trappedWith(arena: std.mem.Allocator, root: []const u8, release: bool, flags:
     const output = try std.fmt.allocPrint(arena, "{s}/trap_frames-{s}", .{ root, if (release) "release" else "debug" });
     const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(arena, &.{ options.core_path, "build", source, "-o", output, "--cache-dir", cache });
+    try argv.appendSlice(arena, &.{ options.corePath(), "build", source, "-o", output, "--cache-dir", cache });
     if (release) try argv.append(arena, "--release");
     try argv.appendSlice(arena, flags);
     const built = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });

@@ -62,7 +62,11 @@ zig-out/tools/selka-components --root . --zig /path/to/pinned/zig --uncached
 ```
 
 `--uncached` recompiles in an empty, stable private build directory and checks
-that the same inputs reproduce the stored artifact. `--cache-dir` (or
+that the same inputs reproduce the stored artifact. That directory,
+`<cache>/staging/component`, is the same for every key and every worktree, and
+the component key binds the builder's source closure rather than its executable,
+so worktrees at one commit install byte-identical components
+([build identity](component-protocol.md#core-cache-planner-v1)). `--cache-dir` (or
 `MYLANG_COMPONENT_CACHE`) chooses the seed/component store; `--install-dir`
 chooses where the selected manifest is published. Source distributions without
 Git history can supply `--seed-source /path/to/pinned-seed.tar`, a `git archive`

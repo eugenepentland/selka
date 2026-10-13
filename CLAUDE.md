@@ -29,7 +29,12 @@ build panics on any other toolchain.
   the compiler's optimization mode does not choose the guest's build mode
   (`--release` does). `-Dcompiler-only=true` is accepted for older scripts and
   changes nothing.
-- Sharing the machine with other agents: run `zig build`, focused tests and gates
+- Sharing the machine with other agents: first `source ~/.config/mylang/dev-env.sh`
+  in the worktree (every build, focused test and gate). It pins Zig, sets the
+  worktree's `ZIG_LOCAL_CACHE_DIR` and `TMPDIR`, and sets `MYLANG_SLOT_DIR` to
+  `~/.cache/mylang/slots`, the admission directory every agent shares; without it
+  `build-slot.sh` uses `$XDG_RUNTIME_DIR/mylang-slots`, a separate admission domain.
+  Then run `zig build`, focused tests and gates
   through `scripts/build-slot.sh build|gate …`. It admits a job only when a slot
   and enough memory are free. Ordinary jobs use all allowed CPUs by default;
   `build-slot.sh timing …` stops new admissions, drains active jobs and runs an
@@ -38,8 +43,13 @@ build panics on any other toolchain.
   `ZIG_LOCAL_CACHE_DIR` and set `TMPDIR` on disk (`/tmp` has a per-user quota; a
   full quota makes test processes exit 70). See `docs/tooling/many-agents.md`.
 - Never point two source trees (a base checkout and a worktree) at one
-  `ZIG_LOCAL_CACHE_DIR`. Zig reuses the cached configure phase across them, and its
-  absolute paths name the first tree.
+  `ZIG_LOCAL_CACHE_DIR`. Zig reuses the cached configure phase across them, and the
+  project's absolute configure-time paths name the first tree.
+- While Guardian has findings, `zig build` does not install, so `zig-out/bin/mylang`
+  silently stays stale. `zig build affected-compiler` installs an ungated copy at
+  `zig-out/focus/mylang`. Do not use `./stage.sh`: it hard-codes `.zig-cache/o`
+  (wrong whenever `ZIG_LOCAL_CACHE_DIR` is set) and copies the newest `mylang`
+  across branches and optimize modes.
 
 ## Measuring guest programs
 
@@ -84,9 +94,13 @@ run them directly. Do not wrap a timing coordinator in a build/gate slot.
   tests, each built by the new core and run in its own forked trial. A bare
   substring matches anywhere in the qualified name; `*`, `?` or `[` make it a glob.
   A directory runs every entry under it in parallel (`--jobs N`, `MYLANG_JOBS`).
-  Results are reused per test (receipts keyed by the test's Core IR), so an
-  unchanged rerun is near-free; `--force` reruns. The gate's second run is
-  `--release --verify-facts` with `MYL_CORE_LEAKCHECK=1`.
+  Results are reused per test in two tiers: receipts keyed by the test's Core IR,
+  then, after a compiler edit, receipts keyed by the linked program and the test
+  runner (`cache.reason` `exec-receipt-hit`, `--json` `exec_receipts`), so an
+  unchanged rerun is near-free and a comment edit under `src/` reruns only tests
+  whose program bytes changed (those calling `function_digest`, for one);
+  `--force` reruns. The gate's second run is `--release --verify-facts` with
+  `MYL_CORE_LEAKCHECK=1`, which keeps receipts of its own.
 - `zig build test-lang` — `tests/lang` and `tests/value_semantics` through
   `mylang test`, at debug and at release with the fact and leak checks.
 - `zig build test-docs` — executes every fenced documentation example.
@@ -132,14 +146,28 @@ the live environment (recorded as a digest), or one of the repository files it
 reads changes; those files are declared per step in
 `build_test_inputs.zig`, and `zig build test` fails (`test-inputs-coverage`) when a
 test names a repository path its step does not declare. An unchanged `zig build test`
-takes seconds, and a `.my` or doc edit re-runs only what reads it. A cached step
+still reruns the core shards. An unchanged complete verification through the
+coordinator takes about 24 to 37 s (median 29.9 s, gate occupancy 14.4 s, five
+timed samples on 12 October; 34 to 37 s before that day's merge). Every gate root
+depends on `zig build test-verification-registry`, which fails while any required
+action is unregistered (`coverage.unknown_actions` in
+`zig-out/verification/inventory.json` names it), because an unregistered action
+sends every request to the original complete gate, about 530 s. A `.my` or doc
+edit re-runs only what reads it,
+and any `src/` edit reruns every step that runs the compiler. A cached step
 prints no test count, so the `Build Summary` total counts only what ran:
 `-Dtest-rerun=true` re-runs every test step (full counts, or to rule out a stale
 verdict you suspect). When a test starts reading a new fixture, declare it in
 `build_test_inputs.zig`. Test steps always run in the live environment of the
 `zig build` that runs them: never call `Step.Run.setEnvironmentVariable` in
 `build.zig` (a cached configuration freezes the whole environment it copies, and
-the build refuses to configure); pass variables through `withTools`.
+the build refuses to configure); pass variables through `withTools`. That live
+environment is projected: `withTools` runs every command through `build-env
+project`, so a test sees only the variables `src/environment_identity.zon` keys
+or marks as placement, and the environment manifest keys exactly the keyed and
+host ones (`docs/tooling/environment-identity.md#in-the-build-graph`). Test
+binaries get the compiler through `MYLANG_TEST_COMPILER` and fixture paths
+relative to the build root, never an absolute path.
 
 `zig build test` splits its slow Zig roots across processes: `src/core/root_test.zig`
 into `-Dcore-shards=N` shards (default 8), `src/root_test.zig` into
@@ -172,12 +200,15 @@ of stack under the ceiling); a test defaults to 1,000,000 steps, 1,024 frames an
 - Share Zig's global cache across worktrees:
   `export ZIG_GLOBAL_CACHE_DIR=/home/epentland/ai/canopy/.zig-global-cache`. Zig locks it
   per entry, so concurrent builds are safe.
-- Never share `.zig-cache` (`ZIG_LOCAL_CACHE_DIR`) between worktrees: Zig's configure
-  cache ignores the build root. Never share a `.mylang-cache` between worktrees running
+- Never share `.zig-cache` (`ZIG_LOCAL_CACHE_DIR`) between worktrees. Zig would allow
+  it; the project's own absolute configure-time path (the build root realpath that
+  `build_identity.zig` passes) ties it to one tree.
+  Never share a `.mylang-cache` between worktrees running
   different compilers: each compiler generation evicts the others' objects.
 - Reuse a merged, clean worktree for new work (`git switch -c <branch> main`) instead of
   creating one; remove a worktree you are done with (`git worktree remove <path>`).
-- `scripts/prune-caches.sh` (hourly on the dev box; dry run unless `--apply`) deletes the
+- `scripts/prune-caches.sh` (dry run unless `--apply`; it runs only when you schedule
+  it, and no timer or cron entry runs it on this box today) deletes the
   caches, `zig-out` and scratch binaries of worktrees idle for 3 days, and any
   `.zig-cache` over 15 GiB. Keep evidence as text, not in caches.
 - Versioned developer evidence uses `scripts/cache_retention.py`, whose collector
@@ -193,8 +224,13 @@ of stack under the ceiling); a test defaults to 1,000,000 steps, 1,024 frames an
   `ZIG_LOCAL_CACHE_DIR` in a staging directory removed when the build ends, so
   guest builds add nothing to `.zig-cache`. `scripts/prune-caches.sh` evicts the
   per-user store too. See `docs/tooling/native-build.md#the-caches`.
-- Optional shared compiler artifacts and native test receipts use v2 namespaces
-  with process leases and automatic hourly LRU retention (10 GiB compiler,
+- Shared compiler artifacts (`MYLANG_COMPILER_SHARED_CACHE`, namespace
+  `compiler-artifacts-v2`) and native test receipts (`MYLANG_TEST_SHARED_CACHE`,
+  `native-tests-v3`) are off unless a variable names a store; the per-user default
+  locations apply only once `default_sharing` in `src/shared_cache_policy.zig` is
+  turned on. A determinism mismatch is a miss, counted as `shared_mismatches` in
+  `--report` and logged to the namespace's `mismatches.log`. Both stores use
+  process leases and automatic hourly LRU retention (10 GiB compiler,
   256 MiB tests, 100,000 entries each). Use `mylang cache gc` to preview,
   `--apply` to collect, and `mylang cache configure` to persist policy. Old v1
   namespaces remain separate and require idle-only manual cleanup. See

@@ -1,0 +1,207 @@
+MYL_FIXTURE_A=keyed prefix MYL_ = one
+MYL_B=x=y=z keyed
+MYL_=bare prefix
+MYLANG_FIXTURE_A=keyed prefix MYLANG_ = one
+MYLANG_B=x=y=z keyed
+MYLANG_=bare prefix
+SELKA_FIXTURE_A=keyed prefix SELKA_ = one
+SELKA_B=x=y=z keyed
+SELKA_=bare prefix
+SOURCE_DATE_EPOCH=exact SOURCE_DATE_EPOCH value with spaces and = signs=1
+ZERO_AR_DATE=exact ZERO_AR_DATE value with spaces and = signs=1
+LD_FIXTURE_A=keyed prefix LD_ = one
+LD_B=x=y=z keyed
+LD_=bare prefix
+CCC_OVERRIDE_OPTIONS=exact CCC_OVERRIDE_OPTIONS value with spaces and = signs=1
+COMPILER_PATH=exact COMPILER_PATH value with spaces and = signs=1
+CPATH=exact CPATH value with spaces and = signs=1
+C_INCLUDE_PATH=exact C_INCLUDE_PATH value with spaces and = signs=1
+CPLUS_INCLUDE_PATH=exact CPLUS_INCLUDE_PATH value with spaces and = signs=1
+GCC_EXEC_PREFIX=exact GCC_EXEC_PREFIX value with spaces and = signs=1
+LIBRARY_PATH=exact LIBRARY_PATH value with spaces and = signs=1
+OBJC_INCLUDE_PATH=exact OBJC_INCLUDE_PATH value with spaces and = signs=1
+ZIG=exact ZIG value with spaces and = signs=1
+ZIG_LIB_DIR=exact ZIG_LIB_DIR value with spaces and = signs=1
+ZIG_LIBC=exact ZIG_LIBC value with spaces and = signs=1
+PYTHONFIXTURE_A=host prefix PYTHON = one
+PYTHONB=x=y=z host
+PYTHON=bare prefix
+LANG=exact LANG value with spaces and = signs=1
+LANGUAGE=exact LANGUAGE value with spaces and = signs=1
+LC_FIXTURE_A=host prefix LC_ = one
+LC_B=x=y=z host
+LC_=bare prefix
+TZ=exact TZ value with spaces and = signs=1
+HOME=exact HOME value with spaces and = signs=1
+XDG_CACHE_HOME=exact XDG_CACHE_HOME value with spaces and = signs=1
+XDG_RUNTIME_DIR=exact XDG_RUNTIME_DIR value with spaces and = signs=1
+TMPDIR=exact TMPDIR value with spaces and = signs=1
+PATH=exact PATH value with spaces and = signs=1
+ZIG_LOCAL_CACHE_DIR=exact ZIG_LOCAL_CACHE_DIR value with spaces and = signs=1
+ZIG_GLOBAL_CACHE_DIR=exact ZIG_GLOBAL_CACHE_DIR value with spaces and = signs=1
+MYLANG_CORE_RUNTIME_CACHE=exact MYLANG_CORE_RUNTIME_CACHE value with spaces and = signs=1
+MYLANG_COMPILER_SHARED_CACHE=exact MYLANG_COMPILER_SHARED_CACHE value with spaces and = signs=1
+MYLANG_TEST_SHARED_CACHE=exact MYLANG_TEST_SHARED_CACHE value with spaces and = signs=1
+MYLANG_VERIFICATION_SHARED_CACHE=exact MYLANG_VERIFICATION_SHARED_CACHE value with spaces and = signs=1
+MYLANG_FRONTEND_CACHE=exact MYLANG_FRONTEND_CACHE value with spaces and = signs=1
+MYLANG_COMPONENT_DIR=exact MYLANG_COMPONENT_DIR value with spaces and = signs=1
+MYLANG_JOBS=exact MYLANG_JOBS value with spaces and = signs=1
+MYLANG_UNIT_JOBS=exact MYLANG_UNIT_JOBS value with spaces and = signs=1
+MYLANG_UNIT_SHARDS=exact MYLANG_UNIT_SHARDS value with spaces and = signs=1
+MYLANG_TEST_ISOLATE=exact MYLANG_TEST_ISOLATE value with spaces and = signs=1
+MYLANG_TEST_CHILDREN=exact MYLANG_TEST_CHILDREN value with spaces and = signs=1
+MYL_CORE_PARENT_TOOL_TICKET=exact MYL_CORE_PARENT_TOOL_TICKET value with spaces and = signs=1
+MYLANG_TEST_COMPILER=exact MYLANG_TEST_COMPILER value with spaces and = signs=1
+MYLANG_TEST_COMPONENT_BUILDER=exact MYLANG_TEST_COMPONENT_BUILDER value with spaces and = signs=1
+MYLANG_SLOT_DIR=exact MYLANG_SLOT_DIR value with spaces and = signs=1
+MYLANG_ADMISSION_FIXTURE_A=placement prefix MYLANG_ADMISSION_ = one
+MYLANG_ADMISSION_B=x=y=z placement
+MYLANG_ADMISSION_=bare prefix
+MYLANG_BUILD_SLOTS=exact MYLANG_BUILD_SLOTS value with spaces and = signs=1
+MYLANG_BUILD_MEM=exact MYLANG_BUILD_MEM value with spaces and = signs=1
+MYLANG_GATE_SLOTS=exact MYLANG_GATE_SLOTS value with spaces and = signs=1
+MYLANG_GATE_MEM=exact MYLANG_GATE_MEM value with spaces and = signs=1
+MYLANG_TIMING_MEM=exact MYLANG_TIMING_MEM value with spaces and = signs=1
+MYLANG_TIMING_CPUS=exact MYLANG_TIMING_CPUS value with spaces and = signs=1
+MYLANG_SLOT_SETTLE=exact MYLANG_SLOT_SETTLE value with spaces and = signs=1
+MYLANG_SLOT_POLL=exact MYLANG_SLOT_POLL value with spaces and = signs=1
+MYLANG_DEV_JOBS=exact MYLANG_DEV_JOBS value with spaces and = signs=1
+MYLANG_DEV_MAXRSS=exact MYLANG_DEV_MAXRSS value with spaces and = signs=1
+MYLANG_TEST_TELEMETRY_DIR=exact MYLANG_TEST_TELEMETRY_DIR value with spaces and = signs=1
+SELKA_VERIFICATION_TELEMETRY_DIR=exact SELKA_VERIFICATION_TELEMETRY_DIR value with spaces and = signs=1
+MYLANG_FRICTION_LOG=exact MYLANG_FRICTION_LOG value with spaces and = signs=1
+MYLANG_S1_WORKDIR=exact MYLANG_S1_WORKDIR value with spaces and = signs=1
+PWD=exact PWD value with spaces and = signs=1
+OLDPWD=exact OLDPWD value with spaces and = signs=1
+SHLVL=exact SHLVL value with spaces and = signs=1
+_=exact _ value with spaces and = signs=1
+TERMFIXTURE_A=dropped prefix TERM = one
+TERMB=x=y=z dropped
+TERM=bare prefix
+COLUMNS=exact COLUMNS value with spaces and = signs=1
+LINES=exact LINES value with spaces and = signs=1
+USER=exact USER value with spaces and = signs=1
+LOGNAME=exact LOGNAME value with spaces and = signs=1
+DISPLAY=exact DISPLAY value with spaces and = signs=1
+SSH_FIXTURE_A=dropped prefix SSH_ = one
+SSH_B=x=y=z dropped
+SSH_=bare prefix
+CODEX_FIXTURE_A=dropped prefix CODEX_ = one
+CODEX_B=x=y=z dropped
+CODEX_=bare prefix
+CLAUDEFIXTURE_A=dropped prefix CLAUDE = one
+CLAUDEB=x=y=z dropped
+CLAUDE=bare prefix
+ANTHROPICFIXTURE_A=dropped prefix ANTHROPIC = one
+ANTHROPICB=x=y=z dropped
+ANTHROPIC=bare prefix
+OPENAIFIXTURE_A=dropped prefix OPENAI = one
+OPENAIB=x=y=z dropped
+OPENAI=bare prefix
+GIT_FIXTURE_A=dropped prefix GIT_ = one
+GIT_B=x=y=z dropped
+GIT_=bare prefix
+BASH_ENV=exact BASH_ENV value with spaces and = signs=1
+ENV=exact ENV value with spaces and = signs=1
+BASH_FUNC_FIXTURE_A=dropped prefix BASH_FUNC_ = one
+BASH_FUNC_B=x=y=z dropped
+BASH_FUNC_=bare prefix
+MYLANG_MEMORY_LIMIT=512M
+MYLANG_OPTIONS=--restrict --allow-random=7
+MYL_CORE_LEAKCHECK=1
+MYLANG_ZIG=/opt/zig/zig
+MYLANG_THREADS=4
+MYLANG_TEST_KEYS=per-test
+MYLANG_CACHE_PLAN_MODE=shadow
+MYLANG_STAGE_CACHE_COMPRESSION=zlib
+MYLANG_HOST_MEMORY_LIMIT=8G
+MYLANG_HOST_LIMIT_CHECKPOINT=1:2
+MYLANG_SEMANTIC_BUDGET=16777216
+MYLANG_CORE_LAYOUT=4
+MYLANG_CORE_SANITIZE=thread
+MYLANG_COUNTERS=/tmp/c.json
+MYLANG_ADMISSION_DIR=/run/adm
+MYLANG_ADMISSION_KIND=build
+MYLANG_ADMISSION_PARENT_PID=77
+MYLANG_ADMISSIONS=not the admission prefix
+MYLANG_JOBSX=near miss of an exact placement name
+MYLANG_JOB=near miss
+MYL_CORE_PARENT_TOOL_TICKETS=near miss
+SELKA_VERIFICATION_TELEMETRY_DIRS=near miss
+MYLANG_TEST_TELEMETRY=near miss
+PATHEXT=near miss of PATH
+XPATH=suffix
+HOMEDIR=near miss
+ZIG_VERBOSE_LINK=1
+ZIG_DEBUG_COLOR=1
+LANGX=near miss
+LC=no underscore
+LD=no underscore
+LD_PRELOAD_X=
+LD_LIBRARY_PATH=/lib:/usr/lib
+LD_PRELOAD=
+PYTHONPATH=a:b
+PYTHONHASHSEED=0
+PYTHONDONTWRITEBYTECODE=1
+PYTHONUNBUFFERED=1
+LC_ALL=C.UTF-8
+LC_CTYPE=en_US.UTF-8
+TERM_PROGRAM=vscode
+TERMINFO=/usr/share/terminfo
+COLORTERM=truecolor
+SSH_AUTH_SOCK=/tmp/ssh
+SSH_CONNECTION=1.2.3.4 5 6.7.8.9 22
+CODEX_THREAD_ID=thread-123
+CODEX_SANDBOX=seatbelt
+CLAUDECODE=1
+CLAUDE_CODE_ENTRYPOINT=cli
+ANTHROPIC_API_KEY=sk-ant-secret
+OPENAI_API_KEY=sk-secret
+GIT_DIR=/repo/.git
+GIT_AUTHOR_NAME=A Person
+BASH_FUNC_module%%=() {  eval x }
+SHELL=/bin/bash
+EDITOR=vim
+MAIL=/var/mail/u
+HOSTNAME=box
+EMPTY_UNKNOWN=
+CC=gcc
+CFLAGS=-O2 -g
+NO_COLOR=1
+mylang_lower=lower case is not MYLANG_
+myl_core=lower
+Path=mixed case
+SELKA_MODE=fast
+SOURCE_DATE_EPOCH_X=near miss
+ZIGGY=near miss of ZIG
+ZIG_LIBC_TXT=near miss
+DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+XDG_CONFIG_HOME=/home/u/.config
+XDG_DATA_DIRS=/usr/share
+XDG_SESSION_TYPE=tty
+LESSOPEN=| /usr/bin/lesspipe %s
+LS_COLORS=rs=0:di=01;34
+MOTD_SHOWN=pam
+SUDO_USER=root
+WINDOWID=1
+VIRTUAL_ENV=/venv
+CONDA_PREFIX=/conda
+NODE_OPTIONS=--max-old-space-size=4096
+JAVA_HOME=/usr/lib/jvm
+GOPATH=/go
+CARGO_HOME=/cargo
+RUSTFLAGS=-C opt
+MAKEFLAGS=-j8
+http_proxy=http://proxy:3128
+HTTPS_PROXY=http://proxy:3128
+no_proxy=localhost
+TMP=/tmp
+TEMP=/tmp
+PS1=\u@\h $ 
+HISTSIZE=1000
+HISTFILE=/home/u/.hist
+PAGER=less
+MANPATH=/usr/man
+INFOPATH=/usr/info
+LANG_X=near miss
+TZDIR=/usr/share/zoneinfo

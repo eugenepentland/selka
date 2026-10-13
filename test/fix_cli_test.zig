@@ -2,7 +2,10 @@
 //! driven through the compiler binary exactly as a user or an agent runs them.
 const std = @import("std");
 const testing = std.testing;
-const compiler_path = @import("test_options").compiler_path;
+/// The `mylang` executable under test, which `zig build` names at run time (TEST-PATHS-1).
+fn compilerPath() []const u8 {
+    return @import("test_paths").corePath();
+}
 
 /// One source file of a temporary project.
 const File = struct { path: []const u8, data: []const u8 };
@@ -45,7 +48,7 @@ const Project = struct {
     /// Run `mylang COMMAND TARGET ARGS...` from the project directory with this
     /// project's cache, so the paths `fix` prints are project-relative.
     fn run(self: *const Project, command: []const u8, target: []const u8, args: []const []const u8) !Outcome {
-        const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, testing.allocator);
+        const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compilerPath(), testing.allocator);
         defer testing.allocator.free(compiler);
         const absolute = try self.path(target);
         defer testing.allocator.free(absolute);
@@ -242,7 +245,7 @@ test "CLI fix reports what it cannot fix once and exits 1" {
     const json = try project.run("fix", ".", &.{"--diagnostics=json"});
     defer json.deinit();
     try testing.expect(contains(json.stderr, "\"version\":\"diagnostic-v1\""));
-    const usage = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fix" } });
+    const usage = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compilerPath(), "fix" } });
     defer testing.allocator.free(usage.stdout);
     defer testing.allocator.free(usage.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, usage.term);

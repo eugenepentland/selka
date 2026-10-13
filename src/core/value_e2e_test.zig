@@ -26,7 +26,7 @@ fn runFixture(arena: std.mem.Allocator, root: []const u8, name: []const u8, mode
     const output = try std.fmt.allocPrint(arena, "{s}/{s}-{s}", .{ root, name, @tagName(mode) });
     const cache = try std.fmt.allocPrint(arena, "{s}/cache-{s}", .{ root, if (mode == .old) "old" else "new" });
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(arena, &.{ if (mode == .old) options.old_path else options.core_path, "build", source, "-o", output, "--link", options.clock_path, "--cache-dir", cache });
+    try argv.appendSlice(arena, &.{ if (mode == .old) options.old_path else options.corePath(), "build", source, "-o", output, "--link", options.clock_path, "--cache-dir", cache });
     // An `extern def` fixture (`v_extern_*`) also links its C source, `test/core/NAME.c`.
     if (std.mem.startsWith(u8, name, "v_extern_")) try argv.appendSlice(arena, &.{ "--link", try std.fmt.allocPrint(arena, "{s}/{s}.c", .{ options.fixtures, name }) });
     switch (mode) {
@@ -292,7 +292,7 @@ fn leakReport(arena: std.mem.Allocator, root: []const u8, name: []const u8, mode
     const output = try std.fmt.allocPrint(arena, "{s}/{s}-leak-{s}", .{ root, name, @tagName(mode) });
     const cache = try std.fmt.allocPrint(arena, "{s}/cache-leak", .{root});
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(arena, &.{ options.core_path, "build", source, "-o", output, "--link", options.clock_path, "--cache-dir", cache });
+    try argv.appendSlice(arena, &.{ options.corePath(), "build", source, "-o", output, "--link", options.clock_path, "--cache-dir", cache });
     if (mode == .release) try argv.append(arena, release_flag);
     const built = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
     try std.testing.expect(built.term == .exited and built.term.exited == 0);

@@ -25,7 +25,7 @@ fn checkRun(allocator: std.mem.Allocator, source: []const u8, expected: []const 
     try environment.put("MYL_CORE_LEAKCHECK", "1");
     for (modes) |flags| {
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(a, &.{ options.core_path, "build", input, "-o", output, "--cache-dir", cache });
+        try argv.appendSlice(a, &.{ options.corePath(), "build", input, "-o", output, "--cache-dir", cache });
         try argv.appendSlice(a, flags);
         const built = try std.process.run(a, std.testing.io, .{ .argv = argv.items });
         if (built.term != .exited or built.term.exited != 0) report("{s}{s}\n", .{ built.stdout, built.stderr });

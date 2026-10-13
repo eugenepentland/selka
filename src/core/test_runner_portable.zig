@@ -1,4 +1,6 @@
-//! Conservative ordinary-test identities for a separate cross-worktree receipt store.
+//! Which tests may share their receipts through the cross-worktree store. The store
+//! holds the same root-relative keys as the private one (RECEIPT-PATHS-1); a test
+//! shares only when every input it names provably lies inside its root.
 const std = @import("std");
 const language = @import("mylang");
 const frontend = @import("frontend.zig");
@@ -14,6 +16,7 @@ const callable = @import("callable_digest.zig");
 /// Allocation or guarded input failures; unsupported portability is a null key.
 pub const Error = @import("test_runner_property.zig").Error;
 /// Existing cache qualifications apply, except force may replace a freshly passed key.
+/// An indexed property campaign keeps no receipts, private or shared.
 pub fn eligible(context: receipt.Context) bool {
     var normal = context;
     normal.options.controls.force = false;
@@ -21,13 +24,17 @@ pub fn eligible(context: receipt.Context) bool {
     return context.options.properties.policy == .legacy;
 }
 
-/// A fresh canonical reachable closure, with only proven project locations normalized.
-/// Strings, source positions, configuration bytes and embedded values remain exact.
-pub fn key(context: receipt.Context, checked: frontend.Checked, case: discover.Case) Error!?[32]u8 {
-    if (!eligible(context) or !ordinary(checked, case)) return null;
+/// Whether `case`'s receipt (its ordinary root-relative key) may be shared: the run is
+/// admitted, the test has no live effects, and its entry, cases, configuration,
+/// policy, every source and every embedded asset resolve inside the entry's root,
+/// as does every source position its reachable program carries. Literal values and
+/// observable traces are never remapped: a program with error traces, an extern
+/// function or a callable digest stays private.
+pub fn shareable(context: receipt.Context, checked: frontend.Checked, case: discover.Case) Error!bool {
+    if (!eligible(context) or !ordinary(checked, case)) return false;
     var paths = Paths{ .context = context };
-    const base_paths = try paths.settings() orelse return null;
-    if (!try paths.addSource(checked.src)) return null;
+    if (!try paths.settings()) return false;
+    if (!try paths.addSource(checked.src)) return false;
     var why: build.Refusal = .{};
     const codegen = context.options.build.show.codegen;
     const module = build.buildRootsCached(context.arena, &.{case.function}, .{
@@ -35,29 +42,20 @@ pub fn key(context: receipt.Context, checked: frontend.Checked, case: discover.C
         .source = checked.src,
         .single_owner = codegen.single_owner,
         .zero_rc = codegen.zero_rc,
-    }, &why, null) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else null;
-    if (!portableModule(&module)) return null;
+    }, &why, null) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else false;
+    if (!portableModule(&module)) return false;
     var locations = Locations{ .original = pipeline.locator(&checked.src), .paths = &paths.names };
-    const shared = closure.Shared.build(context.arena, &module, .{ .context = &locations, .locate = Locations.locate }) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else null;
-    if (locations.missing) return null;
-    var hash = std.crypto.hash.Blake3.init(.{});
-    text(&hash, "core-test-portable-reachable-v1");
-    hash.update(&try receipt.portableSettings(context, base_paths));
-    text(&hash, case.name);
-    shared.reach(context.arena, &.{0}, &hash) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else null;
-    var digest: [32]u8 = undefined;
-    hash.final(&digest);
-    return digest;
+    _ = closure.Shared.build(context.arena, &module, .{ .context = &locations, .locate = Locations.locate }) catch |err| return if (err == error.OutOfMemory) error.OutOfMemory else false;
+    return !locations.missing;
 }
 
+/// A test without live effects (`Host` calls), the same rule that lets it keep a
+/// private receipt, in a program without source externs, which have no complete
+/// native provider contract.
 fn ordinary(checked: frontend.Checked, case: discover.Case) bool {
-    if (case.shape != .boolean or case.parameters.len != 0 or case.other_parameters != 0) return false;
     const function = checked.program.functions[@backingInt(case.function)];
-    if (function.signature.parameter_count != 0 or function.policy.host != null) return false;
     const effects = language.effect_set;
-    const allowed = effects.bit(.managed_allocation) | effects.bit(.mutation);
-    if (function.policy.effects & ~allowed != 0) return false;
-    // Source externs have no complete native provider contract in this domain.
+    if (function.policy.host != null or function.policy.effects & effects.bit(.host) != 0) return false;
     for (checked.program.functions) |found| if (found.policy.c_abi) return false;
     return true;
 }
@@ -86,14 +84,15 @@ const Paths = struct {
         return full[start..];
     }
 
-    fn settings(self: *const Paths) Error!?receipt.PortablePaths {
-        var paths = receipt.PortablePaths{ .entry = try self.relative(self.context.entry.path) orelse return null };
-        if (self.context.options.controls.cases) |path| paths.cases = try self.relative(path) orelse return null;
+    /// Whether the entry, cases, configuration and policy all lie inside the root.
+    fn settings(self: *const Paths) Error!bool {
+        _ = try self.relative(self.context.entry.path) orelse return false;
+        if (self.context.options.controls.cases) |path| _ = try self.relative(path) orelse return false;
         if (self.context.entry.configuration) |configured| {
-            paths.configuration = try self.relative(configured.path) orelse return null;
-            if (configured.policy) |policy| paths.policy = try self.relative(policy.path) orelse return null;
+            _ = try self.relative(configured.path) orelse return false;
+            if (configured.policy) |policy| _ = try self.relative(policy.path) orelse return false;
         }
-        return paths;
+        return true;
     }
 
     fn addSource(self: *Paths, source: language.source.Source) Error!bool {
@@ -134,13 +133,6 @@ fn inside(root: []const u8, path: []const u8) bool {
     if (std.mem.eql(u8, root, path)) return true;
     if (!std.mem.startsWith(u8, path, root)) return false;
     return root.len != 0 and (root[root.len - 1] == '/' or path[root.len] == '/');
-}
-
-fn text(hash: *std.crypto.hash.Blake3, bytes: []const u8) void {
-    var length: [8]u8 = undefined;
-    std.mem.writeInt(u64, &length, bytes.len, .little);
-    hash.update(&length);
-    hash.update(bytes);
 }
 
 const test_source =
@@ -186,7 +178,7 @@ fn testInput(a: std.mem.Allocator, dir: std.Io.Dir, source: []const u8, environm
 }
 
 // spec-case: NEW-CORE-TEST-SHARED-1
-test "portable ordinary test keys share roots while local keys remain distinct and closure edits revert" {
+test "shareable tests from two roots key alike in the private store and the shared store" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
@@ -200,23 +192,17 @@ test "portable ordinary test keys share roots while local keys remain distinct a
     defer first.session.deinit();
     const second = try testInput(a, right.dir, test_source, &environment);
     defer second.session.deinit();
-    const original = (try key(first.context, first.checked, first.case)).?;
-    try std.testing.expectEqual(original, (try key(second.context, second.checked, second.case)).?);
+    try std.testing.expect(try shareable(first.context, first.checked, first.case));
+    try std.testing.expect(try shareable(second.context, second.checked, second.case));
     var inputs: std.ArrayList(receipt.Dependency) = .empty;
-    try std.testing.expect(!std.mem.eql(u8, &try receipt.settings(first.context, &inputs), &try receipt.settings(second.context, &inputs)));
-    const private = try testInput(a, left.dir, try std.mem.replaceOwned(u8, a, test_source, "return 9", "return 8"), &environment);
-    defer private.session.deinit();
-    try std.testing.expectEqual(original, (try key(private.context, private.checked, private.case)).?);
-    const changed = try testInput(a, left.dir, try std.mem.replaceOwned(u8, a, test_source, "return 1", "return 2"), &environment);
-    defer changed.session.deinit();
-    try std.testing.expect(!std.mem.eql(u8, &original, &(try key(changed.context, changed.checked, changed.case)).?));
-    const restored = try testInput(a, left.dir, test_source, &environment);
-    defer restored.session.deinit();
-    try std.testing.expectEqual(original, (try key(restored.context, restored.checked, restored.case)).?);
+    try std.testing.expectEqual(try receipt.settings(first.context, &inputs), try receipt.settings(second.context, &inputs));
+    const generated = try testInput(a, left.dir, "public func test_value(value: int) -> bool:\n    return value == value\nfunc main() -> int:\n    return 0\n", &environment);
+    defer generated.session.deinit();
+    try std.testing.expect(try shareable(generated.context, generated.checked, generated.case));
 }
 
 // spec-case: NEW-CORE-TEST-SHARED-1
-test "portable ordinary test keys bind settings and reject generated policy and external paths" {
+test "shareable refuses indexed campaigns, forced-only admission failures and entries outside their root" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
@@ -226,24 +212,19 @@ test "portable ordinary test keys bind settings and reject generated policy and 
     defer environment.deinit();
     const input = try testInput(a, directory.dir, test_source, &environment);
     defer input.session.deinit();
-    const original = (try key(input.context, input.checked, input.case)).?;
-    try environment.put(@import("test_runner_options.zig").shared_cache_variable, "first-store");
-    try std.testing.expectEqual(original, (try key(input.context, input.checked, input.case)).?);
-    try environment.put(@import("test_runner_options.zig").shared_cache_variable, "second-store");
-    try std.testing.expectEqual(original, (try key(input.context, input.checked, input.case)).?);
     var context = input.context;
     context.options.controls.force = true;
-    try std.testing.expectEqual(original, (try key(context, input.checked, input.case)).?);
-    context.options.build.show.codegen.counters = true;
-    try std.testing.expect(!std.mem.eql(u8, &original, &(try key(context, input.checked, input.case)).?));
-    context.options.build.show.codegen.counters = false;
-    context.options.controls.ceilings.memory += 1;
-    try std.testing.expect(!std.mem.eql(u8, &original, &(try key(context, input.checked, input.case)).?));
+    try std.testing.expect(try shareable(context, input.checked, input.case));
+    context.options.build.links = &.{"native.c"};
+    try std.testing.expect(!try shareable(context, input.checked, input.case));
+    context = input.context;
+    context.options.build.facts = .verify;
+    try std.testing.expect(try shareable(context, input.checked, input.case));
     context.options.properties.policy = .indexed_v1;
-    try std.testing.expectEqual(@as(?[32]u8, null), try key(context, input.checked, input.case));
+    try std.testing.expect(!try shareable(context, input.checked, input.case));
     context = input.context;
     context.entry.root = try std.fs.path.join(a, &.{ context.entry.root, "unrelated" });
-    try std.testing.expectEqual(@as(?[32]u8, null), try key(context, input.checked, input.case));
+    try std.testing.expect(!try shareable(context, input.checked, input.case));
 }
 
 // spec-case: NEW-CORE-TEST-SHARED-1
@@ -262,7 +243,7 @@ test "portable module refuses observable trace paths and unknown native provider
 }
 
 // spec-case: NEW-CORE-ZERO-RC-CACHE-1
-test "zero RC portable receipts lower borrowed views in the selected ABI" {
+test "zero RC tests lower borrowed views in the selected ABI and share under an ownership-bound key" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
@@ -284,11 +265,12 @@ test "zero RC portable receipts lower borrowed views in the selected ABI" {
     var context = input.context;
     context.options.build.show.codegen.single_owner = true;
     context.options.build.show.codegen.zero_rc = true;
-    const original = (try key(context, input.checked, input.case)) orelse return error.TestUnexpectedResult;
-    try std.testing.expectEqual(original, (try key(context, input.checked, input.case)).?);
+    try std.testing.expect(try shareable(context, input.checked, input.case));
+    var inputs: std.ArrayList(receipt.Dependency) = .empty;
+    try std.testing.expect(!std.mem.eql(u8, &try receipt.settings(input.context, &inputs), &try receipt.settings(context, &inputs)));
     const changed = try testInput(a, directory.dir, try std.mem.replaceOwned(u8, a, source, "borrow(0, 2)", "borrow(1, 3)"), &environment);
     defer changed.session.deinit();
     var changed_context = changed.context;
     changed_context.options.build.show.codegen = context.options.build.show.codegen;
-    try std.testing.expect(!std.mem.eql(u8, &original, &(try key(changed_context, changed.checked, changed.case)).?));
+    try std.testing.expect(try shareable(changed_context, changed.checked, changed.case));
 }

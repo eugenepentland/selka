@@ -81,7 +81,7 @@ pub fn acquire() Error!*Session {
     const relative = try std.fs.path.join(a, &.{ harness.cache_directory, "core" });
     std.Io.Dir.cwd().createDirPath(io, relative) catch return error.NativeHostFailed;
     const cache = std.Io.Dir.cwd().realPathFileAlloc(io, relative, a) catch return error.NativeHostFailed;
-    const compiler = std.Io.Dir.cwd().realPathFileAlloc(io, harness.compiler_path, a) catch return error.NativeHostFailed;
+    const compiler = std.Io.Dir.cwd().realPathFileAlloc(io, @import("test_paths").corePath(), a) catch return error.NativeHostFailed;
     const zig = std.Io.Dir.cwd().realPathFileAlloc(io, harness.zig_path, a) catch harness.zig_path;
     var base: std.process.Environ.Map = .init(a);
     const process = std.testing.environ.createMap(a) catch return error.NativeHostFailed;

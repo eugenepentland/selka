@@ -114,11 +114,11 @@ fn fixture(a: std.mem.Allocator) !void {
     defer directory.cleanup();
     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
     const source = try std.fmt.allocPrint(a, "{s}/t_scalar_fusion.my", .{options.fixtures});
-    var environment = try std.testing.environ.createMap(a);
+    var environment = try options.privateEnvironment(a);
     try environment.put("MYL_CORE_LEAKCHECK", "1");
     for ([_][]const []const u8{ &.{}, &.{"--release"}, &.{ "--release", "--verify-facts" } }) |mode| {
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(a, &.{ options.core_path, "test", source, "--json", "--cache-dir", root });
+        try argv.appendSlice(a, &.{ options.corePath(), "test", source, "--json", "--cache-dir", root });
         try argv.appendSlice(a, mode);
         const result = try std.process.run(a, std.testing.io, .{ .argv = argv.items, .environ_map = &environment });
         if (result.term != .exited or result.term.exited != 1) report("scalar fixture: {s}{s}\n", .{ result.stdout, result.stderr });

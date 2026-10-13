@@ -87,7 +87,7 @@ fn nativeIndices(a: std.mem.Allocator, root: []const u8, mode: []const []const u
     const source = try std.fmt.allocPrint(a, "{s}/index.my", .{root});
     const output = try std.fmt.allocPrint(a, "{s}/index", .{root});
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(a, &.{ options.core_path, "build", source, "-o", output, "--cache-dir", root });
+    try argv.appendSlice(a, &.{ options.corePath(), "build", source, "-o", output, "--cache-dir", root });
     try argv.appendSlice(a, mode);
     const built = try std.process.run(a, std.testing.io, .{ .argv = argv.items });
     if (built.term != .exited or built.term.exited != 0) report("{s}{s}", .{ built.stdout, built.stderr });

@@ -125,7 +125,7 @@ test "textgap_split five native modes preserve lengths Unicode escapes and early
     for ([_][]const []const u8{ &.{}, &.{"--unoptimized"}, &.{"--release"}, &.{"--verify-facts"}, &.{ "--release", "--verify-facts" } }) |flags| {
         for ([_][]const u8{ fixture_name, "textgap_split_empty.my", "textgap_split_reader_trap.my" }, 0..) |name, index| {
             var argv: std.ArrayList([]const u8) = .empty;
-            try argv.appendSlice(a, &.{ options.core_path, "run", try std.fs.path.join(a, &.{ options.fixtures, name }), "--cache-dir", root, "--experimental-zero-rc" });
+            try argv.appendSlice(a, &.{ options.corePath(), "run", try std.fs.path.join(a, &.{ options.fixtures, name }), "--cache-dir", root, "--experimental-zero-rc" });
             try argv.appendSlice(a, flags);
             const ran = try std.process.run(a, std.testing.io, .{ .argv = argv.items, .environ_map = &environment });
             if (index == 0) {

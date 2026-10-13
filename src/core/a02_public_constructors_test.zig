@@ -27,7 +27,7 @@ fn qualifies(parent: std.mem.Allocator, source_text: []const u8, expected: []con
     const modes = [_][]const []const u8{ &.{release_flag}, &.{"--unoptimized"}, &.{ release_flag, "--verify-facts" }, &.{"--optimize-debug"}, &.{ release_flag, "--no-facts" } };
     for (modes) |mode| {
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(a, &.{ options.core_path, "build", source, "--experimental-zero-rc", "--counters", "--cache-dir", root, "--emit-llvm", llvm, "-o", binary });
+        try argv.appendSlice(a, &.{ options.corePath(), "build", source, "--experimental-zero-rc", "--counters", "--cache-dir", root, "--emit-llvm", llvm, "-o", binary });
         try argv.appendSlice(a, mode);
         const built = try std.process.run(a, io, .{ .argv = argv.items });
         if (built.term != .exited or built.term.exited != 0) report("A02 public constructors build: {s}{s}\n", .{ built.stdout, built.stderr });

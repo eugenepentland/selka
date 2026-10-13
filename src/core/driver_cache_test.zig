@@ -18,7 +18,8 @@ const Project = struct {
 
     fn prepare(a: std.mem.Allocator, directory: *std.testing.TmpDir, private_store: bool) !Project {
         const root = try directory.dir.realPathFileAlloc(io, ".", a);
-        var environment = try std.testing.environ.createMap(a);
+        // Program and unit counts are this project's own: no shared compiler store.
+        var environment = try tools.privateEnvironment(a);
         // A private store makes reuse counts exact; the shared one serves helper
         // units other programs already compiled.
         if (private_store) try environment.put("MYLANG_CORE_RUNTIME_CACHE", try std.fs.path.join(a, &.{ root, "store" }));
@@ -43,7 +44,7 @@ const Project = struct {
 
     fn attempt(self: *Project, extra: []const []const u8) !std.process.RunResult {
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(self.arena, &.{ tools.core_path, "build", try self.path("app.my"), "-o", try self.path("program"), "--cache-dir", try self.path("cache"), "--cache-report" });
+        try argv.appendSlice(self.arena, &.{ tools.corePath(), "build", try self.path("app.my"), "-o", try self.path("program"), "--cache-dir", try self.path("cache"), "--cache-report" });
         try argv.appendSlice(self.arena, extra);
         return std.process.run(self.arena, io, .{ .argv = argv.items, .environ_map = &self.environment });
     }

@@ -1,0 +1,200 @@
+{
+ "build": 0,
+ "c2": [
+  {
+   "build_exit": 0,
+   "elapsed_seconds": 7.75,
+   "exit": 0,
+   "label": "c2-edit-1",
+   "max_rss_kib": 416544,
+   "outer_seconds_including_queue": 7.79,
+   "queue_seconds": 0,
+   "tests": {
+    "by_reason": {
+     "no-success-receipt": 5,
+     "uncacheable-metadata": 3,
+     "whole-exec-receipt-hit": 1544
+    },
+    "eligible": 1549,
+    "eligible_cached": 1544,
+    "eligible_executed": 5,
+    "exec_hits": 1544,
+    "exec_receipts": {
+     "hits": 1544,
+     "saves": 8
+    },
+    "failed": 0,
+    "ir_hits": 0,
+    "total": 1552
+   }
+  },
+  {
+   "build_exit": 0,
+   "elapsed_seconds": 11.67,
+   "exit": 0,
+   "label": "c2-edit-2",
+   "max_rss_kib": 415876,
+   "outer_seconds_including_queue": 11.709,
+   "queue_seconds": 0,
+   "tests": {
+    "by_reason": {
+     "no-success-receipt": 5,
+     "uncacheable-metadata": 3,
+     "whole-exec-receipt-hit": 1544
+    },
+    "eligible": 1549,
+    "eligible_cached": 1544,
+    "eligible_executed": 5,
+    "exec_hits": 1544,
+    "exec_receipts": {
+     "hits": 1544,
+     "saves": 8
+    },
+    "failed": 0,
+    "ir_hits": 0,
+    "total": 1552
+   }
+  },
+  {
+   "build_exit": 0,
+   "elapsed_seconds": 14.15,
+   "exit": 0,
+   "label": "c2-edit-3",
+   "max_rss_kib": 415412,
+   "outer_seconds_including_queue": 14.215,
+   "queue_seconds": 0,
+   "tests": {
+    "by_reason": {
+     "no-success-receipt": 5,
+     "uncacheable-metadata": 3,
+     "whole-exec-receipt-hit": 1544
+    },
+    "eligible": 1549,
+    "eligible_cached": 1544,
+    "eligible_executed": 5,
+    "exec_hits": 1544,
+    "exec_receipts": {
+     "hits": 1544,
+     "saves": 8
+    },
+    "failed": 0,
+    "ir_hits": 0,
+    "total": 1552
+   }
+  },
+  {
+   "build_exit": 0,
+   "elapsed_seconds": 16.17,
+   "exit": 0,
+   "label": "c2-edit-4",
+   "max_rss_kib": 415104,
+   "outer_seconds_including_queue": 21.244,
+   "queue_seconds": 5,
+   "tests": {
+    "by_reason": {
+     "no-success-receipt": 5,
+     "uncacheable-metadata": 3,
+     "whole-exec-receipt-hit": 1544
+    },
+    "eligible": 1549,
+    "eligible_cached": 1544,
+    "eligible_executed": 5,
+    "exec_hits": 1544,
+    "exec_receipts": {
+     "hits": 1544,
+     "saves": 8
+    },
+    "failed": 0,
+    "ir_hits": 0,
+    "total": 1552
+   }
+  },
+  {
+   "build_exit": 0,
+   "elapsed_seconds": 14.52,
+   "exit": 0,
+   "label": "c2-edit-5",
+   "max_rss_kib": 416176,
+   "outer_seconds_including_queue": 14.566,
+   "queue_seconds": 0,
+   "tests": {
+    "by_reason": {
+     "no-success-receipt": 5,
+     "uncacheable-metadata": 3,
+     "whole-exec-receipt-hit": 1544
+    },
+    "eligible": 1549,
+    "eligible_cached": 1544,
+    "eligible_executed": 5,
+    "exec_hits": 1544,
+    "exec_receipts": {
+     "hits": 1544,
+     "saves": 8
+    },
+    "failed": 0,
+    "ir_hits": 0,
+    "total": 1552
+   }
+  }
+ ],
+ "c2_elapsed": {
+  "max": 16.17,
+  "median": 14.15,
+  "min": 7.75,
+  "n": 5
+ },
+ "cohort": "C2",
+ "warm": [
+  {
+   "elapsed_seconds": 15.04,
+   "exit": 0,
+   "label": "warm-1",
+   "max_rss_kib": 674288,
+   "outer_seconds_including_queue": 15.075,
+   "queue_seconds": 0,
+   "tests": {
+    "by_reason": {
+     "no-success-receipt": 1549,
+     "uncacheable-metadata": 3
+    },
+    "eligible": 1549,
+    "eligible_cached": 0,
+    "eligible_executed": 1549,
+    "exec_hits": 0,
+    "exec_receipts": {
+     "hits": 0,
+     "saves": 1552
+    },
+    "failed": 0,
+    "ir_hits": 0,
+    "total": 1552
+   }
+  },
+  {
+   "elapsed_seconds": 1.39,
+   "exit": 0,
+   "label": "warm-2",
+   "max_rss_kib": 79028,
+   "outer_seconds_including_queue": 1.445,
+   "queue_seconds": 0,
+   "tests": {
+    "by_reason": {
+     "receipt-hit": 5,
+     "uncacheable-metadata": 3,
+     "whole-report-hit": 1544
+    },
+    "eligible": 1549,
+    "eligible_cached": 1549,
+    "eligible_executed": 0,
+    "exec_hits": 0,
+    "exec_receipts": {
+     "hits": 0,
+     "saves": 3
+    },
+    "failed": 0,
+    "ir_hits": 1549,
+    "total": 1552
+   }
+  }
+ ]
+}

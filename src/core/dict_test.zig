@@ -62,9 +62,9 @@ fn fixturesAgree(arena: std.mem.Allocator, fixture: []const u8, expected_exit: u
     const source_path = try std.fmt.allocPrint(arena, "{s}/{s}", .{ options.fixtures, fixture });
     for ([_][]const []const u8{ &.{}, &.{"--release"}, &.{ "--release", "--verify-facts" } }) |mode| {
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(arena, &.{ options.core_path, "test", source_path, "--json", "--cache-dir", root });
+        try argv.appendSlice(arena, &.{ options.corePath(), "test", source_path, "--json", "--cache-dir", root });
         try argv.appendSlice(arena, mode);
-        var environment = try std.testing.environ.createMap(arena);
+        var environment = try options.privateEnvironment(arena);
         defer environment.deinit();
         try environment.put("MYL_CORE_LEAKCHECK", "1");
         const result = try std.process.run(arena, std.testing.io, .{ .argv = argv.items, .environ_map = &environment });
@@ -160,7 +160,7 @@ fn smallTablesOutput(arena: std.mem.Allocator, root: []const u8, mode: []const [
     const output = try std.fmt.allocPrint(arena, "{s}/small-{d}", .{ root, mode.len });
     const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(arena, &.{ options.core_path, "build", program, "-o", output, "--cache-dir", cache });
+    try argv.appendSlice(arena, &.{ options.corePath(), "build", program, "-o", output, "--cache-dir", cache });
     try argv.appendSlice(arena, mode);
     const built = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
     try std.testing.expect(built.term == .exited and built.term.exited == 0);

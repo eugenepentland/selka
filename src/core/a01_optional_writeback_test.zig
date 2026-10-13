@@ -242,7 +242,7 @@ test "A01 optional writeback transfers recursive storage in five native modes" {
         const binary = try std.fmt.allocPrint(a, "{s}/optional-{d}", .{ root, index });
         const llvm_path = try std.fmt.allocPrint(a, "{s}.ll", .{binary});
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(a, &.{ options.core_path, "build", input, "-o", binary, "--cache-dir", root, "--counters", "--experimental-zero-rc", "--emit-llvm", llvm_path });
+        try argv.appendSlice(a, &.{ options.corePath(), "build", input, "-o", binary, "--cache-dir", root, "--counters", "--experimental-zero-rc", "--emit-llvm", llvm_path });
         try argv.appendSlice(a, flags);
         const built = try std.process.run(a, std.testing.io, .{ .argv = argv.items });
         if (built.term != .exited or built.term.exited != 0) report("optional writeback build: {s}{s}\n", .{ built.stdout, built.stderr });
@@ -365,7 +365,7 @@ test "A01 optional writeback keeps invalidation refusal and ordinary compatibili
     try refuses(std.testing.allocator, invalidated, "E_MUTATION_OVERLAP");
     const input = try std.fs.path.join(a, &.{ root, "ordinary.my" });
     const binary = try std.fs.path.join(a, &.{ root, "ordinary" });
-    const built = try std.process.run(a, std.testing.io, .{ .argv = &.{ options.core_path, "build", input, "-o", binary, "--cache-dir", root, "--release" } });
+    const built = try std.process.run(a, std.testing.io, .{ .argv = &.{ options.corePath(), "build", input, "-o", binary, "--cache-dir", root, "--release" } });
     try buildSucceeded(built);
     const ran = try std.process.run(a, std.testing.io, .{ .argv = &.{binary} });
     try std.testing.expect(ran.term == .exited and ran.term.exited == 0);

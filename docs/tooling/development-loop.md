@@ -58,8 +58,12 @@ and retains it through execution, publication and reporting. Checkout-lock and
 admission waits are reported separately. The report's elapsed scope ends at final
 report assembly; an external harness must measure report writing, final output
 and session startup for end-to-end latency. Deadline expiry or holder failure
-revokes new receipts and reports failure. This explicit bound changes execution
-identity; the 5-second feedback and 15-second p95 targets never become implicit
+revokes new receipts and reports failure. The window schedules the request and is
+no input to any action's result, so it stays out of every action key: a windowed
+request reuses receipts a plain request published and the reverse, and windows of
+different lengths share receipts (`last-run.json` records its length as
+`measurement_window_seconds`). The command deadlines above remain identity
+inputs. The 5-second feedback and 15-second p95 targets never become implicit
 deadlines. Long qualification owns separate phase admissions and cannot be
 combined with this request-wide measurement option.
 
@@ -75,7 +79,7 @@ descriptors used by admission and child tooling. Admission's memory-settle helpe
 has separate ownership and retains its original delay after a worker finishes or
 is cancelled.
 
-`.mylang-cache/verification-v2/last-run.json` records admission wait, input validation,
+`.mylang-cache/verification-v3/last-run.json` records admission wait, input validation,
 worker duration, final validation, publication, selected/reused actions and the
 advisory loop target. Preparation failures also record their stage and status.
 Per-action `invalidation` compares exact selected file identities and common
@@ -127,10 +131,15 @@ Inventory v2 binds each receipt to its own registered action membership. Global
 coverage is still validated on every request; adding inventory metadata alone
 does not invalidate unrelated groups. The coordinator recognizes the existing
 data-only `build_test_inputs.zig` declarations and binds their expanded local
-recipes. This projection also requires the reviewed build-configuration fingerprint;
-changes to its consumers disable projection until requalified. Unrecognized syntax
+recipes, so editing one list re-keys only the groups that declare it. This
+projection also requires every build-configuration line that uses the lists to be
+one of the reviewed consumer sites (`DECLARATIVE_CONSUMERS` in
+`scripts/verify_cache.py`); an added or edited site disables projection until it
+is reviewed, `verify_cache_test.py` fails until then, and `last-run.json` reports
+`declarative_configuration` (`excluded`, or why not). Unrecognized syntax
 retains broad configuration identity. Changes to `build.zig` and other common
-execution semantics still invalidate all groups.
+execution semantics still invalidate all groups; every file `build.zig` compiles
+from, transitively, is in `CONFIG_INPUTS`, which a test checks.
 
 The independent `tooling_unit` group runs 27 named pure tooling tests (plus the
 root import test) without linking the compiler. Its prepared artifact and declared
@@ -152,6 +161,121 @@ the whole-artifact fallback. Other reviewed artifact selectors retain their
 existing conservative source contracts. An unchanged wire schema alone never
 authorizes replacement producer reuse.
 
+## Integration gate
+
+`--integration` is the request to run once per integrated commit. It runs the
+complete profile and then two checks that ordinary requests skip:
+
+- **One forced fact/leak run (D1).** Ordinary requests reuse the receipts of the
+  language suites' `--release --verify-facts` members under `MYL_CORE_LEAKCHECK=1`,
+  because both checks are keyed on the program they ran. The integration
+  request reruns every such member it finds in the `language` inventory with
+  `--force` under one gate admission, in a private cache directory that it
+  removes afterwards, so the ordinary receipts stay valid. A failing test, or
+  any test that reports `cached`, fails the request with status 1.
+- **No shared-store mismatches (D3).** It counts the lines of every
+  `mismatches.log` in the native shared stores the request's environment selects
+  (`MYLANG_COMPILER_SHARED_CACHE`, `MYLANG_TEST_SHARED_CACHE`, or their per-user
+  defaults once `default_sharing` is on) before and after the request. A log that
+  grew, or one that is not empty, fails the request with status 5, distinct from
+  a failing test: two producers wrote different bytes under one key.
+
+```bash
+python3 scripts/verify_cache.py --zig "$ZIG" --integration
+```
+
+The outcome is in `last-run.json` under `integration` and in
+`integration-last-run.json` beside it. `--integration` takes neither another
+profile nor a timing window.
+
+## Measured on 12 October
+
+On the merged output-keyed tree, all under exclusive timing windows:
+
+| Cohort | Median | Range | Before |
+| --- | ---: | ---: | --- |
+| Unchanged complete verification, request (5 samples) | 29.9 s | 24.2 to 36.5 s | 33.5 to 36.8 s |
+| Same, gate occupancy | 14.4 s | 13.8 to 24.8 s | 23 to 28 s |
+| Comment edit in `src/parser.zig`, then `mylang test tests/lang` (5) | 14.15 s | 7.75 to 16.17 s | 78 s, nothing reused |
+| Same edit, then complete verification (2) | 762.6 s | 737.8 to 787.4 s | 596 to 1,034 s |
+| First verification in a fresh worktree, after another published its evidence (2 of 3; the first ran cold, 828.7 s) | 83.5 s | 79.3 to 87.6 s | 600 to 1,000 s (941.5 s median before cross-worktree sharing) |
+| Ten complete verifications started at once, one shared evidence store, total wall | 6,527 s | gate 720 to 1,044 s each | ten cold gates |
+
+After a comment edit, 1,544 of 1,549 eligible language tests are answered from
+execution receipts; the five that run call `function_digest`, which binds the
+compiler identity. The complete verification after the edit still reruns the
+Zig roots and drivers whose input is the compiler (19 actions), while every
+guest and language member answers from receipts. A fresh worktree that names
+the shared evidence store (`MYLANG_VERIFICATION_SHARED_CACHE`) reuses every
+action another worktree published except `tooling_unit` and `text_scalar_unit`,
+whose test binaries carry the debug compile directory (F15); its guest and
+language members still run every test unless the native test store is shared
+too, which the gate does not yet tolerate (F18). Ten identical requests started
+together do not share work: each looks up the evidence before it queues for the
+gate and not again after, so all ten execute every group (F19). The
+qualification and its findings are in
+`experiments/output-keyed-receipts-20261012/` and the
+[plan's outcome](../audits/output-keyed-shared-receipts-plan-2026-10-12.md#outcome-12-october).
+
+## Prepared artifact inventory (`artifacts.json`)
+
+`zig build verification-prepare` installs every prepared native artifact under
+`zig-out/verification/bin/` and writes `zig-out/verification/artifacts.json`
+through `scripts/verification_artifacts.py` (a developer step, never part of the
+install graph). `build_verification.zig` exports each artifact's producer
+recipe, so the coordinator can identify an artifact by what produced it rather
+than by its bytes, whose debug information names the worktree. Version 3:
+
+```json
+{
+  "version": 3,
+  "artifacts": {
+    "units": {
+      "path": "/abs/zig-out/.../test",
+      "producer": {
+        "recipes": ["./*.zig", "build.zig.zon", ".zigversion", "guardian.toml", "src/",
+                    "test/fixtures/environment-identity/", "docs/primer.md",
+                    "../guardian-zig/build.zig", "../guardian-zig/build.zig.zon", "../guardian-zig/src/"],
+        "optimize": "debug",
+        "zig_version": "0.17.0-dev.1683+5ceec001b",
+        "test_runner": {"kind": "guardian", "dependency": "guardian",
+                        "location": "../guardian-zig", "runner": "src/test_runner.zig"}
+      }
+    }
+  },
+  "producers": {"tooling-units": {"version": 2, "domain": "...", "...": "..."}}
+}
+```
+
+- `artifacts[label].path`: the exact absolute path of the prepared binary (a
+  bare string in versions 1 and 2).
+- `artifacts[label].producer.recipes`: unique root-relative recipes in the
+  input-list syntax (`dir/`, `base/**/*SUFFIX`, `base/*SUFFIX`, or one file)
+  that bound every compile-time input: the build files (`./*.zig`,
+  `build.zig.zon`, `.zigversion`, `guardian.toml`), the root's sources, the
+  user guides `src/user_docs.zig` embeds (`mylang` and `units`), and for a Zig
+  test root the Guardian sources its runner and diagnostics compile from.
+- `optimize`: the artifact's optimize mode as the build spells it (`debug`,
+  `safe`, ...); `zig_version`: the toolchain the build runs.
+- `test_runner`: `{"kind": "guardian", "dependency", "location", "runner"}`
+  for a test root, which links Guardian's runner from the path dependency in
+  `build.zig.zon`, or `{"kind": "none"}` for an executable. It holds no
+  absolute path; the runner's content is bound through the Guardian recipes.
+- `producers`: the reviewed closure metadata of `tooling-units` and
+  `text-scalar-units`, unchanged from version 2.
+
+Every prepared artifact has a producer: `mylang`, `units`, `core`, `cli`,
+`golden`, `memory-budget`, `component-support`, `component-builder`,
+`tooling-units` and `text-scalar-units`, and so do the installed Selka
+`components`. Their entry's `path` is `libexec/mylang/components/test-index.json`
+(the coordinator's provider is both manifests and the two executables they
+name); recipes are the build files, `selfhost/*.zig`, `selfhost/components/`
+and `selfhost/component-seed.json`, with `optimize: "debug"` and
+`test_runner: {"kind": "none"}`. The seed archive is fetched from outside the
+tree, but the pin's `archive_sha256` fixes its bytes and the component build
+refuses any other archive, so the pin's recipe bounds it. A new artifact must name its recipes
+in `build_verification.zig` or the build refuses to configure.
+
 The report's `action_budgets` evaluates the current request diagnostically. The
 [budget evaluator](verification-budgets.md) combines archived compatible reports
 and reevaluates advisory targets without executing tests. A single measurement
@@ -166,8 +290,66 @@ qualified ordinary-edit latency, broader useful boundaries and full self-hosting
 define the larger work and ownership. The active self-hosting branch owns compiler
 porting; this tooling pass preserves its completion and performance requirements.
 
-Receipt schema 2 and the `verification-v2` directory separate canonical loaded-code
-identities from older marshal-based identities. Report schema remains 1. The
-canonical encoder binds actual loaded code, typed constants and source locations;
-retained bootstrap guards separately authenticate its source. This migration does
-not change deterministic fuzz seed derivation or rewrite existing content stores.
+## Receipt identities (schema 3)
+
+Receipts are schema 3 under `.mylang-cache/verification-v3/`; each receipt
+records `"version": 3` and every action key starts from the domain
+`selka-verification-action-v6`. Schema-2 receipts in `verification-v2` are never
+opened, and a schema-2 record found under a v3 key is a miss, so the first
+request after the change reruns every action once. Report schema remains 1.
+`last-run.json` shows, per action, whether its key is path-free and which
+variables entered it:
+
+```bash
+python3 scripts/verify_cache.py --zig "$ZIG"
+jq '.actions[] | {id, path_free, environment_variables}' .mylang-cache/verification-v3/last-run.json
+```
+
+An action key is path- and environment-free by construction:
+
+- **Environment.** `normalized_environment` projects the launcher environment
+  through the [environment identity contract](environment-identity.md): workers
+  receive only keyed, host and placement variables, then the coordinator's
+  constants (the `PYTHON*` pins, fixed `GIT_*` identity and config isolation,
+  `PATH` limited to existing directories). `PWD`, `SHLVL`, `TERM`, `CODEX_*` and
+  every other dropped variable never reach a worker; a worker's working directory
+  comes from the process. The `environment` field of the common identity is the
+  contract's host-scope digest of that environment plus the content digest of
+  every tool `tool_contract` resolves, named by its snapshot label and taken from
+  the tools snapshot. Two launchers that differ only in dropped or placement
+  variables (another agent's `CODEX_THREAD_ID`, `TERM`, `PWD`, `TMPDIR`) share
+  every key; a keyed change such as `MYLANG_MEMORY_LIMIT` changes every key.
+- **Paths.** The common identity holds no checkout path. The checkout lock and the
+  shared store's coordinator lock still use the real path, for mutual exclusion only.
+- **Prepared artifacts.** Native executables embed the checkout path in their debug
+  information, so their bytes differ between worktrees. When
+  `zig-out/verification/artifacts.json` (version 3) declares a `producer` for an
+  artifact, the coordinator identifies it by what produced it instead: the
+  content of every file of the preparation and build-configuration snapshots its
+  `recipes` select, the recipes, `optimize`, `zig_version` and `test_runner`.
+  An installed copy (`zig-out/bin/mylang`) must have the produced bytes. A recipe
+  that selects no watched file fails the request. An artifact without a valid
+  producer keeps its byte identity. The two reviewed independent roots keep their
+  closure metadata, which still binds executable bytes.
+
+`last-run.json` names the choice per provider in `artifact_identities`
+(`{"identity": "producer", "sources": N}` or `{"identity": "bytes", "reason": ...}`)
+and, per action, `path_free` (true when the checkout path occurs in no part of
+the key or of the documents its digests hash, no loaded-code digest changes when
+the coordinator's code is rehashed as if loaded from another directory
+(`relocation_dependent_code` names any that do), every `common` facet is one
+the check knows how to judge, and every provider the action depends on has a
+producer identity) and
+`environment_variables` (the sorted names, never values, of the keyed and host
+variables in its identity). A retained `cache_session.py` restores its startup
+environment before each request and the coordinator projects it the same way,
+so its retained snapshots and receipts serve launchers that differ only in
+dropped variables.
+
+Schema 2 separated canonical loaded-code identities from older marshal-based
+identities; schema 3 keeps that encoder. The canonical encoder binds actual
+loaded code, typed constants and source locations; since loaded-code format 2
+(`loaded_code_format`) a file name enters by its base name only, so one commit
+checked out twice binds one coordinator implementation. Retained bootstrap guards
+separately authenticate its source. Neither migration changes deterministic fuzz
+seed derivation or rewrites existing content stores.

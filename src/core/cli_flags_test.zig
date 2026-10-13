@@ -22,7 +22,7 @@ const Context = struct {
     /// Run the compiler with `args`, in the project directory.
     fn compiler(self: Context, args: []const []const u8) !Outcome {
         // The build names the compiler relative to the test's own working directory.
-        const executable = try std.Io.Dir.cwd().realPathFileAlloc(std.testing.io, tools.core_path, self.arena);
+        const executable = try std.Io.Dir.cwd().realPathFileAlloc(std.testing.io, tools.corePath(), self.arena);
         const argv = try std.mem.concat(self.arena, []const u8, &.{ &.{executable}, args });
         return self.spawn(argv);
     }
@@ -34,8 +34,10 @@ const Context = struct {
         try std.testing.expectEqual(@as(u8, 0), result.status);
     }
 
+    // The flag tests count this project's own replays and receipts: no shared store.
     fn spawn(self: Context, argv: []const []const u8) !Outcome {
-        const result = try std.process.run(self.arena, std.testing.io, .{ .argv = argv, .cwd = .{ .path = self.root } });
+        var environment = try tools.privateEnvironment(self.arena);
+        const result = try std.process.run(self.arena, std.testing.io, .{ .argv = argv, .cwd = .{ .path = self.root }, .environ_map = &environment });
         const status: u8 = switch (result.term) {
             .exited => |code| code,
             else => 255,
@@ -465,7 +467,7 @@ test "CLI rejects invalid stage compression with a configuration diagnostic" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
     defer arena.deinit();
     const a = arena.allocator();
-    const executable = try std.Io.Dir.cwd().realPathFileAlloc(std.testing.io, tools.core_path, a);
+    const executable = try std.Io.Dir.cwd().realPathFileAlloc(std.testing.io, tools.corePath(), a);
     var environment = try std.testing.environ.createMap(a);
     defer environment.deinit();
     try environment.put("MYLANG_STAGE_CACHE_COMPRESSION", "invalid");

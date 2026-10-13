@@ -12,11 +12,11 @@ fn qualified(a: std.mem.Allocator) !void {
     defer directory.cleanup();
     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
     const fixture = try std.fmt.allocPrint(a, "{s}/m_recursive_values.my", .{options.fixtures});
-    var environment = try std.testing.environ.createMap(a);
+    var environment = try options.privateEnvironment(a);
     try environment.put("MYL_CORE_LEAKCHECK", "1");
     for ([_][]const []const u8{ &.{}, &.{"--release"}, &.{ "--release", "--verify-facts" } }) |mode| {
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(a, &.{ options.core_path, "test", fixture, "--json", "--cache-dir", root });
+        try argv.appendSlice(a, &.{ options.corePath(), "test", fixture, "--json", "--cache-dir", root });
         try argv.appendSlice(a, mode);
         const result = try std.process.run(a, std.testing.io, .{ .argv = argv.items, .environ_map = &environment });
         if (result.term != .exited or result.term.exited != 0 or result.stderr.len != 0)

@@ -146,7 +146,7 @@ class MeasurementWindow(unittest.TestCase):
         @contextmanager
         def admission(_kind):
             yield holder
-        report = self.root / '.mylang-cache/verification-v2/last-run.json'
+        report = self.root / verify_cache.CACHE_DIRECTORY / 'last-run.json'
         receipt = self.root / 'receipt'
         def execute(*_args, **_kwargs):
             verify_cache.atomic_record(report, {'success': True, 'status': 0})

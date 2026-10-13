@@ -138,6 +138,7 @@ pub const Registry = struct {
             }) catch @panic("verification allocation");
         }
         if (unknown.items.len > 0) metadata.append(a, .{ .id = "unclassified", .steps = &.{} }) catch @panic("verification allocation");
+        self.requireCoverage(roots, unknown.items);
         const inventory: Inventory = .{
             .groups = groups.items,
             .action_metadata = metadata.items,
@@ -149,6 +150,22 @@ pub const Registry = struct {
         const written = self.build.addWriteFiles().add("verification-inventory.json", bytes);
         const install = self.build.addInstallFileWithDir(written, .{ .custom = "verification" }, "inventory.json");
         self.build.step("verification-plan", "Export authoritative test and format action inventory without executing gates").dependOn(&install.step);
+    }
+
+    /// The gate's coverage guard, `test-verification-registry`: every root depends
+    /// on it, and it fails, naming each action, while `unknown` is not empty.
+    /// The coordinator still sends such a request to the original complete
+    /// gate (`unclassified`), but that gate, like `zig build test`, then
+    /// cannot pass: an unregistered action costs every request the whole gate.
+    fn requireCoverage(self: *Registry, roots: []const *std.Build.Step, unknown: []const []const u8) void {
+        const b = self.build;
+        const guard = b.step("test-verification-registry", "Fail while a required test or format action is unregistered in the verification inventory");
+        for (roots) |root| root.dependOn(guard);
+        if (unknown.len == 0) return;
+        var message: std.ArrayList(u8) = .empty;
+        message.print(b.allocator, "verification inventory: {d} required gate action(s) belong to no cohort and no prepared infrastructure, so every coordinator request runs the original complete gate (verification-unclassified); register each in build.zig or build_verification.registerInfrastructure:", .{unknown.len}) catch @panic("verification allocation");
+        for (unknown) |name| message.print(b.allocator, "\n  unregistered action: {s}", .{name}) catch @panic("verification allocation");
+        guard.dependOn(&b.addFail(message.items).step);
     }
 
     fn observeNative(self: *Registry, step: *std.Build.Step, id: []const u8, member: usize) void {
@@ -195,10 +212,106 @@ fn sameRecipes(left: []const []const u8, right: []const []const u8) bool {
 
 /// A native executable the coordinator must identify before replaying its actions.
 pub const Artifact = struct { label: []const u8, binary: *std.Build.Step.Compile };
+/// The installed Selka components (`libexec/mylang/components`): the step that
+/// builds them and the `test-index.json` manifest that stands for the set in
+/// `artifacts.json`. The coordinator identifies them as the `components`
+/// provider: both manifests and the two executables they name.
+pub const Components = struct { step: *std.Build.Step, manifest: std.Build.LazyPath };
+
+/// One artifact's producer in `artifacts.json` version 3: root-relative
+/// recipes (`dir/`, `base/**/*SUFFIX`, `base/*SUFFIX` or an exact path) that
+/// bound every compile-time input of the binary, and the settings, toolchain
+/// and test runner that turn them into bytes. The coordinator identifies the
+/// artifact by the content the recipes select instead of by its bytes, which
+/// embed the tree's path in their debug information.
+const Producer = struct { recipes: []const []const u8, optimize: []const u8, zig_version: []const u8, test_runner: TestRunner };
+/// What links the artifact's test runner. A Zig test root links Guardian's
+/// runner from the `guardian` path dependency (`build.zig.zon`), whose sources
+/// the root's recipes select; an executable links none. Relative, so two
+/// worktrees agree.
+const TestRunner = struct { kind: []const u8, dependency: ?[]const u8 = null, location: ?[]const u8 = null, runner: ?[]const u8 = null };
+const LabeledProducer = struct { label: []const u8, producer: Producer };
+/// The build scripts and configuration every artifact's build reads.
+const build_files = [_][]const u8{ "./*.zig", "build.zig.zon", ".zigversion", "guardian.toml" };
+/// The Guardian sources a test root's runner and diagnostics compile from.
+const guardian_sources = [_][]const u8{ "../guardian-zig/build.zig", "../guardian-zig/build.zig.zon", "../guardian-zig/src/" };
+const guardian_runner: TestRunner = .{ .kind = "guardian", .dependency = "guardian", .location = "../guardian-zig", .runner = "src/test_runner.zig" };
+
+/// The compile-time input recipes of one prepared artifact besides the build
+/// files and the test runner's sources. A label without recipes is a
+/// configuration error: a new artifact must say what it is built from.
+fn sourcesFor(b: *std.Build, label: []const u8) []const []const u8 {
+    const user_docs = @import("src/user_docs.zig");
+    var docs: [user_docs.topics.len][]const u8 = undefined;
+    for (&docs, user_docs.topics) |*path, topic| path.* = topic.path;
+    // The compiler and the unit root embed the user guides `src/user_docs.zig` names.
+    if (std.mem.eql(u8, label, "mylang")) return concat(b, &.{ &.{"src/"}, &docs });
+    if (std.mem.eql(u8, label, "units")) return concat(b, &.{ &.{ "src/", "test/fixtures/environment-identity/" }, &docs });
+    if (std.mem.eql(u8, label, "core")) return &.{"src/"};
+    if (std.mem.eql(u8, label, "cli") or std.mem.eql(u8, label, "golden")) return &.{ "test/", "src/core/test_paths.zig" };
+    if (std.mem.eql(u8, label, "tooling-units")) return compiled(b, &test_inputs.tooling_unit);
+    if (std.mem.eql(u8, label, "text-scalar-units")) return compiled(b, &test_inputs.text_scalar_unit);
+    if (std.mem.eql(u8, label, "memory-budget")) return &.{"src/memory_budget.zig"};
+    if (std.mem.eql(u8, label, "component-support")) return &.{"selfhost/"};
+    if (std.mem.eql(u8, label, "component-builder")) return &.{"selfhost/*.zig"};
+    // `selka-components` (built from `selfhost/*.zig`) compiles each component
+    // from `selfhost/components/` with a seed compiler. The seed archive comes
+    // from outside the tree, but `selfhost/component-seed.json` pins its SHA-256
+    // and the build refuses any other bytes, so the pin bounds it.
+    if (std.mem.eql(u8, label, "components")) return &.{ "selfhost/*.zig", "selfhost/components/", "selfhost/component-seed.json" };
+    std.debug.panic("verification artifact {s} has no producer recipe", .{label});
+}
+
+/// The entries of a declared test-input list the root compiles: its `src/`
+/// files, without the scripts and environment contract its run reads.
+fn compiled(b: *std.Build, list: []const []const u8) []const []const u8 {
+    var kept: std.ArrayList([]const u8) = .empty;
+    for (list) |entry| {
+        if (!std.mem.startsWith(u8, entry, "src/")) continue;
+        if (listed(entry, &test_inputs.environment_contract)) continue;
+        kept.append(b.allocator, entry) catch @panic("verification allocation");
+    }
+    return kept.items;
+}
+
+fn listed(entry: []const u8, list: []const []const u8) bool {
+    for (list) |item| if (std.mem.eql(u8, item, entry)) return true;
+    return false;
+}
+
+fn concat(b: *std.Build, parts: []const []const []const u8) []const []const u8 {
+    return std.mem.concat(b.allocator, []const u8, parts) catch @panic("verification allocation");
+}
+
+/// The `artifact_producers` file `scripts/verification_artifacts.py` merges into
+/// `artifacts.json`: each artifact's recipes, optimize mode, Zig version and,
+/// for a test root, its test runner.
+fn producers(b: *std.Build, artifacts: []const Artifact) std.Build.LazyPath {
+    const entries = b.allocator.alloc(LabeledProducer, artifacts.len + 1) catch @panic("verification allocation");
+    // The components are debug builds (`selka-components` passes no --release)
+    // of guest programs; no test runner links them.
+    entries[artifacts.len] = .{ .label = "components", .producer = .{
+        .recipes = concat(b, &.{ &build_files, sourcesFor(b, "components") }),
+        .optimize = "debug",
+        .zig_version = @import("builtin").zig_version_string,
+        .test_runner = .{ .kind = "none" },
+    } };
+    for (entries[0..artifacts.len], artifacts) |*entry, artifact| {
+        const tested = artifact.binary.kind == .@"test";
+        entry.* = .{ .label = artifact.label, .producer = .{
+            .recipes = concat(b, &.{ &build_files, sourcesFor(b, artifact.label), if (tested) &guardian_sources else &.{} }),
+            .optimize = @tagName(artifact.binary.root_module.optimize.?),
+            .zig_version = @import("builtin").zig_version_string,
+            .test_runner = if (tested) guardian_runner else .{ .kind = "none" },
+        } };
+    }
+    const bytes = std.json.Stringify.valueAlloc(b.allocator, entries, .{ .whitespace = .indent_2, .emit_null_optional_fields = false }) catch @panic("verification serialization");
+    return b.addWriteFiles().add("artifact-producers.json", bytes);
+}
 
 /// Explicit developer preparation; the normal install graph runs no Python.
 /// Return only explicitly identified artifact/output roots for coverage exclusion.
-pub fn prepare(b: *std.Build, artifacts: []const Artifact, known_outputs: []const *std.Build.Step) []const *std.Build.Step {
+pub fn prepare(b: *std.Build, artifacts: []const Artifact, components: Components, known_outputs: []const *std.Build.Step) []const *std.Build.Step {
     const target = b.step("verification-prepare", "Prepare exact native verification executables and installed components");
     target.dependOn(b.getInstallStep());
     var identified: std.ArrayList(*std.Build.Step) = .empty;
@@ -210,6 +323,8 @@ pub fn prepare(b: *std.Build, artifacts: []const Artifact, known_outputs: []cons
     run.addFileInput(b.path("scripts/verification_code_identity.py"));
     run.setCwd(b.path("."));
     const paths = run.addOutputFileArg("artifacts.json");
+    run.addArg("--producers");
+    run.addFileArg(producers(b, artifacts));
     for (artifacts) |artifact| {
         if (std.mem.eql(u8, artifact.label, "tooling-units") or std.mem.eql(u8, artifact.label, "text-scalar-units")) {
             run.addArgs(&.{ "--qualify", artifact.label, @tagName(artifact.binary.root_module.optimize.?) });
@@ -222,6 +337,9 @@ pub fn prepare(b: *std.Build, artifacts: []const Artifact, known_outputs: []cons
         const installed = b.addInstallFileWithDir(artifact.binary.getEmittedBin(), .{ .custom = "verification" }, b.fmt("bin/{s}", .{artifact.label}));
         target.dependOn(&installed.step);
     }
+    run.step.dependOn(components.step);
+    run.addArg("components");
+    run.addFileArg(components.manifest);
     const installed_paths = b.addInstallFileWithDir(paths, .{ .custom = "verification" }, "artifacts.json");
     target.dependOn(&installed_paths.step);
     return identified.items;
@@ -255,7 +373,16 @@ fn inputLists(a: std.mem.Allocator) []const InputList {
     return lists.toOwnedSlice(a) catch @panic("verification allocation");
 }
 
-/// Register recognized Guardian and compiler-identity preparations conservatively.
+/// Register recognized Guardian, environment and compiler-identity preparations
+/// conservatively. The host tools that the always-fresh `guardian` and
+/// `environment-discovery` cohorts run (`guardian-check`, `build-env`) are
+/// infrastructure: their compile steps are prepared, not required actions, so
+/// they cannot send a request to the `unclassified` original-gate fallback.
+/// Every cached test step also runs through `build-env project` (`withTools`
+/// in `build.zig`), whose bytes key that step in the build runner; the
+/// coordinator binds the tool's sources through its configuration identity
+/// (`CONFIG_INPUTS` in `scripts/verify_cache.py`: `./*.zig` and the
+/// `src/` files `build_env.zig` imports).
 pub fn registerInfrastructure(registry: *Registry, roots: []const *std.Build.Step) void {
     var reachable = closure(registry.build.allocator, roots);
     var steps = reachable.keyIterator();
@@ -269,6 +396,12 @@ pub fn registerInfrastructure(registry: *Registry, roots: []const *std.Build.Ste
         };
         if (std.mem.eql(u8, name, "guardian-check")) {
             registry.register("guardian", &run.step, &.{}, false, "Guardian source, git scope and mutable policy validation require freshness");
+            switch (run.argv.items[0]) {
+                .artifact => |artifact| registry.infrastructure.append(registry.build.allocator, &artifact.artifact.step) catch @panic("verification allocation"),
+                else => {},
+            }
+        } else if (std.mem.eql(u8, name, "build-env")) {
+            // `addEnvironmentManifest` registers the run itself, always fresh.
             switch (run.argv.items[0]) {
                 .artifact => |artifact| registry.infrastructure.append(registry.build.allocator, &artifact.artifact.step) catch @panic("verification allocation"),
                 else => {},

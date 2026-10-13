@@ -3,19 +3,26 @@
 Marshal serializes reference-sharing details, so equal code can acquire different
 bytes under different loaders or reference counts. This encoder deliberately
 binds code attributes and typed constant values, without object-reference IDs.
+
+Identities are relocatable (format 2): a code object's file name enters as its
+base name only, so one module loaded from two checkouts has one identity. The
+directory is placement; the watched source snapshots bind the repository path.
 """
 from __future__ import annotations
 
 import hashlib
 import importlib.util
+import os
 import struct
 import sys
 from types import CodeType
 
 
 _LOADED_CODE_OBJECT = sys._getframe().f_code
-FORMAT_VERSION = 1
-_DOMAIN = b'mylang-verification-loaded-code-v1\0'
+# Format 2: `co_filename` is bound by base name, not by its directory (format 1
+# bound the absolute path, so every checkout had its own coordinator identity).
+FORMAT_VERSION = 2
+_DOMAIN = b'mylang-verification-loaded-code-v2\0'
 _TEXT_CHUNK = 8192
 _MAX_AUTH_SOURCE_BYTES = 1 << 20
 _CODE_ATTRIBUTES = (
@@ -142,16 +149,41 @@ class _Encoder:
                     attribute = getattr(value, name)
                 except AttributeError as error:
                     raise CodeIdentityError('unsupported Python code attribute') from error
+                if name == 'co_filename':
+                    attribute = _relocatable_filename(attribute)
                 self.value(attribute, depth + 1)
         else:
             raise CodeIdentityError('unsupported loaded-code constant type')
 
 
+def _relocatable_filename(filename):
+    """The base name of a code object's file; its directory is placement."""
+    if type(filename) is not str:
+        raise CodeIdentityError('unsupported Python code file name')
+    return os.path.basename(filename)
+
+
+def relocated(code: CodeType, directory: str) -> CodeType:
+    """The same code as if loaded from below `directory`: every nested code
+    object's absolute file name gains that prefix. A probe for identities that
+    must not depend on the checkout location; it executes and reads nothing."""
+    if type(code) is not CodeType or type(directory) is not str or not os.path.isabs(directory):
+        raise CodeIdentityError('unsupported relocation probe inputs')
+    filename = code.co_filename
+    if os.path.isabs(filename):
+        filename = os.path.join(directory, filename.lstrip(os.sep))
+    constants = tuple(relocated(item, directory) if type(item) is CodeType else item
+                      for item in code.co_consts)
+    return code.replace(co_filename=filename, co_consts=constants)
+
+
 def loaded_code_sha256(code: CodeType, *, limits: CodeLimits | None = None) -> str:
     """Hash loaded executable code and exact constants within explicit bounds.
 
-    Filename/location metadata stays significant. Python bytecode compatibility
-    and optimization are domain inputs. Unknown values and exhausted bounds
+    The file name's base name, names, line and exception tables stay
+    significant; its directory does not (format 2), so a relocated copy of a
+    module hashes alike. Python bytecode compatibility and optimization are
+    domain inputs. Unknown values and exhausted bounds
     raise CodeIdentityError; callers must refuse reuse rather than hash source.
     """
     if type(code) is not CodeType:

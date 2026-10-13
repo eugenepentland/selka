@@ -57,7 +57,7 @@ fn native(a: std.mem.Allocator, root: []const u8, flags: []const []const u8, fix
     const source = try std.fmt.allocPrint(a, "{s}/borrow.my", .{root});
     const output = try std.fmt.allocPrint(a, "{s}/borrow", .{root});
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(a, &.{ options.core_path, "build", source, "-o", output, "--cache-dir", root });
+    try argv.appendSlice(a, &.{ options.corePath(), "build", source, "-o", output, "--cache-dir", root });
     try argv.appendSlice(a, flags);
     const built = try std.process.run(a, std.testing.io, .{ .argv = argv.items });
     if (built.term != .exited or built.term.exited != 0) report("{s}{s}", .{ built.stdout, built.stderr });

@@ -1,0 +1,59 @@
+{
+ "compiler": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/bin/mylang",
+ "compiler_sha256": "c24ea0a47d9bd50b9a0c9f4a74f4d1c270d923eefd36797f553c432e2ace548d",
+ "environment": {
+  "launcher_sha256_16": {
+   "CODEX_THREAD_ID": null,
+   "PWD": "5ffa26a83103a9ee",
+   "TERM": "7f44899d0925ec2c"
+  },
+  "values": {
+   "HOME": "/home/epentland",
+   "LANG": "en_US.UTF-8",
+   "MYLANG_BUILD_MEM": "8G",
+   "MYLANG_BUILD_SLOTS": "3",
+   "MYLANG_DEV_JOBS": "4",
+   "MYLANG_DEV_MAXRSS": "8589934592",
+   "MYLANG_GATE_SLOTS": "2",
+   "MYLANG_SLOT_DIR": "/home/epentland/.cache/mylang/slots",
+   "MYLANG_ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+   "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.tmp/work",
+   "ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+   "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+   "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache"
+  }
+ },
+ "features": {
+  "build_env": true,
+  "coordinator_path_free": true,
+  "coordinator_v3": true,
+  "exec_receipts": true,
+  "exec_receipts_opt_in": false,
+  "execution_key_report": true,
+  "fact_leak_receipts": true,
+  "mismatch_counter": true,
+  "runner_identity": true,
+  "test_v3_namespaces": true
+ },
+ "harness_sha256": "73901f9dd8a030bbf8de20e9a11ae9f3d586197ab7dd2c6e4946dbf5d05c1264",
+ "label": "C1-before",
+ "options": {
+  "build_env": null,
+  "dry_run": false,
+  "evidence": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/evidence-phase2/cohorts/C1",
+  "keep_work": false,
+  "lang_entry": null,
+  "old_ref": "f6971a623",
+  "small_entry": "tests/lang/frontend_numbers.my",
+  "tree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+  "work": null
+ },
+ "plan": "docs/audits/output-keyed-shared-receipts-plan-2026-10-12.md",
+ "schema": "output-keyed-matrix-v1",
+ "slot_dir": "/home/epentland/.cache/mylang/slots",
+ "tree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+ "tree_dirty_sha256": "880514c368e4365105bd0e3999181bdb6f07a23cfe21d8d5bbc10c50c8518d55",
+ "tree_head": "4af3a7a7a209f96d0f04af9d3d2a009897a77629",
+ "written": "2026-10-12T21:41:58.063+00:00",
+ "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+}

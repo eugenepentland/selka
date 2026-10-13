@@ -16,13 +16,14 @@ fn run(a: std.mem.Allocator, fixture: []const u8, flags: []const []const u8, mod
     var directory = std.testing.tmpDir(.{});
     defer directory.cleanup();
     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
-    var environment = try std.testing.environ.createMap(a);
+    // Batched and isolated runs must both execute: no shared receipt answers either.
+    var environment = try options.privateEnvironment(a);
     try environment.put("MYL_CORE_LEAKCHECK", "1");
     if (mode == .isolated) try environment.put("MYLANG_TEST_ISOLATE", "1");
     if (probe.log.len != 0) try environment.put("MYL_BATCH_PROBE_LOG", probe.log);
     if (probe.fault) try environment.put("MYL_BATCH_PROBE_FAULT", "1");
     var argv: std.ArrayList([]const u8) = .empty;
-    try argv.appendSlice(a, &.{ options.core_path, "test", try std.fs.path.join(a, &.{ options.fixtures, fixture }), "--json", "--jobs", "1", "--cache-dir", root });
+    try argv.appendSlice(a, &.{ options.corePath(), "test", try std.fs.path.join(a, &.{ options.fixtures, fixture }), "--json", "--jobs", "1", "--cache-dir", root });
     try argv.appendSlice(a, flags);
     const result = try std.process.run(a, std.testing.io, .{ .argv = argv.items, .environ_map = &environment });
     try std.testing.expectEqualStrings("", result.stderr);

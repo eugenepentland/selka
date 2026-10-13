@@ -101,13 +101,13 @@ test "every aliased-row shape prints the same at debug, release and verify-facts
     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
     const source = try std.fs.path.join(a, &.{ options.fixtures, "row_cow.my" });
     const expected = try std.Io.Dir.cwd().readFileAlloc(std.testing.io, try std.fs.path.join(a, &.{ options.fixtures, "row_cow.expected" }), a, .limited(1 << 20));
-    var environment = try std.testing.environ.createMap(a);
+    var environment = try options.privateEnvironment(a);
     try environment.put("MYL_CORE_LEAKCHECK", "1");
     const modes = [_][]const []const u8{ &.{}, &.{"--release"}, &.{ "--release", "--verify-facts" } };
     for (modes, 0..) |flags, index| {
         const output = try std.fmt.allocPrint(a, "{s}/row_cow-{d}", .{ root, index });
         var argv: std.ArrayList([]const u8) = .empty;
-        try argv.appendSlice(a, &.{ options.core_path, "build", source, "-o", output, "--cache-dir", root });
+        try argv.appendSlice(a, &.{ options.corePath(), "build", source, "-o", output, "--cache-dir", root });
         try argv.appendSlice(a, flags);
         const built = try std.process.run(a, std.testing.io, .{ .argv = argv.items });
         try std.testing.expect(built.term == .exited and built.term.exited == 0);
@@ -117,7 +117,7 @@ test "every aliased-row shape prints the same at debug, release and verify-facts
         try std.testing.expectEqualStrings(expected, ran.stdout);
         // The same shapes as guest tests (inside test functions rather than `main`).
         var test_argv: std.ArrayList([]const u8) = .empty;
-        try test_argv.appendSlice(a, &.{ options.core_path, "test", try std.fs.path.join(a, &.{ options.fixtures, "v_row_cow.my" }), "--cache-dir", try std.fmt.allocPrint(a, "{s}/tests-{d}", .{ root, index }) });
+        try test_argv.appendSlice(a, &.{ options.corePath(), "test", try std.fs.path.join(a, &.{ options.fixtures, "v_row_cow.my" }), "--cache-dir", try std.fmt.allocPrint(a, "{s}/tests-{d}", .{ root, index }) });
         try test_argv.appendSlice(a, flags);
         const tested = try std.process.run(a, std.testing.io, .{ .argv = test_argv.items, .environ_map = &environment });
         try std.testing.expect(tested.term == .exited and tested.term.exited == 0);

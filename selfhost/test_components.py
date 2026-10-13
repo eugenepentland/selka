@@ -51,6 +51,7 @@ class ComponentCacheTests(unittest.TestCase):
             "#!/bin/sh\n"
             "case \"$ZIG_GLOBAL_CACHE_DIR\" in */cache/zig-global) ;; *) exit 12;; esac\n"
             "printf 'component\\n' >> \"$COMPONENT_FIXTURE_LOG\"\n"
+            "printf 'where:%s %s %s %s\\n' \"$PWD\" \"$TMPDIR\" \"$ZIG_LOCAL_CACHE_DIR\" \"$*\" >> \"$COMPONENT_FIXTURE_LOG\"\n"
             "case \" $* \" in *' --experimental-zero-rc '*) printf 'owned\\n' >> \"$COMPONENT_FIXTURE_LOG\";; esac\n"
             "test \"${COMPONENT_FIXTURE_FAIL:-0}\" = 0 || exit 7\n"
             "while test $# -gt 0; do\n"
@@ -261,6 +262,7 @@ class ComponentCacheTests(unittest.TestCase):
         self.invoke(success=False)
         self.assertEqual(before, (self.install / "test-index.json").read_bytes())
         self.assertFalse(list((self.cache / "artifacts").glob("*.build")))
+        self.assertFalse((self.cache / "staging/component").exists())
 
     def test_failed_planner_build_preserves_each_selected_installation(self):
         self.invoke()
@@ -284,6 +286,51 @@ class ComponentCacheTests(unittest.TestCase):
         self.assertEqual(self.calls(), 4)
         self.assertFalse((self.workspace / "caller-zig-global").exists())
         self.assertFalse((self.workspace / "different-zig-global").exists())
+
+    def places(self):
+        return [line[len("where:"):] for line in self.log.read_text().splitlines() if line.startswith("where:")]
+
+    def test_builder_identity_is_independent_of_builder_location(self):
+        global BUILDER
+        first = self.invoke()
+        identity = json.loads((self.cache / "artifacts" / first / "receipt.json").read_text())["identity"]
+        self.assertEqual(identity["format"], 3)
+        self.assertNotIn("coordinator_sha256", identity)
+        coordinator = identity["coordinator"]
+        self.assertEqual(coordinator["domain"], "selka-components-builder-v1")
+        self.assertRegex(coordinator["sources_sha256"], "^[0-9a-f]{64}$")
+        self.assertEqual(set(coordinator), {"domain", "sources_sha256", "zig_version", "optimize", "backend", "target"})
+        self.assertNotIn(str(Path(BUILDER).parent), json.dumps(coordinator))
+        relocated = self.workspace / "elsewhere/deeper/selka-components"
+        relocated.parent.mkdir(parents=True)
+        relocated.write_bytes(Path(BUILDER).read_bytes() + b"\0relocated builder bytes")
+        relocated.chmod(0o755)
+        original, BUILDER = BUILDER, str(relocated)
+        try:
+            self.assertEqual(first, self.invoke())
+        finally:
+            BUILDER = original
+        self.assertEqual(self.calls(), 2)
+
+    def test_every_key_compiles_in_one_stable_staging_directory(self):
+        first = self.invoke()
+        (self.sources / "graph.my").write_text("# another key\n")
+        second = self.invoke()
+        self.assertNotEqual(first, second)
+        self.invoke("--uncached")
+        places = self.places()
+        self.assertEqual(len(places), 5)  # two, then the changed test-index, then two uncached
+        staging = self.cache / "staging/component"
+        for place in places:
+            directory, temporary, local, arguments = place.split(" ", 3)
+            self.assertEqual(directory, str(staging))
+            self.assertEqual(temporary, str(staging / "tmp"))
+            self.assertEqual(local, str(staging / "cache/zig-local"))
+            self.assertIn(str(staging / "src/main.my"), arguments)
+        outputs = {place.split(" -o ", 1)[1].split(" ", 1)[0] for place in places}
+        self.assertEqual(outputs, {str(staging / "test-index"), str(staging / "cache-plan")})
+        self.assertFalse(staging.exists())
+        self.assertFalse(list((self.cache / "artifacts").glob("*.build")))
 
     def test_uncached_build_checks_reproducibility(self):
         first = self.invoke()

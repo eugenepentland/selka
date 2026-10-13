@@ -1,0 +1,195 @@
+{
+ "checks": [
+  {
+   "check": "publish build succeeded",
+   "expected": 0,
+   "note": "",
+   "observed": 0,
+   "result": "pass"
+  },
+  {
+   "check": "build proceeds with a miss",
+   "expected": "exit 0",
+   "note": "",
+   "observed": {
+    "exit": 0,
+    "stderr_tail": "},\"storage\":{\"flush_nanoseconds\":514706,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":6696,\"decoded_bytes\":24689,\"blocks_decoded\":2,\"payload_bytes_returned\":21128,\"block_cache_hits\":8,\"publication\":{\"filename_lookups\":3,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":932,\"save_bytes_prepared\":914,\"sequence_locks\":4}}},\"program_shared\":false,\"shared_mismatches\":1}\n"
+   },
+   "result": "pass"
+  },
+  {
+   "check": "mismatch counter is 1",
+   "expected": 1,
+   "note": "",
+   "observed": [
+    [
+     "shared_mismatches",
+     1
+    ]
+   ],
+   "result": "pass"
+  },
+  {
+   "check": "mismatches.log has one line",
+   "expected": 1,
+   "note": "",
+   "observed": 1,
+   "result": "pass"
+  },
+  {
+   "check": "second bytes never published",
+   "expected": "forged records unchanged",
+   "note": "",
+   "observed": {
+    "after": {
+     "5a3fb9d8bfc92389af4cb08c92cfaf16e75d618cb0f8afabf9b35af99ddf5b0c.blob": "f62b8832acf733bbdc93c8562a541aad5456eb00ac32f36ec35c72f5ad3ff3e3"
+    },
+    "forged": {
+     "5a3fb9d8bfc92389af4cb08c92cfaf16e75d618cb0f8afabf9b35af99ddf5b0c.blob": "f62b8832acf733bbdc93c8562a541aad5456eb00ac32f36ec35c72f5ad3ff3e3"
+    }
+   },
+   "result": "pass"
+  },
+  {
+   "check": "integration check fails on a non-zero counter",
+   "expected": "fails",
+   "note": "",
+   "observed": {
+    "lines": 1,
+    "logs": [
+     "compiler-artifacts-v2/mismatches.log"
+    ],
+    "passes": false
+   },
+   "result": "pass"
+  }
+ ],
+ "compilers_sha256": {
+  "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/bin/mylang": "27385c43a08071a5144529a376b7afdc7f93e575bb048785990124ac7395b134"
+ },
+ "decision": "pass",
+ "finished": "2026-10-12T15:59:43.283+00:00",
+ "started": "2026-10-12T15:59:27.410+00:00",
+ "steps": {
+  "drop-replay": {
+   "description": "remove the private replay records so the second build reaches the link step",
+   "kind": "python",
+   "result": {
+    "removed": [
+     "replay-v1"
+    ]
+   },
+   "seconds": 0.0,
+   "started": "2026-10-12T15:59:38.180+00:00",
+   "step": "drop-replay"
+  },
+  "forge": {
+   "description": "rewrite every shared program record with different, self-consistent bytes",
+   "kind": "python",
+   "result": {
+    "forged": {
+     "5a3fb9d8bfc92389af4cb08c92cfaf16e75d618cb0f8afabf9b35af99ddf5b0c.blob": "f62b8832acf733bbdc93c8562a541aad5456eb00ac32f36ec35c72f5ad3ff3e3"
+    }
+   },
+   "seconds": 0.387,
+   "started": "2026-10-12T15:59:37.793+00:00",
+   "step": "forge"
+  },
+  "inspect": {
+   "description": "count mismatches.log lines, re-hash the forged records, run the integration check",
+   "kind": "python",
+   "result": {
+    "blobs_after": {
+     "5a3fb9d8bfc92389af4cb08c92cfaf16e75d618cb0f8afabf9b35af99ddf5b0c.blob": "f62b8832acf733bbdc93c8562a541aad5456eb00ac32f36ec35c72f5ad3ff3e3"
+    },
+    "forged": {
+     "5a3fb9d8bfc92389af4cb08c92cfaf16e75d618cb0f8afabf9b35af99ddf5b0c.blob": "f62b8832acf733bbdc93c8562a541aad5456eb00ac32f36ec35c72f5ad3ff3e3"
+    },
+    "integration": {
+     "lines": 1,
+     "logs": [
+      "compiler-artifacts-v2/mismatches.log"
+     ],
+     "passes": false
+    }
+   },
+   "seconds": 0.0,
+   "started": "2026-10-12T15:59:43.282+00:00",
+   "step": "inspect"
+  },
+  "publish": {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/bin/mylang",
+    "build",
+    "examples/collatz.my",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/10-mismatch-injection/forged-record/first.out",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/10-mismatch-injection/forged-record/cache",
+    "--report"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+   "env_set": {
+    "MYLANG_COMPILER_SHARED_CACHE": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/10-mismatch-injection/forged-record/store",
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache"
+   },
+   "env_unset": [],
+   "exit": 0,
+   "harness_seconds_including_queue": 10.169,
+   "kind": "command",
+   "queue_seconds": 10,
+   "seconds_excluding_queue": 0.169,
+   "started": "2026-10-12T15:59:27.624+00:00",
+   "stderr": "01-publish.stderr",
+   "stderr_tail": "4,\"inclusive\":false},{\"name\":\"fresh_body_check\",\"nanoseconds\":204814,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":1088,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":96012,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":251,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":158226,\"inclusive\":false}]},\"frontend\":{\"checked\":2,\"reused\":0,\"summaries\":0,\"syntax_hits\":0,\"syntax_misses\":1,\"stored\":2,\"damaged\":0},\"lowering\":{\"reused\":0,\"lowered\":2,\"deferred\":0,\"fallbacks\":0,\"materialized\":2,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,0,0],\"misses\":[2,2,2,2,2,2,0],\"bypassed\":0,\"active_functions\":2,\"fresh_work\":2,\"restores\":{\"final\":0,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":2},\"emission\":{\"units\":2,\"reused\":0,\"rendered\":2,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":2,\"work\":{\"receipts_checked\":0,\"keys_built\":2,\"llvm_loaded_bytes\":15393,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0],\"lookup\":[0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":2409531,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":8833,\"save_bytes_prepared\":22225,\"sequence_locks\":24}}},\"program_shared\":false,\"shared_mismatches\":0}\n",
+   "stdout": "01-publish.stdout",
+   "step": "publish"
+  },
+  "republish": {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/bin/mylang",
+    "build",
+    "examples/collatz.my",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/10-mismatch-injection/forged-record/second.out",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/10-mismatch-injection/forged-record/cache",
+    "--report"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+   "env_set": {
+    "MYLANG_COMPILER_SHARED_CACHE": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/10-mismatch-injection/forged-record/store",
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache"
+   },
+   "env_unset": [],
+   "exit": 0,
+   "harness_seconds_including_queue": 5.102,
+   "kind": "command",
+   "queue_seconds": 5,
+   "seconds_excluding_queue": 0.102,
+   "started": "2026-10-12T15:59:38.180+00:00",
+   "stderr": "04-republish.stderr",
+   "stderr_tail": "ive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":62358,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":1206,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":71928,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":354,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":159818,\"inclusive\":false}]},\"frontend\":{\"checked\":0,\"reused\":2,\"summaries\":0,\"syntax_hits\":1,\"syntax_misses\":0,\"stored\":0,\"damaged\":0},\"lowering\":{\"reused\":2,\"lowered\":0,\"deferred\":0,\"fallbacks\":0,\"materialized\":2,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,2,0],\"misses\":[0,0,0,0,0,0,0],\"bypassed\":2,\"active_functions\":2,\"fresh_work\":0,\"restores\":{\"final\":2,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":2},\"emission\":{\"units\":2,\"reused\":2,\"rendered\":0,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":2,\"work\":{\"receipts_checked\":0,\"keys_built\":2,\"llvm_loaded_bytes\":15393,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"lookup\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":514706,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":6696,\"decoded_bytes\":24689,\"blocks_decoded\":2,\"payload_bytes_returned\":21128,\"block_cache_hits\":8,\"publication\":{\"filename_lookups\":3,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":932,\"save_bytes_prepared\":914,\"sequence_locks\":4}}},\"program_shared\":false,\"shared_mismatches\":1}\n",
+   "stdout": "04-republish.stdout",
+   "step": "republish"
+  },
+  "reset-work": {
+   "description": "empty the row's private work directory",
+   "kind": "python",
+   "result": {
+    "directory": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/10-mismatch-injection/forged-record"
+   },
+   "seconds": 0.0,
+   "started": "2026-10-12T15:59:27.411+00:00",
+   "step": "reset-work"
+  }
+ }
+}

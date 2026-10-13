@@ -1,0 +1,8 @@
+{
+ "diagnosis": "src/core/pipeline.zig:289 passes the absolute entry path as source_path for a single-file entry; src/core/emit_llvm.zig:335-336 writes it as source_filename and :4025-4029 as the entry unit's DIFile. Objects, linked programs and cache.execution_key differ per checkout.",
+ "finding": "F6",
+ "observed": {
+  "debug_root_occurrences": 2,
+  "release_root_occurrences": 1
+ }
+}

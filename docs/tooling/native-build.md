@@ -250,12 +250,12 @@ current directory:
 | `programs-v1/` | linked executables, keyed by every linked object's bytes and the link settings; a build whose objects all match copies the program and links nothing |
 | `foreign-v1/` | `--link` C objects with the headers their depfile listed; one is served only while the source and every listed header keep their bytes |
 | `replay-v1/` | one replay record per entry and settings (below) |
-| `tests/receipts-v2/`, `tests/manifests-v2/` | `mylang test` result receipts ([guest tests](guest-tests.md#reusing-unaffected-results)) |
+| `tests/receipts-v3/`, `tests/manifests-v3/` | `mylang test` result receipts ([guest tests](guest-tests.md#reusing-unaffected-results)) |
 
 `mylang test --shared-cache-dir DIR` additionally shares eligible ordinary test
 successes across project roots; `MYLANG_TEST_SHARED_CACHE` supplies the same
-opt-in. Its separate portable identities and `DIR/native-tests-v2` namespace do
-not relocate these private frontend, executable or report-manifest caches. See
+opt-in. Its `DIR/native-tests-v3` namespace holds the same root-relative keys as
+the private receipts and does not relocate these private frontend, executable or report-manifest caches. See
 [shared test results](guest-tests.md#reusing-unaffected-results) for eligibility.
 
 **Replay.** A build records every file it read — each module source, embedded file,
@@ -284,11 +284,16 @@ mylang build app/main.my -o app.bin --cache-dir .mylang-cache/private --report
 ```
 
 The namespace is `compiler-artifacts-v2`, separate from test-success receipts.
-The shared program key binds the compiler, exact ordered object bytes and
-qualified toolchain/link settings, including `SOURCE_DATE_EPOCH` and
-`ZERO_AR_DATE`. Existing logical module paths can produce identical objects
-across roots. Absolute source provenance may change their bytes and miss;
-source paths and literal strings are never rewritten to manufacture a hit.
+The shared program key (`core-shared-program-v2`, SHARED-PROGRAM-2) binds the
+exact ordered object bytes and qualified toolchain/link settings, including
+`SOURCE_DATE_EPOCH` and `ZERO_AR_DATE`, and no longer the compiler identity: the
+objects determine the bytes and the store's byte verification guards the rest. Existing logical module paths can produce identical objects
+across roots. An entry built without a project root (no `mylang.json`) names
+itself by its basename in the entry unit's `source_filename` and debug
+information (ENTRY-PATH-1), so two checkouts building it by the same relative
+spelling link identical programs. Trap sites still carry the path the command
+was given, so an absolute spelling on the command line changes the bytes and
+misses; source paths and literal strings are never rewritten to manufacture a hit.
 Foreign `--link` inputs and unqualified tools do not use shared programs.
 
 With an empty private cache, a hit still performs frontend validation, lowering
@@ -305,14 +310,43 @@ configured invalid store fails before a private replay can hide it. Corrupt
 individual records instead cause correct fresh work. See
 [retention](cache-retention.md#native-compiler-artifacts) before deleting entries.
 
+**Mismatches.** When a build publishes its linked program and the store already
+holds a verified program with different bytes under the same key, the build
+keeps its own program and goes on: the shared record is not replaced, nothing
+is published, and the store appends one line to
+`compiler-artifacts-v2/mismatches.log`:
+
+```text
+mismatch program <key> existing=<digest> attempted=<digest>
+```
+
+The build counts it as `shared_mismatches` in its report (see
+[Reports](#reports)). Syntax and typed records follow the same rule and log the
+same line with their own kind; only linked programs are counted in the report.
+A non-zero count means two producers built different bytes from one key, which
+is a determinism bug to investigate.
+
+**Default location.** A non-empty `MYLANG_COMPILER_SHARED_CACHE` names an
+explicit store and an empty value disables sharing. The compiler also knows a
+per-user default, `$XDG_CACHE_HOME/mylang/compiler-artifacts` (when
+`XDG_CACHE_HOME` is absolute) or `~/.cache/mylang/compiler-artifacts`, used for
+an unset variable only when the `default_sharing` switch in
+`src/shared_cache_policy.zig` is on. It is off, so sharing stays opt-in. With
+the switch on, a default store that cannot be created or opened prints one
+`warning:` line and the command builds without sharing; an explicit store that
+cannot be opened still fails the command.
+
 ## Reports
 
 - **`--report`** (on `build`, `build --run`, `run` and `run-project`) prints one
   `cache-report-v1` JSON line on stderr: the units linked, served by the object
   store, compiled and verified, the tool processes started, and whether the program
   was `linked`, `reused` from the program store or `replayed` (every count 0).
-  `program_shared` identifies an actual shared linked-program restore.
+  `program_shared` identifies an actual shared linked-program restore, and
+  `shared_mismatches` counts shared program records that held different bytes
+  for this build's key (a miss, logged in the store; normally 0).
 - **`--cache-report`** prints the same as one `mylang-core: cache:` text line.
+  It ends with `; N shared mismatches` only when that count is not zero.
 - **`--stats`** prints what the release passes did: calls inlined, loops unswitched,
   versioned and vectorized, checks proved, and the ownership plan's in-place
   updates, copies, retains and releases.

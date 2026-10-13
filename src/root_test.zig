@@ -3,6 +3,9 @@
 /// reach the front end through `compiler_root`.
 pub const compiler_language = @import("compiler.zig");
 test {
+    _ = @import("environment_identity_test.zig");
+    _ = @import("build_env_rules_test.zig");
+    _ = @import("test_paths_units_test.zig");
     _ = @import("a01_tuple_origins_test.zig");
     _ = @import("a04_borrow_selection_test.zig");
     _ = @import("a01_result_shapes_test.zig");
@@ -95,6 +98,8 @@ test {
     _ = @import("headerless_import_test.zig");
     _ = @import("frontend_cache_test.zig");
     _ = @import("shared_artifact_store_test.zig");
+    _ = @import("shared_artifact_store.zig");
+    _ = @import("shared_cache_policy.zig");
     _ = @import("native_cache_retention.zig");
     _ = @import("native_cache_work.zig");
     _ = @import("cache_command.zig");
@@ -208,4 +213,8 @@ test {
     _ = @import("dictionary_views_test.zig");
     _ = @import("sets_test.zig");
     _ = @import("retired_features_test.zig");
+}
+
+test {
+    _ = @import("build_identity_rules_test.zig");
 }

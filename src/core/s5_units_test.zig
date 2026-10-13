@@ -18,7 +18,7 @@ fn buildAndRun(a: std.mem.Allocator, root: []const u8, name: []const u8, source:
     // `mylang build` reports the source path as it was given, so build from
     // `root` by the file's own name.
     var argv: std.ArrayList([]const u8) = .empty;
-    const compiler = try std.Io.Dir.cwd().realPathFileAlloc(std.testing.io, options.core_path, a);
+    const compiler = try std.Io.Dir.cwd().realPathFileAlloc(std.testing.io, options.corePath(), a);
     try argv.appendSlice(a, &.{ compiler, "build", try std.fmt.allocPrint(a, "{s}.my", .{name}), "-o", output, "--cache-dir", cache });
     if (release) try argv.append(a, "--release");
     const built = try std.process.run(a, std.testing.io, .{ .argv = argv.items, .cwd = .{ .path = root } });

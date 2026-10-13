@@ -1,0 +1,400 @@
+{
+ "checks": [
+  {
+   "check": "debug: identical program bytes from two roots",
+   "expected": "equal sha256",
+   "note": "",
+   "observed": [
+    "c92b419160b4f972c39660ef69397fd12936435ac8fb4ca2f3baf5c6bd9f33f2",
+    "5eac087f10a99cbe0a60b806b3abd0399b3e5b1b93895b69d72f32d5420bff0b"
+   ],
+   "result": "fail"
+  },
+  {
+   "check": "debug: no root path in either program",
+   "expected": "0 occurrences",
+   "note": "",
+   "observed": [
+    2,
+    2
+   ],
+   "result": "fail"
+  },
+  {
+   "check": "debug: identical program_key",
+   "expected": "equal",
+   "note": "not judged: cache-report-v1 carries no program_key",
+   "observed": [
+    null,
+    null
+   ],
+   "result": "not-judged"
+  },
+  {
+   "check": "release: identical program bytes from two roots",
+   "expected": "equal sha256",
+   "note": "",
+   "observed": [
+    "fb1415a9495c834b9b44378b53f59ab90ea2979d226ba1f439a4303eacebe286",
+    "e10aa2916e1f8f8e75ad4528e1bf8757a25eb01bf1d473f13f01279d8b484c22"
+   ],
+   "result": "fail"
+  },
+  {
+   "check": "release: no root path in either program",
+   "expected": "0 occurrences",
+   "note": "",
+   "observed": [
+    1,
+    1
+   ],
+   "result": "fail"
+  },
+  {
+   "check": "release: identical program_key",
+   "expected": "equal",
+   "note": "not judged: cache-report-v1 carries no program_key",
+   "observed": [
+    null,
+    null
+   ],
+   "result": "not-judged"
+  }
+ ],
+ "compilers_sha256": {
+  "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-a/zig-out/bin/mylang": "1ab46e786dc4b7ec684348a9dc24f1f517851e99ef7c2f8d91de871596dd4250",
+  "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-b/zig-out/bin/mylang": "478c23e13ea3c613b07b0cd82ad5ef5c83d6af849dc0c6dba7f4ad5fa0a85307"
+ },
+ "decision": "fail",
+ "finished": "2026-10-12T17:05:14.485+00:00",
+ "manifest": {
+  "compiler": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/bin/mylang",
+  "compiler_sha256": "27385c43a08071a5144529a376b7afdc7f93e575bb048785990124ac7395b134",
+  "environment": {
+   "launcher_sha256_16": {
+    "CODEX_THREAD_ID": null,
+    "PWD": "5ffa26a83103a9ee",
+    "TERM": "7f44899d0925ec2c"
+   },
+   "values": {
+    "HOME": "/home/epentland",
+    "LANG": "en_US.UTF-8",
+    "MYLANG_BUILD_MEM": "8G",
+    "MYLANG_BUILD_SLOTS": "3",
+    "MYLANG_DEV_JOBS": "4",
+    "MYLANG_DEV_MAXRSS": "8589934592",
+    "MYLANG_GATE_SLOTS": "2",
+    "MYLANG_SLOT_DIR": "/home/epentland/.cache/mylang/slots",
+    "MYLANG_ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.tmp/work",
+    "ZIG": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "ZIG_GLOBAL_CACHE_DIR": "/home/epentland/ai/canopy/.zig-global-cache",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache"
+   }
+  },
+  "features": {
+   "build_env": true,
+   "coordinator_path_free": true,
+   "coordinator_v3": true,
+   "exec_receipts": true,
+   "exec_receipts_opt_in": false,
+   "execution_key_report": true,
+   "fact_leak_receipts": true,
+   "mismatch_counter": true,
+   "runner_identity": true,
+   "test_v3_namespaces": true
+  },
+  "harness_sha256": "ebe228057308a6ebc628814541ddada14dbedcd80052d0f39c79a0e379f4ab43",
+  "options": {
+   "build_env": null,
+   "dry_run": false,
+   "evidence": "experiments/output-keyed-receipts-20261012/evidence-phase2",
+   "heavy": true,
+   "keep_work": false,
+   "lang_entry": null,
+   "manifest_only": null,
+   "old_ref": "f6971a623",
+   "rows": "3,5,7,8:ld-preload,11:own-compilers,12,13",
+   "small_entry": "tests/lang/frontend_numbers.my",
+   "tree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+   "work": null
+  },
+  "plan": "docs/audits/output-keyed-shared-receipts-plan-2026-10-12.md",
+  "schema": "output-keyed-matrix-v1",
+  "slot_dir": "/home/epentland/.cache/mylang/slots",
+  "tree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012",
+  "tree_dirty_sha256": "f3783a492a2fff38e27edbc49eb384d08c02a60dcc02f93866f595ea643a3949",
+  "tree_head": "b6b505d368c433a7a76f29923e97f6af07fc44e5",
+  "zig": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig"
+ },
+ "started": "2026-10-12T17:03:40.992+00:00",
+ "steps": {
+  "build-a": {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/scripts/build-slot.sh",
+    "build",
+    "zig",
+    "build"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-a",
+   "env_set": {
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-a",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-a/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-a/.zig-cache"
+   },
+   "env_unset": [],
+   "exit": 0,
+   "harness_seconds_including_queue": 29.359,
+   "kind": "command",
+   "queue_seconds": 0,
+   "seconds_excluding_queue": 29.359,
+   "started": "2026-10-12T17:03:57.572+00:00",
+   "stderr": "03-build-a.stderr",
+   "stderr_tail": "build-slot: build slot 1, FIFO ticket 2276 after 0s\nguardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)\nguardian: diff-scoped vs 4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9: 75/693 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification \u2014 use --full, or `guardian-check commit`.\nguardian: file-size: 17 finding(s) \u2014 report-only (--verbose for detail)\nguardian: function-length: 1 finding(s) \u2014 report-only (--verbose for detail)\nguardian: line-length: 1331 finding(s) \u2014 report-only (--verbose for detail)\nguardian: run-all: 88 check(s) passed \u2014 diff-scoped vs 4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9, 75 file(s) in scope\n",
+   "stdout": "03-build-a.stdout",
+   "step": "build-a"
+  },
+  "build-b": {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/scripts/build-slot.sh",
+    "build",
+    "zig",
+    "build"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-b",
+   "env_set": {
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-b",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-b/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-b/.zig-cache"
+   },
+   "env_unset": [],
+   "exit": 0,
+   "harness_seconds_including_queue": 30.445,
+   "kind": "command",
+   "queue_seconds": 0,
+   "seconds_excluding_queue": 30.445,
+   "started": "2026-10-12T17:04:26.931+00:00",
+   "stderr": "04-build-b.stderr",
+   "stderr_tail": "build-slot: build slot 1, FIFO ticket 2277 after 0s\nguardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)\nguardian: diff-scoped vs 4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9: 75/693 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification \u2014 use --full, or `guardian-check commit`.\nguardian: file-size: 17 finding(s) \u2014 report-only (--verbose for detail)\nguardian: function-length: 1 finding(s) \u2014 report-only (--verbose for detail)\nguardian: line-length: 1331 finding(s) \u2014 report-only (--verbose for detail)\nguardian: run-all: 88 check(s) passed \u2014 diff-scoped vs 4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9, 75 file(s) in scope\n",
+   "stdout": "04-build-b.stdout",
+   "step": "build-b"
+  },
+  "compare": {
+   "description": "sha256 and grep -a root-path counts of both roots' programs",
+   "kind": "python",
+   "result": {
+    "debug": {
+     "a": {
+      "own_root": 2,
+      "sha256": "c92b419160b4f972c39660ef69397fd12936435ac8fb4ca2f3baf5c6bd9f33f2",
+      "work_dir": 2
+     },
+     "b": {
+      "own_root": 2,
+      "sha256": "5eac087f10a99cbe0a60b806b3abd0399b3e5b1b93895b69d72f32d5420bff0b",
+      "work_dir": 2
+     }
+    },
+    "release": {
+     "a": {
+      "own_root": 1,
+      "sha256": "fb1415a9495c834b9b44378b53f59ab90ea2979d226ba1f439a4303eacebe286",
+      "work_dir": 1
+     },
+     "b": {
+      "own_root": 1,
+      "sha256": "e10aa2916e1f8f8e75ad4528e1bf8757a25eb01bf1d473f13f01279d8b484c22",
+      "work_dir": 1
+     }
+    }
+   },
+   "seconds": 0.001,
+   "started": "2026-10-12T17:05:13.086+00:00",
+   "step": "compare"
+  },
+  "debug-a": {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-a/zig-out/bin/mylang",
+    "build",
+    "examples/collatz.my",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/11-path-independence/own-compilers/debug-a.out",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/11-path-independence/own-compilers/cache-a",
+    "--report"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-a",
+   "env_set": {
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-a",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-a/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-a/.zig-cache"
+   },
+   "env_unset": [],
+   "exit": 0,
+   "harness_seconds_including_queue": 0.099,
+   "kind": "command",
+   "queue_seconds": 0,
+   "seconds_excluding_queue": 0.099,
+   "started": "2026-10-12T17:04:57.525+00:00",
+   "stderr": "05-debug-a.stderr",
+   "stderr_tail": "5,\"inclusive\":false},{\"name\":\"fresh_body_check\",\"nanoseconds\":226319,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":1062,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":81911,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":353,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":194467,\"inclusive\":false}]},\"frontend\":{\"checked\":2,\"reused\":0,\"summaries\":0,\"syntax_hits\":0,\"syntax_misses\":1,\"stored\":2,\"damaged\":0},\"lowering\":{\"reused\":0,\"lowered\":2,\"deferred\":0,\"fallbacks\":0,\"materialized\":2,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,0,0],\"misses\":[2,2,2,2,2,2,0],\"bypassed\":0,\"active_functions\":2,\"fresh_work\":2,\"restores\":{\"final\":0,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":2},\"emission\":{\"units\":2,\"reused\":0,\"rendered\":2,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":2,\"work\":{\"receipts_checked\":0,\"keys_built\":2,\"llvm_loaded_bytes\":15505,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0],\"lookup\":[0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":2895013,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":8883,\"save_bytes_prepared\":22337,\"sequence_locks\":24}}},\"program_shared\":false,\"shared_mismatches\":0}\n",
+   "stdout": "05-debug-a.stdout",
+   "step": "debug-a"
+  },
+  "debug-b": {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-b/zig-out/bin/mylang",
+    "build",
+    "examples/collatz.my",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/11-path-independence/own-compilers/debug-b.out",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/11-path-independence/own-compilers/cache-b",
+    "--report"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-b",
+   "env_set": {
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-b",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-b/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-b/.zig-cache"
+   },
+   "env_unset": [],
+   "exit": 0,
+   "harness_seconds_including_queue": 5.113,
+   "kind": "command",
+   "queue_seconds": 5,
+   "seconds_excluding_queue": 0.113,
+   "started": "2026-10-12T17:05:02.870+00:00",
+   "stderr": "07-debug-b.stderr",
+   "stderr_tail": ",\"inclusive\":false},{\"name\":\"fresh_body_check\",\"nanoseconds\":345236,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":1526,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":119555,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":547,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":242478,\"inclusive\":false}]},\"frontend\":{\"checked\":2,\"reused\":0,\"summaries\":0,\"syntax_hits\":0,\"syntax_misses\":1,\"stored\":2,\"damaged\":0},\"lowering\":{\"reused\":0,\"lowered\":2,\"deferred\":0,\"fallbacks\":0,\"materialized\":2,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,0,0],\"misses\":[2,2,2,2,2,2,0],\"bypassed\":0,\"active_functions\":2,\"fresh_work\":2,\"restores\":{\"final\":0,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":2},\"emission\":{\"units\":2,\"reused\":0,\"rendered\":2,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":2,\"work\":{\"receipts_checked\":0,\"keys_built\":2,\"llvm_loaded_bytes\":15505,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0],\"lookup\":[0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":2514508,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":0,\"decoded_bytes\":0,\"blocks_decoded\":0,\"payload_bytes_returned\":0,\"block_cache_hits\":0,\"publication\":{\"filename_lookups\":2,\"refreshes\":3,\"packs_prepared\":1,\"pack_bytes_prepared\":8883,\"save_bytes_prepared\":22337,\"sequence_locks\":24}}},\"program_shared\":false,\"shared_mismatches\":0}\n",
+   "stdout": "07-debug-b.stdout",
+   "step": "debug-b"
+  },
+  "release-a": {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-a/zig-out/bin/mylang",
+    "build",
+    "examples/collatz.my",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/11-path-independence/own-compilers/release-a.out",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/11-path-independence/own-compilers/cache-a",
+    "--report",
+    "--release"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-a",
+   "env_set": {
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-a",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-a/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-a/.zig-cache"
+   },
+   "env_unset": [],
+   "exit": 0,
+   "harness_seconds_including_queue": 5.107,
+   "kind": "command",
+   "queue_seconds": 5,
+   "seconds_excluding_queue": 0.107,
+   "started": "2026-10-12T17:04:57.624+00:00",
+   "stderr": "06-release-a.stderr",
+   "stderr_tail": "usive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":108998,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":1645,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":114145,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":507,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":248821,\"inclusive\":false}]},\"frontend\":{\"checked\":0,\"reused\":2,\"summaries\":0,\"syntax_hits\":1,\"syntax_misses\":0,\"stored\":0,\"damaged\":0},\"lowering\":{\"reused\":0,\"lowered\":2,\"deferred\":0,\"fallbacks\":0,\"materialized\":2,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,2,0],\"misses\":[0,0,0,0,0,0,0],\"bypassed\":2,\"active_functions\":2,\"fresh_work\":0,\"restores\":{\"final\":2,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":2},\"emission\":{\"units\":0,\"reused\":0,\"rendered\":0,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":0,\"work\":{\"receipts_checked\":0,\"keys_built\":0,\"llvm_loaded_bytes\":0,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"lookup\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":817110,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":3390,\"decoded_bytes\":9048,\"blocks_decoded\":1,\"payload_bytes_returned\":4040,\"block_cache_hits\":4,\"publication\":{\"filename_lookups\":3,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":2244,\"save_bytes_prepared\":3043,\"sequence_locks\":8}}},\"program_shared\":false,\"shared_mismatches\":0}\n",
+   "stdout": "06-release-a.stdout",
+   "step": "release-a"
+  },
+  "release-b": {
+   "argv": [
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/scripts/build-slot.sh",
+    "build",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-b/zig-out/bin/mylang",
+    "build",
+    "examples/collatz.my",
+    "-o",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/11-path-independence/own-compilers/release-b.out",
+    "--cache-dir",
+    "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/11-path-independence/own-compilers/cache-b",
+    "--report",
+    "--release"
+   ],
+   "cwd": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-b",
+   "env_set": {
+    "PWD": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-b",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-b/.tmp/work",
+    "ZIG_LOCAL_CACHE_DIR": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-b/.zig-cache"
+   },
+   "env_unset": [],
+   "exit": 0,
+   "harness_seconds_including_queue": 5.103,
+   "kind": "command",
+   "queue_seconds": 6,
+   "seconds_excluding_queue": -0.897,
+   "started": "2026-10-12T17:05:07.984+00:00",
+   "stderr": "08-release-b.stderr",
+   "stderr_tail": "clusive\":false},{\"name\":\"ordinary_body_replay\",\"nanoseconds\":70214,\"inclusive\":false},{\"name\":\"entry_adaptation\",\"nanoseconds\":2407,\"inclusive\":false},{\"name\":\"effect_origin_passes\",\"nanoseconds\":86168,\"inclusive\":false},{\"name\":\"domain_codec_validation\",\"nanoseconds\":512,\"inclusive\":false},{\"name\":\"warning_derivation\",\"nanoseconds\":210276,\"inclusive\":false}]},\"frontend\":{\"checked\":0,\"reused\":2,\"summaries\":0,\"syntax_hits\":1,\"syntax_misses\":0,\"stored\":0,\"damaged\":0},\"lowering\":{\"reused\":0,\"lowered\":2,\"deferred\":0,\"fallbacks\":0,\"materialized\":2,\"unloaded\":0},\"optimizer\":{\"hits\":[0,0,0,0,0,2,0],\"misses\":[0,0,0,0,0,0,0],\"bypassed\":2,\"active_functions\":2,\"fresh_work\":0,\"restores\":{\"final\":2,\"checkpoints\":0,\"fusions\":0},\"final_loaded\":2},\"emission\":{\"units\":0,\"reused\":0,\"rendered\":0,\"seeds_reused\":0,\"seeds_rendered\":0,\"workers\":0,\"work\":{\"receipts_checked\":0,\"keys_built\":0,\"llvm_loaded_bytes\":0,\"native_handles\":0}},\"frontend_misses\":{\"total\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"lookup\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"retention\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"relocation\":[0,0,0,0,0,0]}},\"storage\":{\"flush_nanoseconds\":831260,\"flush_succeeded\":true,\"compression\":\"zlib\",\"reads\":{\"packed_bytes_read\":3387,\"decoded_bytes\":9048,\"blocks_decoded\":1,\"payload_bytes_returned\":4040,\"block_cache_hits\":4,\"publication\":{\"filename_lookups\":3,\"refreshes\":1,\"packs_prepared\":1,\"pack_bytes_prepared\":2242,\"save_bytes_prepared\":3043,\"sequence_locks\":8}}},\"program_shared\":false,\"shared_mismatches\":0}\n",
+   "stdout": "08-release-b.stdout",
+   "step": "release-b"
+  },
+  "reset-work": {
+   "description": "empty the row's private work directory",
+   "kind": "python",
+   "result": {
+    "directory": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/11-path-independence/own-compilers"
+   },
+   "seconds": 0.0,
+   "started": "2026-10-12T17:03:40.992+00:00",
+   "step": "reset-work"
+  },
+  "worktree-add-row11-a": {
+   "description": "git worktree add --detach work/row11-a <target HEAD>",
+   "kind": "python",
+   "result": {
+    "guardian": "/home/epentland/ai/canopy/guardian-zig",
+    "head": "b6b505d368c433a7a76f29923e97f6af07fc44e5",
+    "ref": "b6b505d368c433a7a76f29923e97f6af07fc44e5",
+    "worktree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-a"
+   },
+   "seconds": 6.478,
+   "started": "2026-10-12T17:03:40.992+00:00",
+   "step": "worktree-add-row11-a"
+  },
+  "worktree-add-row11-b": {
+   "description": "git worktree add --detach work/row11-b <target HEAD>",
+   "kind": "python",
+   "result": {
+    "guardian": "/home/epentland/ai/canopy/guardian-zig",
+    "head": "b6b505d368c433a7a76f29923e97f6af07fc44e5",
+    "ref": "b6b505d368c433a7a76f29923e97f6af07fc44e5",
+    "worktree": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-b"
+   },
+   "seconds": 10.102,
+   "started": "2026-10-12T17:03:47.471+00:00",
+   "step": "worktree-add-row11-b"
+  },
+  "worktree-remove-row11-a": {
+   "description": "git worktree remove --force work/row11-a",
+   "kind": "python",
+   "result": {
+    "git": true,
+    "removed": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-a"
+   },
+   "seconds": 0.699,
+   "started": "2026-10-12T17:05:13.088+00:00",
+   "step": "worktree-remove-row11-a"
+  },
+  "worktree-remove-row11-b": {
+   "description": "git worktree remove --force work/row11-b",
+   "kind": "python",
+   "result": {
+    "git": true,
+    "removed": "/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/experiments/output-keyed-receipts-20261012/work/row11-b"
+   },
+   "seconds": 0.698,
+   "started": "2026-10-12T17:05:13.787+00:00",
+   "step": "worktree-remove-row11-b"
+  }
+ }
+}
