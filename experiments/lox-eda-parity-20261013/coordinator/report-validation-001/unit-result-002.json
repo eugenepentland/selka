@@ -1,0 +1,16 @@
+{
+  "command": [
+    "python3",
+    "-B",
+    "experiments/lox-eda-parity-20261013/test_report_verified.py"
+  ],
+  "returncode": 0,
+  "tests_passed": 7,
+  "output": ".......\nRan 7 tests in 0.702s\nOK\n",
+  "recorded_utc": "2026-10-13T07:56:23.876073+00:00",
+  "inputs": {
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/report_verified.py": "03cf90ac82b6ae0ff1ca8819b4bf2d99f8579f1671a3274e797ccc5207698f63",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/test_report_verified.py": "eae668f4951cd77156d53184eea42910c2c76aff1892f98352a46097bd86c1e0"
+  },
+  "reason": "After review, pin wrapper identity at start/end and serialize completion receipt before publication."
+}

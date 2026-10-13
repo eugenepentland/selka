@@ -143,3 +143,11 @@ The eight deadline tests pass. `P6/harness-audit-001.tar.gz` preserves a
 60-case preparation smoke check using prior artifacts; it contains no runtime
 measurements and is not a candidate qualification. Other sessions' admitted
 jobs are left running, including their exclusive timing windows.
+
+`report_verified.py --output NEW_DIRECTORY -- report PIPELINE_ARGS` runs the
+same frozen report assertions while checking every expected identity for
+agreement and hashing each distinct artifact on first use and after reporting.
+The wrapper also pins its own source. Its `validation.json` is the completion
+marker. Eight guard tests pass, and both archived wrapper revisions reproduced
+the complete C1 report byte for byte; see `coordinator/report-validation-001/`.
+No timing, counters, ratios or case inclusion rules change.

@@ -1,0 +1,20 @@
+{
+  "recorded_utc": "2026-10-13T08:06:57.679047+00:00",
+  "reason": "Both report outputs were byte-identical to the preserved and verified archived C1 report; retain receipts without committing duplicate 80MB JSON files.",
+  "copies": [
+    {
+      "removed_duplicate": "experiments/lox-eda-parity-20261013/coordinator/report-validation-001/equivalence/parity-report.json",
+      "sha256": "19beaa7cc28ef5ad156ff8f81a661314361b14631ec714017f597b1cebe99fc1",
+      "retained_raw": "experiments/lox-eda-parity-20261013/attempts/runtime-001/parity-report.json",
+      "verified_archive": "archives/runtime-001.tar.xz",
+      "archive_manifest": "archives/runtime-001.json"
+    },
+    {
+      "removed_duplicate": "experiments/lox-eda-parity-20261013/coordinator/report-validation-001/equivalence-002/parity-report.json",
+      "sha256": "19beaa7cc28ef5ad156ff8f81a661314361b14631ec714017f597b1cebe99fc1",
+      "retained_raw": "experiments/lox-eda-parity-20261013/attempts/runtime-001/parity-report.json",
+      "verified_archive": "archives/runtime-001.tar.xz",
+      "archive_manifest": "archives/runtime-001.json"
+    }
+  ]
+}

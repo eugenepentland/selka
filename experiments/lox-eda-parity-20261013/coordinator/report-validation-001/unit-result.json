@@ -1,0 +1,16 @@
+{
+  "command": [
+    "python3",
+    "-B",
+    "experiments/lox-eda-parity-20261013/test_report_verified.py"
+  ],
+  "returncode": 0,
+  "tests_passed": 7,
+  "output": ".......\nRan 7 tests in 0.592s\nOK\n",
+  "recorded_utc": "2026-10-13T07:49:19.451053+00:00",
+  "inputs": {
+    "experiments/lox-eda-parity-20261013/report_verified.py": "f3b38ef008de49f2e6c7cd75688af5ae6f10f45113aee39ccb7c65d90d8cad38",
+    "experiments/lox-eda-parity-20261013/test_report_verified.py": "eae668f4951cd77156d53184eea42910c2c76aff1892f98352a46097bd86c1e0"
+  },
+  "full_frozen_report_comparison": "pending C1 validator completion"
+}

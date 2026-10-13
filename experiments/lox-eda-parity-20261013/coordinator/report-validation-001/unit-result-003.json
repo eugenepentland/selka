@@ -1,0 +1,15 @@
+{
+  "command": [
+    "/usr/bin/python3",
+    "-B",
+    "experiments/lox-eda-parity-20261013/test_report_verified.py"
+  ],
+  "returncode": 0,
+  "stdout": "",
+  "stderr": "........\n----------------------------------------------------------------------\nRan 8 tests in 1.011s\n\nOK\n",
+  "recorded_utc": "2026-10-13T08:08:21.062763+00:00",
+  "inputs": {
+    "experiments/lox-eda-parity-20261013/test_report_verified.py": "7cbb5df80e769072456dad481223893ecc322ac13d2681ab73090a74fab35f74",
+    "experiments/lox-eda-parity-20261013/report_verified.py": "03cf90ac82b6ae0ff1ca8819b4bf2d99f8579f1671a3274e797ccc5207698f63"
+  }
+}

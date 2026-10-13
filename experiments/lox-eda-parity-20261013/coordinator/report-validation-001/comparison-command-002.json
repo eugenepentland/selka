@@ -1,0 +1,31 @@
+{
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "/usr/bin/python3",
+    "-B",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/report_verified.py",
+    "--output",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/coordinator/report-validation-001/equivalence-002",
+    "--compare",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/parity-report.json",
+    "--",
+    "report",
+    "--root",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012",
+    "--compiler",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-001/install/bin/mylang",
+    "--install",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-001/install",
+    "--attempt",
+    "runtime-001",
+    "--prior-root",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012",
+    "--lox-build",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/native-001/build/lox/build-receipt.json",
+    "--eda-build",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/native-001/build/eda/build-receipt.json"
+  ],
+  "reference_sha256": "19beaa7cc28ef5ad156ff8f81a661314361b14631ec714017f597b1cebe99fc1",
+  "requested_utc": "2026-10-13T07:56:23.876318+00:00"
+}
