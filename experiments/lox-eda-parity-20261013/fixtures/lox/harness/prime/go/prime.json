@@ -1,0 +1,6 @@
+{
+  "release": ["{go}", "build", "std"],
+  "release-safe": ["{go}", "build", "std"],
+  "debug": ["{go}", "build", "-gcflags=all=-N -l", "std"],
+  "test": ["{go}", "build", "std"]
+}

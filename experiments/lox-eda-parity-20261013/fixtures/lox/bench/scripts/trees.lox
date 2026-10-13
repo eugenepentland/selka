@@ -1,0 +1,42 @@
+var N = 100;
+class Tree {
+  init(depth) {
+    this.depth = depth;
+    if (depth > 0) {
+      this.a = Tree(depth - 1);
+      this.b = Tree(depth - 1);
+      this.c = Tree(depth - 1);
+      this.d = Tree(depth - 1);
+      this.e = Tree(depth - 1);
+    }
+  }
+
+  walk() {
+    if (this.depth == 0) return 0;
+    return this.depth 
+        + this.a.walk()
+        + this.b.walk()
+        + this.c.walk()
+        + this.d.walk()
+        + this.e.walk();
+  }
+}
+
+// Depth shrinks with N so the smoke and tree-engine sizes stay small.
+var depth = 8;
+if (N < 10) depth = 7;
+if (N < 2) depth = 4;
+
+fun expected(d) {
+  if (d == 0) return 0;
+  return d + 5 * expected(d - 1);
+}
+
+var want = expected(depth);
+var tree = Tree(depth);
+var errors = 0;
+for (var i = 0; i < N; i = i + 1) {
+  if (tree.walk() != want) errors = errors + 1;
+}
+print want;
+print errors;

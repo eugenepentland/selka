@@ -1,0 +1,68 @@
+{
+  "_comment": "Value substituted for the first line `var N = ...;` of each script. vm/tree are the timed sizes per engine; smoke is for quick correctness runs. Calibrated against build/clox-oracle; re-calibrate with bench.py calibrate once ports exist.",
+  "binary_trees": {
+    "smoke": 6,
+    "tree": 10,
+    "vm": 13
+  },
+  "closures": {
+    "smoke": 1000,
+    "tree": 200000,
+    "vm": 2000000
+  },
+  "equality": {
+    "smoke": 1000,
+    "tree": 300000,
+    "vm": 3000000
+  },
+  "fib": {
+    "smoke": 15,
+    "tree": 28,
+    "vm": 34
+  },
+  "instantiation": {
+    "smoke": 1000,
+    "tree": 50000,
+    "vm": 500000
+  },
+  "invocation": {
+    "smoke": 1000,
+    "tree": 150000,
+    "vm": 1500000
+  },
+  "method_call": {
+    "smoke": 1000,
+    "tree": 50000,
+    "vm": 500000
+  },
+  "properties": {
+    "smoke": 1000,
+    "tree": 100000,
+    "vm": 1000000
+  },
+  "string_equality": {
+    "smoke": 100,
+    "tree": 10000,
+    "vm": 100000
+  },
+  "strings": {
+    "smoke": 1000,
+    "tree": 300000,
+    "vm": 3000000
+  },
+  "trees": {
+    "smoke": 1,
+    "tree": 5,
+    "vm": 40
+  },
+  "zoo": {
+    "smoke": 6000,
+    "tree": 3000000,
+    "vm": 30000000
+  },
+  "zoo_batch": {
+    "smoke": 2,
+    "tree": 40,
+    "vm": 400
+  }
+}

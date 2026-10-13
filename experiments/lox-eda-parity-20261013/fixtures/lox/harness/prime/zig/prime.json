@@ -1,0 +1,6 @@
+{
+  "release": ["{zig}", "build", "-Doptimize=ReleaseFast", "--cache-dir", "{cache}/zig-prime-local", "--prefix", "{cache}/prime-out"],
+  "release-safe": ["{zig}", "build", "-Doptimize=ReleaseSafe", "--cache-dir", "{cache}/zig-prime-local", "--prefix", "{cache}/prime-out"],
+  "debug": ["{zig}", "build", "-Doptimize=Debug", "--cache-dir", "{cache}/zig-prime-local", "--prefix", "{cache}/prime-out"],
+  "test": ["{zig}", "build", "test", "--cache-dir", "{cache}/zig-prime-local"]
+}

@@ -1,0 +1,23 @@
+{
+  "status": "passed",
+  "deadline_tests": 8,
+  "deadline_command": "python3 -B experiments/lox-eda-parity-20261013/test_timeout.py",
+  "syntax_checked": [
+    "native.py",
+    "pipeline.py",
+    "measure.py",
+    "compile_measure.py"
+  ],
+  "source_sha256": {
+    "native.py": "80587da897d2619bddcea15887d8a438cd3ff7ee4d3ededda9b9c09bf42f5995",
+    "pipeline.py": "e68d73c47f07e860d3dc43c0496d85261c71487e75537ae00e9f9cc630b30734",
+    "measure.py": "ebead08898b4eba7885e41451378be14e8d53dc5cf213d66d4230f33130e8c7d",
+    "compile_measure.py": "81368815546b4151de2039d3b07879666610a1d2988e6510fbb554b787c889f8",
+    "test_timeout.py": "47c3aa74e7693be6b0683cdb9b6e84e941803ababe24d23477752215367c8d78"
+  },
+  "native_measurements": false,
+  "notes": [
+    "Recovered conformance corpus: 254/254 identities match prior qualification.",
+    "Preparation smoke check: all 60 cases preserved in archived P6/harness-audit-001."
+  ]
+}

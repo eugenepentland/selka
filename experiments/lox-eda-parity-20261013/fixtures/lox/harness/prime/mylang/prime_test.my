@@ -1,0 +1,9 @@
+module prime_test
+
+
+public def answer() -> int:
+    return 42
+
+
+public def test_answer() -> bool:
+    return answer() == 42

@@ -16,6 +16,19 @@
     "P3": "EDA tokenization and parser",
     "P4": "Tree execution profiling and environment use",
     "P5": "EDA remaining CPU bottlenecks",
-    "P6": "measurement and qualification harness"
+    "P6": "measurement and qualification harness",
+    "P7": "bounded list exchange compiler support (P6 worker after harness handoff)"
+  },
+  "seed_commit": "2525a66f61838086f5327d74db7412926ce4a221",
+  "milestones": {
+    "implementation": "in progress",
+    "individual_parity": "not yet measured",
+    "verification": "pending integrated candidate"
+  },
+  "harness_checks": {
+    "timeout_tests": 8,
+    "prepare_audit_cases": 60,
+    "recovered_identical_lox_corpus_files": 254,
+    "profile_status": "pending shared admission"
   }
 }

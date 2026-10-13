@@ -1,0 +1,53 @@
+{
+  "release": [
+    "{mylang}",
+    "build",
+    "main.my",
+    "--project",
+    "-o",
+    "{cache}/prime-out/hello",
+    "--cache-dir",
+    "{cache}/mylang"
+  ],
+  "release-safe": [
+    "{mylang}",
+    "build",
+    "main.my",
+    "--project",
+    "-o",
+    "{cache}/prime-out/hello",
+    "--cache-dir",
+    "{cache}/mylang"
+  ],
+  "release-qbe": [
+    "{mylang}",
+    "build",
+    "main.my",
+    "--project",
+    "--backend",
+    "qbe",
+    "-o",
+    "{cache}/prime-out/hello",
+    "--cache-dir",
+    "{cache}/mylang"
+  ],
+  "debug": [
+    "{mylang}",
+    "build",
+    "main.my",
+    "--project",
+    "--mode",
+    "Debug",
+    "-o",
+    "{cache}/prime-out/hello",
+    "--cache-dir",
+    "{cache}/mylang"
+  ],
+  "test": [
+    "{mylang}",
+    "test",
+    ".",
+    "--cache-dir",
+    "{cache}/test"
+  ]
+}

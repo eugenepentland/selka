@@ -1,0 +1,8 @@
+module main
+# Toolchain prime: a printing project with one test module, sharing no code with the port.
+import prime_test
+
+
+def main(args: list[str], out: Stream) -> int:
+    out.print("hello", len(args), prime_test.answer())
+    return 0

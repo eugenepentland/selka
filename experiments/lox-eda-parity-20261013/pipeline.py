@@ -24,6 +24,8 @@ def main():
         assert not dest.exists();dest.mkdir(parents=True);work.mkdir(parents=True,exist_ok=False)
         builds={app:json.loads(path.read_text()) for app,path in [('lox',a.lox_build),('eda',a.eda_build)]}
         pins={str(a.compiler.resolve()):sha(a.compiler)}
+        for name in ('pipeline.py','measure.py','native.py'):
+            pins[str(HERE/name)]=sha(HERE/name)
         pins.update({str(a.install.resolve()/name):v for name,v in tree(a.install.resolve()).items()})
         for app,path in [('lox',a.lox_build),('eda',a.eda_build)]:
             b=builds[app];assert b['compiler_sha256']==sha(a.compiler)
@@ -31,7 +33,13 @@ def main():
             for source in b['sources'].values():
                 for name,digest in source['files'].items():
                     file=P(source['root'])/name;assert sha(file)==digest;pins[str(file)]=digest
-            for binary in b['binaries'].values(): assert binary['status']=='ok' and sha(binary['path'])==binary['sha256']
+            for binary in b['binaries'].values():
+                assert binary['status']=='ok' and sha(binary['path'])==binary['sha256']
+                pins[binary['path']]=binary['sha256']
+            same=b.get('before_same_compiler',{})
+            if same.get('status')=='ok':
+                for name,digest in same['sources'].items():
+                    file=P(same['source_root'])/name;assert sha(file)==digest;pins[str(file)]=digest
         recovery=json.loads((a.prior_root/'input-recovery/manifest.json').read_text())['entries']
         historical_path=a.prior_root/'runtime-summary.json.gz';historical=json.loads(gzip.decompress(historical_path.read_bytes()));pins[str(historical_path)]=sha(historical_path)
         prior_specs=sorted((a.prior_root/'specs').glob('*.json'));assert len(prior_specs)==60
@@ -101,7 +109,7 @@ def main():
                 spec=dict(base)
                 if prior:spec['prior_receipt']=str(prior)
                 save(generated,spec)
-                cmd=[str(a.root/'scripts/build-slot.sh'),'timing',sys.executable,'-B',str(HERE/'measure.py'),str(generated),str(output),'--cpu',str(a.cpu),'--round-start',str(start),'--rounds',str(rounds),'--warmups',str(warmups),'--rss-rounds',str(rss),'--calibration-rounds','3','--calibration-warmups','0','--guest-timeout','120']
+                cmd=[str(a.root/'scripts/build-slot.sh'),'timing',sys.executable,'-B',str(HERE/'measure.py'),str(generated),str(output),'--cpu',str(a.cpu),'--round-start',str(start),'--rounds',str(rounds),'--warmups',str(warmups),'--rss-rounds',str(rss),'--calibration-rounds','5','--calibration-warmups','2','--guest-timeout','120']
                 with (dest/'runtime'/(stem+'.log')).open('w') as log:subprocess.run(cmd,cwd=a.root,env=env,stdout=log,stderr=subprocess.STDOUT,check=True)
                 prior=output
         return
@@ -140,14 +148,27 @@ def main():
             for r in receipts:assert_pins(r['identities'])
             arms[name]={'status':status,'wall_seconds':statistics.median(wall) if status=='ok' else None,'rss_kib':statistics.median(rss) if status=='ok' else None,'wall_samples':wall,'rss_samples':rss}
         candidate=arms['mylang-zero-rc'];zig=arms['zig-fast'];ratio=candidate['wall_seconds']/zig['wall_seconds'] if candidate['status']==zig['status']=='ok' else None
+        eligibility_path=dest/'counted'/(spec.stem+'.eligibility.json')
+        assert eligibility_path.exists(), ('missing counter coverage',spec.stem)
+        eligibility=json.loads(eligibility_path.read_text())
+        assert sha(eligibility['runtime_receipt'])==eligibility['runtime_receipt_sha256']
         counter_path=dest/'counted'/(spec.stem+'.counted.spec.summary.json')
         counter=json.loads(counter_path.read_text()) if counter_path.exists() else None
+        assert bool(counter)==bool(eligibility['included']), ('missing instrumented result',spec.stem)
         if counter:
+            assert set(counter['arms'])==set(eligibility['included'])
+            qualification=json.loads(P(counter['qualification_receipt']).read_text())
+            assert_pins(qualification['identities'])
             for n,row in counter['arms'].items():
+                assert row['status']['status']=='ok' and row.get('metrics') is not None, ('instrumented run failed',spec.stem,n)
                 if row.get('metrics') is not None:
                     assert row['metrics']['live_bytes_at_exit']==0
                     assert row['metrics']['runtime_retains']==row['metrics']['runtime_releases']==row['metrics']['compiler_retains']==row['metrics']['compiler_releases']==0
                     assert json.loads(P(row['counter_path']).read_text())==row['counters']
+                    for key in ('shared_retains','shared_releases','share_marks'):
+                        assert row['counters']['totals'][key]==0
+                    for key in ('retain','release','unique_test'):
+                        assert row['counters']['kinds'][key]['count']==0
         rows[spec.stem]={'counters':counter,'arms':arms,'candidate_over_zig_fast':ratio,'parity_pass':ratio is not None and ratio<=1.0}
     save(dest/'parity-report.json',{'cells':rows,'all_cases_pass':len(rows)==60 and all(r['parity_pass'] for r in rows.values()),'scope':len(rows),'counter_note':'Counters are separate instrumented runs; runtime and RSS do not imply managed traffic, peak, exit-live or RC counts.'})
     assert_pins(pins)
