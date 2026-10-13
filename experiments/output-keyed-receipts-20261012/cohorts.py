@@ -263,13 +263,19 @@ def c3(target: Path, out: Path, samples: int) -> dict:
     return result
 
 
+STORES = {"mode": "evidence"}
+
+
 def sharing_env(tree: Path, shared: Path, **extra) -> dict:
-    """A worktree's launcher with every shared store named explicitly (the
-    defaults are off): native compiler artifacts, native test receipts and the
-    coordinator's evidence store."""
-    return tree_env(tree, MYLANG_COMPILER_SHARED_CACHE=str(shared / "compiler"),
-                    MYLANG_TEST_SHARED_CACHE=str(shared / "tests"),
-                    MYLANG_VERIFICATION_SHARED_CACHE=str(shared / "verification"), **extra)
+    """A worktree's launcher with its shared stores named explicitly (the
+    defaults are off). Mode "evidence" names only the coordinator's evidence
+    store; mode "all" also names the native compiler-artifact and test-receipt
+    stores, which every gate test then sees (F18: one test is not hermetic
+    against them)."""
+    stores = {"MYLANG_VERIFICATION_SHARED_CACHE": str(shared / "verification")}
+    if STORES["mode"] == "all":
+        stores.update(MYLANG_COMPILER_SHARED_CACHE=str(shared / "compiler"), MYLANG_TEST_SHARED_CACHE=str(shared / "tests"))
+    return tree_env(tree, **stores, **extra)
 
 
 def c4(target: Path, out: Path, samples: int, shared: Path) -> dict:
@@ -295,7 +301,7 @@ def c4(target: Path, out: Path, samples: int, shared: Path) -> dict:
             voided.append(row)
             continue
         rows.append(row)
-    return {"cohort": "C4", "shared": str(shared), "samples": rows, "voided": voided,
+    return {"cohort": "C4", "stores": STORES["mode"], "shared": str(shared), "samples": rows, "voided": voided,
             "keys_equal_to_first": [r["action_keys"] == rows[0]["action_keys"] for r in rows],
             "request_seconds": median([r["request_seconds"] for r in rows]),
             "gate_admitted_seconds": median([r["gate_admitted_seconds"] for r in rows])}
@@ -351,7 +357,7 @@ def c5(target: Path, out: Path, agents: int, shared: Path) -> dict:
             executions[name] = executions.get(name, 0) + 1
     always_fresh = sorted(set.intersection(*[set(r["fresh_actions"]) for r in rows])) if rows else []
     cacheable = {name: count for name, count in executions.items() if name not in always_fresh}
-    return {"cohort": "C5", "agents": agents, "shared": str(shared), "builds": builds, "requests": rows,
+    return {"cohort": "C5", "stores": STORES["mode"], "agents": agents, "shared": str(shared), "builds": builds, "requests": rows,
             "wall_seconds_all_requests": wall, "always_fresh": always_fresh,
             "executions_per_cacheable_group": dict(sorted(cacheable.items())),
             "groups_executed_once": sum(1 for c in cacheable.values() if c == 1),
@@ -365,12 +371,15 @@ def main(argv):
     parser.add_argument("--tree", required=True)
     parser.add_argument("--cohort", required=True, choices=("C1", "C2", "C3", "C4", "C5"))
     parser.add_argument("--samples", type=int, default=5)
+    parser.add_argument("--stores", choices=("evidence", "all"), default="evidence",
+                        help="C4/C5: share only the coordinator evidence store, or the native stores too")
     parser.add_argument("--shared", help="C4: a shared evidence store warmed by another worktree")
     parser.add_argument("--evidence", default=str(HERE / "evidence-phase2/cohorts"))
     args = parser.parse_args(argv)
     if not os.environ.get("ZIG") or not os.environ.get("MYLANG_SLOT_DIR"):
         print("cohorts: source ~/.config/mylang/dev-env.sh first", file=sys.stderr)
         return 2
+    STORES["mode"] = args.stores
     target = Path(args.tree).resolve()
     out = Path(args.evidence) / args.cohort
     shutil.rmtree(out, ignore_errors=True)
