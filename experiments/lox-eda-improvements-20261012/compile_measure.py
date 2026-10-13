@@ -9,6 +9,8 @@ import shutil
 import subprocess
 import sys
 import time
+import threading
+import signal
 from receipts import build_path, validate_build
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -29,7 +31,7 @@ def pair(application, number):
     compiler = build['compiler']
     sources = {'before': baseline['sources']['migrated'], 'after': build['sources']['migrated']}
     dest = HERE / 'compilation' / application / str(number)
-    work = ROOT / '.tmp/lox-eda-improvements-20261012/compilation' / application / str(number)
+    work = ROOT / '.tmp/lox-eda-improvements-20261012/compilation-precise' / application / str(number)
     dest.mkdir(parents=True, exist_ok=False)
     work.mkdir(parents=True, exist_ok=False)
     env = dict(os.environ, TMPDIR=str(work), MYLANG_JOBS='4')
@@ -52,19 +54,23 @@ def pair(application, number):
             with (dest / (label + '-' + state + '.stdout')).open('w') as out, (dest / (label + '-' + state + '.stderr')).open('w') as err:
                 process = subprocess.Popen(['/usr/bin/time', '-f', '%e %M', '-o', str(usage), *command],
                                            cwd=ROOT, env=env, stdout=out, stderr=err, start_new_session=True)
-                status = 'ok'
-                try:
-                    returncode = process.wait(timeout=600)
-                    if returncode != 0:
-                        status = 'failed'
-                except subprocess.TimeoutExpired:
-                    import signal
+                expired = threading.Event()
+                def expire():
+                    expired.set()
                     try:
                         os.killpg(process.pid, signal.SIGKILL)
                     except ProcessLookupError:
                         pass
+                # Blocking wait has no exponential polling delay on tiny warm builds.
+                deadline = threading.Timer(600, expire)
+                deadline.daemon = True
+                deadline.start()
+                try:
                     returncode = process.wait()
-                    status = 'timeout'
+                finally:
+                    deadline.cancel()
+                    deadline.join()
+                status = 'timeout' if expired.is_set() else ('ok' if returncode == 0 else 'failed')
             elapsed = time.monotonic() - started
             if status != 'ok':
                 rows.append({'arm': label, 'cache_state': state, 'command': command, 'status': status,
@@ -84,7 +90,7 @@ def pair(application, number):
               'build_receipt': str(selected), 'build_receipt_sha256': sha(selected),
               'compiler_sha256': sha(compiler), 'source_manifests': sources,
               'affinity': sorted(os.sched_getaffinity(0)), 'loadavg_end': os.getloadavg(),
-              'method': 'Fresh private guest caches followed by warm replay; OS and shared host-tool caches are not flushed. Admission wait excluded.',
+              'method': 'Fresh private guest caches followed by warm replay; OS and shared host-tool caches are not flushed. Admission wait excluded. Blocking process wait with a separate600second deadline timer; no Python wait(timeout) polling quantization.',
               'rss_limit': 'GNU time maxrss for the build command; not summed concurrent process-tree/cgroup peak RSS.'}
     (dest / 'results.json').write_text(json.dumps(result, indent=2) + '\n')
     print(application, number, [(r['arm'], r['cache_state'], round(r['elapsed_seconds'], 3)) for r in rows], flush=True)

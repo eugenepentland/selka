@@ -3,7 +3,7 @@
   "syntax_files": {
     "experiments/lox-eda-improvements-20261012/build.py": "1a67e18a3ff00beef5937693e1503db07517c75593b5387d5912cb7f3c2ad373",
     "experiments/lox-eda-improvements-20261012/check-error-paths.py": "224084b978b2c8a15cf03f15f363dec9bfc6558d0fb5d3b4c7a6f97a06ffbafd",
-    "experiments/lox-eda-improvements-20261012/compile_measure.py": "a5fc53d6cf92d96ca58b7f1d2daef0e8b1e9a6a4c3826e75c66724599af20f31",
+    "experiments/lox-eda-improvements-20261012/compile_measure.py": "8cb2bb3fd7fb76c2d5696bbfd8ff08a477365b809977357410fcfca98577c575",
     "experiments/lox-eda-improvements-20261012/count.py": "b6bee547985c2e7661621d90a3b036b2176776a5d0f7893f6cb47f5dcaa2e981",
     "experiments/lox-eda-improvements-20261012/matrix.py": "418cad29a2c9ace45de669955d8fa91d82e4ac22c05e6e224d5a1d989e500838",
     "experiments/lox-eda-improvements-20261012/measure.py": "ebead08898b4eba7885e41451378be14e8d53dc5cf213d66d4230f33130e8c7d",

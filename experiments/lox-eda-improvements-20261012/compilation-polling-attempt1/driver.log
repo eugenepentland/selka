@@ -1,0 +1,22 @@
+build-slot: FIFO ticket 723, position 2; earlier timing tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 723, position 2; earlier timing tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 723, position 2; earlier timing tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 723, position 2; earlier timing tickets must run first; waiting (180s so far)
+build-slot: FIFO ticket 723, position 2; earlier timing tickets must run first; waiting (240s so far)
+build-slot: timing slot 1, FIFO ticket 723 after 290s
+lox 0 [('before', 'cold-guest-cache', 5.178), ('before', 'warm-guest-cache', 0.016), ('after', 'cold-guest-cache', 5.094), ('after', 'warm-guest-cache', 0.033)]
+build-slot: FIFO ticket 725, position 2; earlier timing tickets must run first; waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 725 after 10s
+lox 1 [('after', 'cold-guest-cache', 5.831), ('after', 'warm-guest-cache', 0.016), ('before', 'cold-guest-cache', 5.138), ('before', 'warm-guest-cache', 0.032)]
+build-slot: FIFO ticket 727, position 2; earlier timing tickets must run first; waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 727 after 15s
+lox 2 [('before', 'cold-guest-cache', 6.38), ('before', 'warm-guest-cache', 0.032), ('after', 'cold-guest-cache', 6.029), ('after', 'warm-guest-cache', 0.032)]
+build-slot: FIFO ticket 729, position 2; earlier timing tickets must run first; waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 729 after 15s
+eda 0 [('before', 'cold-guest-cache', 26.59), ('before', 'warm-guest-cache', 0.032), ('after', 'cold-guest-cache', 26.092), ('after', 'warm-guest-cache', 0.064)]
+build-slot: FIFO ticket 731, position 2; earlier timing tickets must run first; waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 731 after 15s
+eda 1 [('after', 'cold-guest-cache', 24.534), ('after', 'warm-guest-cache', 0.064), ('before', 'cold-guest-cache', 29.056), ('before', 'warm-guest-cache', 0.065)]
+build-slot: FIFO ticket 733, position 2; earlier timing tickets must run first; waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 733 after 10s
+eda 2 [('before', 'cold-guest-cache', 28.994), ('before', 'warm-guest-cache', 0.032), ('after', 'cold-guest-cache', 24.578), ('after', 'warm-guest-cache', 0.064)]

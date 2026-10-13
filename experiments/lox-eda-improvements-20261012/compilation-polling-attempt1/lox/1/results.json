@@ -1,0 +1,181 @@
+{
+  "application": "lox",
+  "pair": 1,
+  "samples": [
+    {
+      "arm": "after",
+      "cache_state": "cold-guest-cache",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/source/lox/main.my",
+        "--release",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/compilation/lox/1/cache-after",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/compilation/lox/1/after"
+      ],
+      "elapsed_seconds": 5.830572947161272,
+      "gnu_time_seconds": 5.77,
+      "gnu_time_maxrss_kib": 116416,
+      "binary_sha256": "0312b0302c1084c1102fbb89aa8a2035b4a09596c439aa134916e78642ad9f51"
+    },
+    {
+      "arm": "after",
+      "cache_state": "warm-guest-cache",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/source/lox/main.my",
+        "--release",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/compilation/lox/1/cache-after",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/compilation/lox/1/after"
+      ],
+      "elapsed_seconds": 0.01601157709956169,
+      "gnu_time_seconds": 0.01,
+      "gnu_time_maxrss_kib": 8312,
+      "binary_sha256": "0312b0302c1084c1102fbb89aa8a2035b4a09596c439aa134916e78642ad9f51"
+    },
+    {
+      "arm": "before",
+      "cache_state": "cold-guest-cache",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-zero-rc-20261012/lox/migrated/main.my",
+        "--release",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/compilation/lox/1/cache-before",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/compilation/lox/1/before"
+      ],
+      "elapsed_seconds": 5.137947598937899,
+      "gnu_time_seconds": 5.09,
+      "gnu_time_maxrss_kib": 124840,
+      "binary_sha256": "03d20c862445d13709b19f9cb6c629b712b0c6b48820c2492331a180fb6b0aa0"
+    },
+    {
+      "arm": "before",
+      "cache_state": "warm-guest-cache",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-zero-rc-20261012/lox/migrated/main.my",
+        "--release",
+        "--experimental-zero-rc",
+        "--cache-dir",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/compilation/lox/1/cache-before",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/compilation/lox/1/before"
+      ],
+      "elapsed_seconds": 0.03210217505693436,
+      "gnu_time_seconds": 0.02,
+      "gnu_time_maxrss_kib": 8504,
+      "binary_sha256": "03d20c862445d13709b19f9cb6c629b712b0c6b48820c2492331a180fb6b0aa0"
+    }
+  ],
+  "build_receipt": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/build/lox/build-receipt.json",
+  "build_receipt_sha256": "dccb0b797a78ab4f6eb34c2dfefe7a095f6e1650c3ad6cca2291e6668467d535",
+  "compiler_sha256": "2dcba1cb1a98846bb8c1319575da1b3564e60af70162e195c2fbb6ec3af0f329",
+  "source_manifests": {
+    "before": {
+      "root": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-zero-rc-20261012/lox/migrated",
+      "files": {
+        "ast.my": "1fb65ed5a17d23d337b822e263e974886f06386365e869b07fc418d96afe3e46",
+        "chunk.my": "d78b6babd52503e76abcd88fe858d11e44ad43cdb45f7a436aa0adabdbf5b731",
+        "compiler.my": "92f20efd56d2976bc8abf6e349dfb2dd00d7cd6db5a788a87cf054fd99e2ed90",
+        "compiler_test.my": "57ef31985f79ddd7f36420430847c94bf3fda79b1bc1bc7fff56859ea3310e60",
+        "driver.my": "7fc1224dd3e5b42a488a92f4f7282c198ec03fb0eccaa6516b63ca6d75be6c9c",
+        "driver_tests.my": "7de9d76e841420434c3ee6195cd31cb3acfebd23d45c290b6ef49077bd87e99a",
+        "heap.my": "58ca74ce34b70b7d02d36f986cfc363462b72fc8b31c17d6963c13733b21abfc",
+        "heap_test.my": "163e84ed66b8b77248337b0a04789993a63f87ccb4beda704dc14fbe2c346cc5",
+        "interpreter.my": "1e1265144984c4241d78441b3f959dde2afc07904446d050b4c09b09bf6498c9",
+        "lox_strings.my": "02a517589bf27891e2a062f525fe711a5d1c5af42eae73b8943ec8d69539c091",
+        "lox_strings_test.my": "ef5d217fe56c99212cd02b137f8bd75e458a6ddf89df07d7f4c10df0d85b51ae",
+        "main.my": "641f72b214650751a3799292bb9f9900c0ee191a4ee9b51cd6c5d47da731dc3f",
+        "natives.my": "275a01cc19f99e51ed04ca2c45fb997e9df1a61ac83bfbcb71e3344ccb5a8bc8",
+        "object.my": "d7676af7b94ffecfa563e2aa1cbdda39f9dc15934e0268aa168cb8630a111f93",
+        "output.my": "3a2e104f0f7e7fd5b5b281d38cd39ee7cf32d0cb06816a90bcff57198d462b84",
+        "parser.my": "9d240b7def5f585ad3571f1d6f78f079a32c5b1133569bee8de08c002ea70ddd",
+        "parser_test.my": "7b87e451fc84c6f745246b5b716c2f49d4c994b75ac0149f28e3efdcf6115567",
+        "resolver.my": "f06d3b559ee224b9c32fc3e48de932b7b151c15b93d97bde0bf92bc0f47cf8de",
+        "resolver_test.my": "764c6cf4042cab6ffbad624a724268f20d353adc08f38094ebbb0feed1503974",
+        "scanner.my": "62e0ead93c58c83b4dee2473991df12778e432e2404122d9c59bc1be2bdf30df",
+        "scanner_test.my": "c725372b79a947e38f4ca71e3db8c2cf4a06207536eda84d7089613145639a43",
+        "table.my": "09997c3fbc7461e5698c16de1b186ba755f98b94951b54dadfad0dc7268dfa98",
+        "table_test.my": "5cb9baaebaf11aa301faacbeabd777af4a460eb0f0c6e9a67ff8f0e276b0cccc",
+        "value.my": "be66ac3375e327f4bdf1759177519fd95a45bcd1f60070af0bf70047e8bb8c41",
+        "value_test.my": "e08b23815ec0b80060b56168648514c35d2103ab09444b0bd16532ac63caa560",
+        "vm.my": "4ef180c944181b764fac0a770adafeb528114bac2cfeee941679600880562e5f"
+      }
+    },
+    "after": {
+      "root": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/source/lox",
+      "files": {
+        "ast.my": "1fb65ed5a17d23d337b822e263e974886f06386365e869b07fc418d96afe3e46",
+        "chunk.my": "d78b6babd52503e76abcd88fe858d11e44ad43cdb45f7a436aa0adabdbf5b731",
+        "compiler.my": "92f20efd56d2976bc8abf6e349dfb2dd00d7cd6db5a788a87cf054fd99e2ed90",
+        "compiler_test.my": "57ef31985f79ddd7f36420430847c94bf3fda79b1bc1bc7fff56859ea3310e60",
+        "driver.my": "7fc1224dd3e5b42a488a92f4f7282c198ec03fb0eccaa6516b63ca6d75be6c9c",
+        "driver_tests.my": "7de9d76e841420434c3ee6195cd31cb3acfebd23d45c290b6ef49077bd87e99a",
+        "heap.my": "7dafd924d96fec75dcd39bd3023c5522a6a6d2d186d2d20372a1b8b9de72d1b4",
+        "heap_test.my": "163e84ed66b8b77248337b0a04789993a63f87ccb4beda704dc14fbe2c346cc5",
+        "interpreter.my": "99e20bb720209ba1007fd4e11ab9a8f02526949b2a16a847e94468b5957f5ef7",
+        "lox_strings.my": "277c69c5abf81d3db8a51b4d64858bd2eb7ccd1a406b3cfe3eeb949567cdb843",
+        "lox_strings_test.my": "ef5d217fe56c99212cd02b137f8bd75e458a6ddf89df07d7f4c10df0d85b51ae",
+        "main.my": "641f72b214650751a3799292bb9f9900c0ee191a4ee9b51cd6c5d47da731dc3f",
+        "natives.my": "275a01cc19f99e51ed04ca2c45fb997e9df1a61ac83bfbcb71e3344ccb5a8bc8",
+        "object.my": "d7676af7b94ffecfa563e2aa1cbdda39f9dc15934e0268aa168cb8630a111f93",
+        "output.my": "2a4760acf26f0ce8eaa585d7d69afe521120fbe90c6bdd2f35d8500e79648798",
+        "p2_tree_tests.my": "851b12836dc599b8431e4ba05b804422ba9961113fbda80b0ec12a2d4743f52d",
+        "p3_queries_test.my": "9557e1afc80b6bba743d2ff82adf8bdf4eb17cc4908552eaf5696ea036ddaab6",
+        "parser.my": "9d240b7def5f585ad3571f1d6f78f079a32c5b1133569bee8de08c002ea70ddd",
+        "parser_test.my": "7b87e451fc84c6f745246b5b716c2f49d4c994b75ac0149f28e3efdcf6115567",
+        "resolver.my": "f06d3b559ee224b9c32fc3e48de932b7b151c15b93d97bde0bf92bc0f47cf8de",
+        "resolver_test.my": "764c6cf4042cab6ffbad624a724268f20d353adc08f38094ebbb0feed1503974",
+        "scanner.my": "62e0ead93c58c83b4dee2473991df12778e432e2404122d9c59bc1be2bdf30df",
+        "scanner_test.my": "c725372b79a947e38f4ca71e3db8c2cf4a06207536eda84d7089613145639a43",
+        "table.my": "09997c3fbc7461e5698c16de1b186ba755f98b94951b54dadfad0dc7268dfa98",
+        "table_test.my": "5cb9baaebaf11aa301faacbeabd777af4a460eb0f0c6e9a67ff8f0e276b0cccc",
+        "value.my": "be66ac3375e327f4bdf1759177519fd95a45bcd1f60070af0bf70047e8bb8c41",
+        "value_test.my": "e08b23815ec0b80060b56168648514c35d2103ab09444b0bd16532ac63caa560",
+        "vm.my": "94c82cf6197816633bf75f8f792b07387a84bc9682ddda71b362c427903fd07b",
+        "vm_queries.my": "db8d25f0d1bd7f865d8a6259c360f6b6eef50132311b130261894a03fafe182b"
+      }
+    }
+  },
+  "affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
+  ],
+  "loadavg_end": [
+    15.1669921875,
+    23.470703125,
+    25.80224609375
+  ],
+  "method": "Fresh private guest caches followed by warm replay; OS and shared host-tool caches are not flushed. Admission wait excluded.",
+  "rss_limit": "GNU time maxrss for the build command; not summed concurrent process-tree/cgroup peak RSS."
+}
