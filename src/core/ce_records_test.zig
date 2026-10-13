@@ -240,7 +240,7 @@ test "a mut record crosses a call in-out: one writable pointer, no sret, no copy
     const overlapping = functionText(llvm, "@\"my.overlapping\"");
     try std.testing.expectEqual(@as(usize, 1), copies(overlapping));
     const overlap = functionText(llvm, "@\"my.overlap\"");
-    try std.testing.expect(contains(overlap, "ptr noalias sret([56 x i8]) align 8 %ret, ptr noalias align 8 %p0, ptr noalias readonly align 8 %p1, { i64, i64, i64 } %p2)"));
+    try std.testing.expect(contains(overlap, "ptr noalias sret([8 x i8]) align 8 %ret, ptr noalias align 8 %p0, ptr noalias readonly align 8 %p1, { i64, i64, i64 } %p2)"));
     try std.testing.expectEqual(@as(usize, 0), copies(overlap));
     // A write-back through an in-out call passes the field itself.
     const pushes = functionText(llvm, "@\"my.pushes\"");
@@ -259,7 +259,7 @@ test "a call's result record read whole gets its in-out final values copied in a
     try std.testing.expectEqualStrings("8 80 16 16\n", debug.stdout);
     try std.testing.expectEqualStrings("", debug.stderr);
     const main_text = functionText(debug.llvm, "@\"my.main\"");
-    try std.testing.expect(contains(main_text, "call fastcc void @\"my.bump\"(ptr sret([56 x i8]) align 8"));
+    try std.testing.expect(contains(main_text, "call fastcc void @\"my.bump\"(ptr sret([8 x i8]) align 8"));
     try std.testing.expect(contains(functionText(debug.llvm, "@\"my.bump\""), "ptr noalias align 8 %p0, i64 %p1"));
     var again = try completedProgram(a);
     const release = try support.runOwned(a, &again, .{ .release = true });

@@ -9,6 +9,7 @@
 //! The runtime ABI (src/core/runtime/core_rt.c): list and string blocks have a
 //! 32-byte header `{u32 count, u32 kind, i64 len, i64 cap, i64 reserved}` and
 //! their data at offset 32; traps carry pointers to private, unit-local site records.
+const memory_type_format = "[{d} x i8]";
 const std = @import("std");
 const zero_rc = @import("zero_rc.zig");
 const ir = @import("ir.zig");
@@ -436,7 +437,7 @@ const ModuleState = struct {
         const abi = inOutAbi(self.module, function.signature);
         const sret = returnsThroughSret(self.module, function.signature, abi);
         try self.externs.print(self.allocator, "declare hidden fastcc {s} {s}(", .{ try self.returnType(function.signature, abi), name });
-        if (sret) try self.externs.print(self.allocator, "ptr noalias sret({s}) align 8", .{try self.memoryType(function.signature.ret)});
+        if (sret) try self.externs.print(self.allocator, "ptr noalias sret({s}) align 8", .{try std.fmt.allocPrint(self.allocator, memory_type_format, .{abi.size(self.module, function.signature)})});
         for (function.signature.params, 0..) |param, i| try self.externs.print(self.allocator, "{s}{s}", .{ if (i == 0 and !sret) "" else ", ", try self.llvmType(param) });
         try self.externs.appendSlice(self.allocator, ") nounwind\n");
     }
@@ -556,7 +557,7 @@ const ModuleState = struct {
 
     /// `[S x i8]`: the memory image of a value of `ty`, for `sret` and argument slots.
     fn memoryType(self: *ModuleState, ty: ir.Type) ![]const u8 {
-        return std.fmt.allocPrint(self.allocator, "[{d} x i8]", .{self.module.size(ty)});
+        return std.fmt.allocPrint(self.allocator, memory_type_format, .{self.module.size(ty)});
     }
 
     /// Bytes between consecutive list elements of type `ty`.
@@ -901,6 +902,40 @@ const InOutAbi = struct {
     /// after the declared result); the others follow in parameter order.
     first: u32 = 0,
 
+    /// Logical tuple fields updated through their parameter pointer do not cross sret.
+    fn omitted(self: InOutAbi, signature: ir.Signature, field_index: usize) bool {
+        for (0..signature.params.len) |param| {
+            if (self.inOut(param) and self.field(signature, param) == field_index) return true;
+        }
+        return false;
+    }
+
+    fn compact(self: InOutAbi) bool {
+        return self.params != 0 and !self.whole;
+    }
+
+    fn offset(self: InOutAbi, m: *const ir.Module, signature: ir.Signature, field_index: usize) u32 {
+        if (!self.compact()) return m.fieldOffset(signature.ret, field_index);
+        var bytes: u32 = 0;
+        for (m.compound(signature.ret).record[0..field_index], 0..) |field_type, i| {
+            if (!self.omitted(signature, i)) bytes = std.mem.alignForward(u32, bytes, m.alignment(field_type)) + m.size(field_type);
+        }
+        return std.mem.alignForward(u32, bytes, m.alignment(m.compound(signature.ret).record[field_index]));
+    }
+
+    fn size(self: InOutAbi, m: *const ir.Module, signature: ir.Signature) u32 {
+        if (!self.compact()) return m.size(signature.ret);
+        var bytes: u32 = 0;
+        var alignment: u32 = 1;
+        for (m.compound(signature.ret).record, 0..) |field_type, i| {
+            if (self.omitted(signature, i)) continue;
+            const field_alignment = m.alignment(field_type);
+            bytes = std.mem.alignForward(u32, bytes, field_alignment) + m.size(field_type);
+            alignment = @max(alignment, field_alignment);
+        }
+        return @max(std.mem.alignForward(u32, bytes, alignment), 1);
+    }
+
     /// Whether parameter `param` is in-out (a signature of 64 or more parameters has none).
     fn inOut(self: InOutAbi, param: usize) bool {
         return param < 64 and self.params & (@as(u64, 1) << @intCast(param)) != 0;
@@ -1223,7 +1258,7 @@ const FunctionEmitter = struct {
         const sret = returnsThroughSret(m, f.signature, abi);
         const shared = if (self.memory.homes.shared) shareCandidate(m, f.signature, abi) else emit_homes.none;
         try out.print(self.a(), "define {s} fastcc {s} {s}(", .{ self.state.linkage(self.index), try self.state.returnType(f.signature, abi), try self.state.originalSymbol(self.index) });
-        if (sret) try out.print(self.a(), "ptr {s}sret({s}) align 8 %ret", .{ if (shared == emit_homes.none) "noalias " else "", try self.state.memoryType(f.signature.ret) });
+        if (sret) try out.print(self.a(), "ptr {s}sret({s}) align 8 %ret", .{ if (shared == emit_homes.none) "noalias " else "", try std.fmt.allocPrint(self.a(), memory_type_format, .{abi.size(m, f.signature)}) });
         for (f.signature.params, 0..) |param, i| {
             const separator = if (i == 0 and !sret) "" else ", ";
             if (abi.inOut(i)) {
@@ -1338,7 +1373,7 @@ const FunctionEmitter = struct {
             .calls = mem.in_out.args,
             .effects = self.state.options.analysis.effects,
             .results = .{
-                .sret = returnsThroughSret(m, f.signature, abi),
+                .sret = returnsThroughSret(m, f.signature, abi) and !abi.compact(),
                 .finals = finalFields(f.signature, abi),
                 .borrowed = mem.borrowed,
                 .share = shareCandidate(m, f.signature, abi),
@@ -2287,11 +2322,18 @@ const FunctionEmitter = struct {
         var moves: std.ArrayList(Move) = .empty;
         std.debug.assert(!self.memory.homes.staged(self.current));
         if (!self.memory.fused[composite.index()]) {
-            // A whole record: copied to `%ret`, and each final value from there.
-            try self.storeAtRet(out, signature.ret, raw, 0);
+            // Preserve logical tuple bytes before updating potentially overlapping finals.
+            const snapshot = try self.stackSlot(m.size(signature.ret));
+            try self.storeOperand(out, signature.ret, raw, snapshot);
+            for (m.compound(signature.ret).record, 0..) |field_type, k| {
+                if (abi.omitted(signature, k)) continue;
+                const src = try self.offsetPointer(out, snapshot, m.fieldOffset(signature.ret, k));
+                const dst = try self.offsetPointer(out, "%ret", abi.offset(m, signature, k));
+                try self.copyBytes(out, dst, src, m.size(field_type), false);
+            }
             for (signature.params, 0..) |param, i| {
                 if (!abi.inOut(i)) continue;
-                const at = try self.offsetPointer(out, "%ret", m.fieldOffset(signature.ret, abi.field(signature, i)));
+                const at = try self.offsetPointer(out, snapshot, m.fieldOffset(signature.ret, abi.field(signature, i)));
                 try self.copyBytes(out, try std.fmt.allocPrint(self.a(), "%p{d}", .{i}), at, m.size(param), false);
             }
             return;
@@ -2301,7 +2343,7 @@ const FunctionEmitter = struct {
             const final = for (0..signature.params.len) |i| {
                 if (abi.inOut(i) and abi.field(signature, i) == k) break true;
             } else false;
-            if (!final) try self.storeAtRet(out, field_type, operand, m.fieldOffset(signature.ret, k));
+            if (!final) try self.storeAtRet(out, field_type, operand, abi.offset(m, signature, k));
         }
         for (0..signature.params.len) |i| {
             if (!abi.inOut(i)) continue;
@@ -2687,7 +2729,7 @@ const FunctionEmitter = struct {
         const data = try self.fresh("%data");
         const slot = try self.fresh("%elt");
         const inline_value = element.isCompound() and !self.state.module.isBlock(element);
-        const stepped = if (inline_value) try std.fmt.allocPrint(self.a(), "[{d} x i8]", .{self.state.stride(element)}) else storageType(element);
+        const stepped = if (inline_value) try std.fmt.allocPrint(self.a(), memory_type_format, .{self.state.stride(element)}) else storageType(element);
         try out.print(self.a(), "  {s} = getelementptr inbounds i8, ptr {s}, i64 {d}\n  {s} = getelementptr inbounds {s}, ptr {s}, i64 {s}\n", .{ data, list, data_offset, slot, stepped, data, index });
         return slot;
     }
@@ -3888,10 +3930,11 @@ const FunctionEmitter = struct {
         var arguments: Out = .empty;
         var first = true;
         const result = if (sret) try self.destination(name, m.size(ret)) else null;
-        const result_slot = if (result) |into| into.ptr else "";
+        const logical_result = if (result) |into| into.ptr else "";
+        const result_slot = try self.transportSlot(signature, abi, logical_result);
         const places = try self.inOutPlaces(out, name, inst);
         if (sret) {
-            try arguments.print(self.a(), "ptr sret({s}) align 8 {s}", .{ try self.state.memoryType(ret), result_slot });
+            try arguments.print(self.a(), "ptr sret({s}) align 8 {s}", .{ try std.fmt.allocPrint(self.a(), memory_type_format, .{abi.size(m, signature)}), result_slot });
             first = false;
         }
         const c_function = inst.op == .call and signature.linkage == .extern_c;
@@ -3918,13 +3961,40 @@ const FunctionEmitter = struct {
         const tail = if (program and self.state.options.target.traps == .dwarf_lines) "notail " else "";
         if (ret == .void or sret or abi.whole) {
             try out.print(self.a(), "  {s}call {s}void {s}({s}){s}\n", .{ tail, if (program) "fastcc " else "", target, arguments.items, try self.callLocation(inst.span) });
-            if (result != null and result.?.fresh) try out.print(self.a(), identity_line, .{ name, result_slot });
+            if (result != null and result.?.fresh) try out.print(self.a(), identity_line, .{ name, logical_result });
             // The one in-out parameter's final value is the result: it is where it was passed.
             if (abi.whole and !self.homedName(name)) try out.print(self.a(), identity_line, .{ name, places[@ctz(abi.params)] });
         } else {
             try out.print(self.a(), "  {s} = {s}call {s}{s} {s}({s}){s}\n", .{ name, tail, if (program) "fastcc " else "", try self.ty(ret), target, arguments.items, try self.callLocation(inst.span) });
         }
-        if (sret) try self.completeResult(out, name, signature, .{ .result = result_slot, .places = places });
+        if (sret) {
+            try self.unpackTransport(out, signature, abi, result_slot, logical_result);
+            try self.completeResult(out, name, signature, .{ .result = logical_result, .places = places });
+        }
+    }
+
+    /// Compact transport is separate from the logical IR home, which whole readers still need.
+    fn transportSlot(self: *FunctionEmitter, signature: ir.Signature, abi: InOutAbi, logical: []const u8) ![]const u8 {
+        if (!abi.compact()) return logical;
+        return self.stackSlot(abi.size(self.state.module, signature));
+    }
+
+    /// Restore transported fields at their logical offsets; in-out fields stay in argument homes.
+    fn unpackTransport(self: *FunctionEmitter, out: *Out, signature: ir.Signature, abi: InOutAbi, transport: []const u8, logical: []const u8) !void {
+        if (!abi.compact()) return;
+        const m = self.state.module;
+        for (m.compound(signature.ret).record, 0..) |field_type, k| {
+            if (abi.omitted(signature, k)) continue;
+            const src = try self.offsetPointer(out, transport, abi.offset(m, signature, k));
+            const dst = try self.offsetPointer(out, logical, m.fieldOffset(signature.ret, k));
+            if (m.passedInMemory(field_type)) {
+                try self.copyBytes(out, dst, src, m.size(field_type), false);
+            } else {
+                const transported = try self.fresh("%transport");
+                try self.loadValue(out, field_type, src, transported);
+                try self.storeValue(out, field_type, transported, dst);
+            }
+        }
     }
 
     /// A register argument: widened or sign-marked for a C function, its NaN made canonical.

@@ -173,4 +173,5 @@ comptime {
     _ = @import("a07_borrow_choice_test.zig");
     _ = @import("a04_borrow_selection_test.zig");
     _ = @import("owned_copy_stack_test.zig");
+    _ = @import("compact_sret_test.zig");
 }
