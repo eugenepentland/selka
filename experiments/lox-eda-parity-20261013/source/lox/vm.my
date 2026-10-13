@@ -147,7 +147,7 @@ func call_value(mut rt: heap.Runtime, mut o: output.Output, callee: value.Value,
                 rt.stack[rt.stack_top - count - 1] = receiver
                 return call(mut rt, mut o, method, count)
             elif kind == 2:
-                mut instance = heap.allocate(mut rt, object.Obj.instance(value=object.InstanceObj(klass=ref, fields=table.new_table())))
+                mut instance = heap.allocate_instance(mut rt, ref)
                 rt.stack[rt.stack_top - count - 1] = value.Value.obj(value=instance)
                 match heap.class_method(rt, ref, rt.init_string, heap.string_hash(rt, rt.init_string)):
                     case Some(initializer):
@@ -334,20 +334,19 @@ func get_property(mut rt: heap.Runtime, mut o: output.Output, mut frame: heap.Ca
 
 
 func set_property(mut rt: heap.Runtime, mut o: output.Output, mut frame: heap.CallFrame) -> bool:
-    match instance_of(rt, heap.peek(rt, 1)):
-        case Some(instance):
+    match heap.peek(rt, 1):
+        case value.Value.obj(value=instance_ref):
+            if not heap.is_instance(rt, instance_ref):
+                return runtime_error(mut rt, mut o, b"Only instances have fields.")
             mut name = read_string(rt, mut frame)
-            mut fields = instance.fields.copy()
-            _ = table.set(mut fields, name, heap.string_hash(rt, name), heap.peek(rt, 0))
-            mut instance_ref = as_obj(heap.peek(rt, 1))
-            mut updated_instance = instance
-            updated_instance.fields = fields
-            rt.objects[instance_ref] = object.Obj.instance(value=updated_instance)
+            const hash = heap.string_hash(rt, name)
+            const assigned_value = heap.peek(rt, 0)
+            heap.set_instance_field(mut rt, instance_ref, name, hash, assigned_value)
             mut assigned = heap.pop(mut rt)
             _ = heap.pop(mut rt)
             heap.push(mut rt, assigned)
             return True
-        case None:
+        case _:
             return runtime_error(mut rt, mut o, b"Only instances have fields.")
 
 
@@ -416,23 +415,18 @@ func inherit(mut rt: heap.Runtime, mut o: output.Output) -> bool:
     mut parent = heap.peek(rt, 1)
     if not is_class(rt, parent):
         return runtime_error(mut rt, mut o, b"Superclass must be a class.")
-    mut methods = heap.class_obj(rt, as_obj(heap.peek(rt, 0))).methods.copy()
-    const __owned_arg_9 = heap.class_obj(rt, as_obj(parent)).methods.copy()
-    table.add_all(__owned_arg_9, mut methods)
     mut subclass_ref = as_obj(heap.peek(rt, 0))
-    heap.set_class_methods(mut rt, subclass_ref, methods)
+    heap.inherit_class_methods(mut rt, subclass_ref, as_obj(parent))
     _ = heap.pop(mut rt)
     return True
 
 
 func define_method(mut rt: heap.Runtime, mut frame: heap.CallFrame):
     mut name = read_string(rt, mut frame)
-    mut methods = heap.class_obj(rt, as_obj(heap.peek(rt, 1))).methods.copy()
-    _ = table.set(mut methods, name, heap.string_hash(rt, name), heap.peek(rt, 0))
     mut class_ref = as_obj(heap.peek(rt, 1))
-    mut klass = heap.class_obj(rt, class_ref)
-    klass.methods = methods
-    rt.objects[class_ref] = object.Obj.klass(value=klass)
+    const hash = heap.string_hash(rt, name)
+    const method = heap.peek(rt, 0)
+    heap.set_class_method(mut rt, class_ref, name, hash, method)
     _ = heap.pop(mut rt)
 
 
@@ -551,7 +545,7 @@ func run(mut rt: heap.Runtime, mut o: output.Output, clock: Clock?) -> Interpret
             frame = rt.frames[rt.frame_count - 1].copy()
         elif instruction == chunk.OP_CLASS:
             mut name = read_string(rt, mut frame)
-            mut klass = heap.allocate(mut rt, object.Obj.klass(value=object.ClassObj(name=name, methods=table.new_table())))
+            mut klass = heap.allocate_class(mut rt, name)
             heap.push(mut rt, value.Value.obj(value=klass))
         elif instruction == chunk.OP_INHERIT:
             ok = inherit(mut rt, mut o)

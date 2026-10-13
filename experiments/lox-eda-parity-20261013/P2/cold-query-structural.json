@@ -1,0 +1,22 @@
+{
+  "base": {
+    "binary_sha256": "0312b0302c1084c1102fbb89aa8a2035b4a09596c439aa134916e78642ad9f51",
+    "llvm_sha256": "b7333543af6ad2f800dc329d5809333f740df84c5780904a52cb04302938d4ab",
+    "instruction_assert_calls": 10,
+    "instruction_native_retained": true,
+    "constant_native_retained": false,
+    "line_native_retained": false,
+    "read_byte_native_retained": false,
+    "caveat": "Cold query reshapes inlining; API retains read_byte wrapper, baseline retains scalar instruction query. Native symbol removal alone is not a runtime benefit."
+  },
+  "api": {
+    "binary_sha256": "36342f2ea494b9523c678bb1c916a41cbd77bea07c530ff43912c297e43c7482",
+    "llvm_sha256": "1262d192c4054a8cb2985123b7042790081e1dc5a0d59a0cdb735017beb2068c",
+    "instruction_assert_calls": 1,
+    "instruction_native_retained": false,
+    "constant_native_retained": false,
+    "line_native_retained": false,
+    "read_byte_native_retained": true,
+    "caveat": "Cold query reshapes inlining; API retains read_byte wrapper, baseline retains scalar instruction query. Native symbol removal alone is not a runtime benefit."
+  }
+}
