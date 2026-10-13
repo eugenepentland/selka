@@ -1,0 +1,243 @@
+{
+  "label": "bounded diagnostic; full identical equality input; not full application qualification or Zig parity claim",
+  "cpu_affinity": [
+    8
+  ],
+  "compiler_sha256": "2dcba1cb1a98846bb8c1319575da1b3564e60af70162e195c2fbb6ec3af0f329",
+  "input_sha256": "6044b6363a3777c65e20060c867fb669a0a28eb7a06cb1708265ee6e7b24e93d",
+  "binary_sha256": {
+    "api": "36342f2ea494b9523c678bb1c916a41cbd77bea07c530ff43912c297e43c7482",
+    "fused": "a6492a1d06803088ba956ae904993b816c8ec2254d55f8751ef9694ab8622b82"
+  },
+  "warmups": [
+    {
+      "lease": 1,
+      "pair": 0,
+      "arm": "api",
+      "elapsed_seconds": 2.995718047954142,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    },
+    {
+      "lease": 1,
+      "pair": 0,
+      "arm": "fused",
+      "elapsed_seconds": 2.2167562760878354,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    },
+    {
+      "lease": 1,
+      "pair": 1,
+      "arm": "fused",
+      "elapsed_seconds": 2.209777892101556,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    },
+    {
+      "lease": 1,
+      "pair": 1,
+      "arm": "api",
+      "elapsed_seconds": 2.9553179449867457,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    },
+    {
+      "lease": 2,
+      "pair": 0,
+      "arm": "api",
+      "elapsed_seconds": 2.9239037139341235,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    },
+    {
+      "lease": 2,
+      "pair": 0,
+      "arm": "fused",
+      "elapsed_seconds": 2.1754291290417314,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    },
+    {
+      "lease": 2,
+      "pair": 1,
+      "arm": "fused",
+      "elapsed_seconds": 2.193386180093512,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    },
+    {
+      "lease": 2,
+      "pair": 1,
+      "arm": "api",
+      "elapsed_seconds": 2.969411240890622,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    }
+  ],
+  "samples": [
+    {
+      "lease": 1,
+      "pair": 0,
+      "arm": "api",
+      "elapsed_seconds": 2.992960240924731,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    },
+    {
+      "lease": 1,
+      "pair": 0,
+      "arm": "fused",
+      "elapsed_seconds": 2.2161649190820754,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    },
+    {
+      "lease": 1,
+      "pair": 1,
+      "arm": "fused",
+      "elapsed_seconds": 2.222471544984728,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    },
+    {
+      "lease": 1,
+      "pair": 1,
+      "arm": "api",
+      "elapsed_seconds": 3.062352702021599,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    },
+    {
+      "lease": 1,
+      "pair": 2,
+      "arm": "api",
+      "elapsed_seconds": 2.9828681231010705,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    },
+    {
+      "lease": 1,
+      "pair": 2,
+      "arm": "fused",
+      "elapsed_seconds": 2.2372648450545967,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    },
+    {
+      "lease": 1,
+      "pair": 3,
+      "arm": "fused",
+      "elapsed_seconds": 2.223109585000202,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    },
+    {
+      "lease": 1,
+      "pair": 3,
+      "arm": "api",
+      "elapsed_seconds": 2.991829662118107,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    },
+    {
+      "lease": 1,
+      "pair": 4,
+      "arm": "api",
+      "elapsed_seconds": 3.0071753149386495,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    },
+    {
+      "lease": 1,
+      "pair": 4,
+      "arm": "fused",
+      "elapsed_seconds": 2.215390143916011,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    },
+    {
+      "lease": 2,
+      "pair": 5,
+      "arm": "fused",
+      "elapsed_seconds": 2.2113336911424994,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    },
+    {
+      "lease": 2,
+      "pair": 5,
+      "arm": "api",
+      "elapsed_seconds": 3.039870475884527,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    },
+    {
+      "lease": 2,
+      "pair": 6,
+      "arm": "api",
+      "elapsed_seconds": 2.945494612213224,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    },
+    {
+      "lease": 2,
+      "pair": 6,
+      "arm": "fused",
+      "elapsed_seconds": 2.2251990628428757,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    },
+    {
+      "lease": 2,
+      "pair": 7,
+      "arm": "fused",
+      "elapsed_seconds": 2.1974779930897057,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    },
+    {
+      "lease": 2,
+      "pair": 7,
+      "arm": "api",
+      "elapsed_seconds": 2.9748276700265706,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    },
+    {
+      "lease": 2,
+      "pair": 8,
+      "arm": "api",
+      "elapsed_seconds": 2.971273920033127,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    },
+    {
+      "lease": 2,
+      "pair": 8,
+      "arm": "fused",
+      "elapsed_seconds": 2.2376687100622803,
+      "stdout_sha256": "86462511f5bae5ed2d407ecc8d2699a032b2ee003e4d10c3e38511780dd6d016",
+      "status": 0
+    }
+  ],
+  "leases": [
+    {
+      "lease": 1,
+      "warmup_pairs": 2,
+      "measured_pairs": 5,
+      "cpu_affinity": [
+        8
+      ]
+    },
+    {
+      "lease": 2,
+      "warmup_pairs": 2,
+      "measured_pairs": 4,
+      "cpu_affinity": [
+        8
+      ]
+    }
+  ],
+  "status": "complete"
+}

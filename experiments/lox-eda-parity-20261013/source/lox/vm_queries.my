@@ -34,3 +34,17 @@ public func bound_method(rt: heap.Runtime, ref: value.ObjRef) -> value.ObjRef:
         case _:
             assert False, "object is not a bound method"
             return value.NO_OBJ
+
+
+# The operand byte and selected constant belong to the same checked function.
+# Return only the scalar Value; the borrow ends before the caller mutates IP
+# or Runtime. Both code and constant indexing retain their bounds checks.
+public func constant_operand(rt: heap.Runtime, function: value.ObjRef, ip: int) -> value.Value:
+    match rt.objects[function]:
+        case object.Obj.function(value=payload):
+            const index = payload.code.code[ip]
+            return payload.code.constants[index]
+        case _:
+            pass
+    assert False, "object is not a function"
+    return value.Value.nil

@@ -1,0 +1,37 @@
+{
+  "label": "diagnostic only, no Zig comparison",
+  "median_api_seconds": 2.991829662118107,
+  "median_fused_seconds": 2.222471544984728,
+  "paired_fused_over_api": [
+    0.7404591911309019,
+    0.7257399004097644,
+    0.7500381353529889,
+    0.7430602126680972,
+    0.7367013598810443,
+    0.7274433923040935,
+    0.7554585411958628,
+    0.7386908543411788,
+    0.7531007811078327
+  ],
+  "median_paired_fused_over_api": 0.7404591911309019,
+  "fused_faster_pairs": 9,
+  "lease_split": [
+    {
+      "lease": 1,
+      "warmup_pairs": 2,
+      "measured_pairs": 5,
+      "cpu_affinity": [
+        8
+      ]
+    },
+    {
+      "lease": 2,
+      "warmup_pairs": 2,
+      "measured_pairs": 4,
+      "cpu_affinity": [
+        8
+      ]
+    }
+  ],
+  "selection": "selected; benefit consistent"
+}

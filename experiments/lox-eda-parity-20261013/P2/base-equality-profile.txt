@@ -1,0 +1,23 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 1K of event 'cpu_core/cycles/u'
+# Event count (approx.): 8121475930
+#
+# Overhead  Symbol                             IPC   [IPC Coverage]
+# ........  .................................  ....................
+#
+    51.85%  [.] my.vm::run                     -      -            
+    24.96%  [.] my.heap::function_instruction  -      -            
+    17.89%  [.] my.vm::read_constant           -      -            
+     1.96%  [.] my.table::get                  -      -            
+     1.61%  [.] my.heap::string_hash           -      -            
+     1.01%  [.] my.table::set                  -      -            
+     0.70%  [.] my.vm::read_short              -      -            
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

@@ -1,0 +1,80 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 808  of event 'cpu_core/cycles/u'
+# Event count (approx.): 5109346642
+#
+# Overhead  Command  Shared Object         Symbol                           
+# ........  .......  ....................  .................................
+#
+    50.39%  base     base                  [.] my.vm::run
+            |          
+            |--43.27%--vm::run (inlined)
+            |          
+            |--4.99%--vm::read_byte (inlined)
+            |          vm::run (inlined)
+            |          
+            |--1.13%--vm::read_string (inlined)
+            |          vm::get_global (inlined)
+            |          vm::run (inlined)
+            |          
+             --1.01%--vm::get_global (inlined)
+                       vm::run (inlined)
+
+    22.47%  base     base                  [.] my.heap::function_instruction
+            |
+            ---heap::function_instruction (inlined)
+               |          
+                --5.43%--0x139ad4e0
+                          0x9
+
+     7.76%  base     base                  [.] my.vm::read_constant
+            |          
+            |--6.89%--vm::read_constant (inlined)
+            |          |          
+            |           --4.75%--0x139ad4e0
+            |                     0x9
+            |          
+             --0.87%--vm::read_byte (inlined)
+                       vm::read_constant (inlined)
+                       0x139ad4e0
+                       0x9
+
+     6.45%  base     base                  [.] my.vm::call_value
+            |
+            ---vm::call_value (inlined)
+
+     3.89%  base     base                  [.] my.vm::call
+            |
+            ---vm::call (inlined)
+
+     3.13%  base     base                  [.] my.vm::read_short
+            |
+            ---vm::read_short (inlined)
+               |          
+                --1.75%--0x139ad4e0
+                          0x9
+
+     3.01%  base     base                  [.] my.table::get
+            |
+            ---table::get (inlined)
+
+     1.60%  base     base                  [.] my.heap::string_hash
+            |
+            ---heap::string_hash (inlined)
+
+     0.64%  base     base                  [.] my.heap::closure_function
+            |
+            ---heap::closure_function (inlined)
+
+     0.63%  base     base                  [.] my.vm::close_upvalues
+            |
+            ---vm::close_upvalues (inlined)
+
+
+
+#
+# (Cannot load tips.txt file, please install perf!)
+#

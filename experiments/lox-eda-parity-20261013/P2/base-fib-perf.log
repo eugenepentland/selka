@@ -1,0 +1,3 @@
+5702887
+[ perf record: Woken up 1 times to write data ]
+[ perf record: Captured and wrote 0.148 MB .tmp/lox-eda-parity/P2/base-fib.perf (808 samples) ]

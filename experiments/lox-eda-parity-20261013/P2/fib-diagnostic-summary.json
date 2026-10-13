@@ -1,0 +1,19 @@
+{
+  "label": "diagnostic only, no Zig comparison",
+  "median_base_seconds": 1.5305145669262856,
+  "median_direct_seconds": 1.544689791975543,
+  "paired_direct_over_base": [
+    1.0095922044855994,
+    0.9889568577911535,
+    1.0354789706965384,
+    1.0266397896568138,
+    0.9843301008017384,
+    1.0252906309045478,
+    0.9722646164243752,
+    1.0062337467640945,
+    0.9954163749063417
+  ],
+  "median_paired_direct_over_base": 1.0062337467640945,
+  "direct_faster_pairs": 4,
+  "selection": "not selected; benefit is inconsistent"
+}
