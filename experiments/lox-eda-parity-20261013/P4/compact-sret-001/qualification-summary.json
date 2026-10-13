@@ -1,0 +1,12 @@
+{
+  "full_verified_tests": {
+    "passed": 103,
+    "failed": 0,
+    "skipped": 0,
+    "cached": 0,
+    "unsupported": 0
+  },
+  "corpus_output": "conformance engine=vm gc=normal: 246/246 passed\nconformance engine=vm gc=gc-stress: 246/246 passed\nconformance engine=tree gc=normal: 241/241 passed\nconformance engine=tree gc=gc-stress: 241/241 passed\n",
+  "fixture_builds": 64,
+  "fixture_runs": 80
+}

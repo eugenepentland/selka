@@ -1,0 +1,13 @@
+{
+  "decision": "adopt_v2_as_measured_tradeoff_pending_combined_C3_broad_qualification",
+  "production_commit": "f054387ed2e32b5b1439674b4be5e2fea142c029",
+  "reason": "aligned compact INTERNAL transport, preserved semantics, evaluator and execute frame reductions; supported binary-tree improvement and no diagnostic control over5% slowdown",
+  "limits": [
+    "string_equality paired median regression0.61% with CI above1",
+    "fib point gain4.16% uncertain;95%CI includes1",
+    "evaluate code grows34.4%",
+    "four bounded diagnostics do not establish uniform speedup or Zig parity",
+    "combined C3 native/gate/app/micro qualification remains required"
+  ],
+  "further_prototypes_or_repetitions": "none"
+}

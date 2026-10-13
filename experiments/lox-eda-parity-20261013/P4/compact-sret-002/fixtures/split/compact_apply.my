@@ -1,0 +1,7 @@
+import compact_leaf
+
+public func apply_bool(callback: func(mut compact_leaf.Big, mut int) -> bool, mut big: compact_leaf.Big, mut scalar: int) -> bool:
+    return callback(mut big, mut scalar)
+
+public func apply_byte(callback: func(mut compact_leaf.Big, mut bytes) -> u8, mut big: compact_leaf.Big, mut text: bytes) -> u8:
+    return callback(mut big, mut text)

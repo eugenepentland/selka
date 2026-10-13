@@ -1,0 +1,7 @@
+{
+  "decision": "blocked_replaced_by_alignment_corrected_v2",
+  "reason": "Coordinator review found retained narrow field sizes were summed without required C field alignment and final aggregate padding. Integer-only native controls and conformance did not cover this UB.",
+  "timing": "none; v1 is ineligible for measurement or adoption",
+  "tests": "103 verified tests and matched fixture executions passed; VM246/tree241 normal and stress passed; focused Core3/5 passed with two IR-layout/copy-count assertions failing",
+  "explicit_llvm_verifier": "attempt failed because pinned Zig rejected -x ir; native builds had already compiled the LLVM"
+}

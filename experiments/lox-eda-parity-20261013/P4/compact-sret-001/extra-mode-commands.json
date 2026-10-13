@@ -1,0 +1,665 @@
+[
+  {
+    "name": "baseline-zero-unoptimized-bounds-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/bounds.my",
+      "--experimental-zero-rc",
+      "--unoptimized",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/baseline-zero-unoptimized-bounds",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-unoptimized-bounds",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-unoptimized-bounds.ll"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-zero-unoptimized-bounds-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-unoptimized-bounds"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-zero-unoptimized-bounds-end-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-unoptimized-bounds",
+      "end"
+    ],
+    "status": 1
+  },
+  {
+    "name": "baseline-zero-unoptimized-managed_errors-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/managed_errors.my",
+      "--experimental-zero-rc",
+      "--unoptimized",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/baseline-zero-unoptimized-managed_errors",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-unoptimized-managed_errors",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-unoptimized-managed_errors.ll"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-zero-unoptimized-managed_errors-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-unoptimized-managed_errors"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-zero-unoptimized-mixed-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/mixed.my",
+      "--experimental-zero-rc",
+      "--unoptimized",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/baseline-zero-unoptimized-mixed",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-unoptimized-mixed",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-unoptimized-mixed.ll"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-zero-unoptimized-mixed-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-unoptimized-mixed"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-zero-unoptimized-recursive_indirect-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/recursive_indirect.my",
+      "--experimental-zero-rc",
+      "--unoptimized",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/baseline-zero-unoptimized-recursive_indirect",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-unoptimized-recursive_indirect",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-unoptimized-recursive_indirect.ll"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-zero-unoptimized-recursive_indirect-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-unoptimized-recursive_indirect"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-zero-optimize-debug-bounds-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/bounds.my",
+      "--experimental-zero-rc",
+      "--optimize-debug",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/baseline-zero-optimize-debug-bounds",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-optimize-debug-bounds",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-optimize-debug-bounds.ll"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-zero-optimize-debug-bounds-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-optimize-debug-bounds"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-zero-optimize-debug-bounds-end-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-optimize-debug-bounds",
+      "end"
+    ],
+    "status": 1
+  },
+  {
+    "name": "baseline-zero-optimize-debug-managed_errors-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/managed_errors.my",
+      "--experimental-zero-rc",
+      "--optimize-debug",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/baseline-zero-optimize-debug-managed_errors",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-optimize-debug-managed_errors",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-optimize-debug-managed_errors.ll"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-zero-optimize-debug-managed_errors-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-optimize-debug-managed_errors"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-zero-optimize-debug-mixed-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/mixed.my",
+      "--experimental-zero-rc",
+      "--optimize-debug",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/baseline-zero-optimize-debug-mixed",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-optimize-debug-mixed",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-optimize-debug-mixed.ll"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-zero-optimize-debug-mixed-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-optimize-debug-mixed"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-zero-optimize-debug-recursive_indirect-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/recursive_indirect.my",
+      "--experimental-zero-rc",
+      "--optimize-debug",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/baseline-zero-optimize-debug-recursive_indirect",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-optimize-debug-recursive_indirect",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-optimize-debug-recursive_indirect.ll"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-zero-optimize-debug-recursive_indirect-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-optimize-debug-recursive_indirect"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-zero-release-no-facts-bounds-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/bounds.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--no-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/baseline-zero-release-no-facts-bounds",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-release-no-facts-bounds",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-release-no-facts-bounds.ll"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-zero-release-no-facts-bounds-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-release-no-facts-bounds"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-zero-release-no-facts-bounds-end-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-release-no-facts-bounds",
+      "end"
+    ],
+    "status": 1
+  },
+  {
+    "name": "baseline-zero-release-no-facts-managed_errors-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/managed_errors.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--no-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/baseline-zero-release-no-facts-managed_errors",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-release-no-facts-managed_errors",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-release-no-facts-managed_errors.ll"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-zero-release-no-facts-managed_errors-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-release-no-facts-managed_errors"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-zero-release-no-facts-mixed-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/mixed.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--no-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/baseline-zero-release-no-facts-mixed",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-release-no-facts-mixed",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-release-no-facts-mixed.ll"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-zero-release-no-facts-mixed-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-release-no-facts-mixed"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-zero-release-no-facts-recursive_indirect-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/recursive_indirect.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--no-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/baseline-zero-release-no-facts-recursive_indirect",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-release-no-facts-recursive_indirect",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-release-no-facts-recursive_indirect.ll"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-zero-release-no-facts-recursive_indirect-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-zero-release-no-facts-recursive_indirect"
+    ],
+    "status": 0
+  },
+  {
+    "name": "candidate-zero-unoptimized-bounds-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/bounds.my",
+      "--experimental-zero-rc",
+      "--unoptimized",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/candidate-zero-unoptimized-bounds",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-unoptimized-bounds",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-unoptimized-bounds.ll"
+    ],
+    "status": 0
+  },
+  {
+    "name": "candidate-zero-unoptimized-bounds-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-unoptimized-bounds"
+    ],
+    "status": 0
+  },
+  {
+    "name": "candidate-zero-unoptimized-bounds-end-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-unoptimized-bounds",
+      "end"
+    ],
+    "status": 1
+  },
+  {
+    "name": "candidate-zero-unoptimized-managed_errors-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/managed_errors.my",
+      "--experimental-zero-rc",
+      "--unoptimized",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/candidate-zero-unoptimized-managed_errors",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-unoptimized-managed_errors",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-unoptimized-managed_errors.ll"
+    ],
+    "status": 0
+  },
+  {
+    "name": "candidate-zero-unoptimized-managed_errors-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-unoptimized-managed_errors"
+    ],
+    "status": 0
+  },
+  {
+    "name": "candidate-zero-unoptimized-mixed-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/mixed.my",
+      "--experimental-zero-rc",
+      "--unoptimized",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/candidate-zero-unoptimized-mixed",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-unoptimized-mixed",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-unoptimized-mixed.ll"
+    ],
+    "status": 0
+  },
+  {
+    "name": "candidate-zero-unoptimized-mixed-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-unoptimized-mixed"
+    ],
+    "status": 0
+  },
+  {
+    "name": "candidate-zero-unoptimized-recursive_indirect-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/recursive_indirect.my",
+      "--experimental-zero-rc",
+      "--unoptimized",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/candidate-zero-unoptimized-recursive_indirect",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-unoptimized-recursive_indirect",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-unoptimized-recursive_indirect.ll"
+    ],
+    "status": 0
+  },
+  {
+    "name": "candidate-zero-unoptimized-recursive_indirect-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-unoptimized-recursive_indirect"
+    ],
+    "status": 0
+  },
+  {
+    "name": "candidate-zero-optimize-debug-bounds-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/bounds.my",
+      "--experimental-zero-rc",
+      "--optimize-debug",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/candidate-zero-optimize-debug-bounds",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-optimize-debug-bounds",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-optimize-debug-bounds.ll"
+    ],
+    "status": 0
+  },
+  {
+    "name": "candidate-zero-optimize-debug-bounds-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-optimize-debug-bounds"
+    ],
+    "status": 0
+  },
+  {
+    "name": "candidate-zero-optimize-debug-bounds-end-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-optimize-debug-bounds",
+      "end"
+    ],
+    "status": 1
+  },
+  {
+    "name": "candidate-zero-optimize-debug-managed_errors-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/managed_errors.my",
+      "--experimental-zero-rc",
+      "--optimize-debug",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/candidate-zero-optimize-debug-managed_errors",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-optimize-debug-managed_errors",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-optimize-debug-managed_errors.ll"
+    ],
+    "status": 0
+  },
+  {
+    "name": "candidate-zero-optimize-debug-managed_errors-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-optimize-debug-managed_errors"
+    ],
+    "status": 0
+  },
+  {
+    "name": "candidate-zero-optimize-debug-mixed-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/mixed.my",
+      "--experimental-zero-rc",
+      "--optimize-debug",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/candidate-zero-optimize-debug-mixed",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-optimize-debug-mixed",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-optimize-debug-mixed.ll"
+    ],
+    "status": 0
+  },
+  {
+    "name": "candidate-zero-optimize-debug-mixed-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-optimize-debug-mixed"
+    ],
+    "status": 0
+  },
+  {
+    "name": "candidate-zero-optimize-debug-recursive_indirect-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/recursive_indirect.my",
+      "--experimental-zero-rc",
+      "--optimize-debug",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/candidate-zero-optimize-debug-recursive_indirect",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-optimize-debug-recursive_indirect",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-optimize-debug-recursive_indirect.ll"
+    ],
+    "status": 0
+  },
+  {
+    "name": "candidate-zero-optimize-debug-recursive_indirect-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-optimize-debug-recursive_indirect"
+    ],
+    "status": 0
+  },
+  {
+    "name": "candidate-zero-release-no-facts-bounds-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/bounds.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--no-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/candidate-zero-release-no-facts-bounds",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-release-no-facts-bounds",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-release-no-facts-bounds.ll"
+    ],
+    "status": 0
+  },
+  {
+    "name": "candidate-zero-release-no-facts-bounds-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-release-no-facts-bounds"
+    ],
+    "status": 0
+  },
+  {
+    "name": "candidate-zero-release-no-facts-bounds-end-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-release-no-facts-bounds",
+      "end"
+    ],
+    "status": 1
+  },
+  {
+    "name": "candidate-zero-release-no-facts-managed_errors-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/managed_errors.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--no-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/candidate-zero-release-no-facts-managed_errors",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-release-no-facts-managed_errors",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-release-no-facts-managed_errors.ll"
+    ],
+    "status": 0
+  },
+  {
+    "name": "candidate-zero-release-no-facts-managed_errors-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-release-no-facts-managed_errors"
+    ],
+    "status": 0
+  },
+  {
+    "name": "candidate-zero-release-no-facts-mixed-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/mixed.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--no-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/candidate-zero-release-no-facts-mixed",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-release-no-facts-mixed",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-release-no-facts-mixed.ll"
+    ],
+    "status": 0
+  },
+  {
+    "name": "candidate-zero-release-no-facts-mixed-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-release-no-facts-mixed"
+    ],
+    "status": 0
+  },
+  {
+    "name": "candidate-zero-release-no-facts-recursive_indirect-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/recursive_indirect.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--no-facts",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/candidate-zero-release-no-facts-recursive_indirect",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-release-no-facts-recursive_indirect",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-release-no-facts-recursive_indirect.ll"
+    ],
+    "status": 0
+  },
+  {
+    "name": "candidate-zero-release-no-facts-recursive_indirect-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/candidate-zero-release-no-facts-recursive_indirect"
+    ],
+    "status": 0
+  },
+  {
+    "name": "candidate-corpus-gc",
+    "command": [
+      "python3",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/fixtures/lox/harness/lox_bench.py",
+      "conformance",
+      "--binary",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/candidate/lox",
+      "--engine",
+      "both",
+      "--stress",
+      "--jobs",
+      "4"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-llvm-verify",
+    "command": [
+      "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+      "cc",
+      "-x",
+      "ir",
+      "-c",
+      "-O0",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/baseline/lox.ll",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/baseline/llvm-verified.o"
+    ],
+    "status": 1
+  }
+]

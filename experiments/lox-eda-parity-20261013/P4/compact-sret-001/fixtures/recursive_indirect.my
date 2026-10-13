@@ -1,0 +1,24 @@
+record Big:
+    a: int
+    b: int
+    c: int
+    d: int
+    e: int
+    f: int
+
+func recur(mut big: Big, mut scalar: int, n: int) -> int:
+    big.a += 1
+    scalar += 2
+    if n == 0:
+        return big.a + scalar
+    return recur(mut big, mut scalar, n - 1)
+
+func apply(callback: func(mut Big, mut int, int) -> int, mut big: Big, mut scalar: int) -> int:
+    return callback(mut big, mut scalar, 3)
+
+func main(out: Stream) -> int:
+    mut big = Big(a=1, b=2, c=3, d=4, e=5, f=6)
+    mut scalar = 10
+    mut answer = apply(recur, mut big, mut scalar)
+    out.print(answer, big.a, scalar, big.f)
+    return 0

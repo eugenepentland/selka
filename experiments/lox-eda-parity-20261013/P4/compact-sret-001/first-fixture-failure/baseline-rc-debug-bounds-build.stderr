@@ -1,0 +1,3 @@
+/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/bounds.my:14:30: error[E_MAIN]: entry parameters must be `args: str[]` followed by capabilities
+  func main(out: Stream, args: str[]) -> int:
+                               ^

@@ -1,0 +1,52 @@
+{
+  "baseline": {
+    "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+    "llvm_sha256": "293e0aba81f1fe05029cf34d4f1261ff31aca152623b9a4830c12a513af18ce6",
+    "evaluate": {
+      "definition": [
+        "define internal fastcc void @\"my.interpreter::evaluate\"(ptr noalias sret([280 x i8]) align 8 %ret, { ptr, ptr, ptr, ptr } %p0, ptr noalias align 8 %p1, ptr noalias align 8 %p2, { i64, { i8, [1 x i64] } } %p3, i64 %p4, ptr %p5) nounwind uwtable !dbg !1001571 {"
+      ],
+      "code_bytes": 8636,
+      "explicit_frame_bytes": 1208
+    },
+    "get_variable": {
+      "definition": [
+        "define internal fastcc void @\"my.interpreter::get_variable\"(ptr noalias sret([216 x i8]) align 8 %ret, ptr noalias align 8 %p0, i64 %p1, i64 %p2, i64 %p3, i64 %p4) nounwind uwtable !dbg !1002948 {"
+      ],
+      "code_bytes": null,
+      "explicit_frame_bytes": null
+    },
+    "execute": {
+      "definition": [
+        "define internal fastcc void @\"my.interpreter::execute\"(ptr noalias sret([280 x i8]) align 8 %ret, { ptr, ptr, ptr, ptr } %p0, ptr noalias align 8 %p1, ptr noalias align 8 %p2, { i64, { i8, [1 x i64] } } %p3, i64 %p4, ptr %p5) nounwind uwtable !dbg !1000576 {"
+      ],
+      "code_bytes": 6019,
+      "explicit_frame_bytes": 3816
+    }
+  },
+  "candidate": {
+    "binary_sha256": "742b63ad2c546db42bee28ea8ded678e28695f4296293465af057613fefd4f52",
+    "llvm_sha256": "51a4f22572bf7173e4b8b7503c61fa4376695cc0ab1b6d0417e190b2389fddce",
+    "evaluate": {
+      "definition": [
+        "define internal fastcc void @\"my.interpreter::evaluate\"(ptr noalias sret([48 x i8]) align 8 %ret, { ptr, ptr, ptr, ptr } %p0, ptr noalias align 8 %p1, ptr noalias align 8 %p2, { i64, { i8, [1 x i64] } } %p3, i64 %p4, ptr %p5) nounwind uwtable !dbg !1001571 {"
+      ],
+      "code_bytes": 11603,
+      "explicit_frame_bytes": 488
+    },
+    "get_variable": {
+      "definition": [
+        "define internal fastcc void @\"my.interpreter::get_variable\"(ptr noalias sret([24 x i8]) align 8 %ret, ptr noalias align 8 %p0, i64 %p1, i64 %p2, i64 %p3, i64 %p4) nounwind uwtable !dbg !1002948 {"
+      ],
+      "code_bytes": null,
+      "explicit_frame_bytes": null
+    },
+    "execute": {
+      "definition": [
+        "define internal fastcc void @\"my.interpreter::execute\"(ptr noalias sret([48 x i8]) align 8 %ret, { ptr, ptr, ptr, ptr } %p0, ptr noalias align 8 %p1, ptr noalias align 8 %p2, { i64, { i8, [1 x i64] } } %p3, i64 %p4, ptr %p5) nounwind uwtable !dbg !1000576 {"
+      ],
+      "code_bytes": 5959,
+      "explicit_frame_bytes": 728
+    }
+  }
+}

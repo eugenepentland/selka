@@ -1,0 +1,2588 @@
+{
+  "version": "native-tests-v1",
+  "tests": [
+    {
+      "name": "compiler_test::test_compile_error_message",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "b9b6b26a3fec59035a945bf012bf7c47f1b552803dcbb6c9d9e17230d59b1ea2",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": {
+          "scope": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/compiler_test.my#2ceca75bdbfbe5be854cfb08b146d0dd997072b174985aca0a42ad202553a70c",
+          "producer": {
+            "facts": {
+              "fresh": 151,
+              "reused": 0,
+              "fallback": 129,
+              "decoded": 0
+            },
+            "lowering": {
+              "fresh": 129,
+              "reused": 0,
+              "materialized": 0
+            }
+          },
+          "graph": {
+            "nodes_read": 0,
+            "nodes_unchanged": 0,
+            "changed_nodes": 151,
+            "candidate_tests": 0,
+            "shards_read": 0,
+            "shards_written": 3
+          },
+          "planner": {
+            "index_nodes": 604,
+            "index_edges": 1970,
+            "affected_nodes": 151,
+            "closure_nodes": 1690,
+            "closure_edges": 2006,
+            "reused_tests": 0,
+            "planned_tests": 6
+          },
+          "storage": {
+            "packed_bytes_read": 0,
+            "decoded_bytes": 0,
+            "blocks_decoded": 0,
+            "payload_bytes_returned": 0,
+            "block_cache_hits": 0,
+            "publication": {
+              "filename_lookups": 2,
+              "refreshes": 3,
+              "packs_prepared": 1,
+              "pack_bytes_prepared": 204878,
+              "save_bytes_prepared": 448437,
+              "sequence_locks": 393
+            }
+          },
+          "nanoseconds": {
+            "lowering": 84622807,
+            "facts": 33376971,
+            "graph": 942131,
+            "planner": 98048273,
+            "keys": 768924,
+            "publication": 70067007,
+            "total": 288039307
+          },
+          "transport": {
+            "request_bytes": 7812,
+            "reply_bytes": 6316,
+            "startups": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "compiler_test::test_compile_global_definition",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "e072187a8ce5e96b925e4d73b4b22acda5345e3e49b13ced1d211da5176e603f",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "compiler_test::test_compile_if_jumps",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "15a9c40e3f5a3614cc2f42e08ffd0cfa6d3ea440468a82a134796f1793a7c103",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "compiler_test::test_compile_local_slots",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "176489e41a947ebf78dfa652dc784a16c780dca27dd1f5f22a706e030b3fc208",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "compiler_test::test_compile_print_addition",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "8a1a56f94668a0e4bec395839ad0d699938c354c06c14969c9ba7e9e220aedc3",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "compiler_test::test_compile_too_many_constants",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "488db3adf0263576a1d8a3b4d3b3db6498baf15f85fae5f187c34f6c121c319c",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "driver_tests::test_run_arithmetic",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "df88de453a4594e37d8c47ad3dd301bd1cab16b6caec2a453ab92d43c701c215",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": {
+          "scope": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/driver_tests.my#d1ae78bfc0814a4f41963832a570f1bd177a89aa95132ac5ae29c3fa9a5b88e7",
+          "producer": {
+            "facts": {
+              "fresh": 364,
+              "reused": 0,
+              "fallback": 332,
+              "decoded": 0
+            },
+            "lowering": {
+              "fresh": 332,
+              "reused": 0,
+              "materialized": 0
+            }
+          },
+          "graph": {
+            "nodes_read": 0,
+            "nodes_unchanged": 0,
+            "changed_nodes": 364,
+            "candidate_tests": 0,
+            "shards_read": 0,
+            "shards_written": 5
+          },
+          "planner": {
+            "index_nodes": 1456,
+            "index_edges": 5635,
+            "affected_nodes": 364,
+            "closure_nodes": 9070,
+            "closure_edges": 12988,
+            "reused_tests": 0,
+            "planned_tests": 13
+          },
+          "storage": {
+            "packed_bytes_read": 0,
+            "decoded_bytes": 0,
+            "blocks_decoded": 0,
+            "payload_bytes_returned": 0,
+            "block_cache_hits": 0,
+            "publication": {
+              "filename_lookups": 2,
+              "refreshes": 3,
+              "packs_prepared": 1,
+              "pack_bytes_prepared": 586406,
+              "save_bytes_prepared": 1320420,
+              "sequence_locks": 1004
+            }
+          },
+          "nanoseconds": {
+            "lowering": 246011795,
+            "facts": 107361984,
+            "graph": 2564106,
+            "planner": 104393248,
+            "keys": 3628181,
+            "publication": 209692227,
+            "total": 674044071
+          },
+          "transport": {
+            "request_bytes": 19348,
+            "reply_bytes": 25740,
+            "startups": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "driver_tests::test_run_class_init_method",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "c579a85f8af9271a6ceb52c8ef78d564116a7ecb7f17897c5436b9dc4f86be25",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "driver_tests::test_run_closure_counter",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "0bfa488079df7f4c48133b9bf6dabaf697573094f9571e7efeca543744b42bca",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "driver_tests::test_run_compile_error_status",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "ba040a9bbd82af6f8e58a551e518d4d1622c0221b890385be3b58a1df7fc3722",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "driver_tests::test_run_gc_stress_same_output",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "e929717b55e4851716c6199a96ec117ce76236e6da25bda97bae8402d95b9d48",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "driver_tests::test_run_inheritance_super",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "d8ed52934f16037059011a1963d7d9523389a04b12550bbf314af09a41923260",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "driver_tests::test_run_print_value_kinds",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "7e13b07489c504604baa84730443559e129c9edb9013c74d1e34c69ae3a1d87f",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "driver_tests::test_run_runtime_error_trace",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "e6da71f80fdc084b1c2add4668df82d55e583e93e3d15a5ec1ba308e680d3591",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "driver_tests::test_run_set_rhs_keeps_original_receiver",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "594256c33555b5171b44e3ef19aa4b456362c6c766f14fcb5819b79c04561b3f",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "driver_tests::test_run_set_rhs_keeps_receiver_mutations",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "4019628b628c8d84c6148e59e29e94b38e913c6ba9d7270028560874c7ea0dfe",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "driver_tests::test_run_shared_upvalue",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "2c9082f5ae3f10af0015198ada71b79c86d082ad33c4c70a7021d5283cf6ca5d",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "driver_tests::test_run_stack_overflow",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "b97bef11f6141c370771c5d1e75ea7932b6ed4cf2ade250fd3318ee62a0b0ffc",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "driver_tests::test_run_string_concat",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "fb8c6f17da9f97769817307487c846d9951adfc406ba13a3395a105530494811",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "heap_test::test_gc_frees_unreachable",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "335239b7c3c2865112cf7a38cb974e3ae27480841624c4f1610a123245d0eac8",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": {
+          "scope": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/heap_test.my#86a82baa693ed3ceb4c6df8f2d662d08e94362f4c3db6c63f1053b509e9f74c3",
+          "producer": {
+            "facts": {
+              "fresh": 39,
+              "reused": 0,
+              "fallback": 35,
+              "decoded": 0
+            },
+            "lowering": {
+              "fresh": 35,
+              "reused": 0,
+              "materialized": 0
+            }
+          },
+          "graph": {
+            "nodes_read": 0,
+            "nodes_unchanged": 0,
+            "changed_nodes": 39,
+            "candidate_tests": 0,
+            "shards_read": 0,
+            "shards_written": 3
+          },
+          "planner": {
+            "index_nodes": 156,
+            "index_edges": 355,
+            "affected_nodes": 39,
+            "closure_nodes": 364,
+            "closure_edges": 260,
+            "reused_tests": 0,
+            "planned_tests": 6
+          },
+          "storage": {
+            "packed_bytes_read": 0,
+            "decoded_bytes": 0,
+            "blocks_decoded": 0,
+            "payload_bytes_returned": 0,
+            "block_cache_hits": 0,
+            "publication": {
+              "filename_lookups": 2,
+              "refreshes": 3,
+              "packs_prepared": 1,
+              "pack_bytes_prepared": 57594,
+              "save_bytes_prepared": 122415,
+              "sequence_locks": 111
+            }
+          },
+          "nanoseconds": {
+            "lowering": 26269500,
+            "facts": 10284927,
+            "graph": 302149,
+            "planner": 97889875,
+            "keys": 209937,
+            "publication": 18930805,
+            "total": 154061064
+          },
+          "transport": {
+            "request_bytes": 2040,
+            "reply_bytes": 1476,
+            "startups": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "heap_test::test_gc_intern_table_is_weak",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "b4807531fde3da12a0332773f9114ff8f429b47519defd7a58a664c53298076e",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "heap_test::test_gc_reuses_free_slot",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "dca09b16054f89cbb1ff4fd54edebe07a55cae9050f4811d76256d453331b98d",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "heap_test::test_gc_stress_collects_each_allocation",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "c3893f92ef481bab0c839d25f8d25bfcfc4129e300a67bd0260fc31a25301394",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "heap_test::test_gc_threshold_accounting",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "ac8224d35c66a40ed4561901191c7d8f8ee69ebf6f3a33c1c505bb2a6444c8e2",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "heap_test::test_gc_traces_instance_fields",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "defe4797f6542347abcc0861b302bb683e25c3b74e348f9f2b2cd9f944cdfd6b",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "lox_strings_test::test_fnv1a_a",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "d0dfbbb371962592415be2b4d7486e3bb7531d4b8ea1905d1a1b7fc221738739",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": {
+          "scope": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/lox_strings_test.my#f6d143a9e0057cc215c24ba07b181324e7bc4c5567137e4d94bbbb6de0417cc2",
+          "producer": {
+            "facts": {
+              "fresh": 32,
+              "reused": 0,
+              "fallback": 30,
+              "decoded": 0
+            },
+            "lowering": {
+              "fresh": 30,
+              "reused": 0,
+              "materialized": 0
+            }
+          },
+          "graph": {
+            "nodes_read": 0,
+            "nodes_unchanged": 0,
+            "changed_nodes": 32,
+            "candidate_tests": 0,
+            "shards_read": 0,
+            "shards_written": 3
+          },
+          "planner": {
+            "index_nodes": 128,
+            "index_edges": 230,
+            "affected_nodes": 32,
+            "closure_nodes": 124,
+            "closure_edges": 83,
+            "reused_tests": 0,
+            "planned_tests": 5
+          },
+          "storage": {
+            "packed_bytes_read": 0,
+            "decoded_bytes": 0,
+            "blocks_decoded": 0,
+            "payload_bytes_returned": 0,
+            "block_cache_hits": 0,
+            "publication": {
+              "filename_lookups": 2,
+              "refreshes": 3,
+              "packs_prepared": 1,
+              "pack_bytes_prepared": 48329,
+              "save_bytes_prepared": 101567,
+              "sequence_locks": 96
+            }
+          },
+          "nanoseconds": {
+            "lowering": 21611241,
+            "facts": 8322105,
+            "graph": 241296,
+            "planner": 102624195,
+            "keys": 105607,
+            "publication": 15531832,
+            "total": 148612967
+          },
+          "transport": {
+            "request_bytes": 1648,
+            "reply_bytes": 836,
+            "startups": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "lox_strings_test::test_fnv1a_empty",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "14b16e97b1b4ff337212a3d04c62f89ad590a89862f84decaffe82fae875b818",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "lox_strings_test::test_fnv1a_foobar",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "b1be431d9443227c17456ed494424e08101a5e2bfb6b76dd95c9f32be095030f",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "lox_strings_test::test_intern_same_bytes_same_ref",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "82c197ba2d3c2e561931ea066403c6ce82d51ba1a1c274e8912cbd0c9814f701",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "lox_strings_test::test_table_find_string",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "d6251d91717bf7e44449c4048af752f51cd6767a84235dbd4faea7057655d135",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p1_call_env_test::test_call_env_arity_error_precedes_depth_error",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "0b30edb5574f5e7745ecdd93af627997ce9e189c384984f3a57592edd69e9aa2",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": {
+          "scope": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/p1_call_env_test.my#7076879ab142026da81f99f8dfded9d035f2351d502e14ae57f2d8bdb143fa6d",
+          "producer": {
+            "facts": {
+              "fresh": 354,
+              "reused": 0,
+              "fallback": 322,
+              "decoded": 0
+            },
+            "lowering": {
+              "fresh": 322,
+              "reused": 0,
+              "materialized": 0
+            }
+          },
+          "graph": {
+            "nodes_read": 0,
+            "nodes_unchanged": 0,
+            "changed_nodes": 354,
+            "candidate_tests": 0,
+            "shards_read": 0,
+            "shards_written": 5
+          },
+          "planner": {
+            "index_nodes": 1416,
+            "index_edges": 5620,
+            "affected_nodes": 354,
+            "closure_nodes": 2196,
+            "closure_edges": 3072,
+            "reused_tests": 0,
+            "planned_tests": 5
+          },
+          "storage": {
+            "packed_bytes_read": 0,
+            "decoded_bytes": 0,
+            "blocks_decoded": 0,
+            "payload_bytes_returned": 0,
+            "block_cache_hits": 0,
+            "publication": {
+              "filename_lookups": 2,
+              "refreshes": 3,
+              "packs_prepared": 1,
+              "pack_bytes_prepared": 577391,
+              "save_bytes_prepared": 1318398,
+              "sequence_locks": 974
+            }
+          },
+          "nanoseconds": {
+            "lowering": 248403899,
+            "facts": 102781948,
+            "graph": 2406976,
+            "planner": 103216364,
+            "keys": 1015697,
+            "publication": 200724100,
+            "total": 658813517
+          },
+          "transport": {
+            "request_bytes": 18840,
+            "reply_bytes": 11868,
+            "startups": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "p1_call_env_test::test_call_env_closure_method_initializer_args_stress",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "8065d898e3dfac0a3dc5d08bc2b6b27700f3a3bfe4777bca9b1753eb2344d344",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p1_call_env_test::test_call_env_empty_args_and_collected_slot_reuse",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "582f0e665bb746425926ecf5ac4bd90212f8f3d1d08be138da1290513b80426c",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p1_call_env_test::test_call_env_fills_owned_args_preserves_roots_and_accounting",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "3bfd839f7458ec1424f1618fdd23ce84e30edb122eb32c92139476aeefaf62a4",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p1_call_env_test::test_call_env_wrong_arity_keeps_error_order",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "55e16547d43d0c47b50ec13eea27a9b9becb2b68f798b20411d5adc8dc7ab4a4",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p1_discard_local_test::test_p1_discard_global_error_unchanged",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "3c43967279f05121e77d3bf29f97edc0c6155224030f20d27368935f44637d92",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": {
+          "scope": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/p1_discard_local_test.my#66e119170c844476ecc99958fc618bd25c20ff8897de3bf80bb9ce7a574bb042",
+          "producer": {
+            "facts": {
+              "fresh": 352,
+              "reused": 0,
+              "fallback": 321,
+              "decoded": 0
+            },
+            "lowering": {
+              "fresh": 321,
+              "reused": 0,
+              "materialized": 0
+            }
+          },
+          "graph": {
+            "nodes_read": 0,
+            "nodes_unchanged": 0,
+            "changed_nodes": 352,
+            "candidate_tests": 0,
+            "shards_read": 0,
+            "shards_written": 5
+          },
+          "planner": {
+            "index_nodes": 1408,
+            "index_edges": 5545,
+            "affected_nodes": 352,
+            "closure_nodes": 2782,
+            "closure_edges": 3991,
+            "reused_tests": 0,
+            "planned_tests": 4
+          },
+          "storage": {
+            "packed_bytes_read": 0,
+            "decoded_bytes": 0,
+            "blocks_decoded": 0,
+            "payload_bytes_returned": 0,
+            "block_cache_hits": 0,
+            "publication": {
+              "filename_lookups": 2,
+              "refreshes": 3,
+              "packs_prepared": 1,
+              "pack_bytes_prepared": 571865,
+              "save_bytes_prepared": 1301640,
+              "sequence_locks": 971
+            }
+          },
+          "nanoseconds": {
+            "lowering": 249228587,
+            "facts": 101763186,
+            "graph": 2270962,
+            "planner": 103504492,
+            "keys": 1224372,
+            "publication": 198512790,
+            "total": 656716119
+          },
+          "transport": {
+            "request_bytes": 18688,
+            "reply_bytes": 12960,
+            "startups": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "p1_discard_local_test::test_p1_discard_nested_captured_locals",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "c9b9a1c6c1a98f457c12545badfd2a2f75e79f8a92edb70b33a0469fc494d11f",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p1_discard_local_test::test_p1_discard_objects_remain_rooted",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "f8b4bd4d901cd149350e4b8a0b988d891db7e415e5702f116f115296827bfa88",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p1_discard_local_test::test_p1_discard_other_expressions_keep_effects",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "9b5a9b1c648b500320d82687138b1e939551b5b181d4396e3ad562c6191995dd",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p1_heap_test::test_fresh_constructor_reuses_collected_slot",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "79df98b3341ed47bd99da98e4d4a42947657326a6f59529b0d1eed02163074a6",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": {
+          "scope": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/p1_heap_test.my#bd5f3821a6c75874232cc84baf5f8728ef3727df2e20d07e274bc891942cbce4",
+          "producer": {
+            "facts": {
+              "fresh": 62,
+              "reused": 0,
+              "fallback": 60,
+              "decoded": 0
+            },
+            "lowering": {
+              "fresh": 60,
+              "reused": 0,
+              "materialized": 0
+            }
+          },
+          "graph": {
+            "nodes_read": 0,
+            "nodes_unchanged": 0,
+            "changed_nodes": 62,
+            "candidate_tests": 0,
+            "shards_read": 0,
+            "shards_written": 3
+          },
+          "planner": {
+            "index_nodes": 248,
+            "index_edges": 670,
+            "affected_nodes": 62,
+            "closure_nodes": 590,
+            "closure_edges": 417,
+            "reused_tests": 0,
+            "planned_tests": 9
+          },
+          "storage": {
+            "packed_bytes_read": 0,
+            "decoded_bytes": 0,
+            "blocks_decoded": 0,
+            "payload_bytes_returned": 0,
+            "block_cache_hits": 0,
+            "publication": {
+              "filename_lookups": 2,
+              "refreshes": 3,
+              "packs_prepared": 1,
+              "pack_bytes_prepared": 108999,
+              "save_bytes_prepared": 258668,
+              "sequence_locks": 186
+            }
+          },
+          "nanoseconds": {
+            "lowering": 48381178,
+            "facts": 22042909,
+            "graph": 491389,
+            "planner": 88867603,
+            "keys": 338774,
+            "publication": 37922337,
+            "total": 198351849
+          },
+          "transport": {
+            "request_bytes": 3248,
+            "reply_bytes": 2376,
+            "startups": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "p1_heap_test::test_fresh_constructors_stress_roots_and_accounting",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "4e9e58a0c6b05a9c8991ac504411957480181a284e4e4efe29b9e1865feb9302",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p1_heap_test::test_fresh_environment_negative_slot_count_matches_existing_constructor",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "a14c7da97b130851119241c654e4da22a7704b1e7f0ad65c701d9ec63ebc959f",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p1_heap_test::test_owned_class_self_inheritance_keeps_methods_and_snapshot",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "0c50fc571c6c5c89fe8112f057b3be48f5e2b33cd6770d13a60a59ff542e4125",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p1_heap_test::test_owned_environment_negative_index_and_snapshot",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "2d4ba8577a6c18673033039cfaa8e4104f1967adb944121431febad0bf6db4c0",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p1_heap_test::test_public_allocate_retains_independent_input_snapshot",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "a8455d8fdfa343740dab1b950e1f2bea22e72a4ed5d45651e6aee874368f8e1a",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p1_heap_test::test_scoped_class_inheritance_preserves_independent_methods",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "4715442d623538c139840c6915c51bbee7ea40b117fdf060bea66ddf0f809f98",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p1_heap_test::test_scoped_writes_preserve_snapshots_and_alias_identity",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "8d4e9673cc08db8f51529ab6bd596868c1ef713d68d97aeebf3a913d90a6d88c",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p1_heap_test::test_scoped_writes_trace_field_method_and_environment_roots",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "759b70df88f21ef403d3f7fa516190478ca2331fcd14e6c10ddce2d390a5be45",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p2_scalar_reader_test::test_scalar_reader_full_frame_resume",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "c56259338204eb9eae6d3937e62b1423d57766652a2035285ae0930d6328c3c3",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": {
+          "scope": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/p2_scalar_reader_test.my#1c8c34c7edc68171767ac63f71df8e507febcd1949f7b793b330ff6ef6538963",
+          "producer": {
+            "facts": {
+              "fresh": 236,
+              "reused": 0,
+              "fallback": 209,
+              "decoded": 0
+            },
+            "lowering": {
+              "fresh": 209,
+              "reused": 0,
+              "materialized": 0
+            }
+          },
+          "graph": {
+            "nodes_read": 0,
+            "nodes_unchanged": 0,
+            "changed_nodes": 236,
+            "candidate_tests": 0,
+            "shards_read": 0,
+            "shards_written": 3
+          },
+          "planner": {
+            "index_nodes": 944,
+            "index_edges": 3175,
+            "affected_nodes": 236,
+            "closure_nodes": 470,
+            "closure_edges": 592,
+            "reused_tests": 0,
+            "planned_tests": 1
+          },
+          "storage": {
+            "packed_bytes_read": 0,
+            "decoded_bytes": 0,
+            "blocks_decoded": 0,
+            "payload_bytes_returned": 0,
+            "block_cache_hits": 0,
+            "publication": {
+              "filename_lookups": 2,
+              "refreshes": 3,
+              "packs_prepared": 1,
+              "pack_bytes_prepared": 335011,
+              "save_bytes_prepared": 734489,
+              "sequence_locks": 633
+            }
+          },
+          "nanoseconds": {
+            "lowering": 138688059,
+            "facts": 61618393,
+            "graph": 1435180,
+            "planner": 57987347,
+            "keys": 359047,
+            "publication": 178968183,
+            "total": 439185871
+          },
+          "transport": {
+            "request_bytes": 12116,
+            "reply_bytes": 5500,
+            "startups": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "p2_tree_tests::test_p2_error_unwinds_blocks",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "f0b60fccca6eeb6906237fb6b166ec3bd7708c215a5958807955dda42b5d78e0",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": {
+          "scope": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/p2_tree_tests.my#def92b9ffb154368baa35f60da105f6e58d0374921fdfc300b3393a1a1d70826",
+          "producer": {
+            "facts": {
+              "fresh": 354,
+              "reused": 0,
+              "fallback": 323,
+              "decoded": 0
+            },
+            "lowering": {
+              "fresh": 323,
+              "reused": 0,
+              "materialized": 0
+            }
+          },
+          "graph": {
+            "nodes_read": 0,
+            "nodes_unchanged": 0,
+            "changed_nodes": 354,
+            "candidate_tests": 0,
+            "shards_read": 0,
+            "shards_written": 5
+          },
+          "planner": {
+            "index_nodes": 1416,
+            "index_edges": 5560,
+            "affected_nodes": 354,
+            "closure_nodes": 4172,
+            "closure_edges": 5986,
+            "reused_tests": 0,
+            "planned_tests": 6
+          },
+          "storage": {
+            "packed_bytes_read": 0,
+            "decoded_bytes": 0,
+            "blocks_decoded": 0,
+            "payload_bytes_returned": 0,
+            "block_cache_hits": 0,
+            "publication": {
+              "filename_lookups": 2,
+              "refreshes": 3,
+              "packs_prepared": 1,
+              "pack_bytes_prepared": 574656,
+              "save_bytes_prepared": 1304822,
+              "sequence_locks": 977
+            }
+          },
+          "nanoseconds": {
+            "lowering": 252855589,
+            "facts": 109026823,
+            "graph": 2364687,
+            "planner": 102290123,
+            "keys": 1698256,
+            "publication": 193734415,
+            "total": 662203267
+          },
+          "transport": {
+            "request_bytes": 18804,
+            "reply_bytes": 15776,
+            "startups": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "p2_tree_tests::test_p2_inheritance_and_receiver_rhs",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "fbb21b1bf41d728ee11cb32280b547e4315c85979d033dce6ba1e463fd38165b",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p2_tree_tests::test_p2_nested_closure_printing",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "089d6305ef9e8b110315efc47c1ec1dbc7ad63defc3987df0839f0a0bdea6a9d",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p2_tree_tests::test_p2_recursion_depth_error",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "aaa829ffee81a5b7e636bcea044e10be8e44eb066a9abc1a7ecce79166ae9397",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p2_tree_tests::test_p2_recursive_repeated_body",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "1ec3a634136163a5f6c1d7134035c065d4eb8771809e911c6a66d67bf29ef019",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p2_tree_tests::test_p2_short_circuit_and_return",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "18ba475ef2e5b23220f1b8d75c1ada7582f9cc9428a2a4265e202844fb6626a4",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p2_vm_execution_test::test_field_assignment_and_inherited_method",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "42080407aa38ef77293c530fa886f69d85adae494be3a552d3a804d1c51a6f85",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": {
+          "scope": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/p2_vm_execution_test.my#f4b7a02b4dc21abe0cc235acb3e877e521d4e59e1f00b0aff1cbe88847ba4fd1",
+          "producer": {
+            "facts": {
+              "fresh": 239,
+              "reused": 0,
+              "fallback": 212,
+              "decoded": 0
+            },
+            "lowering": {
+              "fresh": 212,
+              "reused": 0,
+              "materialized": 0
+            }
+          },
+          "graph": {
+            "nodes_read": 0,
+            "nodes_unchanged": 0,
+            "changed_nodes": 239,
+            "candidate_tests": 0,
+            "shards_read": 0,
+            "shards_written": 3
+          },
+          "planner": {
+            "index_nodes": 956,
+            "index_edges": 3225,
+            "affected_nodes": 239,
+            "closure_nodes": 1412,
+            "closure_edges": 1774,
+            "reused_tests": 0,
+            "planned_tests": 3
+          },
+          "storage": {
+            "packed_bytes_read": 0,
+            "decoded_bytes": 0,
+            "blocks_decoded": 0,
+            "payload_bytes_returned": 0,
+            "block_cache_hits": 0,
+            "publication": {
+              "filename_lookups": 2,
+              "refreshes": 3,
+              "packs_prepared": 1,
+              "pack_bytes_prepared": 338729,
+              "save_bytes_prepared": 739059,
+              "sequence_locks": 642
+            }
+          },
+          "nanoseconds": {
+            "lowering": 137232308,
+            "facts": 57730792,
+            "graph": 1549116,
+            "planner": 98381365,
+            "keys": 625015,
+            "publication": 117069041,
+            "total": 412749361
+          },
+          "transport": {
+            "request_bytes": 12300,
+            "reply_bytes": 7456,
+            "startups": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "p2_vm_execution_test::test_invalid_field_target_trace",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "d1def6905c9345d2d985c9710aa2253e8322f76ac6889041c2bf596b91ed2666",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p2_vm_execution_test::test_resumed_trace",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "746ccd2b3dccca0cfc7fddddf9d8468d7e4e476f8caf4d5a0c068f0c3c3d0650",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p2_vm_operand_test::test_constant_operand_pool_boundary",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "7929d2e85bf73e238ba66f77b6d5fe7067e67b81ac9a3c318ba0331ca0bb63a3",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": {
+          "scope": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/p2_vm_operand_test.my#ee13bc81baf9e8a374bf1f16beabc0eb6c30a57aeb7a40a211d34e6b00f62d3f",
+          "producer": {
+            "facts": {
+              "fresh": 237,
+              "reused": 0,
+              "fallback": 210,
+              "decoded": 0
+            },
+            "lowering": {
+              "fresh": 210,
+              "reused": 0,
+              "materialized": 0
+            }
+          },
+          "graph": {
+            "nodes_read": 0,
+            "nodes_unchanged": 0,
+            "changed_nodes": 237,
+            "candidate_tests": 0,
+            "shards_read": 0,
+            "shards_written": 3
+          },
+          "planner": {
+            "index_nodes": 948,
+            "index_edges": 3230,
+            "affected_nodes": 237,
+            "closure_nodes": 520,
+            "closure_edges": 627,
+            "reused_tests": 0,
+            "planned_tests": 2
+          },
+          "storage": {
+            "packed_bytes_read": 0,
+            "decoded_bytes": 0,
+            "blocks_decoded": 0,
+            "payload_bytes_returned": 0,
+            "block_cache_hits": 0,
+            "publication": {
+              "filename_lookups": 2,
+              "refreshes": 3,
+              "packs_prepared": 1,
+              "pack_bytes_prepared": 337148,
+              "save_bytes_prepared": 741565,
+              "sequence_locks": 636
+            }
+          },
+          "nanoseconds": {
+            "lowering": 135105873,
+            "facts": 56629484,
+            "graph": 1545069,
+            "planner": 103887116,
+            "keys": 249694,
+            "publication": 114682906,
+            "total": 412250083
+          },
+          "transport": {
+            "request_bytes": 12212,
+            "reply_bytes": 5656,
+            "startups": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "p2_vm_operand_test::test_fused_constant_selected_value",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "3f55adfe1ec90d23e3c36895a4c843e3563211b9d0317f73f45946f91342e1a4",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p3_queries_test::test_p3_environment_snapshot_and_alias",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "3a5ab6be1151934436d2e99878d2618ebc08f65737b02996a2e6c2309d6754dd",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": {
+          "scope": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/p3_queries_test.my#4800246842aaa9f5c4f892f01fffaf544af5bcb8e050220f6b32f4d0fb71ab94",
+          "producer": {
+            "facts": {
+              "fresh": 71,
+              "reused": 0,
+              "fallback": 66,
+              "decoded": 0
+            },
+            "lowering": {
+              "fresh": 66,
+              "reused": 0,
+              "materialized": 0
+            }
+          },
+          "graph": {
+            "nodes_read": 0,
+            "nodes_unchanged": 0,
+            "changed_nodes": 71,
+            "candidate_tests": 0,
+            "shards_read": 0,
+            "shards_written": 3
+          },
+          "planner": {
+            "index_nodes": 284,
+            "index_edges": 550,
+            "affected_nodes": 71,
+            "closure_nodes": 282,
+            "closure_edges": 196,
+            "reused_tests": 0,
+            "planned_tests": 4
+          },
+          "storage": {
+            "packed_bytes_read": 0,
+            "decoded_bytes": 0,
+            "blocks_decoded": 0,
+            "payload_bytes_returned": 0,
+            "block_cache_hits": 0,
+            "publication": {
+              "filename_lookups": 2,
+              "refreshes": 3,
+              "packs_prepared": 1,
+              "pack_bytes_prepared": 108502,
+              "save_bytes_prepared": 250439,
+              "sequence_locks": 204
+            }
+          },
+          "nanoseconds": {
+            "lowering": 47869784,
+            "facts": 21634432,
+            "graph": 397464,
+            "planner": 90258302,
+            "keys": 160458,
+            "publication": 37151352,
+            "total": 197666934
+          },
+          "transport": {
+            "request_bytes": 3452,
+            "reply_bytes": 1716,
+            "startups": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "p3_queries_test::test_p3_function_closure_selected_reads",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "5f85eaaa3b635d41774d3c0c981b764616cc41bf7927df982ae2df4cfe83f83f",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p3_queries_test::test_p3_string_owned_snapshot_stress_and_reuse",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "1788d762809dd43451f0fd855d1c45c4e035022bbd03283ed0a0acb82bcefb0d",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p3_queries_test::test_p3_tables_growth_missing_and_alias",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "40555d0d3c7f314385bd931aa05624bd600314397657471c7be0f85a959138e8",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p4_tree_tests::test_p4_fresh_env_closure_identity",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "681b805237ee8b8f041c39316bca5b7db512e1a4bcb802016f65b942bc645aa9",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": {
+          "scope": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/p4_tree_tests.my#5b9fcc4fa562771cadb371ec1c10664a1509a7ee661bba081c731086da6ad167",
+          "producer": {
+            "facts": {
+              "fresh": 352,
+              "reused": 0,
+              "fallback": 321,
+              "decoded": 0
+            },
+            "lowering": {
+              "fresh": 321,
+              "reused": 0,
+              "materialized": 0
+            }
+          },
+          "graph": {
+            "nodes_read": 0,
+            "nodes_unchanged": 0,
+            "changed_nodes": 352,
+            "candidate_tests": 0,
+            "shards_read": 0,
+            "shards_written": 5
+          },
+          "planner": {
+            "index_nodes": 1408,
+            "index_edges": 5545,
+            "affected_nodes": 352,
+            "closure_nodes": 2782,
+            "closure_edges": 3991,
+            "reused_tests": 0,
+            "planned_tests": 4
+          },
+          "storage": {
+            "packed_bytes_read": 0,
+            "decoded_bytes": 0,
+            "blocks_decoded": 0,
+            "payload_bytes_returned": 0,
+            "block_cache_hits": 0,
+            "publication": {
+              "filename_lookups": 2,
+              "refreshes": 3,
+              "packs_prepared": 1,
+              "pack_bytes_prepared": 572178,
+              "save_bytes_prepared": 1302377,
+              "sequence_locks": 971
+            }
+          },
+          "nanoseconds": {
+            "lowering": 250586732,
+            "facts": 102929618,
+            "graph": 2377595,
+            "planner": 66287979,
+            "keys": 1978162,
+            "publication": 209360418,
+            "total": 633727166
+          },
+          "transport": {
+            "request_bytes": 18688,
+            "reply_bytes": 12960,
+            "startups": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "p4_tree_tests::test_p4_inherited_methods_override",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "19280d60330a51a25bf7d988bce406bdeddc18e66d02a664fffb960a194d474d",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p4_tree_tests::test_p4_instance_rhs_alias_growth",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "c63086044e892df371ccca4964cdc67e67a1feee00e11fcbc67e7318a87a9f4f",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "p4_tree_tests::test_p4_set_checks_before_rhs",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "98c1d71803edd30a3de275000c3c9c5cc1ba92f026f170104f718938184c45ec",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "parser_test::test_parse_call_get_set",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "6a6c5f79cdee43982526651b194659771cd5e9cc796bd6b628a5e9214a577b0c",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": {
+          "scope": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/parser_test.my#c7866f334de9c8e2fd2b984738bd8d6949ebce51720f4b952767660a58148f8e",
+          "producer": {
+            "facts": {
+              "fresh": 130,
+              "reused": 0,
+              "fallback": 106,
+              "decoded": 0
+            },
+            "lowering": {
+              "fresh": 106,
+              "reused": 0,
+              "materialized": 0
+            }
+          },
+          "graph": {
+            "nodes_read": 0,
+            "nodes_unchanged": 0,
+            "changed_nodes": 130,
+            "candidate_tests": 0,
+            "shards_read": 0,
+            "shards_written": 3
+          },
+          "planner": {
+            "index_nodes": 520,
+            "index_edges": 1675,
+            "affected_nodes": 130,
+            "closure_nodes": 1228,
+            "closure_edges": 1432,
+            "reused_tests": 0,
+            "planned_tests": 5
+          },
+          "storage": {
+            "packed_bytes_read": 0,
+            "decoded_bytes": 0,
+            "blocks_decoded": 0,
+            "payload_bytes_returned": 0,
+            "block_cache_hits": 0,
+            "publication": {
+              "filename_lookups": 2,
+              "refreshes": 3,
+              "packs_prepared": 1,
+              "pack_bytes_prepared": 177717,
+              "save_bytes_prepared": 389538,
+              "sequence_locks": 324
+            }
+          },
+          "nanoseconds": {
+            "lowering": 71920231,
+            "facts": 31676105,
+            "graph": 820771,
+            "planner": 108675492,
+            "keys": 570202,
+            "publication": 60712708,
+            "total": 274573965
+          },
+          "transport": {
+            "request_bytes": 6724,
+            "reply_bytes": 4984,
+            "startups": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "parser_test::test_parse_error_recovery",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "70ceeffbe473187909cf82fa16666957822714e548fc50a84d710652f388ff28",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "parser_test::test_parse_logical",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "bef6b5beae362528130f4dcb2d7e29fbcf60333714e222c3be13abe8a779ee89",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "parser_test::test_parse_precedence",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "ef149cbd638495d389cf0f7d5c5246e9657be754090219b1e6df2faa2ab0d2d5",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "parser_test::test_parse_unary_grouping",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "ade61eb7575cd116e45eed3ebd18b993104d9d0f19abb5afa8538454c3a51058",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "resolver_test::test_resolve_duplicate_local",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "e34e60a552972aaec31ef92c149d520efa2760d9f054e3da9d93046c2c630249",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": {
+          "scope": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/resolver_test.my#c2b52d55357bdcc326d1eddc5675fdae9977c3ee6ead4141457e93f5db9ae84a",
+          "producer": {
+            "facts": {
+              "fresh": 136,
+              "reused": 0,
+              "fallback": 113,
+              "decoded": 0
+            },
+            "lowering": {
+              "fresh": 113,
+              "reused": 0,
+              "materialized": 0
+            }
+          },
+          "graph": {
+            "nodes_read": 0,
+            "nodes_unchanged": 0,
+            "changed_nodes": 136,
+            "candidate_tests": 0,
+            "shards_read": 0,
+            "shards_written": 3
+          },
+          "planner": {
+            "index_nodes": 544,
+            "index_edges": 1815,
+            "affected_nodes": 136,
+            "closure_nodes": 1308,
+            "closure_edges": 1579,
+            "reused_tests": 0,
+            "planned_tests": 5
+          },
+          "storage": {
+            "packed_bytes_read": 0,
+            "decoded_bytes": 0,
+            "blocks_decoded": 0,
+            "payload_bytes_returned": 0,
+            "block_cache_hits": 0,
+            "publication": {
+              "filename_lookups": 2,
+              "refreshes": 3,
+              "packs_prepared": 1,
+              "pack_bytes_prepared": 213165,
+              "save_bytes_prepared": 514805,
+              "sequence_locks": 345
+            }
+          },
+          "nanoseconds": {
+            "lowering": 95827681,
+            "facts": 40389281,
+            "graph": 887483,
+            "planner": 106365157,
+            "keys": 657470,
+            "publication": 79744259,
+            "total": 324061836
+          },
+          "transport": {
+            "request_bytes": 7076,
+            "reply_bytes": 5304,
+            "startups": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "resolver_test::test_resolve_own_initializer",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "416f94d15d6af069d6043d8d0d4723ed0b46f8f83c5fa14131a796393b4c5e8a",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "resolver_test::test_resolve_slot_counts",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "652aa8ec15f1ec4fa7f72e110fe25cc233cc3c99b192d95c80084b7a72ea8743",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "resolver_test::test_resolve_this_outside_class",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "d28949b15f74f765affc72c17fde6025273e2af3e3e7a7fb4e198335af524937",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "resolver_test::test_resolve_top_level_return",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "3be4715876740eec6cffd0bea4c0b90d6817eb2b2be7f7e67e6be1358906b8e1",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "scanner_test::test_scan_comments_and_lines",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "d8d656395c092cece7dfc0141408faeeef29424cc46956e3442215f7d82600d3",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": {
+          "scope": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/scanner_test.my#3f99f5cc7294429c40ce48ad5b88c3a349630eece7bad655f566f9245a1f22dc",
+          "producer": {
+            "facts": {
+              "fresh": 36,
+              "reused": 0,
+              "fallback": 32,
+              "decoded": 0
+            },
+            "lowering": {
+              "fresh": 32,
+              "reused": 0,
+              "materialized": 0
+            }
+          },
+          "graph": {
+            "nodes_read": 0,
+            "nodes_unchanged": 0,
+            "changed_nodes": 36,
+            "candidate_tests": 0,
+            "shards_read": 0,
+            "shards_written": 3
+          },
+          "planner": {
+            "index_nodes": 144,
+            "index_edges": 340,
+            "affected_nodes": 36,
+            "closure_nodes": 504,
+            "closure_edges": 491,
+            "reused_tests": 0,
+            "planned_tests": 11
+          },
+          "storage": {
+            "packed_bytes_read": 0,
+            "decoded_bytes": 0,
+            "blocks_decoded": 0,
+            "payload_bytes_returned": 0,
+            "block_cache_hits": 0,
+            "publication": {
+              "filename_lookups": 2,
+              "refreshes": 3,
+              "packs_prepared": 1,
+              "pack_bytes_prepared": 48895,
+              "save_bytes_prepared": 91147,
+              "sequence_locks": 102
+            }
+          },
+          "nanoseconds": {
+            "lowering": 31053863,
+            "facts": 14115812,
+            "graph": 597859,
+            "planner": 9290158,
+            "keys": 486565,
+            "publication": 22242681,
+            "total": 78128455
+          },
+          "transport": {
+            "request_bytes": 1968,
+            "reply_bytes": 1740,
+            "startups": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "scanner_test::test_scan_empty_source",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "05950e14a8725eadfef906ee162ede6eb263ccf91a544fd479cbfe69069b06b4",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "scanner_test::test_scan_identifiers",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "aa50ca3feb299974c176732dc02ec61a441b79d8d05bc7e4e1e6ecf9c4614a3b",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "scanner_test::test_scan_keywords",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "4da923fa51aae6039d7a3492da72d4fd2e1fbabb9daadd86e01c00061e9e6675",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "scanner_test::test_scan_multiline_string_line",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "059e488144e9c7950c16996274e1b8381774bac5e7380c9699f2c69cfe70fb8e",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "scanner_test::test_scan_numbers",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "ea348971a27897185582dc84137a9619664e848e72590006ee2418dd102862bb",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "scanner_test::test_scan_single_char_tokens",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "c8934e182e092c1017f3619034a7997da08082927cdcce78c020df9464849e93",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "scanner_test::test_scan_string",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "9db8d6cdea2816b13621f1681c7a6bc4232f4d7f27bfeb1b365420112ce4daf2",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "scanner_test::test_scan_two_char_tokens",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "71663488651055b26275bc9ddbb3541dac833db2452f29ad3e654f7980a1826c",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "scanner_test::test_scan_unexpected_character",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "d136d7e604393680603bff4c33d54eaa26d003b0f39b717884b1bb7a9ab4840c",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "scanner_test::test_scan_unterminated_string",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "c642e81a4994c92237e6d45ef8f7f8862516ff812c0757d44909a12760b89968",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "table_test::test_table_add_all",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "e8ab48bb073d37dba1782ac96acabedf6d425e893daf9711377a654cc5ea55b5",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": {
+          "scope": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/table_test.my#ac33002e576b0f12aec79d717f62a9a5d5d020cada29d83dd454b0fcb6618efc",
+          "producer": {
+            "facts": {
+              "fresh": 20,
+              "reused": 0,
+              "fallback": 20,
+              "decoded": 0
+            },
+            "lowering": {
+              "fresh": 20,
+              "reused": 0,
+              "materialized": 0
+            }
+          },
+          "graph": {
+            "nodes_read": 0,
+            "nodes_unchanged": 0,
+            "changed_nodes": 20,
+            "candidate_tests": 0,
+            "shards_read": 0,
+            "shards_written": 3
+          },
+          "planner": {
+            "index_nodes": 80,
+            "index_edges": 195,
+            "affected_nodes": 20,
+            "closure_nodes": 146,
+            "closure_edges": 96,
+            "reused_tests": 0,
+            "planned_tests": 6
+          },
+          "storage": {
+            "packed_bytes_read": 0,
+            "decoded_bytes": 0,
+            "blocks_decoded": 0,
+            "payload_bytes_returned": 0,
+            "block_cache_hits": 0,
+            "publication": {
+              "filename_lookups": 2,
+              "refreshes": 3,
+              "packs_prepared": 1,
+              "pack_bytes_prepared": 26633,
+              "save_bytes_prepared": 47060,
+              "sequence_locks": 66
+            }
+          },
+          "nanoseconds": {
+            "lowering": 9686852,
+            "facts": 4085454,
+            "graph": 204059,
+            "planner": 102598236,
+            "keys": 124722,
+            "publication": 8815101,
+            "total": 125698490
+          },
+          "transport": {
+            "request_bytes": 1152,
+            "reply_bytes": 760,
+            "startups": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "table_test::test_table_delete_leaves_tombstone",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "75e30fc4701efa6b6f857f4aa8e3179d6c9219eccc9c20498531694e54c14ac2",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "table_test::test_table_grows_at_load_factor",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "afe82fb47538985029e4e3322b984f1b1af47823b7717fa640781916fdc76217",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "table_test::test_table_set_get",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "2ee88eb7ddb6e8dcc3125561b04f11f16d9174af1abe88bc105eb373d1d492ff",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "table_test::test_table_set_reports_new_key",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "fa74f3cc9fd061b5a0e6ea80ddb8c080f43a3d822ea202aefbb1f062ff79519b",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "table_test::test_table_tombstone_reuse",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "ce244e50d6b612633d30b0fc9d8ca35963de120f5d64df60f864fbde95a0ce82",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "value_test::test_format_fraction",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "2fb6797fcff49ae68e99a49f19a85f7dca4376416d425cf58a1dc09be2eb6842",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": {
+          "scope": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/value_test.my#30a5ead14f12765505ed00acc2135ff4133c54908b5ac5cd235b3938a60caa48",
+          "producer": {
+            "facts": {
+              "fresh": 16,
+              "reused": 0,
+              "fallback": 11,
+              "decoded": 0
+            },
+            "lowering": {
+              "fresh": 11,
+              "reused": 0,
+              "materialized": 0
+            }
+          },
+          "graph": {
+            "nodes_read": 0,
+            "nodes_unchanged": 0,
+            "changed_nodes": 16,
+            "candidate_tests": 0,
+            "shards_read": 0,
+            "shards_written": 3
+          },
+          "planner": {
+            "index_nodes": 64,
+            "index_edges": 90,
+            "affected_nodes": 16,
+            "closure_nodes": 92,
+            "closure_edges": 38,
+            "reused_tests": 0,
+            "planned_tests": 8
+          },
+          "storage": {
+            "packed_bytes_read": 0,
+            "decoded_bytes": 0,
+            "blocks_decoded": 0,
+            "payload_bytes_returned": 0,
+            "block_cache_hits": 0,
+            "publication": {
+              "filename_lookups": 2,
+              "refreshes": 3,
+              "packs_prepared": 1,
+              "pack_bytes_prepared": 14759,
+              "save_bytes_prepared": 24864,
+              "sequence_locks": 39
+            }
+          },
+          "nanoseconds": {
+            "lowering": 5290502,
+            "facts": 2376761,
+            "graph": 225589,
+            "planner": 106594914,
+            "keys": 123297,
+            "publication": 5170711,
+            "total": 120027819
+          },
+          "transport": {
+            "request_bytes": 932,
+            "reply_bytes": 544,
+            "startups": 1
+          }
+        }
+      }
+    },
+    {
+      "name": "value_test::test_format_integer",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "dade75f20995cb2872b40225900a48f1834d3a02e8ecb75a2e03875f2a70f5fc",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "value_test::test_format_large",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "88744f37bbff72a96dd1e3d871ec0016a5140c2cba8852bb2fe248addfa0c8b7",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "value_test::test_format_small",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "c3d866108a2210fa2a13cb8f5ba8f69520efb3a285679b6d4aaa28715588f3e9",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "value_test::test_format_special",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "5e51a846080a6e70bb26b4cac1d0f5b0e4c22ebda8408cbf8f090854941f6541",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "value_test::test_format_zeros",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "6eb4f8aed060784e56c2c1b5afc5fa01d6182639e5c048f1139d79ba47c34933",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "value_test::test_is_falsey_rules",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "344219df392e5891c97b9a996d1a6b6aac1ca5c029176922a95383929bfb3a17",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    },
+    {
+      "name": "value_test::test_values_equal_rules",
+      "status": "passed",
+      "reason": "",
+      "at": "",
+      "cache": {
+        "action": "execute",
+        "reason": "verify-facts",
+        "key": "5f5e9c67c7361a106c9a629fbefc8190422eb6b3a2c30fb04c320d426b6d1efe",
+        "component": "23d688355ed6b27e02cc785ec2645f30e42d72cbfe4b26f6eadd3383f8421379",
+        "key_method": "canonical-facts",
+        "work": null
+      }
+    }
+  ],
+  "passed": 103,
+  "failed": 0,
+  "skipped": 0,
+  "cached": 0,
+  "unsupported": 0,
+  "sources": [
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/ast.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/chunk.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/compiler.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/compiler_test.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/driver.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/driver_tests.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/heap.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/heap_test.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/interpreter.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/lox_strings.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/lox_strings_test.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/main.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/natives.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/object.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/output.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/p1_call_env_test.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/p1_discard_local_test.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/p1_heap_test.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/p2_scalar_reader_test.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/p2_tree_tests.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/p2_vm_execution_test.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/p2_vm_operand_test.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/p3_queries_test.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/p4_tree_tests.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/parser.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/parser_test.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/resolver.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/resolver_test.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/scanner.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/scanner_test.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/table.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/table_test.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/value.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/value_test.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/vm.my",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/guest/lox/vm_queries.my"
+  ]
+}

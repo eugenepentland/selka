@@ -1,0 +1,17 @@
+public record Big:
+    a: int
+    b: int
+    c: int
+    d: int
+    e: int
+    f: int
+
+public func bool_step(mut big: Big, mut scalar: int) -> bool:
+    big.a += 1
+    scalar += 2
+    return True
+
+public func byte_step(mut big: Big, mut text: bytes) -> u8:
+    big.a += 3
+    text = b"updated"
+    return u8(251)

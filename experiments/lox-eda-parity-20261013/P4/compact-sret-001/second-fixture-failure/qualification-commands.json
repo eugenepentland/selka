@@ -1,0 +1,47 @@
+[
+  {
+    "name": "baseline-rc-debug-bounds-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/bounds.my",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/baseline-rc-debug-bounds",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-rc-debug-bounds",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-rc-debug-bounds.ll"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-rc-debug-bounds-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-rc-debug-bounds"
+    ],
+    "status": 0
+  },
+  {
+    "name": "baseline-rc-debug-bounds-end-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-rc-debug-bounds",
+      "end"
+    ],
+    "status": 1
+  },
+  {
+    "name": "baseline-rc-debug-managed_errors-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/managed_errors.my",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/baseline-rc-debug-managed_errors",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-rc-debug-managed_errors",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-rc-debug-managed_errors.ll"
+    ],
+    "status": 1
+  }
+]

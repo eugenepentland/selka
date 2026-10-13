@@ -1,0 +1,29 @@
+# P2 immutable-program execution regressions. Run with P2/cases.json.
+import driver
+
+func tree_prints(source: bytes, expected: bytes, out: Stream) -> bool:
+    mut normal = driver.run_source(source, driver.Engine.TREE, False, out, None)
+    mut stress = driver.run_source(source, driver.Engine.TREE, True, out, None)
+    return normal.status == 0 and stress.status == 0 and normal.stdout == expected and stress.stdout == expected and stress.collections == stress.allocations
+
+public func test_p2_recursive_repeated_body(out: Stream) -> bool:
+    return tree_prints(b"fun fib(n) { if (n < 2) return n; return fib(n - 1) + fib(n - 2); } print fib(8); print fib(8);", b"21\n21\n", out)
+
+public func test_p2_short_circuit_and_return(out: Stream) -> bool:
+    return tree_prints(b"var n = 0; fun bad() { n = n + 1; return missing; } print true or bad(); print false and bad(); fun f() { while (true) { { return 7; } } return bad(); } print f(); print n;", b"true\nfalse\n7\n0\n", out)
+
+public func test_p2_nested_closure_printing(out: Stream) -> bool:
+    return tree_prints(b"fun make(n) { fun get() { return n; } return get; } var get = make(42); class C { init() { this.n = get(); } value() { return this.n; } } print get; print C; print C(); print C().value(); print nil; print true; print 1.5; print \"text\"; print clock;", b"<fn get>\nC\nC instance\n42\nnil\ntrue\n1.5\ntext\n<native fn>\n", out)
+
+public func test_p2_error_unwinds_blocks(out: Stream) -> bool:
+    mut source = b"fun f() { { print 3; return -\"bad\"; } } print 1; f(); print 9;"
+    mut normal = driver.run_source(source, driver.Engine.TREE, False, out, None)
+    mut stress = driver.run_source(source, driver.Engine.TREE, True, out, None)
+    return normal.status == 70 and stress.status == 70 and normal.stdout == b"1\n3\n" and stress.stdout == normal.stdout and normal.stderr == b"Operand must be a number.\n[line 1]\n" and stress.stderr == normal.stderr
+
+public func test_p2_recursion_depth_error(out: Stream) -> bool:
+    mut normal = driver.run_source(b"fun f() { { f(); } } f();", driver.Engine.TREE, False, out, None)
+    return normal.status == 70 and normal.stderr == b"Stack overflow.\n[line 1]\n"
+
+public func test_p2_inheritance_and_receiver_rhs(out: Stream) -> bool:
+    return tree_prints(b"class A { init(n) { this.n = n; } value() { return this.n; } } class B < A { value() { return super.value() + 1; } } var box = B(42); fun rhs() { box.keep = 9; return 7; } box.keep = 1; box.assigned = rhs(); print box.value(); print box.keep; print box.assigned;", b"43\n9\n7\n", out)

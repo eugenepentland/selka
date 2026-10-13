@@ -1,0 +1,22 @@
+record Big:
+    a: int
+    b: int
+    c: int
+    d: int
+    e: int
+    f: int
+
+func read(mut big: Big, mut scalar: int, rows: int[], index: int) -> int:
+    big.a += 1
+    scalar += 2
+    return rows[index]
+
+func main(args: str[], out: Stream) -> int:
+    mut big = Big(a=1, b=2, c=3, d=4, e=5, f=6)
+    mut scalar = 10
+    mut index = -1
+    if len(args) > 0:
+        index = 2
+    mut answer = read(mut big, mut scalar, [10, 20], index)
+    out.print(answer, big.a, scalar)
+    return 0

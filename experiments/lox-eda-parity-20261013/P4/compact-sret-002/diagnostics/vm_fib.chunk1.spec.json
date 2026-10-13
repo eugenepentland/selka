@@ -1,0 +1,40 @@
+{
+  "oracle": "zig-fast",
+  "case": "vm-fib-control",
+  "arms": {
+    "zig-fast": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-fast",
+      "--engine=vm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/fib.vm.34.lox"
+    ],
+    "baseline": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-002/baseline/lox",
+      "--engine=vm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/fib.vm.34.lox"
+    ],
+    "candidate": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-002/candidate/lox",
+      "--engine=vm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/fib.vm.34.lox"
+    ]
+  },
+  "relative_timeout_arms": [
+    "baseline",
+    "candidate"
+  ],
+  "expected_stdout": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/expected/fib.vm.out",
+  "files": [
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/fib.vm.34.lox",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/expected/fib.vm.out",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-002/identity.json",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-002/compiler.patch",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-002/contract.md",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/runtime/vm-fib.chunk09.spec.json",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/measure.py"
+  ],
+  "identity_dirs": [
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-002/guest/lox"
+  ],
+  "variant": "compact INTERNAL sret ABI v2 against unchanged C2 compiler/source; no source policy changes",
+  "prior_receipt": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-002/diagnostics/vm_fib.chunk0.json"
+}

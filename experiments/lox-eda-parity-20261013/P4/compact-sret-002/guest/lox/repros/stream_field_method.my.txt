@@ -1,0 +1,13 @@
+# Repro: mylang check stream_field_method.my
+# A Stream held in a class field cannot be called through the field
+# expression: the checker reports E_COLLECTION_METHOD and lists the
+# collection methods. Binding the field to a local first works.
+class Sink:
+    stream: Stream
+
+def emit(sink: Sink):
+    _ = sink.stream.write(b"hello\n")
+
+def main(out: Stream) -> int:
+    emit(Sink(stream=out))
+    return 0

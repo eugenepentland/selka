@@ -1,0 +1,12 @@
+import compact_leaf
+import compact_apply
+
+func main(out: Stream) -> int:
+    mut big = compact_leaf.Big(a=1, b=2, c=3, d=4, e=5, f=6)
+    mut scalar = 10
+    mut text = b"initial"
+    mut flag = compact_apply.apply_bool(compact_leaf.bool_step, mut big, mut scalar)
+    out.print(flag, scalar, big.a)
+    mut byte = compact_apply.apply_byte(compact_leaf.byte_step, mut big, mut text)
+    out.print(byte, text, big.a, big.f)
+    return 0

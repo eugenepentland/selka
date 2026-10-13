@@ -1,0 +1,693 @@
+{
+  "protocol": "four approved compact-sret-v2 diagnostics;9paired rounds each,2warmups,3chunks, freshZig3x/120cap; no exclusions",
+  "cases": {
+    "fib": {
+      "sample_seconds": {
+        "zig-fast": {
+          "0": 0.095079419,
+          "1": 0.095661012,
+          "2": 0.095331813,
+          "3": 0.094899517,
+          "4": 0.094971195,
+          "5": 0.094767328,
+          "6": 0.094426495,
+          "7": 0.094610993,
+          "8": 0.093642641
+        },
+        "baseline": {
+          "0": 0.104986881,
+          "1": 0.107557305,
+          "2": 0.106856127,
+          "3": 0.106413625,
+          "4": 0.103540669,
+          "5": 0.103945392,
+          "6": 0.103620973,
+          "7": 0.103238958,
+          "8": 0.10449182
+        },
+        "candidate": {
+          "0": 0.10009562,
+          "1": 0.099967542,
+          "2": 0.100569068,
+          "3": 0.107188813,
+          "4": 0.103998726,
+          "5": 0.101122477,
+          "6": 0.100417986,
+          "7": 0.098947263,
+          "8": 0.09974986
+        }
+      },
+      "medians_seconds": {
+        "zig-fast": 0.094899517,
+        "baseline": 0.10449182,
+        "candidate": 0.100417986
+      },
+      "candidate_over_baseline": {
+        "ratios": [
+          0.9534107409096189,
+          0.9294351694661743,
+          0.9411633270219498,
+          1.007284668669073,
+          1.0044239331696805,
+          0.972842326670912,
+          0.9690893946730262,
+          0.9584295010029061,
+          0.9546188400202045
+        ],
+        "median": 0.9584295010029061,
+        "geometric_mean": 0.9653170733354666,
+        "bootstrap_median_95_interval": [
+          0.9411633270219498,
+          1.0044239331696805
+        ],
+        "bootstrap_iterations": 10000,
+        "bootstrap_seed": 42
+      },
+      "candidate_over_zig": {
+        "ratios": [
+          1.0527580106479195,
+          1.0450186539945867,
+          1.0549371173713018,
+          1.1294979825872031,
+          1.0950554639225083,
+          1.0670605485468578,
+          1.063451375591141,
+          1.0458326232766628,
+          1.0652183549586134
+        ],
+        "median": 1.063451375591141,
+        "geometric_mean": 1.0684555882070077,
+        "bootstrap_median_95_interval": [
+          1.0458326232766628,
+          1.0950554639225083
+        ],
+        "bootstrap_iterations": 10000,
+        "bootstrap_seed": 42
+      },
+      "baseline_over_zig": {
+        "ratios": [
+          1.1042019619408907,
+          1.124358845377885,
+          1.1208863404286666,
+          1.1213294689371285,
+          1.0902323488716763,
+          1.0968483990600641,
+          1.097371802267997,
+          1.0911941067989848,
+          1.1158572513989646
+        ],
+        "median": 1.1042019619408907,
+        "geometric_mean": 1.1068441838650651,
+        "bootstrap_median_95_interval": [
+          1.0911941067989848,
+          1.1213294689371285
+        ],
+        "bootstrap_iterations": 10000,
+        "bootstrap_seed": 42
+      },
+      "relative_timeout_policy": {
+        "reference_arm": "zig-fast",
+        "factor": 3.0,
+        "calibration_samples": [
+          {
+            "arm": "zig-fast",
+            "value": 0.095811974,
+            "output": {
+              "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+              "artifacts": {}
+            },
+            "stderr": "",
+            "round": 0
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.095020454,
+            "output": {
+              "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+              "artifacts": {}
+            },
+            "stderr": "",
+            "round": 1
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.094699178,
+            "output": {
+              "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+              "artifacts": {}
+            },
+            "stderr": "",
+            "round": 2
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.094219868,
+            "output": {
+              "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+              "artifacts": {}
+            },
+            "stderr": "",
+            "round": 3
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.094646765,
+            "output": {
+              "stdout_sha256": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+              "artifacts": {}
+            },
+            "stderr": "",
+            "round": 4
+          }
+        ],
+        "calibration_warmups": 2,
+        "reference_median_seconds": 0.094699178,
+        "absolute_ceiling_seconds": 120.0,
+        "budget_seconds": 0.284097534,
+        "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+        "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+      },
+      "receipts": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-002/diagnostics/fib.chunk0.json",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-002/diagnostics/fib.chunk1.json",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-002/diagnostics/fib.chunk2.json"
+      ]
+    },
+    "binary_trees": {
+      "sample_seconds": {
+        "zig-fast": {
+          "0": 0.119669683,
+          "1": 0.118933558,
+          "2": 0.119299787,
+          "3": 0.11941411,
+          "4": 0.120006306,
+          "5": 0.118513179,
+          "6": 0.119727534,
+          "7": 0.119441877,
+          "8": 0.118577081
+        },
+        "baseline": {
+          "0": 0.155958572,
+          "1": 0.154426046,
+          "2": 0.155420209,
+          "3": 0.154379072,
+          "4": 0.15589311,
+          "5": 0.153815148,
+          "6": 0.15524508,
+          "7": 0.154222451,
+          "8": 0.155814407
+        },
+        "candidate": {
+          "0": 0.151360983,
+          "1": 0.1539729,
+          "2": 0.152813395,
+          "3": 0.151925611,
+          "4": 0.151978433,
+          "5": 0.152620213,
+          "6": 0.151121428,
+          "7": 0.151953709,
+          "8": 0.151681132
+        }
+      },
+      "medians_seconds": {
+        "zig-fast": 0.11941411,
+        "baseline": 0.15524508,
+        "candidate": 0.151953709
+      },
+      "candidate_over_baseline": {
+        "ratios": [
+          0.9705204469299707,
+          0.9970656115873094,
+          0.9832273163395372,
+          0.9841075544229206,
+          0.9748887106043365,
+          0.9922313568231914,
+          0.9734377926823832,
+          0.9852891587101024,
+          0.9734730884031796
+        ],
+        "median": 0.9832273163395372,
+        "geometric_mean": 0.9815442062620002,
+        "bootstrap_median_95_interval": [
+          0.9734377926823832,
+          0.9922313568231914
+        ],
+        "bootstrap_iterations": 10000,
+        "bootstrap_seed": 42
+      },
+      "candidate_over_zig": {
+        "ratios": [
+          1.264823129848184,
+          1.294612745042068,
+          1.2809192609874482,
+          1.2722584542144977,
+          1.2664203912751053,
+          1.287791064992021,
+          1.26221114685282,
+          1.2721979327233779,
+          1.2791774828729339
+        ],
+        "median": 1.2722584542144977,
+        "geometric_mean": 1.2755598554666359,
+        "bootstrap_median_95_interval": [
+          1.264823129848184,
+          1.287791064992021
+        ],
+        "bootstrap_iterations": 10000,
+        "bootstrap_seed": 42
+      },
+      "baseline_over_zig": {
+        "ratios": [
+          1.303242125242364,
+          1.2984228219254992,
+          1.3027702136634995,
+          1.2928042758096174,
+          1.2990409853962175,
+          1.297873783303037,
+          1.2966531157319252,
+          1.2911924600783025,
+          1.3140347669715364
+        ],
+        "median": 1.2984228219254992,
+        "geometric_mean": 1.2995439709479117,
+        "bootstrap_median_95_interval": [
+          1.2928042758096174,
+          1.303242125242364
+        ],
+        "bootstrap_iterations": 10000,
+        "bootstrap_seed": 42
+      },
+      "relative_timeout_policy": {
+        "reference_arm": "zig-fast",
+        "factor": 3.0,
+        "calibration_samples": [
+          {
+            "arm": "zig-fast",
+            "value": 0.119894059,
+            "output": {
+              "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+              "artifacts": {}
+            },
+            "stderr": "",
+            "round": 0
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.119835347,
+            "output": {
+              "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+              "artifacts": {}
+            },
+            "stderr": "",
+            "round": 1
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.118969186,
+            "output": {
+              "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+              "artifacts": {}
+            },
+            "stderr": "",
+            "round": 2
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.120196929,
+            "output": {
+              "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+              "artifacts": {}
+            },
+            "stderr": "",
+            "round": 3
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.119756653,
+            "output": {
+              "stdout_sha256": "e650f48ff7ae14c0fcef891bc854d8c3b3778ffd7d8278b6b7aa52e2050f7056",
+              "artifacts": {}
+            },
+            "stderr": "",
+            "round": 4
+          }
+        ],
+        "calibration_warmups": 2,
+        "reference_median_seconds": 0.119835347,
+        "absolute_ceiling_seconds": 120.0,
+        "budget_seconds": 0.359506041,
+        "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+        "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+      },
+      "receipts": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-002/diagnostics/binary_trees.chunk0.json",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-002/diagnostics/binary_trees.chunk1.json",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-002/diagnostics/binary_trees.chunk2.json"
+      ]
+    },
+    "string_equality": {
+      "sample_seconds": {
+        "zig-fast": {
+          "0": 0.144206082,
+          "1": 0.140460852,
+          "2": 0.141917491,
+          "3": 0.141224483,
+          "4": 0.14105227,
+          "5": 0.140967008,
+          "6": 0.143384992,
+          "7": 0.141676764,
+          "8": 0.142522859
+        },
+        "baseline": {
+          "0": 0.201691469,
+          "1": 0.203194926,
+          "2": 0.202704538,
+          "3": 0.20171717,
+          "4": 0.200943915,
+          "5": 0.202177513,
+          "6": 0.20204106,
+          "7": 0.202554136,
+          "8": 0.202613093
+        },
+        "candidate": {
+          "0": 0.203465617,
+          "1": 0.2032826,
+          "2": 0.202662068,
+          "3": 0.202945693,
+          "4": 0.206318367,
+          "5": 0.205217276,
+          "6": 0.204173013,
+          "7": 0.203516387,
+          "8": 0.203752232
+        }
+      },
+      "medians_seconds": {
+        "zig-fast": 0.141676764,
+        "baseline": 0.202177513,
+        "candidate": 0.203516387
+      },
+      "candidate_over_baseline": {
+        "ratios": [
+          1.0087963462648981,
+          1.0004314773096254,
+          0.9997904832303262,
+          1.0060903243883503,
+          1.0267460301049673,
+          1.015035119162832,
+          1.010552077879615,
+          1.0047505867764654,
+          1.0056222378481732
+        ],
+        "median": 1.0060903243883503,
+        "geometric_mean": 1.008616020037783,
+        "bootstrap_median_95_interval": [
+          1.0004314773096254,
+          1.015035119162832
+        ],
+        "bootstrap_iterations": 10000,
+        "bootstrap_seed": 42
+      },
+      "candidate_over_zig": {
+        "ratios": [
+          1.4109364471881287,
+          1.4472544990685376,
+          1.4280274162964168,
+          1.4370432710311285,
+          1.462708590226871,
+          1.4557823061691144,
+          1.4239496766858277,
+          1.4364838753657585,
+          1.4296108949091457
+        ],
+        "median": 1.4364838753657585,
+        "geometric_mean": 1.4367850654218404,
+        "bootstrap_median_95_interval": [
+          1.4239496766858277,
+          1.4557823061691144
+        ],
+        "bootstrap_iterations": 10000,
+        "bootstrap_seed": 42
+      },
+      "baseline_over_zig": {
+        "ratios": [
+          1.3986335819039866,
+          1.446630310913962,
+          1.4283266746873364,
+          1.4283441915662738,
+          1.424606034344573,
+          1.434218657744371,
+          1.4090809448174326,
+          1.4296919994587114,
+          1.4216182191517783
+        ],
+        "median": 1.4283266746873364,
+        "geometric_mean": 1.4245114462568405,
+        "bootstrap_median_95_interval": [
+          1.4090809448174326,
+          1.434218657744371
+        ],
+        "bootstrap_iterations": 10000,
+        "bootstrap_seed": 42
+      },
+      "relative_timeout_policy": {
+        "reference_arm": "zig-fast",
+        "factor": 3.0,
+        "calibration_samples": [
+          {
+            "arm": "zig-fast",
+            "value": 0.142664783,
+            "output": {
+              "stdout_sha256": "876e13f4e07bb39705302c01f445ffd2d2c3b180a207e4d959d6b671c67da09b",
+              "artifacts": {}
+            },
+            "stderr": "",
+            "round": 0
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.142847275,
+            "output": {
+              "stdout_sha256": "876e13f4e07bb39705302c01f445ffd2d2c3b180a207e4d959d6b671c67da09b",
+              "artifacts": {}
+            },
+            "stderr": "",
+            "round": 1
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.141241616,
+            "output": {
+              "stdout_sha256": "876e13f4e07bb39705302c01f445ffd2d2c3b180a207e4d959d6b671c67da09b",
+              "artifacts": {}
+            },
+            "stderr": "",
+            "round": 2
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.140974312,
+            "output": {
+              "stdout_sha256": "876e13f4e07bb39705302c01f445ffd2d2c3b180a207e4d959d6b671c67da09b",
+              "artifacts": {}
+            },
+            "stderr": "",
+            "round": 3
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.143170451,
+            "output": {
+              "stdout_sha256": "876e13f4e07bb39705302c01f445ffd2d2c3b180a207e4d959d6b671c67da09b",
+              "artifacts": {}
+            },
+            "stderr": "",
+            "round": 4
+          }
+        ],
+        "calibration_warmups": 2,
+        "reference_median_seconds": 0.142664783,
+        "absolute_ceiling_seconds": 120.0,
+        "budget_seconds": 0.427994349,
+        "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+        "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+      },
+      "receipts": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-002/diagnostics/string_equality.chunk0.json",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-002/diagnostics/string_equality.chunk1.json",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-002/diagnostics/string_equality.chunk2.json"
+      ]
+    },
+    "vm_fib": {
+      "sample_seconds": {
+        "zig-fast": {
+          "0": 0.597465239,
+          "1": 0.595553556,
+          "2": 0.595539515,
+          "3": 0.597216378,
+          "4": 0.594934147,
+          "5": 0.599524451,
+          "6": 0.599700412,
+          "7": 0.600240549,
+          "8": 0.630220926
+        },
+        "baseline": {
+          "0": 1.233683094,
+          "1": 1.229325297,
+          "2": 1.228437081,
+          "3": 1.236631149,
+          "4": 1.238620508,
+          "5": 1.230276201,
+          "6": 1.228489261,
+          "7": 1.22338097,
+          "8": 1.246803305
+        },
+        "candidate": {
+          "0": 1.225488092,
+          "1": 1.226523988,
+          "2": 1.220238603,
+          "3": 1.232853634,
+          "4": 1.213139578,
+          "5": 1.214617174,
+          "6": 1.221109568,
+          "7": 1.262264184,
+          "8": 1.217151377
+        }
+      },
+      "medians_seconds": {
+        "zig-fast": 0.597465239,
+        "baseline": 1.230276201,
+        "candidate": 1.221109568
+      },
+      "candidate_over_baseline": {
+        "ratios": [
+          0.993357287588801,
+          0.997721263031977,
+          0.993326090422697,
+          0.9969453179284263,
+          0.9794279766599829,
+          0.9872719418718562,
+          0.9939928713792802,
+          1.0317834059491704,
+          0.9762176376329063
+        ],
+        "median": 0.993357287588801,
+        "geometric_mean": 0.9943378262840517,
+        "bootstrap_median_95_interval": [
+          0.9794279766599829,
+          0.997721263031977
+        ],
+        "bootstrap_iterations": 10000,
+        "bootstrap_seed": 42
+      },
+      "candidate_over_zig": {
+        "ratios": [
+          2.0511454257173947,
+          2.0594688347390204,
+          2.0489632883554334,
+          2.064333262474593,
+          2.0391157309045838,
+          2.0259677015241535,
+          2.036199314800537,
+          2.102930543601112,
+          1.931309048598618
+        ],
+        "median": 2.0489632883554334,
+        "geometric_mean": 2.0394601675617015,
+        "bootstrap_median_95_interval": [
+          2.0259677015241535,
+          2.064333262474593
+        ],
+        "bootstrap_iterations": 10000,
+        "bootstrap_seed": 42
+      },
+      "baseline_over_zig": {
+        "ratios": [
+          2.064861708213957,
+          2.0641725410166134,
+          2.062729760257806,
+          2.070658465766322,
+          2.0819455636322717,
+          2.052086781361316,
+          2.0485049475003527,
+          2.038151157961839,
+          1.9783591016462059
+        ],
+        "median": 2.062729760257806,
+        "geometric_mean": 2.051073703173282,
+        "bootstrap_median_95_interval": [
+          2.038151157961839,
+          2.070658465766322
+        ],
+        "bootstrap_iterations": 10000,
+        "bootstrap_seed": 42
+      },
+      "relative_timeout_policy": {
+        "reference_arm": "zig-fast",
+        "factor": 3.0,
+        "calibration_samples": [
+          {
+            "arm": "zig-fast",
+            "value": 0.60046609,
+            "output": {
+              "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+              "artifacts": {}
+            },
+            "stderr": "",
+            "round": 0
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.596906785,
+            "output": {
+              "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+              "artifacts": {}
+            },
+            "stderr": "",
+            "round": 1
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.600759915,
+            "output": {
+              "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+              "artifacts": {}
+            },
+            "stderr": "",
+            "round": 2
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.595093964,
+            "output": {
+              "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+              "artifacts": {}
+            },
+            "stderr": "",
+            "round": 3
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.605922,
+            "output": {
+              "stdout_sha256": "3e01be60139c8e55182a9388e0133537d417649b097c820c766aaf403dcdfc11",
+              "artifacts": {}
+            },
+            "stderr": "",
+            "round": 4
+          }
+        ],
+        "calibration_warmups": 2,
+        "reference_median_seconds": 0.60046609,
+        "absolute_ceiling_seconds": 120.0,
+        "budget_seconds": 1.80139827,
+        "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+        "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+      },
+      "receipts": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-002/diagnostics/vm_fib.chunk0.json",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-002/diagnostics/vm_fib.chunk1.json",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-002/diagnostics/vm_fib.chunk2.json"
+      ]
+    }
+  }
+}

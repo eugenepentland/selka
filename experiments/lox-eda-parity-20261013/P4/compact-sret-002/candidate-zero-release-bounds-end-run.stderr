@@ -1,0 +1,4 @@
+/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-002/fixtures/bounds.my:12:12: error[R_LIST_BOUNDS]: native execution failed (index 2, length 2)
+  in read at /home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-002/fixtures/bounds.my:12:12
+  in main at /home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-002/fixtures/bounds.my:20:18
+MYLANG-TRAP {"version":1,"operation":"index","index":2,"length":2}

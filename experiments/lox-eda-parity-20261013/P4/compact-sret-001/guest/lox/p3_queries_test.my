@@ -1,0 +1,84 @@
+# P3: scoped readers preserve identity, independent snapshots and GC contracts.
+import chunk
+import heap
+import lox_strings
+import object
+import table
+import value
+
+func keep(mut rt: heap.Runtime, ref: value.ObjRef):
+    heap.push(mut rt, value.Value.obj(value=ref))
+
+
+public func test_p3_environment_snapshot_and_alias() -> bool:
+    mut rt = heap.new_runtime(False)
+    mut parent = heap.allocate(mut rt, object.Obj.env(value=object.new_env(value.NO_OBJ, 256)))
+    keep(mut rt, parent)
+    mut env = heap.allocate(mut rt, object.Obj.env(value=object.new_env(parent, 256)))
+    keep(mut rt, env)
+    const alias = env
+    const snapshot = heap.env_obj(rt, env)
+    heap.set_env_slot(mut rt, env, 255, value.Value.number(value=42.0))
+    heap.collect(mut rt)
+    return heap.env_enclosing(rt, alias) == parent and heap.env_slot(rt, alias, 255) == value.Value.number(value=42.0) and snapshot.slots[255] == value.Value.nil
+
+
+public func test_p3_tables_growth_missing_and_alias() -> bool:
+    mut rt = heap.new_runtime(False)
+    mut name = lox_strings.copy_string(mut rt, b"Parent")
+    keep(mut rt, name)
+    mut klass = heap.allocate(mut rt, object.Obj.klass(value=object.ClassObj(name=name, methods=table.new_table())))
+    keep(mut rt, klass)
+    mut instance = heap.allocate(mut rt, object.Obj.instance(value=object.InstanceObj(klass=klass, fields=table.new_table())))
+    keep(mut rt, instance)
+    const alias = instance
+    const snapshot = heap.class_obj(rt, klass)
+    mut entries = table.new_table()
+    mut last = value.NO_OBJ
+    mut i = 0
+    while i < 100:
+        last = lox_strings.copy_string(mut rt, str(i).encode())
+        keep(mut rt, last)
+        _ = table.set(mut entries, last, heap.string_hash(rt, last), value.Value.number(value=float(i)))
+        i += 1
+    heap.set_class_methods(mut rt, klass, entries)
+    heap.set_instance_fields(mut rt, instance, entries)
+    const hash = heap.string_hash(rt, last)
+    const missing = heap.class_method(rt, klass, name, heap.string_hash(rt, name)) == None
+    mut inherited = table.new_table()
+    table.add_all(entries, mut inherited)
+    mut child = heap.allocate(mut rt, object.Obj.klass(value=object.ClassObj(name=name, methods=inherited)))
+    keep(mut rt, child)
+    heap.collect(mut rt)
+    return missing and snapshot.methods.count == 0 and heap.class_name(rt, klass) == name and heap.is_instance(rt, alias) and not heap.is_instance(rt, klass) and heap.instance_class(rt, alias) == klass and heap.instance_field(rt, alias, last, hash) == Some(value.Value.number(value=99.0)) and heap.class_method(rt, child, last, hash) == heap.class_method(rt, klass, last, hash)
+
+
+public func test_p3_function_closure_selected_reads() -> bool:
+    mut rt = heap.new_runtime(False)
+    mut function = object.new_function()
+    mut code = chunk.new_chunk()
+    function.arity = 3
+    function.upvalue_count = 2
+    chunk.write_byte(mut code, 17, 23)
+    _ = chunk.add_constant(mut code, value.Value.number(value=12.0))
+    function.code = code
+    mut ref = heap.allocate(mut rt, object.Obj.function(value=function))
+    keep(mut rt, ref)
+    mut closure = heap.allocate(mut rt, object.Obj.closure(value=object.new_closure(ref, 2)))
+    keep(mut rt, closure)
+    heap.collect(mut rt)
+    return heap.function_arity(rt, ref) == 3 and heap.function_upvalue_count(rt, ref) == 2 and heap.function_name(rt, ref) == value.NO_OBJ and heap.function_instruction(rt, ref, 0) == 17 and heap.function_line(rt, ref, 0) == 23 and heap.function_constant(rt, ref, 0) == value.Value.number(value=12.0) and heap.closure_function(rt, closure) == ref and heap.closure_upvalue(rt, closure, 1) == value.NO_OBJ
+
+
+public func test_p3_string_owned_snapshot_stress_and_reuse() -> bool:
+    mut rt = heap.new_runtime(True)
+    mut gone = lox_strings.copy_string(mut rt, b"gone")
+    const snapshot = heap.string_obj(rt, gone)
+    heap.collect(mut rt)
+    mut kept = lox_strings.copy_string(mut rt, b"replacement")
+    keep(mut rt, kept)
+    mut owned = heap.string_chars(rt, kept)
+    mut joined = lox_strings.concat(mut rt, kept, kept)
+    keep(mut rt, joined)
+    heap.collect(mut rt)
+    return gone == kept and snapshot.chars == b"gone" and owned == b"replacement" and heap.string_matches(rt, kept, b"replacement") and not heap.string_matches(rt, kept, b"replace") and heap.string_hash(rt, kept) == lox_strings.fnv1a(owned) and heap.string_matches(rt, joined, b"replacementreplacement")

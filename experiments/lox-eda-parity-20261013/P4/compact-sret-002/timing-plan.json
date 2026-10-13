@@ -1,0 +1,11 @@
+{
+  "cases": {
+    "fib": "tree fib28",
+    "binary_trees": "tree binary_trees10",
+    "string_equality": "tree string_equality10000",
+    "vm_fib": "canonical VM fib34 control"
+  },
+  "protocol": "2warmup rounds+9alternating paired rounds/arm/case in3leases of3rounds; CPU8; fresh Zig2warmups+5calibrations;3x relative/120sabsolute cutoff; preserve alloutputs/failed/censored receipts; no trimming",
+  "risk": "evaluate code8636\u219211603B +34.4%, explicitframe1208\u2192488B; execute frame3816\u2192728B",
+  "status": "root authorized after complete v2 qualification; no subsequent source edits"
+}

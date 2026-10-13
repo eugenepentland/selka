@@ -1,0 +1,34 @@
+record State:
+    rows: int[]
+    a: int
+    b: int
+    c: int
+    d: int
+    e: int
+
+func update(mut state: State, mut scalar: int, fail: bool) -> Result[int[], str]:
+    state.rows.append(scalar)
+    scalar += 7
+    if fail:
+        return Err("expected error")
+    return Ok(state.rows.copy())
+
+func outer(mut state: State, mut scalar: int, fail: bool) -> Result[int[], str]:
+    return update(mut state, mut scalar, fail)
+
+func main(out: Stream) -> int:
+    mut state = State(rows=[2], a=1, b=2, c=3, d=4, e=5)
+    mut scalar = 10
+    mut first = outer(mut state, mut scalar, False)
+    match first:
+        case Ok(rows):
+            out.print(rows[0], rows[1], scalar, state.rows[1])
+        case Err(message):
+            out.print(message)
+    mut second = outer(mut state, mut scalar, True)
+    match second:
+        case Ok(rows):
+            out.print(len(rows))
+        case Err(message):
+            out.print(message, scalar, state.rows[2])
+    return 0

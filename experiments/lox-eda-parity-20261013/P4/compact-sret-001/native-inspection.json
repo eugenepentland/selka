@@ -1,0 +1,48 @@
+{
+  "baseline": {
+    "evaluate": {
+      "definition": [
+        "define internal fastcc void @\"my.interpreter::evaluate\"(ptr noalias sret([280 x i8]) align 8 %ret, { ptr, ptr, ptr, ptr } %p0, ptr noalias align 8 %p1, ptr noalias align 8 %p2, { i64, { i8, [1 x i64] } } %p3, i64 %p4, ptr %p5) nounwind uwtable !dbg !1001571 {"
+      ],
+      "code_bytes": 8636,
+      "explicit_frame_bytes": 1208
+    },
+    "get_variable": {
+      "definition": [
+        "define internal fastcc void @\"my.interpreter::get_variable\"(ptr noalias sret([216 x i8]) align 8 %ret, ptr noalias align 8 %p0, i64 %p1, i64 %p2, i64 %p3, i64 %p4) nounwind uwtable !dbg !1002948 {"
+      ],
+      "code_bytes": null,
+      "explicit_frame_bytes": null
+    },
+    "execute": {
+      "definition": [
+        "define internal fastcc void @\"my.interpreter::execute\"(ptr noalias sret([280 x i8]) align 8 %ret, { ptr, ptr, ptr, ptr } %p0, ptr noalias align 8 %p1, ptr noalias align 8 %p2, { i64, { i8, [1 x i64] } } %p3, i64 %p4, ptr %p5) nounwind uwtable !dbg !1000576 {"
+      ],
+      "code_bytes": 6019,
+      "explicit_frame_bytes": 3816
+    }
+  },
+  "candidate": {
+    "evaluate": {
+      "definition": [
+        "define internal fastcc void @\"my.interpreter::evaluate\"(ptr noalias sret([48 x i8]) align 8 %ret, { ptr, ptr, ptr, ptr } %p0, ptr noalias align 8 %p1, ptr noalias align 8 %p2, { i64, { i8, [1 x i64] } } %p3, i64 %p4, ptr %p5) nounwind uwtable !dbg !1001571 {"
+      ],
+      "code_bytes": 11641,
+      "explicit_frame_bytes": 488
+    },
+    "get_variable": {
+      "definition": [
+        "define internal fastcc void @\"my.interpreter::get_variable\"(ptr noalias sret([24 x i8]) align 8 %ret, ptr noalias align 8 %p0, i64 %p1, i64 %p2, i64 %p3, i64 %p4) nounwind uwtable !dbg !1002948 {"
+      ],
+      "code_bytes": null,
+      "explicit_frame_bytes": null
+    },
+    "execute": {
+      "definition": [
+        "define internal fastcc void @\"my.interpreter::execute\"(ptr noalias sret([48 x i8]) align 8 %ret, { ptr, ptr, ptr, ptr } %p0, ptr noalias align 8 %p1, ptr noalias align 8 %p2, { i64, { i8, [1 x i64] } } %p3, i64 %p4, ptr %p5) nounwind uwtable !dbg !1000576 {"
+      ],
+      "code_bytes": 5951,
+      "explicit_frame_bytes": 728
+    }
+  }
+}

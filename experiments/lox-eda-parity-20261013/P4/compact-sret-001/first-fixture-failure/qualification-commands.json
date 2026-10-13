@@ -1,0 +1,17 @@
+[
+  {
+    "name": "baseline-rc-debug-bounds-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/experiments/lox-eda-parity-20261013/P4/compact-sret-001/fixtures/bounds.my",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/cache/baseline-rc-debug-bounds",
+      "-o",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-rc-debug-bounds",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-sret/.tmp/lox-eda-parity/P4/compact-sret-001/fixtures/baseline-rc-debug-bounds.ll"
+    ],
+    "status": 1
+  }
+]

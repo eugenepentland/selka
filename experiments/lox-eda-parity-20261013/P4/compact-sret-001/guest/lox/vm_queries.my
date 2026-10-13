@@ -1,0 +1,50 @@
+# VM-only call discriminator and bound-method scalar queries.
+# Every borrow ends here, before the caller can allocate or mutate Runtime.
+import heap
+import object
+import value
+
+public func callable_kind(rt: heap.Runtime, ref: value.ObjRef) -> int:
+    match rt.objects[ref]:
+        case object.Obj.bound_method(value=_):
+            return 1
+        case object.Obj.klass(value=_):
+            return 2
+        case object.Obj.closure(value=_):
+            return 3
+        case object.Obj.native(value=_):
+            return 4
+        case _:
+            return 0
+
+
+public func bound_receiver(rt: heap.Runtime, ref: value.ObjRef) -> value.Value:
+    match rt.objects[ref]:
+        case object.Obj.bound_method(value=payload):
+            return payload.receiver
+        case _:
+            assert False, "object is not a bound method"
+            return value.Value.nil
+
+
+public func bound_method(rt: heap.Runtime, ref: value.ObjRef) -> value.ObjRef:
+    match rt.objects[ref]:
+        case object.Obj.bound_method(value=payload):
+            return payload.method
+        case _:
+            assert False, "object is not a bound method"
+            return value.NO_OBJ
+
+
+# The operand byte and selected constant belong to the same checked function.
+# Return only the scalar Value; the borrow ends before the caller mutates IP
+# or Runtime. Both code and constant indexing retain their bounds checks.
+public func constant_operand(rt: heap.Runtime, function: value.ObjRef, ip: int) -> value.Value:
+    match rt.objects[function]:
+        case object.Obj.function(value=payload):
+            const index = payload.code.code[ip]
+            return payload.code.constants[index]
+        case _:
+            pass
+    assert False, "object is not a function"
+    return value.Value.nil
