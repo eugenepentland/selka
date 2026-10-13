@@ -1,0 +1,135 @@
+{
+  "eda": {
+    "denominator": 34,
+    "parity_pass": 0,
+    "candidate_incomplete": [],
+    "before_incomplete": [
+      "eda-remora-base"
+    ],
+    "wall_seconds_over_zig": {
+      "pairs": 34,
+      "ratio": 1.41525875129199
+    },
+    "wall_seconds_over_before": {
+      "pairs": 33,
+      "ratio": 0.8492045218714953
+    },
+    "rss_kib_over_zig": {
+      "pairs": 34,
+      "ratio": 0.4456469518192994
+    },
+    "rss_kib_over_before": {
+      "pairs": 33,
+      "ratio": 0.9964813175156968
+    },
+    "compiler_change_ratio": {
+      "pairs": 33,
+      "ratio": 0.9971847301536066
+    },
+    "application_source_change_ratio": {
+      "pairs": 34,
+      "ratio": 0.8517506632133807
+    }
+  },
+  "tree": {
+    "denominator": 13,
+    "parity_pass": 0,
+    "candidate_incomplete": [],
+    "before_incomplete": [],
+    "wall_seconds_over_zig": {
+      "pairs": 13,
+      "ratio": 1.267379584769552
+    },
+    "wall_seconds_over_before": {
+      "pairs": 13,
+      "ratio": 0.7828559862744324
+    },
+    "rss_kib_over_zig": {
+      "pairs": 13,
+      "ratio": 2.1479573076928733
+    },
+    "rss_kib_over_before": {
+      "pairs": 13,
+      "ratio": 0.946374419720127
+    },
+    "compiler_change_ratio": {
+      "pairs": 13,
+      "ratio": 1.0010160777166393
+    },
+    "application_source_change_ratio": {
+      "pairs": 13,
+      "ratio": 0.7820613511624714
+    }
+  },
+  "vm": {
+    "denominator": 13,
+    "parity_pass": 0,
+    "candidate_incomplete": [
+      "vm-string_equality"
+    ],
+    "before_incomplete": [
+      "vm-method_call",
+      "vm-string_equality"
+    ],
+    "wall_seconds_over_zig": {
+      "pairs": 12,
+      "ratio": 2.207822165394658
+    },
+    "wall_seconds_over_before": {
+      "pairs": 11,
+      "ratio": 0.9285701977551867
+    },
+    "rss_kib_over_zig": {
+      "pairs": 12,
+      "ratio": 2.949199429342079
+    },
+    "rss_kib_over_before": {
+      "pairs": 11,
+      "ratio": 0.9810133804470316
+    },
+    "compiler_change_ratio": {
+      "pairs": 11,
+      "ratio": 1.0019939445404384
+    },
+    "application_source_change_ratio": {
+      "pairs": 11,
+      "ratio": 0.9267223647554804
+    }
+  },
+  "all": {
+    "denominator": 60,
+    "parity_pass": 0,
+    "candidate_incomplete": [
+      "vm-string_equality"
+    ],
+    "before_incomplete": [
+      "eda-remora-base",
+      "vm-method_call",
+      "vm-string_equality"
+    ],
+    "wall_seconds_over_zig": {
+      "pairs": 59,
+      "ratio": 1.5120129495393748
+    },
+    "wall_seconds_over_before": {
+      "pairs": 57,
+      "ratio": 0.8480914275747308
+    },
+    "rss_kib_over_zig": {
+      "pairs": 59,
+      "ratio": 0.9255818533829937
+    },
+    "rss_kib_over_before": {
+      "pairs": 57,
+      "ratio": 0.9818560374895738
+    },
+    "compiler_change_ratio": {
+      "pairs": 57,
+      "ratio": 0.9989843570004526
+    },
+    "application_source_change_ratio": {
+      "pairs": 58,
+      "ratio": 0.8490861240641338
+    }
+  }
+}

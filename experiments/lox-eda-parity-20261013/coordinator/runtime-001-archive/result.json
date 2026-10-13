@@ -1,0 +1,14 @@
+{
+  "command": [
+    "scripts/build-slot.sh",
+    "build",
+    "/usr/bin/python3",
+    "-B",
+    "experiments/lox-eda-parity-20261013/archive_attempt.py",
+    "runtime-001"
+  ],
+  "requested_utc": "2026-10-13T07:53:26.629749+00:00",
+  "harness_sha256": "3419a48008ee7a5cfe7f669d60eb712cfe02b1fb271d40f867b6c5c264af5cf7",
+  "returncode": 0,
+  "finished_utc": "2026-10-13T07:55:56.975483+00:00"
+}

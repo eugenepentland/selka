@@ -1,0 +1,9 @@
+{
+  "pid": 278355,
+  "start_ticks": "192473437",
+  "stopped_utc": "2026-10-13T07:14:30.823769+00:00",
+  "reason": "Allow already queued application qualification and bounded prototype builds before requesting the C1 counted-run timing windows. Runtime scheduler continues unchanged.",
+  "resume_required": false,
+  "resumed_utc": "2026-10-13T07:27:59.326333+00:00",
+  "resume_reason": "C2 both application matrices archived; pending native admissions drained. C1 counters resume through shared per-case timing queue alongside approved P4 diagnostics."
+}

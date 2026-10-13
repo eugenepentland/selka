@@ -1,0 +1,67 @@
+{
+  "phase": "complete",
+  "scheduler_pid": 217780,
+  "scheduler_start_ticks": "192450340",
+  "commands": [
+    {
+      "stage": "count",
+      "command": [
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/pipeline.py",
+        "count",
+        "--root",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012",
+        "--compiler",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-001/install/bin/mylang",
+        "--install",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-001/install",
+        "--attempt",
+        "runtime-001",
+        "--prior-root",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012",
+        "--lox-build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/native-001/build/lox/build-receipt.json",
+        "--eda-build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/native-001/build/eda/build-receipt.json"
+      ],
+      "returncode": 0
+    },
+    {
+      "stage": "report",
+      "command": [
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/pipeline.py",
+        "report",
+        "--root",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012",
+        "--compiler",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-001/install/bin/mylang",
+        "--install",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-001/install",
+        "--attempt",
+        "runtime-001",
+        "--prior-root",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012",
+        "--lox-build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/native-001/build/lox/build-receipt.json",
+        "--eda-build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/native-001/build/eda/build-receipt.json"
+      ],
+      "returncode": 0
+    },
+    {
+      "stage": "summary",
+      "command": [
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/summarize.py",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/parity-report.json",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/summary"
+      ],
+      "returncode": 0
+    }
+  ],
+  "harness_sha256": "4dc8f48ebadd6ac4ba96762969a9e766b596bc20986275230ed2227ed5cd500a"
+}

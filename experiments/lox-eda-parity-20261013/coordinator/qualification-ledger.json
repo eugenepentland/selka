@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-10-13T07:28:52.600204+00:00",
+  "updated_utc": "2026-10-13T07:59:55.690112+00:00",
   "items": [
     {
       "id": "P1-payload-exchange-and-construction",
@@ -9,9 +9,10 @@
       "evidence": [
         "P1/setter-audit-002",
         "P1/call-env-001",
-        "P1/discard-local-001"
+        "P1/discard-local-001",
+        "P1/frame-ip-002"
       ],
-      "remaining": "Combined final-candidate runtime/RSS/counts; C2-only IP publication prototype under review."
+      "remaining": "Final combined runtime, RSS and counters. C2 IP-only publication passes 103 tests, 16 CLI controls and five bounds controls; paired timing released. Older slower trial preserved."
     },
     {
       "id": "P2-vm-readers",
@@ -27,34 +28,45 @@
       "status": "borrowed parser integrated; scalar scanner rejected after slower paired runtime",
       "owner": "P3",
       "source": "source-002/eda",
-      "remaining": "Preserve rejected experiment evidence; retain existing parser implementation."
+      "remaining": "Scanner rejected; initial parser retained. New isolated diagram_membership borrowed-read helpers under qualification.",
+      "evidence": [
+        "P3/c2-001"
+      ]
     },
     {
       "id": "P4-tree-execution",
-      "status": "fresh environments integrated; arithmetic experiment rejected; atom experiment qualified in isolation",
+      "status": "fresh environments integrated; arithmetic and atom experiments rejected",
       "owner": "P4",
-      "remaining": "Measure atom runtime and RSS tradeoff before source adoption; preserve neutral arithmetic evidence."
+      "remaining": "Rejected source fast paths preserved. Internal sret compaction prototype now isolated: evaluate reserves 280 bytes for 48 transported bytes. ABI, mode, ownership and native performance qualification required.",
+      "evidence": [
+        "P4/arithmetic-inline-001",
+        "P4/atom-operands-001"
+      ]
     },
     {
       "id": "P5-eda-composition",
-      "status": "borrowed geometry/textbox inputs integrated; gangable dictionary copy removal measured in isolation",
+      "status": "borrowed geometry/textbox integrated; gangable overlay provisionally assembled in source-003",
       "owner": "P5",
-      "remaining": "Full isolated unit matrix, reviewed source commit, timing and integration; isolated RDS3-flat saves37926allocations/2811312bytes, peak unchanged."
+      "remaining": "Gangable timing released. Isolated build_components read-only input snapshot removal authorized; all Comp and Builder owned outputs and working-owner copies remain required.",
+      "evidence": [
+        "P5/followup-004"
+      ]
     },
     {
       "id": "runtime-scalar-copy",
       "status": "integrated; C2 application qualification passed",
       "owner": "P7",
-      "remaining": "Final full gate and six text microbenchmarks. Pointer-destruction and bulk-copy experiments not adopted."
+      "remaining": "New copy worklist scratch initialization trial at exact C2 requires correctness, sanitizers, native proof and timing. Existing scalar copy change remains qualified; final gate and six micros pending."
     },
     {
       "id": "C1-runtime",
-      "status": "780/780 chunks complete; counters pending",
+      "status": "complete and archived; 0/60 parity",
       "owner": "coordinator",
       "evidence": [
-        "coordinator/progress-003.json"
+        "coordinator/runtime-001-summary",
+        "archives/runtime-001.json"
       ],
-      "remaining": "Counter watcher resumed through shared admission; validate pins, create combined report and archive. C1 parity0/60; VM string equality censored,59completed."
+      "remaining": "No C1 collection remains. All 59 candidate and 57 previous-version counted runs have zero RC, shared RC, uniqueness events and exit-live bytes. These measurements do not qualify C2 or C3."
     },
     {
       "id": "C2-applications",

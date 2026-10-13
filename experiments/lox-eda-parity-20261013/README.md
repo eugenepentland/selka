@@ -3,7 +3,7 @@
 Implementation and qualification are in progress. The first combined candidate
 has passed the application correctness matrices, but its completed runtime cases
 remain slower than Zig. A second candidate includes measured follow-up changes;
-it has been built and is undergoing application qualification. Individual parity
+it has passed both applications in all five build modes. Individual parity
 and the final complete verification gate are still open.
 
 The target is each of the existing 60 cases at or below Zig ReleaseFast runtime:
@@ -64,13 +64,16 @@ scalar-IP readers reduce VM Fibonacci time by 9.9% and closures by 9.0%; the
 discarded-local-expression change reduces tree string-equality time by 14.8%.
 Each uses nine matched pairs against its recorded control. These results are
 not added together or relabeled as measurements of the combined second candidate.
-Further bounded VM-inlining, tree operand and EDA-copy experiments remain isolated
+Further bounded VM-inlining and EDA-copy experiments remain isolated
 until their correctness and performance evidence is reviewed. The numeric
 dispatch prototype removed a native helper call but showed no reliable runtime
 benefit in nine matched pairs on each of three workloads; it is not adopted.
 The scalar scanner prototype also remains out: despite passing differential
 and overflow checks and reducing instrumented helper calls, it increased runtime
 by about 1.1% and 2.3% in two nine-pair comparisons against C2.
+The atom-operand experiment is also rejected: it improved tree string equality
+by 2.2%, but slowed Fibonacci and binary trees by 2.0% and 4.4% and increased
+RSS in all three cases. Each comparison includes nine matched pairs.
 
 The first candidate's complete runtime/RSS sweep is recorded in
 `coordinator/progress-003.json`. All 60 cases remain in the denominator: 59
@@ -78,8 +81,11 @@ finished and VM string equality hit the three-times-Zig cutoff. None reached
 individual parity. Geometric mean runtime ratios against Zig are 1.415 for EDA
 (34 cases), 1.267 for tree Lox (13) and 2.208 for VM Lox (12 completed).
 Matched ratios against the freshly measured previous version are 0.849, 0.783
-and 0.929 respectively, using 33, 13 and 11 completed pairs. Counter collection
-and final identity validation remain pending; these are C1 results, not C2.
+and 0.929 respectively, using 33, 13 and 11 completed pairs. All runtime,
+identity and counter checks passed. There are 59 completed candidate and 57
+previous-version instrumented runs; every one has zero RC events and zero
+exit-live managed bytes. Readable case rows and separate managed-memory
+comparisons are in `coordinator/runtime-001-summary/`; these are C1 results, not C2.
 
 Both C2 applications have passed primary qualification. EDA additionally passed
 all five build modes with 328 tests each, 102 golden output sets and nine error
@@ -106,8 +112,9 @@ artifacts, with results recorded in `P6/guest-audit-validation.json`.
 Finished attempt evidence is preserved with `archive_attempt.py`. Each archive
 has a per-file SHA-256 inventory and is verified byte for byte before publication.
 `archives/native-001.tar.xz` and `archives/native-002.tar.xz` contain the two
-complete application qualifications;
-its raw attempt directory is retained locally. Compiler installations and guest
+complete application qualifications. `archives/runtime-001.tar.xz` preserves
+all C1 runtime, RSS and counter evidence with a verified file manifest.
+Raw attempt directories are retained locally. Compiler installations and guest
 binaries are separately pinned by the archived receipts.
 
 `fixtures/lox/recovery.json` pins the recovered historical Lox harness and

@@ -31,7 +31,7 @@
     "recovered_identical_lox_corpus_files": 254,
     "profile_status": "P2 native CPU profile and P5 leaf profile completed; attribution limitations recorded in their evidence"
   },
-  "updated_utc": "2026-10-13T07:28:52.599780+00:00",
+  "updated_utc": "2026-10-13T07:59:55.690112+00:00",
   "candidate": {
     "source_root": "source-002",
     "compiler_source_commit": "fbeba4eed7b549a3feef14c8b8dd620e41494139",
@@ -39,15 +39,16 @@
     "native_attempt": "native-002"
   },
   "current_followups": {
-    "P1": "Read-only VM string-equality native overhead audit",
-    "P2": "Bounded Core reader inliner: same-signature query-only cache edit gap reproduced; local dependency and phase-aware demand fix in progress",
-    "P3": "Scalar scanner rejected after measured1.1%/2.3% slowdowns; earlier borrowed parser retained",
-    "P4": "Arithmetic dispatch rejected as neutral; atom operand diagnostic running with separate RSS observations",
-    "P5": "Borrowed gangable membership prototype with matched full-application allocation counters",
-    "P7": "Independent inliner soundness, cache and budget review"
+    "P1": "C2 scalar IP publication timing released",
+    "P2": "Bounded Core reader inliner cache and regression qualification pending",
+    "P3": "Borrowed diagram_membership subtree reads in an isolated C2 snapshot",
+    "P4": "Compact internal sret ABI prototype; five-mode, call and ownership qualification required",
+    "P5": "Gangable timing released; build_components input snapshot removal in isolation",
+    "P7": "Remove redundant copy worklist scratch initialization in an isolated C2 runtime"
   },
   "evidence_archives": {
     "native-001": "archives/native-001.json",
-    "native-002": "archives/native-002.json"
+    "native-002": "archives/native-002.json",
+    "runtime-001": "archives/runtime-001.json"
   }
 }

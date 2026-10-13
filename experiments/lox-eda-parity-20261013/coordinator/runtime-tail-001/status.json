@@ -1,0 +1,8 @@
+{
+  "scheduler_pid": 2885229,
+  "scheduler_start_ticks": "192072755",
+  "started_utc": "2026-10-13T05:14:00.606294+00:00",
+  "phase": "paused by coordinator before count/report",
+  "commands": [],
+  "pause_receipt": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/schedule-pause-builds-001.json"
+}

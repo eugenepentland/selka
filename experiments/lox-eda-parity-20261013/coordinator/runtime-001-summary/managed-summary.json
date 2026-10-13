@@ -1,0 +1,780 @@
+{
+  "compiler_source_commit": "be33ce79b5b58c3e254e73709c9dd7eb97e5a849",
+  "compiler_sha256": "955f311e1dbf65b55f4c148ab03cdcb4881bc5668289aea93336dbfd7985206a",
+  "report_sha256": "19beaa7cc28ef5ad156ff8f81a661314361b14631ec714017f597b1cebe99fc1",
+  "validated_utc": "2026-10-13T07:56:08.577651+00:00",
+  "scope": 60,
+  "candidate_counted_runs": 59,
+  "all_counted_runs": 116,
+  "all_completed_counted_runs_rc_shared_rc_unique_tests_and_exit_live_zero": true,
+  "groups": {
+    "eda": {
+      "case_denominator": 34,
+      "candidate_counted": 34,
+      "before_counted": 33,
+      "metrics": {
+        "allocs": {
+          "positive_matched_pairs": 33,
+          "geometric_mean_ratio": 0.5894410937302845,
+          "zero_pairs": [],
+          "unmatched": [
+            "eda-remora-base"
+          ]
+        },
+        "reallocs": {
+          "positive_matched_pairs": 33,
+          "geometric_mean_ratio": 0.9477727893315304,
+          "zero_pairs": [],
+          "unmatched": [
+            "eda-remora-base"
+          ]
+        },
+        "cumulative_allocated_bytes": {
+          "positive_matched_pairs": 33,
+          "geometric_mean_ratio": 0.7091290906223567,
+          "zero_pairs": [],
+          "unmatched": [
+            "eda-remora-base"
+          ]
+        },
+        "peak_live_bytes": {
+          "positive_matched_pairs": 33,
+          "geometric_mean_ratio": 0.9820207545391866,
+          "zero_pairs": [],
+          "unmatched": [
+            "eda-remora-base"
+          ]
+        },
+        "live_bytes_at_exit": {
+          "positive_matched_pairs": 0,
+          "geometric_mean_ratio": null,
+          "zero_pairs": [
+            {
+              "case": "eda-Cyclops-Flex",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-adf5901",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-barracuda-base",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-barracuda-via-fence",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-barracuda",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-black-canyon+flat",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-black-canyon",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-blinky-breakout",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-cyclops-analog+no-vendor-symbols",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-cyclops-analog",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-cyclops-breakout",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-cyclops-digital-pcb",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-cyclops-interposer",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-cyclops-kband-breakout",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-cyclops-kband-pcb",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-cyclops-kband",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-cyclops-xband-sip",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-dual-flash",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-labstation+no-vendor-symbols",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-labstation",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-lmk05318b-clock",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-max860-inverter",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-poe-pd-flyback-tps23757",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-rds3+flat",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-rds3-rf-selector",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-rds3",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-remora-rf",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-rf-switch-8way",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-rf-switch-eval",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-stm32n6",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-straps-base",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-straps",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-w55rp20",
+              "candidate": 0,
+              "before": 0
+            }
+          ],
+          "unmatched": [
+            "eda-remora-base"
+          ]
+        }
+      }
+    },
+    "tree": {
+      "case_denominator": 13,
+      "candidate_counted": 13,
+      "before_counted": 13,
+      "metrics": {
+        "allocs": {
+          "positive_matched_pairs": 13,
+          "geometric_mean_ratio": 0.40740296566308803,
+          "zero_pairs": [],
+          "unmatched": []
+        },
+        "reallocs": {
+          "positive_matched_pairs": 13,
+          "geometric_mean_ratio": 1.0,
+          "zero_pairs": [],
+          "unmatched": []
+        },
+        "cumulative_allocated_bytes": {
+          "positive_matched_pairs": 13,
+          "geometric_mean_ratio": 0.33215651354496306,
+          "zero_pairs": [],
+          "unmatched": []
+        },
+        "peak_live_bytes": {
+          "positive_matched_pairs": 13,
+          "geometric_mean_ratio": 0.9192770523192533,
+          "zero_pairs": [],
+          "unmatched": []
+        },
+        "live_bytes_at_exit": {
+          "positive_matched_pairs": 0,
+          "geometric_mean_ratio": null,
+          "zero_pairs": [
+            {
+              "case": "tree-binary_trees",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "tree-closures",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "tree-equality",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "tree-fib",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "tree-instantiation",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "tree-invocation",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "tree-method_call",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "tree-properties",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "tree-string_equality",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "tree-strings",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "tree-trees",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "tree-zoo",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "tree-zoo_batch",
+              "candidate": 0,
+              "before": 0
+            }
+          ],
+          "unmatched": []
+        }
+      }
+    },
+    "vm": {
+      "case_denominator": 13,
+      "candidate_counted": 12,
+      "before_counted": 11,
+      "metrics": {
+        "allocs": {
+          "positive_matched_pairs": 11,
+          "geometric_mean_ratio": 0.6812049553443842,
+          "zero_pairs": [],
+          "unmatched": [
+            "vm-method_call",
+            "vm-string_equality"
+          ]
+        },
+        "reallocs": {
+          "positive_matched_pairs": 11,
+          "geometric_mean_ratio": 1.0,
+          "zero_pairs": [],
+          "unmatched": [
+            "vm-method_call",
+            "vm-string_equality"
+          ]
+        },
+        "cumulative_allocated_bytes": {
+          "positive_matched_pairs": 11,
+          "geometric_mean_ratio": 0.6439410597549877,
+          "zero_pairs": [],
+          "unmatched": [
+            "vm-method_call",
+            "vm-string_equality"
+          ]
+        },
+        "peak_live_bytes": {
+          "positive_matched_pairs": 11,
+          "geometric_mean_ratio": 0.973357838441799,
+          "zero_pairs": [],
+          "unmatched": [
+            "vm-method_call",
+            "vm-string_equality"
+          ]
+        },
+        "live_bytes_at_exit": {
+          "positive_matched_pairs": 0,
+          "geometric_mean_ratio": null,
+          "zero_pairs": [
+            {
+              "case": "vm-binary_trees",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "vm-closures",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "vm-equality",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "vm-fib",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "vm-instantiation",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "vm-invocation",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "vm-properties",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "vm-strings",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "vm-trees",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "vm-zoo",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "vm-zoo_batch",
+              "candidate": 0,
+              "before": 0
+            }
+          ],
+          "unmatched": [
+            "vm-method_call",
+            "vm-string_equality"
+          ]
+        }
+      }
+    },
+    "all": {
+      "case_denominator": 60,
+      "candidate_counted": 59,
+      "before_counted": 57,
+      "metrics": {
+        "allocs": {
+          "positive_matched_pairs": 57,
+          "geometric_mean_ratio": 0.557161074500855,
+          "zero_pairs": [],
+          "unmatched": [
+            "eda-remora-base",
+            "vm-method_call",
+            "vm-string_equality"
+          ]
+        },
+        "reallocs": {
+          "positive_matched_pairs": 57,
+          "geometric_mean_ratio": 0.9694222395741976,
+          "zero_pairs": [],
+          "unmatched": [
+            "eda-remora-base",
+            "vm-method_call",
+            "vm-string_equality"
+          ]
+        },
+        "cumulative_allocated_bytes": {
+          "positive_matched_pairs": 57,
+          "geometric_mean_ratio": 0.5854920776914389,
+          "zero_pairs": [],
+          "unmatched": [
+            "eda-remora-base",
+            "vm-method_call",
+            "vm-string_equality"
+          ]
+        },
+        "peak_live_bytes": {
+          "positive_matched_pairs": 57,
+          "geometric_mean_ratio": 0.9656912651106062,
+          "zero_pairs": [],
+          "unmatched": [
+            "eda-remora-base",
+            "vm-method_call",
+            "vm-string_equality"
+          ]
+        },
+        "live_bytes_at_exit": {
+          "positive_matched_pairs": 0,
+          "geometric_mean_ratio": null,
+          "zero_pairs": [
+            {
+              "case": "eda-Cyclops-Flex",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-adf5901",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-barracuda-base",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-barracuda-via-fence",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-barracuda",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-black-canyon+flat",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-black-canyon",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-blinky-breakout",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-cyclops-analog+no-vendor-symbols",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-cyclops-analog",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-cyclops-breakout",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-cyclops-digital-pcb",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-cyclops-interposer",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-cyclops-kband-breakout",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-cyclops-kband-pcb",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-cyclops-kband",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-cyclops-xband-sip",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-dual-flash",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-labstation+no-vendor-symbols",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-labstation",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-lmk05318b-clock",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-max860-inverter",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-poe-pd-flyback-tps23757",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-rds3+flat",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-rds3-rf-selector",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-rds3",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-remora-rf",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-rf-switch-8way",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-rf-switch-eval",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-stm32n6",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-straps-base",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-straps",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "eda-w55rp20",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "tree-binary_trees",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "tree-closures",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "tree-equality",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "tree-fib",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "tree-instantiation",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "tree-invocation",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "tree-method_call",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "tree-properties",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "tree-string_equality",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "tree-strings",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "tree-trees",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "tree-zoo",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "tree-zoo_batch",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "vm-binary_trees",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "vm-closures",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "vm-equality",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "vm-fib",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "vm-instantiation",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "vm-invocation",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "vm-properties",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "vm-strings",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "vm-trees",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "vm-zoo",
+              "candidate": 0,
+              "before": 0
+            },
+            {
+              "case": "vm-zoo_batch",
+              "candidate": 0,
+              "before": 0
+            }
+          ],
+          "unmatched": [
+            "eda-remora-base",
+            "vm-method_call",
+            "vm-string_equality"
+          ]
+        }
+      }
+    }
+  },
+  "metric_note": "Separate instrumented runs. Positive matched per-case ratios only in geometric means; zeros and incomplete cases listed. Managed peak is not traffic or RSS. Runtime cutoff eligibility precedes counted runs; censored cases remain in denominator."
+}
