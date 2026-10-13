@@ -1,0 +1,19 @@
+{
+  "label": "IP-only diagnostic against matching unfused API baseline; no Zig comparison",
+  "median_api_seconds": 1.54086276399903,
+  "median_ip_seconds": 1.6023198838811368,
+  "paired_ip_over_api": [
+    1.0591036007913073,
+    1.04471307208894,
+    1.0298276846486343,
+    1.032865682198443,
+    1.0330782508345802,
+    1.0367604902433571,
+    1.0492221346532111,
+    1.0304801078663095,
+    1.0383685418403408
+  ],
+  "median_paired_ip_over_api": 1.0367604902433571,
+  "ip_faster_pairs": 0,
+  "selection": "rejected; IP is slower in all nine measured pairs"
+}
