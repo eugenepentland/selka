@@ -172,4 +172,5 @@ comptime {
     _ = @import("a01_tuple_unpack_test.zig");
     _ = @import("a07_borrow_choice_test.zig");
     _ = @import("a04_borrow_selection_test.zig");
+    _ = @import("owned_copy_stack_test.zig");
 }

@@ -56,8 +56,10 @@ static myl_block *core_copy_container(core_copy_stack *stack, const core_value_s
 }
 
 myl_block *myl_core_values_copy_box(const core_value_shape *root, const myl_block *source) {
-    core_copy_stack stack = {0};
+    /* Push fully initializes every slot in the live [0, count) prefix. */
+    core_copy_stack stack;
     stack.items = stack.local;
+    stack.count = 0;
     stack.capacity = sizeof stack.local / sizeof *stack.local;
     myl_block *result = NULL;
     core_copy_push(&stack, root, &source, &result);
