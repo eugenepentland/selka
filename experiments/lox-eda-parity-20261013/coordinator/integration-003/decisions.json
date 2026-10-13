@@ -1,0 +1,42 @@
+{
+  "recorded_utc": "2026-10-13T08:41:21.963179+00:00",
+  "status": "production and application snapshot integrated; combined compiler build and qualification pending",
+  "source_snapshot": "source-003",
+  "source_snapshot_commit": "e0b3a2906",
+  "application_changes": [
+    "borrowed diagram attachment decisions",
+    "borrowed component construction inputs with independent outputs retained",
+    "borrowed gangable binding queries"
+  ],
+  "compiler_changes": [
+    {
+      "change": "bounded scalar writeback reader inlining with one-hop cache dependencies",
+      "worker_commit": "1ecc334ee1af550eb643cc6cc11896c436326d81",
+      "integration_commit": "8aff009bb",
+      "diagnostic": "paired candidate/C2 medians fib0.8933388 and closures0.9120556 (9pairs each), invocation0.8796221 (7matched pairs; candidate9/control7 before control censor); both equality variants censored; native VM run +2122bytes",
+      "decision": "adopt; combined qualification pending"
+    },
+    {
+      "change": "compact aligned internal sret transport",
+      "worker_commit": "f054387ed2e32b5b1439674b4be5e2fea142c029",
+      "integration_commit": "21bc7a4ee",
+      "diagnostic": "paired candidate/C2 medians tree fib0.958430 (CI includes1), binary trees0.983227, string equality1.006090, VM fib0.993357; evaluator frame1208\u2192488bytes, code+34.4%; v1 alignment bug fixed before timing",
+      "decision": "adopt measured tradeoff; combined qualification pending"
+    },
+    {
+      "change": "initialize only live copy worklist metadata",
+      "worker_commit": "2d69c183674fd2338498e815ec60b8a88b67f099",
+      "integration_commit": "9697da4bd",
+      "diagnostic": "five paired ratios 0.983105/0.990362/1.002753/0.990727/1.001573; managed allocation/traffic/peak unchanged, exitlive0; RSS+68KiB EDA/+128KiB Lox; allocator movement variability preserved and reconciled",
+      "decision": "adopt; no broad speedup or RSS saving claim"
+    }
+  ],
+  "evidence_validation": {
+    "P7_archive_sha256": "b6d4d38d8b9ddeec24539dca70ad39e97c970905fefddb6b12744a0adaf06675",
+    "P7_archive_members": 683,
+    "P7_manifest_hashes_verified": 664,
+    "P7_compressed_originals_verified": 78
+  },
+  "integration_conflict": "root_test appended imports retained for both worklist and compact sret; scalar reader import merged at existing inline tests",
+  "timing_scope": "All numbers above are isolated C2 diagnostics, not combined C3 performance. Full60 candidate cases, six micros and final gate remain required."
+}

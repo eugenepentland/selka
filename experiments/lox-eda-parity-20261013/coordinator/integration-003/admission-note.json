@@ -1,0 +1,12 @@
+{
+  "event": "Guardian hook ran during conflicted cherry-pick continuation without outer gate admission",
+  "commit": "21bc7a4ee",
+  "conservative_window_utc": [
+    "2026-10-13T08:33:08Z",
+    "2026-10-13T08:34:36Z"
+  ],
+  "guardian_checks_passed": 88,
+  "measurement_owner_confirmation": "P1 reports first actual-policy timing harness start 2026-10-13T08:34:42.936180Z; no timing samples overlap the conservative window. P3/P4/P7 diagnostics were already complete.",
+  "performance_samples_affected": 0,
+  "correction": "Future conflicted cherry-pick continuations that invoke hooks run through gate admission."
+}

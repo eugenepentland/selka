@@ -1,7 +1,7 @@
 {
   "baseline_commit": "53dd221c3ccd6f1b69fae75a08873fc381fe0012",
   "scope": "All 60 Lox tree/VM and EDA cases; individual runtime target <= Zig ReleaseFast",
-  "status": "implementation in progress",
+  "status": "combined third candidate integrated; build and qualification pending",
   "constraints": [
     "checked ownership",
     "same outputs and inputs",
@@ -21,7 +21,7 @@
   },
   "seed_commit": "2525a66f61838086f5327d74db7412926ce4a221",
   "milestones": {
-    "implementation": "Initial five workstreams integrated; measured follow-up candidate source-002 built; further bounded experiments in progress",
+    "implementation": "Third application snapshot frozen; bounded reader inliner, compact aligned sret and initialized worklist metadata integrated. Isolated correctness and controlled diagnostics passed; combined qualification pending.",
     "individual_parity": "C1 complete runtime sweep: 0/60 parity, 59 completed, VM string equality censored at 3x Zig; C2 combined runtime pending",
     "verification": "C1 full gate fixes integrated; complete rerun pending. Both C2 applications passed primary qualification and all five modes; selected guest ABI audit passed."
   },
@@ -31,20 +31,17 @@
     "recovered_identical_lox_corpus_files": 254,
     "profile_status": "P2 native CPU profile and P5 leaf profile completed; attribution limitations recorded in their evidence"
   },
-  "updated_utc": "2026-10-13T08:18:10.027679+00:00",
+  "updated_utc": "2026-10-13T08:41:21.963179+00:00",
   "candidate": {
     "source_root": "source-002",
     "compiler_source_commit": "fbeba4eed7b549a3feef14c8b8dd620e41494139",
     "compiler_sha256": "9bedb835438615d79ed8f2985352877a8c844eebeb74cd95a1d276332b6b0c6a",
-    "native_attempt": "native-002"
+    "native_attempt": "native-002",
+    "next_source_root": "source-003",
+    "next_compiler": "common-003 build pending"
   },
   "current_followups": {
-    "P1": "IP-only publication rejected after matched timing; now completing P2 bounded Core inliner",
-    "P2": "Twelve bounded reader/cache regressions pass; actual compiler/native qualification pending",
-    "P3": "Borrowed diagram_membership subtree reads in an isolated C2 snapshot",
-    "P4": "Compact internal sret v1 alignment bug found before timing; v2 under qualification",
-    "P5": "Gangable allocation reduction accepted with neutral measured runtime; build_components input snapshot removal in isolation",
-    "P7": "Remove redundant copy worklist scratch initialization in an isolated C2 runtime"
+    "C3": "Freeze complete common-003 compiler installation; combined native matrices, full gate, full60 comparisons, compile measurements and six micros."
   },
   "evidence_archives": {
     "native-001": "archives/native-001.json",

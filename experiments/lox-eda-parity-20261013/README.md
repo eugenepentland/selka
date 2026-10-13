@@ -64,8 +64,10 @@ scalar-IP readers reduce VM Fibonacci time by 9.9% and closures by 9.0%; the
 discarded-local-expression change reduces tree string-equality time by 14.8%.
 Each uses nine matched pairs against its recorded control. These results are
 not added together or relabeled as measurements of the combined second candidate.
-Further bounded VM-inlining and EDA-copy experiments remain isolated
-until their correctness and performance evidence is reviewed. The numeric
+The third source snapshot, `source-003/`, is now frozen with additional borrowed
+EDA decision and construction helpers. The bounded VM inliner, compact aligned
+return transport and worklist initialization changes are integrated; their
+combined compiler and application qualification remain pending. The numeric
 dispatch prototype removed a native helper call but showed no reliable runtime
 benefit in nine matched pairs on each of three workloads; it is not adopted.
 The scalar scanner prototype also remains out: despite passing differential
@@ -80,10 +82,16 @@ variants still hit the cutoff. A borrowed EDA gangable helper is accepted for
 37,926 fewer allocations and 2,811,312 fewer traffic bytes in the flat design;
 nine-pair runtime comparisons are approximately neutral.
 
-A compact internal return-buffer prototype remains isolated. Coordinator review
-found missing alignment between mixed-width transported fields in its first
-version. That version is blocked and was not timed; the corrected version must
-pass fresh ABI, ownership, mode and application qualification before adoption.
+Coordinator review found missing alignment between mixed-width transported
+fields in the first compact return-buffer version. That version was not timed.
+The corrected version passed ABI, ownership, mode, indirect/split-unit and
+application checks before its diagnostic comparison and adoption. It reduces
+the evaluator stack frame from 1,208 to 488 bytes while growing its code by
+34.4%; binary trees improved 1.68%, string equality slowed 0.61%, and the fib
+gain remains uncertain. The bounded inliner improved VM fib and closures by
+10.7% and 8.8% in nine matched pairs each, with a larger dispatch function.
+These are isolated C2 comparisons, not combined C3 results. Full decisions and
+limits are recorded in `coordinator/integration-003/decisions.json`.
 
 The first candidate's complete runtime/RSS sweep is recorded in
 `coordinator/progress-003.json`. All 60 cases remain in the denominator: 59
