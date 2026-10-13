@@ -12,11 +12,12 @@ fn qualified(arena: std.mem.Allocator) !bool {
     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", arena);
     const source = try std.fmt.allocPrint(arena, "{s}/t_text.my", .{options.fixtures});
     const cache = try std.fmt.allocPrint(arena, cache_pattern, .{root});
+    var environment = try options.privateEnvironment(arena);
     for ([_][]const []const u8{ &.{}, &.{"--release"}, &.{ "--release", "--verify-facts" } }) |mode| {
         var argv: std.ArrayList([]const u8) = .empty;
         try argv.appendSlice(arena, &.{ options.corePath(), "test", source, "--json", cache_argument, cache });
         try argv.appendSlice(arena, mode);
-        const result = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
+        const result = try std.process.run(arena, std.testing.io, .{ .argv = argv.items, .environ_map = &environment });
         if (result.term != .exited or result.term.exited != 1) {
             report("text fixture failed: {s}{s}\n", .{ result.stdout, result.stderr });
             return false;
@@ -116,7 +117,7 @@ fn methodsRun(allocator: std.mem.Allocator, mode: []const []const u8) !void {
     var directory = std.testing.tmpDir(.{});
     defer directory.cleanup();
     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", allocator);
-    var environment = try std.testing.environ.createMap(allocator);
+    var environment = try options.privateEnvironment(allocator);
     try environment.put(leak_check, "1");
     const source = try std.fs.path.join(allocator, &.{ options.fixtures, "t_methods.my" });
     var argv: std.ArrayList([]const u8) = .empty;

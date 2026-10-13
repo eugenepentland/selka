@@ -16,9 +16,10 @@ const Projects = struct {
     environment: std.process.Environ.Map,
 
     fn init(a: std.mem.Allocator, root: []const u8) !Projects {
-        var environment = try std.testing.environ.createMap(a);
+        // The project's own `--shared-cache-dir` is the only shared store these
+        // tests see: the gate's or a default compiler or receipt store is disabled.
+        var environment = try tools.privateEnvironment(a);
         errdefer environment.deinit();
-        _ = environment.swapRemove("MYLANG_TEST_SHARED_CACHE");
         try environment.put(leakcheck, "0");
         try environment.put("MYLANG_CACHE_PLAN_MODE", "component");
         const projects: Projects = .{ .arena = a, .root = root, .environment = environment };

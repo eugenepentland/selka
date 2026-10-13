@@ -18,7 +18,8 @@ const Project = struct {
 
     fn prepare(a: std.mem.Allocator, directory: *std.testing.TmpDir, private_store: bool) !Project {
         const root = try directory.dir.realPathFileAlloc(io, ".", a);
-        var environment = try std.testing.environ.createMap(a);
+        // Program and unit counts are this project's own: no shared compiler store.
+        var environment = try tools.privateEnvironment(a);
         // A private store makes reuse counts exact; the shared one serves helper
         // units other programs already compiled.
         if (private_store) try environment.put("MYLANG_CORE_RUNTIME_CACHE", try std.fs.path.join(a, &.{ root, "store" }));

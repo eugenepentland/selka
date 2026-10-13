@@ -27,7 +27,7 @@ const Project = struct {
     environment: std.process.Environ.Map,
 
     fn init(a: std.mem.Allocator, root: []const u8, source: []const u8) !Project {
-        var environment = try std.testing.environ.createMap(a);
+        var environment = try options.privateEnvironment(a);
         errdefer environment.deinit();
         try environment.put("MYL_CORE_LEAKCHECK", "0");
         try environment.put("MYLANG_CACHE_PLAN_MODE", "shadow");

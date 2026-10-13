@@ -56,7 +56,7 @@ test "S3 numeric text and S4 nested values match at every core level" {
         var directory = std.testing.tmpDir(.{});
         defer directory.cleanup();
         const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
-        var environment = try std.testing.environ.createMap(a);
+        var environment = try options.privateEnvironment(a);
         try environment.put("MYL_CORE_LEAKCHECK", "1");
         const one = "1 passed";
         const fixtures = [_][]const u8{ "n_float_text.my", "b_buffer_values.my", "b_packet_decode.my", "n_scalar_parse_abi.my", "v_buffer_format.my", "v_dynamic_repeat.my", "v_nested_places.my", "v_nested_lengths.my" };

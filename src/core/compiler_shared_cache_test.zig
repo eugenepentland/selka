@@ -29,7 +29,8 @@ const Projects = struct {
     fn init(a: std.mem.Allocator, root: []const u8) !Projects {
         var environment = try t.environ.createMap(a);
         errdefer environment.deinit();
-        _ = environment.swapRemove("MYLANG_TEST_SHARED_CACHE");
+        // The project's own compiler store (below) is the only shared store.
+        try environment.put("MYLANG_TEST_SHARED_CACHE", "");
         _ = environment.swapRemove("MYLANG_FRONTEND_CACHE");
         _ = environment.swapRemove(epoch_variable);
         _ = environment.swapRemove("ZERO_AR_DATE");

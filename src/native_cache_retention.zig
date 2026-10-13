@@ -8,6 +8,22 @@ const last_leaf = "retention-last";
 const mismatch_leaf = "mismatches.log";
 /// Native storage errors, including malformed policy or namespace metadata.
 pub const Error = storage.Error;
+/// How many times opening a store attempts namespace creation before a failure
+/// is final (SHARED-STORE-6).
+pub const initialization_attempts = 4;
+
+/// Run `step(context)` until it succeeds or `initialization_attempts` attempts
+/// have failed, returning the last failure; running out of memory is final at
+/// once. Concurrent first openers of one namespace use it so that an attempt
+/// that lost a race to a peer re-reads what the peer published.
+pub fn retried(context: anytype, comptime step: anytype) @typeInfo(@TypeOf(step)).@"fn".return_type.? {
+    var attempt: usize = 1;
+    while (true) : (attempt += 1) {
+        if (step(context)) |_| return else |err| {
+            if (err == error.OutOfMemory or attempt == initialization_attempts) return err;
+        }
+    }
+}
 /// Independent cooperative namespaces; legacy writers never enter these roots.
 pub const Kind = enum {
     compiler,
@@ -542,4 +558,29 @@ test "native retention tryLease yields to collection and mismatch appends withou
     try fixture.temporary.dir.deleteFile(io, lease_leaf);
     try fixture.temporary.dir.symLink(io, "format", lease_leaf, .{});
     try std.testing.expectError(error.WriteFailed, fixture.context.tryLease());
+}
+
+// Counts the attempts of a step that fails until `succeed_at`.
+const Attempts = struct {
+    made: usize = 0,
+    succeed_at: usize,
+    failure: Error = error.WriteFailed,
+
+    fn step(self: *Attempts) Error!void {
+        self.made += 1;
+        if (self.made < self.succeed_at) return self.failure;
+    }
+};
+
+// spec-case: SHARED-STORE-6
+test "namespace creation retries a lost race a bounded number of times and stops at once on exhaustion of memory" {
+    var recovers: Attempts = .{ .succeed_at = initialization_attempts };
+    try retried(&recovers, Attempts.step);
+    try std.testing.expectEqual(@as(usize, initialization_attempts), recovers.made);
+    var unusable: Attempts = .{ .succeed_at = initialization_attempts + 1, .failure = error.ReadFailed };
+    try std.testing.expectError(error.ReadFailed, retried(&unusable, Attempts.step));
+    try std.testing.expectEqual(@as(usize, initialization_attempts), unusable.made);
+    var exhausted: Attempts = .{ .succeed_at = initialization_attempts, .failure = error.OutOfMemory };
+    try std.testing.expectError(error.OutOfMemory, retried(&exhausted, Attempts.step));
+    try std.testing.expectEqual(@as(usize, 1), exhausted.made);
 }

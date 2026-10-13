@@ -1079,7 +1079,7 @@ test "a call that takes a mut argument and also reads it gets a second owner, an
     defer dir.cleanup();
     try dir.dir.writeFile(std.testing.io, .{ .sub_path = "taken.my", .data = taken_and_read });
     const root = try dir.dir.realPathFileAlloc(std.testing.io, ".", arena.allocator());
-    var environment = try std.testing.environ.createMap(arena.allocator());
+    var environment = try options.privateEnvironment(arena.allocator());
     try environment.put("MYL_CORE_LEAKCHECK", "1");
     for ([_][]const []const u8{ &.{}, &.{"--release"} }) |flags| {
         var argv: std.ArrayList([]const u8) = .empty;

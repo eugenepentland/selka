@@ -64,7 +64,7 @@ fn fixturesAgree(arena: std.mem.Allocator, fixture: []const u8, expected_exit: u
         var argv: std.ArrayList([]const u8) = .empty;
         try argv.appendSlice(arena, &.{ options.corePath(), "test", source_path, "--json", "--cache-dir", root });
         try argv.appendSlice(arena, mode);
-        var environment = try std.testing.environ.createMap(arena);
+        var environment = try options.privateEnvironment(arena);
         defer environment.deinit();
         try environment.put("MYL_CORE_LEAKCHECK", "1");
         const result = try std.process.run(arena, std.testing.io, .{ .argv = argv.items, .environ_map = &environment });

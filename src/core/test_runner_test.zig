@@ -167,7 +167,9 @@ fn runTest(arena: std.mem.Allocator, root: []const u8, fixture: []const u8, extr
     const cache = try std.fmt.allocPrint(arena, "{s}/cache", .{root});
     try argv.appendSlice(arena, &.{ options.corePath(), "test", source, "--json", "--cache-dir", cache });
     try argv.appendSlice(arena, extra);
-    const result = try std.process.run(arena, std.testing.io, .{ .argv = argv.items });
+    // The graded verdicts are fresh runs: no shared receipt may answer them.
+    var environment = try options.privateEnvironment(arena);
+    const result = try std.process.run(arena, std.testing.io, .{ .argv = argv.items, .environ_map = &environment });
     const status: u8 = switch (result.term) {
         .exited => |code| code,
         else => 255,
@@ -218,6 +220,22 @@ test "every verdict is graded per test function at debug and release, and the fi
     try std.testing.expectEqual(@as(i64, 0), debug.parsed.value.object.get("unsupported").?.integer);
 }
 
+// spec-case: SHARED-STORE-4
+test "a private test environment disables both shared stores even where the default switch would choose them" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var home = std.testing.tmpDir(.{});
+    defer home.cleanup();
+    var environment = try options.privateEnvironment(a);
+    try std.testing.expectEqualStrings("", environment.get("MYLANG_COMPILER_SHARED_CACHE").?);
+    try std.testing.expectEqualStrings("", environment.get("MYLANG_TEST_SHARED_CACHE").?);
+    try environment.put("HOME", try home.dir.realPathFileAlloc(std.testing.io, ".", a));
+    const policy = language.shared_cache_policy;
+    try std.testing.expectEqual(@as(?policy.Selection, null), try policy.resolveWith(a, &environment, .compiler, null, true));
+    try std.testing.expectEqual(@as(?policy.Selection, null), try policy.resolveWith(a, &environment, .tests, null, true));
+}
+
 // spec-case: NEW-CORE-TEST-4
 test "a filter narrows the run, and a filter that selects nothing exits 3" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
@@ -243,7 +261,8 @@ const CacheProject = struct {
     environment: std.process.Environ.Map,
 
     fn init(a: std.mem.Allocator, root: []const u8) !CacheProject {
-        var environment = try std.testing.environ.createMap(a);
+        // Admission tests count this project's own receipts: no shared store.
+        var environment = try options.privateEnvironment(a);
         errdefer environment.deinit();
         try environment.put("MYLANG_CACHE_PLAN_MODE", "component");
         const artifact = try language.cache_plan_adapter.bind(a, std.testing.io, &environment);

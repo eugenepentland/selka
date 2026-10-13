@@ -8,7 +8,7 @@ fn qualified(a: std.mem.Allocator) !void {
     defer directory.cleanup();
     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
     const source = try std.fs.path.join(a, &.{ options.fixtures, "m_list_methods.my" });
-    var environment = try std.testing.environ.createMap(a);
+    var environment = try options.privateEnvironment(a);
     try environment.put("MYL_CORE_LEAKCHECK", "1");
     for ([_][]const []const u8{ &.{"--unoptimized"}, &.{"--release"}, &.{ "--release", "--verify-facts" } }) |mode| {
         var argv: std.ArrayList([]const u8) = .empty;

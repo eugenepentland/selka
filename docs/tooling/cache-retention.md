@@ -118,7 +118,10 @@ work. Writers and claims take the lease without waiting: while a collection
 holds the namespace, a publication is skipped and a claim is not taken, so the
 build or test runs unclaimed and publishes nothing. Opening a namespace whose
 format marker exists takes no lock; the exclusive `.lock` is taken only while the
-marker is first created. Lookups and restores hold no lease: records are
+marker is first created. Several processes may open and publish into one fresh
+store at once: each tolerates directories and a marker a peer created, and an
+open that fails retries namespace creation up to four times, re-reading what a
+peer published, before it reports the store unusable (SHARED-STORE-6). Lookups and restores hold no lease: records are
 immutable files replaced only by rename, so a record a collection evicts is
 either read whole through its open handle or missed. No open, lookup or restore
 waits on a collection. Collection acquires an exclusive nonblocking lease and

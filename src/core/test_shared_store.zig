@@ -38,7 +38,6 @@ pub const Store = struct {
     pub fn open(a: std.mem.Allocator, io: std.Io, directory: []const u8) Error!Store {
         if (directory.len == 0) return error.WriteFailed;
         const self: Store = .{ .arena = a, .io = io, .root = try std.fs.path.join(a, &.{ directory, "native-tests-v3" }) };
-        std.Io.Dir.cwd().createDirPath(io, self.root) catch return error.WriteFailed;
         try self.initialize();
         self.retentionContext().automatic();
         return self;
@@ -52,15 +51,22 @@ pub const Store = struct {
         return self.retentionContext().lease() catch |err| return mapRetention(err);
     }
 
+    // Concurrent first openers race to create one namespace (SHARED-STORE-6):
+    // a failed attempt is retried a bounded number of times, re-reading the
+    // marker a peer may have published, so only a store that stays unusable fails.
+    fn initialize(self: Store) Error!void {
+        try retention.retried(self, createNamespace);
+        _ = self.retentionContext().policy() catch |err| return mapRetention(err);
+    }
+
     // Only first creation takes the exclusive `.lock`, re-reading the marker
     // under it. No sweep runs before the marker exists.
-    fn initialize(self: Store) Error!void {
-        if (!try self.marked()) {
-            const guard = try self.lock(.exclusive);
-            defer guard.close(self.io);
-            if (!try self.marked()) try self.writeMarker();
-        }
-        _ = self.retentionContext().policy() catch |err| return mapRetention(err);
+    fn createNamespace(self: Store) Error!void {
+        std.Io.Dir.cwd().createDirPath(self.io, self.root) catch return error.WriteFailed;
+        if (try self.marked()) return;
+        const guard = try self.lock(.exclusive);
+        defer guard.close(self.io);
+        if (!try self.marked()) try self.writeMarker();
     }
 
     fn marked(self: Store) Error!bool {
@@ -449,4 +455,98 @@ test "shared receipt opens and lookups complete while a sweep holds the store" {
     sweep.unlock(io);
     try std.testing.expectEqual(Saved.stored, try second.save(key));
     try std.testing.expect(try store.hit(key));
+}
+
+const concurrent_publishers = 8;
+const concurrent_keys = 16;
+
+// One thread's open of a fresh receipt store and its save of every shared key.
+const ConcurrentSaver = struct {
+    root: []const u8,
+    backing: std.mem.Allocator,
+    start: *const std.atomic.Value(bool),
+    failure: ?anyerror = null,
+    stored: usize = 0,
+    mismatches: usize = 0,
+
+    fn run(self: *ConcurrentSaver) void {
+        self.saveAll() catch |err| {
+            self.failure = err;
+        };
+    }
+
+    fn saveAll(self: *ConcurrentSaver) !void {
+        while (!self.start.load(.acquire)) std.atomic.spinLoopHint();
+        var arena = std.heap.ArenaAllocator.init(self.backing);
+        defer arena.deinit();
+        const store = try Store.open(arena.allocator(), std.testing.io, self.root);
+        for (0..concurrent_keys) |index| {
+            switch (try store.save(concurrentKey(index))) {
+                .stored => self.stored += 1,
+                .mismatch => self.mismatches += 1,
+                .present, .skipped => {},
+            }
+        }
+    }
+};
+
+fn concurrentKey(index: usize) Digest {
+    return @splat(@intCast(index + 101));
+}
+
+// Start every saver at once against one store root and wait for all.
+fn saveConcurrently(root: []const u8, backing: std.mem.Allocator, savers: *[concurrent_publishers]ConcurrentSaver) !void {
+    var start: std.atomic.Value(bool) = .init(false);
+    var threads: [concurrent_publishers]std.Thread = undefined;
+    var started: usize = 0;
+    defer for (threads[0..started]) |thread| thread.join();
+    // Release the started savers before joining, even when a spawn fails.
+    defer start.store(true, .release);
+    for (savers, &threads) |*saver, *thread| {
+        saver.* = .{ .root = root, .backing = backing, .start = &start };
+        thread.* = try std.Thread.spawn(.{}, ConcurrentSaver.run, .{saver});
+        started += 1;
+    }
+}
+
+const ConcurrentTotals = struct { failures: usize = 0, stored: usize = 0, mismatches: usize = 0 };
+
+fn concurrentTotals(savers: []const ConcurrentSaver) ConcurrentTotals {
+    var totals: ConcurrentTotals = .{};
+    for (savers) |saver| {
+        if (saver.failure != null) totals.failures += 1;
+        totals.stored += saver.stored;
+        totals.mismatches += saver.mismatches;
+    }
+    return totals;
+}
+
+// Every key is a verified hit after a sequential save, which finds it present
+// (or stores one a sweep made every saver skip), never a mismatch.
+fn expectConcurrentReceipts(store: Store) !void {
+    for (0..concurrent_keys) |index| {
+        const again = try store.save(concurrentKey(index));
+        try std.testing.expect(again == .present or again == .stored);
+        try std.testing.expect(try store.hit(concurrentKey(index)));
+    }
+}
+
+// spec-case: SHARED-STORE-6
+test "concurrent first openers initialize one fresh receipt store and save every key once without failure or mismatch" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try std.fs.path.join(a, &.{ try temporary.dir.realPathFileAlloc(std.testing.io, ".", a), "fresh", "store" });
+    var savers: [concurrent_publishers]ConcurrentSaver = undefined;
+    try saveConcurrently(root, std.testing.allocator, &savers);
+    const totals = concurrentTotals(&savers);
+    try std.testing.expectEqual(@as(usize, 0), totals.failures);
+    try std.testing.expectEqual(@as(usize, 0), totals.mismatches);
+    try std.testing.expect(totals.stored <= concurrent_keys);
+    const store = try Store.open(a, std.testing.io, root);
+    try expectConcurrentReceipts(store);
+    try std.testing.expectEqualStrings(format, (try store.read(try store.path("format"))).?);
+    try std.testing.expectEqual(@as(?[]const u8, null), try store.read(try store.path("mismatches.log")));
 }
