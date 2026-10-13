@@ -1,0 +1,17 @@
+--- a/interpreter.my
++++ b/interpreter.my
+@@ -335,13 +335,7 @@
+     if it.depth + 1 > MAX_DEPTH:
+         return Err(fail (b"Stack overflow.", line))
+     const __owned_arg_8 = program.functions[function.decl].slot_count
+-    mut env = new_env(mut rt, enclosing, __owned_arg_8)
+-    mut i = 0
+-    while i < count:
+-        const __owned_arg_9 = rt.stack[args + i]
+-        heap.set_env_slot(mut rt, env, i, __owned_arg_9)
+-        i += 1
+-    return Ok(env)
++    return Ok(heap.allocate_call_env(mut rt, enclosing, __owned_arg_8, args, count))
+ 
+ 
+ func switch_env(mut rt: heap.Runtime, env: value.ObjRef):

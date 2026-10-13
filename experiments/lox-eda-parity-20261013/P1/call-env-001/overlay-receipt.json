@@ -1,0 +1,22 @@
+{
+  "frozen_C1_unchanged": true,
+  "candidate_changed_frozen_files": [
+    "interpreter.my",
+    "heap.my"
+  ],
+  "candidate_added_test_source": "p1_call_env_test.my",
+  "candidate_added_counter_probe": "p1_call_env_probe.my",
+  "call_env_tests": {
+    "passed": 98,
+    "failed": 0
+  },
+  "getter_only_tests": {
+    "passed": 93,
+    "failed": 0
+  },
+  "timings_executed": false,
+  "timing_specs_prepared": 9,
+  "counter_outputs_correct": true,
+  "counter_normal_rc_and_exit_live_zero": true,
+  "combined_four_arm_specs_prepared": 3
+}

@@ -1,0 +1,26 @@
+# Reduced call-environment construction counters; command arguments are values.
+import heap
+import value
+
+func main(args: str[], out: Stream) -> int:
+    mut rt = heap.new_runtime(False)
+    heap.push(mut rt, value.Value.number(value=1.0))
+    heap.push(mut rt, value.Value.number(value=2.0))
+    heap.push(mut rt, value.Value.number(value=3.0))
+    heap.push(mut rt, value.Value.number(value=4.0))
+    mut i = 0
+    mut last = value.NO_OBJ
+    while i < 1000:
+        if len(args) > 0:
+            last = heap.allocate_env(mut rt, value.NO_OBJ, 8)
+            mut j = 0
+            while j < 4:
+                const item = rt.stack[j]
+                heap.set_env_slot(mut rt, last, j, item)
+                j += 1
+        else:
+            last = heap.allocate_call_env(mut rt, value.NO_OBJ, 8, 0, 4)
+        heap.push(mut rt, value.Value.obj(value=last))
+        i += 1
+    out.print(rt.allocations == 1000, rt.bytes_allocated == 160000, heap.env_slot(rt, last, 3) == value.Value.number(value=4.0), heap.env_slot(rt, last, 7) == value.Value.nil)
+    return 0

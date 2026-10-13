@@ -1,0 +1,57 @@
+{
+  "not_executed": true,
+  "cases": [
+    {
+      "case": "fib",
+      "spec": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/call-env-001/diagnostic-specs/combined-fib.json",
+      "spec_sha256": "9981299e9569251b8899f9d8d9e0fddcce6b1f78642405673b968723a7b14b66",
+      "identities": {
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/fib.tree.28.lox": "be2e695e8e83fb548c1280b86975bfac88a1121fd1f292edc1566a14e5426f0a",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/call-env-001/candidate-lox": "e7c28b30d8f51f8ef0ab67ccc9fc6e9148870bce4d9730ec306d9a04ad3b390b",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/call-env-001/getters-lox": "ca611277ee233fe1b9849e828b4c96fb387e0a4c06365593551286619088982e",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/call-env-001/input-identity.json": "1030a3e41269f717329cbfdd583459d01c09f578084e99b6abbb90e8213a4759",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-fast": "0c884acc8e3e2c0e7930910f0f21e89de7078b932368f19f11dc72fb3e3924da",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/zero-rc": "8b6cb98665c289b963c8ced786235d9a2023ce5981a3c0cf366c24253fd19ea5",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/expected/fib.tree.out": "a2926b4c752026e4c4fb427a6c468ba4cd1a584ecc8f6ff23fa80c09fdfcb655",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/measure.py": "ebead08898b4eba7885e41451378be14e8d53dc5cf213d66d4230f33130e8c7d"
+      },
+      "input_argv_verified_identical": true,
+      "expected_stdout_bytes": 7
+    },
+    {
+      "case": "invocation",
+      "spec": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/call-env-001/diagnostic-specs/combined-invocation.json",
+      "spec_sha256": "73f929a95ffeedd5096d43004e57cb033a23e9d5d49beeca133b05c8d8ca7433",
+      "identities": {
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/invocation.tree.150000.lox": "cf8844b4a8a54ec2cb5c289886270feea87a00b142bd883f0e20b0d36860aeae",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/call-env-001/candidate-lox": "e7c28b30d8f51f8ef0ab67ccc9fc6e9148870bce4d9730ec306d9a04ad3b390b",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/call-env-001/getters-lox": "ca611277ee233fe1b9849e828b4c96fb387e0a4c06365593551286619088982e",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/call-env-001/input-identity.json": "1030a3e41269f717329cbfdd583459d01c09f578084e99b6abbb90e8213a4759",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-fast": "0c884acc8e3e2c0e7930910f0f21e89de7078b932368f19f11dc72fb3e3924da",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/zero-rc": "8b6cb98665c289b963c8ced786235d9a2023ce5981a3c0cf366c24253fd19ea5",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/expected/invocation.tree.out": "aceaf168c6709487a120d0059d87a99ab4aad4ee7f8a4d05a91c8ee20161ef75",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/measure.py": "ebead08898b4eba7885e41451378be14e8d53dc5cf213d66d4230f33130e8c7d"
+      },
+      "input_argv_verified_identical": true,
+      "expected_stdout_bytes": 7
+    },
+    {
+      "case": "string_equality",
+      "spec": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/call-env-001/diagnostic-specs/combined-string_equality.json",
+      "spec_sha256": "72eba28f7b7241a1d901b21e02b017a1f455ce8633e295b30742b596255572e7",
+      "identities": {
+        "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/string_equality.tree.10000.lox": "b48a8677baa2e673c0d164b722ebd71461242ac5e9f53e962a483b172055d1c7",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/call-env-001/candidate-lox": "e7c28b30d8f51f8ef0ab67ccc9fc6e9148870bce4d9730ec306d9a04ad3b390b",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/call-env-001/getters-lox": "ca611277ee233fe1b9849e828b4c96fb387e0a4c06365593551286619088982e",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/call-env-001/input-identity.json": "1030a3e41269f717329cbfdd583459d01c09f578084e99b6abbb90e8213a4759",
+        "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-fast": "0c884acc8e3e2c0e7930910f0f21e89de7078b932368f19f11dc72fb3e3924da",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/zero-rc": "8b6cb98665c289b963c8ced786235d9a2023ce5981a3c0cf366c24253fd19ea5",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/expected/string_equality.tree.out": "876e13f4e07bb39705302c01f445ffd2d2c3b180a207e4d959d6b671c67da09b",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/measure.py": "ebead08898b4eba7885e41451378be14e8d53dc5cf213d66d4230f33130e8c7d"
+      },
+      "input_argv_verified_identical": true,
+      "expected_stdout_bytes": 6
+    }
+  ],
+  "policy": "2 initial warmups and9 alternating4-arm rounds shared C1/Zig;3 resumable3-round chunks; fresh5-sample Zig calibration with2 warmups;3x cutoff all3 guests; no RSS/timing run yet"
+}

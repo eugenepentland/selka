@@ -1,0 +1,242 @@
+[
+  {
+    "variant": "call-env",
+    "case": "fib",
+    "command": [
+      "scripts/build-slot.sh",
+      "timing",
+      "python3",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/measure.py",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/call-env-001/diagnostic-specs/call-env-fib.json",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/call-env-001/diagnostic-results/call-env-fib-chunk0.json",
+      "--cpu",
+      "8",
+      "--warmups",
+      "2",
+      "--rounds",
+      "3",
+      "--round-start",
+      "0",
+      "--rss-rounds",
+      "0",
+      "--zig-factor",
+      "3",
+      "--guest-timeout",
+      "120",
+      "--calibration-warmups",
+      "2",
+      "--calibration-rounds",
+      "5"
+    ],
+    "not_executed": true,
+    "next_chunks": {
+      "round_starts": [
+        3,
+        6
+      ],
+      "rounds": 3,
+      "warmups": 0,
+      "prior_receipt": "previous chunk output; add prior_receipt to a copied spec without changing normalized fields"
+    }
+  },
+  {
+    "variant": "getters",
+    "case": "fib",
+    "command": [
+      "scripts/build-slot.sh",
+      "timing",
+      "python3",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/measure.py",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/call-env-001/diagnostic-specs/getters-fib.json",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/call-env-001/diagnostic-results/getters-fib-chunk0.json",
+      "--cpu",
+      "8",
+      "--warmups",
+      "2",
+      "--rounds",
+      "3",
+      "--round-start",
+      "0",
+      "--rss-rounds",
+      "0",
+      "--zig-factor",
+      "3",
+      "--guest-timeout",
+      "120",
+      "--calibration-warmups",
+      "2",
+      "--calibration-rounds",
+      "5"
+    ],
+    "not_executed": true,
+    "next_chunks": {
+      "round_starts": [
+        3,
+        6
+      ],
+      "rounds": 3,
+      "warmups": 0,
+      "prior_receipt": "previous chunk output; add prior_receipt to a copied spec without changing normalized fields"
+    }
+  },
+  {
+    "variant": "call-env",
+    "case": "invocation",
+    "command": [
+      "scripts/build-slot.sh",
+      "timing",
+      "python3",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/measure.py",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/call-env-001/diagnostic-specs/call-env-invocation.json",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/call-env-001/diagnostic-results/call-env-invocation-chunk0.json",
+      "--cpu",
+      "8",
+      "--warmups",
+      "2",
+      "--rounds",
+      "3",
+      "--round-start",
+      "0",
+      "--rss-rounds",
+      "0",
+      "--zig-factor",
+      "3",
+      "--guest-timeout",
+      "120",
+      "--calibration-warmups",
+      "2",
+      "--calibration-rounds",
+      "5"
+    ],
+    "not_executed": true,
+    "next_chunks": {
+      "round_starts": [
+        3,
+        6
+      ],
+      "rounds": 3,
+      "warmups": 0,
+      "prior_receipt": "previous chunk output; add prior_receipt to a copied spec without changing normalized fields"
+    }
+  },
+  {
+    "variant": "getters",
+    "case": "invocation",
+    "command": [
+      "scripts/build-slot.sh",
+      "timing",
+      "python3",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/measure.py",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/call-env-001/diagnostic-specs/getters-invocation.json",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/call-env-001/diagnostic-results/getters-invocation-chunk0.json",
+      "--cpu",
+      "8",
+      "--warmups",
+      "2",
+      "--rounds",
+      "3",
+      "--round-start",
+      "0",
+      "--rss-rounds",
+      "0",
+      "--zig-factor",
+      "3",
+      "--guest-timeout",
+      "120",
+      "--calibration-warmups",
+      "2",
+      "--calibration-rounds",
+      "5"
+    ],
+    "not_executed": true,
+    "next_chunks": {
+      "round_starts": [
+        3,
+        6
+      ],
+      "rounds": 3,
+      "warmups": 0,
+      "prior_receipt": "previous chunk output; add prior_receipt to a copied spec without changing normalized fields"
+    }
+  },
+  {
+    "variant": "call-env",
+    "case": "string_equality",
+    "command": [
+      "scripts/build-slot.sh",
+      "timing",
+      "python3",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/measure.py",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/call-env-001/diagnostic-specs/call-env-string_equality.json",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/call-env-001/diagnostic-results/call-env-string_equality-chunk0.json",
+      "--cpu",
+      "8",
+      "--warmups",
+      "2",
+      "--rounds",
+      "3",
+      "--round-start",
+      "0",
+      "--rss-rounds",
+      "0",
+      "--zig-factor",
+      "3",
+      "--guest-timeout",
+      "120",
+      "--calibration-warmups",
+      "2",
+      "--calibration-rounds",
+      "5"
+    ],
+    "not_executed": true,
+    "next_chunks": {
+      "round_starts": [
+        3,
+        6
+      ],
+      "rounds": 3,
+      "warmups": 0,
+      "prior_receipt": "previous chunk output; add prior_receipt to a copied spec without changing normalized fields"
+    }
+  },
+  {
+    "variant": "getters",
+    "case": "string_equality",
+    "command": [
+      "scripts/build-slot.sh",
+      "timing",
+      "python3",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/measure.py",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/call-env-001/diagnostic-specs/getters-string_equality.json",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/call-env-001/diagnostic-results/getters-string_equality-chunk0.json",
+      "--cpu",
+      "8",
+      "--warmups",
+      "2",
+      "--rounds",
+      "3",
+      "--round-start",
+      "0",
+      "--rss-rounds",
+      "0",
+      "--zig-factor",
+      "3",
+      "--guest-timeout",
+      "120",
+      "--calibration-warmups",
+      "2",
+      "--calibration-rounds",
+      "5"
+    ],
+    "not_executed": true,
+    "next_chunks": {
+      "round_starts": [
+        3,
+        6
+      ],
+      "rounds": 3,
+      "warmups": 0,
+      "prior_receipt": "previous chunk output; add prior_receipt to a copied spec without changing normalized fields"
+    }
+  }
+]

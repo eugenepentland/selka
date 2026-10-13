@@ -1,0 +1,209 @@
+{
+  "baseline": {
+    "my.heap::env_enclosing": {
+      "address": 17239472,
+      "size": 212,
+      "calls": [
+        "1070df3:\te8 48 3e fb ff       \tcall   1024c40 <myl_core_trap>",
+        "1070e13:\te8 a8 91 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "1070e1f:\te8 9c 91 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "1070e2b:\te8 90 91 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "1070e37:\te8 84 91 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "1070e43:\te8 78 91 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "1070e4f:\te8 6c 91 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "1070e5b:\te8 60 91 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "1070e67:\te8 54 91 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "1070e73:\te8 48 91 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "1070e7f:\te8 3c 91 fb ff       \tcall   1029fc0 <myl_core_assert_fail>"
+      ]
+    },
+    "my.heap::env_slot": {
+      "address": 17221616,
+      "size": 278,
+      "calls": [
+        "106c851:\te8 ea 83 fb ff       \tcall   1024c40 <myl_core_trap>",
+        "106c875:\te8 c6 83 fb ff       \tcall   1024c40 <myl_core_trap>",
+        "106c895:\te8 26 d7 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "106c8a1:\te8 1a d7 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "106c8ad:\te8 0e d7 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "106c8b9:\te8 02 d7 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "106c8c5:\te8 f6 d6 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "106c8d1:\te8 ea d6 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "106c8dd:\te8 de d6 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "106c8e9:\te8 d2 d6 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "106c8f5:\te8 c6 d6 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "106c901:\te8 ba d6 fb ff       \tcall   1029fc0 <myl_core_assert_fail>"
+      ]
+    },
+    "my.heap::set_env_slot": {
+      "address": 17221312,
+      "size": 296,
+      "calls": [
+        "106c782:\te8 39 77 fb ff       \tcall   1023ec0 <myl_core_drop_owned>",
+        "106c78a:\te8 31 77 fb ff       \tcall   1023ec0 <myl_core_drop_owned>",
+        "106c7bf:\te8 7c 84 fb ff       \tcall   1024c40 <myl_core_trap>",
+        "106c7cb:\te8 f0 d7 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "106c7d7:\te8 e4 d7 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "106c7e3:\te8 d8 d7 fb ff       \tcall   1029fc0 <myl_core_assert_fail>"
+      ]
+    },
+    "my.heap::tree_function_obj": {
+      "address": 17249568,
+      "size": 247,
+      "calls": [
+        "1073583:\te8 b8 16 fb ff       \tcall   1024c40 <myl_core_trap>",
+        "10735a6:\te8 15 6a fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "10735b2:\te8 09 6a fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "10735be:\te8 fd 69 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "10735ca:\te8 f1 69 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "10735d6:\te8 e5 69 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "10735e2:\te8 d9 69 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "10735ee:\te8 cd 69 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "10735fa:\te8 c1 69 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "1073606:\te8 b5 69 fb ff       \tcall   1029fc0 <myl_core_assert_fail>",
+        "1073612:\te8 a9 69 fb ff       \tcall   1029fc0 <myl_core_assert_fail>"
+      ]
+    },
+    "my.interpreter::enter_function": {
+      "address": 17249824,
+      "size": 996,
+      "calls": [
+        "10736b4:\te8 77 8d ff ff       \tcall   106c430 <my.interpreter::new_env>",
+        "107372e:\te8 8d 8f ff ff       \tcall   106c6c0 <my.heap::set_env_slot>",
+        "107375b:\te8 e0 14 fb ff       \tcall   1024c40 <myl_core_trap>",
+        "10737e7:\te8 54 96 fc ff       \tcall   103ce40 <myl_core_str_from_i64>",
+        "1073831:\te8 0a 96 fc ff       \tcall   103ce40 <myl_core_str_from_i64>",
+        "107387d:\te8 3e 99 fb ff       \tcall   102d1c0 <myl_core_str_join>",
+        "1073888:\te8 33 06 fb ff       \tcall   1023ec0 <myl_core_drop_owned>",
+        "1073890:\te8 6b bc fb ff       \tcall   102f500 <myl_core_text_encode>",
+        "107389b:\te8 20 06 fb ff       \tcall   1023ec0 <myl_core_drop_owned>",
+        "10738a3:\te8 98 0e fb ff       \tcall   1024740 <myl_core_owned_octets_copy>",
+        "10738ae:\te8 0d 06 fb ff       \tcall   1023ec0 <myl_core_drop_owned>",
+        "10738ba:\te8 81 37 fe ff       \tcall   1057040 <myl_core_err_trace_origin_preserve_most>",
+        "10738d4:\te8 67 0e fb ff       \tcall   1024740 <myl_core_owned_octets_copy>",
+        "10738e0:\te8 5b 37 fe ff       \tcall   1057040 <myl_core_err_trace_origin_preserve_most>",
+        "1073918:\te8 23 13 fb ff       \tcall   1024c40 <myl_core_trap>",
+        "107392a:\te8 d1 f7 fa ff       \tcall   1023100 <myl_core_list_new_slow>",
+        "1073951:\te8 6a f8 fa ff       \tcall   10231c0 <myl_core_list_grow>",
+        "1073970:\te8 4b f8 fa ff       \tcall   10231c0 <myl_core_list_grow>",
+        "1073992:\te8 29 f8 fa ff       \tcall   10231c0 <myl_core_list_grow>",
+        "10739ae:\te8 0d f8 fa ff       \tcall   10231c0 <myl_core_list_grow>",
+        "10739d0:\te8 eb f7 fa ff       \tcall   10231c0 <myl_core_list_grow>",
+        "10739ee:\te8 4d 12 fb ff       \tcall   1024c40 <myl_core_trap>",
+        "10739ff:\te8 3c 12 fb ff       \tcall   1024c40 <myl_core_trap>"
+      ]
+    }
+  },
+  "candidate": {
+    "my.heap::env_enclosing": {
+      "address": 17239600,
+      "size": 212,
+      "calls": [
+        "1070e73:\te8 48 3f fb ff       \tcall   1024dc0 <myl_core_trap>",
+        "1070e93:\te8 a8 92 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "1070e9f:\te8 9c 92 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "1070eab:\te8 90 92 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "1070eb7:\te8 84 92 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "1070ec3:\te8 78 92 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "1070ecf:\te8 6c 92 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "1070edb:\te8 60 92 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "1070ee7:\te8 54 92 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "1070ef3:\te8 48 92 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "1070eff:\te8 3c 92 fb ff       \tcall   102a140 <myl_core_assert_fail>"
+      ]
+    },
+    "my.heap::env_slot": {
+      "address": 17221744,
+      "size": 278,
+      "calls": [
+        "106c8d1:\te8 ea 84 fb ff       \tcall   1024dc0 <myl_core_trap>",
+        "106c8f5:\te8 c6 84 fb ff       \tcall   1024dc0 <myl_core_trap>",
+        "106c915:\te8 26 d8 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "106c921:\te8 1a d8 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "106c92d:\te8 0e d8 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "106c939:\te8 02 d8 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "106c945:\te8 f6 d7 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "106c951:\te8 ea d7 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "106c95d:\te8 de d7 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "106c969:\te8 d2 d7 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "106c975:\te8 c6 d7 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "106c981:\te8 ba d7 fb ff       \tcall   102a140 <myl_core_assert_fail>"
+      ]
+    },
+    "my.heap::set_env_slot": {
+      "address": 17221440,
+      "size": 296,
+      "calls": [
+        "106c802:\te8 39 78 fb ff       \tcall   1024040 <myl_core_drop_owned>",
+        "106c80a:\te8 31 78 fb ff       \tcall   1024040 <myl_core_drop_owned>",
+        "106c83f:\te8 7c 85 fb ff       \tcall   1024dc0 <myl_core_trap>",
+        "106c84b:\te8 f0 d8 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "106c857:\te8 e4 d8 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "106c863:\te8 d8 d8 fb ff       \tcall   102a140 <myl_core_assert_fail>"
+      ]
+    },
+    "my.heap::tree_function_obj": {
+      "address": 17249984,
+      "size": 247,
+      "calls": [
+        "1073723:\te8 98 16 fb ff       \tcall   1024dc0 <myl_core_trap>",
+        "1073746:\te8 f5 69 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "1073752:\te8 e9 69 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "107375e:\te8 dd 69 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "107376a:\te8 d1 69 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "1073776:\te8 c5 69 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "1073782:\te8 b9 69 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "107378e:\te8 ad 69 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "107379a:\te8 a1 69 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "10737a6:\te8 95 69 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "10737b2:\te8 89 69 fb ff       \tcall   102a140 <myl_core_assert_fail>"
+      ]
+    },
+    "my.interpreter::enter_function": {
+      "address": 17250240,
+      "size": 1332,
+      "calls": [
+        "10738c7:\te8 84 de fe ff       \tcall   1061750 <my.heap::reserve_object>",
+        "10738d7:\te8 c4 fc ff ff       \tcall   10735a0 <my.object::new_env>",
+        "10739a4:\te8 97 06 fb ff       \tcall   1024040 <myl_core_drop_owned>",
+        "10739df:\te8 5c 06 fb ff       \tcall   1024040 <myl_core_drop_owned>",
+        "10739e7:\te8 54 06 fb ff       \tcall   1024040 <myl_core_drop_owned>",
+        "1073a4c:\te8 6f 95 fc ff       \tcall   103cfc0 <myl_core_str_from_i64>",
+        "1073a91:\te8 2a 95 fc ff       \tcall   103cfc0 <myl_core_str_from_i64>",
+        "1073add:\te8 5e 98 fb ff       \tcall   102d340 <myl_core_str_join>",
+        "1073ae8:\te8 53 05 fb ff       \tcall   1024040 <myl_core_drop_owned>",
+        "1073af0:\te8 8b bb fb ff       \tcall   102f680 <myl_core_text_encode>",
+        "1073afb:\te8 40 05 fb ff       \tcall   1024040 <myl_core_drop_owned>",
+        "1073b03:\te8 b8 0d fb ff       \tcall   10248c0 <myl_core_owned_octets_copy>",
+        "1073b0e:\te8 2d 05 fb ff       \tcall   1024040 <myl_core_drop_owned>",
+        "1073b1a:\te8 a1 36 fe ff       \tcall   10571c0 <myl_core_err_trace_origin_preserve_most>",
+        "1073b34:\te8 87 0d fb ff       \tcall   10248c0 <myl_core_owned_octets_copy>",
+        "1073b40:\te8 7b 36 fe ff       \tcall   10571c0 <myl_core_err_trace_origin_preserve_most>",
+        "1073b78:\te8 43 12 fb ff       \tcall   1024dc0 <myl_core_trap>",
+        "1073ba0:\te8 1b 12 fb ff       \tcall   1024dc0 <myl_core_trap>",
+        "1073bb2:\te8 c9 f6 fa ff       \tcall   1023280 <myl_core_list_new_slow>",
+        "1073bd9:\te8 62 f7 fa ff       \tcall   1023340 <myl_core_list_grow>",
+        "1073bf8:\te8 43 f7 fa ff       \tcall   1023340 <myl_core_list_grow>",
+        "1073c1a:\te8 21 f7 fa ff       \tcall   1023340 <myl_core_list_grow>",
+        "1073c36:\te8 05 f7 fa ff       \tcall   1023340 <myl_core_list_grow>",
+        "1073c58:\te8 e3 f6 fa ff       \tcall   1023340 <myl_core_list_grow>",
+        "1073c76:\te8 45 11 fb ff       \tcall   1024dc0 <myl_core_trap>",
+        "1073c88:\te8 33 11 fb ff       \tcall   1024dc0 <myl_core_trap>",
+        "1073ca4:\te8 17 11 fb ff       \tcall   1024dc0 <myl_core_trap>",
+        "1073cb0:\te8 8b 64 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "1073cbc:\te8 7f 64 fb ff       \tcall   102a140 <myl_core_assert_fail>",
+        "1073ccd:\te8 ee 10 fb ff       \tcall   1024dc0 <myl_core_trap>",
+        "1073cde:\te8 dd 10 fb ff       \tcall   1024dc0 <myl_core_trap>",
+        "1073cef:\te8 cc 10 fb ff       \tcall   1024dc0 <myl_core_trap>"
+      ]
+    }
+  },
+  "getters": {
+    "absent_reachable_getters": [
+      "my.heap::env_slot",
+      "my.heap::env_enclosing",
+      "my.heap::tree_function_obj"
+    ],
+    "enter_function_bytes": 996
+  }
+}

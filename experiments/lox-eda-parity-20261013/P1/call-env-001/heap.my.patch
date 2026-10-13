@@ -1,0 +1,24 @@
+--- a/heap.my
++++ b/heap.my
+@@ -132,6 +132,21 @@
+     return slot
+ 
+ 
++# Reserve and collect while the caller's callee, arguments and enclosing env
++# remain rooted. Fill fresh owned slots before publishing their object once.
++public func allocate_call_env(mut rt: Runtime, enclosing: value.ObjRef, slot_count: int, args: int, count: int) -> value.ObjRef:
++    assert count >= 0 and count <= max(slot_count, 0), "invalid call environment argument count"
++    assert args >= 0 and args <= rt.stack_top and count <= rt.stack_top - args, "call arguments are not rooted stack slots"
++    const slot = reserve_object(mut rt, 32 + 16 * max(slot_count, 0))
++    mut env = object.new_env(enclosing, slot_count)
++    mut i = 0
++    while i < count:
++        env.slots[i] = rt.stack[args + i]
++        i += 1
++    rt.objects[slot] = object.Obj.env(value=env)
++    return slot
++
++
+ # The payload accessors below check the kind; a mismatch is an internal bug.
+ public func string_obj(rt: Runtime, ref: value.ObjRef) -> object.StringObj:
+     match rt.objects[ref]:

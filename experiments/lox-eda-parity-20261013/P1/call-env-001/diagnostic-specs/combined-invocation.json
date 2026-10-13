@@ -1,0 +1,44 @@
+{
+  "oracle": "zig-fast",
+  "files": [
+    "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/invocation.tree.150000.lox",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/expected/invocation.tree.out",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/measure.py",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/experiments/lox-eda-parity-20261013/P1/call-env-001/input-identity.json"
+  ],
+  "expected_stdout": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/expected/invocation.tree.out",
+  "case": "tree-invocation",
+  "arms": {
+    "zig-fast": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/lox-zig-fast",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/invocation.tree.150000.lox"
+    ],
+    "c1": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/lox/zero-rc",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/invocation.tree.150000.lox"
+    ],
+    "call-env-only": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/call-env-001/candidate-lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/invocation.tree.150000.lox"
+    ],
+    "getter-only": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/call-env-001/getters-lox",
+      "--engine=tree",
+      "/home/epentland/ai/canopy/mylang-lox-eda-20261012-bench/experiments/lox-eda-zero-rc-20261012/bench/inputs/invocation.tree.150000.lox"
+    ]
+  },
+  "relative_timeout_arms": [
+    "c1",
+    "call-env-only",
+    "getter-only"
+  ],
+  "identity_dirs": [
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/call-env-001/baseline/lox",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/call-env-001/candidate/lox",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/call-env-001/getters/lox"
+  ],
+  "variant": "combined-independent-arms"
+}

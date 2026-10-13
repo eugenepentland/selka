@@ -1,0 +1,4 @@
+build-slot: FIFO ticket 2894, position 3; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 2894 after 15s
+Stack overflow.
+[line 1]

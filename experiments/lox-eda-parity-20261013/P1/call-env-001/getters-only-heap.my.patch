@@ -1,0 +1,38 @@
+--- a/heap.my
++++ b/heap.my
+@@ -410,8 +410,9 @@
+         case object.Obj.env(value=payload):
+             return payload.enclosing
+         case _:
+-            assert False, "object is not a env"
+-            return value.NO_OBJ
++            pass
++    assert False, "object is not a env"
++    return value.NO_OBJ
+ 
+ 
+ public func env_slot(rt: Runtime, ref: value.ObjRef, index: int) -> value.Value:
+@@ -419,8 +420,9 @@
+         case object.Obj.env(value=payload):
+             return payload.slots[index]
+         case _:
+-            assert False, "object is not a env"
+-            return value.Value.nil
++            pass
++    assert False, "object is not a env"
++    return value.Value.nil
+ 
+ 
+ public func class_name(rt: Runtime, ref: value.ObjRef) -> value.ObjRef:
+@@ -464,8 +466,9 @@
+         case object.Obj.tree_function(value=payload):
+             return payload
+         case _:
+-            assert False, "object is not a tree_function"
+-            return object.TreeFunctionObj(decl=0, name=value.NO_OBJ, closure=value.NO_OBJ, is_initializer=False)
++            pass
++    assert False, "object is not a tree_function"
++    return object.TreeFunctionObj(decl=0, name=value.NO_OBJ, closure=value.NO_OBJ, is_initializer=False)
+ 
+ 
+ public func native_obj(rt: Runtime, ref: value.ObjRef) -> object.NativeObj:
