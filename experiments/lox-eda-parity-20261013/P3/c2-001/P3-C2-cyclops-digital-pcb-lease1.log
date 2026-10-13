@@ -1,0 +1,27 @@
+build-slot: timing slot 1, FIFO ticket 1388 after 0s
+{
+  "baseline": {
+    "seconds": {
+      "median": 0.047311818,
+      "min": 0.046953583,
+      "max": 0.049535796,
+      "samples": [
+        0.049535796,
+        0.047311818,
+        0.046953583
+      ]
+    }
+  },
+  "candidate": {
+    "seconds": {
+      "median": 0.0487011,
+      "min": 0.048321464,
+      "max": 0.050069021,
+      "samples": [
+        0.0487011,
+        0.048321464,
+        0.050069021
+      ]
+    }
+  }
+}

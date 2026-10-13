@@ -1,0 +1,32 @@
+build-slot: FIFO ticket 1384, position 1; draining active work (gate1.lock); waiting (0s so far)
+build-slot: FIFO ticket 1384, position 1; draining active work (gate1.lock); waiting (60s so far)
+build-slot: FIFO ticket 1384, position 1; draining active work (gate1.lock); waiting (121s so far)
+build-slot: FIFO ticket 1384, position 1; draining active work (gate1.lock); waiting (181s so far)
+build-slot: FIFO ticket 1384, position 1; draining active work (gate1.lock); waiting (241s so far)
+build-slot: timing slot 1, FIFO ticket 1384 after 261s
+{
+  "baseline": {
+    "seconds": {
+      "median": 0.10159403,
+      "min": 0.100814896,
+      "max": 0.102644334,
+      "samples": [
+        0.10159403,
+        0.100814896,
+        0.102644334
+      ]
+    }
+  },
+  "candidate": {
+    "seconds": {
+      "median": 0.102516987,
+      "min": 0.101959615,
+      "max": 0.10267468,
+      "samples": [
+        0.101959615,
+        0.102516987,
+        0.10267468
+      ]
+    }
+  }
+}

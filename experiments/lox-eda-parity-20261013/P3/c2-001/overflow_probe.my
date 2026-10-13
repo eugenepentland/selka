@@ -1,0 +1,34 @@
+import sexpr_tokenizer as tk
+
+func main(args: str[], out: Stream) -> int:
+    const mode = args[0].copy()
+    mut source = b"ab"
+    if mode == "line-overflow":
+        source = b"\n"
+    if mode == "line-safe":
+        source = b"abc"
+    if mode == "newline-resets-column":
+        source = b"\n"
+    if mode == "escaped-newline-overflow":
+        source = b"\"\\\n\n\""
+    if mode == "column-string-overflow":
+        source = b"\"x\""
+    mut t = tk.tokenizer_init(source)
+    if mode == "line-overflow" or mode == "line-safe":
+        t.cur.line = 9223372036854775807
+    if mode == "column-overflow" or mode == "newline-resets-column" or mode == "column-string-overflow":
+        t.cur.col = 9223372036854775807
+    if mode == "column-second-overflow":
+        t.cur.col = 9223372036854775806
+    if mode == "escaped-newline-overflow":
+        t.cur.line = 9223372036854775806
+    if mode == "position-max":
+        t.cur.pos = 9223372036854775807
+    if mode == "position-min":
+        t.cur.pos = 0 - 9223372036854775807 - 1
+    match tk.next(mut t):
+        case Ok(token):
+            out.print(token.text.hex(), token.span.line, token.span.col, token.span.offset, t.cur.line, t.cur.col, t.cur.pos)
+        case Err(_):
+            out.print("lex error", t.cur.line, t.cur.col, t.cur.pos)
+    return 0

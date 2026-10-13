@@ -1,0 +1,22 @@
+{
+  "binary": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/eda/zero-rc",
+  "binary_sha256": "e76f28fdf040335897ebee0f5a76a4505ae5444fda3ba71004101dd6a8a1b99d",
+  "llvm": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/eda/zero-rc.ll",
+  "llvm_sha256": "b4501dc9ced7f3f1bd48e9e11758dd706db0bbcd08645be61f3a515c5fa672be",
+  "assembly_command": [
+    "objdump",
+    "--disassemble=my.sexpr_parser::next_token",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/eda/zero-rc"
+  ],
+  "profile_note": "C1 P5 profile is sampling motivation; C2 inspection is static, not timing proof.",
+  "candidate": {
+    "binary": "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/candidate-v2-application",
+    "binary_sha256": "dda653fd6c5ed8dfe3dbbd2567ec85d736c794b8e21af230c992e55fd0de0d7a",
+    "llvm_sha256": "cd4bba40cf778aebaf290d388b454e5e7e81ddb73620359642ea74276111d798",
+    "assembly_command": [
+      "objdump",
+      "--disassemble=my.sexpr_parser::next_token",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/candidate-v2-application"
+    ]
+  }
+}

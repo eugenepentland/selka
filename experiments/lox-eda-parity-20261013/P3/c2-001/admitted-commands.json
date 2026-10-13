@@ -1,0 +1,39 @@
+[
+  {
+    "label": "final-v2-suite",
+    "argv": [
+      "bash",
+      "scripts/build-slot.sh",
+      "build",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+      "test",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/candidate-v2/eda",
+      "--experimental-zero-rc",
+      "--verify-facts",
+      "--force",
+      "--jobs",
+      "4",
+      "--max-steps",
+      "1000000000",
+      "--max-frames",
+      "40000",
+      "--max-memory",
+      "2G",
+      "--timeout-ms",
+      "120000",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/cache-suite-v2",
+      "--json"
+    ]
+  },
+  {
+    "label": "final-v2-counters-boundaries",
+    "argv": [
+      "bash",
+      "scripts/build-slot.sh",
+      "build",
+      "python3",
+      "experiments/lox-eda-parity-20261013/P3/c2-001/qualify_probes.py"
+    ]
+  }
+]

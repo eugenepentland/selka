@@ -1,0 +1,100 @@
+import sexpr_tokenizer as tk
+import reference_tokenizer as ref
+
+func tag(t: tk.TokenTag) -> int:
+    match t:
+        case tk.TokenTag.lparen:
+            return 0
+        case tk.TokenTag.rparen:
+            return 1
+        case tk.TokenTag.atom:
+            return 2
+        case tk.TokenTag.string:
+            return 3
+        case tk.TokenTag.int:
+            return 4
+        case tk.TokenTag.float:
+            return 5
+        case tk.TokenTag.unit_val:
+            return 6
+        case tk.TokenTag.si_val:
+            return 7
+        case tk.TokenTag.eof:
+            return 8
+
+func ref_tag(t: ref.TokenTag) -> int:
+    match t:
+        case ref.TokenTag.lparen:
+            return 0
+        case ref.TokenTag.rparen:
+            return 1
+        case ref.TokenTag.atom:
+            return 2
+        case ref.TokenTag.string:
+            return 3
+        case ref.TokenTag.int:
+            return 4
+        case ref.TokenTag.float:
+            return 5
+        case ref.TokenTag.unit_val:
+            return 6
+        case ref.TokenTag.si_val:
+            return 7
+        case ref.TokenTag.eof:
+            return 8
+
+func same(source: bytes, initial: int):
+    mut before = ref.tokenizer_init(source)
+    mut after = tk.tokenizer_init(source)
+    before.cur.pos = initial
+    after.cur.pos = initial
+    # Keep a nonzero prior error span; successful scans must leave it untouched.
+    before.cur.error_span.line = 19
+    after.cur.error_span.line = 19
+    mut steps = 0
+    while steps < len(source) + 2:
+        mut old = ref.next(mut before)
+        mut new = tk.next(mut after)
+        assert before.cur.pos == after.cur.pos
+        assert before.cur.line == after.cur.line
+        assert before.cur.col == after.cur.col
+        assert before.cur.error_span == after.cur.error_span
+        match old:
+            case Err(old_error):
+                match new:
+                    case Ok(_):
+                        assert False, "reference error"
+                    case Err(new_error):
+                        assert (old_error == ref.LexError.unexpected_character) == (new_error == tk.LexError.unexpected_character)
+                        return
+            case Ok(old_token):
+                match new:
+                    case Err(_):
+                        assert False, "reference token"
+                    case Ok(new_token):
+                        assert ref_tag(old_token.tag) == tag(new_token.tag)
+                        assert old_token.text == new_token.text
+                        assert old_token.span == new_token.span
+                        if new_token.tag == tk.TokenTag.eof:
+                            return
+        steps += 1
+    assert False, "scanner must terminate"
+
+public func test_every_byte_in_string_comment_atom_and_numeric_contexts() -> bool:
+    for byte in range(256):
+        mut one = bytes([byte])
+        for source in [one.copy(), b"1" + one + b" ", b"a" + one + b" ", b";" + one + b"\nfoo", b"\"" + one + b"\"", b"\"\\" + one + b"\"", b" \r\n" + one]:
+            same(source, 0)
+    return True
+
+public func test_runs_match_frozen_scanner_prefixes_and_cursor_boundaries() -> bool:
+    mut corpus = [b"(a 1.5mm -10mil 100nF 10mA 10% 1mAF 123file.stp)", b";\rcomment\n (pad P$1 smd custom)\r\n", b"\"h\xc3\xa9\xff\\\"llo\\\nnext\nend\"", b"\"dangling\\", b"(a ; )\n \"unterminated", b"(+ <= >= ! / %) abcXYZ_~*/.#@:+,$ 123.4abc"]
+    for source in corpus:
+        for end in range(len(source) + 1):
+            same(source[0:end], 0)
+        same(source, len(source))
+        same(source, len(source) + 1)
+    # Wrapped negative cursors retain the existing public-byte indexing behavior.
+    for source in [b"abc", b"123", b"   ", b"\"x\"", b";comment\n", b"x\n"]:
+        same(source, 0 - 1)
+    return True

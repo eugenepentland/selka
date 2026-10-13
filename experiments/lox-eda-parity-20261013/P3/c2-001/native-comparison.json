@@ -1,0 +1,58 @@
+{
+  "baseline": {
+    "command": [
+      "objdump",
+      "--no-show-raw-insn",
+      "--disassemble=my.sexpr_parser::next_token",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/eda/zero-rc"
+    ],
+    "symbol": "0000000001090640 00000000000018cb t my.sexpr_parser::next_token",
+    "instruction_count": 1467,
+    "call_instruction_count": 62,
+    "jump_instruction_count": 284,
+    "rsp_reference_count": 121,
+    "stack_reservation": "109064a:\tsub    $0x48,%rsp",
+    "ordinary_helper_calls": []
+  },
+  "candidate": {
+    "command": [
+      "objdump",
+      "--no-show-raw-insn",
+      "--disassemble=my.sexpr_parser::next_token",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/candidate-v2-application"
+    ],
+    "symbol": "00000000010dddc0 0000000000001925 t my.sexpr_parser::next_token",
+    "instruction_count": 1550,
+    "call_instruction_count": 91,
+    "jump_instruction_count": 320,
+    "rsp_reference_count": 64,
+    "stack_reservation": "10dddca:\tsub    $0x58,%rsp",
+    "ordinary_helper_calls": [
+      "10ddea6:\tcall   1122f70 <my.sexpr_tokenizer::advance>",
+      "10ddf35:\tcall   1122f70 <my.sexpr_tokenizer::advance>",
+      "10ddfde:\tcall   1122f70 <my.sexpr_tokenizer::advance>",
+      "10de0e1:\tcall   1122f70 <my.sexpr_tokenizer::advance>",
+      "10de2e5:\tcall   1122f70 <my.sexpr_tokenizer::advance>",
+      "10de346:\tcall   1122f70 <my.sexpr_tokenizer::advance>",
+      "10de351:\tcall   1122f70 <my.sexpr_tokenizer::advance>",
+      "10de3a2:\tcall   1122f70 <my.sexpr_tokenizer::advance>",
+      "10de4c6:\tcall   1122f70 <my.sexpr_tokenizer::advance>",
+      "10de693:\tcall   1122f70 <my.sexpr_tokenizer::advance>",
+      "10de6e9:\tcall   1122f70 <my.sexpr_tokenizer::advance>",
+      "10dea28:\tcall   1122f70 <my.sexpr_tokenizer::advance>",
+      "10dea33:\tcall   1122f70 <my.sexpr_tokenizer::advance>",
+      "10dea3e:\tcall   1122f70 <my.sexpr_tokenizer::advance>",
+      "10dea63:\tcall   1135f80 <my.sexpr_tokenizer::si_suffix_len>",
+      "10dea86:\tcall   1122f70 <my.sexpr_tokenizer::advance>",
+      "10defc3:\tcall   1122f70 <my.sexpr_tokenizer::advance>",
+      "10df047:\tcall   1122f70 <my.sexpr_tokenizer::advance>",
+      "10df244:\tcall   1122f70 <my.sexpr_tokenizer::advance>",
+      "10df24f:\tcall   1122f70 <my.sexpr_tokenizer::advance>",
+      "10df25a:\tcall   1122f70 <my.sexpr_tokenizer::advance>",
+      "10df270:\tcall   1135f80 <my.sexpr_tokenizer::si_suffix_len>",
+      "10df2c6:\tcall   1122f70 <my.sexpr_tokenizer::advance>",
+      "10df41f:\tcall   1122f70 <my.sexpr_tokenizer::advance>",
+      "10df4b1:\tcall   1122f70 <my.sexpr_tokenizer::advance>"
+    ]
+  }
+}

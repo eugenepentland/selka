@@ -1,0 +1,16 @@
+build-slot: FIFO ticket 3014, position 14; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 3014, position 14; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 3014, position 14; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 3014, position 14; earlier build tickets must run first; waiting (180s so far)
+build-slot: FIFO ticket 3014, position 14; earlier build tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 3014, position 14; earlier build tickets must run first; waiting (301s so far)
+build-slot: FIFO ticket 3014, position 14; earlier build tickets must run first; waiting (361s so far)
+build-slot: FIFO ticket 3014, position 14; earlier build tickets must run first; waiting (421s so far)
+build-slot: FIFO ticket 3014, position 14; earlier build tickets must run first; waiting (481s so far)
+build-slot: FIFO ticket 3014, position 14; earlier build tickets must run first; waiting (541s so far)
+build-slot: FIFO ticket 3014, position 14; earlier build tickets must run first; waiting (602s so far)
+build-slot: FIFO ticket 3014, position 13; earlier build tickets must run first; waiting (662s so far)
+build-slot: FIFO ticket 3014, position 8; earlier build tickets must run first; waiting (722s so far)
+build-slot: FIFO ticket 3014, position 1; waiting for measurement or memory-accounting settle delay; waiting (782s so far)
+build-slot: build slot 1, FIFO ticket 3014 after 787s
+parser output, managed allocation metrics, and all nine checked cursor boundaries match

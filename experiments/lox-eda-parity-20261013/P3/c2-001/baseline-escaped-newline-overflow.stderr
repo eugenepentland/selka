@@ -1,0 +1,8 @@
+sexpr_tokenizer.my:101:13: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)
+  in sexpr_tokenizer::advance at sexpr_tokenizer.my:101:13
+  in sexpr_tokenizer::read_string at sexpr_tokenizer.my:0:0
+  in sexpr_tokenizer::next_in at sexpr_tokenizer.my:297:16
+  in sexpr_tokenizer::next_offset at sexpr_tokenizer.my:281:12
+  in sexpr_tokenizer::next at sexpr_tokenizer.my:269:18
+  in overflow_probe::main at overflow_probe.my:29:11
+MYLANG-TRAP {"version":1,"operation":"add","left":9223372036854775807,"right":1,"width":64}

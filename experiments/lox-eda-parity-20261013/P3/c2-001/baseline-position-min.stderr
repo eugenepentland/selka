@@ -1,0 +1,8 @@
+sexpr_tokenizer.my:88:12: error[R_LIST_BOUNDS]: native execution failed (index -9223372036854775808, length 2)
+  in sexpr_tokenizer::peek at sexpr_tokenizer.my:88:12
+  in sexpr_tokenizer::skip_whitespace_and_comments at sexpr_tokenizer.my:114:17
+  in sexpr_tokenizer::next_in at sexpr_tokenizer.my:285:5
+  in sexpr_tokenizer::next_offset at sexpr_tokenizer.my:281:12
+  in sexpr_tokenizer::next at sexpr_tokenizer.my:269:18
+  in overflow_probe::main at overflow_probe.my:29:11
+MYLANG-TRAP {"version":1,"operation":"index","index":-9223372036854775808,"length":2}

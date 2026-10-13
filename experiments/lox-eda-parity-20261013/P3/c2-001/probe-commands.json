@@ -1,0 +1,284 @@
+[
+  {
+    "name": "baseline-parser-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/baseline/eda/parser_probe.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--verify-facts",
+      "--counters",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/cache-final-probes",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/baseline-parser-v2.ll",
+      "-o",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/baseline-parser-v2"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "name": "baseline-parser-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/baseline-parser-v2"
+    ],
+    "returncode": 0,
+    "stdout": "16000\n",
+    "stderr": ""
+  },
+  {
+    "name": "baseline-overflow-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/baseline/eda/overflow_probe.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--verify-facts",
+      "--counters",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/cache-final-probes",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/baseline-overflow-v2.ll",
+      "-o",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/baseline-overflow-v2"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "name": "baseline-line-overflow",
+    "command": [
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/baseline-overflow-v2",
+      "line-overflow"
+    ],
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "sexpr_tokenizer.my:101:13: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in sexpr_tokenizer::advance at sexpr_tokenizer.my:101:13\n  in sexpr_tokenizer::skip_whitespace_and_comments at sexpr_tokenizer.my:116:13\n  in sexpr_tokenizer::next_in at sexpr_tokenizer.my:285:5\n  in sexpr_tokenizer::next_offset at sexpr_tokenizer.my:281:12\n  in sexpr_tokenizer::next at sexpr_tokenizer.my:269:18\n  in overflow_probe::main at overflow_probe.my:29:11\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+  },
+  {
+    "name": "baseline-line-safe",
+    "command": [
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/baseline-overflow-v2",
+      "line-safe"
+    ],
+    "returncode": 0,
+    "stdout": "616263 9223372036854775807 1 0 9223372036854775807 4 3\n",
+    "stderr": ""
+  },
+  {
+    "name": "baseline-column-overflow",
+    "command": [
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/baseline-overflow-v2",
+      "column-overflow"
+    ],
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "sexpr_tokenizer.my:104:13: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in sexpr_tokenizer::advance at sexpr_tokenizer.my:104:13\n  in sexpr_tokenizer::read_atom at sexpr_tokenizer.my:253:9\n  in sexpr_tokenizer::next_in at sexpr_tokenizer.my:301:19\n  in sexpr_tokenizer::next_offset at sexpr_tokenizer.my:281:12\n  in sexpr_tokenizer::next at sexpr_tokenizer.my:269:18\n  in overflow_probe::main at overflow_probe.my:29:11\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+  },
+  {
+    "name": "baseline-column-second-overflow",
+    "command": [
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/baseline-overflow-v2",
+      "column-second-overflow"
+    ],
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "sexpr_tokenizer.my:104:13: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in sexpr_tokenizer::advance at sexpr_tokenizer.my:104:13\n  in sexpr_tokenizer::read_atom at sexpr_tokenizer.my:253:9\n  in sexpr_tokenizer::next_in at sexpr_tokenizer.my:301:19\n  in sexpr_tokenizer::next_offset at sexpr_tokenizer.my:281:12\n  in sexpr_tokenizer::next at sexpr_tokenizer.my:269:18\n  in overflow_probe::main at overflow_probe.my:29:11\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+  },
+  {
+    "name": "baseline-column-string-overflow",
+    "command": [
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/baseline-overflow-v2",
+      "column-string-overflow"
+    ],
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "sexpr_tokenizer.my:104:13: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in sexpr_tokenizer::advance at sexpr_tokenizer.my:104:13\n  in sexpr_tokenizer::read_string at sexpr_tokenizer.my:190:5\n  in sexpr_tokenizer::next_in at sexpr_tokenizer.my:297:16\n  in sexpr_tokenizer::next_offset at sexpr_tokenizer.my:281:12\n  in sexpr_tokenizer::next at sexpr_tokenizer.my:269:18\n  in overflow_probe::main at overflow_probe.my:29:11\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+  },
+  {
+    "name": "baseline-newline-resets-column",
+    "command": [
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/baseline-overflow-v2",
+      "newline-resets-column"
+    ],
+    "returncode": 0,
+    "stdout": " 2 1 1 2 1 1\n",
+    "stderr": ""
+  },
+  {
+    "name": "baseline-escaped-newline-overflow",
+    "command": [
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/baseline-overflow-v2",
+      "escaped-newline-overflow"
+    ],
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "sexpr_tokenizer.my:101:13: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in sexpr_tokenizer::advance at sexpr_tokenizer.my:101:13\n  in sexpr_tokenizer::read_string at sexpr_tokenizer.my:0:0\n  in sexpr_tokenizer::next_in at sexpr_tokenizer.my:297:16\n  in sexpr_tokenizer::next_offset at sexpr_tokenizer.my:281:12\n  in sexpr_tokenizer::next at sexpr_tokenizer.my:269:18\n  in overflow_probe::main at overflow_probe.my:29:11\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+  },
+  {
+    "name": "baseline-position-max",
+    "command": [
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/baseline-overflow-v2",
+      "position-max"
+    ],
+    "returncode": 0,
+    "stdout": " 1 1 9223372036854775807 1 1 9223372036854775807\n",
+    "stderr": ""
+  },
+  {
+    "name": "baseline-position-min",
+    "command": [
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/baseline-overflow-v2",
+      "position-min"
+    ],
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "sexpr_tokenizer.my:88:12: error[R_LIST_BOUNDS]: native execution failed (index -9223372036854775808, length 2)\n  in sexpr_tokenizer::peek at sexpr_tokenizer.my:88:12\n  in sexpr_tokenizer::skip_whitespace_and_comments at sexpr_tokenizer.my:114:17\n  in sexpr_tokenizer::next_in at sexpr_tokenizer.my:285:5\n  in sexpr_tokenizer::next_offset at sexpr_tokenizer.my:281:12\n  in sexpr_tokenizer::next at sexpr_tokenizer.my:269:18\n  in overflow_probe::main at overflow_probe.my:29:11\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-9223372036854775808,\"length\":2}\n"
+  },
+  {
+    "name": "candidate-v2-parser-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/candidate-v2/eda/parser_probe.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--verify-facts",
+      "--counters",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/cache-final-probes",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/candidate-v2-parser-v2.ll",
+      "-o",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/candidate-v2-parser-v2"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "name": "candidate-v2-parser-run",
+    "command": [
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/candidate-v2-parser-v2"
+    ],
+    "returncode": 0,
+    "stdout": "16000\n",
+    "stderr": ""
+  },
+  {
+    "name": "candidate-v2-overflow-build",
+    "command": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-002/install/bin/mylang",
+      "build",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/candidate-v2/eda/overflow_probe.my",
+      "--experimental-zero-rc",
+      "--release",
+      "--verify-facts",
+      "--counters",
+      "--cache-dir",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/cache-final-probes",
+      "--emit-llvm",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/candidate-v2-overflow-v2.ll",
+      "-o",
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/candidate-v2-overflow-v2"
+    ],
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  },
+  {
+    "name": "candidate-v2-line-overflow",
+    "command": [
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/candidate-v2-overflow-v2",
+      "line-overflow"
+    ],
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "sexpr_tokenizer.my:101:13: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in sexpr_tokenizer::advance at sexpr_tokenizer.my:101:13\n  in sexpr_tokenizer::skip_whitespace_and_comments_slow at sexpr_tokenizer.my:122:13\n  in sexpr_tokenizer::skip_whitespace_and_comments at sexpr_tokenizer.my:134:9\n  in sexpr_tokenizer::next_in at sexpr_tokenizer.my:422:5\n  in sexpr_tokenizer::next_offset at sexpr_tokenizer.my:418:12\n  in sexpr_tokenizer::next at sexpr_tokenizer.my:406:18\n  in overflow_probe::main at overflow_probe.my:29:11\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+  },
+  {
+    "name": "candidate-v2-line-safe",
+    "command": [
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/candidate-v2-overflow-v2",
+      "line-safe"
+    ],
+    "returncode": 0,
+    "stdout": "616263 9223372036854775807 1 0 9223372036854775807 4 3\n",
+    "stderr": ""
+  },
+  {
+    "name": "candidate-v2-column-overflow",
+    "command": [
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/candidate-v2-overflow-v2",
+      "column-overflow"
+    ],
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "sexpr_tokenizer.my:104:13: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in sexpr_tokenizer::advance at sexpr_tokenizer.my:104:13\n  in sexpr_tokenizer::read_atom_slow at sexpr_tokenizer.my:376:9\n  in sexpr_tokenizer::read_atom at sexpr_tokenizer.my:383:16\n  in sexpr_tokenizer::next_in at sexpr_tokenizer.my:438:19\n  in sexpr_tokenizer::next_offset at sexpr_tokenizer.my:418:12\n  in sexpr_tokenizer::next at sexpr_tokenizer.my:406:18\n  in overflow_probe::main at overflow_probe.my:29:11\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+  },
+  {
+    "name": "candidate-v2-column-second-overflow",
+    "command": [
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/candidate-v2-overflow-v2",
+      "column-second-overflow"
+    ],
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "sexpr_tokenizer.my:104:13: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in sexpr_tokenizer::advance at sexpr_tokenizer.my:104:13\n  in sexpr_tokenizer::read_atom_slow at sexpr_tokenizer.my:376:9\n  in sexpr_tokenizer::read_atom at sexpr_tokenizer.my:383:16\n  in sexpr_tokenizer::next_in at sexpr_tokenizer.my:438:19\n  in sexpr_tokenizer::next_offset at sexpr_tokenizer.my:418:12\n  in sexpr_tokenizer::next at sexpr_tokenizer.my:406:18\n  in overflow_probe::main at overflow_probe.my:29:11\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+  },
+  {
+    "name": "candidate-v2-column-string-overflow",
+    "command": [
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/candidate-v2-overflow-v2",
+      "column-string-overflow"
+    ],
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "sexpr_tokenizer.my:104:13: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in sexpr_tokenizer::advance at sexpr_tokenizer.my:104:13\n  in sexpr_tokenizer::read_string_slow at sexpr_tokenizer.my:225:5\n  in sexpr_tokenizer::read_string at sexpr_tokenizer.my:244:16\n  in sexpr_tokenizer::next_in at sexpr_tokenizer.my:434:16\n  in sexpr_tokenizer::next_offset at sexpr_tokenizer.my:418:12\n  in sexpr_tokenizer::next at sexpr_tokenizer.my:406:18\n  in overflow_probe::main at overflow_probe.my:29:11\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+  },
+  {
+    "name": "candidate-v2-newline-resets-column",
+    "command": [
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/candidate-v2-overflow-v2",
+      "newline-resets-column"
+    ],
+    "returncode": 0,
+    "stdout": " 2 1 1 2 1 1\n",
+    "stderr": ""
+  },
+  {
+    "name": "candidate-v2-escaped-newline-overflow",
+    "command": [
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/candidate-v2-overflow-v2",
+      "escaped-newline-overflow"
+    ],
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "sexpr_tokenizer.my:101:13: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 1, width 64)\n  in sexpr_tokenizer::advance at sexpr_tokenizer.my:101:13\n  in sexpr_tokenizer::read_string_slow at sexpr_tokenizer.my:0:0\n  in sexpr_tokenizer::read_string at sexpr_tokenizer.my:244:16\n  in sexpr_tokenizer::next_in at sexpr_tokenizer.my:434:16\n  in sexpr_tokenizer::next_offset at sexpr_tokenizer.my:418:12\n  in sexpr_tokenizer::next at sexpr_tokenizer.my:406:18\n  in overflow_probe::main at overflow_probe.my:29:11\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"add\",\"left\":9223372036854775807,\"right\":1,\"width\":64}\n"
+  },
+  {
+    "name": "candidate-v2-position-max",
+    "command": [
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/candidate-v2-overflow-v2",
+      "position-max"
+    ],
+    "returncode": 0,
+    "stdout": " 1 1 9223372036854775807 1 1 9223372036854775807\n",
+    "stderr": ""
+  },
+  {
+    "name": "candidate-v2-position-min",
+    "command": [
+      "/home/epentland/ai/canopy/mylang/.tmp/lox-eda-parity/P3/c2-001/candidate-v2-overflow-v2",
+      "position-min"
+    ],
+    "returncode": 1,
+    "stdout": "",
+    "stderr": "sexpr_tokenizer.my:88:12: error[R_LIST_BOUNDS]: native execution failed (index -9223372036854775808, length 2)\n  in sexpr_tokenizer::peek at sexpr_tokenizer.my:88:12\n  in sexpr_tokenizer::skip_whitespace_and_comments_slow at sexpr_tokenizer.my:0:12\n  in sexpr_tokenizer::skip_whitespace_and_comments at sexpr_tokenizer.my:134:9\n  in sexpr_tokenizer::next_in at sexpr_tokenizer.my:422:5\n  in sexpr_tokenizer::next_offset at sexpr_tokenizer.my:418:12\n  in sexpr_tokenizer::next at sexpr_tokenizer.my:406:18\n  in overflow_probe::main at overflow_probe.my:29:11\n\u001eMYLANG-TRAP {\"version\":1,\"operation\":\"index\",\"index\":-9223372036854775808,\"length\":2}\n"
+  }
+]

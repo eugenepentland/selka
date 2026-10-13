@@ -1,0 +1,73 @@
+{
+  "totals": {
+    "baseline": 596001,
+    "candidate-v2": 381001
+  },
+  "functions": {
+    "sexpr_tokenizer::advance": {
+      "baseline": 103000,
+      "candidate-v2": 17000
+    },
+    "sexpr_tokenizer::is_atom_continue": {
+      "baseline": 39000,
+      "candidate-v2": 39000
+    },
+    "sexpr_tokenizer::is_atom_start": {
+      "baseline": 44000,
+      "candidate-v2": 44000
+    },
+    "sexpr_tokenizer::is_digit": {
+      "baseline": 45000,
+      "candidate-v2": 45000
+    },
+    "sexpr_tokenizer::is_scale_letter": {
+      "baseline": 5000,
+      "candidate-v2": 5000
+    },
+    "sexpr_tokenizer::is_unit_letter": {
+      "baseline": 4000,
+      "candidate-v2": 4000
+    },
+    "sexpr_tokenizer::next_in": {
+      "baseline": 20000,
+      "candidate-v2": 20000
+    },
+    "sexpr_tokenizer::next_offset": {
+      "baseline": 20000,
+      "candidate-v2": 20000
+    },
+    "sexpr_tokenizer::peek": {
+      "baseline": 197000,
+      "candidate-v2": 35000
+    },
+    "sexpr_tokenizer::peek_at": {
+      "baseline": 12000,
+      "candidate-v2": 12000
+    },
+    "sexpr_tokenizer::read_atom": {
+      "baseline": 5000,
+      "candidate-v2": 5000
+    },
+    "sexpr_tokenizer::read_number": {
+      "baseline": 7000,
+      "candidate-v2": 7000
+    },
+    "sexpr_tokenizer::read_string": {
+      "baseline": 1000,
+      "candidate-v2": 1000
+    },
+    "sexpr_tokenizer::scan_counters_fit": {
+      "baseline": 0,
+      "candidate-v2": 33000
+    },
+    "sexpr_tokenizer::si_suffix_len": {
+      "baseline": 5000,
+      "candidate-v2": 5000
+    },
+    "sexpr_tokenizer::skip_whitespace_and_comments": {
+      "baseline": 20000,
+      "candidate-v2": 20000
+    }
+  },
+  "note": "instrumented call counts, not runtime timing"
+}

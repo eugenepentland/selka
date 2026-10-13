@@ -132,3 +132,13 @@ Application commits: `83e487092`, `21033b9ee`.
 Checked 322/322 qualification and frozen probes: `5edfa2b6f`.
 All three commits passed the normal Guardian hook (88 checks); no feedback log
 was appended.
+
+C2 scalar-run follow-up: rejected after full qualification. Frozen V2 suite
+passes 330/330 checked tests; all nine checked cursor boundaries match C2;
+parser allocation/copy/peak/RC counters and both complete application outputs
+match. Instrumented calls fall 36.1%, but all nine diagnostic pairs per case
+regress: RDS3+flat ratio 1.011355 (95% paired CI 1.003598–1.025534), Cyclops
+1.022840 (1.011203–1.035057). Preserve source-002 unchanged. Full immutable
+prototype patch, hashes, raw counters, calibration/warmup/pair journals, and
+read-only native comparison are in P3/c2-001. These compare against C2, not
+final integrated parity. Stop further scanner prototypes for this batch.
