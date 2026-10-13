@@ -1,0 +1,164 @@
+[
+  {
+    "case": "fib",
+    "chunk": 0,
+    "receipt": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/discard-local-001/diagnostic-results/fib-chunk0.json",
+    "sha256": "21ebe1628b749c65aec817ba0f13ef642f6148ab1cfe0b27fb92d9a541496433",
+    "arm_status": {
+      "zig-fast": {
+        "status": "ok"
+      },
+      "c1": {
+        "status": "ok"
+      },
+      "discard-local-only": {
+        "status": "ok"
+      }
+    },
+    "samples": 9
+  },
+  {
+    "case": "invocation",
+    "chunk": 0,
+    "receipt": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/discard-local-001/diagnostic-results/invocation-chunk0.json",
+    "sha256": "e0ef995a8f5c57c8c9de495110f45f28b68fd05858f6622801a2475029cd22e9",
+    "arm_status": {
+      "zig-fast": {
+        "status": "ok"
+      },
+      "c1": {
+        "status": "ok"
+      },
+      "discard-local-only": {
+        "status": "ok"
+      }
+    },
+    "samples": 9
+  },
+  {
+    "case": "string_equality",
+    "chunk": 0,
+    "receipt": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/discard-local-001/diagnostic-results/string_equality-chunk0.json",
+    "sha256": "d827556529e1549a9544d54cfe3c3531c2ec39aaabc10025cf62bf61bded6b97",
+    "arm_status": {
+      "zig-fast": {
+        "status": "ok"
+      },
+      "c1": {
+        "status": "ok"
+      },
+      "discard-local-only": {
+        "status": "ok"
+      }
+    },
+    "samples": 9
+  },
+  {
+    "case": "fib",
+    "chunk": 1,
+    "receipt": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/discard-local-001/diagnostic-results/fib-chunk1.json",
+    "sha256": "1cd9199edc6fb166c2ecf86f12d3d752935ba3a68efafde25f14df9b424cd9d5",
+    "arm_status": {
+      "zig-fast": {
+        "status": "ok"
+      },
+      "c1": {
+        "status": "ok"
+      },
+      "discard-local-only": {
+        "status": "ok"
+      }
+    },
+    "samples": 9
+  },
+  {
+    "case": "invocation",
+    "chunk": 1,
+    "receipt": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/discard-local-001/diagnostic-results/invocation-chunk1.json",
+    "sha256": "d2edddf8a354eb4ddd5b52a15a50788514fc36a37b0491ed044e6b18577cd149",
+    "arm_status": {
+      "zig-fast": {
+        "status": "ok"
+      },
+      "c1": {
+        "status": "ok"
+      },
+      "discard-local-only": {
+        "status": "ok"
+      }
+    },
+    "samples": 9
+  },
+  {
+    "case": "string_equality",
+    "chunk": 1,
+    "receipt": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/discard-local-001/diagnostic-results/string_equality-chunk1.json",
+    "sha256": "6845faa1f6197b0c827704767d20a71219b4f8c37d81cc2d4cb8514d66cf1f4e",
+    "arm_status": {
+      "zig-fast": {
+        "status": "ok"
+      },
+      "c1": {
+        "status": "ok"
+      },
+      "discard-local-only": {
+        "status": "ok"
+      }
+    },
+    "samples": 9
+  },
+  {
+    "case": "fib",
+    "chunk": 2,
+    "receipt": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/discard-local-001/diagnostic-results/fib-chunk2.json",
+    "sha256": "f8812a165d9e5b811d45bebd066cb0487d468ff50f8e33edf1ec5e2c46841b49",
+    "arm_status": {
+      "zig-fast": {
+        "status": "ok"
+      },
+      "c1": {
+        "status": "ok"
+      },
+      "discard-local-only": {
+        "status": "ok"
+      }
+    },
+    "samples": 9
+  },
+  {
+    "case": "invocation",
+    "chunk": 2,
+    "receipt": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/discard-local-001/diagnostic-results/invocation-chunk2.json",
+    "sha256": "f85aa90d91a0cd15c986085d0861ea7c6e3abcdb0fa2ae9e6d169d884435af69",
+    "arm_status": {
+      "zig-fast": {
+        "status": "ok"
+      },
+      "c1": {
+        "status": "ok"
+      },
+      "discard-local-only": {
+        "status": "ok"
+      }
+    },
+    "samples": 9
+  },
+  {
+    "case": "string_equality",
+    "chunk": 2,
+    "receipt": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p1/.tmp/lox-eda-parity/P1/discard-local-001/diagnostic-results/string_equality-chunk2.json",
+    "sha256": "4a10c5601ae2a1e62d9baa8b35c9013976f85368ed83992cfade0497b95b9f0b",
+    "arm_status": {
+      "zig-fast": {
+        "status": "ok"
+      },
+      "c1": {
+        "status": "ok"
+      },
+      "discard-local-only": {
+        "status": "ok"
+      }
+    },
+    "samples": 9
+  }
+]

@@ -1,0 +1,40 @@
+build-slot: FIFO ticket 1347, position 1; draining active work (build1.lock); waiting (0s so far)
+build-slot: timing slot 1, FIFO ticket 1347 after 11s
+{
+  "zig-fast": {
+    "seconds": {
+      "median": 0.095201425,
+      "min": 0.094980105,
+      "max": 0.097713653,
+      "samples": [
+        0.097713653,
+        0.094980105,
+        0.095201425
+      ]
+    }
+  },
+  "c1": {
+    "seconds": {
+      "median": 0.115304341,
+      "min": 0.114225343,
+      "max": 0.115665937,
+      "samples": [
+        0.114225343,
+        0.115304341,
+        0.115665937
+      ]
+    }
+  },
+  "discard-local-only": {
+    "seconds": {
+      "median": 0.113679768,
+      "min": 0.113150733,
+      "max": 0.115315643,
+      "samples": [
+        0.113679768,
+        0.113150733,
+        0.115315643
+      ]
+    }
+  }
+}
