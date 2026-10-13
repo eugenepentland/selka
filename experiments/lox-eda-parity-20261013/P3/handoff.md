@@ -41,7 +41,7 @@ $COMPILER check experiments/lox-eda-parity-20261013/source/eda/main.my --experim
 git diff --check
 ```
 
-Native qualification commands (checked suite passed; counters pending):
+Native qualification commands (checked suite and counted probes passed):
 
 ```
 scripts/build-slot.sh build "$COMPILER" test experiments/lox-eda-parity-20261013/source/eda/sexpr_tokenizer_test.my --jobs 4 --cache-dir "$SCRATCH/cache" --json
@@ -88,3 +88,47 @@ capability in the probe's `print` call; the corrected identical probe uses
 `main(out: Stream)` and `out.print(total)`. Both corrected probe modules passed
 checked frontend validation before retrying native builds. The original
 missing-output build logs are retained separately.
+
+## Counted traffic result
+
+The final counted builds and runs passed. Both frozen arms printed `16000` for
+the identical 1000-parse fixture. `traffic.json` records exact binary/source/
+counter hashes, stdout, zero exit codes, raw totals and per-function rows;
+`baseline-counters.json` and `candidate-counters.json` preserve full sites.
+
+| Metric | Base | P3 candidate |
+| --- | ---: | ---: |
+| Managed allocations | 46,000 | 18,000 |
+| Cumulative managed allocated bytes | 4,288,000 | 2,432,000 |
+| Managed peak live bytes | 2,464 | 2,336 |
+| Managed live bytes at exit | 0 | 0 |
+| Explicit byte-buffer copies | 11,000 | 0 |
+| Explicit byte-buffer copied bytes | 125,000 | 0 |
+
+Allocation count fell 60.9%; cumulative managed allocation traffic fell 43.3%.
+Both arms have zero compiler/runtime/shared retain-release, share-mark and
+uniqueness-test events. Fresh final owned slices remain legitimate allocations;
+zero explicit-copy counters do not mean the final AST stores borrowed text.
+These tiny-fixture managed peaks are not RSS measurements or full-app results.
+
+Per-function counters diagnose the saved traffic: `make_token` loses 19,000
+allocations / 1,216,000 bytes, `is_unit_letter` loses 8,000 / 512,000, and the
+parser no longer invokes `tokenizer_init`'s 1,000-allocation / 128,000-byte source
+clone. Together these account for all 28,000 saved allocations / 1,856,000 bytes.
+Final atom/string and suffixed-literal storage remains 10,000 allocations /
+640,000 bytes, now directly attributed to parser construction instead of public
+copying AST constructors. The baseline probe did not attribute allocated bytes
+to the SI-scale table, so no measured allocation saving is assigned to its
+scalar replacement; that is source/CPU simplification only in this probe.
+
+`parse_list` is **exactly unchanged**: 3,000 calls, 6,000 allocations,
+1,344,000 bytes, 3,000 list-growth events, and zero list-copy events. The top-level
+output list is also unchanged at 2,000 allocations / 448,000 bytes. Those are
+legitimate independent AST output/growth costs. No additional `parse_list`
+change is justified by this probe. Fresh complete-application timing, RSS and
+output qualification remain coordinator-owned.
+
+Application commits: `83e487092`, `21033b9ee`.
+Checked 322/322 qualification and frozen probes: `5edfa2b6f`.
+All three commits passed the normal Guardian hook (88 checks); no feedback log
+was appended.

@@ -56,7 +56,7 @@ a = result['arms']['baseline']
 b = result['arms']['candidate']
 result['saved'] = {
     key: a['totals'][key] - b['totals'][key]
-    for key in ('allocs', 'alloc_bytes', 'reallocs', 'realloc_added_bytes', 'text_copies', 'text_copy_bytes', 'list_copies', 'list_copy_bytes')
+    for key in ('allocs', 'alloc_bytes', 'reallocs', 'realloc_added_bytes', 'text_copies', 'text_copy_bytes', 'list_copies', 'list_copy_bytes', 'buffer_copies', 'buffer_copy_bytes')
 }
 result['saved']['cumulative_allocated_bytes'] = a['cumulative_allocated_bytes'] - b['cumulative_allocated_bytes']
 (HERE / 'traffic.json').write_text(json.dumps(result, indent=2) + '\n')
