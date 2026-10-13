@@ -1,0 +1,10 @@
+
+
+# Cycle-free trace-width profile shared by the DSL, rule resolver, and router.
+# Narrow SMD launch followed by a linear return to nominal track width.
+public record Profile:
+    width: float = 0.0
+    max_length: float = 0.0
+    taper_length: float = 0.0
+    # Initial width for plane-backed power branches.
+    power_branch_width: float = 0.0

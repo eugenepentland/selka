@@ -1,0 +1,73 @@
+
+import kicad_sch_stagger as m
+import kicad_sch_shape as shape
+import kicad_sch_emit as emit
+
+func left_pin(pad: bytes, y: int) -> shape.Pin:
+    return shape.Pin(pad=pad.copy(), name=pad.copy(), side=shape.Side.left, x=-1270, y=y)
+
+
+func unit_of(pins: shape.Pin[]) -> shape.ShapeUnit:
+    return shape.ShapeUnit(number=1, title=b"", pins=pins.copy(), half_w=1016, half_h=2540, graphics=[], stubs=[])
+
+
+func shape_of(pins: shape.Pin[]) -> shape.Shape:
+    return shape.Shape(lib_name=b"x", units=[unit_of(pins)])
+
+
+# test "kicad-sch: a crowded edge spreads into two stub columns and a roomy one does not"
+public func test_kicad_sch_a_crowded_edge_spreads_into_two_stub_columns_and_a_roomy_one_does_not() -> bool:
+    mut nets: dict[str, bytes] = {"1": b"AAA", "2": b"BBB", "3": b"CCC", "4": b"DDD"}
+    mut tight = [left_pin(b"1", 381), left_pin(b"2", 254), left_pin(b"3", 127), left_pin(b"4", 0)]
+    mut spread = m.spread(shape_of(tight), Some(nets.copy()))
+    mut stubs = spread.units[0].stubs.copy()
+    assert len(stubs) == 4 and stubs[0] == 0 and stubs[2] == 0
+    assert stubs[1] > emit.label_span(b"AAA") and stubs[1] == stubs[3]
+    mut roomy = [left_pin(b"1", 762), left_pin(b"2", 508), left_pin(b"3", 254), left_pin(b"4", 0)]
+    mut kept = m.spread(shape_of(roomy), Some(nets.copy()))
+    assert len(kept.units[0].stubs) == 0 and shape.stub_extra(kept.units[0], 1) == 0
+    return True
+
+
+# test "kicad-sch: a same-net run shares one column and holds its neighbours apart"
+public func test_kicad_sch_a_same_net_run_shares_one_column_and_holds_its_neighbours_apart() -> bool:
+    mut pins = [left_pin(b"1", 508), left_pin(b"2", 381), left_pin(b"3", 254), left_pin(b"4", 127), left_pin(b"5", 0)]
+    mut nets: dict[str, bytes] = {"1": b"GND", "2": b"GND", "3": b"GND", "4": b"SDA", "5": b"SCL"}
+    mut stubs = m.spread(shape_of(pins), Some(nets.copy())).units[0].stubs.copy()
+    assert stubs[0] == stubs[1] and stubs[1] == stubs[2]
+    assert stubs[0] == stubs[3] and stubs[4] > stubs[3]
+    return True
+
+
+# test "kicad-sch: spreading repeats exactly and skips unconnected pads"
+public func test_kicad_sch_spreading_repeats_exactly_and_skips_unconnected_pads() -> bool:
+    mut pins = [left_pin(b"1", 254), left_pin(b"2", 127), left_pin(b"3", 0)]
+    mut nets: dict[str, bytes] = {"1": b"AAA", "3": b"CCC"}
+    mut first = m.spread(shape_of(pins), Some(nets.copy()))
+    assert len(first.units[0].stubs) == 0
+    nets["2"] = b"BBB"
+    mut one = m.spread(shape_of(pins), Some(nets.copy()))
+    mut two = m.spread(shape_of(pins), Some(nets.copy()))
+    assert one.units[0].stubs == two.units[0].stubs
+    assert one.units[0].stubs[0] == 0 and one.units[0].stubs[1] > 0 and one.units[0].stubs[2] == 0
+    return True
+
+
+# test "kicad-sch: spreading needs the net map and leaves a shape without one alone"
+public func test_kicad_sch_spreading_needs_the_net_map_and_leaves_a_shape_without_one_alone() -> bool:
+    mut pins = [left_pin(b"1", 127), left_pin(b"2", 0)]
+    mut out = m.spread(shape_of(pins), None)
+    assert len(out.units[0].stubs) == 0
+    return True
+
+
+# test "kicad-sch: a spread unit keeps every pin endpoint, side and body it was given"
+public func test_kicad_sch_a_spread_unit_keeps_every_pin_endpoint_side_and_body_it_was_given() -> bool:
+    mut pins = [left_pin(b"1", 254), left_pin(b"2", 127), left_pin(b"3", 0)]
+    mut nets: dict[str, bytes] = {"1": b"AAA", "2": b"BBB", "3": b"CCC"}
+    mut before = unit_of(pins)
+    mut after = m.spread(shape.Shape(lib_name=b"x", units=[before.copy()], vendor=True), Some(nets.copy())).units[0].copy()
+    assert len(after.stubs) == len(pins) and after.stubs[1] > 0
+    assert before.pins == after.pins and before.half_w == after.half_w and before.half_h == after.half_h
+    assert len(before.graphics) == len(after.graphics)
+    return True

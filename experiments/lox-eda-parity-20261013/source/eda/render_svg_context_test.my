@@ -1,0 +1,66 @@
+
+import eval_env as env_mod
+import render_svg_context as m
+import support_expect as ex
+import support_strs as strs
+
+func inst(ref: bytes, component: bytes, value: bytes) -> env_mod.Instance:
+    mut item = env_mod.instance_default(ref)
+    item.component = component.copy()
+    item.value = value.copy()
+    return item
+
+
+func bound_cap(ref: bytes, value: bytes, hub: bytes, number: bytes) -> env_mod.Instance:
+    mut item = inst(ref, b"cap", value)
+    item.bind.decouple = env_mod.DecoupleBind(ic=hub.copy(), pin=number.copy())
+    return item
+
+
+func pin(ref: bytes, number: bytes) -> env_mod.PinRef:
+    return env_mod.pin_ref_default(ref, number)
+
+
+func hub_reaches_spoke_on_pin(ctx: m.RenderCtx, hub: bytes, number: bytes, spoke: bytes) -> bool:
+    mut entries = ctx.adjacency.get(strs.text(hub), []).copy()
+    for entry in entries:
+        if entry.pin == number:
+            match entry.endpoint:
+                case m.Endpoint.pin(ref_des=ref, pin=_):
+                    if ref == spoke:
+                        return True
+                case m.Endpoint.net(value=_):
+                    pass
+    return False
+
+
+# test "decouples binding docks each cap on its served hub pad"
+public func test_decouples_binding_docks_each_cap_on_its_served_hub_pad(out: Stream) -> bool:
+    mut block = env_mod.design_block_default(b"decouple-bind-test")
+    block.instances = [inst(b"U1", b"ic", b""), bound_cap(b"C1", b"100nF", b"U1", b"2"), bound_cap(b"C2", b"100nF", b"U1", b"1")]
+    block.nets = [env_mod.Net(name=b"VDD", pins=[pin(b"U1", b"1"), pin(b"U1", b"2"), pin(b"C1", b"1"), pin(b"C2", b"1")]), env_mod.Net(name=b"GND", pins=[pin(b"U1", b"3"), pin(b"C1", b"2"), pin(b"C2", b"2")])]
+    mut ctx = m.render_ctx_init()
+    m.render_ctx_collect_flat(mut ctx, block, b"")
+    m.render_ctx_classify(mut ctx)
+    m.render_ctx_build_adjacency(mut ctx)
+    m.render_ctx_synthesize_spoke_connections(mut ctx)
+    return ex.ok(out, "C1 served pad", hub_reaches_spoke_on_pin(ctx, b"U1", b"2", b"C1")) and ex.ok(out, "C2 served pad", hub_reaches_spoke_on_pin(ctx, b"U1", b"1", b"C2")) and ex.ok(out, "C1 avoids other pad", not hub_reaches_spoke_on_pin(ctx, b"U1", b"1", b"C1")) and ex.ok(out, "C2 avoids other pad", not hub_reaches_spoke_on_pin(ctx, b"U1", b"2", b"C2"))
+
+
+# test "bias tee island anchors to the RF pin that continues to an output port"
+public func test_bias_tee_island_anchors_to_the_rf_pin_that_continues_to_an_output_port(out: Stream) -> bool:
+    mut block = env_mod.design_block_default(b"bias-tee-anchor-test")
+    block.instances = [inst(b"U1", b"ic", b""), inst(b"L1", b"ind", b"18nH"), inst(b"C1", b"cap", b"10nF"), inst(b"R1", b"res", b"50R"), inst(b"R2", b"res", b"50R"), bound_cap(b"C2", b"1uF", b"U1", b"7"), inst(b"C3", b"cap", b"10nF")]
+    block.nets = [env_mod.Net(name=b"VDD", pins=[pin(b"U1", b"7"), pin(b"U1", b"11"), pin(b"L1", b"2"), pin(b"C2", b"1")]), env_mod.Net(name=b"BIAS", pins=[pin(b"L1", b"1"), pin(b"C1", b"1"), pin(b"R1", b"1"), pin(b"R2", b"2")]), env_mod.Net(name=b"RFOUTAM", pins=[pin(b"U1", b"22"), pin(b"R1", b"2")]), env_mod.Net(name=b"RFOUTAP", pins=[pin(b"U1", b"23"), pin(b"R2", b"1"), pin(b"C3", b"1")]), env_mod.Net(name=b"LO_OUT", pins=[pin(b"C3", b"2")]), env_mod.Net(name=b"GND", pins=[pin(b"C1", b"2"), pin(b"C2", b"2")])]
+    block.ports = [env_mod.port_default(b"LO_OUT", b"LO_OUT", b"out")]
+    mut ctx = m.render_ctx_init()
+    m.render_ctx_setup(mut ctx, block)
+    for ref in [b"L1", b"C1", b"R1", b"R2"]:
+        if not ex.eq_bytes(out, "precomputed island owner", ctx.spoke_anchor_net.get(strs.text(ref), b""), b"RFOUTAP"):
+            return False
+    return ex.ok(out, "port-feeding owner", hub_reaches_spoke_on_pin(ctx, b"U1", b"23", b"R2")) and ex.ok(out, "no supply 7 island", not hub_reaches_spoke_on_pin(ctx, b"U1", b"7", b"L1")) and ex.ok(out, "no supply 11 island", not hub_reaches_spoke_on_pin(ctx, b"U1", b"11", b"L1")) and ex.ok(out, "no unused RF leg", not hub_reaches_spoke_on_pin(ctx, b"U1", b"22", b"R1")) and ex.ok(out, "explicit bypass served pad", hub_reaches_spoke_on_pin(ctx, b"U1", b"7", b"C2")) and ex.ok(out, "explicit bypass avoids other pad", not hub_reaches_spoke_on_pin(ctx, b"U1", b"11", b"C2"))
+
+
+# test "isStdRefDes rejects a ref shorter than two characters"
+public func test_isstdrefdes_rejects_a_ref_shorter_than_two_characters(out: Stream) -> bool:
+    return ex.ok(out, "U10 standard", m.is_std_ref_des(b"U10")) and ex.ok(out, "R5 standard", m.is_std_ref_des(b"R5")) and ex.ok(out, "one letter rejected", not m.is_std_ref_des(b"U")) and ex.ok(out, "empty rejected", not m.is_std_ref_des(b""))

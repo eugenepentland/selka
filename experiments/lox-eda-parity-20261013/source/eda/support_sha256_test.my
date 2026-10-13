@@ -1,0 +1,61 @@
+
+import support_expect as ex
+import support_sha256 as sha
+
+# Expected digests come from Python's `hashlib.sha256` (the FIPS 180-4 test vectors for
+# "" and "abc" first); the lengths straddle the padding boundaries 55/56 and 63/64/65.
+func hex_of(data: bytes) -> str:
+    return sha.sha256(data).hex()
+
+
+func repeated(byte: int, n: int) -> bytes:
+    mut out: int[] = []
+    mut i = 0
+    while i < n:
+        out.append(byte)
+        i += 1
+    return bytes(out)
+
+
+public func test_digest_is_thirty_two_bytes(out: Stream) -> bool:
+    return ex.eq_int(out, "digest length", len(sha.sha256(b"abc")), 32)
+
+
+public func test_fips_vectors(out: Stream) -> bool:
+    if not ex.eq_str(out, "empty", hex_of(b""), "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"):
+        return False
+    return ex.eq_str(out, "abc", hex_of(b"abc"), "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+
+
+public func test_padding_boundaries(out: Stream) -> bool:
+    if not ex.eq_str(out, "55 bytes", hex_of(repeated(97, 55)), "9f4390f8d30c2dd92ec9f095b65e2b9ae9b0a925a5258e241c9f1e910f734318"):
+        return False
+    if not ex.eq_str(out, "56 bytes", hex_of(repeated(97, 56)), "b35439a4ac6f0948b6d6f9e3c6af0f5f590ce20f1bde7090ef7970686ec6738a"):
+        return False
+    if not ex.eq_str(out, "63 bytes", hex_of(repeated(97, 63)), "7d3e74a05d7db15bce4ad9ec0658ea98e3f06eeecf16b4c6fff2da457ddc2f34"):
+        return False
+    if not ex.eq_str(out, "64 bytes", hex_of(repeated(97, 64)), "ffe054fe7ae0cb6dc65c3af9b61d5209f439851db43d0ba5997337df154668eb"):
+        return False
+    return ex.eq_str(out, "65 bytes", hex_of(repeated(97, 65)), "635361c48bb9eab14198e76ea8ab7f1a41685d6ad62aa9146d301d4f17eb0ae0")
+
+
+public func test_high_bytes_and_two_blocks(out: Stream) -> bool:
+    mut ramp: int[] = []
+    mut i = 0
+    while i < 119:
+        ramp.append(i)
+        i += 1
+    if not ex.eq_str(out, "0..118", hex_of(bytes(ramp)), "da18797ed7c3a777f0847f429724a2d8cd5138e6ed2895c3fa1a6d39d18f7ec6"):
+        return False
+    mut mod: int[] = []
+    i = 0
+    while i < 128:
+        mod.append(i % 251)
+        i += 1
+    return ex.eq_str(out, "128 bytes", hex_of(bytes(mod)), "471fb943aa23c511f6f72f8d1652d9c880cfa392ad80503120547703e56a2be5")
+
+
+# flat_netlist.zig's frozen `uuidFromId` test hashes "canopy:" ++ id, and stamps the first
+# 16 bytes as a v5 UUID; the digest half of that test is here.
+public func test_canopy_id_digest(out: Stream) -> bool:
+    return ex.eq_str(out, "canopy:aa000001", hex_of(b"canopy:aa000001"), "11d1e8b6ab30661ddee48da03a84febbaf746021b438fb3e69b3b447f8eb6cae")

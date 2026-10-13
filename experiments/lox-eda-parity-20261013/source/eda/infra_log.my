@@ -1,0 +1,15 @@
+
+
+public func progress(err: Stream, msg: bytes):
+    emit_line(err, b"[I] " + msg + b"\n")
+
+
+public func warn(err: Stream, msg: bytes):
+    emit_line(err, b"[W] " + msg + b"\n")
+
+
+public func emit_line(err: Stream, msg: bytes):
+    if len(msg) <= 4096:
+        _ = err.write(msg)
+    else:
+        _ = err.write(msg[0:4092] + b"\xe2\x80\xa6\n")

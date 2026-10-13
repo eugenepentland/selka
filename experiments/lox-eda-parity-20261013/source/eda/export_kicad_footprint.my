@@ -1,0 +1,603 @@
+
+import sexpr_ast as ast
+import sexpr_parser as parser_mod
+import sexpr_paren_span as paren_span
+import placement_geometry as geometry
+import numeric
+import poly_scanline
+import board_layers
+import kicad_pcb_format as kicad_format
+import infra_fs as fsx
+import infra_log as log
+import footprint_paste as paste_mod
+import support_float_fmt as ff
+import support_strs as strs
+import byte_builder
+import math
+
+# Reuse source .kicad_mod verbatim, or emit pads, graphic layers and STEP model
+# with the same algorithms, frames and numeric precision as the Zig writer.
+public const err_invalid_format: str = "InvalidFormat"
+
+
+record PadPos:
+    x: float = 0.0
+    y: float = 0.0
+    rot: float = 0.0
+
+
+record AnchorRect:
+    center: FixedArray[float, 2]
+    size: float
+
+
+func fixed(value: float, places: int) -> bytes:
+    return ff.fmt_float_prec(value, places).encode()
+
+
+func num(node: ast.Node, fallback: float) -> float:
+    mut value = ast.as_number(node)
+    return (if (value is None) then (fallback) else (value))
+
+
+func normalize(name: bytes) -> bytes:
+    mut result: int[] = []
+    for c in name:
+        result.append((if (c == 95) then (45) else (strs.to_lower(c))))
+    return bytes(result)
+
+
+# D4: no entry kinds. Exclude directory names by their failed file read.
+public func find_source_kicad_mod(fs: Filesystem, project_dir: str, footprint_name: bytes) -> str?:
+    mut sources_path = project_dir + "/lib/sources"
+    match fsx.list_dir(fs, sources_path):
+        case Err(_):
+            return None
+        case Ok(names):
+            mut norm_fp = normalize(footprint_name)
+            for name in names:
+                if not name.endswith(".kicad_mod"):
+                    continue
+                if normalize(name[0:len(name) - 10].encode()) != norm_fp:
+                    continue
+                mut full_path = sources_path + "/" + name
+                match fs.read_file(full_path):
+                    case Ok(_):
+                        return Some(full_path)
+                    case Err(_):
+                        continue
+    return None
+
+
+public func use_source_kicad_mod(source: bytes, model_name: bytes?, model_offset: float[]?, model_rotation: float[]?) -> Result[bytes, str]:
+    if model_name is None:
+        return Ok(source.copy())
+    mut w = byte_builder.create()
+    mut model_start = source.find(b"(model ")
+    if model_start >= 0:
+        # KiCad has no semicolon comments; quoted parens do not affect depth.
+        mut end = paren_span.end_index(source, model_start, paren_span.Comments.none)
+        if end is None:
+            return Err(err_invalid_format)
+        mut model_end = end
+        while model_end < len(source) and (source[model_end] == 10 or source[model_end] == 13 or source[model_end] == 32):
+            model_end += 1
+        byte_builder.append(mut w, source[0:model_start])
+        write_model_block(mut w, model_name, model_offset, model_rotation)
+        byte_builder.append(mut w, source[model_end:len(source)])
+    else:
+        mut last_paren = source.rfind(b")")
+        if last_paren < 0:
+            return Err(err_invalid_format)
+        byte_builder.append(mut w, source[0:last_paren])
+        write_model_block(mut w, model_name, model_offset, model_rotation)
+        byte_builder.append(mut w, b")\n")
+    return Ok(byte_builder.finish(w))
+
+
+func write_model_block(mut w: byte_builder.Builder, model_name: bytes, model_offset: float[]?, model_rotation: float[]?):
+    mut off: float[] = [0.0, 0.0, 0.0]
+    mut rot: float[] = [0.0, 0.0, 0.0]
+    if model_offset is not None:
+        off = model_offset.copy()
+    if model_rotation is not None:
+        rot = model_rotation.copy()
+    # Directory filenames are raw; tokenizer text is already escaped. Offset
+    # and X rotation use KiCad's opposite 3D display frame.
+    byte_builder.append(mut w, b"  (model \"${KIPRJMOD}/models/" + kicad_format.sexpr_escape(model_name) + b"\"\n")
+    byte_builder.append(mut w, b"    (offset (xyz " + fixed(-off[0], 4) + b" " + fixed(-off[1], 4) + b" " + fixed(-off[2], 4) + b"))\n")
+    byte_builder.append(mut w, b"    (scale (xyz 1 1 1))\n")
+    byte_builder.append(mut w, b"    (rotate (xyz " + fixed(-rot[0], 4) + b" " + fixed(rot[1], 4) + b" " + fixed(rot[2], 4) + b"))\n  )\n")
+
+
+# Every source token is copied verbatim: re-escaping 0.1\"q doubles escapes.
+# Only the directory-derived model filename is raw and requires escaping.
+public func export_footprint_mod(err: Stream, source: bytes, model_name: bytes?, model_offset: float[]?, model_rotation: float[]?) -> Result[bytes, str]:
+    mut nodes: ast.Node[] = []
+    match parser_mod.parse(source):
+        case Err(e):
+            return Err(parser_mod.error_name(e))
+        case Ok(parsed):
+            nodes = parsed
+    if len(nodes) == 0 or not ast.is_form(nodes[0], b"footprint"):
+        return Err(err_invalid_format)
+    match nodes[0].tag:
+        case ast.Tag.list(value=children):
+            if len(children) < 2:
+                return Err(err_invalid_format)
+            mut name = ast.as_text(children[1])
+            if name is None:
+                return Err(err_invalid_format)
+            mut w = byte_builder.create()
+            byte_builder.append(mut w, b"(footprint \"" + name + b"\"\n  (version 20240108)\n  (generator \"netlisp\")\n  (layer \"" + board_layers.f_cu + b"\")\n")
+            for child_index_12 in range(len(children)):
+                if child_index_12 < 2:
+                    continue
+                if ast.is_form(children[child_index_12], b"description"):
+                    match children[child_index_12].tag:
+                        case ast.Tag.list(value=cl):
+                            if len(cl) >= 2:
+                                mut desc = ast.as_text(cl[1])
+                                const descr: bytes = (if (desc is None) then (b"") else (desc).copy())
+                                byte_builder.append(mut w, b"  (descr \"" + descr + b"\")\n")
+                        case _:
+                            pass
+            for child_index_11 in range(len(children)):
+                if child_index_11 < 2:
+                    continue
+                if ast.is_form(children[child_index_11], b"pad"):
+                    try emit_kicad_pad(err, mut w, children[child_index_11])
+            for child_index_10 in range(len(children)):
+                if child_index_10 < 2:
+                    continue
+                if ast.is_form(children[child_index_10], b"courtyard"):
+                    emit_kicad_courtyard(mut w, children[child_index_10])
+            for child_index_9 in range(len(children)):
+                if child_index_9 < 2:
+                    continue
+                if ast.is_form(children[child_index_9], b"copper-pour-keepout"):
+                    emit_kicad_copper_pour_keepout(mut w, children[child_index_9])
+            # Silk is manufactured (0.15 mm), fab is documentation (0.1 mm).
+            for child_index_8 in range(len(children)):
+                if child_index_8 < 2:
+                    continue
+                if ast.is_form(children[child_index_8], b"silkscreen"):
+                    emit_kicad_geom_block(mut w, children[child_index_8], board_layers.f_silks, 0.15)
+            for child_index_7 in range(len(children)):
+                if child_index_7 < 2:
+                    continue
+                if ast.is_form(children[child_index_7], b"fab"):
+                    emit_kicad_geom_block(mut w, children[child_index_7], board_layers.f_fab, 0.1)
+            if model_name is not None:
+                write_model_block(mut w, model_name, model_offset, model_rotation)
+            byte_builder.append(mut w, b")\n")
+            return Ok(byte_builder.finish(w))
+        case _:
+            return Err(err_invalid_format)
+
+
+func emit_kicad_copper_pour_keepout(mut w: byte_builder.Builder, node: ast.Node):
+    match node.tag:
+        case ast.Tag.list(value=children):
+            if len(children) < 3:
+                return
+            mut layer = ast.as_text(children[1])
+            if layer is None:
+                return
+            mut poly_index = -1
+            mut vias_not_allowed = False
+            for child_index_6 in range(len(children)):
+                if child_index_6 < 2:
+                    continue
+                if ast.is_form(children[child_index_6], b"poly"):
+                    poly_index = child_index_6
+                if ast.is_form(children[child_index_6], b"vias"):
+                    match children[child_index_6].tag:
+                        case ast.Tag.list(value=rule):
+                            if len(rule) >= 2:
+                                mut action = ast.as_text(rule[1])
+                                if action is not None:
+                                    vias_not_allowed = action == b"not_allowed"
+                        case _:
+                            pass
+            if poly_index < 0:
+                return
+            match children[poly_index].tag:
+                case ast.Tag.list(value=points):
+                    if len(points) < 4:
+                        return
+                    const vias: bytes = (if (vias_not_allowed) then (b"not_allowed") else (b"allowed"))
+                    byte_builder.append(mut w, b"  (zone\n    (layer \"" + layer + b"\")\n    (hatch full 0.508)\n    (connect_pads (clearance 0))\n    (min_thickness 0.254)\n    (keepout\n      (tracks allowed)\n      (vias " + vias + b")\n      (pads allowed)\n      (copperpour not_allowed)\n      (footprints allowed)\n    )\n    (polygon (pts\n")
+                    for child_index_5 in range(len(points)):
+                        if child_index_5 < 1:
+                            continue
+                        match points[child_index_5].tag:
+                            case ast.Tag.list(value=xy):
+                                if len(xy) < 2:
+                                    continue
+                                mut x = ast.as_number(xy[0])
+                                mut y = ast.as_number(xy[1])
+                                if x is None or y is None:
+                                    continue
+                                byte_builder.append(mut w, b"      (xy " + fixed(x, 4) + b" " + fixed(y, 4) + b")\n")
+                            case _:
+                                continue
+                    byte_builder.append(mut w, b"    ))\n  )\n")
+                case _:
+                    return
+        case _:
+            return
+
+
+func emit_kicad_pad(err: Stream, mut w: byte_builder.Builder, node: ast.Node) -> Result[Unit, str]:
+    match node.tag:
+        case ast.Tag.list(value=children):
+            if len(children) < 5:
+                return Ok(())
+            mut internal = ast.as_atom(children[2])
+            mut shape = ast.as_atom(children[3])
+            if internal is None or shape is None:
+                return Ok(())
+            mut kicad_type = reverse_map_pad_type(internal)
+            mut pos = PadPos()
+            mut sx = 0.0
+            mut sy = 0.0
+            mut drill_x = 0.0
+            mut drill_y = 0.0
+            mut has_drill = False
+            mut oval_drill = False
+            mut mask_margin: float? = None
+            mut no_paste = False
+            mut paste: paste_mod.Aperture[]? = None
+            match paste_mod.parse(node):
+                case Err(_):
+                    return Err(err_invalid_format)
+                case Ok(apertures):
+                    paste = apertures
+            mut poly_index = -1
+            mut rratio = geometry.default_rratio()
+            for child_index_4 in range(len(children)):
+                if child_index_4 < 4:
+                    continue
+                match children[child_index_4].tag:
+                    case ast.Tag.list(value=cl):
+                        if ast.is_form(children[child_index_4], b"roundrect_rratio"):
+                            if len(cl) >= 2:
+                                rratio = num(cl[1], geometry.default_rratio())
+                        if ast.is_form(children[child_index_4], b"pos"):
+                            pos = read_pad_pos(children[child_index_4])
+                        if ast.is_form(children[child_index_4], b"size"):
+                            if len(cl) >= 3:
+                                sx = num(cl[1], 0.0)
+                                sy = num(cl[2], 0.0)
+                        if ast.is_form(children[child_index_4], b"mask-margin"):
+                            if len(cl) >= 2:
+                                mask_margin = ast.as_number(cl[1])
+                        if ast.is_form(children[child_index_4], b"poly"):
+                            poly_index = child_index_4
+                        if ast.is_form(children[child_index_4], b"drill"):
+                            has_drill = True
+                            if len(cl) >= 2:
+                                mut drill_atom = ast.as_atom(cl[1])
+                                if drill_atom is not None:
+                                    if drill_atom == b"oval" and len(cl) >= 4:
+                                        oval_drill = True
+                                        drill_x = num(cl[2], 0.0)
+                                        drill_y = num(cl[3], 0.0)
+                                else:
+                                    drill_x = num(cl[1], 0.0)
+                                    drill_y = drill_x
+                    case _:
+                        pass
+                mut atom = ast.as_atom(children[child_index_4])
+                if atom is not None:
+                    if atom == b"no-paste":
+                        no_paste = True
+            mut name = pad_name(children[1])
+            if name is None:
+                return Ok(())
+            emit_paste_apertures(mut w, paste, pos, no_paste)
+            if shape == b"custom" and poly_index >= 0:
+                emit_kicad_custom_pad(mut w, name, kicad_type, sx, sy, children[poly_index], no_paste or paste is not None)
+                return Ok(())
+            mut emit_shape: bytes = (if (shape == b"custom") then (b"rect") else (shape).copy())
+            byte_builder.append(mut w, b"  (pad \"" + name + b"\" " + kicad_type + b" " + emit_shape + b"\n")
+            emit_pad_at(mut w, pos.x, pos.y, pos.rot)
+            byte_builder.append(mut w, b"    (size " + fixed(sx, 4) + b" " + fixed(sy, 4) + b")\n")
+            if internal == b"thru" or internal == b"npth":
+                if has_drill:
+                    if oval_drill:
+                        byte_builder.append(mut w, b"    (drill oval " + fixed(drill_x, 4) + b" " + fixed(drill_y, 4) + b")\n")
+                    else:
+                        byte_builder.append(mut w, b"    (drill " + fixed(drill_x, 4) + b")\n")
+                else:
+                    # Guessing the pad minimum leaves zero annular ring. Preserve the
+                    # warning so source omission cannot ship silently.
+                    mut drill = min(sx, sy)
+                    log.warn(err, b"export-kicad: thru-hole pad \"" + name + b"\" has no (drill \xe2\x80\xa6) \xe2\x80\x94 guessing " + fixed(drill, 4) + b" mm (pad min dimension, zero annular ring); add an explicit drill to the footprint")
+                    byte_builder.append(mut w, b"    (drill " + fixed(drill, 4) + b")\n")
+            if internal == b"smd":
+                emit_smd_layers(mut w, no_paste or paste is not None)
+                if shape == b"roundrect":
+                    byte_builder.append(mut w, b"    (roundrect_rratio " + fixed(rratio, 3) + b")\n")
+            elif internal == b"thru" or internal == b"npth":
+                byte_builder.append(mut w, b"    (layers \"*.Cu\" \"*.Mask\")\n")
+            if mask_margin is not None:
+                byte_builder.append(mut w, b"    (solder_mask_margin " + fixed(mask_margin, 3) + b")\n")
+            byte_builder.append(mut w, b"  )\n")
+            return Ok(())
+
+
+        case _:
+            return Ok(())
+func emit_smd_layers(mut w: byte_builder.Builder, no_paste: bool):
+    mut layers = b"    (layers \"" + board_layers.f_cu + b"\" \"" + board_layers.f_mask + b"\""
+    if not no_paste:
+        layers += b" \"" + board_layers.f_paste + b"\""
+    byte_builder.append(mut w, layers + b")\n")
+
+
+func emit_paste_apertures(mut w: byte_builder.Builder, paste: paste_mod.Aperture[]?, pos: PadPos, no_paste: bool):
+    if no_paste or paste is None:
+        return
+    mut angle = pos.rot * math.pi() / 180.0
+    for v in paste:
+        byte_builder.append(mut w, b"  (pad \"\" smd rect\n")
+        emit_pad_at(mut w, pos.x + v.x * math.cos(angle) - v.y * math.sin(angle), pos.y + v.x * math.sin(angle) + v.y * math.cos(angle), pos.rot)
+        byte_builder.append(mut w, b"    (size " + fixed(v.w, 6) + b" " + fixed(v.h, 6) + b") (layers \"" + board_layers.f_paste + b"\"))\n")
+
+
+func read_pad_pos(node: ast.Node) -> PadPos:
+    match node.tag:
+        case ast.Tag.list(value=cl):
+            if len(cl) < 3:
+                return PadPos()
+            return PadPos(x=num(cl[1], 0.0), y=num(cl[2], 0.0), rot=(if (len(cl) >= 4) then (num(cl[3], 0.0)) else (0.0)))
+        case _:
+            return PadPos()
+
+
+func emit_pad_at(mut w: byte_builder.Builder, x: float, y: float, rot: float):
+    mut angle = kicad_pad_angle(rot)
+    mut line = b"    (at " + fixed(x, 4) + b" " + fixed(y, 4)
+    if angle != 0.0:
+        line += b" " + fixed(angle, 4)
+    byte_builder.append(mut w, line + b")\n")
+
+
+# KiCad turns counter-clockwise on the same y-down coordinates: negate into
+# [0,360). Public only for the separate file's original differential test.
+public func kicad_pad_angle(rot: float) -> float:
+    return (360.0 - rot) % 360.0
+
+
+func pad_name(node: ast.Node) -> bytes?:
+    mut text = ast.as_text(node)
+    if text is not None:
+        return Some(text.copy())
+    mut value = ast.as_number(node)
+    if value is None:
+        return None
+    mut integer = numeric.checked_i64(value)
+    return Some(str((if (integer is None) then (0) else (integer))).encode())
+
+
+# Custom polygon coordinates already contain the source rotation; applying it
+# again at the pad anchor would turn the copper twice. Rebase only.
+func emit_kicad_custom_pad(mut w: byte_builder.Builder, name: bytes, kicad_type: bytes, bw: float, bh: float, poly: ast.Node, no_paste: bool):
+    match poly.tag:
+        case ast.Tag.list(value=pl):
+            if len(pl) < 4:
+                return
+            mut points: FixedArray[float, 2][] = []
+            mut x0 = math.infinity()
+            mut y0 = math.infinity()
+            mut x1 = -math.infinity()
+            mut y1 = -math.infinity()
+            for child_index_3 in range(len(pl)):
+                if child_index_3 < 1:
+                    continue
+                match pl[child_index_3].tag:
+                    case ast.Tag.list(value=ptl):
+                        if len(ptl) < 2:
+                            continue
+                        mut ax = ast.as_number(ptl[0])
+                        mut ay = ast.as_number(ptl[1])
+                        if ax is None or ay is None:
+                            continue
+                        mut point: FixedArray[float, 2] = FixedArray[float, 2]([ax, ay])
+                        points.append(point)
+                        x0 = min(x0, ax)
+                        y0 = min(y0, ay)
+                        x1 = max(x1, ax)
+                        y1 = max(y1, ay)
+                    case _:
+                        continue
+            if len(points) < 3:
+                return
+            mut bounds: FixedArray[float, 4] = FixedArray[float, 4]([x0, y0, x1, y1])
+            mut anchor = custom_pad_anchor_rect(points, bounds, min(min(bw, bh) * 0.5, 0.25))
+            byte_builder.append(mut w, b"  (pad \"" + name + b"\" " + kicad_type + b" custom\n    (at " + fixed(anchor.center[0], 3) + b" " + fixed(anchor.center[1], 3) + b")\n    (size " + fixed(anchor.size, 3) + b" " + fixed(anchor.size, 3) + b")\n")
+            emit_smd_layers(mut w, no_paste)
+            byte_builder.append(mut w, b"    (options (clearance outline) (anchor rect))\n    (primitives\n      (gr_poly\n        (pts\n")
+            for point_ in points:
+                byte_builder.append(mut w, b"          (xy " + fixed(point_[0] - anchor.center[0], 3) + b" " + fixed(point_[1] - anchor.center[1], 3) + b")\n")
+            byte_builder.append(mut w, b"        )\n        (width 0)\n        (fill yes)\n      )\n    )\n  )\n")
+        case _:
+            return
+
+
+func custom_pad_anchor_rect(poly: FixedArray[float, 2][], bounds: FixedArray[float, 4], max_size: float) -> AnchorRect:
+    mut box_center: FixedArray[float, 2] = FixedArray[float, 2]([(bounds[0] + bounds[2]) / 2.0, (bounds[1] + bounds[3]) / 2.0])
+    mut center = box_center
+    if not point_in_custom_pad(poly, box_center[0], box_center[1]):
+        mut midpoint = poly_scanline.widest_midpoint(poly, box_center[1])
+        if midpoint is not None:
+            center = midpoint
+    mut size = min(max_size, min(bounds[2] - bounds[0], bounds[3] - bounds[1]) * 0.5)
+    for _ in range(32):
+        mut half = size / 2.0
+        if point_in_custom_pad(poly, center[0] - half, center[1] - half) and point_in_custom_pad(poly, center[0] + half, center[1] - half) and point_in_custom_pad(poly, center[0] + half, center[1] + half) and point_in_custom_pad(poly, center[0] - half, center[1] + half):
+            return AnchorRect(center=center, size=size)
+        size /= 2.0
+    return AnchorRect(center=center, size=size)
+
+
+func point_in_custom_pad(poly: FixedArray[float, 2][], x: float, y: float) -> bool:
+    mut inside = False
+    mut previous = poly[len(poly) - 1]
+    for point in poly:
+        if (previous[1] > y) != (point[1] > y):
+            mut crossing = previous[0] + (y - previous[1]) / (point[1] - previous[1]) * (point[0] - previous[0])
+            if x < crossing:
+                inside = not inside
+        previous = point
+    return inside
+
+
+# Inflate by the placement air gap. Rectangles retain the origin-centred
+# max-absolute half extents that the placement page draws.
+func emit_kicad_courtyard(mut w: byte_builder.Builder, node: ast.Node):
+    match node.tag:
+        case ast.Tag.list(value=children):
+            mut margin = geometry.bbox_margin_mm()
+            for child_index_2 in range(len(children)):
+                if child_index_2 < 1:
+                    continue
+                match children[child_index_2].tag:
+                    case ast.Tag.list(value=cl):
+                        if ast.is_form(children[child_index_2], b"rect") and len(cl) >= 5:
+                            mut hw = max(abs(num(cl[1], 0.0)), abs(num(cl[3], 0.0))) + margin
+                            mut hh = max(abs(num(cl[2], 0.0)), abs(num(cl[4], 0.0))) + margin
+                            byte_builder.append(mut w, b"  (fp_rect (start " + fixed(-hw, 2) + b" " + fixed(-hh, 2) + b") (end " + fixed(hw, 2) + b" " + fixed(hh, 2) + b")\n")
+                        elif ast.is_form(children[child_index_2], b"circle") and len(cl) >= 3:
+                            match cl[1].tag:
+                                case ast.Tag.list(value=center):
+                                    if len(center) < 2:
+                                        continue
+                                    mut cx = ast.as_number(center[0])
+                                    mut cy = ast.as_number(center[1])
+                                    mut r_ = ast.as_number(cl[2])
+                                    if cx is None or cy is None or r_ is None:
+                                        continue
+                                    mut r = r_ + margin
+                                    byte_builder.append(mut w, b"  (fp_circle (center " + fixed(cx, 2) + b" " + fixed(cy, 2) + b") (end " + fixed(cx + r, 2) + b" " + fixed(cy, 2) + b")\n")
+                                case _:
+                                    continue
+                        else:
+                            continue
+                        byte_builder.append(mut w, b"    (stroke (width 0.05) (type default))\n    (fill none)\n    (layer \"" + board_layers.f_crtyd + b"\")\n  )\n")
+                    case _:
+                        continue
+        case _:
+            return
+
+
+# Both graphic layers share line/circle/rect/poly grammar. A filled pin-1
+# polygon must survive, or a fine-pitch part loses its orientation mark.
+func emit_kicad_geom_block(mut w: byte_builder.Builder, node: ast.Node, layer: bytes, width: float):
+    match node.tag:
+        case ast.Tag.list(value=children):
+            mut stroke = b"    (stroke (width " + fixed(width, 2) + b") (type default))\n"
+            mut layer_line = b"    (layer \"" + layer + b"\")\n  )\n"
+            for child_index_1 in range(len(children)):
+                if child_index_1 < 1:
+                    continue
+                match children[child_index_1].tag:
+                    case ast.Tag.list(value=cl):
+                        if ast.is_form(children[child_index_1], b"rect") and len(cl) >= 5:
+                            mut x1 = ast.as_number(cl[1])
+                            mut y1 = ast.as_number(cl[2])
+                            mut x2 = ast.as_number(cl[3])
+                            mut y2 = ast.as_number(cl[4])
+                            if x1 is None or y1 is None or x2 is None or y2 is None:
+                                continue
+                            byte_builder.append(mut w, b"  (fp_rect (start " + fixed(x1, 2) + b" " + fixed(y1, 2) + b") (end " + fixed(x2, 2) + b" " + fixed(y2, 2) + b")\n" + stroke + b"    (fill none)\n" + layer_line)
+                        if ast.is_form(children[child_index_1], b"poly") and len(cl) >= 4:
+                            byte_builder.append(mut w, b"  (fp_poly\n    (pts")
+                            for child_index_0 in range(len(cl)):
+                                if child_index_0 < 1:
+                                    continue
+                                match cl[child_index_0].tag:
+                                    case ast.Tag.list(value=p):
+                                        if len(p) < 2:
+                                            continue
+                                        mut x = ast.as_number(p[0])
+                                        mut y = ast.as_number(p[1])
+                                        if x is None or y is None:
+                                            continue
+                                        byte_builder.append(mut w, b" (xy " + fixed(x, 2) + b" " + fixed(y, 2) + b")")
+                                    case _:
+                                        continue
+                            byte_builder.append(mut w, b")\n" + stroke + b"    (fill solid)\n" + layer_line)
+                        if ast.is_form(children[child_index_1], b"line") and len(cl) >= 3:
+                            match cl[1].tag:
+                                case ast.Tag.list(value=start):
+                                    match cl[2].tag:
+                                        case ast.Tag.list(value=end):
+                                            if len(start) < 2 or len(end) < 2:
+                                                continue
+                                            mut sx = ast.as_number(start[0])
+                                            mut sy = ast.as_number(start[1])
+                                            mut ex = ast.as_number(end[0])
+                                            mut ey = ast.as_number(end[1])
+                                            if sx is None or sy is None or ex is None or ey is None:
+                                                continue
+                                            byte_builder.append(mut w, b"  (fp_line (start " + fixed(sx, 2) + b" " + fixed(sy, 2) + b") (end " + fixed(ex, 2) + b" " + fixed(ey, 2) + b")\n" + stroke + layer_line)
+                                        case _:
+                                            continue
+                                case _:
+                                    continue
+                        if ast.is_form(children[child_index_1], b"circle") and len(cl) >= 3:
+                            match cl[1].tag:
+                                case ast.Tag.list(value=center):
+                                    if len(center) < 2:
+                                        continue
+                                    mut cx = ast.as_number(center[0])
+                                    mut cy = ast.as_number(center[1])
+                                    mut r = ast.as_number(cl[2])
+                                    if cx is None or cy is None or r is None:
+                                        continue
+                                    byte_builder.append(mut w, b"  (fp_circle (center " + fixed(cx, 2) + b" " + fixed(cy, 2) + b") (end " + fixed(cx + r, 2) + b" " + fixed(cy, 2) + b")\n" + stroke + b"    (fill none)\n" + layer_line)
+                                case _:
+                                    continue
+                    case _:
+                        continue
+        case _:
+            return
+
+
+public func reverse_map_pad_type(internal: bytes) -> bytes:
+    if internal == b"smd":
+        return b"smd"
+    if internal == b"thru":
+        return b"thru_hole"
+    if internal == b"npth":
+        return b"np_thru_hole"
+    return b"smd"
+
+
+public func find_model_file(fs: Filesystem, project_dir: str, footprint_name: bytes, component_name: bytes) -> bytes?:
+    mut models_path = project_dir + "/lib/models"
+    mut fp_step = footprint_name + b".step"
+    if fs.exists(models_path + "/" + strs.text(fp_step)):
+        return Some(fp_step)
+    mut comp_step = component_name + b".step"
+    if fs.exists(models_path + "/" + strs.text(comp_step)):
+        return Some(comp_step)
+    match fsx.list_dir(fs, models_path):
+        case Err(_):
+            return None
+        case Ok(names):
+            for name in names:
+                if not name.endswith(".step"):
+                    continue
+                mut basename = name[0:len(name) - 5].encode()
+                if footprint_name.find(basename) < 0 and basename.find(footprint_name) < 0 and component_name.find(basename) < 0 and basename.find(component_name) < 0:
+                    continue
+                match fs.read_file(models_path + "/" + name):
+                    case Ok(_):
+                        return Some(name.encode())
+                    case Err(_):
+                        continue
+    return None

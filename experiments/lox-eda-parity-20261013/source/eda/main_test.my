@@ -1,0 +1,21 @@
+
+import main as entry
+
+# test "eda-sch: the command line needs a model, a project and an output directory"
+# spec: EDA-ARGS-1
+public func test_eda_sch_the_command_line_needs_a_model_a_project_and_an_output_directory() -> bool:
+    mut ok = entry.parse_args(["--model", "m.sexp", "--project-dir", "p", "--out-dir", "o", "--flat"])
+    if ok is None:
+        return False
+    if ok.model != "m.sexp" or not ok.flat or not ok.vendor:
+        return False
+    mut nv = entry.parse_args(["--no-vendor-symbols", "--out-dir", "o", "--model", "m", "--project-dir", "p"])
+    if nv is None:
+        return False
+    if nv.vendor:
+        return False
+    if entry.parse_args(["--model", "m", "--project-dir", "p"]) is not None:
+        return False
+    if entry.parse_args(["--model", "m", "--project-dir", "p", "--out-dir", "o", "--bogus"]) is not None:
+        return False
+    return entry.parse_args(["--model", "m", "--project-dir", "p", "--out-dir"]) is None

@@ -1,0 +1,31 @@
+
+import poly_scanline as m
+import support_expect as ex
+
+# test "widestInterval picks the larger lobe and its midpoint"
+public func test_widestinterval_picks_the_larger_lobe_and_its_midpoint(out: Stream) -> bool:
+    mut poly: FixedArray[float, 2][] = [FixedArray[float, 2]([0.0, 0.0]), FixedArray[float, 2]([10.0, 0.0]), FixedArray[float, 2]([10.0, 6.0]), FixedArray[float, 2]([6.0, 6.0]), FixedArray[float, 2]([6.0, 1.0]), FixedArray[float, 2]([2.0, 1.0]), FixedArray[float, 2]([2.0, 6.0]), FixedArray[float, 2]([0.0, 6.0])]
+    mut span = m.widest_interval(poly, 3.0)
+    if span is None:
+        return ex.ok(out, "span exists", False)
+    if not ex.near(out, "right lobe starts", span[0], 6.0, 1e-9):
+        return False
+    if not ex.near(out, "right lobe ends", span[1], 10.0, 1e-9):
+        return False
+    mut mid = m.widest_midpoint(poly, 3.0)
+    if mid is None:
+        return ex.ok(out, "mid exists", False)
+    if not ex.near(out, "mid x", mid[0], 8.0, 1e-9):
+        return False
+    if not ex.near(out, "mid y", mid[1], 3.0, 1e-9):
+        return False
+    mut solid = m.widest_interval(poly, 0.5)
+    if solid is None:
+        return ex.ok(out, "solid exists", False)
+    if not ex.near(out, "solid start", solid[0], 0.0, 1e-9):
+        return False
+    if not ex.near(out, "solid end", solid[1], 10.0, 1e-9):
+        return False
+    if not ex.ok(out, "above misses", m.widest_interval(poly, 9.0).is_none()):
+        return False
+    return ex.ok(out, "below misses", m.widest_midpoint(poly, -1.0).is_none())

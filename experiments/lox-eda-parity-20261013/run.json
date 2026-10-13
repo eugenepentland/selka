@@ -1,0 +1,21 @@
+{
+  "baseline_commit": "53dd221c3ccd6f1b69fae75a08873fc381fe0012",
+  "scope": "All 60 Lox tree/VM and EDA cases; individual runtime target <= Zig ReleaseFast",
+  "status": "implementation in progress",
+  "constraints": [
+    "checked ownership",
+    "same outputs and inputs",
+    "3x fresh Zig cutoff",
+    "no RC fallback",
+    "report runtime/RSS/managed memory separately",
+    "historical results immutable"
+  ],
+  "workers": {
+    "P1": "Lox mutation and object construction",
+    "P2": "VM execution profiling and dispatch",
+    "P3": "EDA tokenization and parser",
+    "P4": "Tree execution profiling and environment use",
+    "P5": "EDA remaining CPU bottlenecks",
+    "P6": "measurement and qualification harness"
+  }
+}

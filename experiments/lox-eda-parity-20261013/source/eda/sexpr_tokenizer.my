@@ -1,0 +1,293 @@
+
+# Port of zig/src/sexpr/tokenizer.zig: the S-expression lexer feeding the parser.
+# Classifies atoms, strings and numeric literals (including SI-scaled electrical
+# values like `220k`, `100nF`, `3.3V`, and dimension units `mm`/`mil`).
+#
+# Zig's optional byte `?u8` is an int here: -1 stands for "no byte" (end of
+# input), so `peek(src, t) == -1` replaces `peek() == null`.
+import sexpr_ast as ast
+
+public enum TokenTag:
+    lparen
+    rparen
+    atom
+    string
+    int
+    float
+    unit_val
+    si_val
+    eof
+
+
+# One lexed token: classification, the verbatim source slice, and its span.
+public record Token:
+    tag: TokenTag
+    text: bytes
+    span: ast.Span
+
+
+# One SI scale suffix: the letter (as a byte) and its multiplier. `bare` means
+# the letter is a scale even with no unit letter following (`m` is not).
+public record SiScale:
+    letter: int
+    multiplier: float
+    bare: bool
+
+
+public func si_scales() -> SiScale[]:
+    return [SiScale(letter=ord("k"), multiplier=1e3, bare=True), SiScale(letter=ord("M"), multiplier=1e6, bare=True), SiScale(letter=ord("G"), multiplier=1e9, bare=True), SiScale(letter=ord("m"), multiplier=1e-3, bare=False), SiScale(letter=ord("u"), multiplier=1e-6, bare=True), SiScale(letter=ord("n"), multiplier=1e-9, bare=True), SiScale(letter=ord("p"), multiplier=1e-12, bare=True)]
+
+
+# Unit letters accepted after a scale letter (or alone): "VAFHR".
+public func si_unit_letters() -> bytes:
+    return b"VAFHR"
+
+
+# The percent sign closing a numeric literal (`10%`). Carries no scale.
+public const PERCENT_SIGN: int = 37
+
+
+public enum LexError:
+    unexpected_character
+    unterminated_string
+
+
+# Mutable scan state, scalars only. It is kept apart from the source bytes
+# because a `mut` argument whose record holds a `bytes` field costs about 5x per
+# call in the pinned compiler (probes/gaps/g20_record_arg_cost.my); the helpers
+# take `src` by value and the cursor by `mut`.
+public record Cursor:
+    pos: int
+    line: int
+    col: int
+    # Span of the byte that triggered the most recent `next` error.
+    error_span: ast.Span
+
+
+public record Tokenizer:
+    source: bytes
+    cur: Cursor
+
+
+public func tokenizer_init(source: bytes) -> Tokenizer:
+    return Tokenizer(source=source.copy(), cur=Cursor(pos=0, line=1, col=1, error_span=ast.span_zero()))
+
+
+# The byte at the cursor, or -1 at end of input.
+func peek(src: bytes, t: Cursor) -> int:
+    if t.pos >= len(src):
+        return -1
+    return src[t.pos]
+
+
+func peek_at(src: bytes, t: Cursor, offset: int) -> int:
+    mut idx = t.pos + offset
+    if idx >= len(src):
+        return -1
+    return src[idx]
+
+
+func advance(src: bytes, mut t: Cursor):
+    if t.pos < len(src):
+        if src[t.pos] == ord("\n"):
+            t.line += 1
+            t.col = 1
+        else:
+            t.col += 1
+        t.pos += 1
+
+
+func span_here(t: Cursor) -> ast.Span:
+    return ast.Span(line=t.line, col=t.col, offset=t.pos)
+
+
+func skip_whitespace_and_comments(src: bytes, mut t: Cursor):
+    while True:
+        mut c = peek(src, t)
+        while c == ord(" ") or c == ord("\t") or c == ord("\n") or c == ord("\r"):
+            advance(src, mut t)
+            c = peek(src, t)
+        if c == ord(";"):
+            while peek(src, t) != -1 and peek(src, t) != ord("\n"):
+                advance(src, mut t)
+            continue
+        break
+
+
+func is_digit(c: int) -> bool:
+    return c >= ord("0") and c <= ord("9")
+
+
+func is_atom_start(c: int) -> bool:
+    if c < 0:
+        return False
+    return (c >= ord("a") and c <= ord("z")) or (c >= ord("A") and c <= ord("Z")) or c == ord("_") or c == ord("~") or c == ord("*")
+
+
+# `+`, `,` and `$` are included so vendor KiCad exports tokenize as a single atom.
+func is_atom_continue(c: int) -> bool:
+    if c < 0:
+        return False
+    return is_atom_start(c) or is_digit(c) or c == ord("-") or c == ord("/") or c == ord(".") or c == ord("*") or c == ord("#") or c == ord("@") or c == ord(":") or c == ord("+") or c == ord(",") or c == ord("$")
+
+
+func is_operator_char(c: int) -> bool:
+    return c == ord("+") or c == ord("-") or c == ord("/") or c == ord("%") or c == ord(">") or c == ord("<") or c == ord("=") or c == ord("!")
+
+
+func is_unit_letter(c: int) -> bool:
+    return c >= 0 and si_unit_letters().find(bytes([c])) >= 0
+
+
+# Scale letters that stand on their own (`4.7k`).
+func is_scale_letter(c: int) -> bool:
+    for s in si_scales():
+        if s.bare and s.letter == c:
+            return True
+    return False
+
+
+# Scale letters that are only a scale when a unit letter follows (`10mA`).
+func is_unit_required_scale(c: int) -> bool:
+    for s in si_scales():
+        if not s.bare and s.letter == c:
+            return True
+    return False
+
+
+func make_token(src: bytes, tag: TokenTag, start: int, end: int, s: ast.Span) -> Token:
+    return Token(tag=tag, text=src[start:end], span=s)
+
+
+# Length (1 or 2) of an SI value suffix starting at the cursor, or 0 when the
+# upcoming bytes are not one.
+func si_suffix_len(src: bytes, t: Cursor) -> int:
+    mut c0 = peek(src, t)
+    if c0 < 0:
+        return 0
+    if is_scale_letter(c0):
+        mut c1 = peek_at(src, t, 1)
+        if not is_atom_continue(c1):
+            return 1
+        if c1 >= 0:
+            if is_unit_letter(c1) and not is_atom_continue(peek_at(src, t, 2)):
+                return 2
+        return 0
+    if is_unit_required_scale(c0):
+        mut u = peek_at(src, t, 1)
+        if u >= 0:
+            if is_unit_letter(u) and not is_atom_continue(peek_at(src, t, 2)):
+                return 2
+        return 0
+    if is_unit_letter(c0) and not is_atom_continue(peek_at(src, t, 1)):
+        return 1
+    return 0
+
+
+func read_string(src: bytes, mut t: Cursor, s: ast.Span) -> Result[Token, LexError]:
+    advance(src, mut t)
+    mut start = t.pos
+    while peek(src, t) != -1:
+        mut ch = peek(src, t)
+        if ch == ord("\\"):
+            advance(src, mut t)
+            advance(src, mut t)
+            continue
+        if ch == ord("\""):
+            mut end = t.pos
+            advance(src, mut t)
+            return Ok(make_token(src, TokenTag.string, start, end, s))
+        advance(src, mut t)
+    t.error_span = s
+    return Err(LexError.unterminated_string)
+
+
+func read_number(src: bytes, mut t: Cursor, s: ast.Span) -> Token:
+    mut start = t.pos
+    if peek(src, t) == ord("-"):
+        advance(src, mut t)
+    while is_digit(peek(src, t)):
+        advance(src, mut t)
+    mut is_float = False
+    if peek(src, t) == ord(".") and is_digit(peek_at(src, t, 1)):
+        is_float = True
+        advance(src, mut t)
+        while is_digit(peek(src, t)):
+            advance(src, mut t)
+    mut num_end = t.pos
+    if peek(src, t) == ord("m"):
+        mut ch2 = peek_at(src, t, 1)
+        if ch2 == ord("m") and not is_atom_continue(peek_at(src, t, 2)):
+            advance(src, mut t)
+            advance(src, mut t)
+            return make_token(src, TokenTag.unit_val, start, num_end, s)
+        if ch2 == ord("i"):
+            mut ch3 = peek_at(src, t, 2)
+            if ch3 == ord("l") and not is_atom_continue(peek_at(src, t, 3)):
+                advance(src, mut t)
+                advance(src, mut t)
+                advance(src, mut t)
+                return make_token(src, TokenTag.unit_val, start, num_end, s)
+    mut suffix_len = si_suffix_len(src, t)
+    if suffix_len > 0:
+        for _ in range(suffix_len):
+            advance(src, mut t)
+        return make_token(src, TokenTag.si_val, start, t.pos, s)
+    if peek(src, t) == PERCENT_SIGN and not is_atom_continue(peek_at(src, t, 1)):
+        advance(src, mut t)
+        return make_token(src, TokenTag.si_val, start, t.pos, s)
+    if is_atom_continue(peek(src, t)):
+        while is_atom_continue(peek(src, t)):
+            advance(src, mut t)
+        return make_token(src, TokenTag.atom, start, t.pos, s)
+    if is_float:
+        return make_token(src, TokenTag.float, start, t.pos, s)
+    return make_token(src, TokenTag.int, start, t.pos, s)
+
+
+func read_atom(src: bytes, mut t: Cursor, s: ast.Span) -> Token:
+    mut start = t.pos
+    while is_atom_continue(peek(src, t)):
+        advance(src, mut t)
+    return make_token(src, TokenTag.atom, start, t.pos, s)
+
+
+func read_operator(src: bytes, mut t: Cursor, s: ast.Span) -> Token:
+    mut start = t.pos
+    advance(src, mut t)
+    if peek(src, t) == ord("="):
+        advance(src, mut t)
+    return make_token(src, TokenTag.atom, start, t.pos, s)
+
+
+# The next token, or a LexError (with `t.cur.error_span` set) for a bad
+# character or an unterminated string.
+public func next(mut t: Tokenizer) -> Result[Token, LexError]:
+    mut cur = t.cur
+    mut r = next_in(t.source, mut cur)
+    t.cur = cur
+    return r
+
+
+func next_in(src: bytes, mut t: Cursor) -> Result[Token, LexError]:
+    skip_whitespace_and_comments(src, mut t)
+    mut s = span_here(t)
+    mut c = peek(src, t)
+    if c < 0:
+        return Ok(Token(tag=TokenTag.eof, text=b"", span=s))
+    if c == ord("("):
+        advance(src, mut t)
+        return Ok(make_token(src, TokenTag.lparen, s.offset, t.pos, s))
+    if c == ord(")"):
+        advance(src, mut t)
+        return Ok(make_token(src, TokenTag.rparen, s.offset, t.pos, s))
+    if c == ord("\""):
+        return read_string(src, mut t, s)
+    if is_digit(c) or (c == ord("-") and is_digit(peek_at(src, t, 1))):
+        return Ok(read_number(src, mut t, s))
+    if is_atom_start(c):
+        return Ok(read_atom(src, mut t, s))
+    if is_operator_char(c):
+        return Ok(read_operator(src, mut t, s))
+    t.error_span = s
+    return Err(LexError.unexpected_character)

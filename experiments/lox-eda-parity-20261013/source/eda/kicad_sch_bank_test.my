@@ -1,0 +1,98 @@
+
+import kicad_sch_bank as m
+import kicad_sch_emit as emit
+import kicad_sch_shape as shape
+
+func cand(item: int, ref: bytes, value: bytes, power: bytes) -> m.Candidate:
+    return m.Candidate(item=item, ref=ref.copy(), value=value.copy(), power=power.copy(), gnd=b"GND", power_pin=0, reach=381)
+
+
+func unit_of(pins: shape.Pin[]) -> shape.ShapeUnit:
+    return shape.ShapeUnit(number=1, title=b"", pins=pins.copy(), half_w=127, half_h=254, graphics=[], stubs=[])
+
+
+# test "kicad-sch: bank grouping keys on the rail and ground pair"
+public func test_kicad_sch_bank_grouping_keys_on_the_rail_and_ground_pair() -> bool:
+    mut cands = [cand(0, b"C1", b"100nF", b"VDD3V3"), cand(1, b"C2", b"100nF", b"VDD3V3"), cand(2, b"C3", b"100nF", b"VDDA"), cand(3, b"C4", b"100nF", b"VDD3V3")]
+    mut banks = m.group(cands)
+    assert len(banks) == 1
+    assert banks[0].power == b"VDD3V3" and banks[0].gnd == b"GND"
+    assert len(banks[0].members) == 3
+    assert banks[0].members[0].item == 0 and banks[0].members[2].item == 3
+    assert len(m.group([])) == 0
+    return True
+
+
+# test "kicad-sch: bank members sort by value then reference"
+public func test_kicad_sch_bank_members_sort_by_value_then_reference() -> bool:
+    mut cands = [cand(0, b"C9", b"10uF", b"VDD"), cand(1, b"C2", b"100nF", b"VDD"), cand(2, b"C1", b"100nF", b"VDD"), cand(3, b"C7", b"1uF", b"VDD")]
+    mut banks = m.group(cands)
+    assert len(banks) == 1
+    assert [for x in banks[0].members yield x.item] == [2, 1, 3, 0]
+    assert banks[0].pitch >= emit.banked_text_dx + 5 * 127
+    assert banks[0].pitch % 127 == 0
+    return True
+
+
+# test "kicad-sch: the bank frame places rails clear of every member pin"
+public func test_kicad_sch_the_bank_frame_places_rails_clear_of_every_member_pin() -> bool:
+    mut f = m.Frame(x=10160, y=5080, reach=381, pitch=1270)
+    assert m.frame_member_x(f, 0) == 10160 and m.frame_member_x(f, 1) == 11430
+    assert m.frame_power_y(f) < m.frame_power_pin_y(f)
+    assert m.frame_gnd_y(f) > m.frame_gnd_pin_y(f) and m.frame_end_x(f) < f.x
+    for v in [m.frame_power_y(f), m.frame_gnd_y(f), m.frame_end_x(f), m.frame_member_x(f, 3), m.frame_power_pin_y(f)]:
+        assert v % 127 == 0
+    return True
+
+
+# test "kicad-sch: railPts breaks the rail at each member column"
+public func test_kicad_sch_railpts_breaks_the_rail_at_each_member_column() -> bool:
+    mut f = m.Frame(x=10160, y=5080, reach=381, pitch=1270)
+    mut pts = m.rail_pts(f, 3, m.frame_power_y(f))
+    assert len(pts) == 4
+    assert pts[0].x == m.frame_end_x(f) and pts[1].x == m.frame_member_x(f, 0) and pts[3].x == m.frame_member_x(f, 2)
+    for p in pts:
+        assert p.y == m.frame_power_y(f)
+    return True
+
+
+# test "kicad-sch: cellFor budgets the whole bank and keeps its origin inside"
+public func test_kicad_sch_cellfor_budgets_the_whole_bank_and_keeps_its_origin_inside() -> bool:
+    mut b = m.Bank(power=b"VDD3V3", gnd=b"GND", key=b"C1", members=[m.Member(item=0, power_pin=0), m.Member(item=1, power_pin=0)], reach=381, pitch=1270)
+    mut cell = m.cell_for(b, 600)
+    assert cell.ox >= 600 and cell.w >= cell.ox + 2 * b.pitch
+    assert cell.oy > b.reach and cell.h > cell.oy + b.reach
+    return True
+
+
+# test "kicad-sch: isSupplyNet accepts real rails and refuses signals"
+public func test_kicad_sch_issupplynet_accepts_real_rails_and_refuses_signals() -> bool:
+    for rail in [b"VDD3V3", b"VCC", b"V1P8", b"V_5VA", b"buck/VOUT"]:
+        assert m.is_supply_net(rail)
+    for net in [b"SPI_SCK", b"GND", b""]:
+        assert not m.is_supply_net(net)
+    return True
+
+
+# test "kicad-sch: angleFor stands a cap up and reachOf refuses an odd body"
+public func test_kicad_sch_anglefor_stands_a_cap_up_and_reachof_refuses_an_odd_body() -> bool:
+    assert m.angle_for(381) == 90 and m.angle_for(-381) == 270
+    mut flat = [shape.Pin(pad=b"1", name=b"A", side=shape.Side.left, x=-381, y=0), shape.Pin(pad=b"2", name=b"B", side=shape.Side.right, x=381, y=0)]
+    mut want: int? = Some(381)
+    assert m.reach_of(unit_of(flat)) == want
+    mut offset = flat.copy()
+    offset[0].y = 127
+    assert m.reach_of(unit_of(offset)) is None
+    mut lopsided = flat.copy()
+    lopsided[0].x = -254
+    assert m.reach_of(unit_of(lopsided)) is None
+    assert m.reach_of(unit_of(flat[0:1])) is None
+    return True
+
+
+# test "kicad-sch: the bank caption names its IC and rail"
+public func test_kicad_sch_the_bank_caption_names_its_ic_and_rail() -> bool:
+    assert m.caption(b"U1", b"VDD3V3") == b"Decoupling \xe2\x80\x94 U1 \xc2\xb7 VDD3V3"
+    assert m.caption(b"", b"VDD3V3") == b"Decoupling \xe2\x80\x94 VDD3V3"
+    assert m.caption(b"buck/U18", b"buck/VIN_F") == b"Decoupling \xe2\x80\x94 U18 \xc2\xb7 VIN_F"
+    return True

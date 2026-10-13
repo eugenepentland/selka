@@ -1,0 +1,56 @@
+
+import kicad_sch_plan as m
+import support_expect as ex
+import strings
+
+# test "kicad-sch: slugify normalises a title and uniqueName disambiguates collisions"
+public func test_kicad_sch_slugify_normalises_a_title_and_uniquename_disambiguates_collisions(out: Stream) -> bool:
+    if not ex.eq_bytes(out, "USB", m.slugify(b"USB 2.0 HS", b"x"), b"usb-2-0-hs"):
+        return False
+    if not ex.eq_bytes(out, "buck", m.slugify(b"  3V3 Buck!  ", b"x"), b"3v3-buck"):
+        return False
+    if not ex.eq_bytes(out, "fallback", m.slugify(b"***", b"sheet"), b"sheet"):
+        return False
+    match strings.repeat("a", 200):
+        case Err(_):
+            return False
+        case Ok(long_title):
+            if not ex.ok(out, "bounded", len(m.slugify(long_title.encode(), b"x")) <= m.max_slug_len):
+                return False
+    mut seen: set[str] = set()
+    if not ex.eq_bytes(out, "first", m.unique_name(b"core", mut seen), b"core"):
+        return False
+    if not ex.eq_bytes(out, "second", m.unique_name(b"core", mut seen), b"core-2"):
+        return False
+    return ex.eq_bytes(out, "third", m.unique_name(b"core", mut seen), b"core-3")
+
+
+# test "kicad-sch: isPassiveRef reads the leaf of a hierarchical ref"
+public func test_kicad_sch_ispassiveref_reads_the_leaf_of_a_hierarchical_ref(out: Stream) -> bool:
+    for ref in [b"C1", b"usb/C12", b"R_OPT"]:
+        if not ex.ok(out, "passive", m.is_passive_ref(ref)):
+            return False
+    for ref2 in [b"U1", b"lna1/U17", b""]:
+        if not ex.ok(out, "not passive", not m.is_passive_ref(ref2)):
+            return False
+    return True
+
+
+# test "kicad-sch: cluster binds a declared decap to its IC and groups the rest by net affinity"
+public func test_kicad_sch_cluster_binds_a_declared_decap_to_its_ic_and_groups_the_rest_by_net_affinity(out: Stream) -> bool:
+    mut members = [m.Member(hub=True, ref=b"U1", bound_ref=b"", order=b"", nets=[b"VDD", b"SDA"]), m.Member(hub=True, ref=b"U2", bound_ref=b"", order=b"", nets=[b"VBUS"]), m.Member(hub=False, ref=b"C1", bound_ref=b"", order=b"", nets=[b"VDD"]), m.Member(hub=False, ref=b"C2", bound_ref=b"U2", order=b"7", nets=[b"VDD"]), m.Member(hub=False, ref=b"R9", bound_ref=b"", order=b"", nets=[b"PRIVATE"])]
+    mut p = m.cluster(members)
+    if not ex.ok(out, "draw order", p.order == [0, 2, 1, 3, 4]):
+        return False
+    return ex.ok(out, "clusters", p.cluster == [0, 0, 1, 1, 2])
+
+
+# test "kicad-sch: cluster keeps hubless members in one bucket in declaration order"
+public func test_kicad_sch_cluster_keeps_hubless_members_in_one_bucket_in_declaration_order(out: Stream) -> bool:
+    mut members = [m.Member(hub=False, ref=b"R1", bound_ref=b"", order=b"", nets=[b"VDD"]), m.Member(hub=False, ref=b"R2", bound_ref=b"", order=b"", nets=[b"VDD"])]
+    mut p = m.cluster(members)
+    if not ex.ok(out, "draw order", p.order == [0, 1]):
+        return False
+    if not ex.ok(out, "single bucket", p.cluster == [0, 0]):
+        return False
+    return ex.eq_int(out, "empty sheet", len(m.cluster([]).order), 0)

@@ -1,0 +1,54 @@
+
+
+# Port of zig/src/sexpr/sexpr_paren_span.zig: balanced-paren matching over raw
+# s-expression TEXT, for callers that splice bytes rather than re-print an AST.
+# Quoted strings (and their `\` escapes) are skipped; `;` line comments are
+# skipped only in the netlisp dialect.
+# Whether the dialect being scanned has `;` line comments. KiCad's s-expressions
+# do not, so a `;` there is an ordinary atom character.
+public enum Comments:
+    none
+    line_semicolon
+
+
+# Byte offset of the `)` that closes the form opening at `open`. None when
+# `open` does not open a form and when the form is unterminated.
+public func matching_close(source: bytes, open: int, comments: Comments) -> int?:
+    if open >= len(source) or source[open] != ord("("):
+        return None
+    mut depth = 0
+    mut in_string = False
+    mut i = open
+    mut n = len(source)
+    while i < n:
+        mut c = source[i]
+        if in_string:
+            if c == ord("\\") and i + 1 < n:
+                i += 1
+            elif c == ord("\""):
+                in_string = False
+            i += 1
+            continue
+        if c == ord("\""):
+            in_string = True
+        elif c == ord("("):
+            depth += 1
+        elif c == ord(")"):
+            depth -= 1
+            if depth == 0:
+                return Some(i)
+        elif c == ord(";") and comments == Comments.line_semicolon:
+            while i < n and source[i] != ord("\n"):
+                i += 1
+        i += 1
+    return None
+
+
+# One past `matching_close` — the exclusive end offset a slice-and-splice
+# caller wants.
+public func end_index(source: bytes, open: int, comments: Comments) -> int?:
+    match matching_close(source, open, comments):
+        case Some(close):
+            return Some(close + 1)
+        case None:
+            return None

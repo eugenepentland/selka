@@ -1,0 +1,12 @@
+# Repro: mylang run print_long_float.my
+#   => prints the str() line, then: error[InternalError]: QBE runtime failure
+# The threshold is roughly 64 characters of positional output (1.1e70 fails,
+# 1e300 with one significant digit prints). The port renders numbers with
+# str(x), which is unaffected.
+# `stream.print` of a float whose positional rendering is long traps with
+# InternalError, while `str(x)` renders the same value fine.
+def main(out: Stream) -> int:
+    x = 1.2345e300
+    out.print(str(x))
+    out.print(x)
+    return 0
