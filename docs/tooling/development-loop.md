@@ -181,17 +181,24 @@ profile nor a timing window.
 
 ## Measured on 12 October
 
-On the merged output-keyed tree (`7313c483e`), a comment edit in `src/parser.zig`
-followed by `mylang test tests/lang` took a median 14.15 s over five edits
-(7.75 to 16.17 s, exclusive timing windows), answering 1,544 of 1,549 eligible
-tests from execution receipts; it took 78 s with nothing reused on 5 October.
-The five that still run call `function_digest`, which binds the compiler
-identity. An unchanged complete verification then took 532 s because every
-request ran the original complete gate (`coverage.unknown_actions` named the
-unregistered `build-env` compile step), not the 34 to 37 s it took before. With
-the tool registered as infrastructure (`2ea257471`), two consecutive unchanged
-requests observed under load took 40.7 s and 23.1 s, gate occupancy 22.6 s and
-13.4 s, with the 11 always-fresh actions executed and 35 reused. The
+On the merged output-keyed tree, all under exclusive timing windows:
+
+| Cohort | Median | Range | Before |
+| --- | ---: | ---: | --- |
+| Unchanged complete verification, request (5 samples) | 29.9 s | 24.2 to 36.5 s | 33.5 to 36.8 s |
+| Same, gate occupancy | 14.4 s | 13.8 to 24.8 s | 23 to 28 s |
+| Comment edit in `src/parser.zig`, then `mylang test tests/lang` (5) | 14.15 s | 7.75 to 16.17 s | 78 s, nothing reused |
+| Same edit, then complete verification (2) | 762.6 s | 737.8 to 787.4 s | 596 to 1,034 s |
+| First verification in a fresh worktree (3) | 941.5 s | 902.5 to 1,096.8 s | 600 to 1,000 s |
+
+After a comment edit, 1,544 of 1,549 eligible language tests are answered from
+execution receipts; the five that run call `function_digest`, which binds the
+compiler identity. The complete verification after the edit still reruns the
+Zig roots and drivers whose input is the compiler (19 actions), while every
+guest and language member answers from receipts. A fresh worktree reuses
+nothing yet: its action keys and cache-plan component differ from other
+worktrees'. A timed request (`--timing-window-seconds`) and an untimed one have
+separate receipts, because the window is part of the action identity. The
 qualification and its findings are in
 `experiments/output-keyed-receipts-20261012/` and the
 [plan's outcome](../audits/output-keyed-shared-receipts-plan-2026-10-12.md#outcome-12-october).

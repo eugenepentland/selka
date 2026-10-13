@@ -147,8 +147,8 @@ reads changes; those files are declared per step in
 `build_test_inputs.zig`, and `zig build test` fails (`test-inputs-coverage`) when a
 test names a repository path its step does not declare. An unchanged `zig build test`
 still reruns the core shards. An unchanged complete verification through the
-coordinator takes about 25 to 40 s (gate occupancy 13 to 23 s, observed on
-12 October under load; 34 to 37 s before that day's merge). Every gate root
+coordinator takes about 24 to 37 s (median 29.9 s, gate occupancy 14.4 s, five
+timed samples on 12 October; 34 to 37 s before that day's merge). Every gate root
 depends on `zig build test-verification-registry`, which fails while any required
 action is unregistered (`coverage.unknown_actions` in
 `zig-out/verification/inventory.json` names it), because an unregistered action

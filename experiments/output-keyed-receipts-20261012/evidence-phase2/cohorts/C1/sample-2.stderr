@@ -1,0 +1,164 @@
+build-slot: timing slot 1, FIFO ticket 712 after 0s
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source 17d5fc936519)
+guardian: diff-scoped vs 4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9: 75/693 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 1 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 1331 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9, 75 file(s) in scope
+guardian: diff-scoped vs 4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9: 75/693 source file(s) in scope for the 50 per-file check(s); 38 whole-tree check(s) still read everything. NOT a whole-tree verification — use --full, or `guardian-check commit`.
+guardian: file-size: 17 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 1 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 1331 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed — diff-scoped vs 4892aaba4e3fa9076cc5f2c8590f3f2f89500cb9, 75 file(s) in scope
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 0.248s
+
+OK
+.............................................
+----------------------------------------------------------------------
+Ran 45 tests in 4.014s
+
+OK
+verification-coverage
++- verification action coverage member 0 w
+inputs coverage: every repository path the cached test roots name is declared
+failed command: cd . && sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 tests/test_inputs_coverage.py
+
+verification-juice
++- verification action juice member 0 w
+juice: quick (perf, 2 samples)
+juice: quick (perf, 2 samples)
+.juice: quick (perf, 2 samples)
+..juice: quick (perf, 2 samples)
+juice: quick (perf, 2 samples)
+.juice: quick (perf, 2 samples)
+.juice: quick (perf, 2 samples)
+juice: quick (perf, 2 samples)
+..juice: quick (perf, 2 samples)
+.juice: quick (perf, 2 samples)
+.
+----------------------------------------------------------------------
+Ran 9 tests in 1.078s
+
+OK
+failed command: cd . && sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 tests/test_juice.py --native
+
+verification-juice
++- verification action juice member 1 w
+......................
+----------------------------------------------------------------------
+Ran 22 tests in 4.392s
+
+OK
+failed command: cd . && sh -c "build_env=\$1\nshift\nif [ -z \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then\n  if [ -n \"\${XDG_CACHE_HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$XDG_CACHE_HOME/zig\"\n  elif [ -n \"\${HOME:-}\" ]; then ZIG_GLOBAL_CACHE_DIR=\"\$HOME/.cache/zig\"; fi\nfi\nif [ -n \"\${ZIG_GLOBAL_CACHE_DIR+set}\" ]; then export ZIG_GLOBAL_CACHE_DIR; fi\nZIG_LOCAL_CACHE_DIR=\$(mktemp -d \"\${TMPDIR:-/tmp}/mylang-zig-local.XXXXXX\") || exit 2\nexport ZIG_LOCAL_CACHE_DIR\n(trap '' HUP INT TERM; while kill -0 \$\$ 2>/dev/null; do sleep 1; done; rm -rf \"\$ZIG_LOCAL_CACHE_DIR\") </dev/null >/dev/null 2>&1 &\nexec \"\$build_env\" project -- env \"\$@\"" with-tools /home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/.zig-cache/o/b19f24be7e355f309151a0c9b1a74e09/build-env MYLANG_ZIG=/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig MYLANG_COMPONENT_DIR=/home/epentland/ai/canopy/mylang-lane-f-qualification-20261012/zig-out/libexec/mylang/components sh -c "exec \"\$@\" 1>&2" driver python3 tests/test_juice_native.py ./zig-out/bin/mylang
+
+Build Summary: 45/45 steps succeeded
+verification-guardian success
++- verification action guardian member 0 success 1s
+|  +- guardian-selfcheck success
+|     +- verification action guardian member 2 success 5ms
++- verification action guardian member 1 success 1s
+|  +- guardian-selfcheck (+1 more reused dependencies)
++- verification action guardian member 2 (reused)
+verification-language success
++- verification action language member 0 success 2s
+|  +- compile exe mylang debug native cached 8ms MaxRSS:41M
+|  |  +- run exe build-identity (build_identity) cached
+|  |  |  +- compile exe build-identity debug native cached 8ms MaxRSS:37M
+|  |  +- WriteFile cached
+|  |  +- compile obj juice_bytes_hash fast native cached 5ms MaxRSS:41M
+|  |  +- compile obj juice_bytes_hash fast native (reused)
+|  |  +- compile obj core_number_text fast x86_64-linux-gnu.2.31 cached 8ms MaxRSS:37M
+|  +- compile exe build-env safe native cached 7ms MaxRSS:42M
+|  +- install success
+|     +- install mylang cached
+|     |  +- compile exe mylang debug native (+5 more reused dependencies)
+|     |  +- verification action guardian member 1 (+1 more reused dependencies)
+|     +- install generated to selka-components cached
+|     |  +- compile exe selka-components safe native cached 8ms MaxRSS:42M
+|     +- verification action component-preparation member 0 success 523ms
+|     |  +- compile exe selka-components safe native (reused)
+|     +- verification action guardian member 1 (+1 more reused dependencies)
++- verification action language member 1 success 2s
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- install (+4 more reused dependencies)
++- verification action language member 2 success 2s
+|  +- compile exe build-env safe native (reused)
+|  +- install (+4 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action language member 3 success 349ms
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- install (+4 more reused dependencies)
++- verification action language member 4 success 258ms
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- install (+4 more reused dependencies)
++- verification action language member 5 success 378ms
+|  +- compile exe build-env safe native (reused)
+|  +- install (+4 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action language member 6 success 480ms
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- install (+4 more reused dependencies)
++- verification action language member 7 success 424ms
+|  +- compile exe mylang debug native (+5 more reused dependencies)
+|  +- compile exe build-env safe native (reused)
+|  +- install (+4 more reused dependencies)
++- verification action language member 8 success 457ms
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-guest success
++- verification action guest member 0 success 312ms
+   +- compile exe mylang debug native (+5 more reused dependencies)
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+verification-coverage success
++- verification action coverage member 0 success 447ms
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+   +- verification action input-discovery member 0 success 459ms
+   +- verification action environment-discovery member 0 success 202ms
+   |  +- compile exe build-env safe native (reused)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-identity-qualification success
++- verification action identity-qualification member 0 cached
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+   +- verification action environment-discovery member 0 (+1 more reused dependencies)
+verification-juice-runtime success
++- verification action juice-runtime member 0 success 865ms
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+verification-juice success
++- verification action juice member 0 success 1s
+|  +- compile exe build-env safe native (reused)
+|  +- install (+4 more reused dependencies)
+|  +- verification action input-discovery member 0 (reused)
+|  +- verification action environment-discovery member 0 (+1 more reused dependencies)
+|  +- verification action component-preparation member 0 (+1 more reused dependencies)
+|  +- compile exe mylang debug native (+5 more reused dependencies)
++- verification action juice member 1 success 4s
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+   +- verification action input-discovery member 0 (reused)
+   +- verification action environment-discovery member 0 (+1 more reused dependencies)
+   +- verification action component-preparation member 0 (+1 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+   +- compile exe mylang debug native (+5 more reused dependencies)
+verification-spec-history success
++- verification action spec-history member 0 success 4s
+   +- compile exe build-env safe native (reused)
+   +- install (+4 more reused dependencies)
+verification-environment-discovery success
++- verification action environment-discovery member 0 (+1 more reused dependencies)
+verification-input-discovery success
++- verification action input-discovery member 0 (reused)
+verification-component-preparation success
++- verification action component-preparation member 0 (+1 more reused dependencies)
+
