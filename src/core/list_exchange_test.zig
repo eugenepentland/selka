@@ -44,7 +44,9 @@ test "list exchange transfers nested wide recursive values in every ownership bu
         for ([_][]const u8{ "retain", "release", "unique_test" }) |name|
             try std.testing.expectEqual(@as(i64, 0), kinds.get(name).?.object.get("count").?.integer);
         for ([_][]const u8{ "negative", "positive", "empty", "unsigned-max" }) |scenario| {
-            const failed = try std.process.run(a, io, .{ .argv = &.{ binary, scenario } });
+            // Fatal counted runs use the default counter filename. Keep their
+            // output inside this test's temporary directory as well.
+            const failed = try std.process.run(a, io, .{ .argv = &.{ binary, scenario }, .cwd = .{ .path = root } });
             try std.testing.expect(failed.term == .exited and failed.term.exited == 1);
             try std.testing.expect(std.mem.indexOf(u8, failed.stderr, "error[R_LIST_BOUNDS]") != null);
         }
