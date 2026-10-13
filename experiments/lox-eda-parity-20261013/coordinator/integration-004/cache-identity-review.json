@@ -1,0 +1,16 @@
+{
+  "scope": "Read-only cache identity audit for compact ABI eligibility correction",
+  "findings": [
+    "Stage store open hashes frontend_reuse.compiler_identity and Store key includes identity.",
+    "frontend_reuse binds generated build_identity.compiler_identity to frontend and stage stores.",
+    "Build identity includes production source content (including emit_llvm.zig), toolchain and optimization mode; test-only Zig sources are excluded by exact policy.",
+    "Shared native program key also includes compiler_identity and exact native inputs."
+  ],
+  "sources": {
+    "src/core/stage_store.zig": "da7cba7f51dda71eead47d55012f85fdfa3ee6c52d5c5497de102a4590167368",
+    "src/core/frontend_reuse.zig": "b7174bbb2277bc17a76d60d62471e6a965359566ad1d639083f095a4f5e3ceba",
+    "src/core/driver.zig": "8b990d67466be745c04313e77f9fa21291e5b0d5b4def7e91a2a844df45df766",
+    "build_identity.zig": "9528b5b6b2d6a90c2ecee9084c901b238cb02a7390c987b8fc1ddccc8104a294"
+  },
+  "limit": "Source audit only. Final registered gate supplies behavioral cache tests; no newly fabricated cache measurement."
+}

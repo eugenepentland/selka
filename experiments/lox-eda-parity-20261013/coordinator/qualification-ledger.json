@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-10-13T08:58:15.512070+00:00",
+  "updated_utc": "2026-10-13T09:15:08.503449+00:00",
   "items": [
     {
       "id": "P1-payload-exchange-and-construction",
@@ -81,12 +81,13 @@
     },
     {
       "id": "final-verification",
-      "status": "blocked by concrete CE2 emitted-copy regression; formatting fix integrated",
+      "status": "C3blocker corrected and focused16pass; C4fullgate pending",
       "owner": "coordinator",
       "evidence": [
-        "coordinator/gate-002/failure-analysis.json"
+        "coordinator/gate-002/failure-analysis.json",
+        "coordinator/integration-004/decision.json"
       ],
-      "remaining": "P4 must preserve existing CE2 caller-destination win, then coordinator reruns complete registered verification. C3 application correctness passes do not replace gate."
+      "remaining": "Build common004 and run complete registered verification on frozen sources; do not relabel C3 qualification."
     },
     {
       "id": "final-performance",

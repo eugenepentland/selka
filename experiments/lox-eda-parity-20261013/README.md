@@ -1,11 +1,10 @@
 # Lox/EDA individual Zig parity work
 
-Implementation and qualification are in progress. C3 passes both application
-matrices and selected guest ABI checks, but the complete compiler gate found a
-regression in caller-destination return construction. That regression is being
-fixed; a separate formatting failure is corrected. C3 timing requests were
-cancelled while queued, before any measurement. Individual parity and the final
-complete verification gate remain open.
+Implementation and qualification are in progress. The caller-destination
+regression found by the C3 full gate is corrected, with all 16 focused
+regressions passing. The fourth compiler candidate must now pass the combined
+application matrices and full gate before final measurement. C3 timing requests
+were cancelled before admission. Individual parity remains unestablished.
 
 The target is each of the existing 60 cases at or below Zig ReleaseFast runtime:
 13 Lox tree cases, 13 Lox VM cases and 34 EDA cases. A favorable aggregate does

@@ -1,0 +1,16 @@
+{
+  "created_utc": "2026-10-13T08:54:44.292539+00:00",
+  "pins_sha256": "999aed1331e4ff765d4c189267480e515a1f8377658ec02dcf49b671076ca7d6",
+  "qualification_proofs": {
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/native-003/qualification/lox/qualified.json": "dc6ae4b3d1b3fb3ad8a5df078b758dde4d7b7a1293f2393529bd9d3969ae6de9",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/native-003/matrix/lox/results.json": "657ea4afe7d46e8dfddaebb422c97cc3e89fc390af8ef8f60b4cd836dcdefdd3",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/native-003/qualification/eda/qualified.json": "6574fdd2088bdc354f3f82567b97c15bb908a27e6e6651595fdebfd0cd580b74",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/native-003/matrix/eda/results.json": "e505322186c3f4e281fcc4fa777641f833d4debc60d79a07a85ff446340e0389",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/c3-guest-audit.json": "b1da0babd1f62e77cca833ef7a61d15af1e009e2e486995be0335ad088a5bc27",
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/coordinator/common-003/build-receipt.json": "2d353fd1c7a702f338bf322197a82d82900b0c990c98a6c467e649de6b2c824b"
+  },
+  "source_snapshot": "source-003",
+  "compiler_source_commit": "91f5b5d3010893e7642a8fbee90fa910aa7fabab",
+  "compiler_sha256": "6842cc711ca6f6eadf2967a76ca60f57044ec06e0c9c2cf15b2834fd3cdebbaf",
+  "gate_status": "Full registered run in progress; formatting-only fixture defect identified; no parity or full-gate claim."
+}

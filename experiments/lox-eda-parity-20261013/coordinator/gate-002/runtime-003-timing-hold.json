@@ -1,0 +1,114 @@
+{
+  "utc": "2026-10-13T08:56:27.141648+00:00",
+  "reason": "Hold C3 timing before measurement while full gate CE2 return-copy regression is investigated. Only coordinator-owned queued runtime003 and compile003 were cancelled.",
+  "status": "cancelled-before-measurement",
+  "roots": [
+    2313691,
+    2321653
+  ],
+  "processes": {
+    "2313691": [
+      754507,
+      [
+        "python3",
+        "-B",
+        "experiments/lox-eda-parity-20261013/windowed_schedule.py",
+        "--root",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012",
+        "--attempt",
+        "runtime-003",
+        "--freeze",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-003/freeze.json",
+        "--cpu",
+        "8",
+        "--window-seconds",
+        "55"
+      ]
+    ],
+    "2313995": [
+      2313691,
+      [
+        "bash",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/scripts/build-slot.sh",
+        "timing",
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/windowed_schedule.py",
+        "--root",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012",
+        "--attempt",
+        "runtime-003",
+        "--freeze",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-003/freeze.json",
+        "--cpu",
+        "8",
+        "--window-seconds",
+        "55.0",
+        "--admitted",
+        "0"
+      ]
+    ],
+    "2321653": [
+      754507,
+      [
+        "python3",
+        "-B",
+        ".tmp/lox-eda-parity/coordinator/compile-003/run.py"
+      ]
+    ],
+    "2321669": [
+      2321653,
+      [
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/compile_measure.py",
+        "--root",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012",
+        "--build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/native-003/build/lox/build-receipt.json",
+        "--previous-build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/build/lox/build-receipt.json",
+        "--attempt",
+        "runtime-003",
+        "--pair",
+        "0"
+      ]
+    ],
+    "2321685": [
+      2321669,
+      [
+        "bash",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/scripts/build-slot.sh",
+        "timing",
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/compile_measure.py",
+        "--root",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012",
+        "--build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/native-003/build/lox/build-receipt.json",
+        "--previous-build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/build/lox/build-receipt.json",
+        "--attempt",
+        "runtime-003",
+        "--pair",
+        "0",
+        "--admitted"
+      ]
+    ],
+    "2366457": [
+      2313995,
+      [
+        "sleep",
+        "5"
+      ]
+    ],
+    "2366468": [
+      2321685,
+      [
+        "sleep",
+        "5"
+      ]
+    ]
+  }
+}

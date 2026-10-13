@@ -1,0 +1,12 @@
+{
+  "utc": "2026-10-13T09:15:08.503449+00:00",
+  "fix_commit": "d86dca3b2b729551dac4236475e9edc2728c0574",
+  "worker_commit": "5d3d31f7c3aef09805dfdc038c9d899cae81f32d",
+  "change": "Compact only register-sized transported fields; nominal destination planner and whole-result path preserved for larger returned fields.",
+  "source_snapshot": "source-003 unchanged",
+  "focused_tests": 16,
+  "original_CE2_assertions": "unchanged; next_in/next/next_token copies1/2/2 restored0/0/0",
+  "new_regressions": "40/48byte declared results/direct+indirect; non-fused88bytecall/phi return with no88byteintermediatecopy; normal/checkeddebug/release",
+  "status": "integrated; new common004 compiler and full combined qualification required",
+  "measurement_boundary": "C3hasno runtime/compile measurements. Future common004 measurements use fresh native004/runtime004 identities."
+}

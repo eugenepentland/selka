@@ -1,0 +1,4 @@
+build-slot: gate slot 1, FIFO ticket 516 after 0s
+[codex/lox-eda-parity-20261013 d86dca3b2] Preserve caller destinations for wide internal results
+ Date: Tue Oct 13 09:14:21 2026 +0000
+ 2 files changed, 144 insertions(+), 7 deletions(-)
