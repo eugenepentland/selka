@@ -1,0 +1,38 @@
+{
+  "before": {
+    "llvm_sha256": "15c3e9030200aaff2303bff7bb5f18730bf3a35032d8392ff74cb4528bcbf53d",
+    "binary_sha256": "e22da8064debd2d863dc8b7e433d17853fc8675eecf09660adc192794582e08b",
+    "functions": {
+      "next_in": {
+        "definition": "define internal fastcc void @\"my.next_in\"(ptr noalias sret([48 x i8]) align 8 %ret, ptr %p0, ptr noalias align 8 %p1) nounwind uwtable !dbg !1000024 {",
+        "copies": 1
+      },
+      "next": {
+        "definition": "define internal fastcc void @\"my.next\"(ptr noalias sret([48 x i8]) align 8 %ret, ptr noalias align 8 %p0) nounwind uwtable !dbg !1000018 {",
+        "copies": 2
+      },
+      "next_token": {
+        "definition": "define internal fastcc void @\"my.next_token\"(ptr noalias sret([48 x i8]) align 8 %ret, ptr noalias align 8 %p0) nounwind uwtable !dbg !1000012 {",
+        "copies": 2
+      }
+    }
+  },
+  "after": {
+    "llvm_sha256": "c67b5b03a8c2ba7449b00071456607dc2062fcd2d4857091241ddead165d2b85",
+    "binary_sha256": "4321b074b72c335535aa2e85f27d3ced833dd2d914426c8c2786f696a0c9d8be",
+    "functions": {
+      "next_in": {
+        "definition": "define internal fastcc void @\"my.next_in\"(ptr noalias sret([96 x i8]) align 8 %ret, ptr %p0, ptr noalias align 8 %p1) nounwind uwtable !dbg !1000024 {",
+        "copies": 0
+      },
+      "next": {
+        "definition": "define internal fastcc void @\"my.next\"(ptr noalias sret([104 x i8]) align 8 %ret, ptr noalias align 8 %p0) nounwind uwtable !dbg !1000018 {",
+        "copies": 0
+      },
+      "next_token": {
+        "definition": "define internal fastcc void @\"my.next_token\"(ptr noalias sret([104 x i8]) align 8 %ret, ptr noalias align 8 %p0) nounwind uwtable !dbg !1000012 {",
+        "copies": 0
+      }
+    }
+  }
+}

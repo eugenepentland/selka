@@ -1,0 +1,78 @@
+diff --git a/src/core/emit_llvm.zig b/src/core/emit_llvm.zig
+index 366e8b1b4..14ec07371 100644
+--- a/src/core/emit_llvm.zig
++++ b/src/core/emit_llvm.zig
+@@ -910,12 +910,18 @@ const InOutAbi = struct {
+         return false;
+     }
+ 
+-    fn compact(self: InOutAbi) bool {
+-        return self.params != 0 and !self.whole;
++    /// Wide transported fields retain their logical layout so CE2 can construct them
++    /// directly in the caller's destination, including nested union payloads and call results.
++    fn compact(self: InOutAbi, m: *const ir.Module, signature: ir.Signature) bool {
++        if (self.params == 0 or self.whole) return false;
++        for (m.compound(signature.ret).record, 0..) |field_type, i| {
++            if (!self.omitted(signature, i) and m.passedInMemory(field_type)) return false;
++        }
++        return true;
+     }
+ 
+     fn offset(self: InOutAbi, m: *const ir.Module, signature: ir.Signature, field_index: usize) u32 {
+-        if (!self.compact()) return m.fieldOffset(signature.ret, field_index);
++        if (!self.compact(m, signature)) return m.fieldOffset(signature.ret, field_index);
+         var bytes: u32 = 0;
+         for (m.compound(signature.ret).record[0..field_index], 0..) |field_type, i| {
+             if (!self.omitted(signature, i)) bytes = std.mem.alignForward(u32, bytes, m.alignment(field_type)) + m.size(field_type);
+@@ -924,7 +930,7 @@ const InOutAbi = struct {
+     }
+ 
+     fn size(self: InOutAbi, m: *const ir.Module, signature: ir.Signature) u32 {
+-        if (!self.compact()) return m.size(signature.ret);
++        if (!self.compact(m, signature)) return m.size(signature.ret);
+         var bytes: u32 = 0;
+         var alignment: u32 = 1;
+         for (m.compound(signature.ret).record, 0..) |field_type, i| {
+@@ -1373,7 +1379,7 @@ const FunctionEmitter = struct {
+             .calls = mem.in_out.args,
+             .effects = self.state.options.analysis.effects,
+             .results = .{
+-                .sret = returnsThroughSret(m, f.signature, abi) and !abi.compact(),
++                .sret = returnsThroughSret(m, f.signature, abi) and !abi.compact(m, f.signature),
+                 .finals = finalFields(f.signature, abi),
+                 .borrowed = mem.borrowed,
+                 .share = shareCandidate(m, f.signature, abi),
+@@ -2322,6 +2328,16 @@ const FunctionEmitter = struct {
+         var moves: std.ArrayList(Move) = .empty;
+         std.debug.assert(!self.memory.homes.staged(self.current));
+         if (!self.memory.fused[composite.index()]) {
++            if (!abi.compact(m, signature)) {
++                // Nominal transport retains CE2's existing whole-result destination.
++                try self.storeAtRet(out, signature.ret, raw, 0);
++                for (signature.params, 0..) |param, i| {
++                    if (!abi.inOut(i)) continue;
++                    const at = try self.offsetPointer(out, "%ret", m.fieldOffset(signature.ret, abi.field(signature, i)));
++                    try self.copyBytes(out, try std.fmt.allocPrint(self.a(), "%p{d}", .{i}), at, m.size(param), false);
++                }
++                return;
++            }
+             // Preserve logical tuple bytes before updating potentially overlapping finals.
+             const snapshot = try self.stackSlot(m.size(signature.ret));
+             try self.storeOperand(out, signature.ret, raw, snapshot);
+@@ -3975,14 +3991,14 @@ const FunctionEmitter = struct {
+ 
+     /// Compact transport is separate from the logical IR home, which whole readers still need.
+     fn transportSlot(self: *FunctionEmitter, signature: ir.Signature, abi: InOutAbi, logical: []const u8) ![]const u8 {
+-        if (!abi.compact()) return logical;
++        if (!abi.compact(self.state.module, signature)) return logical;
+         return self.stackSlot(abi.size(self.state.module, signature));
+     }
+ 
+     /// Restore transported fields at their logical offsets; in-out fields stay in argument homes.
+     fn unpackTransport(self: *FunctionEmitter, out: *Out, signature: ir.Signature, abi: InOutAbi, transport: []const u8, logical: []const u8) !void {
+-        if (!abi.compact()) return;
+         const m = self.state.module;
++        if (!abi.compact(m, signature)) return;
+         for (m.compound(signature.ret).record, 0..) |field_type, k| {
+             if (abi.omitted(signature, k)) continue;
+             const src = try self.offsetPointer(out, transport, abi.offset(m, signature, k));

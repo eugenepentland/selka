@@ -1,0 +1,93 @@
+record Span:
+    line: int
+    col: int
+    offset: int
+
+
+record Token:
+    tag: int
+    text: str
+    span: Span
+
+
+record Cursor:
+    pos: int
+    line: int
+    col: int
+    error_span: Span
+
+
+record Tokenizer:
+    source: bytes
+    cur: Cursor
+
+
+enum LexError:
+    bad
+    eof
+
+
+record Big:
+    a: int
+    b: int
+    c: int
+    d: int
+    e: int
+
+
+record Pair:
+    x: Big
+    y: Big
+
+
+func make_token(t: Cursor, tag: int) -> Token:
+    return Token(tag=tag, text=str(t.pos), span=Span(line=t.line, col=t.col, offset=t.pos))
+
+
+func next_in(src: bytes, mut t: Cursor) -> Result[Token, LexError]:
+    if t.pos >= len(src):
+        return Err(LexError.eof)
+    t.pos += 1
+    return Ok(make_token(t, 1))
+
+
+func next(mut t: Tokenizer) -> Result[Token, LexError]:
+    mut src = t.source
+    mut cur = t.cur
+    mut r = next_in(src, mut cur)
+    t.cur = cur
+    return r
+
+
+func next_token(mut tok: Tokenizer) -> Result[Token, str]:
+    match next(mut tok):
+        case Ok(token):
+            return Ok(token)
+        case Err(_):
+            return Err("lex")
+
+
+func make_pair(k: int) -> Pair:
+    return Pair(x=Big(a=k, b=k, c=k, d=k, e=k), y=Big(a=10 * k, b=0, c=0, d=0, e=1))
+
+
+func pick(k: int, flag: bool) -> Pair:
+    mut w = make_pair(k)
+    if flag:
+        return w
+    return Pair(x=w.y, y=w.x)
+
+
+func main(out: Stream) -> int:
+    mut tok = Tokenizer(source=b"abc", cur=Cursor(pos=0, line=1, col=1, error_span=Span(line=0, col=0, offset=0)))
+    for _ in range(4):
+        match next_token(mut tok):
+            case Ok(token):
+                out.print(token.text, token.span.offset)
+            case Err(e):
+                out.print(e)
+    mut p = pick(1, False)
+    mut q = pick(2, True)
+    out.print(p.x.a, p.y.a, p.x.e, p.y.e, q.x.a, q.y.a)
+    return 0
+

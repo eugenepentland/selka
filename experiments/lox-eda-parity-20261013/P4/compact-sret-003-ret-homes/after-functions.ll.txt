@@ -1,0 +1,161 @@
+define internal fastcc void @"my.next_in"(ptr noalias sret([96 x i8]) align 8 %ret, ptr %p0, ptr noalias align 8 %p1) nounwind uwtable !dbg !1000024 {
+entry:
+  %slot = alloca i64, align 8
+  %home.1 = getelementptr inbounds i8, ptr %ret, i64 8
+  %v15 = getelementptr inbounds i8, ptr %p1, i64 0
+  %v17 = getelementptr inbounds i8, ptr %home.1, i64 0
+  br label %b0
+b0:
+  %v2 = load i64, ptr %p1, align 8, !tbaa !7
+  %h.2 = getelementptr inbounds i8, ptr %p0, i64 8
+  %v3 = load i64, ptr %h.2, align 8, !tbaa !5
+  %hi.3 = icmp ugt i64 %v3, 9223372036854775807
+  br i1 %hi.3, label %trap.4, label %b0.5, !prof !0
+trap.4:
+  call void @myl_core_trap(ptr @myl.site.4, i64 %v3, i64 0) #2, !dbg !1000026
+  unreachable
+b0.5:
+  %v4 = add i64 %v3, 0
+  %v5 = icmp sge i64 %v2, %v4
+  br i1 %v5, label %b1, label %b2
+b1:
+  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(ptr @myl.site.5) #1
+  store i64 1, ptr %ret, align 8, !tbaa !7
+  %fp.6 = getelementptr inbounds i8, ptr %ret, i64 8
+  store i64 1, ptr %fp.6, align 8, !tbaa !7
+  ret void
+b2:
+  %v12 = load i64, ptr %p1, align 8, !tbaa !7
+  %p.7 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v12, i64 1)
+  %v14 = extractvalue { i64, i1 } %p.7, 0
+  %o.8 = extractvalue { i64, i1 } %p.7, 1
+  br i1 %o.8, label %trap.9, label %b2.10, !prof !0
+trap.9:
+  call void @myl_core_trap(ptr @myl.site.6, i64 %v12, i64 1) #2, !dbg !1000028
+  unreachable
+b2.10:
+  store i64 %v14, ptr %v15, align 8, !tbaa !7
+  notail call fastcc void @"my.make_token"(ptr sret([40 x i8]) align 8 %v17, ptr %v15, i64 1), !dbg !1000030
+  store i64 0, ptr %ret, align 8, !tbaa !7
+  ret void
+}
+
+define internal fastcc void @"my.next"(ptr noalias sret([104 x i8]) align 8 %ret, ptr noalias align 8 %p0) nounwind uwtable !dbg !1000018 {
+entry:
+  %slot = alloca i64, align 8
+  %home.1 = getelementptr inbounds i8, ptr %ret, i64 0
+  %home.2 = getelementptr inbounds i8, ptr %p0, i64 8
+  %v3 = getelementptr inbounds i8, ptr %home.1, i64 0
+  %v5 = getelementptr inbounds i8, ptr %home.2, i64 0
+  %v6 = getelementptr inbounds i8, ptr %p0, i64 0
+  br label %b0
+b0:
+  %v1 = load ptr, ptr %p0, align 8, !tbaa !7
+  %v2 = getelementptr inbounds i8, ptr %p0, i64 8
+  notail call fastcc void @"my.next_in"(ptr sret([96 x i8]) align 8 %v3, ptr %v1, ptr %v5), !dbg !1000020
+  %v4 = getelementptr inbounds i8, ptr %v3, i64 0
+  %t.3 = load i64, ptr %v4, align 8, !tbaa !7
+  %v7 = trunc i64 %t.3 to i32
+  %v9 = icmp eq i32 %v7, 1
+  br i1 %v9, label %b1, label %b2
+b1:
+  call preserve_mostcc void @myl_core_err_trace_append_preserve_most(ptr @myl.site.2) #1
+  br label %b2
+b2:
+  ret void
+}
+
+define internal fastcc void @"my.next_token"(ptr noalias sret([104 x i8]) align 8 %ret, ptr noalias align 8 %p0) nounwind uwtable !dbg !1000012 {
+entry:
+  %slot = alloca i64, align 8
+  %home.1 = getelementptr inbounds i8, ptr %ret, i64 0
+  %v1 = getelementptr inbounds i8, ptr %home.1, i64 0
+  %v3 = getelementptr inbounds i8, ptr %p0, i64 0
+  br label %b0
+b0:
+  notail call fastcc void @"my.next"(ptr sret([104 x i8]) align 8 %v1, ptr %v3), !dbg !1000014
+  %v2 = getelementptr inbounds i8, ptr %v1, i64 0
+  %t.2 = load i64, ptr %v2, align 8, !tbaa !7
+  %v4 = trunc i64 %t.2 to i32
+  %v6 = icmp eq i32 %v4, 0
+  br i1 %v6, label %b2, label %b3
+b2:
+  %v8 = getelementptr inbounds i8, ptr %v2, i64 8
+  %fp.3 = getelementptr inbounds i8, ptr %v8, i64 8
+  %cm.4 = load ptr, ptr %fp.3, align 8, !tbaa !7
+  %rc.5 = load atomic i32, ptr %cm.4 unordered, align 8, !tbaa !3, !range !8
+  %rp.6 = icmp ult i32 %rc.5, 2147483646
+  br i1 %rp.6, label %rc.inc.7, label %rc.slow.8, !prof !23
+rc.inc.7:
+  %rn.10 = add nuw i32 %rc.5, 1
+  store i32 %rn.10, ptr %cm.4, align 8, !tbaa !3
+  br label %b2.9
+rc.slow.8:
+  call preserve_mostcc void @myl_core_retain_slow(ptr %cm.4)
+  br label %b2.9
+b2.9:
+  %cw.11 = load i64, ptr %v2, align 8, !tbaa !7
+  %ct.12 = trunc i64 %cw.11 to i8
+  %cc.13 = icmp eq i8 %ct.12, 0
+  br i1 %cc.13, label %rc.then.14, label %b2.15
+rc.then.14:
+  %fp.16 = getelementptr inbounds i8, ptr %v2, i64 8
+  %fp.17 = getelementptr inbounds i8, ptr %fp.16, i64 8
+  %cm.18 = load ptr, ptr %fp.17, align 8, !tbaa !7
+  %rc.19 = load atomic i32, ptr %cm.18 unordered, align 8, !tbaa !3, !range !8
+  %rp.20 = icmp ult i32 %rc.19, 2147483648
+  br i1 %rp.20, label %rc.dec.21, label %rc.slow.22, !prof !23
+rc.dec.21:
+  %rn.24 = sub nuw i32 %rc.19, 1
+  %rz.25 = icmp eq i32 %rn.24, 0
+  br i1 %rz.25, label %rc.free.27, label %rc.keep.26
+rc.keep.26:
+  store i32 %rn.24, ptr %cm.18, align 8, !tbaa !3
+  br label %rc.then.23
+rc.free.27:
+  call void @myl_core_free(ptr %cm.18)
+  br label %rc.then.23
+rc.slow.22:
+  call preserve_mostcc void @myl_core_release_slow(ptr %cm.18)
+  br label %rc.then.23
+rc.then.23:
+  br label %b2.15
+b2.15:
+  store i64 0, ptr %ret, align 8, !tbaa !7
+  ret void
+b3:
+  %cw.28 = load i64, ptr %v2, align 8, !tbaa !7
+  %ct.29 = trunc i64 %cw.28 to i8
+  %cc.30 = icmp eq i8 %ct.29, 0
+  br i1 %cc.30, label %rc.then.31, label %b3.32
+rc.then.31:
+  %fp.33 = getelementptr inbounds i8, ptr %v2, i64 8
+  %fp.34 = getelementptr inbounds i8, ptr %fp.33, i64 8
+  %cm.35 = load ptr, ptr %fp.34, align 8, !tbaa !7
+  %rc.36 = load atomic i32, ptr %cm.35 unordered, align 8, !tbaa !3, !range !8
+  %rp.37 = icmp ult i32 %rc.36, 2147483648
+  br i1 %rp.37, label %rc.dec.38, label %rc.slow.39, !prof !23
+rc.dec.38:
+  %rn.41 = sub nuw i32 %rc.36, 1
+  %rz.42 = icmp eq i32 %rn.41, 0
+  br i1 %rz.42, label %rc.free.44, label %rc.keep.43
+rc.keep.43:
+  store i32 %rn.41, ptr %cm.35, align 8, !tbaa !3
+  br label %rc.then.40
+rc.free.44:
+  call void @myl_core_free(ptr %cm.35)
+  br label %rc.then.40
+rc.slow.39:
+  call preserve_mostcc void @myl_core_release_slow(ptr %cm.35)
+  br label %rc.then.40
+rc.then.40:
+  br label %b3.32
+b3.32:
+  br label %b4
+b4:
+  call preserve_mostcc void @myl_core_err_trace_origin_preserve_most(ptr @myl.site.1) #1
+  store i64 1, ptr %ret, align 8, !tbaa !7
+  %fp.45 = getelementptr inbounds i8, ptr %ret, i64 8
+  store ptr @myl.str.1, ptr %fp.45, align 8, !tbaa !7
+  ret void
+}
