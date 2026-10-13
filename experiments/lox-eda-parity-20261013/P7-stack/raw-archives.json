@@ -1,0 +1,470 @@
+[
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001.log",
+    "sha256": "61dcae0b3ea37e4ca525c516650508968ffa017ec9e82beea36d078ea1c806d5",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001.log.gz",
+    "archive_sha256": "bfdee41b7d6deeea9e7c29253d934366e007163212e35a782abe0c2cc9dd9d86"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/counted-guests-001.log",
+    "sha256": "ad14531f5f5283d02c40ee0ae8fbe374b0984796d08eb487e3cd8610ec1acb7d",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/counted-guests-001.log.gz",
+    "archive_sha256": "e40a14ece287e576a12cc2bfdd03feda2b776a311c227354ac2e1c64c288085d"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/guest-builds-001.log",
+    "sha256": "7a5c8384bbe0c97afe9a5508180f7e1d24e67ea87d5db10ea4416ceaa490782b",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/guest-builds-001.log.gz",
+    "archive_sha256": "b200e83cb1742ed1eb1a786701f800bc24083c0efc4de70afd88da2079b26e6d"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/checks-001.log",
+    "sha256": "f10c494280f3e60ba480ce9923f99799b59dd70556d31e300d294a80871b242a",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/checks-001.log.gz",
+    "archive_sha256": "60564e3315869e72cd619784c0edb0e46b970b215ab627d28c3f828d1f8a4be9"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/qualification-005.log",
+    "sha256": "765897047251583a1dfabd164aeed708a43a51cd82fdf6ef2c92af041fe4c823",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/qualification-005.log.gz",
+    "archive_sha256": "be76d234decf8a1c0fa00381269801d727f03db63c8b64760ce88142bbf38a61"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/qualification-003.log",
+    "sha256": "ee7f53e149a025671a70fe93b31d3aac4e15c13183ee16dde0b55dba8b095a23",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/qualification-003.log.gz",
+    "archive_sha256": "0da59f97c60044aebfeeff6b8611c060ff64445aebc9d57a8b2cb00a4fc2db84"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/qualification-004.log",
+    "sha256": "ad25084f6bd962a512a73a5c49eaed32ea6c8f5d6d6328da8892f7004e5d0abf",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/qualification-004.log.gz",
+    "archive_sha256": "db5a8ec7aba304760f8b99e95b082675c8a0d7011e7ec3e9092af2abd8923425"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/checks-002.log",
+    "sha256": "1834add9c65aab9aa0430583ecaf659df36bf6ca2366ebd4e1b6baac64590b05",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/checks-002.log.gz",
+    "archive_sha256": "3df09876808f28825317273b23e2941ba480f0edb63fa2f69211cb3a8cd37108"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/qualification-002.log",
+    "sha256": "ff4ecc081572a79a039bbb276219bba1614f0daa6b45206bbaa3825adf88027d",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/qualification-002.log.gz",
+    "archive_sha256": "b0ba9011503c1a85f17f875ab50500665bce07d37b8d50378454c84f847f0ae1"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/commit-source.log",
+    "sha256": "51e2e8c87d6c5253275043da3b46cd68264011d7211f70a694e7dfbf272f41c1",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/commit-source.log.gz",
+    "archive_sha256": "106bb18da4eea9f9f6c0907424b63e13aec602a73e6571b1caaee5f7c874f849"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/registered.log",
+    "sha256": "2497a57494e7d7bb547928cf5048a86ebc04af98d66a087f971a0e94cdf3cc2c",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/registered.log.gz",
+    "archive_sha256": "9c69226c93906fc8ab2ed0a7f3bc021002a4602d53822311e3e996f69ebd1b2a"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/qualification-001.log",
+    "sha256": "dc97af64efcb017e6c57e33b6f349401dcee081890a05c2952efda4af56dde45",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/qualification-001.log.gz",
+    "archive_sha256": "1d0c10c0c015e9ef3a88f80be741f46e68bb43c0a72bdb8765f4e350511e37a2"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/counter-repeats-001.log",
+    "sha256": "16df45bfd2231363cf4091748da22a0454095ba33bcf2ddb6d83a5b1b0f5f348",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/counter-repeats-001.log.gz",
+    "archive_sha256": "5f6ba1e00bea44eaf17ddda89ce52e3baa6267b75ce1e1d6745ca71bc884ae2c"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-fib.chunk07.log",
+    "sha256": "81d3dfb2af8cd2035ae425377841d44bc2e3183880068bafa7b4fe606ed16984",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-fib.chunk07.log.gz",
+    "archive_sha256": "5a3e938d1667f76bfa35dbd346331a97a71b8bb94164818e3ca5344f04a68b77"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/vm-fib.chunk06.log",
+    "sha256": "302bd8c8486eca9182beb1d1395d240cc588a62414808983718b410d6f7094c9",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/vm-fib.chunk06.log.gz",
+    "archive_sha256": "04c10ad486a286cfd7ff1eec15ba0127be33da8c201109a11797b1cabd9f515a"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-binary_trees.chunk04.log",
+    "sha256": "d8e34eba90cc9f5ffbae975c0163e34f3818ca93cd51584b02cb89f40fe85217",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-binary_trees.chunk04.log.gz",
+    "archive_sha256": "4bea763f5ca851cb43719717e4fa70c433b1dbe9f42e163173f930aba57ea639"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3+flat.chunk03.log",
+    "sha256": "9f17d7a736075915bfccbc652d039c0149e226a280031ae07bb53dd3bef4254c",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3+flat.chunk03.log.gz",
+    "archive_sha256": "0c7eedb97a0d302d7b5a96e7b2deec99a9c8fe28468746bc9ac1271783ecb00d"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-binary_trees.chunk05.log",
+    "sha256": "b5555b94dfa4d43b7301c4205b32558a55c5b84e7e88c9da85936e956295e376",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-binary_trees.chunk05.log.gz",
+    "archive_sha256": "3b20eefcc0b7da514d06498182e6c7e04cf93d009ebdd5e54f1c2c9dba98729a"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-fib.chunk03.log",
+    "sha256": "bec5d67b9d694e6fa90cc8a226e903880b080e09917c129bcd401dddfa2bf90c",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-fib.chunk03.log.gz",
+    "archive_sha256": "d5a16601f8869a11af335e3a7a5abd0ae81c30d328223919404d4604a7683f7f"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-fib.chunk02.log",
+    "sha256": "7ffe448b8e5382fe50bab536b8c84c3d0fc0c466d7bd1ce95065109e65b6ad8f",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-fib.chunk02.log.gz",
+    "archive_sha256": "6a06aeacd8291130e8d9f70b09e99f4eae6b1a67c991fd32344f311cc3953bf8"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3-rf-selector.chunk09.log",
+    "sha256": "7d9eaedf6c270352b7672bdcd8331de37d3fb9b4ec115c9d139dbe1d71bede6a",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3-rf-selector.chunk09.log.gz",
+    "archive_sha256": "c8b24b817826a165bba8855d336ad5a4bb4f2803322c63fc19408340e5e2e090"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3-rf-selector.chunk05.log",
+    "sha256": "a3ec48e5b3a92031d4718818cab07d6fe039be0aad6de118381a642faacf3b7d",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3-rf-selector.chunk05.log.gz",
+    "archive_sha256": "84ce1c7793dc7f32096f6074f5f03303b53986acdfa799252062c6308257f03e"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-binary_trees.chunk02.log",
+    "sha256": "0b82b252bb209601a861d3a4bc29db7a681e0a3ee96d390fae9b7f15ca5f0c7e",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-binary_trees.chunk02.log.gz",
+    "archive_sha256": "94263dd961eda2a80950e69f13a02d147dd4b31f10858b16cdfa9a8fa74a4017"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-binary_trees.chunk06.log",
+    "sha256": "2736288e36138ed8128fe39799160967678e80a0fef5df93b2fc45682c70881b",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-binary_trees.chunk06.log.gz",
+    "archive_sha256": "900877e8c56f1e026f2be7919d1666e3908ef162d41425e5fe8cd8fd654eb587"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-binary_trees.chunk01.log",
+    "sha256": "7e25610e7a8283e3baa439e7394d1e2e2fb4d55d50c768a164298eb24068ea36",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-binary_trees.chunk01.log.gz",
+    "archive_sha256": "9676ad230f5af05dca42a3f43b752d57d81703a50cb8ce3aa72d1addcd35b61a"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-fib.chunk08.log",
+    "sha256": "c81a25a5a9b3df00dcafa35364a3254bdeed6e0828bd241d5d3af3f126907d25",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-fib.chunk08.log.gz",
+    "archive_sha256": "7379e22e9c9488a7fe55ec3322508df27673e22106f96001377245ef3a934baa"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3-rf-selector.chunk06.log",
+    "sha256": "045e28332be5027d9288859e59974a204467bf8e7cee889f3ecbcf276f2f8d82",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3-rf-selector.chunk06.log.gz",
+    "archive_sha256": "833962b1672114104ddc9049c54211db4146ae4b7757860ba0c7a60c6b85452a"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-fib.chunk06.log",
+    "sha256": "efb0f1ac80dd80f45ec0836e8e1f159faa615d99dbc635a0eec1471e7ec1b00a",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-fib.chunk06.log.gz",
+    "archive_sha256": "5a1a361fa581928189c15e0e9f7f7a4718bc42c3d27720860aecfc631a260d71"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/vm-fib.chunk02.log",
+    "sha256": "633fb2c7f48e92c9f5a3ab986928b0d9b78d204c923ebd53b5e99242b05e82e9",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/vm-fib.chunk02.log.gz",
+    "archive_sha256": "b3a75790a26502f22108a939c7ce69f7b08300620ae0f123f872a46aa5e35016"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3-rf-selector.chunk07.log",
+    "sha256": "169f21ca8479e907c65ffe7db38597f7262a603ffb6e1d4fd25b2bee8d1bb3af",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3-rf-selector.chunk07.log.gz",
+    "archive_sha256": "11e111b20c44e255c11eed332a7f32e48109e214b16f48940c4b7f6ea6c436ce"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/vm-fib.chunk07.log",
+    "sha256": "b7309e7096d6e3efd41c7d0f2f91e6c1d5f09f3e1c60b8361aa42140db4dcf9e",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/vm-fib.chunk07.log.gz",
+    "archive_sha256": "0e431f815abaae1689e4ece136b51db5405119a5484d778fbafc80677a315aef"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/vm-fib.chunk04.log",
+    "sha256": "82fe3b2d16d2dfa9c1f5d229393706bdddab2e746619f32c363644eaefeb87d5",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/vm-fib.chunk04.log.gz",
+    "archive_sha256": "0aac90189ee3cd4b3926013b0c5a308abb003c828936dae898d004f5e0d1af88"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3+flat.chunk05.log",
+    "sha256": "b141dc6d70ada71ad864ee59b0e7b4302419c2eb1db38029c208bbec91829860",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3+flat.chunk05.log.gz",
+    "archive_sha256": "87f95f87430f4297d7e511e7fe3bdf7596e567aee8b55e2cb764b9986d65b308"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-binary_trees.chunk07.log",
+    "sha256": "541e2272e8cde988a4cf671dac81cf1544628c3fe795191ad2a5e30325c59e1c",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-binary_trees.chunk07.log.gz",
+    "archive_sha256": "24875f3b5ae8f3e499b796c6c3385281ed77ef3f3f263c976bffe1b258e364fd"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-binary_trees.chunk08.log",
+    "sha256": "426c739a47e377a2f95539be97699e2dc623b66644c88b098daf6d47cbd7080f",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-binary_trees.chunk08.log.gz",
+    "archive_sha256": "618a34729821fdc4c6cbc5a6c9211e35f683186b419e4c596728f059f6ea3238"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3-rf-selector.chunk03.log",
+    "sha256": "99ca9ba094a6e8052985719fea79445e732b65f5af6cb1da0a4956cb4f0e6ada",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3-rf-selector.chunk03.log.gz",
+    "archive_sha256": "c405518085db6947b9fba55877b060b672b579859be15c96f926a62889541bdf"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3+flat.chunk04.log",
+    "sha256": "b75a9f4ab298b5674765e83d7ca79e42d285c94df3223e7f9a808e14bff5215e",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3+flat.chunk04.log.gz",
+    "archive_sha256": "17219c80f91030a14a61fbedb51e695d24fc1f54a9417740233805669f2bc01e"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-binary_trees.chunk00.log",
+    "sha256": "3f1c2479c9e4428667a107e86d91212adffaa7c259dcec6059ba6777d084badc",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-binary_trees.chunk00.log.gz",
+    "archive_sha256": "41be7b734bee8079d013130eb1e556dbc51d10e6e203d156493d6b5cb89c8723"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-fib.chunk09.log",
+    "sha256": "4ffc972102dbe4d4d14589be2b3b0417524327ab64053b0b64ccd1d939bff493",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-fib.chunk09.log.gz",
+    "archive_sha256": "826f1a0bc428d60589023489ff29df494515ecd7a51961deb288d959be6bf27a"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3+flat.chunk01.log",
+    "sha256": "1726dd4395bb364745aa4584673225249205cc2ce95c9a9a5c3c200b950ce5de",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3+flat.chunk01.log.gz",
+    "archive_sha256": "3e4ee444dce473d6f14a3a2712b27eaf6edf7969f9355abb3e115893cdaa047c"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/vm-fib.chunk01.log",
+    "sha256": "a4e4c8dcd4da75057cdff5de8cde693ec215fffe262bd9f698cf7c25f19a9bfb",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/vm-fib.chunk01.log.gz",
+    "archive_sha256": "2a8fe2e0c1708423c793339c6233f902339eaff0045440694b35214a2b71cbc7"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3+flat.chunk07.log",
+    "sha256": "b867f8ca7703f3c23653ff3465acd093e05c354c561314088f0a911e9bb7e743",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3+flat.chunk07.log.gz",
+    "archive_sha256": "b5360129738538396edc92e4fc953b96ea9aa91efe0d398c51f9a5309bc4d697"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3-rf-selector.chunk04.log",
+    "sha256": "1680f6485e2142cc41169e31032e3ea27b17d109241038062bb1810fae1f9cfd",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3-rf-selector.chunk04.log.gz",
+    "archive_sha256": "5e4f7cbf863b49f008d1bc902297fe8431b6e4533d7efefd8adce2e8270002ab"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-binary_trees.chunk09.log",
+    "sha256": "a4ed0f70d68645b053303276fe4d85058c739da502283ff49154f5b6d84b9fb2",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-binary_trees.chunk09.log.gz",
+    "archive_sha256": "753dc9f3ad31d2665777733d72b673c04d99175e320d9233b91867de781b8ba5"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3-rf-selector.chunk08.log",
+    "sha256": "a06b267cf612d315ce3906b3d7ce4dcd0aa7a414d0a956a8d4c39da20a25beaf",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3-rf-selector.chunk08.log.gz",
+    "archive_sha256": "954aef1e3bdffea1469990c18cf67d28b3ed727a5884eabf63a0208c9e6e1900"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3+flat.chunk02.log",
+    "sha256": "b067638b068ffbca42fb0fa768a2c6ce3d8bbeee072fd9f92f74cdc0b716d81b",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3+flat.chunk02.log.gz",
+    "archive_sha256": "c3e60dba1c749f1af6db446388752d78d2ccb448b5b5efe02ccf49ca8a39e679"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-fib.chunk05.log",
+    "sha256": "0bf9474017d8fb9f7057952006b78f14d98d46bf8d0317682522d227d72e8a13",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-fib.chunk05.log.gz",
+    "archive_sha256": "f770b79214091df0990bccf514b9fe5a2bb29f27d6663dab2ac9a1e829b78387"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3+flat.chunk08.log",
+    "sha256": "25146e89a8cafbb229df9a0e1389886bbe7b7281319d2021385cdca35ef89f4e",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3+flat.chunk08.log.gz",
+    "archive_sha256": "1006b652f6ae0c3a5722e7b772a8a2d2b6ebf3086f02dd0a41fb99d60d5715e4"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-fib.chunk01.log",
+    "sha256": "520708f322161cb4d09e4280915136488803ec8bbf0d114cbb78317f55f5ff3f",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-fib.chunk01.log.gz",
+    "archive_sha256": "d81795fe086e3fc1a7bc42f5a4eafc01021630b4d192c901be8136cac634d566"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/vm-fib.chunk03.log",
+    "sha256": "88b111287fd58d4ea1b69658b0022133a5d387514dacb6353fa5bc99c89115fc",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/vm-fib.chunk03.log.gz",
+    "archive_sha256": "3a06789073a68c03e51f0d8f0bfd99d36f43acf3c80ff6dc88318269a33c9143"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3-rf-selector.chunk02.log",
+    "sha256": "df611f51185b468209d38d360fba43f7d59fd618d5c759ede16cdb7c375821fb",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3-rf-selector.chunk02.log.gz",
+    "archive_sha256": "eaeb7102630dc37a6a3cf11f9fd63de5cd94709c056399ed120ea5f24cc868ec"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-fib.chunk00.log",
+    "sha256": "85b3b4f397834b9d92660e58050128bd9c60345cb35ffdf724a2fe995b782b35",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-fib.chunk00.log.gz",
+    "archive_sha256": "9f01877f7515b0f780f12ab10191f526367c3cd11beb2f5823adfc54bc557bc9"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3-rf-selector.chunk00.log",
+    "sha256": "dfdeb967e1dc56de0bb9a56f3c16ad7fea2a6f7979d7f58ee49d5087588525cf",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3-rf-selector.chunk00.log.gz",
+    "archive_sha256": "f722fbe287badfd7473dd3d31c680cb2368eba5dc5811bfeb9ecbec0d5f30834"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3+flat.chunk00.log",
+    "sha256": "a21d2f0c25f060ba7b95a022f76ffe0b33c399580c9917671f52ca53cc513277",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3+flat.chunk00.log.gz",
+    "archive_sha256": "29e1ca254f17ca433f4de1a5fa1966a5e439aa4a40e1d40e4d33e40f08960c44"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-fib.chunk04.log",
+    "sha256": "b9206ebd26122b646c3fdaef5ca5fa0e1b5bbcb2d41b107efbe572d8997c1f73",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-fib.chunk04.log.gz",
+    "archive_sha256": "6561913f3cca3196578d611b37ec9933a4bb47717056d9ae37612cc95b8785ee"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/vm-fib.chunk08.log",
+    "sha256": "d0a2d804cf3e5ee2abea9e2eddd15f8b7b7b85946df15ea18a96c00226e8e5b2",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/vm-fib.chunk08.log.gz",
+    "archive_sha256": "cc2b89ad9023e09535879640aea90543ace2e80fe5a6304f4cd1284228c7e6f8"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3+flat.chunk06.log",
+    "sha256": "24d58db291faf79a17c4ee1c252a13d569676c66f770257a8cfa93a86603d3cd",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3+flat.chunk06.log.gz",
+    "archive_sha256": "a6b5d72be764806407cccd307c003f2d250109e50071ad4734f8eb6ceb82b0fc"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/vm-fib.chunk09.log",
+    "sha256": "9295f9eb375be879d9169a4cc05d8914da20f525853b1f19037dcd1c01f6d1d5",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/vm-fib.chunk09.log.gz",
+    "archive_sha256": "346b5ff4afbc1b7f7c17fe75144152f87612f59907ae87aa3ae14d11a748d6a7"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3+flat.chunk09.log",
+    "sha256": "bc0c2c09e4d66681afc4cfb9f8d54fe59019c11eb26be8e7e00c446a2bb0265b",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3+flat.chunk09.log.gz",
+    "archive_sha256": "5a28e4c65653346e0107a7c85a2e9ecd9fa1abc56be5b602c22a50d71137c9f7"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3-rf-selector.chunk01.log",
+    "sha256": "a142d0756998e60135395e847a14733688cf8f4bbf6c707b3b41f6bf1d134cb9",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/eda-rds3-rf-selector.chunk01.log.gz",
+    "archive_sha256": "67fb8c837c8197bb32335cc2e3bf0c27bf670206aed9f9b33ae0d8475471dddb"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-binary_trees.chunk03.log",
+    "sha256": "738fa5ef7420fbd9b7dd20e6e1f29ebbd8be71ece14e2cd80d54d8c425765ae6",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/tree-binary_trees.chunk03.log.gz",
+    "archive_sha256": "0271fd8eac6fdaeeea7b5e95ce68241e66a8d4cd81dd0543f05a2d8e632dd773"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/vm-fib.chunk05.log",
+    "sha256": "848fedc56f6e4046438a77e34b36baa96e5fad54e7958af030c533119b6349b9",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/vm-fib.chunk05.log.gz",
+    "archive_sha256": "04d31145df16d749c2383ccbc614bdd818ecae33e0b710995439cf77eda2b686"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/vm-fib.chunk00.log",
+    "sha256": "26c21a7d753d2a6a5df0d43fc8d9e775802fbf22facbba490e6821d0b8626f05",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/timing-001/vm-fib.chunk00.log.gz",
+    "archive_sha256": "aa1f1eb87c1a1f14782385dce59c9cc3cbd256873487f21235bb456b5178e526"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/candidate.values-copy.ll",
+    "sha256": "68c1e963bf1c3e651ed17554c0735919f03037129eb312a4b994216312aa7342",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/candidate.values-copy.ll.gz",
+    "archive_sha256": "9e2a3b21a48219b78ee09d51edca6b68ddc82cbe1b8c9ca30ba6d9343ab61ddf"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/baseline.values-copy.ll",
+    "sha256": "878c0262fb82b5e3ebdf18bb06a311c6534d5e278694eb6b26f8a5fed7c03116",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/baseline.values-copy.ll.gz",
+    "archive_sha256": "cf2a863864906bc366cd9de18bda6aeda35535ec87a577d51bef7e2f29da2f4d"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/candidate-zero-rc-ubsan-control.stderr",
+    "sha256": "2bdf80dbec473110dd7461da2cf311738d3f799d9c7ffa0937f771ab5a91d303",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/candidate-zero-rc-ubsan-control.stderr.gz",
+    "archive_sha256": "be9a84ab7caecf793037cbbff932a461f228d32fe1a7d83a8979b201bc8ab677"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/baseline-zero-rc-asan-control.stderr",
+    "sha256": "3d7970f7f930a70191ffca04ad362b5da753f8ce273879afb5f805f8f897e81b",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/baseline-zero-rc-asan-control.stderr.gz",
+    "archive_sha256": "2b8c9d0afe49e21d42643acb334cee0050bc34706368a6ff4435204b17ffb66d"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/baseline-rc-asan-control.stderr",
+    "sha256": "a0324ede1d747312f0e45cb0ecfcd333dc64f5bcf36fdccbbedb24509aefa431",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/baseline-rc-asan-control.stderr.gz",
+    "archive_sha256": "256fc7ca732a59801482e1eab8c8ca04060138f90a170c628871157b19a2f965"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/baseline-disassembly.stdout",
+    "sha256": "b34beb69f36dcf8257c7c76d453c95a241662224dde47e18376ff160905c7b1e",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/baseline-disassembly.stdout.gz",
+    "archive_sha256": "ab1192689c99da262ddf371a6b7a5c7503c7127bbdf07a368e6305485bfc3139"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/baseline-rc-ubsan-control.stderr",
+    "sha256": "f9cf345f928d1450341755490c448a00d5a771b40e3cd0cb8e0926f209635303",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/baseline-rc-ubsan-control.stderr.gz",
+    "archive_sha256": "9729476515c69a9bbd1dc7c5fe49a06204a5f4eceaa7562d071655a373f6ecd7"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/candidate-zero-rc-asan-control.stderr",
+    "sha256": "1629f497561ea012b9df6058f1405423d029113e00e1543d2a1c7fb8ceaa9326",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/candidate-zero-rc-asan-control.stderr.gz",
+    "archive_sha256": "60d78326cca60a15e8610783f5a567bbd09ce27693c16af401138eb07572bfdb"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/baseline.values-copy.asm",
+    "sha256": "b34beb69f36dcf8257c7c76d453c95a241662224dde47e18376ff160905c7b1e",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/baseline.values-copy.asm.gz",
+    "archive_sha256": "ab1192689c99da262ddf371a6b7a5c7503c7127bbdf07a368e6305485bfc3139"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/candidate-disassembly.stdout",
+    "sha256": "d8b77b25b94278956e073d40b6297dff71d9511cf7b27787569a3c442d4ebe57",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/candidate-disassembly.stdout.gz",
+    "archive_sha256": "5531762e98a3e61efcffdaefba5b66df9ac2d9cdd11ce3d77f8208e397d450a6"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/candidate-rc-ubsan-control.stderr",
+    "sha256": "f00df3af9815b346ae0b0f96c0ad726786d1ead02da3c0e6b902abf0c3f9b49e",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/candidate-rc-ubsan-control.stderr.gz",
+    "archive_sha256": "55ac0729ee51e506f4be85c03c0efc60824fa5a8c4afb0aef167807b243881cd"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/candidate.values-copy.asm",
+    "sha256": "d8b77b25b94278956e073d40b6297dff71d9511cf7b27787569a3c442d4ebe57",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/candidate.values-copy.asm.gz",
+    "archive_sha256": "5531762e98a3e61efcffdaefba5b66df9ac2d9cdd11ce3d77f8208e397d450a6"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/candidate-rc-asan-control.stderr",
+    "sha256": "096ab45ec3df16565394d9bccd79dbd7b8fa85313257d09a70874674db546039",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/candidate-rc-asan-control.stderr.gz",
+    "archive_sha256": "2ef33eb9f9082a39ac323c5e0d2f1efa945e0cd9fc6778ca95c5aaeb6224ac17"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/baseline-zero-rc-ubsan-control.stderr",
+    "sha256": "24c73026bd81ab816437c9ee6aeaec0c16658172cd4d429d12327122f74bb9b1",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/checks-002/baseline-zero-rc-ubsan-control.stderr.gz",
+    "archive_sha256": "7296ce16626f7aafa00406dd61156daff987acbd17f9947c5ce2a91024b3a915"
+  },
+  {
+    "original": "experiments/lox-eda-parity-20261013/P7-stack/checks-001/baseline-rc-asan-control.stderr",
+    "sha256": "625c0370dbc58d99de9bcdec77efd3c124e3d19f42a32c4d19316c52cfafd1a7",
+    "archive": "experiments/lox-eda-parity-20261013/P7-stack/checks-001/baseline-rc-asan-control.stderr.gz",
+    "archive_sha256": "23caa0009094117106b80dd96750d140b388622dc74f68875faaba0b9187afe8"
+  }
+]
