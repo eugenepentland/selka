@@ -27,6 +27,27 @@ pub const compiler_variable = "MYLANG_TEST_COMPILER";
 /// The variable naming the `selka-components` executable a test runs.
 pub const component_builder_variable = "MYLANG_TEST_COMPONENT_BUILDER";
 
+/// The variables that select the shared compiler-artifact and native
+/// test-receipt stores. An empty value disables a store (SHARED-STORE-4).
+pub const shared_store_variables = [_][]const u8{ "MYLANG_COMPILER_SHARED_CACHE", "MYLANG_TEST_SHARED_CACHE" };
+
+/// Disable both shared stores in an environment a test builds for a compiler
+/// child, so the child's cache counts and verdicts come from its private cache
+/// alone, whether the gate names a shared store or `default_sharing` would pick
+/// the per-user one. Tests about sharing name their own store instead.
+pub fn privateStores(environment: *std.process.Environ.Map) std.mem.Allocator.Error!void {
+    for (shared_store_variables) |name| try environment.put(name, "");
+}
+
+/// A copy of the test process's environment with both shared stores disabled
+/// (see `privateStores`); the caller owns it.
+pub fn privateEnvironment(a: std.mem.Allocator) std.process.Environ.CreateMapError!std.process.Environ.Map {
+    var environment = try std.testing.environ.createMap(a);
+    errdefer environment.deinit();
+    try privateStores(&environment);
+    return environment;
+}
+
 /// The `mylang` executable under test, from `MYLANG_TEST_COMPILER`.
 pub fn corePath() []const u8 {
     return required(compiler_variable);

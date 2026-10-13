@@ -73,8 +73,6 @@ pub const Store = struct {
         if (directory.len == 0) return error.WriteFailed;
         const self: Store = .{ .allocator = a, .io = io, .root = try std.fs.path.join(a, &.{ directory, "compiler-artifacts-v2" }) };
         errdefer a.free(self.root);
-        const cwd = std.Io.Dir.cwd();
-        cwd.createDirPath(io, self.root) catch return error.WriteFailed;
         try self.initialize();
         self.retentionContext().automatic();
         return self;
@@ -84,18 +82,26 @@ pub const Store = struct {
         return retention.Context.init(self.allocator, self.io, self.root, .compiler);
     }
 
+    // Concurrent first openers race to create one namespace (SHARED-STORE-6).
+    // Each attempt tolerates directories and a marker a peer already created; a
+    // failed attempt is retried a bounded number of times, re-reading whatever
+    // a peer published meanwhile, so only a store that stays unusable fails.
+    fn initialize(self: *const Store) Error!void {
+        try retention.retried(self, createNamespace);
+        _ = try self.retentionContext().policy();
+    }
+
     // A present marker is checked without any lock. Only first creation takes the
     // exclusive `.lock`, and it re-reads the marker under it. No sweep can run
     // before the marker exists, so creation needs no retention lease.
-    fn initialize(self: *const Store) Error!void {
-        if (!try self.marked()) {
-            const lock_path = try self.path(".lock");
-            defer self.allocator.free(lock_path);
-            const guard = try storage.lock(self.allocator, self.io, lock_path);
-            defer guard.close(self.io);
-            if (!try self.marked()) try self.writeMarker();
-        }
-        _ = try self.retentionContext().policy();
+    fn createNamespace(self: *const Store) Error!void {
+        std.Io.Dir.cwd().createDirPath(self.io, self.root) catch return error.WriteFailed;
+        if (try self.marked()) return;
+        const lock_path = try self.path(".lock");
+        defer self.allocator.free(lock_path);
+        const guard = try storage.lock(self.allocator, self.io, lock_path);
+        defer guard.close(self.io);
+        if (!try self.marked()) try self.writeMarker();
     }
 
     fn marked(self: *const Store) Error!bool {
@@ -399,4 +405,116 @@ test "openSelected fails an explicit unusable store and skips an unusable defaul
     try std.testing.expectError(error.WriteFailed, openSelected(a, io, &environment));
     try environment.put(environment_variable, "");
     try std.testing.expect((try openSelected(a, io, &environment)) == null);
+}
+
+const concurrent_publishers = 8;
+const concurrent_keys = 16;
+
+// One thread's open of a fresh store and its publication of every shared key.
+const ConcurrentPublisher = struct {
+    root: []const u8,
+    backing: std.mem.Allocator,
+    start: *const std.atomic.Value(bool),
+    failure: ?anyerror = null,
+    stored: usize = 0,
+    mismatches: usize = 0,
+
+    fn run(self: *ConcurrentPublisher) void {
+        self.publishAll() catch |err| {
+            self.failure = err;
+        };
+    }
+
+    fn publishAll(self: *ConcurrentPublisher) !void {
+        while (!self.start.load(.acquire)) std.atomic.spinLoopHint();
+        var arena = std.heap.ArenaAllocator.init(self.backing);
+        defer arena.deinit();
+        var store = try Store.open(arena.allocator(), std.testing.io, self.root);
+        defer store.deinit();
+        for (0..concurrent_keys) |index| {
+            const key = concurrentKey(index);
+            switch (try store.save(.syntax, key, &key)) {
+                .stored => self.stored += 1,
+                .mismatch => self.mismatches += 1,
+                .present, .skipped => {},
+            }
+        }
+    }
+};
+
+fn concurrentKey(index: usize) Key {
+    return @splat(@intCast(index + 1));
+}
+
+// Start every publisher at once against one store root and wait for all.
+fn publishConcurrently(root: []const u8, backing: std.mem.Allocator, publishers: *[concurrent_publishers]ConcurrentPublisher) !void {
+    var start: std.atomic.Value(bool) = .init(false);
+    var threads: [concurrent_publishers]std.Thread = undefined;
+    var started: usize = 0;
+    defer for (threads[0..started]) |thread| thread.join();
+    // Release the started publishers before joining, even when a spawn fails.
+    defer start.store(true, .release);
+    for (publishers, &threads) |*publisher, *thread| {
+        publisher.* = .{ .root = root, .backing = backing, .start = &start };
+        thread.* = try std.Thread.spawn(.{}, ConcurrentPublisher.run, .{publisher});
+        started += 1;
+    }
+}
+
+const ConcurrentTotals = struct { failures: usize = 0, stored: usize = 0, mismatches: usize = 0 };
+
+fn concurrentTotals(publishers: []const ConcurrentPublisher) ConcurrentTotals {
+    var totals: ConcurrentTotals = .{};
+    for (publishers) |publisher| {
+        if (publisher.failure != null) totals.failures += 1;
+        totals.stored += publisher.stored;
+        totals.mismatches += publisher.mismatches;
+    }
+    return totals;
+}
+
+// Every key holds exactly its bytes; a sequential republication finds them
+// present (or stores one a sweep made every publisher skip), never a mismatch.
+fn expectConcurrentRecords(store: *Store, a: std.mem.Allocator) !void {
+    for (0..concurrent_keys) |index| {
+        const key = concurrentKey(index);
+        const again = try store.save(.syntax, key, &key);
+        try std.testing.expect(again == .present or again == .stored);
+        try std.testing.expectEqualSlices(u8, &key, (try store.load(a, .syntax, key)).?);
+    }
+}
+
+// Staged partial files left in a tier directory; a finished publication leaves none.
+fn leftoverPartials(io: std.Io, directory: []const u8) !usize {
+    var tier = try std.Io.Dir.cwd().openDir(io, directory, .{ .iterate = true });
+    defer tier.close(io);
+    var entries = tier.iterate();
+    var partials: usize = 0;
+    while (try entries.next(io)) |entry| {
+        if (std.mem.endsWith(u8, entry.name, ".partial")) partials += 1;
+    }
+    return partials;
+}
+
+// spec: SHARED-STORE-6
+test "concurrent first openers initialize one fresh compiler store and publish every key once without failure or mismatch" {
+    var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
+    defer arena.deinit();
+    const a = arena.allocator();
+    const io = std.testing.io;
+    var temporary = std.testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const root = try std.fs.path.join(a, &.{ try temporary.dir.realPathFileAlloc(io, ".", a), "fresh", "store" });
+    var publishers: [concurrent_publishers]ConcurrentPublisher = undefined;
+    try publishConcurrently(root, std.testing.allocator, &publishers);
+    const totals = concurrentTotals(&publishers);
+    try std.testing.expectEqual(@as(usize, 0), totals.failures);
+    try std.testing.expectEqual(@as(usize, 0), totals.mismatches);
+    try std.testing.expect(totals.stored <= concurrent_keys);
+    var store = try Store.open(a, io, root);
+    defer store.deinit();
+    try expectConcurrentRecords(&store, a);
+    try std.testing.expectEqualStrings(format, (try storage.bounded(a, io, try store.path("format"), 128)).?);
+    try std.testing.expectEqual(@as(?[]u8, null), try storage.bounded(a, io, try store.path("mismatches.log"), 4096));
+    try std.testing.expectEqual(@as(usize, 0), try leftoverPartials(io, try store.path("syntax")));
 }

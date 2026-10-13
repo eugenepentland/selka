@@ -36,7 +36,9 @@ const Context = struct {
         var args: std.ArrayList([]const u8) = .empty;
         try args.appendSlice(self.arena, &.{ tools.corePath(), "test", path, "--json", command_cache, cache, "--jobs", "2", "--property-runs", "5" });
         try args.appendSlice(self.arena, extra);
-        const result = try std.process.run(self.arena, std.testing.io, .{ .argv = args.items });
+        // These tests count the project's own fresh runs and receipts.
+        var environment = try tools.privateEnvironment(self.arena);
+        const result = try std.process.run(self.arena, std.testing.io, .{ .argv = args.items, .environ_map = &environment });
         const parsed = std.json.parseFromSliceLeaky(std.json.Value, self.arena, result.stdout, .{}) catch .null;
         return .{ .status = switch (result.term) {
             .exited => |code| code,
@@ -245,7 +247,7 @@ fn byName(_: void, left: []const u8, right: []const u8) bool {
 /// order; every other test `cached`).
 fn sameReruns(context: Context, expected: []const []const u8) !void {
     for ([_]bool{ false, true }) |oracle| {
-        var environment = try std.testing.environ.createMap(context.arena);
+        var environment = try tools.privateEnvironment(context.arena);
         if (oracle) try environment.put("MYLANG_TEST_KEYS", "per-test");
         const cache = try std.fs.path.join(context.arena, &.{ context.root, if (oracle) "cache-oracle" else "cache-derived" });
         const entry_path = try std.fs.path.join(context.arena, &.{ context.root, "app.my" });
@@ -468,7 +470,8 @@ fn runSmallStack(context: Context, source: []const u8, extra: []const u8) !Outco
     const path = try std.fs.path.join(context.arena, &.{ context.root, source });
     const cache = try std.fs.path.join(context.arena, &.{ context.root, "cache" });
     const command = try std.fmt.allocPrint(context.arena, "ulimit -s 1024 && exec \"$0\" test \"$1\" --json --cache-dir \"$2\" --max-steps 0 {s}", .{extra});
-    const result = try std.process.run(context.arena, std.testing.io, .{ .argv = &.{ "sh", "-c", command, tools.corePath(), path, cache } });
+    var environment = try tools.privateEnvironment(context.arena);
+    const result = try std.process.run(context.arena, std.testing.io, .{ .argv = &.{ "sh", "-c", command, tools.corePath(), path, cache }, .environ_map = &environment });
     const parsed = std.json.parseFromSliceLeaky(std.json.Value, context.arena, result.stdout, .{}) catch .null;
     return .{ .status = switch (result.term) {
         .exited => |code| code,
@@ -734,7 +737,7 @@ const Placement = enum { shared_check, children };
 /// `mylang test` of the whole project with `--json`, in a cache of its own for
 /// `placement`; `MYLANG_TEST_CHILDREN=1` gives every root a child process.
 fn runDirectory(context: Context, placement: Placement) !Outcome {
-    var environment = try std.testing.environ.createMap(context.arena);
+    var environment = try tools.privateEnvironment(context.arena);
     if (placement == .children) try environment.put("MYLANG_TEST_CHILDREN", "1");
     const cache = try std.fs.path.join(context.arena, &.{ context.root, @tagName(placement) });
     const argv = [_][]const u8{ tools.corePath(), "test", context.root, "--json", command_cache, cache, "--jobs", "2" };

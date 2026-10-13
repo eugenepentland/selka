@@ -3945,7 +3945,15 @@ test "CLI test reports an exported ill-shaped test as a failed case" {
 fn capabilityTestRun(path: []const u8, cache: []const u8, extra: []const []const u8) !std.process.RunResult {
     const argv = try std.mem.concat(testing.allocator, []const u8, &.{ &.{ compilerPath(), "test", path, "--cache-dir", cache }, extra });
     defer testing.allocator.free(argv);
-    return std.process.run(testing.allocator, testing.io, .{ .argv = argv });
+    return privateRun(testing.allocator, argv);
+}
+
+/// Run a `mylang test` child whose verdicts and counts come from its private
+/// cache alone: both shared stores are disabled in its environment.
+fn privateRun(allocator: std.mem.Allocator, argv: []const []const u8) !std.process.RunResult {
+    var environment = try @import("test_paths").privateEnvironment(allocator);
+    defer environment.deinit();
+    return std.process.run(allocator, testing.io, .{ .argv = argv, .environ_map = &environment });
 }
 
 /// The `word N` line a failing entropy test printed, which the runner appends
@@ -8602,7 +8610,7 @@ fn guestTestRun(allocator: std.mem.Allocator, entry: []const u8, extra: []const 
     const cache_argument = try std.fmt.allocPrint(allocator, "--cache-dir={s}", .{cache});
     try args.append(allocator, cache_argument);
     try args.appendSlice(allocator, &tools);
-    return std.process.run(allocator, testing.io, .{ .argv = args.items });
+    return privateRun(allocator, args.items);
 }
 
 const guest_output_program =
@@ -9565,7 +9573,9 @@ test "MYLANG_FRONTEND_CACHE moves the checked-body store and invalidation baseli
     try work.dir.writeFile(testing.io, .{ .sub_path = "prog.my", .data = cache_program });
     const cache_path = try cache.dir.realPathFileAlloc(testing.io, ".", testing.allocator);
     defer testing.allocator.free(cache_path);
-    var environment = try std.process.Environ.createMap(testing.environ, testing.allocator);
+    // The test asserts the private checked-body store is written; a shared
+    // compiler store could serve those bodies instead.
+    var environment = try @import("test_paths").privateEnvironment(testing.allocator);
     defer environment.deinit();
     try environment.put("MYLANG_FRONTEND_CACHE", cache_path);
     try runToolIn(work.dir, &environment, &.{ "check", "prog.my" }, 0);

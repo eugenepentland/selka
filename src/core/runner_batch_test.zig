@@ -16,7 +16,8 @@ fn run(a: std.mem.Allocator, fixture: []const u8, flags: []const []const u8, mod
     var directory = std.testing.tmpDir(.{});
     defer directory.cleanup();
     const root = try directory.dir.realPathFileAlloc(std.testing.io, ".", a);
-    var environment = try std.testing.environ.createMap(a);
+    // Batched and isolated runs must both execute: no shared receipt answers either.
+    var environment = try options.privateEnvironment(a);
     try environment.put("MYL_CORE_LEAKCHECK", "1");
     if (mode == .isolated) try environment.put("MYLANG_TEST_ISOLATE", "1");
     if (probe.log.len != 0) try environment.put("MYL_BATCH_PROBE_LOG", probe.log);
