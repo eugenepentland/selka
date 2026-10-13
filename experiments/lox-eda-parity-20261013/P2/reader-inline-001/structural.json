@@ -15,7 +15,11 @@
       }
     },
     "text_bytes": 377094,
-    "total_binary_bytes": 865176
+    "total_binary_bytes": 865176,
+    "query_native_calls": {
+      "function_instruction": 0,
+      "constant_operand": 0
+    }
   },
   "inline": {
     "functions": {
@@ -33,7 +37,12 @@
       }
     },
     "text_bytes": 379462,
-    "total_binary_bytes": 870320
+    "total_binary_bytes": 870320,
+    "query_native_calls": {
+      "function_instruction": 0,
+      "constant_operand": 12
+    },
+    "constant_operand_native_bytes": 202
   },
   "delta": {
     "text_bytes": 2368,

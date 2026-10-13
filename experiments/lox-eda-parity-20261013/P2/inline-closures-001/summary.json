@@ -1,0 +1,80 @@
+{
+  "status": "complete",
+  "sample_count": 18,
+  "warmup_count": 12,
+  "censors": [],
+  "pairs": [
+    {
+      "pair": 0,
+      "inline_over_baseline": 0.9251758626967653,
+      "inline_over_Zig": 1.741195736207477,
+      "baseline_over_Zig": 1.8820159565470305
+    },
+    {
+      "pair": 1,
+      "inline_over_baseline": 0.9420063509787799,
+      "inline_over_Zig": 1.754731050077697,
+      "baseline_over_Zig": 1.8627592566169704
+    },
+    {
+      "pair": 2,
+      "inline_over_baseline": 0.9250966622762451,
+      "inline_over_Zig": 1.726451368475668,
+      "baseline_over_Zig": 1.8662388903529832
+    },
+    {
+      "pair": 3,
+      "inline_over_baseline": 0.7875111929270026,
+      "inline_over_Zig": 1.7098509945825089,
+      "baseline_over_Zig": 2.1712084982911497
+    },
+    {
+      "pair": 4,
+      "inline_over_baseline": 0.9333879894480279,
+      "inline_over_Zig": 2.0027377726923707,
+      "baseline_over_Zig": 2.145664820346272
+    },
+    {
+      "pair": 5,
+      "inline_over_baseline": 0.9341067559939482,
+      "inline_over_Zig": 1.9858595154269323,
+      "baseline_over_Zig": 2.1259449229803002
+    },
+    {
+      "pair": 6,
+      "inline_over_baseline": 0.9397953227999873,
+      "inline_over_Zig": 1.6999718682404583,
+      "baseline_over_Zig": 1.8088745783237485
+    },
+    {
+      "pair": 7,
+      "inline_over_baseline": 0.9186084814272127,
+      "inline_over_Zig": 1.6770027862959656,
+      "baseline_over_Zig": 1.825590357809956
+    },
+    {
+      "pair": 8,
+      "inline_over_baseline": 0.924380656441651,
+      "inline_over_Zig": 1.668070008313592,
+      "baseline_over_Zig": 1.8045271682065802
+    }
+  ],
+  "median_inline_over_baseline": 0.9251758626967653,
+  "faster_pairs": 9,
+  "median_inline_over_Zig": 1.726451368475668,
+  "median_baseline_over_Zig": 1.8662388903529832,
+  "calibrations": [
+    [
+      1,
+      0.793524855049327
+    ],
+    [
+      2,
+      0.7693466069176793
+    ],
+    [
+      3,
+      0.7948380729649216
+    ]
+  ]
+}

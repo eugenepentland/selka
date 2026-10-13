@@ -1,0 +1,190 @@
+Full raw scalar-before.ir SHA256 b7ef24a0e46d4e6185a7566cdfe35c06259b5abf537af70f0c6dc0847f24bdc5
+Generated with pinned common002 compiler9bedb835 under ordinary build ticket2987(wait65s); source unchanged qualified scalar-only snapshot.
+
+fn vm::read_byte [header types elided; full raw artifact SHA below]
+b0:
+  %3 = call i64 heap::function_instruction(param0, param1, param2)
+  %5 = add.exact i64 param2, 1:i64
+  %6 = record_make record{i64, i64} %3, %5
+  ret %6
+
+fn vm::read_constant [header types elided; full raw artifact SHA below]
+b0:
+  %3 = call union{void, record{bool}, record{f64}, record{i64}} vm_queries::constant_operand(param0, param1, param2)
+  %5 = add.exact i64 param2, 1:i64
+  %6 = record_make record{union{void, record{bool}, record{f64}, record{i64}}, i64} %3, %5
+  ret %6
+
+fn heap::function_instruction [header types elided; full raw artifact SHA below]
+b0:
+  %3 = record_get list[union{void, record{record{bytes, u32}}, record{record{i64, i64, record{list[i64], list[i64], list[union{void, record{bool}, record{f64}, record{i64}}]}, i64}}, record{record{i64, i64}}, record{record{i64, list[i64]}}, record{record{i64, union{void, record{bool}, record{f64}, record{i64}}, i64}}, record{record{i64, record{list[record{i64, u32, union{void, record{bool}, record{f64}, record{i64}}}], i64}}}, record{record{i64, record{list[record{i64, u32, union{void, record{bool}, record{f64}, record{i64}}}], i64}}}, record{record{union{void, record{bool}, record{f64}, record{i64}}, i64}}, record{record{i64, list[union{void, record{bool}, record{f64}, record{i64}}]}}, record{record{i64, i64, i64, bool}}}] param0, field0
+  %5 = cmp.lt bool param1, 0:i64
+  branch %5, b1, b2
+b1: ; preds b0
+  %7 = list_len u64 %3
+  %8 = convert.exact i64 %7
+  %9 = add.exact i64 %8, param1
+  jump b2
+b2: ; preds b0 b1
+  %11 = phi i64 param1, %9
+  %14 = list_get_field.exact u32 %3, %11, path 0
+  %16 = cmp.eq bool %14, 2:u32
+  branch %16, b4, b5
+b3: ; preds b8 b10 b12 b14 b16 b18 b20 b22 b24 b26
+  unreachable
+b4: ; preds b2
+  %21 = list_get_field list[i64] %3, %11, path 3.0.2.0
+  %24 = cmp.lt bool param2, 0:i64
+  branch %24, b6, b7
+b5: ; preds b2
+  %35 = cmp.eq bool %14, 0:u32
+  branch %35, b8, b9
+b6: ; preds b4
+  %26 = list_len u64 %21
+  %27 = convert.exact i64 %26
+  %28 = add.exact i64 %27, param2
+  jump b7
+b7: ; preds b4 b6
+  %30 = phi i64 param2, %28
+  %32 = list_get.exact i64 %21, %30
+  ret %32
+b8: ; preds b5
+  jump b3
+b9: ; preds b5
+  %39 = cmp.eq bool %14, 1:u32
+  branch %39, b10, b11
+b10: ; preds b9
+  jump b3
+b11: ; preds b9
+  %43 = cmp.eq bool %14, 3:u32
+  branch %43, b12, b13
+b12: ; preds b11
+  jump b3
+b13: ; preds b11
+  %47 = cmp.eq bool %14, 4:u32
+  branch %47, b14, b15
+b14: ; preds b13
+  jump b3
+b15: ; preds b13
+  %51 = cmp.eq bool %14, 5:u32
+  branch %51, b16, b17
+b16: ; preds b15
+  jump b3
+b17: ; preds b15
+  %55 = cmp.eq bool %14, 6:u32
+  branch %55, b18, b19
+b18: ; preds b17
+  jump b3
+b19: ; preds b17
+  %59 = cmp.eq bool %14, 7:u32
+  branch %59, b20, b21
+b20: ; preds b19
+  jump b3
+b21: ; preds b19
+  %63 = cmp.eq bool %14, 8:u32
+  branch %63, b22, b23
+b22: ; preds b21
+  jump b3
+b23: ; preds b21
+  %67 = cmp.eq bool %14, 9:u32
+  branch %67, b24, b25
+b24: ; preds b23
+  jump b3
+b25: ; preds b23
+  jump b26
+b26: ; preds b25
+  jump b3
+
+fn vm_queries::constant_operand [header types elided; full raw artifact SHA below]
+b0:
+  %3 = record_get list[union{void, record{record{bytes, u32}}, record{record{i64, i64, record{list[i64], list[i64], list[union{void, record{bool}, record{f64}, record{i64}}]}, i64}}, record{record{i64, i64}}, record{record{i64, list[i64]}}, record{record{i64, union{void, record{bool}, record{f64}, record{i64}}, i64}}, record{record{i64, record{list[record{i64, u32, union{void, record{bool}, record{f64}, record{i64}}}], i64}}}, record{record{i64, record{list[record{i64, u32, union{void, record{bool}, record{f64}, record{i64}}}], i64}}}, record{record{union{void, record{bool}, record{f64}, record{i64}}, i64}}, record{record{i64, list[union{void, record{bool}, record{f64}, record{i64}}]}}, record{record{i64, i64, i64, bool}}}] param0, field0
+  %5 = cmp.lt bool param1, 0:i64
+  branch %5, b1, b2
+b1: ; preds b0
+  %7 = list_len u64 %3
+  %8 = convert.exact i64 %7
+  %9 = add.exact i64 %8, param1
+  jump b2
+b2: ; preds b0 b1
+  %11 = phi i64 param1, %9
+  %14 = list_get_field.exact u32 %3, %11, path 0
+  %16 = cmp.eq bool %14, 2:u32
+  branch %16, b4, b5
+b3: ; preds b10 b12 b14 b16 b18 b20 b22 b24 b26 b28
+  unreachable
+b4: ; preds b2
+  %19 = list_get_field record{i64, i64, record{list[i64], list[i64], list[union{void, record{bool}, record{f64}, record{i64}}]}, i64} %3, %11, path 3.0
+  %20 = record_get record{list[i64], list[i64], list[union{void, record{bool}, record{f64}, record{i64}}]} %19, field2
+  %21 = record_get list[i64] %20, field0
+  %24 = cmp.lt bool param2, 0:i64
+  branch %24, b6, b7
+b5: ; preds b2
+  %48 = cmp.eq bool %14, 0:u32
+  branch %48, b10, b11
+b6: ; preds b4
+  %26 = list_len u64 %21
+  %27 = convert.exact i64 %26
+  %28 = add.exact i64 %27, param2
+  jump b7
+b7: ; preds b4 b6
+  %30 = phi i64 param2, %28
+  %32 = list_get.exact i64 %21, %30
+  %34 = record_get record{list[i64], list[i64], list[union{void, record{bool}, record{f64}, record{i64}}]} %19, field2
+  %35 = record_get list[union{void, record{bool}, record{f64}, record{i64}}] %34, field2
+  %37 = cmp.lt bool %32, 0:i64
+  branch %37, b8, b9
+b8: ; preds b7
+  %39 = list_len u64 %35
+  %40 = convert.exact i64 %39
+  %41 = add.exact i64 %40, %32
+  jump b9
+b9: ; preds b7 b8
+  %43 = phi i64 %32, %41
+  %45 = list_get.exact union{void, record{bool}, record{f64}, record{i64}} %35, %43
+  ret %45
+b10: ; preds b5
+  jump b3
+b11: ; preds b5
+  %52 = cmp.eq bool %14, 1:u32
+  branch %52, b12, b13
+b12: ; preds b11
+  jump b3
+b13: ; preds b11
+  %56 = cmp.eq bool %14, 3:u32
+  branch %56, b14, b15
+b14: ; preds b13
+  jump b3
+b15: ; preds b13
+  %60 = cmp.eq bool %14, 4:u32
+  branch %60, b16, b17
+b16: ; preds b15
+  jump b3
+b17: ; preds b15
+  %64 = cmp.eq bool %14, 5:u32
+  branch %64, b18, b19
+b18: ; preds b17
+  jump b3
+b19: ; preds b17
+  %68 = cmp.eq bool %14, 6:u32
+  branch %68, b20, b21
+b20: ; preds b19
+  jump b3
+b21: ; preds b19
+  %72 = cmp.eq bool %14, 7:u32
+  branch %72, b22, b23
+b22: ; preds b21
+  jump b3
+b23: ; preds b21
+  %76 = cmp.eq bool %14, 8:u32
+  branch %76, b24, b25
+b24: ; preds b23
+  jump b3
+b25: ; preds b23
+  %80 = cmp.eq bool %14, 9:u32
+  branch %80, b26, b27
+b26: ; preds b25
+  jump b3
+b27: ; preds b25
+  jump b28
+b28: ; preds b27
+  jump b3

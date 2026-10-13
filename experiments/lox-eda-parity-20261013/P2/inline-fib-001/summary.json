@@ -1,0 +1,80 @@
+{
+  "status": "complete",
+  "sample_count": 18,
+  "warmup_count": 12,
+  "censors": [],
+  "pairs": [
+    {
+      "pair": 0,
+      "inline_over_baseline": 0.8928720296188778,
+      "inline_over_Zig": 1.8106310361913571,
+      "baseline_over_Zig": 2.0278729494575214
+    },
+    {
+      "pair": 1,
+      "inline_over_baseline": 0.8861191968959987,
+      "inline_over_Zig": 1.7978631117528263,
+      "baseline_over_Zig": 2.0289179131324433
+    },
+    {
+      "pair": 2,
+      "inline_over_baseline": 0.8798198987330846,
+      "inline_over_Zig": 1.7810155434089416,
+      "baseline_over_Zig": 2.0242955927384148
+    },
+    {
+      "pair": 3,
+      "inline_over_baseline": 0.8788234925708339,
+      "inline_over_Zig": 1.8393197670647345,
+      "baseline_over_Zig": 2.092934226967634
+    },
+    {
+      "pair": 4,
+      "inline_over_baseline": 0.8883809845729486,
+      "inline_over_Zig": 1.8413401228832837,
+      "baseline_over_Zig": 2.0726919585839965
+    },
+    {
+      "pair": 5,
+      "inline_over_baseline": 0.8810694050814275,
+      "inline_over_Zig": 1.8232897048235817,
+      "baseline_over_Zig": 2.06940530939793
+    },
+    {
+      "pair": 6,
+      "inline_over_baseline": 0.869662431936205,
+      "inline_over_Zig": 1.8281983390317198,
+      "baseline_over_Zig": 2.1021930715823185
+    },
+    {
+      "pair": 7,
+      "inline_over_baseline": 0.8935479554470719,
+      "inline_over_Zig": 1.8541729938852511,
+      "baseline_over_Zig": 2.0750682518853134
+    },
+    {
+      "pair": 8,
+      "inline_over_baseline": 0.8918663394602201,
+      "inline_over_Zig": 1.8223643217672862,
+      "baseline_over_Zig": 2.0433155071983395
+    }
+  ],
+  "median_inline_over_baseline": 0.8861191968959987,
+  "faster_pairs": 9,
+  "median_inline_over_Zig": 1.8232897048235817,
+  "median_baseline_over_Zig": 2.06940530939793,
+  "calibrations": [
+    [
+      1,
+      0.6489048500079662
+    ],
+    [
+      2,
+      0.6178912320174277
+    ],
+    [
+      3,
+      0.609342411160469
+    ]
+  ]
+}
