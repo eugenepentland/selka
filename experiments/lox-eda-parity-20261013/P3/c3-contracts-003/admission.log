@@ -1,0 +1,3 @@
+build-slot: FIFO ticket 3146, position 2; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 3146 after 10s
+passed; 3/3 in all five fresh modes
