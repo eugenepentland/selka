@@ -1,0 +1,27 @@
+{
+  "reviewed_tree": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p7",
+  "base_commit": "2525a66f61838086f5327d74db7412926ce4a221",
+  "captured_utc": "2026-10-13T04:01:50.519666+00:00",
+  "source_sha256": {
+    "src/core/build_list_methods.zig": "49ab6f4c286d02e3164ef032db6fa080f36bd1157f39f489b6d208f15b12f23c",
+    "src/core/flags.zig": "0d755cfaf8459362b87a12d41b4ad3e4e61e605b9cec9d7daafb4e1781981c8c",
+    "src/core/own.zig": "08fe0026b13abcf4cbf32866224f8315414242b6a936c53fb33fb5a3194381e5",
+    "src/core/build.zig": "52fc08b4418d8cf2e6579588c28727557ec9d5c380f837c50f801a98552ab70d",
+    "src/core/emit_llvm.zig": "21afd4ee1d6ec76ceb9ee966bbc0ca48bc8da3257b6fd1dbe55231839c73ae58",
+    "src/core/single_owner.zig": "80a0c2c473a784438cb2f00df0fd0e75a505cec1e6939d2abbb5425cff4f13c0",
+    "src/core/list_exchange_fixture.my": "34ffb9d535ea79d3d10b2c77ded97b1d325de47fc0daef93900e659e839f1a96",
+    "src/core/list_exchange_test.zig": "d78b91c61a4abf7cca0aca369c6fe110b918670c7d55aea3d810d6673eac7f5b",
+    "src/sema.zig": "baafbecaa07c9c3f0721c75011d416a2cc295805d67190cfe9cc4344f398dab7",
+    "src/generic_bodies.zig": "ab6a03b2f872e0a7ecb1524f01cea655c8c12578a066b8a44eb7710df42dd00c"
+  },
+  "fixtures": {
+    "sibling-overwrite-zero.my": "b2d8283e4a1010c0a2b629c74bc83ea829fb1efe24cc9a3f0b3002c79351c44f",
+    "local-old-result-refusal.my": "7dad810a1f08784b32174e34eaddc90ac7b6876a7920193356cdf216b3ee7c91",
+    "sibling-overwrite.my": "0e75d3274efa5490c5361796ca32b1c8f661c2950fd6d8c021213873fd94a77a",
+    "remaining-result-refusal.my": "5fa5cdd52f4ef447e3779d3b6244441325be7f7e8d9a906f28ce725bd3ac5809",
+    "generic-remaining-result-refusal.my": "fcd3a1f8f8eebf66763d3a4117d95d80a9ef4abc6248ecd1907f5447bc4d3a9c",
+    "wide-discard.my": "c3e86943fcb6f5b5f7c913df7d4c637c8a1aeca29867e94ec668eb1d21dafa2c"
+  },
+  "executed_native_builds_or_runs_by_P3": false,
+  "native_outcomes": "pending P7 admitted verification; static matcher concern only"
+}

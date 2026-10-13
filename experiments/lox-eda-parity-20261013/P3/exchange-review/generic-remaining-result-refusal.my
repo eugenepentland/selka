@@ -1,0 +1,8 @@
+# Expected E_RESULT_UNHANDLED for remaining caller-owned Result elements.
+func inspect[T: storable](mut values: T[]):
+    _ = len(values)
+
+func main() -> int:
+    mut values: Result[int, int][] = [Err(7)]
+    inspect(mut values)
+    return 0
