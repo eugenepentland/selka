@@ -45,3 +45,5 @@ No speedup or adoption conclusion before valid timing receipts. Timings compare 
 Current production module hashes:
 - core_owned_copy.c: `26d8c9e775b64c8064d50fcf678fb89536ef1f40ca881bbda5943a4c17f30dc6`
 - core_rt.c: `1da897c92854f2615dab2935a1f0c81f712cae15cbb5fe1c19e304a0f00a6ace`
+
+Timing complete: see timing-combined-001/results.md and report.json. Scalar-only recommended for fresh-install/full qualification; pointer held, bulk/all rejected for current adoption. Neither selected case reaches Zig parity.

@@ -1,6 +1,3 @@
 *.log
 __pycache__/
 *.pyc
-timing-combined-001/*.run-spec*.json
-timing-combined-001/*.chunk*.json
-timing-combined-001/execution.json

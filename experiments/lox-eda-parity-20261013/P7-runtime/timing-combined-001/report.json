@@ -1,0 +1,697 @@
+{
+  "purpose": "bounded C1 runtime diagnostic; two cases cannot establish full-corpus parity",
+  "cases": {
+    "eda-adf5901": {
+      "receipt_hashes": {
+        "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/experiments/lox-eda-parity-20261013/P7-runtime/timing-combined-001/eda-adf5901.chunk00.json": "5224c8646316170ba3daedb06c37c6729580f37b710f65d6bd4bf71a473aec77",
+        "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/experiments/lox-eda-parity-20261013/P7-runtime/timing-combined-001/eda-adf5901.chunk01.json": "41d4812f73c38dd796ffea770c823e652f70a74a4a18b9b38076583ac6a5feea",
+        "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/experiments/lox-eda-parity-20261013/P7-runtime/timing-combined-001/eda-adf5901.chunk02.json": "fe7b0bc26c1b34c67129ab7bdb3dd646b1c07cd32a1654ba472eb6c4ccfb6c16",
+        "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/experiments/lox-eda-parity-20261013/P7-runtime/timing-combined-001/eda-adf5901.chunk03.json": "02225e5b8466f7bb41918a5adbfaacc339df3c9b19aa1cf80b73f5911af040c8",
+        "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/experiments/lox-eda-parity-20261013/P7-runtime/timing-combined-001/eda-adf5901.chunk04.json": "d8f5b636a8eb867fc090c17ac4945a92693b1be7e5f4f006410651702845909a",
+        "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/experiments/lox-eda-parity-20261013/P7-runtime/timing-combined-001/eda-adf5901.chunk05.json": "757aa10153a06a2c5fcad3a39b952052614219c99955b99f92f1ecbcafd644ca",
+        "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/experiments/lox-eda-parity-20261013/P7-runtime/timing-combined-001/eda-adf5901.chunk06.json": "09e5b6a787ef1141079b1968c54eb2e29ddc6d9f2d3cb85c6af948c70e7064a4",
+        "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/experiments/lox-eda-parity-20261013/P7-runtime/timing-combined-001/eda-adf5901.chunk07.json": "c143eb55e44cb434151f3b3daaaff865bb263118bec66552d76eb3d4c03d6c11",
+        "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/experiments/lox-eda-parity-20261013/P7-runtime/timing-combined-001/eda-adf5901.chunk08.json": "8a89e3068064b18e7e2900991314353505a8c09b3ddc615581aaf63b906ac597",
+        "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/experiments/lox-eda-parity-20261013/P7-runtime/timing-combined-001/eda-adf5901.chunk09.json": "d443eb0a77f5143d4cc688a02428b2de57399e191a57852deb68435702c888ce"
+      },
+      "calibration": {
+        "reference_arm": "zig-fast",
+        "factor": 3,
+        "calibration_samples": [
+          {
+            "arm": "zig-fast",
+            "value": 0.012879776,
+            "output": {
+              "stdout_sha256": "6fe975c83ca9421f0adf0425127a0a5e097d14b45f770e9363da5eea203bc862",
+              "artifacts": {},
+              "golden_tree": {
+                "adf5901.net": "859eb72ef41881c5b477d53e1b91cf918aaa4f38763c8019a45808a4ce29cd12",
+                "adf5901.kicad_pro": "af4b289ff26dcc1011ad17b93fcc48d781632dc4554cadf739a6d5e5291243a3",
+                "netlisp.kicad_sym": "0ac2cac25fcb0d2a470c91940bb4bb1621c8ea5233f35ef80682aea34cc1a8af",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "adf5901.kicad_sch": "dafcc509cdfa77f6b1676fec5d73d86c2c032fd19193465a673e82aee4b5736f",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+              }
+            },
+            "stderr": "[I] export-kicad-sch: adf5901: 1/5 components drawn from vendor symbols (138 libraries indexed)\n",
+            "round": 0
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.012747936,
+            "output": {
+              "stdout_sha256": "6fe975c83ca9421f0adf0425127a0a5e097d14b45f770e9363da5eea203bc862",
+              "artifacts": {},
+              "golden_tree": {
+                "adf5901.net": "859eb72ef41881c5b477d53e1b91cf918aaa4f38763c8019a45808a4ce29cd12",
+                "adf5901.kicad_pro": "af4b289ff26dcc1011ad17b93fcc48d781632dc4554cadf739a6d5e5291243a3",
+                "netlisp.kicad_sym": "0ac2cac25fcb0d2a470c91940bb4bb1621c8ea5233f35ef80682aea34cc1a8af",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "adf5901.kicad_sch": "dafcc509cdfa77f6b1676fec5d73d86c2c032fd19193465a673e82aee4b5736f",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+              }
+            },
+            "stderr": "[I] export-kicad-sch: adf5901: 1/5 components drawn from vendor symbols (138 libraries indexed)\n",
+            "round": 1
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.01218847,
+            "output": {
+              "stdout_sha256": "6fe975c83ca9421f0adf0425127a0a5e097d14b45f770e9363da5eea203bc862",
+              "artifacts": {},
+              "golden_tree": {
+                "adf5901.net": "859eb72ef41881c5b477d53e1b91cf918aaa4f38763c8019a45808a4ce29cd12",
+                "adf5901.kicad_pro": "af4b289ff26dcc1011ad17b93fcc48d781632dc4554cadf739a6d5e5291243a3",
+                "netlisp.kicad_sym": "0ac2cac25fcb0d2a470c91940bb4bb1621c8ea5233f35ef80682aea34cc1a8af",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "adf5901.kicad_sch": "dafcc509cdfa77f6b1676fec5d73d86c2c032fd19193465a673e82aee4b5736f",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+              }
+            },
+            "stderr": "[I] export-kicad-sch: adf5901: 1/5 components drawn from vendor symbols (138 libraries indexed)\n",
+            "round": 2
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.01250639,
+            "output": {
+              "stdout_sha256": "6fe975c83ca9421f0adf0425127a0a5e097d14b45f770e9363da5eea203bc862",
+              "artifacts": {},
+              "golden_tree": {
+                "adf5901.net": "859eb72ef41881c5b477d53e1b91cf918aaa4f38763c8019a45808a4ce29cd12",
+                "adf5901.kicad_pro": "af4b289ff26dcc1011ad17b93fcc48d781632dc4554cadf739a6d5e5291243a3",
+                "netlisp.kicad_sym": "0ac2cac25fcb0d2a470c91940bb4bb1621c8ea5233f35ef80682aea34cc1a8af",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "adf5901.kicad_sch": "dafcc509cdfa77f6b1676fec5d73d86c2c032fd19193465a673e82aee4b5736f",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+              }
+            },
+            "stderr": "[I] export-kicad-sch: adf5901: 1/5 components drawn from vendor symbols (138 libraries indexed)\n",
+            "round": 3
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.012268791,
+            "output": {
+              "stdout_sha256": "6fe975c83ca9421f0adf0425127a0a5e097d14b45f770e9363da5eea203bc862",
+              "artifacts": {},
+              "golden_tree": {
+                "adf5901.net": "859eb72ef41881c5b477d53e1b91cf918aaa4f38763c8019a45808a4ce29cd12",
+                "adf5901.kicad_pro": "af4b289ff26dcc1011ad17b93fcc48d781632dc4554cadf739a6d5e5291243a3",
+                "netlisp.kicad_sym": "0ac2cac25fcb0d2a470c91940bb4bb1621c8ea5233f35ef80682aea34cc1a8af",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "adf5901.kicad_sch": "dafcc509cdfa77f6b1676fec5d73d86c2c032fd19193465a673e82aee4b5736f",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6"
+              }
+            },
+            "stderr": "[I] export-kicad-sch: adf5901: 1/5 components drawn from vendor symbols (138 libraries indexed)\n",
+            "round": 4
+          }
+        ],
+        "calibration_warmups": 0,
+        "reference_median_seconds": 0.01250639,
+        "absolute_ceiling_seconds": 120.0,
+        "budget_seconds": 0.03751917,
+        "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+        "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+      },
+      "arms": {
+        "zig-fast": {
+          "status": {
+            "status": "ok"
+          },
+          "wall_samples": [
+            0.013012992,
+            0.012608648,
+            0.012250669,
+            0.012652554,
+            0.012132113,
+            0.012038913,
+            0.012324629,
+            0.012250896,
+            0.012427697
+          ],
+          "rss_samples_kib": [
+            20768,
+            20768,
+            20768
+          ],
+          "wall_median_seconds": 0.012324629,
+          "peak_rss_median_kib": 20768,
+          "peak_rss_max_kib": 20768,
+          "runtime_vs_baseline_relinked": 0.776265684975415,
+          "paired_runtime_vs_baseline_samples": [
+            0.8070622611736452,
+            0.8178689472586614,
+            0.7709716273390868,
+            0.796920012561711,
+            0.7489113509446029,
+            0.7802751573799598,
+            0.7900892452699315,
+            0.7978919997670978,
+            0.7761508897099418
+          ],
+          "paired_runtime_vs_baseline_median": 0.7900892452699315,
+          "runtime_vs_zig": 1.0
+        },
+        "baseline-relinked": {
+          "status": {
+            "status": "ok"
+          },
+          "wall_samples": [
+            0.016123901,
+            0.015416465,
+            0.015889909,
+            0.015876818,
+            0.016199665,
+            0.015429061,
+            0.015599034,
+            0.015354078,
+            0.01601196
+          ],
+          "rss_samples_kib": [
+            10268,
+            10268,
+            10264
+          ],
+          "wall_median_seconds": 0.015876818,
+          "peak_rss_median_kib": 10268,
+          "peak_rss_max_kib": 10268,
+          "runtime_vs_baseline_relinked": 1.0,
+          "paired_runtime_vs_baseline_samples": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "paired_runtime_vs_baseline_median": 1.0,
+          "runtime_vs_zig": 1.2882187366451356
+        },
+        "scalar": {
+          "status": {
+            "status": "ok"
+          },
+          "wall_samples": [
+            0.0152445,
+            0.015240435,
+            0.015130902,
+            0.015150852,
+            0.015513853,
+            0.01543784,
+            0.015300957,
+            0.014843319,
+            0.015172482
+          ],
+          "rss_samples_kib": [
+            10264,
+            10268,
+            10260
+          ],
+          "wall_median_seconds": 0.015240435,
+          "peak_rss_median_kib": 10264,
+          "peak_rss_max_kib": 10268,
+          "runtime_vs_baseline_relinked": 0.9599174721282312,
+          "paired_runtime_vs_baseline_samples": [
+            0.9454597866856166,
+            0.9885816884739789,
+            0.9522333954209555,
+            0.9542750946694734,
+            0.9576650504809822,
+            1.0005689912043254,
+            0.9808913167315362,
+            0.9667346355802022,
+            0.9475718150682365
+          ],
+          "paired_runtime_vs_baseline_median": 0.9576650504809822,
+          "runtime_vs_zig": 1.2365836732286222
+        },
+        "pointer": {
+          "status": {
+            "status": "ok"
+          },
+          "wall_samples": [
+            0.015696638,
+            0.015500884,
+            0.014992515,
+            0.015373744,
+            0.015311621,
+            0.016158368,
+            0.015526397,
+            0.015046033,
+            0.015159421
+          ],
+          "rss_samples_kib": [
+            10204,
+            10200,
+            10204
+          ],
+          "wall_median_seconds": 0.015373744,
+          "peak_rss_median_kib": 10204,
+          "peak_rss_max_kib": 10204,
+          "runtime_vs_baseline_relinked": 0.9683139278915963,
+          "paired_runtime_vs_baseline_samples": [
+            0.9735012637450453,
+            1.0054758986577013,
+            0.9435242832416472,
+            0.9683139278915963,
+            0.9451813355399634,
+            1.0472683982518443,
+            0.9953434937060847,
+            0.9799372518493132,
+            0.9467561123060513
+          ],
+          "paired_runtime_vs_baseline_median": 0.9735012637450453,
+          "runtime_vs_zig": 1.2474001448644012
+        },
+        "bulk": {
+          "status": {
+            "status": "ok"
+          },
+          "wall_samples": [
+            0.015776465,
+            0.015588742,
+            0.015463032,
+            0.015474346,
+            0.015678155,
+            0.015391817,
+            0.015509327,
+            0.015495551,
+            0.015015847
+          ],
+          "rss_samples_kib": [
+            10264,
+            10264,
+            10268
+          ],
+          "wall_median_seconds": 0.015495551,
+          "peak_rss_median_kib": 10264,
+          "peak_rss_max_kib": 10268,
+          "runtime_vs_baseline_relinked": 0.9759859311859592,
+          "paired_runtime_vs_baseline_samples": [
+            0.9784521127982614,
+            1.0111748705037114,
+            0.9731353401709223,
+            0.9746503361063911,
+            0.967807358979337,
+            0.9975861136332276,
+            0.9942491951745217,
+            1.0092140342129303,
+            0.9377894398936796
+          ],
+          "paired_runtime_vs_baseline_median": 0.9784521127982614,
+          "runtime_vs_zig": 1.2572833632558027
+        },
+        "all": {
+          "status": {
+            "status": "ok"
+          },
+          "wall_samples": [
+            0.015455489,
+            0.016102211,
+            0.014718649,
+            0.015558072,
+            0.015015215,
+            0.015547726,
+            0.014783076,
+            0.015601128,
+            0.015834131
+          ],
+          "rss_samples_kib": [
+            10268,
+            10268,
+            10268
+          ],
+          "wall_median_seconds": 0.015547726,
+          "peak_rss_median_kib": 10268,
+          "peak_rss_max_kib": 10268,
+          "runtime_vs_baseline_relinked": 0.9792721690202658,
+          "paired_runtime_vs_baseline_samples": [
+            0.9585452676743674,
+            1.0444814034864673,
+            0.9262890681123472,
+            0.9799238109298726,
+            0.9268842905084766,
+            1.0076910059529869,
+            0.9476917609128873,
+            1.0160901878966617,
+            0.988893989243041
+          ],
+          "paired_runtime_vs_baseline_median": 0.9799238109298726,
+          "runtime_vs_zig": 1.2615167564070284
+        }
+      }
+    },
+    "eda-Cyclops-Flex": {
+      "receipt_hashes": {
+        "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/experiments/lox-eda-parity-20261013/P7-runtime/timing-combined-001/eda-Cyclops-Flex.chunk00.json": "1f6c7675b5cb12dcbca35c29d914d78f5f0d7de0baf2c3461b05f2edfc759b2a",
+        "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/experiments/lox-eda-parity-20261013/P7-runtime/timing-combined-001/eda-Cyclops-Flex.chunk01.json": "ec31093894d00d3482ea8c6a75f833d69dea076f9f382e94f04cf0d5dc4ad0b4",
+        "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/experiments/lox-eda-parity-20261013/P7-runtime/timing-combined-001/eda-Cyclops-Flex.chunk02.json": "199880ad5e50315cf8fa611c42d0b688168cab4bcfc7d0721d1328006f0d9025",
+        "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/experiments/lox-eda-parity-20261013/P7-runtime/timing-combined-001/eda-Cyclops-Flex.chunk03.json": "982f9e0c7e6911461fd120da6f807a36951be1177838fd020e80328aafc27998",
+        "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/experiments/lox-eda-parity-20261013/P7-runtime/timing-combined-001/eda-Cyclops-Flex.chunk04.json": "ea4bfb1d10fabb4ba4376bf322d69ca540c8c8c5901f474385a9d4448762f5a3",
+        "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/experiments/lox-eda-parity-20261013/P7-runtime/timing-combined-001/eda-Cyclops-Flex.chunk05.json": "dc101143dc46aee58086a52ab54e712f0f4300fccca67e6bc76b21679b17968a",
+        "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/experiments/lox-eda-parity-20261013/P7-runtime/timing-combined-001/eda-Cyclops-Flex.chunk06.json": "82e0a92affefc2d7cb63d145ea3702a0f16dc106ebfcea5dc982c8e34e77a722",
+        "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/experiments/lox-eda-parity-20261013/P7-runtime/timing-combined-001/eda-Cyclops-Flex.chunk07.json": "3a3879fadf345da2a42e1c57e4b61c5ba064b78f72bcc2283b71627de6977edb",
+        "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/experiments/lox-eda-parity-20261013/P7-runtime/timing-combined-001/eda-Cyclops-Flex.chunk08.json": "9bb34521b62d3030d6ba12f8f29bf6eb7d6e840973a88397a2e4bcfadf75884a",
+        "/home/epentland/ai/canopy/mylang-lox-eda-runtime-prototypes-20261013/experiments/lox-eda-parity-20261013/P7-runtime/timing-combined-001/eda-Cyclops-Flex.chunk09.json": "73f95d7ecd411fcd5fcbb3eac0596074cde32f3d425f1b5be92a4d7750451d0a"
+      },
+      "calibration": {
+        "reference_arm": "zig-fast",
+        "factor": 3,
+        "calibration_samples": [
+          {
+            "arm": "zig-fast",
+            "value": 0.01106216,
+            "output": {
+              "stdout_sha256": "506f29696eab0b93eb183cc9efacae20308887096d6548098bedfd34fa51d80d",
+              "artifacts": {},
+              "golden_tree": {
+                "netlisp.kicad_sym": "7acb157812927878382607861dccd25e75ea926e8ad470a885d2ca2e8cffcb8a",
+                "Cyclops-Flex.net": "dce6645f331cdc5d5b09564d06b49d0d69374357808184788a1d359a8dbac413",
+                "Cyclops-Flex.kicad_sch": "120c5690a5041e673d7d21f6d2ab98411c375f534c3e9688520dfc1c88cfd6f0",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+                "Cyclops-Flex.kicad_pro": "a67980cd8d26be9fcaefae095603ab16bf2a3d3326121612b939dbf25019e0aa"
+              }
+            },
+            "stderr": "[I] export-kicad-sch: Cyclops-Flex: 1/2 components drawn from vendor symbols (138 libraries indexed)\n",
+            "round": 0
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.010835905,
+            "output": {
+              "stdout_sha256": "506f29696eab0b93eb183cc9efacae20308887096d6548098bedfd34fa51d80d",
+              "artifacts": {},
+              "golden_tree": {
+                "netlisp.kicad_sym": "7acb157812927878382607861dccd25e75ea926e8ad470a885d2ca2e8cffcb8a",
+                "Cyclops-Flex.net": "dce6645f331cdc5d5b09564d06b49d0d69374357808184788a1d359a8dbac413",
+                "Cyclops-Flex.kicad_sch": "120c5690a5041e673d7d21f6d2ab98411c375f534c3e9688520dfc1c88cfd6f0",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+                "Cyclops-Flex.kicad_pro": "a67980cd8d26be9fcaefae095603ab16bf2a3d3326121612b939dbf25019e0aa"
+              }
+            },
+            "stderr": "[I] export-kicad-sch: Cyclops-Flex: 1/2 components drawn from vendor symbols (138 libraries indexed)\n",
+            "round": 1
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.010859095,
+            "output": {
+              "stdout_sha256": "506f29696eab0b93eb183cc9efacae20308887096d6548098bedfd34fa51d80d",
+              "artifacts": {},
+              "golden_tree": {
+                "netlisp.kicad_sym": "7acb157812927878382607861dccd25e75ea926e8ad470a885d2ca2e8cffcb8a",
+                "Cyclops-Flex.net": "dce6645f331cdc5d5b09564d06b49d0d69374357808184788a1d359a8dbac413",
+                "Cyclops-Flex.kicad_sch": "120c5690a5041e673d7d21f6d2ab98411c375f534c3e9688520dfc1c88cfd6f0",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+                "Cyclops-Flex.kicad_pro": "a67980cd8d26be9fcaefae095603ab16bf2a3d3326121612b939dbf25019e0aa"
+              }
+            },
+            "stderr": "[I] export-kicad-sch: Cyclops-Flex: 1/2 components drawn from vendor symbols (138 libraries indexed)\n",
+            "round": 2
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.010613648,
+            "output": {
+              "stdout_sha256": "506f29696eab0b93eb183cc9efacae20308887096d6548098bedfd34fa51d80d",
+              "artifacts": {},
+              "golden_tree": {
+                "netlisp.kicad_sym": "7acb157812927878382607861dccd25e75ea926e8ad470a885d2ca2e8cffcb8a",
+                "Cyclops-Flex.net": "dce6645f331cdc5d5b09564d06b49d0d69374357808184788a1d359a8dbac413",
+                "Cyclops-Flex.kicad_sch": "120c5690a5041e673d7d21f6d2ab98411c375f534c3e9688520dfc1c88cfd6f0",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+                "Cyclops-Flex.kicad_pro": "a67980cd8d26be9fcaefae095603ab16bf2a3d3326121612b939dbf25019e0aa"
+              }
+            },
+            "stderr": "[I] export-kicad-sch: Cyclops-Flex: 1/2 components drawn from vendor symbols (138 libraries indexed)\n",
+            "round": 3
+          },
+          {
+            "arm": "zig-fast",
+            "value": 0.010692062,
+            "output": {
+              "stdout_sha256": "506f29696eab0b93eb183cc9efacae20308887096d6548098bedfd34fa51d80d",
+              "artifacts": {},
+              "golden_tree": {
+                "netlisp.kicad_sym": "7acb157812927878382607861dccd25e75ea926e8ad470a885d2ca2e8cffcb8a",
+                "Cyclops-Flex.net": "dce6645f331cdc5d5b09564d06b49d0d69374357808184788a1d359a8dbac413",
+                "Cyclops-Flex.kicad_sch": "120c5690a5041e673d7d21f6d2ab98411c375f534c3e9688520dfc1c88cfd6f0",
+                "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+                "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+                "Cyclops-Flex.kicad_pro": "a67980cd8d26be9fcaefae095603ab16bf2a3d3326121612b939dbf25019e0aa"
+              }
+            },
+            "stderr": "[I] export-kicad-sch: Cyclops-Flex: 1/2 components drawn from vendor symbols (138 libraries indexed)\n",
+            "round": 4
+          }
+        ],
+        "calibration_warmups": 0,
+        "reference_median_seconds": 0.010835905,
+        "absolute_ceiling_seconds": 120.0,
+        "budget_seconds": 0.032507715,
+        "applies_to": "checked-ownership uninstrumented warmup and wall invocations; RSS uses the absolute ceiling",
+        "interpretation": "A censor exceeded the calibrated wall-time budget; it is not an exact runtime or measured median ratio."
+      },
+      "arms": {
+        "zig-fast": {
+          "status": {
+            "status": "ok"
+          },
+          "wall_samples": [
+            0.011173173,
+            0.011350869,
+            0.01128989,
+            0.011313353,
+            0.011239122,
+            0.011282108,
+            0.011337692,
+            0.01132686,
+            0.010955331
+          ],
+          "rss_samples_kib": [
+            19008,
+            19008,
+            19008
+          ],
+          "wall_median_seconds": 0.01128989,
+          "peak_rss_median_kib": 19008,
+          "peak_rss_max_kib": 19008,
+          "runtime_vs_baseline_relinked": 0.8723983306043253,
+          "paired_runtime_vs_baseline_samples": [
+            0.8633793130626889,
+            0.887312720018142,
+            0.8149310979509806,
+            0.8644540451144894,
+            0.8774966593575271,
+            0.8909137068865107,
+            0.8742852670293813,
+            0.8954000595254328,
+            0.8449173490649542
+          ],
+          "paired_runtime_vs_baseline_median": 0.8742852670293813,
+          "runtime_vs_zig": 1.0
+        },
+        "baseline-relinked": {
+          "status": {
+            "status": "ok"
+          },
+          "wall_samples": [
+            0.01294121,
+            0.012792411,
+            0.013853797,
+            0.013087281,
+            0.012808165,
+            0.012663525,
+            0.012967955,
+            0.012650055,
+            0.012966157
+          ],
+          "rss_samples_kib": [
+            9588,
+            9588,
+            9580
+          ],
+          "wall_median_seconds": 0.01294121,
+          "peak_rss_median_kib": 9588,
+          "peak_rss_max_kib": 9588,
+          "runtime_vs_baseline_relinked": 1.0,
+          "paired_runtime_vs_baseline_samples": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "paired_runtime_vs_baseline_median": 1.0,
+          "runtime_vs_zig": 1.1462653754819576
+        },
+        "scalar": {
+          "status": {
+            "status": "ok"
+          },
+          "wall_samples": [
+            0.012519291,
+            0.013095937,
+            0.013073337,
+            0.012629593,
+            0.012510992,
+            0.012311055,
+            0.012630882,
+            0.013016729,
+            0.01222561
+          ],
+          "rss_samples_kib": [
+            9584,
+            9576,
+            9580
+          ],
+          "wall_median_seconds": 0.012629593,
+          "peak_rss_median_kib": 9580,
+          "peak_rss_max_kib": 9584,
+          "runtime_vs_baseline_relinked": 0.9759205669330766,
+          "paired_runtime_vs_baseline_samples": [
+            0.9673972526525727,
+            1.0237270362873738,
+            0.9436645419302738,
+            0.9650280298864218,
+            0.9767981596114667,
+            0.9721665176165404,
+            0.9740072355278839,
+            1.0289859609306047,
+            0.9428861612581121
+          ],
+          "paired_runtime_vs_baseline_median": 0.9721665176165404,
+          "runtime_vs_zig": 1.118663955096108
+        },
+        "pointer": {
+          "status": {
+            "status": "ok"
+          },
+          "wall_samples": [
+            0.012837938,
+            0.013035295,
+            0.012804536,
+            0.012878961,
+            0.01302877,
+            0.012545023,
+            0.013350022,
+            0.012773799,
+            0.012853273
+          ],
+          "rss_samples_kib": [
+            9580,
+            9580,
+            9576
+          ],
+          "wall_median_seconds": 0.012853273,
+          "peak_rss_median_kib": 9580,
+          "peak_rss_max_kib": 9580,
+          "runtime_vs_baseline_relinked": 0.9932048857873413,
+          "paired_runtime_vs_baseline_samples": [
+            0.9920199115847745,
+            1.0189865694590332,
+            0.9242618467702393,
+            0.9840822551299999,
+            1.017223778738016,
+            0.9906422579810914,
+            1.0294623940320582,
+            1.0097820918565177,
+            0.9912939508599193
+          ],
+          "paired_runtime_vs_baseline_median": 0.9920199115847745,
+          "runtime_vs_zig": 1.1384763713375419
+        },
+        "bulk": {
+          "status": {
+            "status": "ok"
+          },
+          "wall_samples": [
+            0.013516055,
+            0.012986926,
+            0.012978391,
+            0.013002164,
+            0.012998306,
+            0.012803408,
+            0.013389234,
+            0.013086365,
+            0.012864119
+          ],
+          "rss_samples_kib": [
+            9584,
+            9588,
+            9584
+          ],
+          "wall_median_seconds": 0.012998306,
+          "peak_rss_median_kib": 9584,
+          "peak_rss_max_kib": 9588,
+          "runtime_vs_baseline_relinked": 1.0044119522053965,
+          "paired_runtime_vs_baseline_samples": [
+            1.0444197258216195,
+            1.0152054995731452,
+            0.9368111139494827,
+            0.9934962044446055,
+            1.0148452959498881,
+            1.0110461344688781,
+            1.0324861552958813,
+            1.0344907591310868,
+            0.9921304361808977
+          ],
+          "paired_runtime_vs_baseline_median": 1.0148452959498881,
+          "runtime_vs_zig": 1.151322643533285
+        },
+        "all": {
+          "status": {
+            "status": "ok"
+          },
+          "wall_samples": [
+            0.012984839,
+            0.01273073,
+            0.012575223,
+            0.013744046,
+            0.012371913,
+            0.013121496,
+            0.012894654,
+            0.012468944,
+            0.012431757
+          ],
+          "rss_samples_kib": [
+            9580,
+            9584,
+            9568
+          ],
+          "wall_median_seconds": 0.01273073,
+          "peak_rss_median_kib": 9580,
+          "peak_rss_max_kib": 9584,
+          "runtime_vs_baseline_relinked": 0.9837356785030149,
+          "paired_runtime_vs_baseline_samples": [
+            1.0033713230833903,
+            0.9951783131420653,
+            0.9077094893190655,
+            1.050183456747051,
+            0.9659395393485327,
+            1.0361645750294646,
+            0.9943475281954633,
+            0.9856829871490677,
+            0.9587850123980451
+          ],
+          "paired_runtime_vs_baseline_median": 0.9943475281954633,
+          "runtime_vs_zig": 1.1276221468942567
+        }
+      }
+    }
+  }
+}
