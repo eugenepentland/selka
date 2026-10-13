@@ -27,6 +27,13 @@ static void core_copy_push(core_copy_stack *stack, const core_value_shape *shape
     stack->items[stack->count++] = (core_copy_work){shape, source, target};
 }
 
+/* An aggregate's whole-value memcpy already initialized primitive fields.
+   Container elements still enter core_copy_push before any payload is copied. */
+static void core_copy_push_initialized(core_copy_stack *stack, const core_value_shape *shape, const void *source, void *target) {
+    if (shape->kind <= 2) return;
+    core_copy_push(stack, shape, source, target);
+}
+
 static myl_block *core_copy_container(core_copy_stack *stack, const core_value_shape *shape, const myl_block *source) {
     if (shape->kind == 9) {
         myl_block *copy = core_dict_copy_storage(source);
@@ -69,13 +76,13 @@ myl_block *myl_core_values_copy_box(const core_value_shape *root, const myl_bloc
         }
         case 4:
             for (uint32_t i = 0; i < shape->count; ++i)
-                core_copy_push(&stack, shape->children[i], work.source + shape->offsets[i], work.target + shape->offsets[i]);
+                core_copy_push_initialized(&stack, shape->children[i], work.source + shape->offsets[i], work.target + shape->offsets[i]);
             break;
         case 5: {
             uint64_t tag = value_tag(shape, work.source);
             if (tag >= shape->count) abort();
             size_t offset = shape->aux ? 0 : 8;
-            core_copy_push(&stack, shape->children[tag], work.source + offset, work.target + offset);
+            core_copy_push_initialized(&stack, shape->children[tag], work.source + offset, work.target + offset);
             break;
         }
         case 6: case 7: case 9: {
@@ -86,9 +93,10 @@ myl_block *myl_core_values_copy_box(const core_value_shape *root, const myl_bloc
             break;
         }
         case 8:
+            if (shape->children[0]->kind <= 2) break;
             for (uint32_t i = 0; i < shape->count; ++i) {
                 size_t offset = (size_t)i * shape->children[0]->size;
-                core_copy_push(&stack, shape->children[0], work.source + offset, work.target + offset);
+                core_copy_push_initialized(&stack, shape->children[0], work.source + offset, work.target + offset);
             }
             break;
         case 10:
