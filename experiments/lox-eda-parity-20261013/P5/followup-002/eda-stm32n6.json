@@ -1,0 +1,91 @@
+{
+  "cell": "P5-diagnostic/stm32n6",
+  "cwd": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore",
+  "arms": {
+    "zig-fast": [
+      "/home/epentland/ai/canopy/mylang-memory-20261012/.tmp/lox-eda-20261012/reference-binaries/eda-zig-fast",
+      "--model",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/stm32n6/model.sexp",
+      "--project-dir",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+      "--out-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/.tmp/lox-eda-parity/P5/followup-002/outputs/stm32n6"
+    ],
+    "mylang-c1": [
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/eda/zero-rc",
+      "--model",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/stm32n6/model.sexp",
+      "--project-dir",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+      "--out-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/.tmp/lox-eda-parity/P5/followup-002/outputs/stm32n6"
+    ],
+    "mylang-candidate": [
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/.tmp/lox-eda-parity/P5/followup-002/eda",
+      "--model",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/stm32n6/model.sexp",
+      "--project-dir",
+      "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+      "--out-dir",
+      "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/.tmp/lox-eda-parity/P5/followup-002/outputs/stm32n6"
+    ]
+  },
+  "oracle": "zig-fast",
+  "relative_timeout_arms": [
+    "mylang-c1",
+    "mylang-candidate"
+  ],
+  "files": [
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/stm32n6/model.sexp"
+  ],
+  "out_dir": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/.tmp/lox-eda-parity/P5/followup-002/outputs/stm32n6",
+  "golden_dir": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/stm32n6/expected",
+  "identity_dirs": [
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/stm32n6/expected"
+  ],
+  "expected_output": {
+    "stdout_sha256": "b79f0f6c916e0c4e30a0ed5e539ae5766dba18f54ba4332d1a7c750c7d4f4d55",
+    "stderr_sha256": "f5657e5f0958b152056d75bf77e177025ce56a104ccbcd612484161b4e6043f8",
+    "golden_tree": {
+      "stm32n6-usb.kicad_sch": "e18d30be71f72e2f90b9de411085f160dbf6a92ef8ce7b5c2df4e61c44293604",
+      "stm32n6-power-status-led.kicad_sch": "2fe66f46390f60bc27afb34eb336dc88301bd578c28be0c8e52ab860f44a1301",
+      "stm32n6-adc-array.kicad_sch": "ae86d622bb94f2274c9e2563c559ce605c3e32c2a67eed059b77ef95249f54ba",
+      "stm32n6.net": "2e570d022faa796a3b2a4830a876f8fcc08dec887cc07227ebd0befe2e89499a",
+      "stm32n6-boot-nor-flash-xspim-p2-port-n.kicad_sch": "7afa628a8c7e75958f215f4d0a69935f6da0563bb18dc84abebf4c3069d8bc06",
+      "stm32n6-stm32n657l0h3q-core-system.kicad_sch": "795f626984f5762c67fe20a6103cedeeec1a7c6d351555680757805f9711a49d",
+      "stm32n6-boot-fail-led.kicad_sch": "8aab76636f2560ce4a139807fb3942dd6376034dc9641a64c202562130774e07",
+      "stm32n6-expansion-connector.kicad_sch": "1a56a1d12a596058734d01d45bf051201fcbd41a758fbb33f949159d8f96da28",
+      "stm32n6-mounting.kicad_sch": "733a95ba698b93b892fd36ee802c8604fa81a241ca920297b40ff52fd9955275",
+      "stm32n6-imu.kicad_sch": "28c82576e3a2304c4cdebbe840cbbf3c50549dd42dfd4bb6dc8b7c8c8869d701",
+      "stm32n6-sub-block-buck.kicad_sch": "cf3f18169000057156cb69a515accfde03381ee53e0cf20f4ef320626366717f",
+      "stm32n6-sub-block-ldo.kicad_sch": "e53c814d96ea44e74144d17c671a843b029f3ae440ca06530c3837aa7e24d7e5",
+      "stm32n6-sub-block-vref.kicad_sch": "5dd54ca9f4d376c1adcf05cc95be6d32af4ad4355e4fbb56aa70e546675f4d2c",
+      "stm32n6-vibration-motor.kicad_sch": "ab83c9114211ccfa2be2c19962f74f3602166c1a3bc6ea607971a7153e45796e",
+      "netlisp.kicad_sym": "f63190277710258009cbd68fe25211245f34919be0bc9aa7016db7c7219582c1",
+      "stm32n6-power-button-controller.kicad_sch": "14a7b031d6d0aa97876d69b20aa52b477fe4320fe5686be169d005eed41c92d8",
+      "stm32n6.kicad_pro": "c74409205f299f5958c92a58b1071e81af835a69942521fb446bdf25bb6bc63d",
+      "stm32n6-sub-block-battery.kicad_sch": "4aa37c421e9ee03e20391ad8f6f9f8ba250979f785c11ab702c13b190cd88ff9",
+      "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+      "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+      "stm32n6-xspi1-psram.kicad_sch": "3db93cee909b1f4effbc78f620b045678c79be8df629372ef3f76bdddb28dbe2",
+      "stm32n6-test-points.kicad_sch": "a4abcad34c5b5329c30cb43a3f37e09b6e0d402c0c70e9bc0000d60e3be17559",
+      "stm32n6.kicad_sch": "e580fbb85aed99a00113c2ce1df7737625de19d2928fa62d6ec673f7a2e37579",
+      "stm32n6-display.kicad_sch": "6cae54ce7a37f64132dc6c700e00b1e2e6170fc3592a6abecdcac70f54b5d402",
+      "stm32n6-fiducials.kicad_sch": "cc4806dd33e04d9b45f870eec00f145b75c1dede5316ba4b151c7f603f16746b",
+      "stm32n6-neopixel-led.kicad_sch": "daa5f1f484f9c67aae01930b6bd4fdde75b47957b90a7717a0c48de837efc152",
+      "stm32n6-unsectioned.kicad_sch": "45585168a7444c11a8ac8686bad5e9276a3539cfe8bb5bdcc1b74d18d3d158d2"
+    }
+  },
+  "oracle_provenance": {
+    "receipt": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/runtime/eda-stm32n6.chunk01.json",
+    "sha256": "c3204ab8e2842a2e28a05f878b2116f0edddecdaba08fcb76badbb70353bfc8f",
+    "arm": "mylang-zero-rc",
+    "round": 0
+  },
+  "provenance": {
+    "frozen_c1_spec": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/specs/eda-stm32n6.json",
+    "sha256": "0d159d12185f8bebca77991331d19e88fa48987e69b1b9aab3dbdad34aa39f9c",
+    "label": "two-case diagnostic only; no full EDA parity claim"
+  }
+}

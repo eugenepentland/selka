@@ -1,0 +1,9 @@
+# Uninstrumented P5 diagnostic candidate
+
+Built from the complete frozen C1 EDA scratch source using compiler955, with exactly the two production modules from P5 commit 2ba3d475 overlaid. No new tests are imported or included in this source snapshot. Source hashes/difference list, command and compiler identity are in source-receipt.json and build-receipt.json. LLVM contains zero myl_count symbols. The previous counted binary is not used.
+
+Candidate binary SHA256: `005458d24008875dd5374728ed89b2b29a57f2fe9ac71c65315de4d0428a8801`. Output/cache are separate from followup-001. Build passed through shared admission; build.log contains the admission/result evidence.
+
+Prepared two-case diagnostic specs pair frozen C1 and this candidate, retaining pinned Zig ReleaseFast as the output oracle and fresh calibration arm. Cases: RDS3-flat and STM32N6 (another full composition/library-pin case). Both use 2 warmups, 9 alternating paired rounds and fresh 5-sample Zig calibration with 2 calibration warmups. Guest cutoff is 3× the fresh Zig median, with 120s absolute ceiling. RSS is not requested. Exact qualified C1 stdout/stderr/file hashes and receipt provenance are embedded in each spec. validate_output.py checks all successful oracle/calibration/warmup/wall invocations in the progress journal against those hashes and preserves censor/failure statuses.
+
+No timing/profile has been queued or executed. diagnostic-plan.json contains prepared commands for coordinator scheduling; coordinator must choose bounded admission windows. Run check_pins.py before admission, then validate_output.py SPEC RECEIPT after measurement. pins.json covers compiler, candidate/C1/Zig binaries, harness, model/library/golden inputs, specs and validators. This is a two-case diagnostic, not a full EDA parity claim. Previous committed evidence is unchanged.

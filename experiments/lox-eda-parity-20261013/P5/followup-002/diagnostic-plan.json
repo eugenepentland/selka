@@ -1,0 +1,72 @@
+{
+  "status": "prepared, not queued",
+  "pins_sha256": "e486b2430ce1c83b449c208c76fb2ec61e1cae034a4ba1012debf5273e4576da",
+  "cases": [
+    {
+      "case": "rds3+flat",
+      "status": "prepared, not queued",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/scripts/build-slot.sh",
+        "timing",
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/measure.py",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/experiments/lox-eda-parity-20261013/P5/followup-002/eda-rds3+flat.json",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/experiments/lox-eda-parity-20261013/P5/followup-002/eda-rds3+flat-runtime.json",
+        "--cpu",
+        "8",
+        "--rounds",
+        "9",
+        "--warmups",
+        "2",
+        "--rss-rounds",
+        "0",
+        "--zig-factor",
+        "3",
+        "--calibration-rounds",
+        "5",
+        "--calibration-warmups",
+        "2",
+        "--guest-timeout",
+        "120"
+      ],
+      "cutoff": "fresh5-sample Zig median \u00d73, ceiling120s;2 calibration warmups",
+      "pairs": "2 warmups per arm then9 rounds with arm order reversed on odd rounds",
+      "post_validation": "validate_output.py SPEC RECEIPT; pins must be checked before admission"
+    },
+    {
+      "case": "stm32n6",
+      "status": "prepared, not queued",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/scripts/build-slot.sh",
+        "timing",
+        "/usr/bin/python3",
+        "-B",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/measure.py",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/experiments/lox-eda-parity-20261013/P5/followup-002/eda-stm32n6.json",
+        "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/experiments/lox-eda-parity-20261013/P5/followup-002/eda-stm32n6-runtime.json",
+        "--cpu",
+        "8",
+        "--rounds",
+        "9",
+        "--warmups",
+        "2",
+        "--rss-rounds",
+        "0",
+        "--zig-factor",
+        "3",
+        "--calibration-rounds",
+        "5",
+        "--calibration-warmups",
+        "2",
+        "--guest-timeout",
+        "120"
+      ],
+      "cutoff": "fresh5-sample Zig median \u00d73, ceiling120s;2 calibration warmups",
+      "pairs": "2 warmups per arm then9 rounds with arm order reversed on odd rounds",
+      "post_validation": "validate_output.py SPEC RECEIPT; pins must be checked before admission"
+    }
+  ],
+  "scheduling": "coordinator chooses bounded admission windows; no native timing command executed",
+  "build_receipt_sha256": "c9fc52a78ea25ee12ca24852aea092173e086510f43e48fc40869ee7ac8a854a"
+}
