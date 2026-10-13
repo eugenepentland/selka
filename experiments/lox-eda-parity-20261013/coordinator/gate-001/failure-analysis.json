@@ -1,0 +1,15 @@
+{
+  "source_commit": "be33ce79b5b58c3e254e73709c9dd7eb97e5a849",
+  "returncode": 1,
+  "failures": [
+    "my_format: four exchange fixtures require blank lines",
+    "unit: DIAG-ORACLE-1 expected method list omitted exchange"
+  ],
+  "input_instability": {
+    "path": "mylang-counters.json",
+    "cause": "counted list_exchange_test negative runs inherit repository cwd and write default counter file",
+    "preserved_as": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/coordinator/gate-001/unisolated-fatal-counters.json",
+    "sha256": "e5d9b32c0df3e291f3e22ffb34e9bdfc4c5ae7da2b203e1cbc033900ebc27537"
+  },
+  "required_followup": "Formatting/oracle/isolation fixes and complete verification rerun; no green gate or reusable action claim"
+}

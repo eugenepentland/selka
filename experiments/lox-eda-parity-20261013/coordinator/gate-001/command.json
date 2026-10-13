@@ -1,0 +1,17 @@
+{
+  "command": [
+    "python3",
+    "-B",
+    "scripts/verify_cache.py",
+    "--zig",
+    "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig",
+    "--",
+    "-j4",
+    "--maxrss",
+    "8589934592",
+    "-Dcomponent-owned-compiler-pin=/home/epentland/ai/canopy/mylang-memory-20261012-A10/experiments/memory-closeout-20261012/A10/packaging-support6-candidate/candidate-pin.json",
+    "-Dcomponent-seed-source=/home/epentland/ai/canopy/mylang-memory-20261012-A10/.tmp/memory-closeout/A10/owned-pin-support6-5167c588/source.tar"
+  ],
+  "source_commit": "be33ce79b5b58c3e254e73709c9dd7eb97e5a849",
+  "route": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/text-gaps-20261012/coordinator/component-route.json"
+}

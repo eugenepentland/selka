@@ -2,7 +2,7 @@
   "base_source_commit": "be33ce79b5b58c3e254e73709c9dd7eb97e5a849",
   "base_source_root": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/source",
   "source_root": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/source-002",
-  "status": "candidate assembly; not yet frozen or qualified",
+  "status": "source frozen; both application builds complete; combined qualification in progress",
   "overlays": [
     {
       "name": "P2 scalar-IP readers",
@@ -56,6 +56,13 @@
       "a84df0175141cffbdbc17b241ea74c56dd29add4",
       "e49e284bb6d3373b2a946ff8f06b5a796255a790"
     ],
-    "compiler": "fresh full installation required"
-  }
+    "compiler": "coordinator/common-002/build-receipt.json"
+  },
+  "source_freeze_commit": "f38645222",
+  "compiler_source_commit": "fbeba4eed7b549a3feef14c8b8dd620e41494139",
+  "compiler_sha256": "9bedb835438615d79ed8f2985352877a8c844eebeb74cd95a1d276332b6b0c6a",
+  "build_receipts": [
+    "attempts/native-002/build/lox/build-receipt.json",
+    "attempts/native-002/build/eda/build-receipt.json"
+  ]
 }

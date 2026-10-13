@@ -1,0 +1,9 @@
+{
+  "session_id": 98835,
+  "returncode": 1,
+  "stage": "matrix eda",
+  "cause": "Coordinator launched matrix before qualification completed; receipts.qualified refused missing qualification/eda/qualified.json. No matrix mode ran; source and build inputs unchanged.",
+  "exception": "FileNotFoundError",
+  "dependency": "experiments/lox-eda-parity-20261013/attempts/native-002/qualification/eda/qualified.json",
+  "followup": "Qualification now passed. Retry exact matrix command after dependency exists; preserve this orchestration failure."
+}

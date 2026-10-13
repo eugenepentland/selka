@@ -1,7 +1,10 @@
 # Lox/EDA individual Zig parity work
 
-Implementation is in progress. No fresh full-application runtime or parity
-result has been published for this candidate.
+Implementation and qualification are in progress. The first combined candidate
+has passed the application correctness matrices, but its completed runtime cases
+remain slower than Zig. A second candidate includes measured follow-up changes;
+it has been built and is undergoing application qualification. Individual parity
+and the final complete verification gate are still open.
 
 The target is each of the existing 60 cases at or below Zig ReleaseFast runtime:
 13 Lox tree cases, 13 Lox VM cases and 34 EDA cases. A favorable aggregate does
@@ -28,13 +31,41 @@ passes do not replace the combined application matrices or full gate.
 
 Integrated source changes include borrowed EDA parsing and routing inputs,
 fresh Lox constructors, and owned payload exchange in the heap setters. The
-exchange source depends on the new compiler helper, whose final qualification
-is still pending. Its provisional worker build passed 84 tests and removed
-300 list copies (14,745,600 bytes) in the bounded mutation probe. The parser
-probe reduced allocations from 46,000 to 18,000 and allocation traffic from
-4,288,000 to 2,432,000 bytes. These are separate instrumented probes, not
-full-application runtime or RSS measurements. Exact identities and raw counters
-are in P1 and P3.
+bounded mutation probe removes 300 list copies (14,745,600 bytes). The parser
+probe reduces allocations from 46,000 to 18,000 and allocation traffic from
+4,288,000 to 2,432,000 bytes. These instrumented probes do not establish
+full-application runtime or RSS savings. Exact identities and raw counters are
+in P1 and P3.
+
+The immutable first candidate is `source/`, built by compiler
+`955f311e1dbf65b55f4c148ab03cdcb4881bc5668289aea93336dbfd7985206a`
+from revision `be33ce79b5b58c3e254e73709c9dd7eb97e5a849`.
+It passed 93 Lox tests and 325 EDA tests in each of five modes, 2,922 Lox
+conformance executions across three source/mode controls, 102 EDA golden output
+sets and nine error cases. Its selected guest LLVM and native symbol audits
+also passed. Its full verification run failed on fixture formatting, a diagnostic
+oracle spelling list and a counted-test output escaping its temporary directory.
+Those fixes are integrated; a fresh complete gate remains required.
+
+The second frozen source snapshot is `source-002/`. It adds scalar-IP VM readers,
+fresh call-environment construction, simpler checked getter control flow,
+discarded-local-expression evaluation without a transient push/pop, and borrowed
+EDA composition/textbox inputs. Its compiler also skips primitive-field copy
+work after an aggregate has already been initialized by `memcpy`. The separately
+tested pointer-destruction and bulk-list-copy experiments were not adopted.
+`coordinator/source-002/assembly.json` records the individual decisions and
+provenance. Compiler
+`9bedb835438615d79ed8f2985352877a8c844eebeb74cd95a1d276332b6b0c6a`
+comes from revision `fbeba4eed7b549a3feef14c8b8dd620e41494139`;
+both complete application builds are recorded under `attempts/native-002/`.
+
+Diagnostic follow-ups show consistent improvements for individual changes:
+scalar-IP readers reduce VM Fibonacci time by 9.9% and closures by 9.0%; the
+discarded-local-expression change reduces tree string-equality time by 14.8%.
+Each uses nine matched pairs against its recorded control. These results are
+not added together or relabeled as measurements of the combined second candidate.
+Further bounded VM-inlining, numeric-dispatch and EDA-copy/scanner experiments
+remain isolated until their correctness and performance evidence is reviewed.
 
 ## Reproduction and measurement
 

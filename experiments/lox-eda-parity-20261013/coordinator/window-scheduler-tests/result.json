@@ -1,0 +1,21 @@
+{
+  "command": [
+    "python3",
+    "-B",
+    "experiments/lox-eda-parity-20261013/test_windowed_schedule.py"
+  ],
+  "returncode": 0,
+  "harness_sha256": "3886169cb8faad2c6de1663778b8b42913da6df5f3e929c183057b4a0ddd49e5",
+  "test_sha256": "deb623e6022748b768fb51ba1b0a1e62c3d0a2f9dff07f21bb6738728e860623",
+  "existing_chunks_validated": 341,
+  "deadline_tests": {
+    "command": [
+      "python3",
+      "-B",
+      "experiments/lox-eda-parity-20261013/test_timeout.py"
+    ],
+    "returncode": 0,
+    "passed": 8,
+    "measure_sha256": "ebead08898b4eba7885e41451378be14e8d53dc5cf213d66d4230f33130e8c7d"
+  }
+}

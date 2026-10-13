@@ -21,14 +21,28 @@
   },
   "seed_commit": "2525a66f61838086f5327d74db7412926ce4a221",
   "milestones": {
-    "implementation": "in progress",
-    "individual_parity": "not yet measured",
-    "verification": "pending integrated candidate"
+    "implementation": "Initial five workstreams integrated; measured follow-up candidate source-002 built; further bounded experiments in progress",
+    "individual_parity": "Unmet in completed C1 cases; final candidate not yet measured",
+    "verification": "C1 application matrices passed; full gate found formatter/diagnostic/receipt-isolation issues, fixes integrated; complete gate rerun pending. C2 qualification in progress"
   },
   "harness_checks": {
     "timeout_tests": 8,
     "prepare_audit_cases": 60,
     "recovered_identical_lox_corpus_files": 254,
-    "profile_status": "pending shared admission"
+    "profile_status": "P2 native CPU profile and P5 leaf profile completed; attribution limitations recorded in their evidence"
+  },
+  "updated_utc": "2026-10-13T06:47:07.639011+00:00",
+  "candidate": {
+    "source_root": "source-002",
+    "compiler_source_commit": "fbeba4eed7b549a3feef14c8b8dd620e41494139",
+    "compiler_sha256": "9bedb835438615d79ed8f2985352877a8c844eebeb74cd95a1d276332b6b0c6a",
+    "native_attempt": "native-002"
+  },
+  "current_followups": {
+    "P2": "Measured LLVM-only reader inlining; bounded Core policy proposal awaiting review and second workload",
+    "P3": "Parser/tokenizer native overhead audit against C2",
+    "P4": "Numeric dispatch source prototype against C2",
+    "P5": "Remaining EDA avoidable copy sites against C2",
+    "P7": "Independent inliner soundness/budget review"
   }
 }
