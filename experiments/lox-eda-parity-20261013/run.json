@@ -23,7 +23,7 @@
   "milestones": {
     "implementation": "Initial five workstreams integrated; measured follow-up candidate source-002 built; further bounded experiments in progress",
     "individual_parity": "C1 complete runtime sweep: 0/60 parity, 59 completed, VM string equality censored at 3x Zig; C2 combined runtime pending",
-    "verification": "C1 application matrices passed; full gate fixes integrated, complete rerun pending. C2 primary qualification passed for both apps; EDA five modes passed, Lox five modes in progress; selected guest ABI audit passed."
+    "verification": "C1 full gate fixes integrated; complete rerun pending. Both C2 applications passed primary qualification and all five modes; selected guest ABI audit passed."
   },
   "harness_checks": {
     "timeout_tests": 8,
@@ -31,7 +31,7 @@
     "recovered_identical_lox_corpus_files": 254,
     "profile_status": "P2 native CPU profile and P5 leaf profile completed; attribution limitations recorded in their evidence"
   },
-  "updated_utc": "2026-10-13T07:16:52.141347+00:00",
+  "updated_utc": "2026-10-13T07:28:52.599780+00:00",
   "candidate": {
     "source_root": "source-002",
     "compiler_source_commit": "fbeba4eed7b549a3feef14c8b8dd620e41494139",
@@ -40,13 +40,14 @@
   },
   "current_followups": {
     "P1": "Read-only VM string-equality native overhead audit",
-    "P2": "Measured LLVM reader inlining; bounded Core policy, budget/cache/lazy correctness qualification in progress",
-    "P3": "Scalar scanner differential, overflow and full-application qualification",
-    "P4": "Numeric dispatch rejected as neutral; atom operand correctness/native audit",
+    "P2": "Bounded Core reader inliner: same-signature query-only cache edit gap reproduced; local dependency and phase-aware demand fix in progress",
+    "P3": "Scalar scanner rejected after measured1.1%/2.3% slowdowns; earlier borrowed parser retained",
+    "P4": "Arithmetic dispatch rejected as neutral; atom operand diagnostic running with separate RSS observations",
     "P5": "Borrowed gangable membership prototype with matched full-application allocation counters",
     "P7": "Independent inliner soundness, cache and budget review"
   },
   "evidence_archives": {
-    "native-001": "archives/native-001.json"
+    "native-001": "archives/native-001.json",
+    "native-002": "archives/native-002.json"
   }
 }

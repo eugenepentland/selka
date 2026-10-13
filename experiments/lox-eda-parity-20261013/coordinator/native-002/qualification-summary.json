@@ -1,0 +1,33 @@
+{
+  "recorded_utc": "2026-10-13T07:22:02.533914+00:00",
+  "compiler_sha256": "9bedb835438615d79ed8f2985352877a8c844eebeb74cd95a1d276332b6b0c6a",
+  "source_root": "source-002",
+  "status": "Both applications passed primary qualification and all five modes; full compiler verification remains pending.",
+  "applications": {
+    "lox": {
+      "unit_tests_by_mode": {
+        "verified-release-units": 103,
+        "release-units": 103,
+        "debug-units": 103,
+        "optimized-debug-units": 103,
+        "no-facts-units": 103
+      },
+      "qualification_status": "passed",
+      "qualification_receipt_sha256": "7b5406f5beee04416ed27f074365f6c1095ac24bed043382184d7df27d7beea3",
+      "matrix_sha256": "a6a239b2f20cdcbf3f0d5b566f48831637f8ccb3e9481a0b3fdc2eb0cecafe71"
+    },
+    "eda": {
+      "unit_tests_by_mode": {
+        "verified-release-units": 328,
+        "release-units": 328,
+        "debug-units": 328,
+        "optimized-debug-units": 328,
+        "no-facts-units": 328
+      },
+      "qualification_status": "passed",
+      "qualification_receipt_sha256": "d320d3e1d6f6e033eb86778ad79c7875f4edc783f8a26dd7e3e197e4607d903e",
+      "matrix_sha256": "2995d2f4d1b6e9510b0d42c0873d14550967cafc26d4335234c9b7c4a5049af2"
+    }
+  },
+  "archive_manifest": "archives/native-002.json"
+}

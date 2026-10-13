@@ -1,0 +1,455 @@
+{
+  "attempt": "native-002",
+  "archive": "native-002.tar.xz",
+  "archive_sha256": "23463b1613f626aacd9b0c33259d24df88daf2d66dca9f4863d1e9b83c5280d5",
+  "files": [
+    {
+      "path": "adapted-helpers.json",
+      "bytes": 613,
+      "sha256": "bc2c0a318e83d848a36a5981ea860a11d888415af80a1a1bc294f204fc470c3d"
+    },
+    {
+      "path": "build/eda/before-same-compiler.log",
+      "bytes": 52,
+      "sha256": "95278e84384c2651cb80fc4ecc13482ccf3272cc8eed0e32d2601c9580f1fb0a"
+    },
+    {
+      "path": "build/eda/build-receipt.json",
+      "bytes": 45619,
+      "sha256": "a40efb8ec0cef4109485a9f28447109cfba7feedf777ccdedfb5683b2ff7dd93"
+    },
+    {
+      "path": "build/eda/migrated-rc-counted.log",
+      "bytes": 52,
+      "sha256": "c276d807db09059e557d0a4ced7661072453241c93e6f8e03854022d7128f3e1"
+    },
+    {
+      "path": "build/eda/migrated-rc.log",
+      "bytes": 174,
+      "sha256": "d7506b33588dd2df5ed8b2aa35b648de469ba472b4de941e6142f0495ec737b6"
+    },
+    {
+      "path": "build/eda/original-rc-counted.log",
+      "bytes": 173,
+      "sha256": "961cca02ff72826616312ac3e9f803fa2f46b320a51a7663df5de5b6fbe1d89e"
+    },
+    {
+      "path": "build/eda/original-rc.log",
+      "bytes": 153,
+      "sha256": "ba8491e2afe55239d6add1f1da74ff6d7b2c66b185d45ada2fc98d996e9ac426"
+    },
+    {
+      "path": "build/eda/zero-rc-counted.log",
+      "bytes": 52,
+      "sha256": "74e7a79ed36370628dd1ba23704510bd63af94b195f5b275100e27113872a903"
+    },
+    {
+      "path": "build/eda/zero-rc.log",
+      "bytes": 173,
+      "sha256": "d41d936ee6736a5da98faceb8cf1c08572bcb0479f77408be3c0f4b4812f1f97"
+    },
+    {
+      "path": "build/eda-selected.json",
+      "bytes": 238,
+      "sha256": "c1fe5477fa04c06ad64f7abd831c4a2873fad61f5711b3b28c064ae00228ae87"
+    },
+    {
+      "path": "build/lox/before-same-compiler.log",
+      "bytes": 297,
+      "sha256": "e34324ca0e4c243ffe4ac27d626a88332db58d6fc0d50e48709c0807d8697429"
+    },
+    {
+      "path": "build/lox/build-receipt.json",
+      "bytes": 17566,
+      "sha256": "67262b31f83866602441128dc3ac5945d87c678285621798b51f864842615b9c"
+    },
+    {
+      "path": "build/lox/migrated-rc-counted.log",
+      "bytes": 153,
+      "sha256": "079ca040930c0731cc06485ad9c1db501e2bce9e839c4f09d863d00341a77a0a"
+    },
+    {
+      "path": "build/lox/migrated-rc.log",
+      "bytes": 52,
+      "sha256": "9057ecca692bd6a3e235af5e09b3722d66a97e3f904b11e3e173f1937361772b"
+    },
+    {
+      "path": "build/lox/original-rc-counted.log",
+      "bytes": 153,
+      "sha256": "b96d77e0c284886dd76762336bc7d8d7a4ff6bed465cc5c6d548fbd70860e77b"
+    },
+    {
+      "path": "build/lox/original-rc.log",
+      "bytes": 153,
+      "sha256": "7f3abbce0345346dc882bf4f358ddce2a3c403c703b0c1da7f513756a1d0d506"
+    },
+    {
+      "path": "build/lox/zero-rc-counted.log",
+      "bytes": 173,
+      "sha256": "20c278940d6509c4b83ec59d0b7de4765d14ddefd7ed4553bc84c57b09427eed"
+    },
+    {
+      "path": "build/lox/zero-rc.log",
+      "bytes": 153,
+      "sha256": "7b37c26f6fa4c878dca5f5ff1ce80f8846d88985da4a481dc3f8106885abc0f7"
+    },
+    {
+      "path": "build/lox-selected.json",
+      "bytes": 238,
+      "sha256": "e91e7ca3283d40b80a5e851e42415bb065005bf7596a31b0fad3fbafc22c1e4b"
+    },
+    {
+      "path": "check-error-paths.py",
+      "bytes": 2571,
+      "sha256": "bac1441d368c006c58f888ce88432ea702325fb03b35764591cb8ae44ad5ed45"
+    },
+    {
+      "path": "eda-declaration-inventory.json",
+      "bytes": 41392,
+      "sha256": "47dad057a722449a9c41c82f3fed7ac2bd250d459be47a11422e0c0fc184db8f"
+    },
+    {
+      "path": "error-paths.json",
+      "bytes": 15184,
+      "sha256": "4ec8e259cef32d7aa2ec388f892860984efed9f2ccd0e7c682bff64e7a43e716"
+    },
+    {
+      "path": "lox-declaration-inventory.json",
+      "bytes": 9054,
+      "sha256": "535cec19acbde8bb5ce3c72f7e0dbe327f24f86a02b335a95d3deb7c012678c8"
+    },
+    {
+      "path": "matrix/eda/debug-units.stderr",
+      "bytes": 1237,
+      "sha256": "43cd8c8316c81df1f621fd7f5aa61513159e9cedc8d200a1c636c7b709ca6800"
+    },
+    {
+      "path": "matrix/eda/debug-units.stdout",
+      "bytes": 204179,
+      "sha256": "f6742fa1731fc438c380ca63c212b24a8809db2f14e0657aa941f2db457df4cb"
+    },
+    {
+      "path": "matrix/eda/no-facts-units.stderr",
+      "bytes": 421,
+      "sha256": "f353bc9afc5bf6bb8f81c1779fd7d864b28200a1b178262ca7f320bd4b2738c0"
+    },
+    {
+      "path": "matrix/eda/no-facts-units.stdout",
+      "bytes": 204232,
+      "sha256": "777ddd31556039fd6e1c5cdf72657d9725bb8ffb25f4fb47d9618600a5a47027"
+    },
+    {
+      "path": "matrix/eda/optimized-debug-units.stderr",
+      "bytes": 421,
+      "sha256": "19bb585385c7e3a9c5dabc18419ff49e0f2f8eb933f2b34ce20f412c8520b9ae"
+    },
+    {
+      "path": "matrix/eda/optimized-debug-units.stdout",
+      "bytes": 204216,
+      "sha256": "b181a2816508d03752f9d3ada2ef50d7b4dac3d53c21061407ba0e155c712f04"
+    },
+    {
+      "path": "matrix/eda/release-units.stderr",
+      "bytes": 790,
+      "sha256": "08ccec369d1b9c84e5b92f82a04761145b0a607ca1430e4122ba39ba11ea753c"
+    },
+    {
+      "path": "matrix/eda/release-units.stdout",
+      "bytes": 204306,
+      "sha256": "6f19a23dd7cf9178ba57dcb5ef35db2597f91d8d8dbd9d3d3defe567b02f99c0"
+    },
+    {
+      "path": "matrix/eda/results.json",
+      "bytes": 1646360,
+      "sha256": "2995d2f4d1b6e9510b0d42c0873d14550967cafc26d4335234c9b7c4a5049af2"
+    },
+    {
+      "path": "matrix/lox/debug-build.stderr",
+      "bytes": 52,
+      "sha256": "d49f8b80db310e248c0db822fcd9370cad1718de445fb508897b9bc3b9199e02"
+    },
+    {
+      "path": "matrix/lox/debug-build.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "matrix/lox/debug-units.stderr",
+      "bytes": 173,
+      "sha256": "12270aa62f05a0e3ea3c3c279e81d5e671d28fe4def279067dd946a2f1a003e1"
+    },
+    {
+      "path": "matrix/lox/debug-units.stdout",
+      "bytes": 59025,
+      "sha256": "9ec953eafc218805e14e7c6f5b587f2e5404c52b114ff59424a3f442af0411ac"
+    },
+    {
+      "path": "matrix/lox/debug-vm-regressions.stderr",
+      "bytes": 173,
+      "sha256": "27b713cc106ff72ccc8e21f2a602bb7756892d091b07dc597a9c18f2b5f5276e"
+    },
+    {
+      "path": "matrix/lox/debug-vm-regressions.stdout",
+      "bytes": 44,
+      "sha256": "b7d9a0a54221af51e97981f206e64294bbb41e7bfd9d42fcb3b152a55cd36277"
+    },
+    {
+      "path": "matrix/lox/no-facts-build.stderr",
+      "bytes": 52,
+      "sha256": "05516f6eeed5f63d80bb21b1a2397b5fab4454ba0716466ce266105882b3a05e"
+    },
+    {
+      "path": "matrix/lox/no-facts-build.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "matrix/lox/no-facts-units.stderr",
+      "bytes": 173,
+      "sha256": "3b04a0bc1d15c8ed67b2e2f862c4ce6e16e49d5333edfb9980a9ccab9425239e"
+    },
+    {
+      "path": "matrix/lox/no-facts-units.stdout",
+      "bytes": 59035,
+      "sha256": "33866777a69c540115c1288ef358bc1cb6b0e91c006039db3cdbc26e48f987d2"
+    },
+    {
+      "path": "matrix/lox/no-facts-vm-regressions.stderr",
+      "bytes": 52,
+      "sha256": "400df41fb4441e90f1908a65ccc813237b1832d83627dab1d19b4fff3224e41a"
+    },
+    {
+      "path": "matrix/lox/no-facts-vm-regressions.stdout",
+      "bytes": 44,
+      "sha256": "b7d9a0a54221af51e97981f206e64294bbb41e7bfd9d42fcb3b152a55cd36277"
+    },
+    {
+      "path": "matrix/lox/optimized-debug-build.stderr",
+      "bytes": 173,
+      "sha256": "a6cca704559ad85042405e5d2a0fa69fb3b8cb62883161702ac94313e5f19271"
+    },
+    {
+      "path": "matrix/lox/optimized-debug-build.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "matrix/lox/optimized-debug-units.stderr",
+      "bytes": 173,
+      "sha256": "ca43572692d8d0a153b546162e8c9ac11c701bcbbc50bb790cfcba551fc6aa42"
+    },
+    {
+      "path": "matrix/lox/optimized-debug-units.stdout",
+      "bytes": 59031,
+      "sha256": "73caa6891977153322ad4504643c59baec7b3e3685bcd1cb4b0d45b24a28f61b"
+    },
+    {
+      "path": "matrix/lox/optimized-debug-vm-regressions.stderr",
+      "bytes": 52,
+      "sha256": "54fec64ed8da7057b6bdda2d728d6c0419ed9f0497f7b3e11d2503591fda0937"
+    },
+    {
+      "path": "matrix/lox/optimized-debug-vm-regressions.stdout",
+      "bytes": 44,
+      "sha256": "b7d9a0a54221af51e97981f206e64294bbb41e7bfd9d42fcb3b152a55cd36277"
+    },
+    {
+      "path": "matrix/lox/provider-inputs.json",
+      "bytes": 188,
+      "sha256": "61b679da2e153004cbaa2b4b28b5032d1103cd3564d80f86257a2b1ae391c9c9"
+    },
+    {
+      "path": "matrix/lox/release-units.stderr",
+      "bytes": 173,
+      "sha256": "d760baa38ba4d4d1659e2543834dc8a1e85cce21b7afdd2c5e57d6f5e10861fa"
+    },
+    {
+      "path": "matrix/lox/release-units.stdout",
+      "bytes": 59032,
+      "sha256": "c299738b047fef37cbdcf28b3bd6ead516d13f99aa3b2928005a2a6a3eaa498e"
+    },
+    {
+      "path": "matrix/lox/release-vm-regressions.stderr",
+      "bytes": 52,
+      "sha256": "546d7a5bc2e272bfc7740536c429650685e5540f3fed53f71cee57c48d8dc4eb"
+    },
+    {
+      "path": "matrix/lox/release-vm-regressions.stdout",
+      "bytes": 44,
+      "sha256": "b7d9a0a54221af51e97981f206e64294bbb41e7bfd9d42fcb3b152a55cd36277"
+    },
+    {
+      "path": "matrix/lox/results.json",
+      "bytes": 493260,
+      "sha256": "a6a239b2f20cdcbf3f0d5b566f48831637f8ccb3e9481a0b3fdc2eb0cecafe71"
+    },
+    {
+      "path": "matrix/lox/verified-release-build.stderr",
+      "bytes": 153,
+      "sha256": "76d9d9e3fa5dd3b91bdbb1eed01519cd5fc6bbd2d0e58ea8e5d13a680fd3d711"
+    },
+    {
+      "path": "matrix/lox/verified-release-build.stdout",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "matrix/lox/verified-release-vm-regressions.stderr",
+      "bytes": 52,
+      "sha256": "312834f286ee43012ae3f9c0f5a98fd9ffc8946590ce00d64c2d55a2ad96eba8"
+    },
+    {
+      "path": "matrix/lox/verified-release-vm-regressions.stdout",
+      "bytes": 44,
+      "sha256": "b7d9a0a54221af51e97981f206e64294bbb41e7bfd9d42fcb3b152a55cd36277"
+    },
+    {
+      "path": "matrix-eda.py",
+      "bytes": 5633,
+      "sha256": "eadce018181b9ffd5195f588557f3b62c82ed360f6ee81e3beccf85bff8b0e86"
+    },
+    {
+      "path": "matrix-lox.py",
+      "bytes": 5633,
+      "sha256": "048410cbc65279b87860f92d821aa520695787480040c42508bb1a78084fdad4"
+    },
+    {
+      "path": "qualification/eda/checked-tests.stderr",
+      "bytes": 421,
+      "sha256": "595a81e40d2de28d586f445c935f2bfabfb3a654b9310c5eb0679bd4bd030452"
+    },
+    {
+      "path": "qualification/eda/checked-tests.stdout",
+      "bytes": 204858,
+      "sha256": "9ed7a02a0aeaac2557584d28777369325c6b0894f0fc9c6a760ea24ed745b7f3"
+    },
+    {
+      "path": "qualification/eda/commands.json",
+      "bytes": 2068,
+      "sha256": "f742d17e1bfdb49a178bbfe0805226b02d8f5144f5e725bd07de71c0492eeec0"
+    },
+    {
+      "path": "qualification/eda/error-paths.stderr",
+      "bytes": 173,
+      "sha256": "d722122852646a314136d13603224ab703b8a70eb9d53ea5c4ac58d90059ece0"
+    },
+    {
+      "path": "qualification/eda/error-paths.stdout",
+      "bytes": 20,
+      "sha256": "1479da111ab85bf1e057944da6b1d0a1162a81a4f5728ffbfd3ba4106f7e67f5"
+    },
+    {
+      "path": "qualification/eda/goldens.json",
+      "bytes": 735410,
+      "sha256": "5fc5db791d7bf7057104eadcb79697dcf7284b5e218312a2b014fbb4fa92bd19"
+    },
+    {
+      "path": "qualification/eda/goldens.stderr",
+      "bytes": 153,
+      "sha256": "db85ba44b06b5ae860aebaaca4e26a552b7bf05a024c6d859cacf165048fc149"
+    },
+    {
+      "path": "qualification/eda/goldens.stdout",
+      "bytes": 53,
+      "sha256": "19af32c1a4b4a7b5671f59c41d9a6a71f1cbfd3cce17d06cfc7c5fc9fb253903"
+    },
+    {
+      "path": "qualification/eda/qualified.json",
+      "bytes": 4466,
+      "sha256": "d320d3e1d6f6e033eb86778ad79c7875f4edc783f8a26dd7e3e197e4607d903e"
+    },
+    {
+      "path": "qualification/lox/checked-tests.stderr",
+      "bytes": 1092,
+      "sha256": "d64fde79e343ae7f23577e50749465e7c920db7384a3aa3ff2fc9ba14f513fa9"
+    },
+    {
+      "path": "qualification/lox/checked-tests.stdout",
+      "bytes": 59227,
+      "sha256": "413060e4a8c7c031ee47d39a3165af1f5cf23ba78c70510a07f6669bb31886f3"
+    },
+    {
+      "path": "qualification/lox/commands.json",
+      "bytes": 2957,
+      "sha256": "dce4f54129f527b82b58ad6f8215c455f0749195810ab9b26f3c3270355f7a18"
+    },
+    {
+      "path": "qualification/lox/conformance-inputs.json",
+      "bytes": 55311,
+      "sha256": "051479b96f4f1de3b5b495a2f76d8c7fe3c1388320ac8a7674b96d0d58c05d48"
+    },
+    {
+      "path": "qualification/lox/conformance-migrated-rc.stderr",
+      "bytes": 153,
+      "sha256": "beefea4483d01bf14c496a908707fd11d1b04a5f344cda3e3c905963cb0c6ec9"
+    },
+    {
+      "path": "qualification/lox/conformance-migrated-rc.stdout",
+      "bytes": 202,
+      "sha256": "08189b55a4fce5f74a4264e276d2f2b3ba017653bd07b7e0fb11ff3cdd48f62b"
+    },
+    {
+      "path": "qualification/lox/conformance-original-rc.stderr",
+      "bytes": 153,
+      "sha256": "38286b74b2d318ec2ed7e49a04b3b064498237c3f2c05f7f12c070e1f82b137e"
+    },
+    {
+      "path": "qualification/lox/conformance-original-rc.stdout",
+      "bytes": 202,
+      "sha256": "08189b55a4fce5f74a4264e276d2f2b3ba017653bd07b7e0fb11ff3cdd48f62b"
+    },
+    {
+      "path": "qualification/lox/conformance-zero-rc.stderr",
+      "bytes": 153,
+      "sha256": "840f1e2646c01a85bdc4c496feb6cc16da5baa5d8fa072936b138246705b94a2"
+    },
+    {
+      "path": "qualification/lox/conformance-zero-rc.stdout",
+      "bytes": 202,
+      "sha256": "08189b55a4fce5f74a4264e276d2f2b3ba017653bd07b7e0fb11ff3cdd48f62b"
+    },
+    {
+      "path": "qualification/lox/harness.json",
+      "bytes": 223,
+      "sha256": "497da966e704c4d21931b61fc189f3fb9d341eed05b3c3386afcc734e559b130"
+    },
+    {
+      "path": "qualification/lox/qualified.json",
+      "bytes": 6454,
+      "sha256": "7b5406f5beee04416ed27f074365f6c1095ac24bed043382184d7df27d7beea3"
+    },
+    {
+      "path": "qualification/lox/smoke-gc-parity.stderr",
+      "bytes": 2198,
+      "sha256": "e7b263f01d507afab5babe5c13de04cdf4aa04ecaab323ec7d61f5b45cd74c33"
+    },
+    {
+      "path": "qualification/lox/smoke-gc-parity.stdout",
+      "bytes": 3932,
+      "sha256": "b4dfdfee922e5d47c3b529f934dc06a5a8cc8c70cab3051d57b8eab5477cc479"
+    },
+    {
+      "path": "qualify-eda.py",
+      "bytes": 6298,
+      "sha256": "62120f607b2f4b9617fe4c8d7f5709730e491ffe53ec71a0f8642159ae3aea40"
+    },
+    {
+      "path": "qualify-lox.py",
+      "bytes": 6321,
+      "sha256": "b36dce2f5f15056cedffd28e86d3fbf81e74a316479c86b308d483a4fe056ad8"
+    },
+    {
+      "path": "qualify_goldens.py",
+      "bytes": 4101,
+      "sha256": "a968329784a5d32ec44f16e10638d8b2b576a61f3f2ec61ba9feae5321655874"
+    },
+    {
+      "path": "receipts.py",
+      "bytes": 2047,
+      "sha256": "4ff6d82305f86478ea6791fe93ac19efcdab40cc9805d5276c37593c9f5de983"
+    }
+  ],
+  "scope": "Evidence files only; compiler installations and guest binaries are separately pinned by the archived receipts.",
+  "verified": true,
+  "raw_files_retained": true
+}

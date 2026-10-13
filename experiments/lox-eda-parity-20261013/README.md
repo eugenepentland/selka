@@ -64,10 +64,13 @@ scalar-IP readers reduce VM Fibonacci time by 9.9% and closures by 9.0%; the
 discarded-local-expression change reduces tree string-equality time by 14.8%.
 Each uses nine matched pairs against its recorded control. These results are
 not added together or relabeled as measurements of the combined second candidate.
-Further bounded VM-inlining and EDA-copy/scanner experiments remain isolated
+Further bounded VM-inlining, tree operand and EDA-copy experiments remain isolated
 until their correctness and performance evidence is reviewed. The numeric
 dispatch prototype removed a native helper call but showed no reliable runtime
 benefit in nine matched pairs on each of three workloads; it is not adopted.
+The scalar scanner prototype also remains out: despite passing differential
+and overflow checks and reducing instrumented helper calls, it increased runtime
+by about 1.1% and 2.3% in two nine-pair comparisons against C2.
 
 The first candidate's complete runtime/RSS sweep is recorded in
 `coordinator/progress-003.json`. All 60 cases remain in the denominator: 59
@@ -81,7 +84,7 @@ and final identity validation remain pending; these are C1 results, not C2.
 Both C2 applications have passed primary qualification. EDA additionally passed
 all five build modes with 328 tests each, 102 golden output sets and nine error
 cases. Lox has 103 passing tests, all three conformance controls and the GC/CLI
-checks; its five-mode matrix is still running. The selected C2 guest LLVM and
+checks; all five modes also passed with 103 tests each. The selected C2 guest LLVM and
 native symbol audits pass. The full compiler verification gate remains open.
 
 ## Reproduction and measurement
@@ -102,7 +105,8 @@ artifacts, with results recorded in `P6/guest-audit-validation.json`.
 
 Finished attempt evidence is preserved with `archive_attempt.py`. Each archive
 has a per-file SHA-256 inventory and is verified byte for byte before publication.
-`archives/native-001.tar.xz` contains the first complete application qualification;
+`archives/native-001.tar.xz` and `archives/native-002.tar.xz` contain the two
+complete application qualifications;
 its raw attempt directory is retained locally. Compiler installations and guest
 binaries are separately pinned by the archived receipts.
 

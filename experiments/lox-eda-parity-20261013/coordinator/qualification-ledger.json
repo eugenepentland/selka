@@ -1,0 +1,86 @@
+{
+  "updated_utc": "2026-10-13T07:28:52.600204+00:00",
+  "items": [
+    {
+      "id": "P1-payload-exchange-and-construction",
+      "status": "integrated; C2 application qualification passed",
+      "owner": "P1",
+      "source": "source-002/lox",
+      "evidence": [
+        "P1/setter-audit-002",
+        "P1/call-env-001",
+        "P1/discard-local-001"
+      ],
+      "remaining": "Combined final-candidate runtime/RSS/counts; C2-only IP publication prototype under review."
+    },
+    {
+      "id": "P2-vm-readers",
+      "status": "scalar-IP source integrated; bounded compiler inliner in progress",
+      "owner": "P2",
+      "evidence": [
+        "P2/scalar-ip-001"
+      ],
+      "remaining": "Close bounded cache dependency, phase-aware lazy demand and budget-refusal regressions; qualify and measure actual Core implementation. LLVM-only diagnostic is not shipped compiler evidence."
+    },
+    {
+      "id": "P3-eda-parser",
+      "status": "borrowed parser integrated; scalar scanner rejected after slower paired runtime",
+      "owner": "P3",
+      "source": "source-002/eda",
+      "remaining": "Preserve rejected experiment evidence; retain existing parser implementation."
+    },
+    {
+      "id": "P4-tree-execution",
+      "status": "fresh environments integrated; arithmetic experiment rejected; atom experiment qualified in isolation",
+      "owner": "P4",
+      "remaining": "Measure atom runtime and RSS tradeoff before source adoption; preserve neutral arithmetic evidence."
+    },
+    {
+      "id": "P5-eda-composition",
+      "status": "borrowed geometry/textbox inputs integrated; gangable dictionary copy removal measured in isolation",
+      "owner": "P5",
+      "remaining": "Full isolated unit matrix, reviewed source commit, timing and integration; isolated RDS3-flat saves37926allocations/2811312bytes, peak unchanged."
+    },
+    {
+      "id": "runtime-scalar-copy",
+      "status": "integrated; C2 application qualification passed",
+      "owner": "P7",
+      "remaining": "Final full gate and six text microbenchmarks. Pointer-destruction and bulk-copy experiments not adopted."
+    },
+    {
+      "id": "C1-runtime",
+      "status": "780/780 chunks complete; counters pending",
+      "owner": "coordinator",
+      "evidence": [
+        "coordinator/progress-003.json"
+      ],
+      "remaining": "Counter watcher resumed through shared admission; validate pins, create combined report and archive. C1 parity0/60; VM string equality censored,59completed."
+    },
+    {
+      "id": "C2-applications",
+      "status": "passed primary qualification and all five build modes",
+      "owner": "coordinator",
+      "evidence": [
+        "coordinator/native-002/qualification-summary.json",
+        "archives/native-002.json"
+      ],
+      "remaining": "Do not relabel as later compiler/source qualification."
+    },
+    {
+      "id": "final-verification",
+      "status": "open",
+      "owner": "coordinator",
+      "evidence": [
+        "coordinator/gate-001/failure-analysis.json"
+      ],
+      "remaining": "C1 gate fixes integrated; run complete registered verification/Guardian on frozen final sources; record fresh/reused actions."
+    },
+    {
+      "id": "final-performance",
+      "status": "open",
+      "owner": "coordinator/P4",
+      "remaining": "All60 final cases,3xZig censors retained, allocation/peak/exit-live/RSS, three paired cold/warm compile observations, six text microbenchmarks. No individual parity completion claim before all60pass."
+    }
+  ],
+  "publication": "Integration branch only; no push or main advancement in this batch."
+}
