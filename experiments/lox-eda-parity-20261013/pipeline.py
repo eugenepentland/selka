@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Isolated all-case parity preparation and timing; scheduler alone owns admission."""
-import argparse, hashlib, json, os, pathlib, shutil, statistics, subprocess, sys
+import argparse, gzip, hashlib, json, os, pathlib, shutil, statistics, subprocess, sys
 P=pathlib.Path
 HERE=P(__file__).resolve().parent
 
@@ -33,6 +33,7 @@ def main():
                     file=P(source['root'])/name;assert sha(file)==digest;pins[str(file)]=digest
             for binary in b['binaries'].values(): assert binary['status']=='ok' and sha(binary['path'])==binary['sha256']
         recovery=json.loads((a.prior_root/'input-recovery/manifest.json').read_text())['entries']
+        historical_path=a.prior_root/'runtime-summary.json.gz';historical=json.loads(gzip.decompress(historical_path.read_bytes()));pins[str(historical_path)]=sha(historical_path)
         prior_specs=sorted((a.prior_root/'specs').glob('*.json'));assert len(prior_specs)==60
         for original in prior_specs:
             spec=json.loads(original.read_text());app=spec['cell'].split('/')[0];old_arms=spec['arms']
@@ -45,6 +46,13 @@ def main():
                 if target.exists(): assert sha(target)==entry['sha256']
                 else:shutil.copyfile(candidate,target)
                 return str(target)
+            for path in spec['files']:
+                assert sha(relocate(path))==historical['cells'][spec['cell']]['identities'][path], ('historical input changed',path)
+            for folder in spec.get('identity_dirs',[]):
+                for name,digest in tree(P(folder)).items():
+                    assert historical['cells'][spec['cell']]['identities'][str(P(folder)/name)]==digest
+            for name in ['zig-fast','mylang-zero-rc']:
+                assert sha(old_arms[name][0])==historical['cells'][spec['cell']]['identities'][old_arms[name][0]]
             spec['files']=[relocate(path) for path in spec['files']]
             if 'expected_stdout' in spec:spec['expected_stdout']=relocate(spec['expected_stdout'])
             previous=old_arms['mylang-zero-rc']
