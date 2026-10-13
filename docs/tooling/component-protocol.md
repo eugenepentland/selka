@@ -75,9 +75,24 @@ compiler staging. The pinned Zig's cached libc startup objects can retain
 debug paths from the working directory where they were first built; borrowing
 the caller's global cache made otherwise identical rebuilds differ in their
 debug sections. The private cache removes that dependency on caller cache
-history. The resolved component store root is part of the build identity,
+history. Every build, whatever its key and whichever worktree runs it,
+compiles in one staging directory, `<component store>/staging/component`, with
+its temporary and Zig local cache directories inside it; the builder lock
+serializes its use. The seed embeds those paths in the debug sections, so a
+key-named or caller-named directory would make otherwise identical builds
+differ. The resolved component store root is part of the build identity,
 because those debug paths still depend on it. Reproducibility checks compare
 the complete executable bytes within that declared build context.
+
+The build identity (format 3) names the builder by a location-free
+`coordinator` record rather than the digest of the `selka-components`
+executable, whose own debug information names the worktree that compiled it:
+`sources_sha256` hashes the builder's source closure, embedded when it is
+compiled (`selfhost/component_builder_identity.zig` lists it, and
+`zig build test-component-support` fails when a builder source imports a file
+the list omits), beside the Zig version, optimize mode, backend and target.
+Worktrees at the same commit sharing one component store therefore select the
+same key and install byte-identical executables and manifests.
 
 The planner uses the same 64-byte envelope, with magic `SLKCP001`, protocol 1
 and schema 1. The host sets the snapshot to SHA-256 of the complete request
