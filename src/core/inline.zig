@@ -61,6 +61,7 @@ pub fn cfgCallerDemandWithScratch(arena: std.mem.Allocator, scratch: std.mem.All
     const caller = &module.functions.items[index];
     var count: u32 = 0;
     var constructor_instructions: usize = 0;
+    var mutation_trials: usize = 0;
     var b: usize = 0;
     while (b < caller.blocks.items.len) : (b += 1) {
         var at: usize = 0;
@@ -71,19 +72,29 @@ pub fn cfgCallerDemandWithScratch(arena: std.mem.Allocator, scratch: std.mem.All
             if (demand) |handles| try handles.ensure(@intCast(call.a.index()));
             const callee = &module.functions.items[call.a.index()];
             if (@import("borrowed_provider.zig").contains(module, callee)) continue;
-            const helper = cfg.qualifies(callee);
-            const reader = @import("inline_reader.zig").qualifies(module, callee);
+            const reader_policy = @import("inline_reader.zig");
+            const mutation_reader = reader_policy.mutationShell(module, callee);
+            if (mutation_reader) {
+                if (mutation_trials == reader_policy.mutation_trial_limit) continue;
+                mutation_trials += 1;
+                if (demand) |handles| if (reader_policy.mutationQuery(module, callee)) |target| try handles.ensure(target);
+                if (!reader_policy.mutationFamily(module, callee) or !reader_policy.mutationCall(caller, callee, ref)) continue;
+            }
+            const helper = !mutation_reader and cfg.qualifies(callee);
+            const reader = mutation_reader or reader_policy.qualifies(module, callee);
+            const clone_cost = callee.insts.items.len + 1 + @as(usize, if (mutation_reader) 2 else 0);
             if (!helper) {
                 // Readers and constructors share one fixed cloning budget.
-                // Each clone adds at most the callee's instructions and a jump.
-                if (callee.insts.items.len + 1 > destination.max_caller_instructions - constructor_instructions) continue;
+                // Each clone adds its instructions and a jump; scalar mutation readers
+                // also reserve two slots for projected result phis/copies.
+                if (clone_cost > destination.max_caller_instructions - constructor_instructions) continue;
                 const constructs = reader or @import("inline_snapshot.zig").qualifies(module, callee) or try destination.qualifies(trials.allocator(), module, callee);
                 _ = trials.reset(.retain_capacity);
                 if (!constructs) continue;
             }
             var clone = try provenance.prepare(arena, .{ .caller = @intCast(index), .callee = @intCast(call.a.index()), .block = @intCast(b), .ref = ref, .span = call.span }, callee) orelse continue;
             try cfg.splice(arena, caller, callee, b, at, &clone);
-            if (!helper) constructor_instructions += callee.insts.items.len + 1;
+            if (!helper) constructor_instructions += clone_cost;
             count += 1;
             break;
         }

@@ -62,6 +62,7 @@ comptime {
     _ = @import("emit_llvm_test.zig");
     _ = @import("emit_units_test.zig");
     _ = @import("inline_origins_test.zig");
+    _ = @import("inline_scalar_reader_test.zig");
     _ = @import("a09_version_test.zig");
     _ = @import("driver.zig");
     _ = @import("driver_test.zig");

@@ -166,6 +166,9 @@ pub const Context = struct {
                     error.InvalidSnapshot => return null,
                 };
                 try writer.write(Provenance, callee_ancestry);
+                if (stage == .inline_cfg and inst.op == .call) {
+                    if (!(try self.readerDependency(a, &writer, provenance, function, target))) return null;
+                }
             }
             if (inputs.returns.len != 0 and inst.op == .call) try writer.write(?facts.Interval, inputs.returns[target]);
             if (inputs.effects) |summaries| {
@@ -175,6 +178,35 @@ pub const Context = struct {
         var dependencies: [32]u8 = undefined;
         std.crypto.hash.Blake3.hash(writer.bytes.items, &dependencies, .{});
         return self.store.key(@tagName(stage), &.{ &self.prepared.?.layout, &digest, &dependencies });
+    }
+
+    /// Eligibility reads one bounded query body even when that query is rejected.
+    /// No demand is performed here: the stage boundary prepares observed bodies.
+    fn readerDependency(self: *Context, a: std.mem.Allocator, writer: *codec.Writer, provenance: *const origins.Table, caller: u32, wrapper: u32) std.mem.Allocator.Error!bool {
+        const reader = @import("inline_reader.zig");
+        const module = self.source.module;
+        const query = reader.mutationQuery(module, &module.functions.items[wrapper]);
+        try writer.write(?u32, query);
+        const target = query orelse return true;
+        const query_body = &module.functions.items[target];
+        const bounded = query_body.blocks.items.len != 0 and query_body.blocks.items.len <= 32 and query_body.insts.items.len <= 96 and query_body.loops.items.len == 0;
+        try writer.write(bool, bounded);
+        try writer.write(u64, @intCast(query_body.blocks.items.len));
+        try writer.write(u64, @intCast(query_body.insts.items.len));
+        try writer.write(u64, @intCast(query_body.loops.items.len));
+        if (!bounded) return true;
+        const saved = if (self.lazy.checkpoints) |provider| provider.identity_fn(provider.pointer, .inline_cfg, caller, target) else null;
+        const digest = if (saved) |checkpoint| checkpoint.digest else self.body(target) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.UnknownMetadata => return false,
+        };
+        try writer.write([32]u8, digest);
+        const ancestry = if (saved) |checkpoint| checkpoint.ancestry else Provenance.capture(a, self.source, provenance, target) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.InvalidSnapshot => return false,
+        };
+        try writer.write(Provenance, ancestry);
+        return true;
     }
 
     /// Decode on reclaimable storage and count the observed lookup result.

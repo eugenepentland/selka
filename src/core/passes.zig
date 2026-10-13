@@ -3,6 +3,7 @@
 //! facts again), ownership (`own.zig`, after the facts it may not disturb), and the
 //! vector plans. Debug builds run only ownership (`ownership`).
 const std = @import("std");
+const demand_ir = @import("demand_ir.zig");
 const ir = @import("ir.zig");
 const facts = @import("facts.zig");
 const inline_leaves = @import("inline.zig");
@@ -991,6 +992,7 @@ fn inlineCached(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *i
             state.cursor(stage, @intCast(index));
             if (state.green[index]) continue;
         }
+        if (stage == .inline_cfg) if (cache.lazy.raw) |raw| try prepareReaderQueries(module, raw, @intCast(index));
         const params = if (index < parameters.len) parameters[index] else &.{};
         const key = try cache.key(work.allocator(), .{ .stage = stage, .function = @intCast(index), .mode = @backingInt(round.mode), .provenance = provenance, .inputs = .{ .parameters = params } });
         var changed: ?u32 = null;
@@ -1014,6 +1016,21 @@ fn inlineCached(arena: std.mem.Allocator, backing: std.mem.Allocator, module: *i
         _ = work.reset(.retain_capacity);
     }
     return total;
+}
+
+/// Materialize only the exact one-hop query inspected by bounded reader trials.
+/// This runs at the existing stage cursor, whose errors already admit demand loading.
+/// Prepare every direct shell; only the later expensive cloning trials are capped.
+pub fn prepareReaderQueries(module: *ir.Module, raw: *demand_ir.Context, caller: u32) demand_ir.Error!void {
+    const reader = @import("inline_reader.zig");
+    for (module.functions.items[caller].insts.items) |inst| {
+        if (inst.op != .call or inst.a.index() == caller) continue;
+        const target: u32 = @intCast(inst.a.index());
+        if (!reader.mutationSignature(module, &module.functions.items[target])) continue;
+        try raw.ensure(target);
+        if (!reader.mutationShell(module, &module.functions.items[target])) continue;
+        if (reader.mutationQuery(module, &module.functions.items[target])) |query| try raw.ensure(query);
+    }
 }
 
 /// The internal functions in an order that puts each callee before its callers
