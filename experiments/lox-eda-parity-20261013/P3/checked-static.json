@@ -1,0 +1,46 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+  "compiler_sha256": "2dcba1cb1a98846bb8c1319575da1b3564e60af70162e195c2fbb6ec3af0f329",
+  "commit": "21033b9ee79ccbbe5eef4023433314cd342c9d80",
+  "sources": {
+    "experiments/lox-eda-parity-20261013/source/eda/sexpr_ast.my": "6ddfecb45bb828e1a6699b5449cc559f468cb8a83e1ff5601282c37cdbbeb4b3",
+    "experiments/lox-eda-parity-20261013/source/eda/sexpr_tokenizer.my": "67eaaee71e38e395f5211bdf947e01bbe3f4d0070eada4ff286f93094df99eb6",
+    "experiments/lox-eda-parity-20261013/source/eda/sexpr_parser.my": "245bf6208c6ed33a0424ed4f8bf482d6b9715afcfbc78b92e4dbfb0eb306591c",
+    "experiments/lox-eda-parity-20261013/source/eda/p3_parser_tests.my": "3814dc35c90820d86b1be79be700d17f5fbf47b5475fc1ccefe1aa17de6526d4"
+  },
+  "checks": [
+    {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+        "check",
+        "experiments/lox-eda-parity-20261013/source/eda/p3_parser_tests.my",
+        "--experimental-zero-rc"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+        "check",
+        "experiments/lox-eda-parity-20261013/source/eda/sexpr_parser_test.my",
+        "--experimental-zero-rc"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+        "check",
+        "experiments/lox-eda-parity-20261013/source/eda/main.my",
+        "--experimental-zero-rc"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

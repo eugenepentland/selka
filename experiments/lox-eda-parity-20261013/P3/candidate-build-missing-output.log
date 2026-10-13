@@ -1,0 +1,26 @@
+build-slot: FIFO ticket 2705, position 12; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 2705, position 12; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 2705, position 12; earlier build tickets must run first; waiting (121s so far)
+build-slot: FIFO ticket 2705, position 12; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 2705, position 12; earlier build tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 2705, position 12; earlier build tickets must run first; waiting (301s so far)
+build-slot: FIFO ticket 2705, position 7; earlier build tickets must run first; waiting (361s so far)
+build-slot: FIFO ticket 2705, position 3; earlier build tickets must run first; waiting (421s so far)
+build-slot: FIFO ticket 2705, position 3; earlier build tickets must run first; waiting (482s so far)
+build-slot: FIFO ticket 2705, position 3; earlier build tickets must run first; waiting (542s so far)
+build-slot: FIFO ticket 2705, position 3; earlier build tickets must run first; waiting (602s so far)
+build-slot: FIFO ticket 2705, position 3; earlier build tickets must run first; waiting (662s so far)
+build-slot: FIFO ticket 2705, position 3; earlier build tickets must run first; waiting (722s so far)
+build-slot: FIFO ticket 2705, position 3; earlier build tickets must run first; waiting (782s so far)
+build-slot: FIFO ticket 2705, position 3; earlier build tickets must run first; waiting (843s so far)
+build-slot: FIFO ticket 2705, position 3; earlier build tickets must run first; waiting (903s so far)
+build-slot: FIFO ticket 2705, position 3; earlier build tickets must run first; waiting (963s so far)
+build-slot: FIFO ticket 2705, position 3; earlier build tickets must run first; waiting (1023s so far)
+build-slot: FIFO ticket 2705, position 3; earlier build tickets must run first; waiting (1083s so far)
+build-slot: FIFO ticket 2705, position 3; earlier build tickets must run first; waiting (1143s so far)
+build-slot: FIFO ticket 2705, position 1; waiting for measurement or memory-accounting settle delay; waiting (1204s so far)
+build-slot: build slot 1, FIFO ticket 2705 after 1209s
+parser_probe.my:24:5: error[E_OUTPUT_CAPABILITY]: print needs a Stream; add `out: Stream` to this function and pass one from main
+      print(total)
+      ^
+  signature: stream.print(values..., sep: str, end: str) -> None

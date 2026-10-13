@@ -1,0 +1,16 @@
+build-slot: FIFO ticket 2717, position 15; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 2717, position 15; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 2717, position 15; earlier build tickets must run first; waiting (121s so far)
+build-slot: FIFO ticket 2717, position 15; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 2717, position 15; earlier build tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 2717, position 15; earlier build tickets must run first; waiting (301s so far)
+build-slot: FIFO ticket 2717, position 15; earlier build tickets must run first; waiting (361s so far)
+build-slot: FIFO ticket 2717, position 15; earlier build tickets must run first; waiting (421s so far)
+build-slot: FIFO ticket 2717, position 15; earlier build tickets must run first; waiting (482s so far)
+build-slot: FIFO ticket 2717, position 15; earlier build tickets must run first; waiting (542s so far)
+build-slot: FIFO ticket 2717, position 15; earlier build tickets must run first; waiting (602s so far)
+build-slot: FIFO ticket 2717, position 15; earlier build tickets must run first; waiting (662s so far)
+build-slot: FIFO ticket 2717, position 12; earlier build tickets must run first; waiting (722s so far)
+build-slot: FIFO ticket 2717, position 4; earlier build tickets must run first; waiting (782s so far)
+build-slot: build slot 2, FIFO ticket 2717 after 808s
+mylang test: no tests selected; sibling test file /home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p3/experiments/lox-eda-parity-20261013/source/eda/main_test.my is not included by this entry. Run that file explicitly with mylang test, or test its directory.

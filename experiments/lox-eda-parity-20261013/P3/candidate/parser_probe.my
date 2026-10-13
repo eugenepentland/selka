@@ -1,0 +1,25 @@
+import sexpr_parser as parser
+import sexpr_ast as ast
+
+func count(node: ast.Node) -> int:
+    match node.tag:
+        case ast.Tag.list(value=children):
+            mut n = 1
+            for child in children:
+                n += count(child)
+            return n
+        case _:
+            return 1
+
+func main(out: Stream) -> int:
+    mut source = b"(component resistor \"h\xc3\xa9llo\" (value 100nF 220k 10mA 10% 10mil 1mm) (pin 1 A))"
+    mut total = 0
+    for _ in range(1000):
+        match parser.parse(source):
+            case Ok(nodes):
+                for node in nodes:
+                    total += count(node)
+            case Err(_):
+                return 1
+    out.print(total)
+    return 0
