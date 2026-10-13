@@ -1,0 +1,105 @@
+diff --git a/experiments/lox-eda-parity-20261013/source/eda/kicad_sch_compose.my b/experiments/lox-eda-parity-20261013/source/eda/kicad_sch_compose.my
+index 14c23cd10..d4fb954c9 100644
+--- a/experiments/lox-eda-parity-20261013/source/eda/kicad_sch_compose.my
++++ b/experiments/lox-eda-parity-20261013/source/eda/kicad_sch_compose.my
+@@ -491,22 +491,25 @@ func collect_field(mut self: State):
+ func site_list(self: State) -> Site[]:
+     mut result: Site[] = []
+     for pi in range(len(self.parts)):
+-        mut p = self.parts[pi].copy()
+-        if p.banked is not None:
++        if self.parts[pi].banked is not None:
+             continue
+-        mut u = self.req.shapes[p.shape].units[p.unit].copy()
+-        for k in range(len(u.pins)):
+-            mut pin = u.pins[k].copy()
+-            mut net = net_at2(self.req.items[pi], k)
+-            if len(net) == 0 or is_rail_net(net_at(p, k)):
+-                continue
+-            mut role = Role.free
+-            if gang_key(pi, k) in self.ganged:
+-                role = Role.anchor
+-            result.append(Site(part=pi, pin=k, end=wire.End(at=stub_end(p, u, k), side=pin.side), net=net, group=self.req.items[pi].group, cluster=self.req.items[pi].cluster, role=role))
++        mut shape = self.parts[pi].shape
++        mut unit = self.parts[pi].unit
++        append_part_sites(self, pi, self.parts[pi], self.req.shapes[shape].units[unit], mut result)
+     return result
+ 
+ 
++func append_part_sites(self: State, pi: int, p: emit.Part, u: shape_mod.ShapeUnit, mut result: Site[]):
++    for k in range(len(u.pins)):
++        mut net = net_at2(self.req.items[pi], k)
++        if len(net) == 0 or is_rail_net(net_at(p, k)):
++            continue
++        mut role = Role.free
++        if gang_key(pi, k) in self.ganged:
++            role = Role.anchor
++        result.append(Site(part=pi, pin=k, end=wire.End(at=stub_end(p, u, k), side=u.pins[k].side), net=net, group=self.req.items[pi].group, cluster=self.req.items[pi].cluster, role=role))
++
++
+ func bind_wires(mut self: State, mut sites: Site[]):
+     mut binds = self.req.facts.binds.copy()
+     if binds is None:
+diff --git a/experiments/lox-eda-parity-20261013/source/eda/kicad_sch_textbox.my b/experiments/lox-eda-parity-20261013/source/eda/kicad_sch_textbox.my
+index 17bd64d76..6bde7a41a 100644
+--- a/experiments/lox-eda-parity-20261013/source/eda/kicad_sch_textbox.my
++++ b/experiments/lox-eda-parity-20261013/source/eda/kicad_sch_textbox.my
+@@ -187,10 +187,10 @@ record LibSymbol:
+     name_offset: int = 0
+ 
+ 
+-func libraries_find(self: LibSymbol[], id_: bytes) -> LibSymbol?:
+-    for entry in self:
+-        if entry.name == id_:
+-            return Some(entry.copy())
++func libraries_index(self: LibSymbol[], id_: bytes) -> int?:
++    for i in range(len(self)):
++        if self[i].name == id_:
++            return Some(i)
+     return None
+ 
+ 
+@@ -277,7 +277,7 @@ func named_text(item: ast.Node, form: bytes) -> NamedText:
+                 match cl[i].tag:
+                     case ast.Tag.list(value=l):
+                         if len(l) >= 2:
+-                            return NamedText(text=ast.as_text(l[1]).unwrap_or(b"").copy(), size=font_size(cl[i]))
++                            return named_text_value(l[1], font_size(cl[i]))
+                     case _:
+                         pass
+         case _:
+@@ -285,6 +285,16 @@ func named_text(item: ast.Node, form: bytes) -> NamedText:
+     return NamedText(text=b"")
+ 
+ 
++func named_text_value(node: ast.Node, size: int) -> NamedText:
++    match node.tag:
++        case ast.Tag.atom(value=text):
++            return NamedText(text=text.copy(), size=size)
++        case ast.Tag.string(value=text):
++            return NamedText(text=text.copy(), size=size)
++        case _:
++            return NamedText(text=b"", size=size)
++
++
+ func font_size(node: ast.Node) -> int:
+     match node.tag:
+         case ast.Tag.list(value=cl):
+@@ -365,13 +375,13 @@ func append_symbol(node: ast.Node, libs: LibSymbol[], mut items: Item[]):
+     mut id_ = form_text(node, b"lib_id")
+     if id_ is None:
+         return
+-    mut entry = libraries_find(libs, id_)
++    mut entry = libraries_index(libs, id_)
+     if entry is None:
+         return
+     mut unit = unit_of(node)
+-    for pin in entry.pins:
+-        if pin.unit == unit or pin.unit == 0:
+-            append_pin_texts(entry, pin, origin, mut items)
++    for i in range(len(libs[entry].pins)):
++        if libs[entry].pins[i].unit == unit or libs[entry].pins[i].unit == 0:
++            append_pin_texts(libs[entry], libs[entry].pins[i], origin, mut items)
+ 
+ 
+ func append_fields(node: ast.Node, origin: Pose, mut items: Item[]):

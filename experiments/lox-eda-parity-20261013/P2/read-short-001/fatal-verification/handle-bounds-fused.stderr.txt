@@ -1,0 +1,5 @@
+vm_queries.my:57:11: error[R_LIST_BOUNDS]: native execution failed (index 1, length 1)
+  in vm_queries::short_operand at vm_queries.my:57:11
+  in main::fused at main.my:14:12
+  in main::main at main.my:51:18
+MYLANG-TRAP {"version":1,"operation":"index","index":1,"length":1}

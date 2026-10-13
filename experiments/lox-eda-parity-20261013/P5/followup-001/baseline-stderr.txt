@@ -1,0 +1,6 @@
+build-slot: FIFO ticket 2892, position 8; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 1, FIFO ticket 2892 after 55s
+[W] export-kicad-sch: vendor symbol 'W55RP20-EVB-PICO' does not draw 1 pad(s) the design uses — adding them as unit 2
+[I] export-kicad-sch: rds3: 15/35 components drawn from vendor symbols (138 libraries indexed)
+[I] export-kicad-sch: rds3: root: 1 overlapping text pairs of 4160 drawn texts (e.g. caption "External Calibration" over caption "RF Connector Banks" at 557,12)
+[I] export-kicad-sch: rds3: 1 overlapping text pairs across 1 sheets

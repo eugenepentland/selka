@@ -1,0 +1,137 @@
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (121s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (181s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (301s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (361s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (421s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (481s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (541s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (602s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (662s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (722s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (782s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (842s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (902s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (962s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (1022s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (1082s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (1143s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (1203s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (1263s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (1323s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (1383s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (1443s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (1503s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (1563s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (1624s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (1684s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (1744s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (1804s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (1864s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (1924s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (1984s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (2040s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (2100s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (2160s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (2220s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (2280s so far)
+build-slot: FIFO ticket 2884, position 3; earlier build tickets must run first; waiting (2340s so far)
+build-slot: build slot 2, FIFO ticket 2884 after 2400s
+cached compiler_test::test_compile_error_message
+cached compiler_test::test_compile_global_definition
+cached compiler_test::test_compile_if_jumps
+cached compiler_test::test_compile_local_slots
+cached compiler_test::test_compile_print_addition
+cached compiler_test::test_compile_too_many_constants
+cached driver_tests::test_run_arithmetic
+cached driver_tests::test_run_class_init_method
+cached driver_tests::test_run_closure_counter
+cached driver_tests::test_run_compile_error_status
+cached driver_tests::test_run_gc_stress_same_output
+cached driver_tests::test_run_inheritance_super
+cached driver_tests::test_run_print_value_kinds
+cached driver_tests::test_run_runtime_error_trace
+cached driver_tests::test_run_set_rhs_keeps_original_receiver
+cached driver_tests::test_run_set_rhs_keeps_receiver_mutations
+cached driver_tests::test_run_shared_upvalue
+cached driver_tests::test_run_stack_overflow
+cached driver_tests::test_run_string_concat
+cached heap_test::test_gc_frees_unreachable
+cached heap_test::test_gc_intern_table_is_weak
+cached heap_test::test_gc_reuses_free_slot
+cached heap_test::test_gc_stress_collects_each_allocation
+cached heap_test::test_gc_threshold_accounting
+cached heap_test::test_gc_traces_instance_fields
+cached lox_strings_test::test_fnv1a_a
+cached lox_strings_test::test_fnv1a_empty
+cached lox_strings_test::test_fnv1a_foobar
+cached lox_strings_test::test_intern_same_bytes_same_ref
+cached lox_strings_test::test_table_find_string
+cached p1_heap_test::test_fresh_constructor_reuses_collected_slot
+cached p1_heap_test::test_fresh_constructors_stress_roots_and_accounting
+cached p1_heap_test::test_fresh_environment_negative_slot_count_matches_existing_constructor
+cached p1_heap_test::test_owned_class_self_inheritance_keeps_methods_and_snapshot
+cached p1_heap_test::test_owned_environment_negative_index_and_snapshot
+cached p1_heap_test::test_public_allocate_retains_independent_input_snapshot
+cached p1_heap_test::test_scoped_class_inheritance_preserves_independent_methods
+cached p1_heap_test::test_scoped_writes_preserve_snapshots_and_alias_identity
+cached p1_heap_test::test_scoped_writes_trace_field_method_and_environment_roots
+cached p2_tree_tests::test_p2_error_unwinds_blocks
+cached p2_tree_tests::test_p2_inheritance_and_receiver_rhs
+cached p2_tree_tests::test_p2_nested_closure_printing
+cached p2_tree_tests::test_p2_recursion_depth_error
+cached p2_tree_tests::test_p2_recursive_repeated_body
+cached p2_tree_tests::test_p2_short_circuit_and_return
+cached p2_vm_execution_test::test_field_assignment_and_inherited_method
+cached p2_vm_execution_test::test_invalid_field_target_trace
+cached p2_vm_execution_test::test_resumed_trace
+cached p2_vm_operand_test::test_constant_operand_pool_boundary
+cached p2_vm_operand_test::test_fused_constant_selected_value
+cached p2_vm_short_test::test_short_operand_long_jumps
+cached p2_vm_short_test::test_short_operand_uneven_pairs_and_gc
+cached p3_queries_test::test_p3_environment_snapshot_and_alias
+cached p3_queries_test::test_p3_function_closure_selected_reads
+cached p3_queries_test::test_p3_string_owned_snapshot_stress_and_reuse
+cached p3_queries_test::test_p3_tables_growth_missing_and_alias
+cached p4_tree_tests::test_p4_fresh_env_closure_identity
+cached p4_tree_tests::test_p4_inherited_methods_override
+cached p4_tree_tests::test_p4_instance_rhs_alias_growth
+cached p4_tree_tests::test_p4_set_checks_before_rhs
+cached parser_test::test_parse_call_get_set
+cached parser_test::test_parse_error_recovery
+cached parser_test::test_parse_logical
+cached parser_test::test_parse_precedence
+cached parser_test::test_parse_unary_grouping
+cached resolver_test::test_resolve_duplicate_local
+cached resolver_test::test_resolve_own_initializer
+cached resolver_test::test_resolve_slot_counts
+cached resolver_test::test_resolve_this_outside_class
+cached resolver_test::test_resolve_top_level_return
+cached scanner_test::test_scan_comments_and_lines
+cached scanner_test::test_scan_empty_source
+cached scanner_test::test_scan_identifiers
+cached scanner_test::test_scan_keywords
+cached scanner_test::test_scan_multiline_string_line
+cached scanner_test::test_scan_numbers
+cached scanner_test::test_scan_single_char_tokens
+cached scanner_test::test_scan_string
+cached scanner_test::test_scan_two_char_tokens
+cached scanner_test::test_scan_unexpected_character
+cached scanner_test::test_scan_unterminated_string
+cached table_test::test_table_add_all
+cached table_test::test_table_delete_leaves_tombstone
+cached table_test::test_table_grows_at_load_factor
+cached table_test::test_table_set_get
+cached table_test::test_table_set_reports_new_key
+cached table_test::test_table_tombstone_reuse
+cached value_test::test_format_fraction
+cached value_test::test_format_integer
+cached value_test::test_format_large
+cached value_test::test_format_small
+cached value_test::test_format_special
+cached value_test::test_format_zeros
+cached value_test::test_is_falsey_rules
+cached value_test::test_values_equal_rules
+0 passed, 95 cached, 0 failed, 0 skipped

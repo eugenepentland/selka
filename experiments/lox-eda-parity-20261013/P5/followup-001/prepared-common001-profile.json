@@ -1,0 +1,52 @@
+{
+  "status": "prepared, not queued",
+  "binary": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/eda/zero-rc",
+  "binary_sha256": "794eb7ce25c67c209189ee65688ba1b07746cfbe10926d22f91c67986cdf1180",
+  "compiler_sha256": "955f311e1dbf65b55f4c148ab03cdcb4881bc5668289aea93336dbfd7985206a",
+  "cwd": "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore",
+  "argv": [
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-001/eda/zero-rc",
+    "--model",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/rds3+flat/model.sexp",
+    "--project-dir",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/projects/designs",
+    "--out-dir",
+    "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/.tmp/lox-eda-parity/P5/followup-001/common001-profile-output",
+    "--flat"
+  ],
+  "repeats": 12,
+  "guest_timeout_seconds": 2,
+  "record_timeout_seconds": 40,
+  "outer_lease_timeout_seconds": 55,
+  "cpu": 8,
+  "event": "cycles:u",
+  "frequency": 499,
+  "call_graph": "dwarf,16384",
+  "environment": {
+    "DEBUGINFOD_URLS": ""
+  },
+  "record_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/experiments/lox-eda-parity-20261013/P5/followup-001/current-common001.perf.data",
+  "input_file_digests": {
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/cases/rds3+flat/model.sexp": "535232c04103e230546bf26e7a30c0433d524c03e0d296cfb11b56aabdede9eb",
+    "/home/epentland/ai/canopy/eda-bench-wt/claude-eda-bench-newcore/golden/manifest.json": "4077dc7240898167b9080063bb811e11a54f52d1f486fdbec9f07138975109c0"
+  },
+  "decode": "Decode outside timing lease with debuginfod disabled; filter guest PID/DSO using saved guest_pids, report included/excluded samples; Python cleanup/hashing driver and inherited children are also recorded.",
+  "expected_output": {
+    "stdout": "8252e32fd878510b55978b452ddb5813882028d0291406d0fb8f15c2e2f85283",
+    "stderr": "57a1b67ae8ea6141c8ca3f134146fe8f0fa6078880f9c9809db3cd5c532c5532",
+    "files": {
+      "rds3.kicad_sch": "75cfc2d50ac3006dfa76292442dd295b3032625c4b155b16805757bdcf699ca2",
+      "netlisp.kicad_sym": "6e048a0dfba96cbc9a26b09d44b2c19ae8dadb8ff40dda9ff92f3d9d3a3ca34e",
+      "rds3.kicad_pro": "64e8a5183c9ef167b76251655a7f5f4d7ec899186c2e6c6c9ac058d10b8ec362",
+      "sym-lib-table": "bd39cfb9efd52a3e641e71edaae80c6b3cc2147ac94004903f570a32336606e8",
+      "fp-lib-table": "e8aa0020f1922a7c5b4738301129e27265dedcf277962f21e5bdd86a11b3a2d6",
+      "rds3.net": "f6bd49787a8945a8581055517c2ba4267b90d4e98298c57dbd345608d8295868"
+    }
+  },
+  "oracle_provenance": {
+    "receipt": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/runtime-001/runtime/eda-rds3+flat.chunk01.json",
+    "receipt_sha256": "00e3059e3ad67ef7225ca86b2ef71a72fa8c1e294591cd7f31bead016d9d937a",
+    "arm": "mylang-zero-rc",
+    "round": 0
+  }
+}

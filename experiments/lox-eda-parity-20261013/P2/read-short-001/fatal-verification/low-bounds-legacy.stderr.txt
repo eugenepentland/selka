@@ -1,0 +1,5 @@
+heap.my:363:20: error[R_LIST_BOUNDS]: native execution failed (index 1, length 1)
+  in heap::function_instruction at heap.my:363:20
+  in main::legacy at main.my:10:80
+  in main::main at main.my:49:18
+MYLANG-TRAP {"version":1,"operation":"index","index":1,"length":1}

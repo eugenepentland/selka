@@ -1,0 +1,43 @@
+{
+  "compiler": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/coordinator/common-001/install/bin/mylang",
+  "compiler_sha256": "955f311e1dbf65b55f4c148ab03cdcb4881bc5668289aea93336dbfd7985206a",
+  "frozen_source": "be33ce79b5b58c3e254e73709c9dd7eb97e5a849",
+  "flags": [
+    "--release",
+    "--verify-facts",
+    "--experimental-zero-rc",
+    "--json"
+  ],
+  "environment": {
+    "MYL_CORE_LEAKCHECK": "1"
+  },
+  "shared_admission": "scripts/build-slot.sh build",
+  "checked_manifest": "checked-v3-manifest.json",
+  "checked_manifest_sha256": "944cad15747bf8fd7979f393f843152c63b3d5140ea27bf24e599817d877ba88",
+  "tests": {
+    "new": {
+      "passed": 3,
+      "failed": 0,
+      "cached": 0,
+      "log": "tests-v3.log",
+      "log_sha256": "454ae70a9614535a4bf13076cabafc0b17554454c7671ad9bd82136cb08b1dca"
+    },
+    "existing_textbox": {
+      "passed": 6,
+      "failed": 0,
+      "cached": 0,
+      "log": "regress-kicad_sch_textbox_test.log",
+      "log_sha256": "4c28c117a666e37b607a3caf1759528b421018d5529ba508e46063ea0ff81dee"
+    },
+    "existing_compose": {
+      "passed": 2,
+      "failed": 0,
+      "cached": 0,
+      "log": "regress-kicad_sch_compose_test.log",
+      "log_sha256": "cf8b0d1fadf097a1a35d0da6a796ccdda9bd36fc6aae3a5a9ef3ed7123146f1e"
+    }
+  },
+  "final_new_test_sha256": "970d99c8d1cff649f130cfb90cd63b4fb3b110d2f616765cb6b3759a218efda3",
+  "comparison_sha256": "870e532c76a7e456ca30b6c430120035aea4cf48151f65278e0a403e26c31745",
+  "runtime_claim": null
+}

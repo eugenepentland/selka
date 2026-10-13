@@ -1,0 +1,8 @@
+{
+  "patch_sha256": "42e68c3ca339f222166f96fd45af0789b8ac70f98b04694b0255889c9c05b74c",
+  "source_sha256": {
+    "experiments/lox-eda-parity-20261013/source/eda/kicad_sch_compose.my": "0555edd5a67e90526ffd98105fb2c40acdc1e5e32f113977b2c797dc434bc4d5",
+    "experiments/lox-eda-parity-20261013/source/eda/kicad_sch_textbox.my": "aa45348e25f8ecf231542a202e914e647bddff993f4521d74f2875d8ffa8df94"
+  },
+  "qualification": "pending native tests/counters; frozen coordinator untouched"
+}

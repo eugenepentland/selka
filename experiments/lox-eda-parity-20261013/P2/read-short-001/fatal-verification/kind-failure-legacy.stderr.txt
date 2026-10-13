@@ -1,0 +1,5 @@
+heap.my:366:12: error[R_ASSERT]: native execution failed: object is not a function
+  in heap::function_instruction at heap.my:366:12
+  in main::legacy at main.my:10:12
+  in main::main at main.my:49:18
+MYLANG-TRAP {"version":1,"operation":"object is not a function"}

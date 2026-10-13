@@ -1,0 +1,5 @@
+vm_queries.my:64:12: error[R_ASSERT]: native execution failed: object is not a function
+  in vm_queries::short_operand at vm_queries.my:64:12
+  in main::fused at main.my:14:12
+  in main::main at main.my:51:18
+MYLANG-TRAP {"version":1,"operation":"object is not a function"}

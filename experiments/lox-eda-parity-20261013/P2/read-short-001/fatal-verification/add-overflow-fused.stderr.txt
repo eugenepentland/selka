@@ -1,0 +1,5 @@
+vm_queries.my:61:25: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775552, right 256, width 64)
+  in vm_queries::short_operand at vm_queries.my:61:25
+  in main::fused at main.my:14:12
+  in main::main at main.my:51:18
+MYLANG-TRAP {"version":1,"operation":"add","left":9223372036854775552,"right":256,"width":64}

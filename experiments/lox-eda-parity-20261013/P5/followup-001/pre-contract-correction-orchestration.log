@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/experiments/lox-eda-parity-20261013/P5/followup-001/run_counted.py", line 85, in <module>
+    main()
+    ~~~~^^
+  File "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p5/experiments/lox-eda-parity-20261013/P5/followup-001/run_counted.py", line 41, in main
+    assert status == 0, phase
+           ^^^^^^^^^^^
+AssertionError: baseline

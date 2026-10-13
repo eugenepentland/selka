@@ -1,0 +1,205 @@
+{
+  "binary": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/.tmp/lox-eda-parity/P2/read-short-001/probe",
+  "binary_sha256": "787299b3e9f22ee5333b3cf3848f8e667d790fffccb3ac36789bb7395a875db0",
+  "timings": "not measured",
+  "cases": [
+    {
+      "scenario": "valid",
+      "arms": {
+        "legacy": {
+          "status": 0,
+          "stdout": "4660\n",
+          "diagnostic_category": null,
+          "diagnostic_detail": null,
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/read-short-001/fatal-verification/valid-legacy.stderr.txt",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "fused": {
+          "status": 0,
+          "stdout": "4660\n",
+          "diagnostic_category": null,
+          "diagnostic_detail": null,
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/read-short-001/fatal-verification/valid-fused.stderr.txt",
+          "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "scenario": "ip-overflow",
+      "arms": {
+        "legacy": {
+          "status": 1,
+          "stdout": "",
+          "diagnostic_category": "R_OVERFLOW",
+          "diagnostic_detail": "native execution failed (add: left 9223372036854775807, right 2, width 64)",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/read-short-001/fatal-verification/ip-overflow-legacy.stderr.txt",
+          "stderr_sha256": "d2c7f5211468eb5a8d2eb18aa8ea923d609ff509f77c0f921f1eac97b8015b60"
+        },
+        "fused": {
+          "status": 1,
+          "stdout": "",
+          "diagnostic_category": "R_OVERFLOW",
+          "diagnostic_detail": "native execution failed (add: left 9223372036854775807, right 2, width 64)",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/read-short-001/fatal-verification/ip-overflow-fused.stderr.txt",
+          "stderr_sha256": "51ac0a52ede001e26f1c419cf9662da55936a8474d8a2c6f0bf90ad96ef67e21"
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "scenario": "high-bounds",
+      "arms": {
+        "legacy": {
+          "status": 1,
+          "stdout": "",
+          "diagnostic_category": "R_LIST_BOUNDS",
+          "diagnostic_detail": "native execution failed (index 0, length 0)",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/read-short-001/fatal-verification/high-bounds-legacy.stderr.txt",
+          "stderr_sha256": "ab99dedeb6cf4fe211b26c30c1e576a359a2900f3c4128d71ab3ee2ff8ad4e58"
+        },
+        "fused": {
+          "status": 1,
+          "stdout": "",
+          "diagnostic_category": "R_LIST_BOUNDS",
+          "diagnostic_detail": "native execution failed (index 0, length 0)",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/read-short-001/fatal-verification/high-bounds-fused.stderr.txt",
+          "stderr_sha256": "6fa42e402efa8e395cc02c809ddb918bded6ab1abdbc229e216a625bdaca0acd"
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "scenario": "low-bounds",
+      "arms": {
+        "legacy": {
+          "status": 1,
+          "stdout": "",
+          "diagnostic_category": "R_LIST_BOUNDS",
+          "diagnostic_detail": "native execution failed (index 1, length 1)",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/read-short-001/fatal-verification/low-bounds-legacy.stderr.txt",
+          "stderr_sha256": "1176054f2a01b95e88bca1cb42c6a20f4762caeeb7dd3b58b8c549022ff49f0e"
+        },
+        "fused": {
+          "status": 1,
+          "stdout": "",
+          "diagnostic_category": "R_LIST_BOUNDS",
+          "diagnostic_detail": "native execution failed (index 1, length 1)",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/read-short-001/fatal-verification/low-bounds-fused.stderr.txt",
+          "stderr_sha256": "8b29f0494f9cd164b4b3a5d5bcd130c088777aaceabce1ac5c76905294f7672a"
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "scenario": "multiply-before-low-bounds",
+      "arms": {
+        "legacy": {
+          "status": 1,
+          "stdout": "",
+          "diagnostic_category": "R_OVERFLOW",
+          "diagnostic_detail": "native execution failed (mul: left 9223372036854775807, right 256, width 64)",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/read-short-001/fatal-verification/multiply-before-low-bounds-legacy.stderr.txt",
+          "stderr_sha256": "160a8d474a3797859859128e0ee9b329ec7ff8ff536d93735b29a25fed211665"
+        },
+        "fused": {
+          "status": 1,
+          "stdout": "",
+          "diagnostic_category": "R_OVERFLOW",
+          "diagnostic_detail": "native execution failed (mul: left 9223372036854775807, right 256, width 64)",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/read-short-001/fatal-verification/multiply-before-low-bounds-fused.stderr.txt",
+          "stderr_sha256": "1fb8cb8949ee7c2b836a5742e9f66b0d6ac5dba7d8e4798fa819e4f13e78e6ea"
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "scenario": "multiply-negative-overflow",
+      "arms": {
+        "legacy": {
+          "status": 1,
+          "stdout": "",
+          "diagnostic_category": "R_OVERFLOW",
+          "diagnostic_detail": "native execution failed (mul: left -36028797018963969, right 256, width 64)",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/read-short-001/fatal-verification/multiply-negative-overflow-legacy.stderr.txt",
+          "stderr_sha256": "470684c08bd205a232698c10d3b1623866ba8528125ad317488833fdd118dd8c"
+        },
+        "fused": {
+          "status": 1,
+          "stdout": "",
+          "diagnostic_category": "R_OVERFLOW",
+          "diagnostic_detail": "native execution failed (mul: left -36028797018963969, right 256, width 64)",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/read-short-001/fatal-verification/multiply-negative-overflow-fused.stderr.txt",
+          "stderr_sha256": "f99270848009d8c3ad3b23187a022e582f2142027f33b66565f9b97bdc75e0b7"
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "scenario": "add-overflow",
+      "arms": {
+        "legacy": {
+          "status": 1,
+          "stdout": "",
+          "diagnostic_category": "R_OVERFLOW",
+          "diagnostic_detail": "native execution failed (add: left 9223372036854775552, right 256, width 64)",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/read-short-001/fatal-verification/add-overflow-legacy.stderr.txt",
+          "stderr_sha256": "ad272c7299acb25e259aadd125edf617db5dc015e1ae30ee8151bd1a47f7b803"
+        },
+        "fused": {
+          "status": 1,
+          "stdout": "",
+          "diagnostic_category": "R_OVERFLOW",
+          "diagnostic_detail": "native execution failed (add: left 9223372036854775552, right 256, width 64)",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/read-short-001/fatal-verification/add-overflow-fused.stderr.txt",
+          "stderr_sha256": "f5f493804f668edc373d4364993eda468255d51c00a8cefe610bf8f5fb88e2dd"
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "scenario": "handle-bounds",
+      "arms": {
+        "legacy": {
+          "status": 1,
+          "stdout": "",
+          "diagnostic_category": "R_LIST_BOUNDS",
+          "diagnostic_detail": "native execution failed (index 1, length 1)",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/read-short-001/fatal-verification/handle-bounds-legacy.stderr.txt",
+          "stderr_sha256": "852be2d7c8a416a36f96c2137aaf4ee41519e364a118335c215c2bd47e529677"
+        },
+        "fused": {
+          "status": 1,
+          "stdout": "",
+          "diagnostic_category": "R_LIST_BOUNDS",
+          "diagnostic_detail": "native execution failed (index 1, length 1)",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/read-short-001/fatal-verification/handle-bounds-fused.stderr.txt",
+          "stderr_sha256": "bb8747f1df8e8fef0c1d71cb5c692a599607c3f95ce6952b0c49313da7ac5a74"
+        }
+      },
+      "status": "passed"
+    },
+    {
+      "scenario": "kind-failure",
+      "arms": {
+        "legacy": {
+          "status": 1,
+          "stdout": "",
+          "diagnostic_category": "R_ASSERT",
+          "diagnostic_detail": "native execution failed: object is not a function",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/read-short-001/fatal-verification/kind-failure-legacy.stderr.txt",
+          "stderr_sha256": "f71d6d46c6b468fc084c993b146d63629db6196d50af4995767d64769226b851"
+        },
+        "fused": {
+          "status": 1,
+          "stdout": "",
+          "diagnostic_category": "R_ASSERT",
+          "diagnostic_detail": "native execution failed: object is not a function",
+          "stderr_file": "/home/epentland/ai/canopy/mylang-lox-eda-parity-20261013-p2/experiments/lox-eda-parity-20261013/P2/read-short-001/fatal-verification/kind-failure-fused.stderr.txt",
+          "stderr_sha256": "ec7ceba0a15ac2afbb3f425ba0210bcfea7d45d86cb562b4944bf65f4beb90de"
+        }
+      },
+      "status": "passed"
+    }
+  ]
+}

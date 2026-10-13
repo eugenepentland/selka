@@ -1,0 +1,4 @@
+main.my:10:72: error[R_OVERFLOW]: native execution failed (mul: left 9223372036854775807, right 256, width 64)
+  in main::legacy at main.my:10:72
+  in main::main at main.my:49:18
+MYLANG-TRAP {"version":1,"operation":"mul","left":9223372036854775807,"right":256,"width":64}

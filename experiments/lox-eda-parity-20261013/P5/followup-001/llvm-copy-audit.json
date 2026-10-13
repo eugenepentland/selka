@@ -1,0 +1,91 @@
+{
+  "baseline": {
+    "llvm_sha256": "bbf04d1941e8bdcfb7f097504b4b7cdc91ec0feec535e8beef3ebc1604c7deb4",
+    "functions": {
+      "site_list": {
+        "line": 489484,
+        "function_sha256": "8a04c426ab94322334563fb4f2fbb557a6704335acdd94766bc00beefb45b65b",
+        "copy_or_as_text_calls": [
+          "%v26 = call ptr @myl_core_owned_octets_copy(ptr %v25), !dbg !1015415",
+          "%v28 = call ptr @myl_core_owned_octets_copy(ptr %v27), !dbg !1015417",
+          "%v30 = call ptr @myl_core_owned_octets_copy(ptr %v29), !dbg !1015419",
+          "%v32 = notail call fastcc ptr @myl_core_owned_copy_25(ptr %v31), !dbg !1015421",
+          "%v34 = call ptr @myl_core_owned_octets_copy(ptr %v33), !dbg !1015423",
+          "%v42 = notail call fastcc ptr @myl_core_owned_copy_27(ptr %v41), !dbg !1015425",
+          "%v89 = call ptr @myl_core_owned_octets_copy(ptr %v88), !dbg !1015431",
+          "%v91 = notail call fastcc ptr @myl_core_owned_copy_346(ptr %v90), !dbg !1015433",
+          "%v95 = notail call fastcc ptr @myl_core_owned_copy_324(ptr %v94), !dbg !1015435",
+          "%v97 = call ptr @myl_core_list_copy(ptr %v96, i64 8)",
+          "%v121 = call ptr @myl_core_owned_octets_copy(ptr %v120), !dbg !1015441",
+          "%v123 = call ptr @myl_core_owned_octets_copy(ptr %v122), !dbg !1015443",
+          "%v328 = call ptr @myl_core_owned_octets_copy(ptr %v327), !dbg !1015481",
+          "%v330 = call ptr @myl_core_owned_octets_copy(ptr %v329), !dbg !1015483",
+          "%v485 = call ptr @myl_core_owned_octets_copy(ptr %v484), !dbg !1015523",
+          "%v487 = call ptr @myl_core_owned_octets_copy(ptr %v486), !dbg !1015525",
+          "%v641 = call ptr @myl_core_owned_octets_copy(ptr %v640), !dbg !1015565",
+          "%v643 = call ptr @myl_core_owned_octets_copy(ptr %v642), !dbg !1015567",
+          "%v797 = call ptr @myl_core_owned_octets_copy(ptr %v796), !dbg !1015607",
+          "%v799 = call ptr @myl_core_owned_octets_copy(ptr %v798), !dbg !1015609",
+          "%v953 = call ptr @myl_core_owned_octets_copy(ptr %v952), !dbg !1015649",
+          "%v955 = call ptr @myl_core_owned_octets_copy(ptr %v954), !dbg !1015651",
+          "%v1109 = call ptr @myl_core_owned_octets_copy(ptr %v1108), !dbg !1015691",
+          "%v1111 = call ptr @myl_core_owned_octets_copy(ptr %v1110), !dbg !1015693",
+          "%v1265 = call ptr @myl_core_owned_octets_copy(ptr %v1264), !dbg !1015733",
+          "%v1267 = call ptr @myl_core_owned_octets_copy(ptr %v1266), !dbg !1015735"
+        ]
+      },
+      "libraries_find": {
+        "line": 578300,
+        "function_sha256": "19fbb67f234bd644bfb1c33613e90fad285da702aac00456c9f1437b1899fa1a",
+        "copy_or_as_text_calls": [
+          "%v17 = call ptr @myl_core_owned_octets_copy(ptr %v16), !dbg !1022262",
+          "%v19 = notail call fastcc ptr @myl_core_owned_copy_551(ptr %v18), !dbg !1022264"
+        ]
+      },
+      "named_text": {
+        "line": 586372,
+        "function_sha256": "8aa272332dbe62b2a6041bd6d2227ec3b4740f3bb289e9aa09d829a810cb0c06",
+        "copy_or_as_text_calls": [
+          "%v71 = notail call fastcc ptr @\"my.sexpr_ast::as_text\"(ptr %v70), !dbg !1022737",
+          "%v82 = call ptr @myl_core_owned_octets_copy(ptr %v81), !dbg !1022739",
+          "%v237 = notail call fastcc ptr @\"my.sexpr_ast::as_text\"(ptr %v236), !dbg !1022769",
+          "%v248 = call ptr @myl_core_owned_octets_copy(ptr %v247), !dbg !1022771"
+        ]
+      }
+    }
+  },
+  "candidate": {
+    "llvm_sha256": "1ea938db3768dce1601a5d4fa3566d29400a9bac06a817649b2d7c2817f6ac0d",
+    "functions": {
+      "site_list": {
+        "line": 489479,
+        "function_sha256": "0d555513cda83f4a65573a714ae863bd3d7a0223e210de8fa3791a227a6feb18",
+        "copy_or_as_text_calls": []
+      },
+      "append_part_sites": {
+        "line": 534398,
+        "function_sha256": "8cc7b6f6fac27e546398e5136a26cf1a41ed58d18357edde1fc73aeb2c03fd48",
+        "copy_or_as_text_calls": []
+      },
+      "libraries_index": {
+        "line": 577152,
+        "function_sha256": "207c2b90e5489db395eb7243f98813cdc9e2ad59ee88e6d9d42b21ace84008fb",
+        "copy_or_as_text_calls": []
+      },
+      "named_text": {
+        "line": 585213,
+        "function_sha256": "73fe7365312172adb1c0e1f5483f2f68175614257f371d79e824fa21fbfb9ce2",
+        "copy_or_as_text_calls": []
+      },
+      "named_text_value": {
+        "line": 591133,
+        "function_sha256": "24bc14cc591836bc6e1ba90faad3fe2975e486d47c64b1e8c7805849cf1c0f2a",
+        "copy_or_as_text_calls": [
+          "%v9 = call ptr @myl_core_owned_octets_copy(ptr %v8), !dbg !1023112",
+          "%v17 = call ptr @myl_core_owned_octets_copy(ptr %v16), !dbg !1023114"
+        ]
+      }
+    }
+  },
+  "interpretation": "Static emitted call sites, not execution counts. Site nets remain owned via net_at2; named_text_value retains one owned copy on each text branch. Full-input counters establish combined traffic decrease only; individual-site dynamic savings and CPU impact are not measured."
+}

@@ -1,0 +1,11 @@
+# Isolated P5 borrow-copy follow-up
+
+This candidate overlays only `kicad_sch_compose.my` and `kicad_sch_textbox.my` onto frozen common001 source at be33ce79b5b58c3e254e73709c9dd7eb97e5a849, using compiler955. `inputs.json` pins all module hashes and compiler identity. Coordinator source remains unchanged.
+
+Selected changes remove Part/ShapeUnit/Pin snapshots from site collection, select a library entry by its first matching index instead of cloning its pins, and copy atom/string named text directly into its retained result. Site nets and emitted text retain independent owned storage. No routing algorithm, output order, errors, or text fallback contract changes are intended.
+
+The frozen AST `as_text` accepts only atom/string. The preparatory integer conversion was removed before native admission; its earlier manifest and cancellation receipt are preserved. Initial tests rejected direct field access on an optional Pair; that source and rejection log are preserved separately. `checked-v2-manifest.json` identifies the optional-pair correction; compiler955 subsequently rejected an unused Stream capability. That log and source are preserved. `checked-v3-manifest.json` identifies the final trimmed three-test snapshot, whose production overlays are identical to the counted candidate.
+
+`run_counted.py` builds and executes baseline then candidate through shared build admission on the same full RDS3-flat frozen input, with identical private output paths. It verifies guest stdout/stderr, every emitted file digest, zero live bytes at exit, no RC/unique-test operations, and that the production source difference is exactly the two selected modules. These allocation counters are diagnostic and provide no timing, RSS, or parity claim. Both phases completed successfully; `comparison.json`, receipts and raw counters contain the results.
+
+`prepared-common001-profile.json` and `prepared_capture.py` describe a CPU8 cycles:u/DWARF capture of the exact current common001 binary, with at most 12 repeats, 2 seconds per guest, 40 seconds for recording, and a 55-second outer admission deadline. The capture is prepared only; it requires coordinator scheduling after the current runtime campaign. Reports must be decoded outside the timing lease with debuginfod disabled.

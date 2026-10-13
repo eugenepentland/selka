@@ -1,0 +1,16 @@
+build-slot: FIFO ticket 2879, position 4; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 2879, position 4; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 2879, position 4; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 2879, position 4; earlier build tickets must run first; waiting (180s so far)
+build-slot: FIFO ticket 2879, position 3; earlier build tickets must run first; waiting (241s so far)
+build-slot: FIFO ticket 2879, position 3; earlier build tickets must run first; waiting (301s so far)
+build-slot: FIFO ticket 2879, position 2; earlier build tickets must run first; waiting (361s so far)
+build-slot: FIFO ticket 2879, position 2; earlier build tickets must run first; waiting (421s so far)
+build-slot: FIFO ticket 2879, position 2; earlier build tickets must run first; waiting (481s so far)
+build-slot: FIFO ticket 2879, position 2; earlier build tickets must run first; waiting (541s so far)
+build-slot: FIFO ticket 2879, position 2; earlier build tickets must run first; waiting (601s so far)
+build-slot: FIFO ticket 2879, position 2; earlier build tickets must run first; waiting (661s so far)
+build-slot: build slot 1, FIFO ticket 2879 after 676s
+p2_short_fatal_probe.my:17:18: error[E_SINGLE_OWNER_BORROW]: an element read is borrowed; use .copy() or pop() to obtain an owned value
+      const mode = args[0]
+                   ^

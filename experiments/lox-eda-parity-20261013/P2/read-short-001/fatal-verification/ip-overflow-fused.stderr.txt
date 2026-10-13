@@ -1,0 +1,4 @@
+main.my:13:25: error[R_OVERFLOW]: native execution failed (add: left 9223372036854775807, right 2, width 64)
+  in main::fused at main.my:13:25
+  in main::main at main.my:51:18
+MYLANG-TRAP {"version":1,"operation":"add","left":9223372036854775807,"right":2,"width":64}

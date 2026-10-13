@@ -1,0 +1,3 @@
+build-slot: FIFO ticket 2900, position 3; earlier build tickets must run first; waiting (0s so far)
+build-slot: build slot 2, FIFO ticket 2900 after 20s
+passed 9 legacy/fused fatal-category and detail comparisons

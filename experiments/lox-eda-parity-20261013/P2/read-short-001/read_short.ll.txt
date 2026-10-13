@@ -1,0 +1,34 @@
+define internal fastcc void @"my.vm::read_short"(ptr noalias sret([40 x i8]) align 8 %ret, ptr noalias readonly align 8 %p0, { i64, i64, i64, i64 } %p1) nounwind uwtable !dbg !1001202 {
+entry:
+  %slot = alloca i64, align 8
+  br label %b0
+b0:
+  %v2 = extractvalue { i64, i64, i64, i64 } %p1, 2
+  %p.1 = call { i64, i1 } @llvm.sadd.with.overflow.i64(i64 %v2, i64 2)
+  %v4 = extractvalue { i64, i1 } %p.1, 0
+  %o.2 = extractvalue { i64, i1 } %p.1, 1
+  br i1 %o.2, label %trap.3, label %b0.4, !prof !0
+trap.3:
+  call void @myl_core_trap(ptr @myl.site.234, i64 %v2, i64 2) #2, !dbg !1001204
+  unreachable
+b0.4:
+  %v5 = insertvalue { i64, i64, i64, i64 } %p1, i64 %v4, 2
+  %v6 = extractvalue { i64, i64, i64, i64 } %v5, 1
+  %v9 = sub nsw i64 %v4, 2
+  %v12 = sub nsw i64 %v4, 1
+  %v13 = notail call fastcc i64 @"my.vm_queries::short_operand"(ptr %p0, i64 %v6, i64 %v9, i64 %v12), !dbg !1001206
+  store i64 %v13, ptr %ret, align 8, !tbaa !7
+  %fp.5 = getelementptr inbounds i8, ptr %ret, i64 8
+  %sf.6 = extractvalue { i64, i64, i64, i64 } %v5, 0
+  store i64 %sf.6, ptr %fp.5, align 8, !tbaa !7
+  %sf.7 = extractvalue { i64, i64, i64, i64 } %v5, 1
+  %fp.8 = getelementptr inbounds i8, ptr %fp.5, i64 8
+  store i64 %sf.7, ptr %fp.8, align 8, !tbaa !7
+  %sf.9 = extractvalue { i64, i64, i64, i64 } %v5, 2
+  %fp.10 = getelementptr inbounds i8, ptr %fp.5, i64 16
+  store i64 %sf.9, ptr %fp.10, align 8, !tbaa !7
+  %sf.11 = extractvalue { i64, i64, i64, i64 } %v5, 3
+  %fp.12 = getelementptr inbounds i8, ptr %fp.5, i64 24
+  store i64 %sf.11, ptr %fp.12, align 8, !tbaa !7
+  ret void
+}

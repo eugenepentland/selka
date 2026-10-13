@@ -1,0 +1,18 @@
+build-slot: FIFO ticket 2880, position 5; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 2880, position 5; earlier build tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 2880, position 5; earlier build tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 2880, position 4; earlier build tickets must run first; waiting (180s so far)
+build-slot: FIFO ticket 2880, position 4; earlier build tickets must run first; waiting (240s so far)
+build-slot: FIFO ticket 2880, position 4; earlier build tickets must run first; waiting (300s so far)
+build-slot: FIFO ticket 2880, position 3; earlier build tickets must run first; waiting (361s so far)
+build-slot: FIFO ticket 2880, position 3; earlier build tickets must run first; waiting (421s so far)
+build-slot: FIFO ticket 2880, position 3; earlier build tickets must run first; waiting (481s so far)
+build-slot: FIFO ticket 2880, position 3; earlier build tickets must run first; waiting (541s so far)
+build-slot: FIFO ticket 2880, position 3; earlier build tickets must run first; waiting (601s so far)
+build-slot: build slot 1, FIFO ticket 2880 after 641s
+p5_followup_001_textbox_tests.my:188:25: error[E_TYPE]: operation requires a record value
+          if report.first.a != want or report.first.b != want:
+                          ^
+p5_followup_001_textbox_tests.my:210:124: error[E_TYPE]: operation requires a record value
+      return report is not None and report.texts == 2 and report.overlaps == 1 and report.first is not None and report.first.a == b"FIRST" and report.first.b == b"FIRST"
+                                                                                                                             ^
