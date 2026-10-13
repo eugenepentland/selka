@@ -6,6 +6,7 @@ func replace(mut rows: int[][], index: u64, take: bool):
     else:
         rows[index] = [3]
 
+
 func main(args: str[], out: Stream) -> int:
     mut rows = [[1]]
     const take = len(args) > 0

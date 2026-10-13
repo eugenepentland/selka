@@ -4,21 +4,26 @@ record Wide:
     data: bytes
     number: int
 
+
 enum Obj:
     free
     wide(value: Wide)
     chain(label: str, rest: Obj)
 
+
 func indices(mut calls: int[]) -> int:
     calls.append(1)
     return -1
+
 
 func replacement(mut calls: int[]) -> int[]:
     calls.append(2)
     return [7, 8]
 
+
 func generic[T: storable](mut values: T[], index: int, value: T) -> T:
     return values.exchange(index, value)
+
 
 func handle_pending() -> int:
     mut pending: Result[int, str][] = [Ok(4)]
@@ -30,6 +35,7 @@ func handle_pending() -> int:
             _ = pending
             return len(reason)
 
+
 func early() -> int:
     mut items: Obj[] = [Obj.chain(label="outer", rest=Obj.chain(label="inner", rest=Obj.free))]
     match items.exchange(0, Obj.free):
@@ -37,6 +43,7 @@ func early() -> int:
             return len(label) + len(f"{child}")
         case _:
             return 0
+
 
 func main(args: str[], out: Stream) -> int:
     if len(args) > 0:
