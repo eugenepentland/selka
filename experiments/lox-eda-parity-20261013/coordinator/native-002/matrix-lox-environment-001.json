@@ -1,0 +1,8 @@
+{
+  "recorded_utc": "2026-10-13T07:16:25.576906+00:00",
+  "status": "orchestration failure before matrix work directory creation",
+  "session": 11800,
+  "returncode": 1,
+  "failure": "MYLANG_SLOT_DIR was absent because the wait wrapper did not source the development environment.",
+  "resolution": "Rerun the identical native.py matrix command after sourcing ~/.config/mylang/dev-env.sh. No guest build or test ran in the failed invocation."
+}

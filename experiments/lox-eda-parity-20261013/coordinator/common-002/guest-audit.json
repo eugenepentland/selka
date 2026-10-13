@@ -1,0 +1,56 @@
+{
+  "harness_sha256": "1f2d0da6f708219137b983bd1d00b79d0e64f29d95e015bad977e0f63a772cdc",
+  "builds": {
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/native-002/build/lox/build-receipt.json": {
+      "build_receipt": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/native-002/build/lox/build-receipt.json",
+      "build_receipt_sha256": "67262b31f83866602441128dc3ac5945d87c678285621798b51f864842615b9c",
+      "binaries": {
+        "zero-rc": {
+          "binary": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/lox/zero-rc",
+          "binary_sha256": "d2ad8234c345524de9061d38f530d90e084f973288c0c1bea43de71e638a1aef",
+          "legacy_rc_native_symbols": []
+        },
+        "zero-rc-counted": {
+          "binary": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/lox/zero-rc-counted",
+          "binary_sha256": "390518fd1ed27aeb4f75aab5eb7abefbe411bedbe3b92206723b9f4cde578836",
+          "legacy_rc_native_symbols": []
+        }
+      },
+      "llvm": {
+        "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/lox/zero-rc.ll",
+        "sha256": "293e0aba81f1fe05029cf34d4f1261ff31aca152623b9a4830c12a513af18ce6"
+      },
+      "legacy_rc_llvm_names": [],
+      "managed_count_loads": 0,
+      "managed_count_initializers": 0,
+      "direct_drop_call_sites": 1272,
+      "scope": "Selected checked guest LLVM and defined native symbols, including counted binaries. Runtime header layout and transfer soundness require the registered compiler tests. This does not establish retirement from the whole installed package."
+    },
+    "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/native-002/build/eda/build-receipt.json": {
+      "build_receipt": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/native-002/build/eda/build-receipt.json",
+      "build_receipt_sha256": "a40efb8ec0cef4109485a9f28447109cfba7feedf777ccdedfb5683b2ff7dd93",
+      "binaries": {
+        "zero-rc": {
+          "binary": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/eda/zero-rc",
+          "binary_sha256": "e76f28fdf040335897ebee0f5a76a4505ae5444fda3ba71004101dd6a8a1b99d",
+          "legacy_rc_native_symbols": []
+        },
+        "zero-rc-counted": {
+          "binary": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/eda/zero-rc-counted",
+          "binary_sha256": "00724f31b570209fb2448dfd425972d558f5b7e41842b1c827057ec388633013",
+          "legacy_rc_native_symbols": []
+        }
+      },
+      "llvm": {
+        "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-parity/P6/native-002/eda/zero-rc.ll",
+        "sha256": "b4501dc9ced7f3f1bd48e9e11758dd706db0bbcd08645be61f3a515c5fa672be"
+      },
+      "legacy_rc_llvm_names": [],
+      "managed_count_loads": 0,
+      "managed_count_initializers": 0,
+      "direct_drop_call_sites": 35786,
+      "scope": "Selected checked guest LLVM and defined native symbols, including counted binaries. Runtime header layout and transfer soundness require the registered compiler tests. This does not establish retirement from the whole installed package."
+    }
+  },
+  "status": "passed"
+}

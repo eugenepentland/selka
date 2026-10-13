@@ -64,8 +64,25 @@ scalar-IP readers reduce VM Fibonacci time by 9.9% and closures by 9.0%; the
 discarded-local-expression change reduces tree string-equality time by 14.8%.
 Each uses nine matched pairs against its recorded control. These results are
 not added together or relabeled as measurements of the combined second candidate.
-Further bounded VM-inlining, numeric-dispatch and EDA-copy/scanner experiments
-remain isolated until their correctness and performance evidence is reviewed.
+Further bounded VM-inlining and EDA-copy/scanner experiments remain isolated
+until their correctness and performance evidence is reviewed. The numeric
+dispatch prototype removed a native helper call but showed no reliable runtime
+benefit in nine matched pairs on each of three workloads; it is not adopted.
+
+The first candidate's complete runtime/RSS sweep is recorded in
+`coordinator/progress-003.json`. All 60 cases remain in the denominator: 59
+finished and VM string equality hit the three-times-Zig cutoff. None reached
+individual parity. Geometric mean runtime ratios against Zig are 1.415 for EDA
+(34 cases), 1.267 for tree Lox (13) and 2.208 for VM Lox (12 completed).
+Matched ratios against the freshly measured previous version are 0.849, 0.783
+and 0.929 respectively, using 33, 13 and 11 completed pairs. Counter collection
+and final identity validation remain pending; these are C1 results, not C2.
+
+Both C2 applications have passed primary qualification. EDA additionally passed
+all five build modes with 328 tests each, 102 golden output sets and nine error
+cases. Lox has 103 passing tests, all three conformance controls and the GC/CLI
+checks; its five-mode matrix is still running. The selected C2 guest LLVM and
+native symbol audits pass. The full compiler verification gate remains open.
 
 ## Reproduction and measurement
 
@@ -82,6 +99,12 @@ legacy RC helpers. It also checks emitted managed-count loads and initializers.
 The audit is scoped to those guests; it does not establish package retirement.
 Its positive and negative smoke controls use the previous checked and RC
 artifacts, with results recorded in `P6/guest-audit-validation.json`.
+
+Finished attempt evidence is preserved with `archive_attempt.py`. Each archive
+has a per-file SHA-256 inventory and is verified byte for byte before publication.
+`archives/native-001.tar.xz` contains the first complete application qualification;
+its raw attempt directory is retained locally. Compiler installations and guest
+binaries are separately pinned by the archived receipts.
 
 `fixtures/lox/recovery.json` pins the recovered historical Lox harness and
 corpus. All 254 corpus files match the previous qualification identities; the
