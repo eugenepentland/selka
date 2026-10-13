@@ -31,7 +31,7 @@
     "recovered_identical_lox_corpus_files": 254,
     "profile_status": "P2 native CPU profile and P5 leaf profile completed; attribution limitations recorded in their evidence"
   },
-  "updated_utc": "2026-10-13T07:59:55.690112+00:00",
+  "updated_utc": "2026-10-13T08:18:10.027679+00:00",
   "candidate": {
     "source_root": "source-002",
     "compiler_source_commit": "fbeba4eed7b549a3feef14c8b8dd620e41494139",
@@ -39,11 +39,11 @@
     "native_attempt": "native-002"
   },
   "current_followups": {
-    "P1": "C2 scalar IP publication timing released",
-    "P2": "Bounded Core reader inliner cache and regression qualification pending",
+    "P1": "IP-only publication rejected after matched timing; now completing P2 bounded Core inliner",
+    "P2": "Twelve bounded reader/cache regressions pass; actual compiler/native qualification pending",
     "P3": "Borrowed diagram_membership subtree reads in an isolated C2 snapshot",
-    "P4": "Compact internal sret ABI prototype; five-mode, call and ownership qualification required",
-    "P5": "Gangable timing released; build_components input snapshot removal in isolation",
+    "P4": "Compact internal sret v1 alignment bug found before timing; v2 under qualification",
+    "P5": "Gangable allocation reduction accepted with neutral measured runtime; build_components input snapshot removal in isolation",
     "P7": "Remove redundant copy worklist scratch initialization in an isolated C2 runtime"
   },
   "evidence_archives": {

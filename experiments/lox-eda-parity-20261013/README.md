@@ -74,6 +74,16 @@ by about 1.1% and 2.3% in two nine-pair comparisons against C2.
 The atom-operand experiment is also rejected: it improved tree string equality
 by 2.2%, but slowed Fibonacci and binary trees by 2.0% and 4.4% and increased
 RSS in all three cases. Each comparison includes nine matched pairs.
+The IP-only frame publication experiment is also excluded: its small Fibonacci
+gain did not produce a reliable improvement in invocation, and both string-equality
+variants still hit the cutoff. A borrowed EDA gangable helper is accepted for
+37,926 fewer allocations and 2,811,312 fewer traffic bytes in the flat design;
+nine-pair runtime comparisons are approximately neutral.
+
+A compact internal return-buffer prototype remains isolated. Coordinator review
+found missing alignment between mixed-width transported fields in its first
+version. That version is blocked and was not timed; the corrected version must
+pass fresh ABI, ownership, mode and application qualification before adoption.
 
 The first candidate's complete runtime/RSS sweep is recorded in
 `coordinator/progress-003.json`. All 60 cases remain in the denominator: 59

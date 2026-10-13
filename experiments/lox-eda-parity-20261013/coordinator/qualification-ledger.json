@@ -1,5 +1,5 @@
 {
-  "updated_utc": "2026-10-13T07:59:55.690112+00:00",
+  "updated_utc": "2026-10-13T08:18:10.027679+00:00",
   "items": [
     {
       "id": "P1-payload-exchange-and-construction",
@@ -12,16 +12,16 @@
         "P1/discard-local-001",
         "P1/frame-ip-002"
       ],
-      "remaining": "Final combined runtime, RSS and counters. C2 IP-only publication passes 103 tests, 16 CLI controls and five bounds controls; paired timing released. Older slower trial preserved."
+      "remaining": "Final combined runtime, RSS and counters. IP-only publication rejected after matched timing: small/noisy gains in Fibonacci and invocation, both equality variants censored. Evidence P1/frame-ip-002/timing."
     },
     {
       "id": "P2-vm-readers",
       "status": "scalar-IP source integrated; bounded compiler inliner in progress",
-      "owner": "P2",
+      "owner": "P1 finishing P2 isolated compiler worktree",
       "evidence": [
         "P2/scalar-ip-001"
       ],
-      "remaining": "Close bounded cache dependency, phase-aware lazy demand and budget-refusal regressions; qualify and measure actual Core implementation. LLVM-only diagnostic is not shipped compiler evidence."
+      "remaining": "Twelve bounded reader/cache tests pass, including 31/32/33 preparation and 32/33 deferred query edits in both directions. Existing optimizer suite, actual candidate build and native qualification/timing pending; LLVM-only diagnostic remains separate."
     },
     {
       "id": "P3-eda-parser",
@@ -37,7 +37,7 @@
       "id": "P4-tree-execution",
       "status": "fresh environments integrated; arithmetic and atom experiments rejected",
       "owner": "P4",
-      "remaining": "Rejected source fast paths preserved. Internal sret compaction prototype now isolated: evaluate reserves 280 bytes for 48 transported bytes. ABI, mode, ownership and native performance qualification required.",
+      "remaining": "Compact internal sret v1 blocked by coordinator-found narrow-field alignment bug; v1 evidence retained, no timing. V2 aligns each retained field and final size, adds mixed-width regressions and retains copy/alias invariants. Fresh full qualification and timing required.",
       "evidence": [
         "P4/arithmetic-inline-001",
         "P4/atom-operands-001"
@@ -47,9 +47,10 @@
       "id": "P5-eda-composition",
       "status": "borrowed geometry/textbox integrated; gangable overlay provisionally assembled in source-003",
       "owner": "P5",
-      "remaining": "Gangable timing released. Isolated build_components read-only input snapshot removal authorized; all Comp and Builder owned outputs and working-owner copies remain required.",
+      "remaining": "Gangable accepted for 37,926 fewer allocations and 2,811,312 fewer traffic bytes in matched RDS3-flat. Nine-pair runtime is approximately neutral, no general speedup claim. Isolated build_components read-only input snapshot removal under qualification; owned outputs and working-owner copies remain required.",
       "evidence": [
-        "P5/followup-004"
+        "P5/followup-004",
+        "P5/followup-005"
       ]
     },
     {
