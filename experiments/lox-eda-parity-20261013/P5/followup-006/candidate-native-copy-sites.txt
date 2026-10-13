@@ -1,0 +1,19 @@
+define internal fastcc void @"my.export_kicad_sch::build_components"(ptr %p0, i64 %p1, ptr noalias align 8 %p2) nounwind uwtable !dbg !1009648 {
+%v107 = notail call fastcc ptr @myl_core_owned_copy_341(ptr %v106), !dbg !1009650
+notail call fastcc void @"my.export_kicad_sch::component_from_instance"(ptr sret([88 x i8]) align 8 %v75, ptr %v61, ptr %v74), !dbg !1009676
+%v169 = call ptr @myl_core_owned_octets_copy(ptr %v168), !dbg !1009690
+%v171 = call ptr @myl_core_owned_octets_copy(ptr %v170), !dbg !1009692
+%v173 = call ptr @myl_core_owned_octets_copy(ptr %v172), !dbg !1009694
+%v176 = call ptr @myl_core_owned_octets_copy(ptr %v175), !dbg !1009696
+%v179 = notail call fastcc ptr @myl_core_owned_copy_338(ptr %v178), !dbg !1009698
+%v182 = call ptr @myl_core_owned_octets_copy(ptr %v181), !dbg !1009700
+%v184 = notail call fastcc ptr @myl_core_owned_copy_328(ptr %v183), !dbg !1009702
+%v187 = notail call fastcc ptr @myl_core_owned_copy_27(ptr %v186), !dbg !1009704
+%v189 = notail call fastcc ptr @myl_core_owned_copy_340(ptr %v188), !dbg !1009706
+%v221 = call ptr @myl_core_owned_octets_copy(ptr %v220), !dbg !1009714
+
+define internal fastcc void @"my.export_kicad_sch::component_from_instance"(ptr noalias sret([88 x i8]) align 8 %ret, ptr noalias readonly align 8 %p0, ptr noalias readonly align 8 %p1) nounwind uwtable !dbg !1011032 {
+%v4 = call ptr @myl_core_owned_octets_copy(ptr %v3), !dbg !1011036
+%v6 = call ptr @myl_core_owned_octets_copy(ptr %v5), !dbg !1011038
+%v9 = call ptr @myl_core_owned_octets_copy(ptr %v8), !dbg !1011040
+%v16 = call ptr @myl_core_owned_octets_copy(ptr %v12), !dbg !1011048

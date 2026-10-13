@@ -1,0 +1,101 @@
+
+
+func p5_reader_instance(ref: bytes, symbol: bytes, footprint: bytes) -> env_mod.Instance:
+    mut value = env_mod.instance_default(ref)
+    value.component = b"reader-shared"
+    value.symbol = symbol.copy()
+    value.pinout = symbol + b"-pins"
+    value.footprint = footprint.copy()
+    return value
+
+
+func p5_reader_block() -> env_mod.DesignBlock:
+    mut value = env_mod.design_block_default(b"Reader Test")
+    value.instances = [p5_reader_instance(b"U1", b"FIRST", b"first-footprint"), p5_reader_instance(b"U2", b"SECOND", b"second-footprint")]
+    mut other = p5_reader_instance(b"U3", b"THIRD", b"third-footprint")
+    other.component = b"reader-other"
+    value.instances.append(other)
+    value.nets = [env_mod.Net(name=b"NET1", pins=[env_mod.pin_ref_default(b"U1", b"1"), env_mod.pin_ref_default(b"U1", b"1"), env_mod.pin_ref_default(b"U2", b"2"), env_mod.pin_ref_default(b"MISSING", b"9")]), env_mod.Net(name=b"NET2", pins=[env_mod.pin_ref_default(b"U1", b"1"), env_mod.pin_ref_default(b"U1", b"3"), env_mod.pin_ref_default(b"U2", b"2")])]
+    return value
+
+
+func p5_reader_builder(err: Stream, block: env_mod.DesignBlock) -> Builder:
+    mut instances: flat_netlist.FlatInstance[] = []
+    mut nets: flat_netlist.FlatNet[] = []
+    flat_netlist.collect_instances(block, b"", mut instances)
+    flat_netlist.flatten_and_merge_nets(block, mut nets)
+    mut result = builder_init(block, "/nonexistent", b"reader-test", Options(vendor=False), instances, nets, None)
+    index_nets(err, mut result)
+    index_groups(mut result)
+    return result
+
+
+public func test_p5_component_repeated_key_preserves_first_fields_and_order(fs: Filesystem, out: Stream) -> bool:
+    mut input = p5_reader_block()
+    mut builder = p5_reader_builder(out, input)
+    build_components(fs, out, mut builder)
+    assert builder.keys == [b"reader-shared", b"reader-shared", b"reader-other"]
+    assert len(builder.comps) == 2
+    mut comp = builder.comps["reader-shared"].copy()
+    assert comp.names.component == b"reader-shared" and comp.names.symbol == b"FIRST" and comp.names.pinout == b"FIRST-pins"
+    assert comp.footprint == b"first-footprint" and comp.pins.ref == b"U1"
+    assert input.instances[0].symbol == b"FIRST" and input.instances[1].symbol == b"SECOND"
+    return True
+
+
+public func test_p5_component_pad_net_filter_order_and_dedup(fs: Filesystem, out: Stream) -> bool:
+    mut builder = p5_reader_builder(out, p5_reader_block())
+    build_components(fs, out, mut builder)
+    mut comp = builder.comps["reader-shared"].copy()
+    assert comp.used == [b"1", b"2", b"3"]
+    assert len(comp.seen) == 3 and len(comp.pins.net) == 2
+    assert comp.pins.net["1"] == b"NET1" and comp.pins.net["3"] == b"NET2"
+    assert "2" not in comp.pins.net and "9" not in comp.seen
+    return True
+
+
+func p5_reader_owned_component() -> Comp:
+    mut payload = b"".join([for i in range(512) yield b"ABCDEFGH"])
+    mut source = p5_reader_instance(b"U7", payload, payload)
+    source.parts = [env_mod.Part(name=payload.copy(), pins=[env_mod.PartPin(pin=b"A1", net=b"N", pin_name=b"", group=b""), env_mod.PartPin(pin=b"B2", net=b"N", pin_name=b"", group=b"")])]
+    mut block = env_mod.design_block_default(b"Owned Reader")
+    block.instances = [source.copy()]
+    mut instances: flat_netlist.FlatInstance[] = []
+    flat_netlist.collect_instances(block, b"", mut instances)
+    return component_from_instance(instances[0], source)
+
+
+public func test_p5_component_owned_parts_and_fields_survive_input_destruction() -> bool:
+    mut comp = p5_reader_owned_component()
+    mut want = b"".join([for i in range(512) yield b"ABCDEFGH"])
+    assert comp.names.symbol == want and comp.names.pinout == want + b"-pins" and comp.footprint == want
+    assert comp.pins.ref == b"U7" and len(comp.parts) == 1
+    assert comp.parts[0].title == want and comp.parts[0].pads == [b"A1", b"B2"]
+    assert len(comp.used) == 0 and len(comp.seen) == 0 and len(comp.pins.net) == 0
+    return True
+
+
+public func test_p5_component_export_reuses_input_and_is_deterministic(fs: Filesystem, out: Stream) -> bool:
+    mut input = p5_reader_block()
+    mut first = p5_reader_export(fs, out, input)
+    mut second = p5_reader_export(fs, out, input)
+    assert first.stats.components == second.stats.components and first.stats.instances == 3
+    assert len(first.files) == len(second.files)
+    for i in range(len(first.files)):
+        assert first.files[i].name == second.files[i].name and first.files[i].bytes == second.files[i].bytes
+    assert input.instances[0].symbol == b"FIRST" and input.instances[1].symbol == b"SECOND"
+    return True
+
+
+func p5_reader_export(fs: Filesystem, out: Stream, input: env_mod.DesignBlock) -> Output:
+    match export_sch(fs, out, input, "/nonexistent", b"reader-test", Options(vendor=False)):
+        case Ok(result):
+            return result
+        case Err(error):
+            out.print(error)
+            assert False, "P5 reader export failed"
+            return Output(files=[], sidecars=[], stats=Stats())
+
+
+func component_from_instance(inst: flat_netlist.FlatInstance, src: env_mod.Instance) -> Comp:
+    return Comp(names=shape_mod.Names(component=base_name(inst), symbol=inst.symbol.copy(), pinout=inst.pinout.copy()), footprint=inst.footprint.copy(), glyph=shape_mod.classify(base_name(inst), inst.symbol, inst.ref_des), parts=part_specs(src), pins=PadNets(ref=inst.ref_des.copy(), net={}), used=[], seen=set())

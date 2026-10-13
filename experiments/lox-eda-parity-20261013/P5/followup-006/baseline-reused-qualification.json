@@ -1,0 +1,28 @@
+{
+  "exact_baseline_my_manifest_matches_source002": true,
+  "compiler_sha256": "9bedb835438615d79ed8f2985352877a8c844eebeb74cd95a1d276332b6b0c6a",
+  "matrix_receipt": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-parity-20261013/attempts/native-002/matrix/eda/results.json",
+  "matrix_sha256": "2995d2f4d1b6e9510b0d42c0873d14550967cafc26d4335234c9b7c4a5049af2",
+  "modes": {
+    "verified-release-units": {
+      "passed": 328,
+      "failed": 0
+    },
+    "release-units": {
+      "passed": 328,
+      "failed": 0
+    },
+    "debug-units": {
+      "passed": 328,
+      "failed": 0
+    },
+    "optimized-debug-units": {
+      "passed": 328,
+      "failed": 0
+    },
+    "no-facts-units": {
+      "passed": 328,
+      "failed": 0
+    }
+  }
+}

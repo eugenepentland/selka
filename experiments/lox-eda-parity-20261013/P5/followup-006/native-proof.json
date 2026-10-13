@@ -1,0 +1,10 @@
+{
+  "baseline": {
+    "llvm_sha256": "1ea938db3768dce1601a5d4fa3566d29400a9bac06a817649b2d7c2817f6ac0d",
+    "extract_sha256": "59c76a235fd71e48da58d937395abffdf6d9c10b60f3274b3d020c8a924d2f5d"
+  },
+  "candidate": {
+    "llvm_sha256": "0c8868f7156c71f88f4f467ad45570327acedb0bbfa85caf2838bcded9c41461",
+    "extract_sha256": "a632fae54ecb10aa95f887db9ef8d1cd1e8b17616463a3cdd97da0744d4b99c9"
+  }
+}

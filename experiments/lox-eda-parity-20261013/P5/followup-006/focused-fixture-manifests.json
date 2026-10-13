@@ -1,0 +1,16 @@
+{
+  "baseline": {
+    "production_prefix_sha256": "72a291dcfb0898298a36cf2839aa1388f53caf4c98ae49bd9c3c4ca8de9ed8bc",
+    "production_prefix_bytes": 26669,
+    "fixture_sha256": "5681ad73768b511ca8f59c8258b07b185bbaf4ca662d5bc5093738426a3f740b",
+    "test_appendix_sha256": "4b5d611ac4c5f85c59db02398fad13397c476e717b5f2cbfa79243abbabdb713",
+    "test_cases": 4
+  },
+  "candidate": {
+    "production_prefix_sha256": "627a373bf88d37b02db85ad19607f1e42c5196e8c25ca459b1499ef37b3de0e0",
+    "production_prefix_bytes": 26772,
+    "fixture_sha256": "24e765f6a79a529a87198083010dbba2113ac13b6293a069f49b83c882a3d96a",
+    "test_appendix_sha256": "b172dd59701188a207052a4964b37e4176111d8f1bf0bb84fd8fa12cce15ead8",
+    "test_cases": 4
+  }
+}
