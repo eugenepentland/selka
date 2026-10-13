@@ -499,6 +499,58 @@ class VerificationCoordinator(unittest.TestCase):
             fallback = coordinator.action_payload(pure, sources, common, self.root, providers, producer_manifest=record)
             self.assertEqual(fallback['common']['artifacts'], 'whole-artifact-fallback')
 
+    def test_narrowed_identity_binding_located_artifact_bytes_is_not_path_free(self):
+        # A qualified producer identity also binds the artifact's own bytes; a
+        # test binary's debug information names the checkout, which no search
+        # of the key can see.
+        helper = coordinator.verification_producers
+        label = 'text-scalar-units'
+        for name in helper.CLOSURES[label]:
+            self.write(name, 'reviewed source fixture')
+        pure = dict(group('text_scalar_unit', list(helper.CLOSURES[label])), artifacts=[label])
+        common = {'artifacts': 'whole-artifact-fallback', 'build_configuration': 'a' * 64,
+                  'tools': 'b' * 64, 'options': [], 'action_controls': {'optimize': 'Debug'}}
+        verdicts = []
+        for contents in ('binary fixture', 'binary fixture naming ' + str(self.root) + '/src'):
+            binary = self.write('native-scalar', contents)
+            record = {'version': 2, 'producers': {label: helper.producer_metadata(self.root, label, binary, 'Debug')}}
+            with Snapshot(self.root, pure['inputs']) as sources, Snapshot(self.root, [], [binary]) as artifact:
+                providers = {label: artifact.identity['files']}
+                payload = coordinator.action_payload(pure, sources, common, self.root, providers, producer_manifest=record)
+            self.assertIn('producer', payload['common']['artifacts'][label])
+            report = {label: {'identity': 'producer'}}
+            coordinator.located_bytes(providers, self.root, report)
+            verdicts.append((report[label]['bytes_name_root'], coordinator.path_free(payload, self.root, True, report)))
+        self.assertEqual(verdicts, [(False, True), (True, False)])
+
+    def test_timing_window_neither_enters_keys_nor_blocks_reuse(self):
+        # F14: a window schedules the request; receipts cross it both ways.
+        environment = dict(os.environ, MYLANG_SLOT_DIR=str(self.root / 'measurement-slots'), MYLANG_SLOT_SETTLE='0',
+                           MYLANG_SLOT_POLL='1', MYLANG_TIMING_MEM='0')
+        environment.pop('MYLANG_ADMISSION_DIR', None)
+        environment.pop('MYLANG_ADMISSION_KIND', None)
+
+        def windowed(seconds):
+            with patch.dict(os.environ, environment, clear=True):
+                with coordinator.verification_measurement.timing_window(seconds):
+                    self.assertEqual(self.execute(), 0)
+            return coordinator.read_record(self.cache / 'last-run.json')
+
+        self.assertEqual(self.execute(), 0)
+        plain_keys = {row['id']: row['action_key'] for row in coordinator.read_record(self.cache / 'last-run.json')['actions']}
+        report = windowed(20)
+        self.assertEqual(self.states(), {'unit': 'reused', 'docs': 'reused'})
+        self.assertEqual({row['id']: row['action_key'] for row in report['actions']}, plain_keys)
+        self.assertEqual(report['measurement_window_seconds'], 20)
+        self.input.write_text('changed under a window')
+        windowed(20)
+        self.assertEqual(self.states(), {'unit': 'execute', 'docs': 'reused'})
+        self.assertEqual(self.execute(), 0)
+        self.assertEqual(self.states(), {'unit': 'reused', 'docs': 'reused'})
+        self.assertIsNone(coordinator.read_record(self.cache / 'last-run.json')['measurement_window_seconds'])
+        windowed(30)
+        self.assertEqual(self.states(), {'unit': 'reused', 'docs': 'reused'})
+
     def test_execution_deadline_change_invalidates_success_and_is_explained(self):
         self.assertEqual(self.execute(gate_timeout=60), 0)
         self.admissions.clear()

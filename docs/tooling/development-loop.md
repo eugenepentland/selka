@@ -58,8 +58,12 @@ and retains it through execution, publication and reporting. Checkout-lock and
 admission waits are reported separately. The report's elapsed scope ends at final
 report assembly; an external harness must measure report writing, final output
 and session startup for end-to-end latency. Deadline expiry or holder failure
-revokes new receipts and reports failure. This explicit bound changes execution
-identity; the 5-second feedback and 15-second p95 targets never become implicit
+revokes new receipts and reports failure. The window schedules the request and is
+no input to any action's result, so it stays out of every action key: a windowed
+request reuses receipts a plain request published and the reverse, and windows of
+different lengths share receipts (`last-run.json` records its length as
+`measurement_window_seconds`). The command deadlines above remain identity
+inputs. The 5-second feedback and 15-second p95 targets never become implicit
 deadlines. Long qualification owns separate phase admissions and cannot be
 combined with this request-wide measurement option.
 

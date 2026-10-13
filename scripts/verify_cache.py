@@ -851,6 +851,21 @@ def artifact_identities(record: dict | None, providers: dict[str, list[dict]],
     return identities, report
 
 
+def located_bytes(providers: dict[str, list[dict]], root: Path, report: dict) -> None:
+    """Record, per narrowed provider whose key binds its bytes (a qualified
+    producer identity also binds the artifact content), whether those bytes name
+    the checkout (`bytes_name_root`), which no search of the key can see."""
+    needle = os.fsencode(str(root))
+    for label in sorted(set(providers) & set(verification_producers.CLOSURES)):
+        named = False
+        for item in providers[label]:
+            try:
+                named = named or needle in (root / item["path"]).read_bytes()
+            except OSError:
+                named = True
+        report.setdefault(label, {})["bytes_name_root"] = named
+
+
 def mentions(value: object, text: str) -> bool:
     """Whether `text` occurs anywhere in a JSON-serializable value."""
     return json.dumps(text, ensure_ascii=False)[1:-1] in json.dumps(value, sort_keys=True, ensure_ascii=False)
@@ -912,13 +927,18 @@ def path_free(payload: dict, root: Path, facets_path_free: bool, report: dict) -
     digest facets, and no loaded-code digest may depend on where the code was
     loaded from (`facets_path_free` covers both). Every prepared provider the
     action depends on must have a producer identity: its narrowed selection,
-    else all of them.
+    else all of them; a narrowed identity that also binds artifact bytes needs
+    bytes that do not name the checkout (`located_bytes`).
     """
     if any(name not in COMMON_FACETS for name in payload["common"]):
         return False
     if not facets_path_free or mentions(payload, str(root)):
         return False
     artifacts = payload["common"].get("artifacts")
+    if isinstance(artifacts, dict) and any(
+            isinstance(value, dict) and "artifacts" in value and report.get(label, {}).get("bytes_name_root") is not False
+            for label, value in artifacts.items()):
+        return False  # A narrowed identity binds artifact bytes that name the checkout.
     labels = artifacts.keys() if isinstance(artifacts, dict) else report.keys()
     return all(report.get(label, {}).get("identity") == "producer" for label in labels)
 
@@ -1272,9 +1292,11 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
         common = {"version": VERSION, "options": options,
                   "environment": environment_identity(env, tools, tool_files, root), "platform": host.identity,
                   "tools": key(tools.identity),
+                  # A timing window schedules the request; it is no input to
+                  # any action's result, so it stays out of every key (F14) and
+                  # is reported as `measurement_window` in last-run.json.
                   "execution_limits": {"build": build_limits.execution_identity(),
-                                       "gate": gate_limits.execution_identity(),
-                                       "measurement_window_seconds": None if measurement is None else measurement.seconds},
+                                       "gate": gate_limits.execution_identity()},
                   "loaded_code_format": [code_identity.FORMAT_VERSION, code_identity.LOADED_CODE_SHA256],
                   "implementation": [digest for _, digest, _ in implementation_code()]}
         if component_sources is not None:
@@ -1299,6 +1321,7 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
         recipe_sources = [item for snapshot in snapshots if getattr(snapshot, "verification_role", "")
                           in ("configuration", "preparation_sources") for item in snapshot.identity["files"]]
         labels, artifact_report = artifact_identities(producer_manifest, providers, recipe_sources, root)
+        located_bytes(providers, root, artifact_report)
         common["artifacts"] = key({"version": producer_manifest.get("version") if producer_manifest else None,
                                    "providers": labels})
         environment_names = identity_variables(env)
@@ -1513,6 +1536,7 @@ def execute(root: Path, cache: Path, zig: Path, options: list[str], force: bool 
                   "artifact_identities": artifact_report,
                   "declarative_configuration": configuration_notes.get("declarative_configuration"),
                   "relocation_dependent_code": relocation_dependent,
+                  "measurement_window_seconds": None if measurement is None else measurement.seconds,
                   "elapsed_seconds": elapsed}
         if measurement is not None:
             report["measurement_window"] = measurement.report()
