@@ -1,0 +1,233 @@
+{
+  "date": "2026-10-13",
+  "statement": "Board module alone passes frozen original, fresh candidate and original cached candidate routes. Original integrated exit70 cause remains unproven. No application/compiler changes.",
+  "compiler": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+  "compiler_sha256": "2dcba1cb1a98846bb8c1319575da1b3564e60af70162e195c2fbb6ec3af0f329",
+  "compiler_source_commit": "8b7d59eba868775b1b8d7f64c54b07abdd23d470",
+  "environment": {
+    "MYL_CORE_LEAKCHECK": "1",
+    "TMPDIR": "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p4/.tmp/lox-eda-improvements/P4/diagnosis/tmp",
+    "MYLANG_SLOT_DIR": "/home/epentland/.cache/mylang/slots"
+  },
+  "cached_binary_original_path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/qualification/eda/cache/programs-v1/492fdeff52bd9694c0ef00aa11ff22a0e7334aef45e26d77d805201196e8b9d0",
+  "cached_binary_retained_path": "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p4/.tmp/lox-eda-improvements/P4/diagnosis/integrated-board-cached",
+  "cached_binary_sha256": "f1f851fa052ca0caeebcca415761639237fa64ca98947d04695791c37b879128",
+  "routes": [
+    {
+      "route": "original fresh module CLI",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p4/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-zero-rc-20261012/eda/source/src/board_layers_test.my",
+        "--release",
+        "--verify-facts",
+        "--experimental-zero-rc",
+        "--jobs",
+        "1",
+        "--max-steps",
+        "1000000000",
+        "--max-frames",
+        "40000",
+        "--max-memory",
+        "2G",
+        "--timeout-ms",
+        "120000",
+        "--cache-dir",
+        ".tmp/lox-eda-improvements/P4/diagnosis/cache-original",
+        "--json"
+      ],
+      "returncode": 0,
+      "result_sha256": "9370e9ae50f7793f8ed7542eaf90cf793076994c394c2fab91ea061d6a6f0c87",
+      "counts": {
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0,
+        "cached": 0
+      },
+      "source_hashes": {
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-zero-rc-20261012/eda/source/src/board_layers_test.my": "2eb7d06b5e6f9abedfc54ed4dd47526b90723bc4e6f61fadacfc3d81d5536e8c",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-zero-rc-20261012/eda/source/src/board_layers.my": "c288df6bbec4421c30a9cd8b517b7d4c3f8e886687aee25fef13132263624f53",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-zero-rc-20261012/eda/source/src/support_strs.my": "56d61196fc70b2df9125b861238a85931716617e0a245f6df342c48fcd0eef0f",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-zero-rc-20261012/eda/source/src/support_expect.my": "c74f4cc6fe365f6b76f9154eefbbc8783d0c6a87d3750012e2679279a9a0fecc"
+      }
+    },
+    {
+      "route": "candidate fresh module CLI",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p4/scripts/build-slot.sh",
+        "build",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/text-gaps/coordinator/common-002/install/bin/mylang",
+        "test",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/source/eda/board_layers_test.my",
+        "--release",
+        "--verify-facts",
+        "--experimental-zero-rc",
+        "--jobs",
+        "1",
+        "--max-steps",
+        "1000000000",
+        "--max-frames",
+        "40000",
+        "--max-memory",
+        "2G",
+        "--timeout-ms",
+        "120000",
+        "--cache-dir",
+        ".tmp/lox-eda-improvements/P4/diagnosis/cache-candidate",
+        "--json"
+      ],
+      "returncode": 0,
+      "result_sha256": "1a9b9b9e29545bf8adc0cad5c2c3188242823d1d73fe159714a3c407043cbe50",
+      "counts": {
+        "passed": 10,
+        "failed": 0,
+        "skipped": 0,
+        "unsupported": 0,
+        "cached": 0
+      },
+      "source_hashes": {
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/source/eda/board_layers_test.my": "2eb7d06b5e6f9abedfc54ed4dd47526b90723bc4e6f61fadacfc3d81d5536e8c",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/source/eda/board_layers.my": "c288df6bbec4421c30a9cd8b517b7d4c3f8e886687aee25fef13132263624f53",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/source/eda/support_strs.my": "56d61196fc70b2df9125b861238a85931716617e0a245f6df342c48fcd0eef0f",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/source/eda/support_expect.my": "c74f4cc6fe365f6b76f9154eefbbc8783d0c6a87d3750012e2679279a9a0fecc"
+      }
+    },
+    {
+      "route": "original cached candidate binary single",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p4/scripts/build-slot.sh",
+        "build",
+        "strace",
+        "-f",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p4/.tmp/lox-eda-improvements/P4/diagnosis/integrated-board.trace",
+        "-e",
+        "trace=openat,read,write,close,lseek,exit_group,prctl",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/qualification/eda/cache/programs-v1/492fdeff52bd9694c0ef00aa11ff22a0e7334aef45e26d77d805201196e8b9d0",
+        "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p4/.tmp/lox-eda-improvements/P4/diagnosis/single.input",
+        "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p4/.tmp/lox-eda-improvements/P4/diagnosis/single.response"
+      ],
+      "returncode": 0,
+      "input_sha256": "32edb6022c0921d99aa347e9cda5dc2db413f5574eebaaa8592234308ffebd2b",
+      "response_sha256": "ba75725aca431241350fbb975992389152e3ff7cfa77bd19713852b06504c693",
+      "response_bytes": 56,
+      "records": [
+        {
+          "status": 0,
+          "bool": true,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "trace_bytes": 0
+        }
+      ],
+      "raw_strace_sha256": "b92a1681efdf4f14eecd1f2acceaee1d7f18d98be76c77538cc37d0b04cfe24e",
+      "compressed_trace_sha256": "422b872f5f39da4deeabb3e092b31a63cf12ce02bc4c5705380921e0ec27bb35"
+    },
+    {
+      "route": "original cached candidate binary batch10",
+      "command": [
+        "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p4/scripts/build-slot.sh",
+        "build",
+        "strace",
+        "-f",
+        "-o",
+        "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p4/.tmp/lox-eda-improvements/P4/diagnosis/integrated-board-batch.trace",
+        "-e",
+        "trace=openat,read,write,close,lseek,exit_group,prctl",
+        "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/qualification/eda/cache/programs-v1/492fdeff52bd9694c0ef00aa11ff22a0e7334aef45e26d77d805201196e8b9d0",
+        "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p4/.tmp/lox-eda-improvements/P4/diagnosis/batch.input",
+        "/home/epentland/ai/canopy/mylang-lox-eda-improve-20261012-p4/.tmp/lox-eda-improvements/P4/diagnosis/batch.response"
+      ],
+      "returncode": 0,
+      "input_sha256": "094e4d503c3458a0240eb48eca52b7dd5292356b294b24467d3f83c91ef9c80e",
+      "response_sha256": "32a38deba6f8cbdd1c010f396de681ee702df06a12939775cbdbe41b8d4efe49",
+      "response_bytes": 560,
+      "records": [
+        {
+          "status": 0,
+          "bool": true,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "trace_bytes": 0
+        },
+        {
+          "status": 0,
+          "bool": true,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "trace_bytes": 0
+        },
+        {
+          "status": 0,
+          "bool": true,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "trace_bytes": 0
+        },
+        {
+          "status": 0,
+          "bool": true,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "trace_bytes": 0
+        },
+        {
+          "status": 0,
+          "bool": true,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "trace_bytes": 0
+        },
+        {
+          "status": 0,
+          "bool": true,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "trace_bytes": 0
+        },
+        {
+          "status": 0,
+          "bool": true,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "trace_bytes": 0
+        },
+        {
+          "status": 0,
+          "bool": true,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "trace_bytes": 0
+        },
+        {
+          "status": 0,
+          "bool": true,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "trace_bytes": 0
+        },
+        {
+          "status": 0,
+          "bool": true,
+          "stdout_bytes": 0,
+          "stderr_bytes": 0,
+          "trace_bytes": 0
+        }
+      ],
+      "raw_strace_sha256": "8837c3b2c13f9e83291be4af524ba926473667b3fc61c4f04b9f299c4be67ae9",
+      "compressed_trace_sha256": "ccc38e62cca33c5751efb024edcf99da16ebcfc0a19b43e0793d26038f93c241"
+    }
+  ],
+  "native_leakcheck_branch_note": "core_test.c records status4 and exits0 for a trial live-count mismatch; exit70 originates from protocol/I/O/setup guards, not that branch.",
+  "core_test_source_sha256": "18535b83cd85b1f4ccd8bd55153c38a55299e561b8dd09429cba3c257d96e7fd",
+  "observed_low_disk_note": "Filesystem reported518MiB free during first diagnosis; coordinator later reclaimed completed gate caches. No ENOSPC/EIO was observed in successful cached strace replays, so disk exhaustion is not established as original cause.",
+  "preserved_failed_full_report": {
+    "path": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/qualification/eda-attempt1/checked-tests.stdout",
+    "sha256": "b06191706ad6a7235841e6636f7f5358eaf67c4997544ed607cb8eb40a9a5abb",
+    "passed": 184,
+    "failed": 133
+  }
+}
