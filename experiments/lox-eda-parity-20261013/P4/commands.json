@@ -44,6 +44,24 @@
       ".tmp/lox-eda-parity/P4/tree-counted",
       "--emit-llvm",
       ".tmp/lox-eda-parity/P4/tree.ll"
+    ],
+    [
+      "scripts/build-slot.sh",
+      "build",
+      "python3",
+      "-B",
+      "experiments/lox-eda-parity-20261013/P4/run_probes.py",
+      "baseline",
+      "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/.tmp/lox-eda-improvements-20261012/lox/zero-rc-counted"
+    ],
+    [
+      "scripts/build-slot.sh",
+      "build",
+      "python3",
+      "-B",
+      "experiments/lox-eda-parity-20261013/P4/run_probes.py",
+      "candidate",
+      ".tmp/lox-eda-parity/P4/tree-counted"
     ]
   ]
 }

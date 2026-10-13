@@ -1,0 +1,29 @@
+build-slot: FIFO ticket 458, position 1; waiting for measurement or memory-accounting settle delay; waiting (0s so far)
+build-slot: FIFO ticket 458, position 1; waiting for measurement or memory-accounting settle delay; waiting (60s so far)
+build-slot: FIFO ticket 458, position 1; waiting for measurement or memory-accounting settle delay; waiting (121s so far)
+build-slot: FIFO ticket 458, position 1; waiting for measurement or memory-accounting settle delay; waiting (181s so far)
+build-slot: gate slot 1, FIFO ticket 458 after 231s
+guardian: run-all: whole-tree run — blocking gate run (commit/CI enforces the whole-tree guarantee)
+guardian: cold gate — no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm
+guardian: file-size: 18 finding(s) — report-only (--verbose for detail)
+guardian: function-length: 21 finding(s) — report-only (--verbose for detail)
+guardian: line-length: 10579 finding(s) — report-only (--verbose for detail)
+guardian: abi-layout: 3 finding(s) — report-only (--verbose for detail)
+guardian: run-all: 88 check(s) passed
+[codex/lox-eda-parity-20261013-p4 3553896f9] Optimize Lox tree construction and stable-handle writes
+ 16 files changed, 344 insertions(+), 37 deletions(-)
+ create mode 100644 experiments/lox-eda-parity-20261013/P4/build-counted-first-dependency.log
+ create mode 100644 experiments/lox-eda-parity-20261013/P4/build-counted.log
+ create mode 100644 experiments/lox-eda-parity-20261013/P4/build-outputs.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P4/cases.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P4/commands.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P4/focused-tests-first-dependency.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P4/focused-tests-first-dependency.log
+ create mode 100644 experiments/lox-eda-parity-20261013/P4/focused-tests.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P4/focused-tests.log
+ create mode 100644 experiments/lox-eda-parity-20261013/P4/handoff.md
+ create mode 100644 experiments/lox-eda-parity-20261013/P4/llvm-inspection.json
+ create mode 100644 experiments/lox-eda-parity-20261013/P4/probes/env-instance.lox
+ create mode 100644 experiments/lox-eda-parity-20261013/P4/run_probes.py
+ create mode 100644 experiments/lox-eda-parity-20261013/P4/source-identity.json
+ create mode 100644 experiments/lox-eda-parity-20261013/source/lox/p4_tree_tests.my

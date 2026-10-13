@@ -1,0 +1,7 @@
+build-slot: FIFO ticket 2735, position 10; earlier build tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 2735, position 2; earlier build tickets must run first; waiting (60s so far)
+build-slot: build slot 1, FIFO ticket 2735 after 75s
+{
+  "env-instance": 1999440,
+  "env-instance-stress": 2307624
+}
