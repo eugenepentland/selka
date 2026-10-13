@@ -128,7 +128,7 @@ def main():
                 for n in included:
                     e=entries[n];assert sha(e['path'])==e['sha256'];cmd+=['--arm',n+'='+e['path']]
                 count_spec=dest/'count-specs'/spec.name
-                count_document=dict(raw);count_document['arms']={**raw['arms'],'zig-safe':raw['arms']['zig-fast']}
+                count_document=dict(raw);count_document['arms']={**raw['arms'],'zig-safe':raw['arms']['zig-fast']};count_document['oracle']='zig-safe'
                 save(count_spec,count_document)
                 cmd.append(str(count_spec))
                 summary=counted/(spec.stem+'.counted.spec.summary.json')

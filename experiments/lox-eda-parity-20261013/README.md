@@ -26,6 +26,16 @@ source/compiler identities, commands, successful and failed checks, and pending
 measurements. The integrated compiler still requires qualification; worker
 passes do not replace the combined application matrices or full gate.
 
+Integrated source changes include borrowed EDA parsing and routing inputs,
+fresh Lox constructors, and owned payload exchange in the heap setters. The
+exchange source depends on the new compiler helper, whose final qualification
+is still pending. Its provisional worker build passed 84 tests and removed
+300 list copies (14,745,600 bytes) in the bounded mutation probe. The parser
+probe reduced allocations from 46,000 to 18,000 and allocation traffic from
+4,288,000 to 2,432,000 bytes. These are separate instrumented probes, not
+full-application runtime or RSS measurements. Exact identities and raw counters
+are in P1 and P3.
+
 ## Reproduction and measurement
 
 Source `/home/epentland/.config/mylang/dev-env.sh`. `native.py` takes explicit
@@ -34,6 +44,13 @@ migrated and checked source controls, plus counted binaries. It also builds the
 previous checked source with the new compiler to separate compiler and source
 effects. Qualification uses current test declaration counts, all five ownership
 build modes, Lox conformance/GC stress and EDA golden/error outputs.
+
+After both builds, `audit_guests.py --output REPORT BUILD_LOX BUILD_EDA`
+checks the recorded guest LLVM and the timed and counted native binaries for
+legacy RC helpers. It also checks emitted managed-count loads and initializers.
+The audit is scoped to those guests; it does not establish package retirement.
+Its positive and negative smoke controls use the previous checked and RC
+artifacts, with results recorded in `P6/guest-audit-validation.json`.
 
 `fixtures/lox/recovery.json` pins the recovered historical Lox harness and
 corpus. All 254 corpus files match the previous qualification identities; the

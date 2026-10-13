@@ -1,0 +1,22 @@
+{
+  "harness_sha256": "1f2d0da6f708219137b983bd1d00b79d0e64f29d95e015bad977e0f63a772cdc",
+  "status": "passed",
+  "applications": {
+    "lox": {
+      "prior_build": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/build/lox/build-receipt.json",
+      "prior_build_sha256": "dccb0b797a78ab4f6eb34c2dfefe7a095f6e1650c3ad6cca2291e6668467d535",
+      "checked_accepted": true,
+      "rc_control_rejected": true,
+      "llvm_sha256": "b7333543af6ad2f800dc329d5809333f740df84c5780904a52cb04302938d4ab",
+      "scope": "Harness validation using historical artifacts, not new candidate qualification."
+    },
+    "eda": {
+      "prior_build": "/home/epentland/ai/canopy/mylang-text-gaps-main-20261012/experiments/lox-eda-improvements-20261012/build/eda/build-receipt.json",
+      "prior_build_sha256": "67aaa3e1efe1b56a6bc939cac70f46b44b631f6f47143c679c925550de150419",
+      "checked_accepted": true,
+      "rc_control_rejected": true,
+      "llvm_sha256": "6d022e29f80874405ab0c219fbc99a81d07bdab440635bb94816fcbec7ea7ac7",
+      "scope": "Harness validation using historical artifacts, not new candidate qualification."
+    }
+  }
+}
