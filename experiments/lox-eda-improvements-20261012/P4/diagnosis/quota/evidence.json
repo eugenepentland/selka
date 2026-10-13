@@ -1,0 +1,28 @@
+{
+  "timestamp_utc": "2026-10-13T00:45:11.942422+00:00",
+  "uid": 1000,
+  "query": "quotactl_fd(fd(/tmp,O_RDONLY|O_DIRECTORY), QCMD(Q_GETQUOTA,USRQUOTA), getuid(), if_dqblk)",
+  "syscall_number": 443,
+  "command": 2147485440,
+  "return": 0,
+  "errno": 0,
+  "quota": {
+    "bhardlimit": 12839478,
+    "bsoftlimit": 12839478,
+    "curspace": 12903657472,
+    "ihardlimit": 0,
+    "isoftlimit": 0,
+    "curinodes": 203177,
+    "btime": 0,
+    "itime": 0,
+    "valid": 63
+  },
+  "quota_limit_units": "bhardlimit/bsoftlimit in1024-byte blocks; curspace inbytes; inode fields incounts",
+  "hard_limit_bytes": 13147625472,
+  "soft_limit_bytes": 13147625472,
+  "usage_bytes": 12903657472,
+  "hard_limit_headroom_bytes": 243968000,
+  "filesystem_available_bytes": 12866146304,
+  "filesystem_free_inodes": 845375,
+  "mount": "tmpfs tmpfs rw,nosuid,nodev,size=25165824k,nr_inodes=1048576,inode64,usrquota"
+}
