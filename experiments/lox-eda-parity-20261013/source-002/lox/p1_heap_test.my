@@ -1,0 +1,120 @@
+import heap
+import lox_strings
+import object
+import table
+import value
+
+public func test_fresh_constructors_stress_roots_and_accounting() -> bool:
+    mut rt = heap.new_runtime(True)
+    const name = lox_strings.copy_string(mut rt, b"P1")
+    heap.push(mut rt, value.Value.obj(value=name))
+    const klass = heap.allocate_class(mut rt, name)
+    heap.push(mut rt, value.Value.obj(value=klass))
+    const instance = heap.allocate_instance(mut rt, klass)
+    heap.push(mut rt, value.Value.obj(value=instance))
+    const env = heap.allocate_env(mut rt, value.NO_OBJ, 3)
+    rt.current_env = env
+    const child = heap.allocate_env(mut rt, env, 2)
+    rt.current_env = child
+    heap.collect(mut rt)
+    return rt.allocations == 5 and rt.collections == 6 and rt.freed == 0 and rt.bytes_allocated == 274 and heap.instance_class(rt, instance) == klass and heap.class_name(rt, klass) == name and heap.env_enclosing(rt, child) == env
+
+public func test_scoped_writes_preserve_snapshots_and_alias_identity() -> bool:
+    mut rt = heap.new_runtime(False)
+    const name = lox_strings.copy_string(mut rt, b"field")
+    const hash = heap.string_hash(rt, name)
+    const klass = heap.allocate_class(mut rt, name)
+    const instance = heap.allocate_instance(mut rt, klass)
+    const alias = instance
+    heap.set_instance_field(mut rt, instance, name, hash, value.Value.number(value=1.0))
+    mut before = table.new_table()
+    match rt.objects[instance]:
+        case object.Obj.instance(value=payload):
+            before = payload.fields.copy()
+        case _:
+            return False
+    heap.set_instance_field(mut rt, alias, name, hash, value.Value.number(value=2.0))
+    const saved_class = heap.class_obj(rt, klass)
+    heap.set_class_method(mut rt, klass, name, hash, value.Value.number(value=3.0))
+    const env = heap.allocate_env(mut rt, value.NO_OBJ, 1)
+    const saved_env = heap.env_obj(rt, env)
+    heap.set_env_slot(mut rt, env, 0, value.Value.number(value=4.0))
+    return table.get(before, name, hash) == Some(value.Value.number(value=1.0)) and heap.instance_field(rt, alias, name, hash) == Some(value.Value.number(value=2.0)) and table.get(saved_class.methods, name, hash) == None and saved_env.slots[0] == value.Value.nil and heap.env_slot(rt, env, 0) == value.Value.number(value=4.0)
+
+public func test_fresh_constructor_reuses_collected_slot() -> bool:
+    mut rt = heap.new_runtime(True)
+    const env = heap.allocate_env(mut rt, value.NO_OBJ, 3)
+    const instance = heap.allocate_instance(mut rt, value.NO_OBJ)
+    heap.push(mut rt, value.Value.obj(value=instance))
+    heap.collect(mut rt)
+    return env == instance and len(rt.objects) == 1 and rt.allocations == 2 and rt.freed == 1 and rt.bytes_allocated == 48 and heap.instance_class(rt, instance) == value.NO_OBJ
+
+public func test_public_allocate_retains_independent_input_snapshot() -> bool:
+    mut rt = heap.new_runtime(False)
+    mut supplied = object.Obj.env(value=object.new_env(value.NO_OBJ, 1))
+    const ref = heap.allocate(mut rt, supplied)
+    heap.set_env_slot(mut rt, ref, 0, value.Value.number(value=9.0))
+    match supplied:
+        case object.Obj.env(value=payload):
+            return payload.slots[0] == value.Value.nil and heap.env_slot(rt, ref, 0) == value.Value.number(value=9.0)
+        case _:
+            return False
+
+
+public func test_scoped_class_inheritance_preserves_independent_methods() -> bool:
+    mut rt = heap.new_runtime(False)
+    const name = lox_strings.copy_string(mut rt, b"method")
+    const hash = heap.string_hash(rt, name)
+    const parent = heap.allocate_class(mut rt, name)
+    const child = heap.allocate_class(mut rt, name)
+    heap.set_class_method(mut rt, parent, name, hash, value.Value.number(value=1.0))
+    heap.inherit_class_methods(mut rt, child, parent)
+    heap.set_class_method(mut rt, parent, name, hash, value.Value.number(value=2.0))
+    const before = heap.class_obj(rt, child)
+    heap.set_class_method(mut rt, child, name, hash, value.Value.number(value=3.0))
+    return heap.class_method(rt, parent, name, hash) == Some(value.Value.number(value=2.0)) and heap.class_method(rt, child, name, hash) == Some(value.Value.number(value=3.0)) and table.get(before.methods, name, hash) == Some(value.Value.number(value=1.0))
+
+public func test_scoped_writes_trace_field_method_and_environment_roots() -> bool:
+    mut rt = heap.new_runtime(True)
+    const name = lox_strings.copy_string(mut rt, b"root")
+    heap.push(mut rt, value.Value.obj(value=name))
+    const klass = heap.allocate_class(mut rt, name)
+    heap.push(mut rt, value.Value.obj(value=klass))
+    const instance = heap.allocate_instance(mut rt, klass)
+    heap.push(mut rt, value.Value.obj(value=instance))
+    const env = heap.allocate_env(mut rt, value.NO_OBJ, 1)
+    rt.current_env = env
+    const hash = heap.string_hash(rt, name)
+    heap.set_instance_field(mut rt, instance, name, hash, value.Value.obj(value=env))
+    heap.set_class_method(mut rt, klass, name, hash, value.Value.obj(value=env))
+    heap.set_env_slot(mut rt, env, 0, value.Value.obj(value=instance))
+    rt.current_env = value.NO_OBJ
+    rt.stack_top = 0
+    heap.push(mut rt, value.Value.obj(value=instance))
+    const child = heap.allocate_env(mut rt, value.NO_OBJ, 0)
+    rt.current_env = child
+    heap.collect(mut rt)
+    return rt.freed == 0 and rt.allocations == 5 and heap.env_slot(rt, env, 0) == value.Value.obj(value=instance) and heap.class_method(rt, klass, name, heap.string_hash(rt, name)) == Some(value.Value.obj(value=env))
+
+public func test_fresh_environment_negative_slot_count_matches_existing_constructor() -> bool:
+    mut rt = heap.new_runtime(False)
+    const env = heap.allocate_env(mut rt, value.NO_OBJ, -1)
+    return rt.bytes_allocated == 32 and len(heap.env_obj(rt, env).slots) == 0 and rt.allocations == 1
+
+public func test_owned_class_self_inheritance_keeps_methods_and_snapshot() -> bool:
+    mut rt = heap.new_runtime(False)
+    const name = lox_strings.copy_string(mut rt, b"self")
+    const hash = heap.string_hash(rt, name)
+    const klass = heap.allocate_class(mut rt, name)
+    heap.set_class_method(mut rt, klass, name, hash, value.Value.number(value=1.0))
+    const before = heap.class_obj(rt, klass)
+    heap.inherit_class_methods(mut rt, klass, klass)
+    heap.set_class_method(mut rt, klass, name, hash, value.Value.number(value=2.0))
+    return table.get(before.methods, name, hash) == Some(value.Value.number(value=1.0)) and heap.class_method(rt, klass, name, hash) == Some(value.Value.number(value=2.0))
+
+public func test_owned_environment_negative_index_and_snapshot() -> bool:
+    mut rt = heap.new_runtime(False)
+    const env = heap.allocate_env(mut rt, value.NO_OBJ, 2)
+    const before = heap.env_obj(rt, env)
+    heap.set_env_slot(mut rt, env, -1, value.Value.number(value=1.0))
+    return before.slots[1] == value.Value.nil and heap.env_slot(rt, env, 1) == value.Value.number(value=1.0) and heap.env_slot(rt, env, 0) == value.Value.nil

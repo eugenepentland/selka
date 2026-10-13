@@ -1,0 +1,96 @@
+
+import byte_builder
+import support_crc32 as crc_mod
+
+public record Entry:
+    name: bytes
+    data: bytes
+
+
+public const err_zip32_limit_exceeded: str = "Zip32LimitExceeded"
+
+
+public func encoded_size(entries: Entry[]) -> Result[int, str]:
+    if len(entries) > 65535:
+        return Err(err_zip32_limit_exceeded)
+    mut local_size = 0
+    mut central_size = 0
+    for entry in entries:
+        if len(entry.name) > 65535 or len(entry.data) > 4294967295:
+            return Err(err_zip32_limit_exceeded)
+        local_size += 30 + len(entry.name) + len(entry.data)
+        central_size += 46 + len(entry.name)
+        if local_size > 4294967295 or central_size > 4294967295:
+            return Err(err_zip32_limit_exceeded)
+    return Ok(local_size + central_size + 22)
+
+
+public func write(mut w: byte_builder.Builder, entries: Entry[]) -> Result[Unit, str]:
+    match encoded_size(entries):
+        case Err(_):
+            return Err("WriteFailed")
+        case Ok(_):
+            pass
+    mut offset = 0
+    # Local file headers and stored data, in the supplied order.
+    for entry in entries:
+        mut crc = crc_mod.crc32(entry.data)
+        byte_builder.append(mut w, b"PK\x03\x04")
+        write_int(mut w, 20, 2)
+        write_int(mut w, 0, 2)
+        write_int(mut w, 0, 2)
+        write_int(mut w, 0, 2)
+        write_int(mut w, 33, 2) # 0x0021: 1980-01-01.
+        write_int(mut w, crc, 4)
+        write_int(mut w, len(entry.data), 4)
+        write_int(mut w, len(entry.data), 4)
+        write_int(mut w, len(entry.name), 2)
+        write_int(mut w, 0, 2)
+        byte_builder.append(mut w, entry.name)
+        byte_builder.append(mut w, entry.data)
+        offset += 30 + len(entry.name) + len(entry.data)
+    mut cd_start = offset
+    mut cd_size = 0
+    mut local_off = 0
+    # Central directory.
+    for entry2 in entries:
+        mut crc2 = crc_mod.crc32(entry2.data)
+        byte_builder.append(mut w, b"PK\x01\x02")
+        write_int(mut w, 20, 2)
+        write_int(mut w, 20, 2)
+        write_int(mut w, 0, 2)
+        write_int(mut w, 0, 2)
+        write_int(mut w, 0, 2)
+        write_int(mut w, 33, 2)
+        write_int(mut w, crc2, 4)
+        write_int(mut w, len(entry2.data), 4)
+        write_int(mut w, len(entry2.data), 4)
+        write_int(mut w, len(entry2.name), 2)
+        write_int(mut w, 0, 2)
+        write_int(mut w, 0, 2)
+        write_int(mut w, 0, 2)
+        write_int(mut w, 0, 2)
+        write_int(mut w, 0, 4)
+        write_int(mut w, local_off, 4)
+        byte_builder.append(mut w, entry2.name)
+        cd_size += 46 + len(entry2.name)
+        local_off += 30 + len(entry2.name) + len(entry2.data)
+    # End of central directory.
+    byte_builder.append(mut w, b"PK\x05\x06")
+    write_int(mut w, 0, 2)
+    write_int(mut w, 0, 2)
+    write_int(mut w, len(entries), 2)
+    write_int(mut w, len(entries), 2)
+    write_int(mut w, cd_size, 4)
+    write_int(mut w, cd_start, 4)
+    write_int(mut w, 0, 2)
+    return Ok(())
+
+
+func write_int(mut w: byte_builder.Builder, value: int, count: int):
+    mut n = value
+    mut i = 0
+    while i < count:
+        _ = byte_builder.append_byte(mut w, n % 256)
+        n = n // 256
+        i += 1

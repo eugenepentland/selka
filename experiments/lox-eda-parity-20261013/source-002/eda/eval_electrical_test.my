@@ -1,0 +1,153 @@
+
+import eval_electrical as m
+import eval_env as env
+import sexpr_parser as parser
+import sexpr_ast as ast
+import support_expect as ex
+
+func form(source: bytes) -> ast.Node[]?:
+    match parser.parse(source):
+        case Ok(nodes):
+            if len(nodes) == 0:
+                return None
+            return ast.as_list(nodes[0])
+        case Err(_):
+            return None
+
+
+func declaration(source: bytes) -> env.ElectricalDecl?:
+    mut children = try form(source)
+    return m.parse(children)
+
+
+func near(out: Stream, label: str, got: float?, want: float) -> bool:
+    if got is None:
+        return ex.ok(out, label, False)
+    return ex.near(out, label, got, want, 1e-9)
+
+
+# test "parse reads pin function name"
+public func test_parse_reads_pin_function_name(out: Stream) -> bool:
+    mut decl = declaration(b"(electrical \"VDD_1\" (type power-in))")
+    if decl is None:
+        return ex.ok(out, "decl", False)
+    if not ex.eq_bytes(out, "pin", decl.pin, b"VDD_1"):
+        return False
+    mut electrical_type = decl.electrical_type
+    if electrical_type is None:
+        return False
+    return ex.ok(out, "type", electrical_type == env.ElectricalType.power_in)
+
+
+# test "parse returns null without pin name"
+public func test_parse_returns_null_without_pin_name(out: Stream) -> bool:
+    return ex.ok(out, "missing pin", declaration(b"(electrical)").is_none())
+
+
+# test "parse rejects an unknown electrical type"
+public func test_parse_rejects_an_unknown_electrical_type(out: Stream) -> bool:
+    return ex.ok(out, "unknown type", declaration(b"(electrical \"VDD\" (type mystery))").is_none())
+
+
+record TypeCase:
+    src: bytes
+    expected: env.ElectricalType
+
+
+# test "parse recognises all electrical types"
+public func test_parse_recognises_all_electrical_types(out: Stream) -> bool:
+    mut cases = [TypeCase(src=b"(electrical \"P\" (type input))", expected=env.ElectricalType.input), TypeCase(src=b"(electrical \"P\" (type output))", expected=env.ElectricalType.output), TypeCase(src=b"(electrical \"P\" (type io))", expected=env.ElectricalType.io), TypeCase(src=b"(electrical \"P\" (type power-in))", expected=env.ElectricalType.power_in), TypeCase(src=b"(electrical \"P\" (type power-out))", expected=env.ElectricalType.power_out), TypeCase(src=b"(electrical \"P\" (type passive))", expected=env.ElectricalType.passive), TypeCase(src=b"(electrical \"P\" (type nc))", expected=env.ElectricalType.nc)]
+    for row in cases:
+        mut decl = declaration(row.src)
+        if decl is None:
+            return ex.ok(out, "decl", False)
+        mut electrical_type = decl.electrical_type
+        if electrical_type is None:
+            return ex.ok(out, "type exists", False)
+        if not ex.ok(out, "type", electrical_type == row.expected):
+            return False
+    return True
+
+
+# test "parse captures voltage levels"
+public func test_parse_captures_voltage_levels(out: Stream) -> bool:
+    mut src = b"(electrical \"GPIO_PA5\" (type io) (drive push-pull) (v-ih-min 2.31) (v-il-max 0.99) (v-oh-typ 3.1) (v-ol-typ 0.4) (max-voltage 3.6) (domain digital))"
+    mut decl = declaration(src)
+    if decl is None:
+        return ex.ok(out, "decl", False)
+    mut electrical_type = decl.electrical_type
+    mut drive = decl.drive
+    if electrical_type is None or drive is None:
+        return False
+    if not ex.ok(out, "type", electrical_type == env.ElectricalType.io):
+        return False
+    if not ex.ok(out, "drive", drive == env.Drive.push_pull):
+        return False
+    if not near(out, "v-ih-min", decl.v_ih_min, 2.31):
+        return False
+    if not near(out, "v-il-max", decl.v_il_max, 0.99):
+        return False
+    if not near(out, "v-oh-typ", decl.v_oh_typ, 3.1):
+        return False
+    if not near(out, "v-ol-typ", decl.v_ol_typ, 0.4):
+        return False
+    if not near(out, "max-voltage", decl.max_voltage, 3.6):
+        return False
+    return ex.eq_bytes(out, "domain", decl.domain_, b"digital")
+
+
+# test "parseSubForms fills caller-supplied decl from sub-form list"
+public func test_parsesubforms_fills_caller_supplied_decl_from_sub_form_list(out: Stream) -> bool:
+    mut src = b"(electrical (type io) (drive push-pull) (v-oh-typ 3.1) (v-ih-min 2.31) (max-voltage 3.6) (domain digital))"
+    mut children = form(src)
+    if children is None:
+        return False
+    # Mimic the port parser: caller sets the pin; helper fills remaining slots.
+    mut decl = env.ElectricalDecl(pin=b"RF_SPI_SCK", domain_=b"")
+    m.parse_sub_forms(mut decl, children[1:])
+    if not ex.eq_bytes(out, "pin", decl.pin, b"RF_SPI_SCK"):
+        return False
+    mut electrical_type = decl.electrical_type
+    mut drive = decl.drive
+    if electrical_type is None or drive is None:
+        return False
+    if not ex.ok(out, "type", electrical_type == env.ElectricalType.io):
+        return False
+    if not ex.ok(out, "drive", drive == env.Drive.push_pull):
+        return False
+    if not near(out, "v-oh-typ", decl.v_oh_typ, 3.1):
+        return False
+    if not near(out, "v-ih-min", decl.v_ih_min, 2.31):
+        return False
+    if not near(out, "max-voltage", decl.max_voltage, 3.6):
+        return False
+    return ex.eq_bytes(out, "domain", decl.domain_, b"digital")
+
+
+# test "port-level electrical decl carries boundary logic levels"
+public func test_port_level_electrical_decl_carries_boundary_logic_levels(out: Stream) -> bool:
+    mut children = form(b"(electrical (type output) (v-oh-typ 3.1))")
+    if children is None:
+        return False
+    # A port has no positional pin-name argument; the caller's name is retained.
+    mut decl = env.ElectricalDecl(pin=b"VBAT_MEZZ_OUT", domain_=b"")
+    m.parse_sub_forms(mut decl, children[1:])
+    if not ex.eq_bytes(out, "pin", decl.pin, b"VBAT_MEZZ_OUT"):
+        return False
+    mut electrical_type = decl.electrical_type
+    if electrical_type is None:
+        return False
+    if not ex.ok(out, "type", electrical_type == env.ElectricalType.output):
+        return False
+    return near(out, "v-oh-typ", decl.v_oh_typ, 3.1)
+
+
+# test "parse ignores unknown sub-forms"
+public func test_parse_ignores_unknown_sub_forms(out: Stream) -> bool:
+    mut decl = declaration(b"(electrical \"VDD\" (type power-in) (mystery 42))")
+    if decl is None:
+        return False
+    mut electrical_type = decl.electrical_type
+    if electrical_type is None:
+        return False
+    return ex.ok(out, "type", electrical_type == env.ElectricalType.power_in)

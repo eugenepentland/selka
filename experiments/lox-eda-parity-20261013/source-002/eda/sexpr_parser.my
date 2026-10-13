@@ -1,0 +1,237 @@
+
+# Port of zig/src/sexpr/parser.zig: recursive-descent S-expression parser with a
+# hard nesting-depth cap. Checked ownership keeps independent node text slices.
+#
+# Differences from the Zig: no `OutOfMemory` error (an allocation failure traps
+# in mylang) and no `freeNodes` (the runtime reclaims managed values).
+import sexpr_ast as ast
+import sexpr_tokenizer as tokenizer_mod
+
+# 1 mil = 0.0254 mm (mylang has no float module constants, so a function).
+func mil_to_mm() -> float:
+    return 0.0254
+
+
+# Maximum S-expression nesting depth (parse_list -> parse_node -> parse_list
+# recurses once per open paren).
+public const MAX_PARSE_DEPTH: int = 10000
+
+
+public enum ParseError:
+    unexpected_eof
+    unexpected_rparen
+    unexpected_character
+    unterminated_string
+    invalid_number
+    too_deep
+
+
+# Source-located explanation for a ParseError.
+public record ParseDiagnostic:
+    span: ast.Span
+    message: str
+
+
+public func new_diagnostic() -> ParseDiagnostic:
+    return ParseDiagnostic(span=ast.span_zero(), message="")
+
+
+# Human-readable message for each ParseError kind.
+public func error_message(err: ParseError) -> str:
+    match err:
+        case ParseError.unexpected_eof:
+            return "unexpected end of input — a '(' was never closed"
+        case ParseError.unexpected_rparen:
+            return "unexpected ')' — no matching '(' is open here"
+        case ParseError.unexpected_character:
+            return "unexpected character"
+        case ParseError.unterminated_string:
+            return "unterminated string — missing closing '\"'"
+        case ParseError.invalid_number:
+            return "invalid number literal"
+        case ParseError.too_deep:
+            return "s-expression nesting is too deep"
+
+
+# The Zig error identity, distinct from the human-facing diagnostic text.
+public func error_name(err: ParseError) -> str:
+    match err:
+        case ParseError.unexpected_eof:
+            return "UnexpectedEof"
+        case ParseError.unexpected_rparen:
+            return "UnexpectedRparen"
+        case ParseError.unexpected_character:
+            return "UnexpectedCharacter"
+        case ParseError.unterminated_string:
+            return "UnterminatedString"
+        case ParseError.invalid_number:
+            return "InvalidNumber"
+        case ParseError.too_deep:
+            return "TooDeep"
+
+
+func lex_error_to_parse(err: tokenizer_mod.LexError) -> ParseError:
+    match err:
+        case tokenizer_mod.LexError.unexpected_character:
+            return ParseError.unexpected_character
+        case tokenizer_mod.LexError.unterminated_string:
+            return ParseError.unterminated_string
+
+
+# Parse S-expression source into a list of top-level nodes, discarding any
+# diagnostic.
+public func parse(source: bytes) -> Result[ast.Node[], ParseError]:
+    mut diag = new_diagnostic()
+    return parse_diag(source, mut diag)
+
+
+# Parse, writing a source-located diagnostic into `diag` on failure. On success
+# `diag` is left untouched.
+public func parse_diag(source: bytes, mut diag: ParseDiagnostic) -> Result[ast.Node[], ParseError]:
+    match parse_inner(source, mut diag):
+        case Ok(nodes):
+            return Ok(nodes)
+        case Err(err):
+            if len(diag.message) == 0:
+                diag.message = error_message(err)
+            return Err(err)
+
+
+func parse_inner(source: bytes, mut diag: ParseDiagnostic) -> Result[ast.Node[], ParseError]:
+    mut cur = tokenizer_mod.Cursor(pos=0, line=1, col=1, error_span=ast.span_zero())
+    mut nodes: ast.Node[] = []
+    while True:
+        mut token = try next_token(source, mut cur, mut diag)
+        if token.tag == tokenizer_mod.TokenTag.eof:
+            break
+        mut node = try parse_node(source, mut cur, token, 0, mut diag)
+        nodes.append(node)
+    return Ok(nodes)
+
+
+# Advance the tokenizer, capturing the failing byte's span into `diag` when the
+# lexer rejects a character or an unterminated string.
+func next_token(source: bytes, mut cur: tokenizer_mod.Cursor, mut diag: ParseDiagnostic) -> Result[tokenizer_mod.OffsetToken, ParseError]:
+    match tokenizer_mod.next_offset(source, mut cur):
+        case Ok(token):
+            return Ok(token)
+        case Err(err):
+            mut perr = lex_error_to_parse(err)
+            diag.span = cur.error_span
+            diag.message = error_message(perr)
+            return Err(perr)
+
+
+# Record `span` + the message for `err` into `diag`, so a parser-level
+# rejection reports where it happened.
+func fail(mut diag: ParseDiagnostic, span: ast.Span, err: ParseError) -> ParseError:
+    diag.span = span
+    diag.message = error_message(err)
+    return err
+
+
+func parse_node(source: bytes, mut cur: tokenizer_mod.Cursor, token: tokenizer_mod.OffsetToken, depth: int, mut diag: ParseDiagnostic) -> Result[ast.Node, ParseError]:
+    match token.tag:
+        case tokenizer_mod.TokenTag.lparen:
+            return parse_list(source, mut cur, token.span, depth, mut diag)
+        case tokenizer_mod.TokenTag.rparen:
+            return Err(fail(mut diag, token.span, ParseError.unexpected_rparen))
+        case tokenizer_mod.TokenTag.atom:
+            return Ok(ast.Node(tag=ast.Tag.atom(value=source[token.start:token.end]), span=token.span, literal=None))
+        case tokenizer_mod.TokenTag.string:
+            return Ok(ast.Node(tag=ast.Tag.string(value=source[token.start:token.end]), span=token.span, literal=None))
+        case tokenizer_mod.TokenTag.eof:
+            return Err(fail(mut diag, token.span, ParseError.unexpected_eof))
+        case _:
+            return parse_number_node(source, token, mut diag)
+
+
+# Parse a numeric token (int/float/si_val/unit_val) into its AST node, applying
+# the SI scale suffix or the mm/mil dimension conversion.
+func parse_number_node(source: bytes, token: tokenizer_mod.OffsetToken, mut diag: ParseDiagnostic) -> Result[ast.Node, ParseError]:
+    match token.tag:
+        case tokenizer_mod.TokenTag.int:
+            match source[token.start:token.end].parse_int():
+                case Some(val):
+                    return Ok(ast.node_int(token.span, val))
+                case None:
+                    return Err(fail(mut diag, token.span, ParseError.invalid_number))
+        case tokenizer_mod.TokenTag.float:
+            match source[token.start:token.end].parse_float():
+                case Some(val):
+                    return Ok(ast.node_float(token.span, val))
+                case None:
+                    return Err(fail(mut diag, token.span, ParseError.invalid_number))
+        case tokenizer_mod.TokenTag.si_val:
+            match parse_si_value(source, token.start, token.end):
+                case Some(val):
+                    # Keep the source spelling so a renderer can write `100nF`
+                    # back instead of `0.0000001`.
+                    return Ok(ast.Node(tag=ast.Tag.float(value=val), span=token.span, literal=Some(source[token.start:token.end])))
+                case None:
+                    return Err(fail(mut diag, token.span, ParseError.invalid_number))
+        case tokenizer_mod.TokenTag.unit_val:
+            match source[token.start:token.end].parse_float():
+                case Some(val):
+                    mut after_pos = token.end
+                    mut mm_value = val
+                    if after_pos + 2 < len(source) and source[after_pos] == ord("m") and source[after_pos + 1] == ord("i") and source[after_pos + 2] == ord("l"):
+                        mm_value = val * mil_to_mm()
+                    return Ok(ast.node_unit_val(token.span, mm_value))
+                case None:
+                    return Err(fail(mut diag, token.span, ParseError.invalid_number))
+        case _:
+            return Err(fail(mut diag, token.span, ParseError.invalid_number))
+
+
+# Parse an SI-scaled literal token (`220k`, `100nF`, `3.3V`, `10%`) into its
+# numeric value. None when the text has no parsable numeric prefix.
+func parse_si_value(source: bytes, start: int, end: int) -> float?:
+    mut num_end = start
+    while num_end < end:
+        mut c = source[num_end]
+        mut numeric = (c >= ord("0") and c <= ord("9")) or c == ord(".") or (c == ord("-") and num_end == start)
+        if not numeric:
+            break
+        num_end += 1
+    if num_end == start or num_end == end:
+        return None
+    match source[start:num_end].parse_float():
+        case None:
+            return None
+        case Some(base):
+            mut scale = 1.0
+            mut letter = source[num_end]
+            if letter == ord("k"):
+                scale = 1e3
+            elif letter == ord("M"):
+                scale = 1e6
+            elif letter == ord("G"):
+                scale = 1e9
+            elif letter == ord("m"):
+                scale = 1e-3
+            elif letter == ord("u"):
+                scale = 1e-6
+            elif letter == ord("n"):
+                scale = 1e-9
+            elif letter == ord("p"):
+                scale = 1e-12
+            return Some(base * scale)
+
+
+func parse_list(source: bytes, mut cur: tokenizer_mod.Cursor, open_span: ast.Span, depth: int, mut diag: ParseDiagnostic) -> Result[ast.Node, ParseError]:
+    if depth >= MAX_PARSE_DEPTH:
+        return Err(fail(mut diag, open_span, ParseError.too_deep))
+    mut children: ast.Node[] = []
+    while True:
+        mut token = try next_token(source, mut cur, mut diag)
+        # Point an unterminated list at the '(' that was never closed.
+        if token.tag == tokenizer_mod.TokenTag.eof:
+            return Err(fail(mut diag, open_span, ParseError.unexpected_eof))
+        if token.tag == tokenizer_mod.TokenTag.rparen:
+            break
+        mut child = try parse_node(source, mut cur, token, depth + 1, mut diag)
+        children.append(child)
+    # The parser owns these freshly completed children. Transfer them once;
+    # the public node_list constructor keeps its independent-copy contract.
+    return Ok(ast.Node(tag=ast.Tag.list(value=children), span=open_span, literal=None))

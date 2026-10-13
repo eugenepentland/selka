@@ -1,0 +1,805 @@
+
+import kicad_sch_emit as emit
+import kicad_sch_shape as shape_mod
+import kicad_sch_verify as verify
+import kicad_sch_bank as bank
+import kicad_sch_gang as gang_mod
+import kicad_sch_plan as plan_mod
+import kicad_sch_sheet as sheet_mod
+import kicad_sch_wire as wire
+import net_name
+import support_strs as strs
+
+public record Placeable:
+    id: emit.Identity
+    shape: int
+    unit: int
+    group: int
+    caption: bytes
+    nets: bytes[]
+    cluster: int
+
+
+public record Bind:
+    ref: bytes
+    pad: bytes
+
+
+public record NetFacts:
+    binds: dict[str, Bind]? = None
+    net_pins: dict[str, int]? = None
+    labels: dict[str, bytes]? = None
+
+
+public record Request:
+    sheet: emit.Sheet
+    shapes: shape_mod.Shape[]
+    items: Placeable[]
+    children: emit.SheetRef[]
+    flag_nets: bytes[]
+    seq: int
+    facts: NetFacts
+
+
+public record Result:
+    doc: emit.Doc
+    expect: verify.Expect
+
+
+public func rail_for(net: bytes) -> emit.Rail:
+    return emit.Rail(lib_name=b"PWR_" + shape_mod.sanitize_lib_name(net), net=net.copy())
+
+
+public func is_rail_net(name: bytes) -> bool:
+    return emit.is_rail_net(name)
+
+
+public func compose(mut req: Request) -> Result:
+    mut st = state_init(req)
+    mut groups = split_runs(st.req.items, group_changed)
+    mut packed_groups: Packed[] = []
+    mut cells: sheet_mod.Cell[] = []
+    for g in groups:
+        mut packed = pack_group(st, g)
+        cells.append(sheet_mod.Cell(w=packed.block.w, h=packed.block.h + 762, ox=0, oy=762))
+        packed_groups.append(packed)
+    mut layout = sheet_mod.pack_sheet(cells)
+    for i in range(len(groups)):
+        mut group = groups[i]
+        mut p = packed_groups[i].copy()
+        mut corner = layout.spots[i]
+        mut text = band_heading(st.req.sheet.title, st.req.items[group.start].caption)
+        if text is not None:
+            st.captions.append(emit.Caption(text=text.copy(), x=corner.x, y=corner.y - 762 + 254))
+        for j in range(len(p.clusters)):
+            mut run = p.clusters[j]
+            mut local = p.block.spots[j]
+            place(mut st, run, sheet_mod.Spot(x=corner.x + local.x, y=corner.y + local.y), p.slots[run.index])
+    plan_gangs(mut st)
+    draw_wires(mut st)
+    connect_pins(mut st)
+    mut result = finish(mut st, layout)
+    req.seq = st.req.seq
+    req.children = st.req.children.copy()
+    return result
+
+
+record Run:
+    start: int
+    len: int
+    index: int = 0
+
+
+record Packed:
+    clusters: Run[]
+    slots: Slotting[]
+    block: sheet_mod.Block
+
+
+record Slotting:
+    block: sheet_mod.Block
+    plan: ClusterPlan
+
+
+record ClusterPlan:
+    cells: sheet_mod.Cell[]
+    slot_of: int[]
+    banks: bank.Bank?[]
+
+
+record Poses:
+    pos: sheet_mod.Spot[]
+    angle: int?[]
+
+
+enum Role:
+    free
+    anchor
+    spoke
+
+
+record Site:
+    part: int
+    pin: int
+    end: wire.End
+    net: bytes
+    group: int
+    cluster: int
+    role: Role
+
+
+record State:
+    req: Request
+    parts: emit.Part[]
+    rails: emit.Rail[]
+    rail_of_net: dict[str, int]
+    pins: emit.RailPin[]
+    flags: emit.Flag[]
+    uuids: bytes[]
+    lib_ids: bytes[]
+    labels: bytes[]
+    free_labels: emit.FreeLabel[]
+    captions: emit.Caption[]
+    rail_values: bytes[]
+    paths: wire.Path[]
+    segs: wire.Seg[]
+    no_label: wire.Point[]
+    dots: wire.Point[]
+    stops: wire.Point[]
+    bodies: wire.Box[]
+    ganged: set[int]
+    no_connects: int = 0
+
+
+func state_init(req: Request) -> State:
+    return State(req=req.copy(), parts=[], rails=[], rail_of_net={}, pins=[], flags=[], uuids=[], lib_ids=[], labels=[], free_labels=[], captions=[], rail_values=[], paths=[], segs=[], no_label=[], dots=[], stops=[], bodies=[], ganged=set())
+
+
+func pack_group(self: State, group: Run) -> Packed:
+    mut members = self.req.items[group.start:group.start + group.len]
+    mut runs = split_runs(members, cluster_changed)
+    mut slots: Slotting[] = []
+    mut cells: sheet_mod.Cell[] = []
+    for i in range(len(runs)):
+        mut r = runs[i]
+        r.start += group.start
+        r.index = i
+        runs[i] = r
+        mut cp = plan_cluster(self, r)
+        mut sl = Slotting(block=sheet_mod.pack_cells(cp.cells), plan=cp)
+        cells.append(sheet_mod.Cell(w=sl.block.w, h=sl.block.h, ox=0, oy=0))
+        slots.append(sl)
+    return Packed(clusters=runs, slots=slots, block=sheet_mod.pack_cells(cells))
+
+
+func plan_cluster(self: State, run: Run) -> ClusterPlan:
+    mut items = self.req.items[run.start:run.start + run.len]
+    mut banks = bank.group(candidates(self, items))
+    mut of_item = bank_of_item(len(items), banks)
+    mut slot_of_bank: int?[] = []
+    for b in banks:
+        slot_of_bank.append(None)
+    mut slot_of: int[] = []
+    mut cells: sheet_mod.Cell[] = []
+    mut owner: bank.Bank?[] = []
+    for j in range(len(items)):
+        mut it = items[j].copy()
+        mut owned = of_item[j]
+        if owned is not None:
+            mut assigned = slot_of_bank[owned]
+            if assigned is None:
+                assigned = Some(len(cells))
+                slot_of_bank[owned] = assigned
+                cells.append(bank.cell_for(banks[owned], emit.label_span(banks[owned].power)))
+                owner.append(Some(banks[owned].copy()))
+            assert assigned is not None
+            if assigned is not None:
+                slot_of.append(assigned)
+            continue
+        slot_of.append(len(cells))
+        cells.append(cell_of(self, it))
+        owner.append(None)
+    return ClusterPlan(cells=cells, slot_of=slot_of, banks=owner)
+
+
+func bank_of_item(n: int, banks: bank.Bank[]) -> int?[]:
+    mut result: int?[] = []
+    for k in range(n):
+        result.append(None)
+    for j in range(len(banks)):
+        for m in banks[j].members:
+            result[m.item] = Some(j)
+    return result
+
+
+func candidates(self: State, items: Placeable[]) -> bank.Candidate[]:
+    mut result: bank.Candidate[] = []
+    for i in range(len(items)):
+        mut cand = candidate_of(self, items[i], i)
+        if cand is not None:
+            result.append(cand.copy())
+    return result
+
+
+func candidate_of(self: State, it: Placeable, i: int) -> bank.Candidate?:
+    if not is_bypass_ref(it.id.ref):
+        return None
+    mut s = self.req.shapes[it.shape].copy()
+    if len(s.units) != 1:
+        return None
+    mut reach = try bank.reach_of(s.units[0])
+    if len(it.nets) < 2:
+        return None
+    mut first = label_of(self, it.nets[0])
+    mut second = label_of(self, it.nets[1])
+    if len(first) == 0 or len(second) == 0:
+        return None
+    mut power_pin = 0
+    if is_rail_net(second):
+        power_pin = 0
+    elif is_rail_net(first):
+        power_pin = 1
+    else:
+        return None
+    mut power: bytes = b""
+    mut gnd: bytes = b""
+    if power_pin == 1:
+        power = second
+        gnd = first
+    else:
+        power = first
+        gnd = second
+    if is_rail_net(power) or not gangable(self, it.id.ref, power):
+        return None
+    return Some(bank.Candidate(item=i, ref=it.id.ref.copy(), value=it.id.value.copy(), power=power, gnd=gnd, power_pin=power_pin, reach=reach))
+
+
+func gangable(self: State, ref: bytes, power: bytes) -> bool:
+    mut binds = self.req.facts.binds.copy()
+    if binds is not None:
+        if strs.text(ref) in binds:
+            return True
+    return bank.is_supply_net(power)
+
+
+func split_runs(items: Placeable[], changed: func(Placeable, Placeable) -> bool) -> Run[]:
+    mut result: Run[] = []
+    mut start = 0
+    for i in range(len(items)):
+        mut it = items[i].copy()
+        if i == 0 or not changed(items[i - 1], it):
+            continue
+        result.append(Run(start=start, len=i - start))
+        start = i
+    if len(items) > start:
+        result.append(Run(start=start, len=len(items) - start))
+    return result
+
+
+func side_index(side: shape_mod.Side) -> int:
+    if side == shape_mod.Side.left:
+        return 0
+    if side == shape_mod.Side.right:
+        return 1
+    if side == shape_mod.Side.top:
+        return 2
+    return 3
+
+
+func cell_of(self: State, it: Placeable) -> sheet_mod.Cell:
+    mut u = self.req.shapes[it.shape].units[it.unit].copy()
+    mut span = [0, 0, 0, 0]
+    for i in range(len(u.pins)):
+        mut pin = u.pins[i].copy()
+        mut net = b""
+        if i < len(it.nets):
+            net = it.nets[i].copy()
+        mut label = label_of(self, net)
+        mut side = side_index(pin.side)
+        span[side] = max(span[side], shape_mod.stub_extra(u, i) + emit.label_span(label))
+    mut lead = shape_mod.max_reach(u) + emit.stub_len
+    mut left = span[0]
+    mut right = span[1]
+    mut field = max(span[2], span[3])
+    return with_mpn(it, sheet_mod.Cell(w=2 * u.half_w + 2 * lead + left + right, h=2 * u.half_h + 2 * lead + 2 * field + 2 * shape_mod.pitch, ox=left + lead + u.half_w, oy=field + lead + u.half_h + shape_mod.pitch))
+
+
+func place(mut self: State, run: Run, corner: sheet_mod.Spot, slot: Slotting):
+    mut items = self.req.items[run.start:run.start + run.len]
+    mut at: sheet_mod.Spot[] = []
+    for local in slot.block.spots:
+        at.append(sheet_mod.Spot(x=corner.x + local.x, y=corner.y + local.y))
+    mut poses = pose_items(mut self, items, slot, at)
+    for i in range(len(items)):
+        place_part(mut self, items[i], poses.pos[i], poses.angle[i])
+
+
+func pose_items(mut self: State, items: Placeable[], slot: Slotting, at: sheet_mod.Spot[]) -> Poses:
+    mut result = Poses(pos=[], angle=[])
+    for s in slot.plan.slot_of:
+        result.pos.append(at[s])
+        result.angle.append(None)
+    mut ic = cluster_ic(items)
+    for i in range(len(slot.plan.banks)):
+        mut owned = slot.plan.banks[i].copy()
+        if owned is None:
+            continue
+        mut spot = at[i]
+        mut f = bank.Frame(x=spot.x, y=spot.y, reach=owned.reach, pitch=owned.pitch)
+        for k in range(len(owned.members)):
+            mut m = owned.members[k]
+            result.pos[m.item] = sheet_mod.Spot(x=bank.frame_member_x(f, k), y=f.y)
+            result.angle[m.item] = Some(bank.angle_for(self.req.shapes[items[m.item].shape].units[items[m.item].unit].pins[m.power_pin].x))
+        draw_bank(mut self, f, owned, ic)
+    return result
+
+
+func place_part(mut self: State, it: Placeable, at: sheet_mod.Spot, angle: int?):
+    mut lib_name = self.req.shapes[it.shape].lib_name.copy()
+    note(mut self, it.id.uuid, lib_name)
+    mut nets = label_nets(self, it.nets)
+    self.parts.append(emit.Part(id=it.id.copy(), shape=it.shape, unit=it.unit, x=at.x, y=at.y, nets=nets, banked=angle.copy()))
+
+
+func draw_bank(mut self: State, f: bank.Frame, b: bank.Bank, ic: bytes):
+    bank_rail(mut self, f, b, bank.frame_power_y(f))
+    bank_rail(mut self, f, b, bank.frame_gnd_y(f))
+    for k in range(len(b.members)):
+        bank_legs(mut self, f, b, k)
+    bank_terminals(mut self, f, b, ic)
+
+
+func bank_rail(mut self: State, f: bank.Frame, b: bank.Bank, y: int):
+    mut kind = b"railg"
+    if y < f.y:
+        kind = b"railp"
+    add_wire(mut self, b.key + b":" + kind, bank.rail_pts(f, len(b.members), y))
+
+
+func bank_legs(mut self: State, f: bank.Frame, b: bank.Bank, k: int):
+    mut x = bank.frame_member_x(f, k)
+    mut up = [wire.Point(x=x, y=bank.frame_power_pin_y(f)), wire.Point(x=x, y=bank.frame_power_y(f))]
+    mut down = [wire.Point(x=x, y=bank.frame_gnd_pin_y(f)), wire.Point(x=x, y=bank.frame_gnd_y(f))]
+    add_wire(mut self, b.key + b":legp" + str(k).encode(), up)
+    add_wire(mut self, b.key + b":legg" + str(k).encode(), down)
+
+
+func bank_terminals(mut self: State, f: bank.Frame, b: bank.Bank, ic: bytes):
+    self.free_labels.append(emit.FreeLabel(net=b.power.copy(), uuid=emit.element_uuid(self.req.sheet.design, b"banklabel", b.key), x=bank.frame_end_x(f), y=bank.frame_power_y(f), side=shape_mod.Side.left))
+    self.labels.append(b.power.copy())
+    rail_pin(mut self, b.gnd, bank.frame_end_x(f), bank.frame_gnd_y(f), emit.rail_angle(shape_mod.Side.bottom))
+    mut spot = bank.caption_at(f)
+    self.captions.append(emit.Caption(text=bank.caption(ic, b.power), x=spot.x, y=spot.y, size=178))
+
+
+func add_wire(mut self: State, key: bytes, pts: wire.Point[]):
+    self.paths.append(wire.Path(key=key.copy(), pts=pts.copy()))
+    wire.append_segs(mut self.segs, pts)
+    self.stops.extend(pts)
+
+
+func label_nets(self: State, nets: bytes[]) -> bytes[]:
+    mut map = self.req.facts.labels.copy()
+    if map is None or len(map) == 0:
+        return nets.copy()
+    return [for net in nets yield map.get(strs.text(net), net).copy()]
+
+
+func label_of(self: State, net: bytes) -> bytes:
+    mut map = self.req.facts.labels.copy()
+    if map is None:
+        return net.copy()
+    return map.get(strs.text(net), net).copy()
+
+
+func connect_pins(mut self: State):
+    for part_index in range(len(self.parts)):
+        mut p = self.parts[part_index].copy()
+        wire_pins(mut self, p)
+
+
+func wire_pins(mut self: State, p: emit.Part):
+    if p.banked is not None:
+        return
+    mut u = self.req.shapes[p.shape].units[p.unit].copy()
+    for i in range(len(u.pins)):
+        mut pin = u.pins[i].copy()
+        mut net = net_at(p, i)
+        if len(net) == 0:
+            self.no_connects += 1
+            continue
+        mut at = stub_end(p, u, i)
+        if wired(self, at):
+            continue
+        if is_rail_net(net):
+            rail_pin(mut self, net, at.x, at.y, emit.rail_angle(pin.side))
+            continue
+        self.labels.append(net)
+
+
+func wired(self: State, pt: wire.Point) -> bool:
+    for p in self.no_label:
+        if wire.same_point(p, pt):
+            return True
+    return False
+
+
+func plan_gangs(mut self: State):
+    for pi in range(len(self.parts)):
+        mut p = self.parts[pi].copy()
+        if p.banked is not None:
+            continue
+        for g in gang_mod.plan(gang_pins(self, p)):
+            draw_gang(mut self, pi, g)
+
+
+func gang_pins(self: State, p: emit.Part) -> gang_mod.PinAt[]:
+    mut u = self.req.shapes[p.shape].units[p.unit].copy()
+    mut result: gang_mod.PinAt[] = []
+    for i in range(len(u.pins)):
+        mut pin = u.pins[i].copy()
+        result.append(gang_mod.PinAt(index=i, side=pin.side, net=net_at(p, i), at=stub_end(p, u, i)))
+    return result
+
+
+func draw_gang(mut self: State, part: int, g: gang_mod.Gang):
+    mut ref = self.parts[part].id.ref.copy()
+    mut key = b"gang:" + ref + b":" + side_name(g.side) + b":" + g.net
+    add_wire(mut self, key, gang_mod.run_pts(g))
+    for i in range(len(g.pins)):
+        mut pin = g.pins[i].copy()
+        self.ganged.add(gang_key(part, pin.index))
+        if i > 0:
+            self.no_label.append(pin.at)
+
+
+func side_name(side: shape_mod.Side) -> bytes:
+    if side == shape_mod.Side.left:
+        return b"left"
+    if side == shape_mod.Side.right:
+        return b"right"
+    if side == shape_mod.Side.top:
+        return b"top"
+    return b"bottom"
+
+
+func draw_wires(mut self: State):
+    assert len(self.parts) == len(self.req.items)
+    collect_field(mut self)
+    mut sites = site_list(self)
+    bind_wires(mut self, mut sites)
+    net_wires(mut self, mut sites)
+    self.dots = wire.junctions(self.segs)
+
+
+func collect_field(mut self: State):
+    for part_index in range(len(self.parts)):
+        mut p = self.parts[part_index].copy()
+        mut u = self.req.shapes[p.shape].units[p.unit].copy()
+        self.bodies.append(body_box(p, u))
+        for i in range(len(u.pins)):
+            mut pin = u.pins[i].copy()
+            mut at = pin_point(p, pin)
+            self.stops.append(at)
+            if p.banked is not None or len(net_at(p, i)) == 0:
+                continue
+            mut end = stub_end(p, u, i)
+            self.stops.append(end)
+            self.segs.append(wire.Seg(a=at, b=end))
+
+
+func site_list(self: State) -> Site[]:
+    mut result: Site[] = []
+    for pi in range(len(self.parts)):
+        if self.parts[pi].banked is not None:
+            continue
+        mut shape = self.parts[pi].shape
+        mut unit = self.parts[pi].unit
+        append_part_sites(self, pi, self.parts[pi], self.req.shapes[shape].units[unit], mut result)
+    return result
+
+
+func append_part_sites(self: State, pi: int, p: emit.Part, u: shape_mod.ShapeUnit, mut result: Site[]):
+    for k in range(len(u.pins)):
+        mut net = net_at2(self.req.items[pi], k)
+        if len(net) == 0 or is_rail_net(net_at(p, k)):
+            continue
+        mut role = Role.free
+        if gang_key(pi, k) in self.ganged:
+            role = Role.anchor
+        result.append(Site(part=pi, pin=k, end=wire.End(at=stub_end(p, u, k), side=u.pins[k].side), net=net, group=self.req.items[pi].group, cluster=self.req.items[pi].cluster, role=role))
+
+
+func bind_wires(mut self: State, mut sites: Site[]):
+    mut binds = self.req.facts.binds.copy()
+    if binds is None:
+        return
+    for si in range(len(sites)):
+        mut s = sites[si].copy()
+        if s.role != Role.free:
+            continue
+        mut ref = strs.text(ref_of(self, s))
+        if ref not in binds:
+            continue
+        mut bind = binds[ref].copy()
+        mut ai = pad_site(self, sites, bind, s.net)
+        if ai is None or ai == si:
+            continue
+        if not same_cluster(sites[ai], s):
+            continue
+        _ = join_sites(mut self, mut sites, ai, si)
+
+
+func pad_site(self: State, sites: Site[], bind: Bind, net: bytes) -> int?:
+    for i in range(len(sites)):
+        mut s = sites[i].copy()
+        if s.role == Role.spoke or s.net != net:
+            continue
+        if ref_of(self, s) != bind.ref or pad_of(self, s) != bind.pad:
+            continue
+        return Some(i)
+    return None
+
+
+func net_wires(mut self: State, mut sites: Site[]):
+    mut sizes = self.req.facts.net_pins.copy()
+    if sizes is None:
+        return
+    mut by_net: dict[str, int[]] = {}
+    for i in range(len(sites)):
+        mut key = strs.text(sites[i].net)
+        if key not in by_net:
+            by_net[key.copy()] = []
+        by_net[key].append(i)
+    for net in by_net:
+        mut run = by_net[net].copy()
+        if not whole_net_here(sites, run, sizes.get(net, 0)):
+            continue
+        join_run(mut self, mut sites, run)
+
+
+func join_run(mut self: State, mut sites: Site[], run: int[]):
+    mut head = run[0]
+    if sites[head].role == Role.spoke:
+        return
+    mut last = head
+    for i in run[1:]:
+        if sites[i].role != Role.free:
+            continue
+        if join_sites(mut self, mut sites, last, i):
+            last = i
+        elif last != head:
+            _ = join_sites(mut self, mut sites, head, i)
+
+
+func join_sites(mut self: State, mut sites: Site[], ai: int, si: int) -> bool:
+    mut key = wire_key(self, sites[ai], sites[si])
+    mut path = wire.route_parts(sites[ai].end, sites[si].end, self.stops, self.bodies, self.segs, key)
+    if path is None:
+        return False
+    self.paths.append(path.copy())
+    wire.append_segs(mut self.segs, path.pts)
+    self.no_label.append(sites[si].end.at)
+    if sites[ai].role == Role.free:
+        sites[ai].role = Role.anchor
+    sites[si].role = Role.spoke
+    return True
+
+
+func wire_key(self: State, from_: Site, to: Site) -> bytes:
+    return ref_of(self, from_) + b":" + pad_of(self, from_) + b">" + ref_of(self, to) + b":" + pad_of(self, to)
+
+
+func ref_of(self: State, s: Site) -> bytes:
+    return self.parts[s.part].id.ref.copy()
+
+
+func pad_of(self: State, s: Site) -> bytes:
+    mut shape = self.parts[s.part].shape
+    mut unit = self.parts[s.part].unit
+    return self.req.shapes[shape].units[unit].pins[s.pin].pad.copy()
+
+
+func rail_pin(mut self: State, net: bytes, x: int, y: int, angle: int):
+    mut rail = rail_index(mut self, net)
+    mut rp = new_rail_pin(mut self, rail, x, y, angle)
+    self.pins.append(rp)
+
+
+func new_rail_pin(mut self: State, rail: int, x: int, y: int, angle: int) -> emit.RailPin:
+    mut ref = next_ref(mut self, b"#PWR")
+    mut uuid = emit.element_uuid(self.req.sheet.design, b"pwr", ref)
+    return emit.RailPin(rail=rail, ref=ref, uuid=uuid, x=x, y=y, angle=angle)
+
+
+func rail_index(mut self: State, net: bytes) -> int:
+    mut key = strs.text(net)
+    if key in self.rail_of_net:
+        return self.rail_of_net[key]
+    mut i = len(self.rails)
+    self.rail_of_net[key] = i
+    self.rails.append(rail_for(net))
+    return i
+
+
+func note(mut self: State, uuid: bytes, lib_name: bytes):
+    self.uuids.append(uuid.copy())
+    self.lib_ids.append(b"netlisp:" + lib_name)
+
+
+func note_power(mut self: State, rp: emit.RailPin):
+    mut r = self.rails[rp.rail].copy()
+    note(mut self, rp.uuid, r.lib_name)
+    self.rail_values.append(r.net.copy())
+
+
+func next_ref(mut self: State, prefix: bytes) -> bytes:
+    self.req.seq += 1
+    return prefix + strs.zero_pad(self.req.seq, 2).encode()
+
+
+func drive_rails(mut self: State, y: int) -> int:
+    mut x = 1270
+    for flag_index in range(len(self.req.flag_nets)):
+        mut net = self.req.flag_nets[flag_index].copy()
+        mut ref = next_ref(mut self, b"#FLG")
+        mut uuid = emit.element_uuid(self.req.sheet.design, b"flg", ref)
+        self.flags.append(emit.Flag(net=net, ref=ref, uuid=uuid, x=x, y=y))
+        x += 1270
+    return x
+
+
+func layout_children(mut self: State, y0: int) -> emit.Rect:
+    mut n = len(self.req.children)
+    if n == 0:
+        return emit.Rect(x=0, y=y0, w=0, h=0)
+    mut cols = 1
+    while cols * cols < n * 2:
+        cols += 1
+    mut step_x = 6350 + 1270
+    mut step_y = 2540 + 2 * 1270
+    for i in range(n):
+        mut child = self.req.children[i].copy()
+        child.at = emit.Rect(x=1270 + (i % cols) * step_x, y=y0 + (i // cols) * step_y, w=6350, h=2540)
+        self.req.children[i] = child
+    mut rows = (n + cols - 1) // cols
+    return emit.Rect(x=0, y=y0, w=1270 + min(n, cols) * step_x, h=rows * step_y)
+
+
+func finish(mut self: State, layout: sheet_mod.Layout) -> Result:
+    mut content_h = layout.page_h
+    if len(self.req.items) == 0:
+        content_h = 1270
+    mut kids = layout_children(mut self, content_h)
+    mut bottom = content_h + kids.h
+    if kids.h > 0:
+        bottom += 1270
+    mut flag_y = bottom + emit.stub_len
+    mut flag_x = drive_rails(mut self, flag_y)
+    if len(self.flags) > 0:
+        bottom = flag_y + 1270
+    for pin_index in range(len(self.pins)):
+        mut rp = self.pins[pin_index].copy()
+        note_power(mut self, rp)
+    for flag_index in range(len(self.flags)):
+        mut f = self.flags[flag_index].copy()
+        note(mut self, f.uuid, emit.flag_lib_name)
+        self.labels.append(f.net.copy())
+    mut page = self.req.sheet.copy()
+    mut widest = max(max(layout.page_w, kids.w + 1270), flag_x + 1270)
+    page.page_w = sheet_mod.clamp_page(widest)
+    page.page_h = sheet_mod.clamp_page(bottom)
+    mut doc = emit.Doc(sheet=page, shapes=self.req.shapes.copy(), parts=self.parts.copy(), captions=self.captions.copy(), power=emit.Power(rails=self.rails.copy(), pins=self.pins.copy(), flags=self.flags.copy()), wiring=emit.Wiring(paths=self.paths.copy(), junctions=self.dots.copy(), no_label=self.no_label.copy(), labels=self.free_labels.copy()), children=self.req.children.copy())
+    mut want = verify.Expect(uuids=self.uuids.copy(), lib_ids=self.lib_ids.copy(), labels=self.labels.copy(), rail_values=self.rail_values.copy(), no_connects=self.no_connects, sheets=[for c in self.req.children yield c.file.copy()], wires=len(self.segs) + len(self.flags))
+    return Result(doc=doc, expect=want)
+
+
+func gang_key(part: int, pin: int) -> int:
+    return part * 4294967296 + pin
+
+
+func with_mpn(it: Placeable, cell: sheet_mod.Cell) -> sheet_mod.Cell:
+    mut mpn = emit.shown_mpn(it.id)
+    if mpn is None:
+        return cell.copy()
+    mut half = emit.mpn_half_span(mpn)
+    mut result = cell.copy()
+    result.ox = max(cell.ox, half)
+    result.w = max(cell.w + (result.ox - cell.ox), result.ox + half)
+    result.h = cell.h + emit.mpn_drop + shape_mod.grid
+    return result
+
+
+public func band_heading(title: bytes, text: bytes) -> bytes?:
+    if text == title:
+        return None
+    if len(title) == 0:
+        return Some(text.copy())
+    mut cut = len(title) + 3
+    if len(text) <= cut or not text.startswith(title):
+        return Some(text.copy())
+    if text[len(title):cut] != b" / ":
+        return Some(text.copy())
+    return Some(text[cut:])
+
+
+func net_at(p: emit.Part, i: int) -> bytes:
+    if i < len(p.nets):
+        return p.nets[i].copy()
+    return b""
+
+
+func net_at2(it: Placeable, i: int) -> bytes:
+    if i < len(it.nets):
+        return it.nets[i].copy()
+    return b""
+
+
+func pin_point(p: emit.Part, pin: shape_mod.Pin) -> wire.Point:
+    mut r = rotate_lib(pin.x, pin.y, p.banked.unwrap_or(0))
+    return wire.Point(x=p.x + r[0], y=p.y - r[1])
+
+
+func rotate_lib(x: int, y: int, angle: int) -> int[]:
+    mut a = angle % 360
+    if a == 90:
+        return [-y, x]
+    if a == 180:
+        return [-x, -y]
+    if a == 270:
+        return [y, -x]
+    return [x, y]
+
+
+func body_box(p: emit.Part, u: shape_mod.ShapeUnit) -> wire.Box:
+    mut hw = u.half_w
+    mut hh = u.half_h
+    if p.banked is not None:
+        hw = u.half_h
+        hh = u.half_w
+    return wire.Box(x0=p.x - hw, y0=p.y - hh, x1=p.x + hw, y1=p.y + hh)
+
+
+func stub_end(p: emit.Part, u: shape_mod.ShapeUnit, i: int) -> wire.Point:
+    mut pin = u.pins[i].copy()
+    mut at = pin_point(p, pin)
+    mut end = emit.label_point(at.x, at.y, pin.side, emit.stub_reach(u, i))
+    return wire.Point(x=end[0], y=end[1])
+
+
+func cluster_ic(items: Placeable[]) -> bytes:
+    if len(items) == 0:
+        return b""
+    mut ref = items[0].id.ref.copy()
+    if plan_mod.is_passive_ref(ref):
+        return b""
+    return ref
+
+
+func is_bypass_ref(ref: bytes) -> bool:
+    mut leaf = net_name.leaf(ref)
+    if len(leaf) == 0:
+        return False
+    return strs.to_upper(leaf[0]) == 67
+
+
+func whole_net_here(sites: Site[], run: int[], total: int) -> bool:
+    if total < 2 or total > 3 or len(run) != total:
+        return False
+    mut head = sites[run[0]].copy()
+    for i in run[1:]:
+        if not same_cluster(sites[i], head):
+            return False
+    return True
+
+
+func same_cluster(x: Site, y: Site) -> bool:
+    return x.group == y.group and x.cluster == y.cluster
+
+
+func group_changed(prev: Placeable, next_: Placeable) -> bool:
+    return prev.group != next_.group
+
+
+func cluster_changed(prev: Placeable, next_: Placeable) -> bool:
+    return prev.group != next_.group or prev.cluster != next_.cluster

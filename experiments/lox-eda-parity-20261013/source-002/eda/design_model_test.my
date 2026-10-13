@@ -1,0 +1,91 @@
+
+import design_model as m
+import eval_env as env_mod
+import support_expect as ex
+
+# Original two-level model; string bodies, including the escaped quote, are data.
+func sample() -> bytes:
+    return b"".join([b"; a two-level model\n(sch-model 1\n  (design \"demo\")\n  (block \"Demo Board\"\n", b"    (instance \"U1\"\n      (component \"ldo\")\n      (footprint \"sot23-5\")\n      (id \"a171124e\")\n      (property \"MPN\" \"TLV755\")\n      (part \"Power\" (pin \"1\") (pin \"5\")))\n", b"    (instance \"C1\"\n      (component \"cap-0402\")\n      (value \"1uF\")\n      (dnp)\n      (decouple \"U1\" \"1\"))\n", b"    (net \"VIN\" (pin \"U1\" \"1\") (pin \"C1\" \"1\"))\n    (net-tie \"VIN\" \"ldo/VIN\")\n", b"    (section \"Power\"\n      (member \"U1\")\n      (pin-group \"U1\" (pin \"1\" \"VIN\"))\n      (port \"VIN\" power)\n      (host \"ldo\")\n      (section \"Inner\" (member \"C1\")))\n", b"    (sub-block \"ldo\"\n      (block \"ldo-module\"\n        (instance \"R1\" (component \"res-0402\") (value \"0.1\\\"q\"))\n        (net \"VIN\" (pin \"R1\" \"1\"))))))\n"])
+
+
+# test "design-model: a model round-trips every modelled field into the block"
+public func test_design_model_a_model_round_trips_every_modelled_field_into_the_block(out: Stream) -> bool:
+    mut diag = m.Diag(message=b"")
+    match m.load(sample(), mut diag):
+        case Err(error):
+            return ex.eq_str(out, "load", error, "")
+        case Ok(model):
+            if not ex.eq_bytes(out, "design", model.design, b"demo"):
+                return False
+            mut b = model.block.copy()
+            if not ex.eq_bytes(out, "block", b.name, b"Demo Board"):
+                return False
+            if not ex.eq_int(out, "instances", len(b.instances), 2):
+                return False
+            mut reg = b.instances[0].copy()
+            if not ex.eq_bytes(out, "ref", reg.ref_des, b"U1"):
+                return False
+            if not ex.eq_bytes(out, "component", reg.component, b"ldo"):
+                return False
+            if not ex.eq_bytes(out, "value default", reg.value, b""):
+                return False
+            if not ex.eq_bytes(out, "id", reg.id, b"a171124e"):
+                return False
+            if not ex.eq_bytes(out, "property", reg.properties[0].value, b"TLV755"):
+                return False
+            if not ex.eq_bytes(out, "part pin", reg.parts[0].pins[1].pin, b"5"):
+                return False
+            mut c1 = b.instances[1].copy()
+            if not ex.ok(out, "dnp", c1.dnp):
+                return False
+            if not ex.eq_bytes(out, "decouple ic", c1.bind.decouple.ic, b"U1"):
+                return False
+            if not ex.eq_bytes(out, "decouple pin", c1.bind.decouple.pin, b"1"):
+                return False
+            if not ex.eq_bytes(out, "net pin", b.nets[0].pins[1].ref_des, b"C1"):
+                return False
+            if not ex.eq_bytes(out, "tie", b.net_ties[0].b, b"ldo/VIN"):
+                return False
+            mut sec = b.sections[0].copy()
+            if not ex.eq_bytes(out, "member", sec.instances[0].ref_des, b"U1"):
+                return False
+            if not ex.eq_bytes(out, "pin group", sec.pin_groups[0].pins[0].net, b"VIN"):
+                return False
+            if not ex.ok(out, "signal type", sec.ports[0].signal_type == env_mod.SignalType.power):
+                return False
+            if not ex.eq_bytes(out, "host", sec.hosts[0], b"ldo"):
+                return False
+            if not ex.eq_bytes(out, "nested section", sec.sub_sections[0].instances[0].ref_des, b"C1"):
+                return False
+            mut sub = b.sub_blocks[0].copy()
+            if not ex.eq_bytes(out, "sub-block", sub.name, b"ldo"):
+                return False
+            if not ex.eq_bytes(out, "sub-block name", sub.block.name, b"ldo-module"):
+                return False
+            return ex.eq_bytes(out, "escaped quote retained", sub.block.instances[0].value, b"0.1\\\"q")
+
+
+func error_of(result: Result[m.Model, str]) -> str:
+    match result:
+        case Ok(_):
+            return ""
+        case Err(error):
+            return error.copy()
+
+
+# test "design-model: a malformed model names the offending line"
+public func test_design_model_a_malformed_model_names_the_offending_line(out: Stream) -> bool:
+    mut diag = m.Diag(message=b"")
+    mut bad = b"(sch-model 1\n  (design \"d\")\n  (block \"b\"\n    (wire \"x\")))\n"
+    mut error = error_of(m.load(bad, mut diag))
+    if not ex.eq_str(out, "bad form", error, m.err_bad_model):
+        return False
+    if not ex.eq_int(out, "offending line", diag.line, 4):
+        return False
+    if not ex.eq_bytes(out, "diagnostic", diag.message, b"unknown block form"):
+        return False
+    mut error2 = error_of(m.load(b"(sch-model 2 (design \"d\"))", mut diag))
+    if not ex.eq_str(out, "unsupported version", error2, m.err_bad_model):
+        return False
+    mut error3 = error_of(m.load(b"(sch-model 1 (block \"b\"))", mut diag))
+    return ex.eq_str(out, "missing design", error3, m.err_bad_model)

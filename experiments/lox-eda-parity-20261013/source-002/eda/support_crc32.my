@@ -1,0 +1,39 @@
+
+
+# CRC-32 (IEEE 802.3, reflected, polynomial 0xEDB88320), the counterpart of
+# `std.hash.Crc32` and of Python's `zlib.crc32`.
+#
+#     crc32(data)                       # `Crc32.hash(data)`
+#     crc32_update(crc32(a), b)         # == crc32(a + b): `Crc32.init()`, `update(a)`,
+#                                       # `update(b)`, `final()` -- the running value is
+#                                       # the finished checksum, as in zlib
+#
+# Bitwise (eight steps a byte, no table): the slice checksums short texts and small
+# archive members. Values are `int` in 0..4294967295; `{x:0>8}` is
+# `support_strs.hex_pad(value, 8)`.
+# Polynomial 0xEDB88320 in decimal (mylang has no `0x` literals).
+public const crc32_poly: int = 3988292384
+
+
+# 0xFFFFFFFF.
+public const crc32_mask: int = 4294967295
+
+
+# Fold `data` into `crc`, a checksum already finished (0 for none).
+public func crc32_update(crc: int, data: bytes) -> int:
+    mut state = bit_xor(crc, crc32_mask)
+    for byte in data:
+        state = bit_xor(state, byte)
+        mut step = 0
+        while step < 8:
+            if bit_and(state, 1) == 1:
+                state = bit_xor(shift_right(state, 1), crc32_poly)
+            else:
+                state = shift_right(state, 1)
+            step += 1
+    return bit_xor(state, crc32_mask)
+
+
+# `Crc32.hash`: the checksum of `data`.
+public func crc32(data: bytes) -> int:
+    return crc32_update(0, data)

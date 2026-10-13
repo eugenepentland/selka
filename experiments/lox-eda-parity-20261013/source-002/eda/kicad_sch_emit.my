@@ -1,0 +1,890 @@
+
+import eval_env as env_mod
+import flat_netlist as flat_netlist
+import kicad_sch_shape as shape_mod
+import kicad_sch_sheet as sheet_mod
+import kicad_sch_wire as wire_mod
+import kicad_sch_plan as plan_mod
+import kicad_sym_reader as kicad_sym
+import render_svg_context as draw
+import net_name
+import support_strs as strs
+import byte_builder
+
+public const file_version: bytes = b"20260306"
+
+
+public const symbol_lib_version: bytes = b"20251024"
+
+
+public const stub_len: int = 254
+
+
+public const flag_lib_name: bytes = b"PWR_FLAG"
+
+
+public const text_reach: int = 635
+
+
+public const title_size: int = 381
+
+
+public const mpn_drop: int = 254
+
+
+public const banked_text_dx: int = 254
+
+
+public record Identity:
+    ref: bytes
+    value: bytes
+    footprint: bytes
+    properties: env_mod.Property[]
+    uuid: bytes
+    dnp: bool = False
+
+
+public record Part:
+    id: Identity
+    shape: int
+    unit: int
+    x: int
+    y: int
+    nets: bytes[]
+    banked: int? = None
+
+
+public record Caption:
+    text: bytes
+    x: int
+    y: int
+    size: int = 254
+
+
+public record Rect:
+    x: int
+    y: int
+    w: int
+    h: int
+
+
+public record SheetRef:
+    name: bytes
+    file: bytes
+    uuid: bytes
+    page: int
+    at: Rect
+
+
+public record Rail:
+    lib_name: bytes
+    net: bytes
+
+
+public record RailPin:
+    rail: int
+    ref: bytes
+    uuid: bytes
+    x: int
+    y: int
+    angle: int
+
+
+public record Flag:
+    net: bytes
+    ref: bytes
+    uuid: bytes
+    x: int
+    y: int
+
+
+public record Power:
+    rails: Rail[]
+    pins: RailPin[]
+    flags: Flag[]
+
+
+public record FreeLabel:
+    net: bytes
+    uuid: bytes
+    x: int
+    y: int
+    side: shape_mod.Side
+
+
+public record Wiring:
+    paths: wire_mod.Path[]
+    junctions: wire_mod.Point[]
+    no_label: wire_mod.Point[]
+    labels: FreeLabel[]
+
+
+public record Sheet:
+    design: bytes
+    root_uuid: bytes
+    sheet_uuid: bytes
+    page_w: int
+    page_h: int
+    title: bytes
+    is_root: bool = True
+
+
+public record Doc:
+    sheet: Sheet
+    shapes: shape_mod.Shape[]
+    parts: Part[]
+    captions: Caption[]
+    power: Power
+    wiring: Wiring
+    children: SheetRef[]
+
+
+public enum Naming:
+    lib_id
+    bare
+
+
+const font_effects: bytes = b"(effects (font (size 1.27 1.27)))"
+
+
+const hidden_font_effects: bytes = b"(hide yes) (effects (font (size 1.27 1.27)))"
+
+
+const lib_prefix: bytes = b"netlisp:"
+
+
+public func is_rail_net(name: bytes) -> bool:
+    return draw.is_ground_net(net_name.leaf(name))
+
+
+public func label_span(net: bytes) -> int:
+    if len(net) == 0:
+        return 0
+    if is_rail_net(net):
+        return sheet_mod.snap_up(text_reach + shape_mod.grid)
+    mut raw = min(len(net), 5080 // shape_mod.grid)
+    return sheet_mod.snap_up(143 + raw * shape_mod.grid)
+
+
+public func shown_mpn(id: Identity) -> bytes?:
+    if plan_mod.is_passive_ref(id.ref):
+        return None
+    for prop in id.properties:
+        if prop.key != b"mpn":
+            continue
+        if len(prop.value) == 0:
+            return None
+        return Some(prop.value.copy())
+    return None
+
+
+public func mpn_half_span(text: bytes) -> int:
+    mut n = min(len(text), 40)
+    return sheet_mod.snap_up(n * shape_mod.grid // 2)
+
+
+public func library_file(shapes: shape_mod.Shape[], rails: Rail[]) -> bytes:
+    mut out = byte_builder.create()
+    byte_builder.append(mut out, b"(kicad_symbol_lib\n\t(version " + symbol_lib_version + b")\n")
+    byte_builder.append(mut out, b"\t(generator \"netlisp\")\n\t(generator_version \"10.0\")\n")
+    for s in shapes:
+        lib_symbol(mut out, s, Naming.bare)
+    for r in rails:
+        rail_symbol(mut out, r, Naming.bare)
+    flag_symbol(mut out, Naming.bare)
+    byte_builder.append(mut out, b")\n")
+    return byte_builder.finish(out)
+
+
+public func render(doc: Doc) -> bytes:
+    mut out = byte_builder.create()
+    header(mut out, doc)
+    byte_builder.append(mut out, b"\t(lib_symbols\n")
+    for s in doc.shapes:
+        lib_symbol(mut out, s, Naming.lib_id)
+    for r in doc.power.rails:
+        rail_symbol(mut out, r, Naming.lib_id)
+    if len(doc.power.flags) > 0:
+        flag_symbol(mut out, Naming.lib_id)
+    byte_builder.append(mut out, b"\t)\n")
+    if len(doc.sheet.title) > 0:
+        caption(mut out, doc.sheet.design, Caption(text=doc.sheet.title.copy(), x=1270, y=1016, size=title_size), b"title")
+    for i in range(len(doc.captions)):
+        caption(mut out, doc.sheet.design, doc.captions[i], str(i).encode())
+    for p in doc.parts:
+        placed_symbol(mut out, doc, p)
+    for p2 in doc.parts:
+        connections(mut out, doc, p2)
+    for path in doc.wiring.paths:
+        routed_wire(mut out, doc.sheet.design, path)
+    for fl in doc.wiring.labels:
+        global_label(mut out, fl.net, fl.uuid, fl.side, [fl.x, fl.y])
+    for pt in doc.wiring.junctions:
+        junction(mut out, doc.sheet.design, pt)
+    for rp in doc.power.pins:
+        rail_instance(mut out, doc, rp)
+    for f in doc.power.flags:
+        flag_instance(mut out, doc, f)
+    for c in doc.children:
+        child_sheet(mut out, doc, c)
+    if doc.sheet.is_root:
+        byte_builder.append(mut out, b"\t(sheet_instances\n\t\t(path \"/\"\n\t\t\t(page \"1\")\n\t\t)\n\t)\n")
+    byte_builder.append(mut out, b"\t(embedded_fonts no)\n)\n")
+    return byte_builder.finish(out)
+
+
+func header(mut w: byte_builder.Builder, doc: Doc):
+    byte_builder.append(mut w, b"(kicad_sch\n\t(version " + file_version + b")\n")
+    byte_builder.append(mut w, b"\t(generator \"netlisp\")\n\t(generator_version \"10.0\")\n")
+    byte_builder.append(mut w, b"\t(uuid \"" + doc.sheet.sheet_uuid + b"\")\n\t(paper \"User\" ")
+    mm(mut w, doc.sheet.page_w)
+    byte_builder.append(mut w, b" ")
+    mm(mut w, doc.sheet.page_h)
+    byte_builder.append(mut w, b")\n")
+
+
+public func element_uuid(design: bytes, kind: bytes, path: bytes) -> bytes:
+    return flat_netlist.uuid_from_id(b"sch:" + design + b":" + kind + b":" + path)
+
+
+# Private in Zig; public for sibling tests.
+public func instance_path(s: Sheet) -> bytes:
+    if s.is_root:
+        return b"/" + s.root_uuid
+    return b"/" + s.root_uuid + b"/" + s.sheet_uuid
+
+
+public func mm(mut w: byte_builder.Builder, v: int):
+    if v < 0:
+        byte_builder.append(mut w, b"-")
+    mut a = abs(v)
+    mut whole = a // 100
+    mut frac = a % 100
+    if frac == 0:
+        byte_builder.append_text(mut w, str(whole))
+    elif frac % 10 == 0:
+        byte_builder.append_text(mut w, str(whole) + "." + str(frac // 10))
+    else:
+        byte_builder.append_text(mut w, str(whole) + "." + strs.zero_pad(frac, 2))
+
+
+public func mm4(mut w: byte_builder.Builder, v: int):
+    if v < 0:
+        byte_builder.append(mut w, b"-")
+    mut a = abs(v)
+    mut whole = a // kicad_sym.per_mm
+    mut frac = a % kicad_sym.per_mm
+    if frac == 0:
+        byte_builder.append_text(mut w, str(whole))
+        return
+    mut digits = 4
+    while frac % 10 == 0:
+        digits -= 1
+        frac = frac // 10
+    byte_builder.append_text(mut w, str(whole) + "." + strs.zero_pad(frac, digits))
+
+
+# Zig helper `str`; suffix avoids hiding the mylang annotation type (G28).
+public func str_(mut w: byte_builder.Builder, s: bytes):
+    byte_builder.append(mut w, b"\"")
+    for c in s:
+        if c == 34 or c == 92:
+            byte_builder.append(mut w, b"\\")
+        _ = byte_builder.append_byte(mut w, c)
+    byte_builder.append(mut w, b"\"")
+
+
+func at(mut w: byte_builder.Builder, x: int, y: int, angle: int):
+    byte_builder.append(mut w, b"(at ")
+    mm(mut w, x)
+    byte_builder.append(mut w, b" ")
+    mm(mut w, y)
+    byte_builder.append_text(mut w, " " + str(angle) + ")")
+
+
+func entry_name(mut w: byte_builder.Builder, lib_name: bytes, naming: Naming):
+    byte_builder.append(mut w, b"\t\t(symbol \"")
+    if naming == Naming.lib_id:
+        byte_builder.append(mut w, lib_prefix)
+    byte_builder.append(mut w, lib_name + b"\"")
+
+
+func lib_symbol(mut w: byte_builder.Builder, s: shape_mod.Shape, naming: Naming):
+    entry_name(mut w, s.lib_name, naming)
+    if s.hide_pin_text:
+        byte_builder.append(mut w, b"\n\t\t\t(pin_numbers (hide yes))\n\t\t\t(pin_names (offset 0) (hide yes))\n")
+    else:
+        byte_builder.append(mut w, b"\n\t\t\t(pin_names (offset 0.254))\n")
+    byte_builder.append(mut w, b"\t\t\t(exclude_from_sim no)\n\t\t\t(in_bom yes)\n\t\t\t(on_board yes)\n")
+    byte_builder.append(mut w, b"\t\t\t(property \"Reference\" \"U\" (at 0 0 0) " + font_effects + b")\n")
+    byte_builder.append(mut w, b"\t\t\t(property \"Value\" ")
+    str_(mut w, s.lib_name)
+    byte_builder.append(mut w, b" (at 0 0 0) " + font_effects + b")\n")
+    byte_builder.append(mut w, b"\t\t\t(property \"Footprint\" \"\" (at 0 0 0) " + hidden_font_effects + b")\n")
+    byte_builder.append(mut w, b"\t\t\t(property \"Datasheet\" \"\" (at 0 0 0) " + hidden_font_effects + b")\n")
+    for u in s.units:
+        lib_unit(mut w, s.lib_name, u)
+    byte_builder.append(mut w, b"\t\t\t(embedded_fonts no)\n\t\t)\n")
+
+
+func lib_unit(mut w: byte_builder.Builder, lib_name: bytes, u: shape_mod.ShapeUnit):
+    byte_builder.append(mut w, b"\t\t\t(symbol \"" + lib_name)
+    byte_builder.append_text(mut w, "_" + str(u.number) + "_1\"\n")
+    if len(u.graphics) == 0:
+        synth_body(mut w, u)
+    else:
+        for g in u.graphics:
+            vendor_body(mut w, g)
+    for i in range(len(u.pins)):
+        lib_pin(mut w, u.pins[i], pin_text_size(u, i))
+    byte_builder.append(mut w, b"\t\t\t)\n")
+
+
+public func pin_text_size(u: shape_mod.ShapeUnit, i: int) -> int:
+    mut gap = edge_spacing(u, i)
+    if gap is None:
+        return 127
+    mut fits = (2 * gap // 3) // 10 * 10
+    return max(50, min(127, fits))
+
+
+public func edge_spacing(u: shape_mod.ShapeUnit, i: int) -> int?:
+    mut result: int? = None
+    if len(u.pins) == 0:
+        return result
+    mut side = u.pins[i].side
+    mut origin = along_edge(u.pins[i], side)
+    for k in range(len(u.pins)):
+        if k == i or u.pins[k].side != side:
+            continue
+        mut d = abs(along_edge(u.pins[k], side) - origin)
+        if d == 0:
+            continue
+        result = Some(min(result.unwrap_or(d), d))
+    return result
+
+
+func along_edge(p: shape_mod.Pin, side: shape_mod.Side) -> int:
+    if side == shape_mod.Side.left or side == shape_mod.Side.right:
+        return p.y
+    return p.x
+
+
+func synth_body(mut w: byte_builder.Builder, u: shape_mod.ShapeUnit):
+    byte_builder.append(mut w, b"\t\t\t\t(rectangle (start ")
+    mm(mut w, -u.half_w)
+    byte_builder.append(mut w, b" ")
+    mm(mut w, u.half_h)
+    byte_builder.append(mut w, b") (end ")
+    mm(mut w, u.half_w)
+    byte_builder.append(mut w, b" ")
+    mm(mut w, -u.half_h)
+    byte_builder.append(mut w, b")\n\t\t\t\t\t(stroke (width 0.254) (type default)) (fill (type background)))\n")
+
+
+func lib_pin(mut w: byte_builder.Builder, p: shape_mod.Pin, size: int):
+    byte_builder.append(mut w, b"\t\t\t\t(pin passive line ")
+    at(mut w, p.x, p.y, pin_angle(p.side))
+    byte_builder.append(mut w, b" (length ")
+    mm(mut w, p.len)
+    byte_builder.append(mut w, b")\n\t\t\t\t\t(name ")
+    str_(mut w, p.name)
+    mut name_size = 0
+    if p.show_name:
+        name_size = size
+    pin_text_effects(mut w, name_size)
+    byte_builder.append(mut w, b")\n\t\t\t\t\t(number ")
+    str_(mut w, p.pad)
+    pin_text_effects(mut w, size)
+    byte_builder.append(mut w, b")\n\t\t\t\t)\n")
+
+
+func pin_text_effects(mut w: byte_builder.Builder, size: int):
+    byte_builder.append(mut w, b" (effects (font (size ")
+    mm(mut w, size)
+    byte_builder.append(mut w, b" ")
+    mm(mut w, size)
+    byte_builder.append(mut w, b")))")
+
+
+func vendor_body(mut w: byte_builder.Builder, g: kicad_sym.Graphic):
+    if g.kind == kicad_sym.Kind.rectangle:
+        named_pts(mut w, g, [b"rectangle", b"start", b"end"])
+    elif g.kind == kicad_sym.Kind.arc:
+        named_pts(mut w, g, [b"arc", b"start", b"mid", b"end"])
+    elif g.kind == kicad_sym.Kind.polyline:
+        polyline(mut w, g)
+    elif g.kind == kicad_sym.Kind.circle:
+        circle(mut w, g)
+    else:
+        symbol_text(mut w, g)
+
+
+func named_pts(mut w: byte_builder.Builder, g: kicad_sym.Graphic, spec: bytes[]):
+    byte_builder.append(mut w, b"\t\t\t\t(" + spec[0])
+    for i in range(len(g.pts)):
+        mut p = g.pts[i]
+        byte_builder.append(mut w, b" (" + spec[i + 1] + b" ")
+        mm4(mut w, p.x)
+        byte_builder.append(mut w, b" ")
+        mm4(mut w, p.y)
+        byte_builder.append(mut w, b")")
+    style_of(mut w, g.style)
+
+
+func polyline(mut w: byte_builder.Builder, g: kicad_sym.Graphic):
+    byte_builder.append(mut w, b"\t\t\t\t(polyline (pts")
+    for p in g.pts:
+        byte_builder.append(mut w, b" (xy ")
+        mm4(mut w, p.x)
+        byte_builder.append(mut w, b" ")
+        mm4(mut w, p.y)
+        byte_builder.append(mut w, b")")
+    byte_builder.append(mut w, b")")
+    style_of(mut w, g.style)
+
+
+func circle(mut w: byte_builder.Builder, g: kicad_sym.Graphic):
+    byte_builder.append(mut w, b"\t\t\t\t(circle (center ")
+    mm4(mut w, g.pts[0].x)
+    byte_builder.append(mut w, b" ")
+    mm4(mut w, g.pts[0].y)
+    byte_builder.append(mut w, b") (radius ")
+    mm4(mut w, g.radius)
+    byte_builder.append(mut w, b")")
+    style_of(mut w, g.style)
+
+
+func symbol_text(mut w: byte_builder.Builder, g: kicad_sym.Graphic):
+    byte_builder.append(mut w, b"\t\t\t\t(text ")
+    str_(mut w, g.text)
+    byte_builder.append(mut w, b" ")
+    at(mut w, trunc100(g.pts[0].x), trunc100(g.pts[0].y), g.angle % 360)
+    byte_builder.append(mut w, b" " + font_effects + b")\n")
+
+
+func trunc100(n: int) -> int:
+    if n < 0:
+        return -((-n) // 100)
+    return n // 100
+
+
+func style_of(mut w: byte_builder.Builder, s: kicad_sym.Style):
+    byte_builder.append(mut w, b"\n\t\t\t\t\t(stroke (width ")
+    mm4(mut w, s.width)
+    mut fill_name = b"none"
+    if s.fill == kicad_sym.Fill.outline:
+        fill_name = b"outline"
+    elif s.fill == kicad_sym.Fill.background:
+        fill_name = b"background"
+    byte_builder.append(mut w, b") (type default)) (fill (type " + fill_name + b")))\n")
+
+
+func rail_symbol(mut w: byte_builder.Builder, r: Rail, naming: Naming):
+    entry_name(mut w, r.lib_name, naming)
+    byte_builder.append(mut w, b"\n\t\t\t(power global)\n\t\t\t(pin_numbers (hide yes))\n")
+    byte_builder.append(mut w, b"\t\t\t(pin_names (offset 0) (hide yes))\n")
+    byte_builder.append(mut w, b"\t\t\t(exclude_from_sim no)\n\t\t\t(in_bom no)\n\t\t\t(on_board no)\n")
+    byte_builder.append(mut w, b"\t\t\t(property \"Reference\" \"#PWR\" (at 0 -6.35 0) " + hidden_font_effects + b")\n")
+    byte_builder.append(mut w, b"\t\t\t(property \"Value\" ")
+    str_(mut w, r.net)
+    byte_builder.append(mut w, b" (at 0 -3.81 0) " + font_effects + b")\n")
+    byte_builder.append(mut w, b"\t\t\t(property \"Footprint\" \"\" (at 0 0 0) " + hidden_font_effects + b")\n")
+    byte_builder.append(mut w, b"\t\t\t(property \"Datasheet\" \"\" (at 0 0 0) " + hidden_font_effects + b")\n")
+    byte_builder.append(mut w, b"\t\t\t(symbol \"" + r.lib_name)
+    byte_builder.append(mut w, b"_0_1\"\n\t\t\t\t(polyline (pts (xy 0 0) (xy 0 -1.27) (xy 1.27 -1.27)")
+    byte_builder.append(mut w, b" (xy 0 -2.54) (xy -1.27 -1.27) (xy 0 -1.27))\n")
+    byte_builder.append(mut w, b"\t\t\t\t\t(stroke (width 0) (type default)) (fill (type none)))\n\t\t\t)\n")
+    byte_builder.append(mut w, b"\t\t\t(symbol \"" + r.lib_name)
+    byte_builder.append(mut w, b"_1_1\"\n\t\t\t\t(pin power_in line (at 0 0 270) (length 0)\n")
+    byte_builder.append(mut w, b"\t\t\t\t\t(name \"\" " + font_effects + b")\n")
+    byte_builder.append(mut w, b"\t\t\t\t\t(number \"1\" " + font_effects + b")\n\t\t\t\t)\n\t\t\t)\n")
+    byte_builder.append(mut w, b"\t\t\t(embedded_fonts no)\n\t\t)\n")
+
+
+func flag_symbol(mut w: byte_builder.Builder, naming: Naming):
+    entry_name(mut w, flag_lib_name, naming)
+    byte_builder.append(mut w, b"\n\t\t\t(power global)\n\t\t\t(pin_numbers (hide yes))\n")
+    byte_builder.append(mut w, b"\t\t\t(pin_names (offset 0) (hide yes))\n")
+    byte_builder.append(mut w, b"\t\t\t(exclude_from_sim no)\n\t\t\t(in_bom no)\n\t\t\t(on_board no)\n")
+    byte_builder.append(mut w, b"\t\t\t(property \"Reference\" \"#FLG\" (at 0 2.54 0) " + hidden_font_effects + b")\n")
+    byte_builder.append(mut w, b"\t\t\t(property \"Value\" \"" + flag_lib_name + b"\" (at 0 3.81 0) " + font_effects + b")\n")
+    byte_builder.append(mut w, b"\t\t\t(property \"Footprint\" \"\" (at 0 0 0) " + hidden_font_effects + b")\n")
+    byte_builder.append(mut w, b"\t\t\t(property \"Datasheet\" \"\" (at 0 0 0) " + hidden_font_effects + b")\n")
+    byte_builder.append(mut w, b"\t\t\t(symbol \"" + flag_lib_name + b"_0_1\"\n")
+    byte_builder.append(mut w, b"\t\t\t\t(polyline (pts (xy 0 0) (xy 0 1.27) (xy -1.27 2.54) (xy 0 3.81)")
+    byte_builder.append(mut w, b" (xy 1.27 2.54) (xy 0 1.27))\n")
+    byte_builder.append(mut w, b"\t\t\t\t\t(stroke (width 0) (type default)) (fill (type none)))\n\t\t\t)\n")
+    byte_builder.append(mut w, b"\t\t\t(symbol \"" + flag_lib_name + b"_1_1\"\n")
+    byte_builder.append(mut w, b"\t\t\t\t(pin power_out line (at 0 0 90) (length 0)\n")
+    byte_builder.append(mut w, b"\t\t\t\t\t(name \"pwr\" " + font_effects + b")\n")
+    byte_builder.append(mut w, b"\t\t\t\t\t(number \"1\" " + font_effects + b")\n\t\t\t\t)\n\t\t\t)\n")
+    byte_builder.append(mut w, b"\t\t\t(embedded_fonts no)\n\t\t)\n")
+
+
+public func pin_angle(side: shape_mod.Side) -> int:
+    if side == shape_mod.Side.left:
+        return 0
+    if side == shape_mod.Side.right:
+        return 180
+    if side == shape_mod.Side.top:
+        return 270
+    return 90
+
+
+func pin_point(p: Part, pin: shape_mod.Pin) -> int[]:
+    return [p.x + pin.x, p.y - pin.y]
+
+
+public func label_point(x: int, y: int, side: shape_mod.Side, reach: int) -> int[]:
+    if side == shape_mod.Side.left:
+        return [x - reach, y]
+    if side == shape_mod.Side.right:
+        return [x + reach, y]
+    if side == shape_mod.Side.top:
+        return [x, y - reach]
+    return [x, y + reach]
+
+
+public func stub_reach(u: shape_mod.ShapeUnit, i: int) -> int:
+    return stub_len + shape_mod.stub_extra(u, i)
+
+
+public func label_angle(side: shape_mod.Side) -> int:
+    if side == shape_mod.Side.left:
+        return 180
+    if side == shape_mod.Side.right:
+        return 0
+    if side == shape_mod.Side.top:
+        return 90
+    return 270
+
+
+public func label_justify(side: shape_mod.Side) -> bytes:
+    if side == shape_mod.Side.left or side == shape_mod.Side.bottom:
+        return b"right"
+    return b"left"
+
+
+public func rail_angle(side: shape_mod.Side) -> int:
+    if side == shape_mod.Side.bottom:
+        return 0
+    if side == shape_mod.Side.right:
+        return 90
+    if side == shape_mod.Side.top:
+        return 180
+    return 270
+
+
+func placed_symbol(mut w: byte_builder.Builder, doc: Doc, p: Part):
+    mut s = doc.shapes[p.shape].copy()
+    mut u = s.units[p.unit].copy()
+    byte_builder.append(mut w, b"\t(symbol (lib_id \"" + lib_prefix + s.lib_name + b"\") ")
+    at(mut w, p.x, p.y, p.banked.unwrap_or(0))
+    byte_builder.append_text(mut w, " (unit " + str(u.number) + ")\n\t\t(exclude_from_sim no)\n")
+    mut bom = b"yes"
+    mut dnp = b"no"
+    if p.id.dnp:
+        bom = b"no"
+        dnp = b"yes"
+    byte_builder.append(mut w, b"\t\t(in_bom " + bom + b")\n\t\t(on_board yes)\n\t\t(dnp " + dnp + b")\n")
+    byte_builder.append(mut w, b"\t\t(uuid \"" + p.id.uuid + b"\")\n")
+    named_props(mut w, p, u)
+    hidden_prop(mut w, b"Footprint", p.id.footprint, p.x, p.y)
+    extra_props(mut w, p, u)
+    instances(mut w, doc.sheet, p.id.ref, u.number)
+
+
+func named_props(mut w: byte_builder.Builder, p: Part, u: shape_mod.ShapeUnit):
+    mut ref_at = text_anchor(p, u, -1)
+    mut val_at = text_anchor(p, u, 1)
+    mut angle = 0
+    mut just = b""
+    if p.banked is not None:
+        angle = 90
+        just = b" (justify left)"
+    byte_builder.append(mut w, b"\t\t(property \"Reference\" ")
+    str_(mut w, p.id.ref)
+    byte_builder.append(mut w, b" ")
+    at(mut w, ref_at[0], ref_at[1], angle)
+    byte_builder.append(mut w, b" (effects (font (size 1.27 1.27))" + just + b"))\n")
+    byte_builder.append(mut w, b"\t\t(property \"Value\" ")
+    str_(mut w, p.id.value)
+    byte_builder.append(mut w, b" ")
+    at(mut w, val_at[0], val_at[1], angle)
+    byte_builder.append(mut w, b" (effects (font (size 1.27 1.27))" + just + b"))\n")
+
+
+func text_anchor(p: Part, u: shape_mod.ShapeUnit, dir: int) -> int[]:
+    if p.banked is not None:
+        return [p.x + banked_text_dx, p.y + dir * shape_mod.grid]
+    return [p.x, p.y + dir * field_reach(p, u)]
+
+
+func field_reach(p: Part, u: shape_mod.ShapeUnit) -> int:
+    mut span = 0
+    for i in range(len(u.pins)):
+        mut pin = u.pins[i].copy()
+        if pin.side == shape_mod.Side.left or pin.side == shape_mod.Side.right:
+            continue
+        mut net = b""
+        if i < len(p.nets):
+            net = p.nets[i].copy()
+        span = max(span, shape_mod.stub_extra(u, i) + label_span(net))
+    return u.half_h + shape_mod.max_reach(u) + stub_len + span + shape_mod.pitch
+
+
+func instances(mut w: byte_builder.Builder, s: Sheet, ref: bytes, unit: int):
+    byte_builder.append(mut w, b"\t\t(instances\n\t\t\t(project ")
+    str_(mut w, s.design)
+    byte_builder.append(mut w, b"\n\t\t\t\t(path ")
+    str_(mut w, instance_path(s))
+    byte_builder.append(mut w, b"\n\t\t\t\t\t(reference ")
+    str_(mut w, ref)
+    byte_builder.append_text(mut w, ") (unit " + str(unit) + ")\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t)\n")
+
+
+func hidden_prop(mut w: byte_builder.Builder, name: bytes, value: bytes, x: int, y: int):
+    byte_builder.append(mut w, b"\t\t(property ")
+    str_(mut w, name)
+    byte_builder.append(mut w, b" ")
+    str_(mut w, value)
+    byte_builder.append(mut w, b" ")
+    at(mut w, x, y, 0)
+    byte_builder.append(mut w, b" " + hidden_font_effects + b")\n")
+
+
+func extra_props(mut w: byte_builder.Builder, p: Part, u: shape_mod.ShapeUnit):
+    mut datasheet = b""
+    for prop in p.id.properties:
+        if prop.key == b"datasheet":
+            datasheet = prop.value.copy()
+    hidden_prop(mut w, b"Datasheet", datasheet, p.x, p.y)
+    mut shown = shown_mpn(p.id)
+    for prop2 in p.id.properties:
+        mut name = field_name(prop2.key)
+        if name is None:
+            continue
+        if shown is not None and name == b"MPN":
+            continue
+        hidden_prop(mut w, name, prop2.value, p.x, p.y)
+    if shown is None:
+        return
+    mut pt = mpn_anchor(p, u)
+    byte_builder.append(mut w, b"\t\t(property \"MPN\" ")
+    str_(mut w, shown)
+    byte_builder.append(mut w, b" ")
+    mut angle = 0
+    if p.banked is not None:
+        angle = 90
+    at(mut w, pt[0], pt[1], angle)
+    byte_builder.append(mut w, b" " + font_effects + b")\n")
+
+
+func mpn_anchor(p: Part, u: shape_mod.ShapeUnit) -> int[]:
+    mut value = text_anchor(p, u, 1)
+    return [value[0], value[1] + mpn_drop]
+
+
+func field_name(key: bytes) -> bytes?:
+    if key == b"mpn":
+        return Some(b"MPN")
+    if key == b"manufacturer":
+        return Some(b"Manufacturer")
+    if key == b"datasheet" or key == b"footprint" or key == b"value" or len(key) == 0:
+        return None
+    return Some(key.copy())
+
+
+func connections(mut w: byte_builder.Builder, doc: Doc, p: Part):
+    if p.banked is not None:
+        return
+    mut u = doc.shapes[p.shape].units[p.unit].copy()
+    for i in range(len(u.pins)):
+        mut pin = u.pins[i].copy()
+        mut net = b""
+        if i < len(p.nets):
+            net = p.nets[i].copy()
+        mut pt = pin_point(p, pin)
+        if len(net) == 0:
+            byte_builder.append(mut w, b"\t(no_connect ")
+            at2(mut w, pt)
+            byte_builder.append(mut w, b" (uuid \"" + pin_uuid(doc.sheet.design, b"nc", p.id.ref, pin.pad) + b"\"))\n")
+            continue
+        mut lp = label_point(pt[0], pt[1], pin.side, stub_reach(u, i))
+        wire(mut w, doc.sheet.design, pt, lp, pin_key(p.id.ref, pin.pad))
+        if is_rail_pin(doc.power.pins, lp) or is_wired(doc.wiring.no_label, lp):
+            continue
+        global_label(mut w, net, pin_uuid(doc.sheet.design, b"label", p.id.ref, pin.pad), pin.side, lp)
+
+
+func is_rail_pin(pins: RailPin[], pt: int[]) -> bool:
+    for rp in pins:
+        if rp.x == pt[0] and rp.y == pt[1]:
+            return True
+    return False
+
+
+func is_wired(no_label: wire_mod.Point[], pt: int[]) -> bool:
+    for p in no_label:
+        if p.x == pt[0] and p.y == pt[1]:
+            return True
+    return False
+
+
+func routed_wire(mut w: byte_builder.Builder, design: bytes, path: wire_mod.Path):
+    for i in range(len(path.pts) - 1):
+        mut a = path.pts[i]
+        mut b = path.pts[i + 1]
+        mut key = path.key + b"#" + str(i).encode()
+        wire(mut w, design, [a.x, a.y], [b.x, b.y], key)
+
+
+func junction(mut w: byte_builder.Builder, design: bytes, pt: wire_mod.Point):
+    mut path = (str(pt.x) + "," + str(pt.y)).encode()
+    byte_builder.append(mut w, b"\t(junction ")
+    at2(mut w, [pt.x, pt.y])
+    byte_builder.append(mut w, b" (diameter 0) (color 0 0 0 0)\n")
+    byte_builder.append(mut w, b"\t\t(uuid \"" + element_uuid(design, b"junc", path) + b"\")\n\t)\n")
+
+
+func wire(mut w: byte_builder.Builder, design: bytes, from_: int[], to: int[], key: bytes):
+    byte_builder.append(mut w, b"\t(wire (pts ")
+    at2xy(mut w, from_)
+    byte_builder.append(mut w, b" ")
+    at2xy(mut w, to)
+    byte_builder.append(mut w, b")\n\t\t(stroke (width 0) (type default))\n\t\t(uuid \"" + element_uuid(design, b"wire", key) + b"\")\n\t)\n")
+
+
+func global_label(mut w: byte_builder.Builder, net: bytes, uuid: bytes, side: shape_mod.Side, pt: int[]):
+    byte_builder.append(mut w, b"\t(global_label ")
+    str_(mut w, net)
+    byte_builder.append(mut w, b" (shape bidirectional) ")
+    at(mut w, pt[0], pt[1], label_angle(side))
+    byte_builder.append(mut w, b"\n\t\t(fields_autoplaced yes)\n\t\t(effects (font (size 1.27 1.27)) (justify ")
+    byte_builder.append(mut w, label_justify(side))
+    byte_builder.append(mut w, b"))\n\t\t(uuid \"" + uuid + b"\")\n\t)\n")
+
+
+func rail_instance(mut w: byte_builder.Builder, doc: Doc, rp: RailPin):
+    mut rail = doc.power.rails[rp.rail].copy()
+    power_instance(mut w, doc.sheet, PowerPlacement(lib_name=rail.lib_name.copy(), value=rail.net.copy(), ref=rp.ref.copy(), uuid=rp.uuid.copy(), x=rp.x, y=rp.y, angle=rp.angle))
+
+
+func flag_instance(mut w: byte_builder.Builder, doc: Doc, f: Flag):
+    power_instance(mut w, doc.sheet, PowerPlacement(lib_name=flag_lib_name, value=flag_lib_name, ref=f.ref.copy(), uuid=f.uuid.copy(), x=f.x, y=f.y - stub_len, angle=0))
+    wire(mut w, doc.sheet.design, [f.x, f.y - stub_len], [f.x, f.y], f.ref)
+    mut uuid = pin_uuid(doc.sheet.design, b"label", f.ref, b"")
+    global_label(mut w, f.net, uuid, shape_mod.Side.bottom, [f.x, f.y])
+
+
+# Private in Zig; public for the bodyDir counterpart.
+public record PowerPlacement:
+    lib_name: bytes
+    value: bytes
+    ref: bytes
+    uuid: bytes
+    x: int
+    y: int
+    angle: int
+
+
+func power_instance(mut w: byte_builder.Builder, s: Sheet, pp: PowerPlacement):
+    mut dir = body_dir(pp)
+    byte_builder.append(mut w, b"\t(symbol (lib_id \"" + lib_prefix + pp.lib_name + b"\") ")
+    at(mut w, pp.x, pp.y, pp.angle)
+    byte_builder.append(mut w, b" (unit 1)\n")
+    byte_builder.append(mut w, b"\t\t(exclude_from_sim no)\n\t\t(in_bom no)\n\t\t(on_board no)\n\t\t(dnp no)\n")
+    byte_builder.append(mut w, b"\t\t(uuid \"" + pp.uuid + b"\")\n")
+    mut text_angle = 0
+    if pp.angle == 90 or pp.angle == 270:
+        text_angle = 90
+    byte_builder.append(mut w, b"\t\t(property \"Reference\" ")
+    str_(mut w, pp.ref)
+    byte_builder.append(mut w, b" ")
+    at(mut w, pp.x - dir[0] * text_reach, pp.y - dir[1] * text_reach, text_angle)
+    byte_builder.append(mut w, b" " + hidden_font_effects + b")\n")
+    byte_builder.append(mut w, b"\t\t(property \"Value\" ")
+    str_(mut w, pp.value)
+    byte_builder.append(mut w, b" ")
+    at(mut w, pp.x + dir[0] * text_reach, pp.y + dir[1] * text_reach, text_angle)
+    byte_builder.append(mut w, b" " + font_effects + b")\n")
+    instances(mut w, s, pp.ref, 1)
+
+
+public func body_dir(pp: PowerPlacement) -> int[]:
+    mut away = 1
+    if pp.lib_name == flag_lib_name:
+        away = -1
+    mut angle = pp.angle % 360
+    if angle == 90:
+        return [away, 0]
+    if angle == 180:
+        return [0, -away]
+    if angle == 270:
+        return [-away, 0]
+    return [0, away]
+
+
+func child_sheet(mut w: byte_builder.Builder, doc: Doc, c: SheetRef):
+    byte_builder.append(mut w, b"\t(sheet ")
+    at2(mut w, [c.at.x, c.at.y])
+    byte_builder.append(mut w, b" (size ")
+    mm(mut w, c.at.w)
+    byte_builder.append(mut w, b" ")
+    mm(mut w, c.at.h)
+    byte_builder.append(mut w, b")\n\t\t(exclude_from_sim no)\n\t\t(in_bom yes)\n\t\t(on_board yes)\n\t\t(dnp no)\n")
+    byte_builder.append(mut w, b"\t\t(fields_autoplaced yes)\n\t\t(stroke (width 0.1524) (type solid))\n")
+    byte_builder.append(mut w, b"\t\t(fill (color 0 0 0 0))\n\t\t(uuid \"" + c.uuid + b"\")\n")
+    byte_builder.append(mut w, b"\t\t(property \"Sheetname\" ")
+    str_(mut w, c.name)
+    byte_builder.append(mut w, b" ")
+    at(mut w, c.at.x, c.at.y - shape_mod.grid, 0)
+    byte_builder.append(mut w, b" (effects (font (size 1.27 1.27)) (justify left bottom)))\n")
+    byte_builder.append(mut w, b"\t\t(property \"Sheetfile\" ")
+    str_(mut w, c.file)
+    byte_builder.append(mut w, b" ")
+    at(mut w, c.at.x, c.at.y + c.at.h + shape_mod.grid, 0)
+    byte_builder.append(mut w, b" (effects (font (size 1.27 1.27)) (justify left top)))\n")
+    byte_builder.append(mut w, b"\t\t(instances\n\t\t\t(project ")
+    str_(mut w, doc.sheet.design)
+    byte_builder.append(mut w, b"\n\t\t\t\t(path ")
+    str_(mut w, instance_path(doc.sheet))
+    byte_builder.append_text(mut w, "\n\t\t\t\t\t(page \"" + str(c.page) + "\")\n\t\t\t\t)\n\t\t\t)\n\t\t)\n\t)\n")
+
+
+func pin_key(ref: bytes, pad: bytes) -> bytes:
+    return ref + b":" + pad
+
+
+func pin_uuid(design: bytes, kind: bytes, ref: bytes, pad: bytes) -> bytes:
+    return element_uuid(design, kind, pin_key(ref, pad))
+
+
+func at2(mut w: byte_builder.Builder, pt: int[]):
+    byte_builder.append(mut w, b"(at ")
+    mm(mut w, pt[0])
+    byte_builder.append(mut w, b" ")
+    mm(mut w, pt[1])
+    byte_builder.append(mut w, b")")
+
+
+func at2xy(mut w: byte_builder.Builder, pt: int[]):
+    byte_builder.append(mut w, b"(xy ")
+    mm(mut w, pt[0])
+    byte_builder.append(mut w, b" ")
+    mm(mut w, pt[1])
+    byte_builder.append(mut w, b")")
+
+
+func caption(mut w: byte_builder.Builder, design: bytes, c: Caption, path: bytes):
+    byte_builder.append(mut w, b"\t(text ")
+    str_(mut w, c.text)
+    byte_builder.append(mut w, b"\n\t\t(exclude_from_sim no)\n\t\t")
+    at(mut w, c.x, c.y, 0)
+    byte_builder.append(mut w, b"\n\t\t(effects (font (size ")
+    mm(mut w, c.size)
+    byte_builder.append(mut w, b" ")
+    mm(mut w, c.size)
+    byte_builder.append(mut w, b")) (justify left bottom))\n\t\t(uuid \"")
+    byte_builder.append(mut w, element_uuid(design, b"cap", path) + b"\")\n\t)\n")

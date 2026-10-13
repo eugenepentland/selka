@@ -1,0 +1,3 @@
+# Mutable measurement working sets are preserved in deterministic evidence
+# archives after completion. Summaries and archive manifests are tracked.
+/attempts/

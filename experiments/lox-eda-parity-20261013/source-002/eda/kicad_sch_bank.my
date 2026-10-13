@@ -1,0 +1,159 @@
+
+import kicad_sch_shape as shape_mod
+import kicad_sch_sheet as sheet_mod
+import kicad_sch_wire as wire
+import kicad_sch_emit as emit
+import decouple_key as decouple_key
+import eval_rails as rails
+import placement_pin_roles as pin_roles
+import net_name as net_name
+import support_strs as strs
+import support_sort as sorts
+
+public const min_members: int = 2
+
+
+public record Candidate:
+    item: int
+    ref: bytes
+    value: bytes
+    power: bytes
+    gnd: bytes
+    power_pin: int
+    reach: int
+
+
+public record Member:
+    item: int
+    power_pin: int
+
+
+public record Bank:
+    power: bytes
+    gnd: bytes
+    key: bytes
+    members: Member[]
+    reach: int
+    pitch: int
+
+
+public record Frame:
+    x: int
+    y: int
+    reach: int
+    pitch: int
+
+
+public func frame_member_x(self: Frame, k: int) -> int:
+    return self.x + k * self.pitch
+
+
+public func frame_power_y(self: Frame) -> int:
+    return self.y - self.reach - 254
+
+
+public func frame_gnd_y(self: Frame) -> int:
+    return self.y + self.reach + 254
+
+
+public func frame_end_x(self: Frame) -> int:
+    return self.x - 762
+
+
+public func frame_power_pin_y(self: Frame) -> int:
+    return self.y - self.reach
+
+
+public func frame_gnd_pin_y(self: Frame) -> int:
+    return self.y + self.reach
+
+
+public func is_supply_net(name: bytes) -> bool:
+    mut short = net_name.leaf(name)
+    if pin_roles.is_supply_fn(short):
+        return True
+    return rails.looks_like_rail(short)
+
+
+public func angle_for(power_pin_x: int) -> int:
+    if power_pin_x > 0:
+        return 90
+    return 270
+
+
+public func reach_of(u: shape_mod.ShapeUnit) -> int?:
+    if len(u.pins) != 2:
+        return None
+    if u.pins[0].y != 0 or u.pins[1].y != 0:
+        return None
+    if u.pins[0].x != -u.pins[1].x:
+        return None
+    mut r = abs(u.pins[0].x)
+    if r == 0:
+        return None
+    return Some(r)
+
+
+public func group(cands: Candidate[]) -> Bank[]:
+    mut by_pair: dict[str, int[]] = {}
+    for i in range(len(cands)):
+        mut c = cands[i].copy()
+        mut key = strs.text(c.power + b"\x00" + c.gnd)
+        if key not in by_pair:
+            by_pair[key.copy()] = []
+        by_pair[key].append(i)
+    mut result: Bank[] = []
+    for run in by_pair.values():
+        if len(run) < min_members:
+            continue
+        mut ordered = run.copy()
+        sorts.sort_by_ctx(mut ordered, cands, less_candidate)
+        result.append(one_bank(cands, ordered))
+    return result
+
+
+func one_bank(cands: Candidate[], run: int[]) -> Bank:
+    mut members: Member[] = []
+    for i in run:
+        members.append(Member(item=cands[i].item, power_pin=cands[i].power_pin))
+    return Bank(power=cands[run[0]].power.copy(), gnd=cands[run[0]].gnd.copy(), key=cands[run[0]].ref.copy(), members=members, reach=cands[run[0]].reach, pitch=pitch_for(cands, run))
+
+
+func pitch_for(cands: Candidate[], run: int[]) -> int:
+    mut widest = 0
+    for i in run:
+        widest = max(widest, max(len(cands[i].ref), len(cands[i].value)))
+    mut chars = min(widest, 24)
+    return sheet_mod.snap_up(max(762, emit.banked_text_dx + chars * 127 + 381))
+
+
+func less_candidate(cands: Candidate[], x: int, y: int) -> bool:
+    mut fx = decouple_key.cap_farads(cands[x].value)
+    mut fy = decouple_key.cap_farads(cands[y].value)
+    if fx != fy:
+        return fx < fy
+    return strs.bytes_less(cands[x].ref, cands[y].ref)
+
+
+public func cell_for(b: Bank, label_w: int) -> sheet_mod.Cell:
+    mut ox = label_w + 762
+    mut oy = 762 + 254 + b.reach
+    return sheet_mod.Cell(w=ox + len(b.members) * b.pitch, h=oy + b.reach + 254 + 762, ox=ox, oy=oy)
+
+
+public func caption_at(f: Frame) -> wire.Point:
+    return wire.Point(x=frame_end_x(f), y=frame_power_y(f) - 127)
+
+
+public func rail_pts(f: Frame, n: int, y: int) -> wire.Point[]:
+    mut pts = [wire.Point(x=frame_end_x(f), y=y)]
+    for k in range(n):
+        pts.append(wire.Point(x=frame_member_x(f, k), y=y))
+    return pts
+
+
+public func caption(ic: bytes, power: bytes) -> bytes:
+    mut rail = net_name.leaf(power)
+    if len(ic) == 0:
+        return b"Decoupling \xe2\x80\x94 " + rail
+    return b"Decoupling \xe2\x80\x94 " + net_name.leaf(ic) + b" \xc2\xb7 " + rail

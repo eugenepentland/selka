@@ -1,0 +1,32 @@
+
+
+# Port of zig/src/uuid.zig: the canonical UUID text form, written in one place.
+# Stamps the RFC 4122 version nibble and variant bits and renders the 8-4-4-4-12
+# lowercase hex text.
+# Which UUID this is. The Zig enum's value is the version nibble already
+# shifted into the high half of byte 6; `version_bits` recovers it.
+public enum Version:
+    random_v4
+    name_v5
+
+
+public func version_bits(version: Version) -> int:
+    match version:
+        case Version.random_v4:
+            return 64
+        case Version.name_v5:
+            return 80
+
+
+# Length of the canonical text form: 32 hex digits and 4 dashes.
+public const TEXT_LEN: int = 36
+
+
+# Stamp `raw`'s (16 bytes) version and variant fields and render the canonical
+# `xxxxxxxx-xxxx-Vxxx-yxxx-xxxxxxxxxxxx` text.
+public func format(raw: bytes, version: Version) -> bytes:
+    mut b = raw.to_list()
+    b[6] = bit_or(bit_and(b[6], 15), version_bits(version))
+    b[8] = bit_or(bit_and(b[8], 63), 128)
+    mut h = bytes(b).hex()
+    return (h[0:8] + "-" + h[8:12] + "-" + h[12:16] + "-" + h[16:20] + "-" + h[20:32]).encode()

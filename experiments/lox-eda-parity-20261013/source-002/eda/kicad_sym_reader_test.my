@@ -1,0 +1,145 @@
+
+import kicad_sym_reader as m
+import kicad_sym_testdata as data
+import support_expect as ex
+
+func parsed(src: bytes) -> m.Symbol[]:
+    match m.parse_library(src):
+        case Ok(syms):
+            return syms
+        case Err(_):
+            return []
+
+
+# test "kicad-sym: reader parses a flat vendor symbol's pins and body graphics"
+public func test_kicad_sym_reader_parses_a_flat_vendor_symbol_s_pins_and_body_graphics(out: Stream) -> bool:
+    mut syms = parsed(data.vendor_flat())
+    if not ex.eq_int(out, "symbols", len(syms), 1):
+        return False
+    if not ex.eq_bytes(out, "name", syms[0].name, b"ACME-3"):
+        return False
+    if not ex.eq_int(out, "units", len(syms[0].units), 1):
+        return False
+    mut u = syms[0].units[0].copy()
+    if not ex.eq_int(out, "common", u.number, 0):
+        return False
+    if not ex.eq_int(out, "pins", len(u.pins), 3):
+        return False
+    if not ex.eq_bytes(out, "pad", u.pins[0].pad, b"1"):
+        return False
+    if not ex.eq_bytes(out, "function", u.pins[0].name, b"G"):
+        return False
+    if not ex.eq_int(out, "endpoint", u.pins[0].at.x, 0):
+        return False
+    if not ex.eq_int(out, "left pin angle", u.pins[0].angle, 0):
+        return False
+    if not ex.eq_int(out, "right pin angle", u.pins[2].angle, 180):
+        return False
+    if not ex.eq_int(out, "drawn length", u.pins[2].length, 50800):
+        return False
+    if not ex.eq_int(out, "graphics", len(u.graphics), 1):
+        return False
+    if not ex.ok(out, "rectangle", u.graphics[0].kind == m.Kind.rectangle):
+        return False
+    if not ex.ok(out, "background", u.graphics[0].style.fill == m.Fill.background):
+        return False
+    return ex.eq_int(out, "offset", u.graphics[0].pts[0].x, 50800)
+
+
+# test "kicad-sym: reader splits sub-symbols into units and keeps sub-hundredth coordinates"
+public func test_kicad_sym_reader_splits_sub_symbols_into_units_and_keeps_sub_hundredth_coordinates(out: Stream) -> bool:
+    mut syms = parsed(data.vendor_units())
+    if not ex.eq_int(out, "symbols", len(syms), 1):
+        return False
+    mut units = syms[0].units.copy()
+    if not ex.eq_int(out, "units", len(units), 3):
+        return False
+    for i in range(3):
+        if not ex.eq_int(out, "sorted number", units[i].number, i):
+            return False
+    if not ex.eq_int(out, "common body pins", len(units[0].pins), 0):
+        return False
+    if not ex.eq_int(out, "DeMorgan dropped", len(units[1].pins), 1):
+        return False
+    if not ex.eq_bytes(out, "pad", units[1].pins[0].pad, b"A1"):
+        return False
+    if not ex.eq_int(out, "half-grid", units[1].pins[0].at.y, 120650):
+        return False
+    return ex.ok(out, "hidden pad remains", units[2].pins[0].hidden)
+
+
+# test "kicad-sym: reader models each body primitive and skips malformed ones"
+public func test_kicad_sym_reader_models_each_body_primitive_and_skips_malformed_ones(out: Stream) -> bool:
+    mut syms = parsed(data.vendor_units())
+    if len(syms) != 1:
+        return False
+    mut g = syms[0].units[0].graphics.copy()
+    if not ex.eq_int(out, "malformed skipped", len(g), 4):
+        return False
+    if not ex.ok(out, "polyline", g[0].kind == m.Kind.polyline):
+        return False
+    if not ex.eq_int(out, "vertices", len(g[0].pts), 3):
+        return False
+    if not ex.ok(out, "circle", g[1].kind == m.Kind.circle):
+        return False
+    if not ex.eq_int(out, "radius", g[1].radius, 1270):
+        return False
+    if not ex.ok(out, "arc", g[2].kind == m.Kind.arc):
+        return False
+    if not ex.eq_int(out, "arc points", len(g[2].pts), 3):
+        return False
+    if not ex.ok(out, "text", g[3].kind == m.Kind.text):
+        return False
+    return ex.eq_bytes(out, "body", g[3].text, b"GREEN")
+
+
+# test "kicad-sym: reader rejects a non-library root and tolerates an empty library"
+public func test_kicad_sym_reader_rejects_a_non_library_root_and_tolerates_an_empty_library(out: Stream) -> bool:
+    for src in [b"(kicad_pcb (version 20240101))", b""]:
+        match m.parse_library(src):
+            case Ok(_):
+                return ex.ok(out, "non-library rejected", False)
+            case Err(e):
+                if not ex.eq_str(out, "specific error", e, m.err_not_symbol_lib):
+                    return False
+    for src2 in [b"(kicad_symbol_lib (version 20211014))", b"(kicad_symbol_lib (symbol \"X\" (in_bom yes)))"]:
+        match m.parse_library(src2):
+            case Err(_):
+                return ex.ok(out, "empty accepted", False)
+            case Ok(syms):
+                if not ex.eq_int(out, "empty", len(syms), 0):
+                    return False
+    return True
+
+
+# test "kicad-sym: unitId reads the trailing unit and style numbers"
+public func test_kicad_sym_unitid_reads_the_trailing_unit_and_style_numbers(out: Stream) -> bool:
+    mut id_ = m.unit_id(b"ADAR2001ACCZ_1_1")
+    if id_ is None:
+        return False
+    if not ex.eq_int(out, "unit", id_.unit, 1):
+        return False
+    if not ex.eq_int(out, "style", id_.style, 1):
+        return False
+    mut second = m.unit_id(b"CM4102008_2_0")
+    if second is None:
+        return False
+    if not ex.eq_int(out, "unit 2", second.unit, 2):
+        return False
+    mut common = m.unit_id(b"TPSM84338RCJR_0_0")
+    if common is None:
+        return False
+    if not ex.eq_int(out, "common", common.unit, 0):
+        return False
+    for name in [b"DF40C-100DS-0.4V_51_", b"PLAIN", b"A_B"]:
+        if not ex.ok(out, "not sub-symbol", m.unit_id(name).is_none()):
+            return False
+    return True
+
+
+# test "fuzz: parseLibrary tolerates arbitrary bytes"
+public func test_fuzz_parselibrary_tolerates_arbitrary_bytes() -> bool:
+    mut corpus = [b"", b"(kicad_symbol_lib)", b"(kicad_symbol_lib (symbol \"A\" (pin passive line (at 0 0 0) (length 2.54) (name \"x\" (effects)) (number \"1\" (effects)))))", b"(kicad_symbol_lib (symbol \"A\" (symbol \"A_1_1\" (rectangle (start 0 0) (end 1 1)))))", b"(kicad_symbol_lib (symbol", b"((((", b"(\x00\xff)"]
+    for input_ in corpus:
+        _ = m.parse_library(input_)
+    return True

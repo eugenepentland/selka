@@ -1,0 +1,424 @@
+
+import eval_env as env_mod
+import sexpr_ast as ast
+import sexpr_parser as parser
+
+# Input seam for the evaluated design subset read by KiCad exporters. Every
+# quoted string body is kept verbatim, including escapes, just as netlisp holds it.
+public const format_version: int = 1
+
+
+public const err_bad_model: str = "BadModel"
+
+
+# Location of the last load failure: one-based line, or zero for no location.
+public record Diag:
+    message: bytes
+    line: int = 0
+
+
+public record Model:
+    design: bytes
+    block: env_mod.DesignBlock
+
+
+public func load(source: bytes, mut diag: Diag) -> Result[Model, str]:
+    mut pdiag = parser.new_diagnostic()
+    mut nodes: ast.Node[] = []
+    match parser.parse_diag(source, mut pdiag):
+        case Ok(parsed):
+            nodes = parsed
+        case Err(error):
+            diag = Diag(line=pdiag.span.line, message=pdiag.message.encode())
+            return Err(parser.error_name(error))
+    if len(nodes) != 1:
+        mut offending: ast.Span? = None
+        if len(nodes) > 1:
+            offending = Some(nodes[1].span)
+        return Err(fail(mut diag, offending, b"expected exactly one (sch-model \xe2\x80\xa6) form"))
+    try form(mut diag, nodes[0], b"sch-model", 2)
+    match nodes[0].tag:
+        case ast.Tag.list(value=items):
+            mut version = 0
+            match items[1].tag:
+                case ast.Tag.int(value=v):
+                    version = v
+                case _:
+                    return Err(fail(mut diag, Some(items[1].span), b"model version must be an integer"))
+            if version != format_version:
+                return Err(fail(mut diag, Some(items[1].span), b"unsupported model version"))
+            mut design: bytes? = None
+            mut block: env_mod.DesignBlock? = None
+            for child_index_6 in range(len(items)):
+                if child_index_6 < 2:
+                    continue
+                mut head = head_of(items[child_index_6])
+                if head is None:
+                    return Err(fail(mut diag, Some(items[child_index_6].span), b"expected a form"))
+                if head == b"design":
+                    if design is not None:
+                        return Err(fail(mut diag, Some(items[child_index_6].span), b"duplicate (design \xe2\x80\xa6)"))
+                    mut design_value = try string_arg(mut diag, items[child_index_6], b"design")
+                    design = Some(design_value)
+                elif head == b"block":
+                    if block is not None:
+                        return Err(fail(mut diag, Some(items[child_index_6].span), b"duplicate root (block \xe2\x80\xa6)"))
+                    mut block_value = try read_block(mut diag, items[child_index_6])
+                    block = Some(block_value)
+                else:
+                    return Err(fail(mut diag, Some(items[child_index_6].span), b"unknown top-level form"))
+            if design is None:
+                return Err(fail(mut diag, Some(nodes[0].span), b"missing (design \xe2\x80\xa6)"))
+            if block is None:
+                return Err(fail(mut diag, Some(nodes[0].span), b"missing (block \xe2\x80\xa6)"))
+            return Ok(Model(design=design.copy(), block=block.copy()))
+        case _:
+            return Err(err_bad_model)
+
+
+func fail(mut diag: Diag, node: ast.Span?, message: bytes) -> str:
+    mut line = 0
+    if node is not None:
+        line = node.line
+    diag = Diag(line=line, message=message.copy())
+    return err_bad_model
+
+
+# The head atom of a list, or None.
+func head_of(node: ast.Node) -> bytes?:
+    match node.tag:
+        case ast.Tag.list(value=items):
+            if len(items) == 0:
+                return None
+            return ast.as_atom(items[0])
+        case _:
+            return None
+
+
+# Validate a borrowed form; the caller traverses its children in a scoped match.
+
+
+func form(mut diag: Diag, node: ast.Node, name: bytes, min_: int) -> Result[Unit, str]:
+    match node.tag:
+        case ast.Tag.list(value=items):
+            if len(items) == 0:
+                return Err(fail(mut diag, Some(node.span), b"unexpected form"))
+            mut head = ast.as_atom(items[0])
+            if head is None:
+                return Err(fail(mut diag, Some(node.span), b"unexpected form"))
+            if head != name:
+                return Err(fail(mut diag, Some(node.span), b"unexpected form"))
+            if len(items) < min_:
+                return Err(fail(mut diag, Some(node.span), b"form has too few arguments"))
+            return Ok(())
+        case _:
+            return Err(fail(mut diag, Some(node.span), b"expected a list"))
+
+
+# Zig's private `str` helper is `str_`: a function named str shadows the type.
+func str_(mut diag: Diag, node: ast.Node) -> Result[bytes, str]:
+    mut text = ast.as_string(node)
+    if text is None:
+        return Err(fail(mut diag, Some(node.span), b"expected a quoted string"))
+    return Ok(text.copy())
+
+
+# The single quoted string in (name "value").
+func string_arg(mut diag: Diag, node: ast.Node, name: bytes) -> Result[bytes, str]:
+    try form(mut diag, node, name, 2)
+    match node.tag:
+        case ast.Tag.list(value=items):
+            if len(items) != 2:
+                return Err(fail(mut diag, Some(node.span), b"expected exactly one string"))
+            return str_(mut diag, items[1])
+        case _:
+            return Err(err_bad_model)
+
+
+func read_block(mut diag: Diag, node: ast.Node) -> Result[env_mod.DesignBlock, str]:
+    try form(mut diag, node, b"block", 2)
+    match node.tag:
+        case ast.Tag.list(value=items):
+            mut instances: env_mod.Instance[] = []
+            mut nets: env_mod.Net[] = []
+            mut ties: env_mod.NetTie[] = []
+            mut sections: env_mod.Section[] = []
+            mut subs: env_mod.SubBlock[] = []
+            for child_index_5 in range(len(items)):
+                if child_index_5 < 2:
+                    continue
+                mut head = head_of(items[child_index_5])
+                if head is None:
+                    return Err(fail(mut diag, Some(items[child_index_5].span), b"expected a form"))
+                if head == b"instance":
+                    mut instances_item = try read_instance(mut diag, items[child_index_5])
+                    instances.append(instances_item)
+                elif head == b"net":
+                    mut nets_item = try read_net(mut diag, items[child_index_5])
+                    nets.append(nets_item)
+                elif head == b"net-tie":
+                    try form(mut diag, items[child_index_5], b"net-tie", 3)
+                    match items[child_index_5].tag:
+                        case ast.Tag.list(value=t):
+                            if len(t) != 3:
+                                return Err(fail(mut diag, Some(items[child_index_5].span), b"(net-tie A B) takes two strings"))
+                            mut a = try str_(mut diag, t[1])
+                            mut b = try str_(mut diag, t[2])
+                            ties.append(env_mod.NetTie(a=a, b=b))
+                        case _:
+                            return Err(err_bad_model)
+                elif head == b"section":
+                    mut sections_item = try read_section(mut diag, items[child_index_5])
+                    sections.append(sections_item)
+                elif head == b"sub-block":
+                    try form(mut diag, items[child_index_5], b"sub-block", 3)
+                    match items[child_index_5].tag:
+                        case ast.Tag.list(value=s):
+                            if len(s) != 3:
+                                return Err(fail(mut diag, Some(items[child_index_5].span), b"(sub-block NAME (block \xe2\x80\xa6)) takes a name and one block"))
+                            mut sub_name = try str_(mut diag, s[1])
+                            mut sub_block = try read_block(mut diag, s[2])
+                            subs.append(env_mod.SubBlock(name=sub_name, block=sub_block, source=b""))
+                        case _:
+                            return Err(err_bad_model)
+                else:
+                    return Err(fail(mut diag, Some(items[child_index_5].span), b"unknown block form"))
+            mut name = try str_(mut diag, items[1])
+            mut block = env_mod.design_block_default(name)
+            block.instances = instances
+            block.nets = nets
+            block.sub_blocks = subs
+            block.sections = sections
+            block.net_ties = ties
+            return Ok(block)
+        case _:
+            return Err(err_bad_model)
+
+
+func read_instance(mut diag: Diag, node: ast.Node) -> Result[env_mod.Instance, str]:
+    try form(mut diag, node, b"instance", 2)
+    match node.tag:
+        case ast.Tag.list(value=items):
+            mut ref_des = try str_(mut diag, items[1])
+            mut inst = env_mod.instance_default(ref_des)
+            mut props: env_mod.Property[] = []
+            mut parts: env_mod.Part[] = []
+            for child_index_4 in range(len(items)):
+                if child_index_4 < 2:
+                    continue
+                mut head = head_of(items[child_index_4])
+                if head is None:
+                    return Err(fail(mut diag, Some(items[child_index_4].span), b"expected a form"))
+                if head == b"component":
+                    mut component_value = try string_arg(mut diag, items[child_index_4], head)
+                    inst.component = component_value
+                elif head == b"value":
+                    mut value_value = try string_arg(mut diag, items[child_index_4], head)
+                    inst.value = value_value
+                elif head == b"footprint":
+                    mut footprint_value = try string_arg(mut diag, items[child_index_4], head)
+                    inst.footprint = footprint_value
+                elif head == b"symbol":
+                    mut symbol_value = try string_arg(mut diag, items[child_index_4], head)
+                    inst.symbol = symbol_value
+                elif head == b"pinout":
+                    mut pinout_value = try string_arg(mut diag, items[child_index_4], head)
+                    inst.pinout = pinout_value
+                elif head == b"origin-key":
+                    mut origin_key_value = try string_arg(mut diag, items[child_index_4], head)
+                    inst.origin_key = origin_key_value
+                elif head == b"id":
+                    mut id_value = try string_arg(mut diag, items[child_index_4], head)
+                    inst.id = id_value
+                elif head == b"uuid":
+                    mut uuid_value = try string_arg(mut diag, items[child_index_4], head)
+                    inst.uuid = uuid_value
+                elif head == b"dnp":
+                    match items[child_index_4].tag:
+                        case ast.Tag.list(value=dnp_items):
+                            if len(dnp_items) != 1:
+                                return Err(fail(mut diag, Some(items[child_index_4].span), b"(dnp) takes no arguments"))
+                            inst.dnp = True
+                        case _:
+                            return Err(fail(mut diag, Some(items[child_index_4].span), b"expected a list"))
+                elif head == b"decouple":
+                    try form(mut diag, items[child_index_4], b"decouple", 3)
+                    match items[child_index_4].tag:
+                        case ast.Tag.list(value=d):
+                            if len(d) != 3:
+                                return Err(fail(mut diag, Some(items[child_index_4].span), b"(decouple IC PIN) takes two strings"))
+                            mut ic = try str_(mut diag, d[1])
+                            mut pin = try str_(mut diag, d[2])
+                            inst.bind.decouple = env_mod.DecoupleBind(ic=ic, pin=pin)
+                        case _:
+                            return Err(err_bad_model)
+                elif head == b"property":
+                    try form(mut diag, items[child_index_4], b"property", 3)
+                    match items[child_index_4].tag:
+                        case ast.Tag.list(value=p):
+                            if len(p) != 3:
+                                return Err(fail(mut diag, Some(items[child_index_4].span), b"(property KEY VALUE) takes two strings"))
+                            mut prop_key = try str_(mut diag, p[1])
+                            mut prop_value = try str_(mut diag, p[2])
+                            props.append(env_mod.Property(key=prop_key, value=prop_value))
+                        case _:
+                            return Err(err_bad_model)
+                elif head == b"part":
+                    mut parts_item = try read_part(mut diag, items[child_index_4])
+                    parts.append(parts_item)
+                else:
+                    return Err(fail(mut diag, Some(items[child_index_4].span), b"unknown instance field"))
+            inst.properties = props
+            inst.parts = parts
+            return Ok(inst)
+        case _:
+            return Err(err_bad_model)
+
+
+# Multi-unit breakdown models pads only, so each pin's net stays empty.
+func read_part(mut diag: Diag, node: ast.Node) -> Result[env_mod.Part, str]:
+    try form(mut diag, node, b"part", 2)
+    match node.tag:
+        case ast.Tag.list(value=items):
+            mut pins: env_mod.PartPin[] = []
+            for child_index_3 in range(len(items)):
+                if child_index_3 < 2:
+                    continue
+                try form(mut diag, items[child_index_3], b"pin", 2)
+                match items[child_index_3].tag:
+                    case ast.Tag.list(value=p):
+                        if len(p) != 2:
+                            return Err(fail(mut diag, Some(items[child_index_3].span), b"(pin PAD) takes one string"))
+                        mut pin = try str_(mut diag, p[1])
+                        pins.append(env_mod.PartPin(pin=pin, net=b"", pin_name=b"", group=b""))
+                    case _:
+                        return Err(err_bad_model)
+            mut name = try str_(mut diag, items[1])
+            return Ok(env_mod.Part(name=name, pins=pins))
+        case _:
+            return Err(err_bad_model)
+
+
+func read_net(mut diag: Diag, node: ast.Node) -> Result[env_mod.Net, str]:
+    try form(mut diag, node, b"net", 2)
+    match node.tag:
+        case ast.Tag.list(value=items):
+            mut pins: env_mod.PinRef[] = []
+            for child_index_2 in range(len(items)):
+                if child_index_2 < 2:
+                    continue
+                try form(mut diag, items[child_index_2], b"pin", 3)
+                match items[child_index_2].tag:
+                    case ast.Tag.list(value=p):
+                        if len(p) != 3:
+                            return Err(fail(mut diag, Some(items[child_index_2].span), b"(pin REF PAD) takes two strings"))
+                        mut ref_des = try str_(mut diag, p[1])
+                        mut pin = try str_(mut diag, p[2])
+                        pins.append(env_mod.pin_ref_default(ref_des, pin))
+                    case _:
+                        return Err(err_bad_model)
+            mut name = try str_(mut diag, items[1])
+            return Ok(env_mod.Net(name=name, pins=pins))
+        case _:
+            return Err(err_bad_model)
+
+
+func read_section(mut diag: Diag, node: ast.Node) -> Result[env_mod.Section, str]:
+    try form(mut diag, node, b"section", 2)
+    match node.tag:
+        case ast.Tag.list(value=items):
+            mut members: env_mod.Instance[] = []
+            mut groups: env_mod.PinGroup[] = []
+            mut ports: env_mod.SectionPort[] = []
+            mut hosts: bytes[] = []
+            mut subs: env_mod.Section[] = []
+            for child_index_1 in range(len(items)):
+                if child_index_1 < 2:
+                    continue
+                mut head = head_of(items[child_index_1])
+                if head is None:
+                    return Err(fail(mut diag, Some(items[child_index_1].span), b"expected a form"))
+                if head == b"member":
+                    mut ref_des = try string_arg(mut diag, items[child_index_1], head)
+                    members.append(env_mod.instance_default(ref_des))
+                elif head == b"pin-group":
+                    mut groups_item = try read_pin_group(mut diag, items[child_index_1])
+                    groups.append(groups_item)
+                elif head == b"port":
+                    try form(mut diag, items[child_index_1], b"port", 3)
+                    match items[child_index_1].tag:
+                        case ast.Tag.list(value=p):
+                            if len(p) != 3:
+                                return Err(fail(mut diag, Some(items[child_index_1].span), b"(port NAME TYPE) takes a string and a type"))
+                            mut tag = ast.as_atom(p[2])
+                            if tag is None:
+                                return Err(fail(mut diag, Some(p[2].span), b"port type must be an atom"))
+                            mut signal_type = parse_signal_type(tag)
+                            if signal_type is None:
+                                return Err(fail(mut diag, Some(p[2].span), b"unknown port signal type"))
+                            mut port_name = try str_(mut diag, p[1])
+                            # Direction is not modelled; exporters do not read it.
+                            mut port = env_mod.section_port_default(port_name)
+                            port.signal_type = signal_type
+                            ports.append(port)
+                        case _:
+                            return Err(err_bad_model)
+                elif head == b"host":
+                    mut hosts_item = try string_arg(mut diag, items[child_index_1], head)
+                    hosts.append(hosts_item)
+                elif head == b"section":
+                    mut subs_item = try read_section(mut diag, items[child_index_1])
+                    subs.append(subs_item)
+                else:
+                    return Err(fail(mut diag, Some(items[child_index_1].span), b"unknown section form"))
+            mut name = try str_(mut diag, items[1])
+            mut section = env_mod.section_default(name)
+            section.instances = members
+            section.pin_groups = groups
+            section.ports = ports
+            section.hosts = hosts
+            section.sub_sections = subs
+            return Ok(section)
+        case _:
+            return Err(err_bad_model)
+
+
+func parse_signal_type(tag: bytes) -> env_mod.SignalType?:
+    if tag == b"power":
+        return Some(env_mod.SignalType.power)
+    if tag == b"signal":
+        return Some(env_mod.SignalType.signal)
+    if tag == b"clock":
+        return Some(env_mod.SignalType.clock)
+    if tag == b"data":
+        return Some(env_mod.SignalType.data)
+    if tag == b"differential":
+        return Some(env_mod.SignalType.differential)
+    if tag == b"rf":
+        return Some(env_mod.SignalType.rf)
+    return None
+
+
+# (pin-group "REF" (pin "PAD" "NET") ...).
+func read_pin_group(mut diag: Diag, node: ast.Node) -> Result[env_mod.PinGroup, str]:
+    try form(mut diag, node, b"pin-group", 2)
+    match node.tag:
+        case ast.Tag.list(value=items):
+            mut pins: env_mod.PartPin[] = []
+            for child_index_0 in range(len(items)):
+                if child_index_0 < 2:
+                    continue
+                try form(mut diag, items[child_index_0], b"pin", 3)
+                match items[child_index_0].tag:
+                    case ast.Tag.list(value=p):
+                        if len(p) != 3:
+                            return Err(fail(mut diag, Some(items[child_index_0].span), b"(pin PAD NET) takes two strings"))
+                        mut pin = try str_(mut diag, p[1])
+                        mut net = try str_(mut diag, p[2])
+                        pins.append(env_mod.PartPin(pin=pin, net=net, pin_name=b"", group=b""))
+                    case _:
+                        return Err(err_bad_model)
+            mut ref_des = try str_(mut diag, items[1])
+            return Ok(env_mod.PinGroup(ref_des=ref_des, pins=pins, group=b""))
+        case _:
+            return Err(err_bad_model)

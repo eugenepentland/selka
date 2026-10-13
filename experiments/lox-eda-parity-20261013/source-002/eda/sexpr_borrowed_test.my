@@ -1,0 +1,97 @@
+import sexpr_ast as ast
+import sexpr_parser as parser
+import kicad_sym_reader as symbols
+import byte_builder
+
+
+func parse_ok(source: bytes) -> ast.Node[]:
+    match parser.parse(source):
+        case Ok(nodes):
+            return nodes
+        case Err(_):
+            assert False, "valid probe source parses"
+            return []
+
+
+func count_nodes(node: ast.Node) -> int:
+    match node.tag:
+        case ast.Tag.list(value=children):
+            mut count = 1
+            for child in children:
+                count += count_nodes(child)
+            return count
+        case _:
+            return 1
+
+
+public func test_owned_ast_accessors_remain_independent() -> bool:
+    mut children = [ast.node_atom(ast.span_zero(), b"original")]
+    mut node = ast.node_list(ast.span_zero(), children)
+    children[0] = ast.node_atom(ast.span_zero(), b"changed input")
+    mut selected = ast.as_list(node)
+    if selected is None:
+        return False
+    assert ast.as_atom(selected[0]).unwrap_or(b"") == b"original", "constructor copied input"
+    selected[0] = ast.node_atom(ast.span_zero(), b"changed snapshot")
+    match node.tag:
+        case ast.Tag.list(value=original):
+            assert ast.as_atom(original[0]).unwrap_or(b"") == b"original", "snapshot writes do not change AST"
+        case _:
+            assert False, "list node retained"
+    return True
+
+
+func selected_after_ast_cleanup(source: bytes) -> bytes:
+    mut nodes = parse_ok(source)
+    match nodes[0].tag:
+        case ast.Tag.list(value=children):
+            return ast.as_text(children[1]).unwrap_or(b"").copy()
+        case _:
+            return b""
+
+
+public func test_parser_source_and_selected_output_independence() -> bool:
+    mut source = b"(value \"kept\")"
+    mut selected = selected_after_ast_cleanup(source)
+    source = b"(replacement destroyed)"
+    assert selected == b"kept", "selected text outlives AST and source replacement"
+    return True
+
+
+public func test_parser_width_and_depth_borrowed_walk() -> bool:
+    mut wide = byte_builder.create()
+    byte_builder.append(mut wide, b"(")
+    for _ in range(128):
+        byte_builder.append(mut wide, b" (leaf 1)")
+    byte_builder.append(mut wide, b")")
+    mut width_nodes = parse_ok(byte_builder.finish(wide))
+    assert count_nodes(width_nodes[0]) == 385, "wide tree count"
+    mut deep = byte_builder.create()
+    for _ in range(32):
+        byte_builder.append(mut deep, b"(")
+    byte_builder.append(mut deep, b"leaf")
+    for _ in range(32):
+        byte_builder.append(mut deep, b")")
+    mut depth_nodes = parse_ok(byte_builder.finish(deep))
+    assert count_nodes(depth_nodes[0]) == 33, "deep tree count"
+    mut empty = parse_ok(b"()")
+    assert count_nodes(empty[0]) == 1, "empty tree count"
+    match parser.parse(b"(complete (children 1) (unterminated"):
+        case Err(_):
+            pass
+        case Ok(_):
+            assert False, "partial children cleaned up on parse failure"
+    return True
+
+
+public func test_symbol_selected_output_outlives_ast() -> bool:
+    mut source = b"(kicad_symbol_lib (symbol \"kept\" (symbol \"kept_1_1\" (pin passive line (at 0 0 0) (length 1) (name \"signal\") (number \"1\")))))"
+    match symbols.parse_library(source):
+        case Ok(items):
+            source = b"replacement"
+            assert len(items) == 1, "one selected symbol"
+            assert items[0].name == b"kept", "name survives AST destruction"
+            assert items[0].units[0].pins[0].name == b"signal", "pin text survives AST destruction"
+        case Err(_):
+            assert False, "symbol fixture parses"
+    return True

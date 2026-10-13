@@ -1,0 +1,539 @@
+
+import support_strs as strs
+
+# Non-exhaustive Zig index enums become distinct nominal scalar records:
+# both accept every u8 value, preserving their separate index spaces.
+public record SignalIndex:
+    value: int
+
+
+public record StackIndex:
+    value: int
+
+
+public enum Kind:
+    signal
+    plane
+    silk
+    mask
+    paste
+    courtyard
+    fab
+    edge
+    doc
+
+
+public enum Side:
+    front
+    back
+
+
+public record PlaneAt:
+    index: int
+    net: bytes
+
+
+public record Text:
+    bytes: bytes
+    len: int = 0
+
+
+public record GerberId:
+    suffix: Text
+    function: Text
+
+
+public record Naming:
+    kicad: Text
+    ui: Text
+    color: bytes
+
+
+public record Row:
+    stack: StackIndex
+    kind: Kind
+    naming: Naming
+    gerber: GerberId
+    signal: SignalIndex? = None
+    side: Side? = None
+    plane_net: bytes? = None
+
+
+public record Stack:
+    planes: PlaneAt[]
+    copper_layers: int = 0
+    declared: bool = False
+    implicit_rail: bytes? = None
+
+
+public record LayerTable:
+    rows_buf: Row[]
+    stack: Stack
+    len: int = 0
+
+
+public record LayerAudit:
+    net: bytes
+    signals: int = 0
+    over: int = 0
+    worst: int = 0
+
+
+public record LayerSet:
+    bits: u64 = 0u64
+
+
+public const max_copper_layers: int = 32
+
+
+public const max_signal_layers: int = 64
+
+
+public const max_sidecar_layer: int = 255
+
+
+public const implicit_copper_layers: int = 4
+
+
+public const implicit_ground_stack: int = 2
+
+
+public const implicit_rail_stack: int = 3
+
+
+public const name_buf_len: int = 12
+
+
+public const tech_row_count: int = 7
+
+
+public const f_cu: bytes = b"F.Cu"
+
+
+public const b_cu: bytes = b"B.Cu"
+
+
+public const f_mask: bytes = b"F.Mask"
+
+
+public const b_mask: bytes = b"B.Mask"
+
+
+public const f_paste: bytes = b"F.Paste"
+
+
+public const b_paste: bytes = b"B.Paste"
+
+
+public const f_silks: bytes = b"F.SilkS"
+
+
+public const b_silks: bytes = b"B.SilkS"
+
+
+public const edge_cuts: bytes = b"Edge.Cuts"
+
+
+public const f_crtyd: bytes = b"F.CrtYd"
+
+
+public const b_crtyd: bytes = b"B.CrtYd"
+
+
+public const f_fab: bytes = b"F.Fab"
+
+
+public const b_fab: bytes = b"B.Fab"
+
+
+public const f_adhes: bytes = b"F.Adhes"
+
+
+public const b_adhes: bytes = b"B.Adhes"
+
+
+public const dwgs_user: bytes = b"Dwgs.User"
+
+
+public const cmts_user: bytes = b"Cmts.User"
+
+
+public func signal_index_of(v: int) -> SignalIndex:
+    assert v >= 0 and v <= 255, "SignalIndex outside u8 range"
+    return SignalIndex(value=v)
+
+
+public func signal_index_int(self: SignalIndex) -> int:
+    return self.value
+
+
+public func signal_index_bit(self: SignalIndex) -> int?:
+    if self.value >= max_signal_layers:
+        return None
+    return Some(self.value)
+
+
+public func stack_index_of(v: int) -> StackIndex:
+    assert v >= 0 and v <= 255, "StackIndex outside u8 range"
+    return StackIndex(value=v)
+
+
+public func stack_index_int(self: StackIndex) -> int:
+    return self.value
+
+
+public func kind_is_copper(self: Kind) -> bool:
+    return self == Kind.signal or self == Kind.plane
+
+
+public func kind_gerber_polarity(self: Kind) -> bytes:
+    if self == Kind.mask:
+        return b"Negative"
+    return b"Positive"
+
+
+public func back_side_name(name: bytes) -> bytes:
+    mut twins: bytes[][] = [[f_cu, b_cu], [f_paste, b_paste], [f_mask, b_mask], [f_silks, b_silks], [f_fab, b_fab], [f_crtyd, b_crtyd], [f_adhes, b_adhes]]
+    for twin in twins:
+        if name == twin[0]:
+            return twin[1].copy()
+    return name.copy()
+
+
+public func signal_layer_colors() -> bytes[]:
+    return [b"#C83434", b"#4D7FC4"]
+
+
+public func inner_layer_colors() -> bytes[]:
+    return [b"#C2C200", b"#C200C2", b"#C2C2C2", b"#00C2C2"]
+
+
+public func signal_color(sig: SignalIndex) -> bytes:
+    mut v = signal_index_int(sig)
+    mut colors = signal_layer_colors()
+    if v < len(colors):
+        return colors[v].copy()
+    mut inner = inner_layer_colors()
+    return inner[(v - 2) % len(inner)].copy()
+
+
+public func stack_color(stack: StackIndex, count: int) -> bytes:
+    mut i = stack_index_int(stack)
+    mut colors = signal_layer_colors()
+    if i == 1:
+        return colors[0].copy()
+    if count > 1 and i == count:
+        return colors[1].copy()
+    mut inner = inner_layer_colors()
+    return inner[max(i - 2, 0) % len(inner)].copy()
+
+
+# Zig's scratch buffer has no surviving alias; return owned bytes directly.
+public func inner_name(stack: StackIndex) -> bytes:
+    return ("In" + str(stack_index_int(stack) - 1) + ".Cu").encode()
+
+
+public func stack_name(stack: StackIndex, count: int) -> bytes:
+    mut i = stack_index_int(stack)
+    if i == 1:
+        return f_cu
+    if count > 1 and i == count:
+        return b_cu
+    return inner_name(stack)
+
+
+public func is_imported_copper_name(name: bytes) -> bool:
+    if strs.eql_ignore_case(name, b"F&B.Cu") or strs.eql_ignore_case(name, b"*.Cu"):
+        return True
+    if not strs.starts_with_ignore_case(name, b"In") or not strs.ends_with_ignore_case(name, b".Cu"):
+        return False
+    mut digits = name[2:len(name) - 3]
+    if len(digits) == 0:
+        return False
+    for c in digits:
+        if not strs.is_digit(c):
+            return False
+    return True
+
+
+public func text_slice(self: Text) -> bytes:
+    return self.bytes[0:self.len]
+
+
+func text_from(s: bytes) -> Text:
+    mut n = min(len(s), 24)
+    return Text(bytes=s[0:n], len=n)
+
+
+public func row_name(self: Row) -> bytes:
+    return text_slice(self.naming.ui)
+
+
+public func row_kicad_name(self: Row) -> bytes:
+    return text_slice(self.naming.kicad)
+
+
+public func row_color(self: Row) -> bytes:
+    return self.naming.color.copy()
+
+
+public func row_gerber_suffix(self: Row) -> bytes:
+    return text_slice(self.gerber.suffix)
+
+
+public func row_gerber_function(self: Row) -> bytes:
+    return text_slice(self.gerber.function)
+
+
+public func row_gerber_polarity(self: Row) -> bytes:
+    return kind_gerber_polarity(self.kind)
+
+
+public func row_is_outer(self: Row, count: int) -> bool:
+    if not kind_is_copper(self.kind):
+        return False
+    mut i = stack_index_int(self.stack)
+    return i == 1 or i == count
+
+
+public func stack_declared_plane_at(self: Stack, stack: StackIndex) -> bytes?:
+    for pl in self.planes:
+        if pl.index == stack_index_int(stack):
+            return Some(pl.net.copy())
+    return None
+
+
+public func stack_stack_count(self: Stack) -> int:
+    if not self.declared:
+        return implicit_copper_layers
+    return min(max(2, self.copper_layers), max_copper_layers)
+
+
+public func stack_signal_count(self: Stack) -> int:
+    if self.copper_layers <= 2:
+        return 2
+    mut n = 2
+    mut idx = 2
+    while idx < self.copper_layers:
+        if stack_declared_plane_at(self, stack_index_of(idx)).is_none():
+            n += 1
+        idx += 1
+    return n
+
+
+public func stack_signal_stack(self: Stack, sig: SignalIndex) -> StackIndex:
+    mut s = signal_index_int(sig)
+    if s == 0:
+        return stack_index_of(1)
+    mut bottom = implicit_copper_layers
+    if self.copper_layers >= 2:
+        bottom = self.copper_layers
+    elif self.copper_layers == 1:
+        bottom = 1
+    if s == 1:
+        return stack_index_of(bottom)
+    mut seen = 2
+    mut idx = 2
+    while idx < self.copper_layers:
+        if stack_declared_plane_at(self, stack_index_of(idx)).is_none():
+            if seen == s:
+                return stack_index_of(idx)
+            seen += 1
+        idx += 1
+    return stack_index_of(bottom)
+
+
+public func stack_signal_name(self: Stack, sig: SignalIndex) -> bytes:
+    mut s = signal_index_int(sig)
+    if s == 0:
+        return f_cu
+    if s == 1:
+        return b_cu
+    return inner_name(stack_signal_stack(self, sig))
+
+
+public func stack_signal_index_of_name(self: Stack, layer_name: bytes) -> SignalIndex?:
+    mut n = stack_signal_count(self)
+    mut s = 0
+    while s < n:
+        mut sig = signal_index_of(s)
+        if strs.eql_ignore_case(stack_signal_name(self, sig), layer_name):
+            return Some(sig)
+        s += 1
+    return None
+
+
+public func stack_name_of_stack(self: Stack, stack: StackIndex) -> bytes:
+    return stack_name(stack, stack_stack_count(self))
+
+
+public func stack_table(self: Stack) -> LayerTable:
+    return build(self)
+
+
+public func layer_table_rows(self: LayerTable) -> Row[]:
+    return self.rows_buf[0:self.len]
+
+
+public func layer_table_tech_rows(self: LayerTable) -> Row[]:
+    return self.rows_buf[self.len:self.len + tech_row_count]
+
+
+public func layer_table_fab_rows(self: LayerTable) -> Row[]:
+    return self.rows_buf[0:self.len + tech_row_count]
+
+
+public func layer_table_stack_count(self: LayerTable) -> int:
+    return self.len
+
+
+public func layer_table_row_at_stack(self: LayerTable, stack: StackIndex) -> Row?:
+    mut i = stack_index_int(stack)
+    if i < 1 or i > self.len:
+        return None
+    return Some(self.rows_buf[i - 1].copy())
+
+
+public func layer_table_row_of_signal(self: LayerTable, sig: SignalIndex) -> Row?:
+    for row in layer_table_rows(self):
+        mut signal = row.signal
+        if signal is not None and signal == sig:
+            return Some(row.copy())
+    return None
+
+
+public func layer_table_name_of_stack(self: LayerTable, stack: StackIndex) -> bytes:
+    return stack_name(stack, self.len)
+
+
+record TechSpec:
+    kind: Kind
+    side: Side?
+    kicad: bytes
+    ui: bytes
+    suffix: bytes
+    function: bytes
+
+
+# The fixed technical table drives both names and fabrication emission order.
+func tech_specs() -> TechSpec[]:
+    return [TechSpec(kind=Kind.mask, side=Some(Side.front), kicad=f_mask, ui=f_mask, suffix=b"F_Mask.gts", function=b"Soldermask,Top"), TechSpec(kind=Kind.mask, side=Some(Side.back), kicad=b_mask, ui=b_mask, suffix=b"B_Mask.gbs", function=b"Soldermask,Bot"), TechSpec(kind=Kind.paste, side=Some(Side.front), kicad=f_paste, ui=f_paste, suffix=b"F_Paste.gtp", function=b"Paste,Top"), TechSpec(kind=Kind.paste, side=Some(Side.back), kicad=b_paste, ui=b_paste, suffix=b"B_Paste.gbp", function=b"Paste,Bot"), TechSpec(kind=Kind.silk, side=Some(Side.front), kicad=f_silks, ui=b"F.Silkscreen", suffix=b"F_Silkscreen.gto", function=b"Legend,Top"), TechSpec(kind=Kind.silk, side=Some(Side.back), kicad=b_silks, ui=b"B.Silkscreen", suffix=b"B_Silkscreen.gbo", function=b"Legend,Bot"), TechSpec(kind=Kind.edge, side=None, kicad=edge_cuts, ui=edge_cuts, suffix=b"Edge_Cuts.gm1", function=b"Profile,NP")]
+
+
+public func build(s: Stack) -> LayerTable:
+    mut count = stack_stack_count(s)
+    mut rows: Row[] = []
+    mut i = 1
+    while i <= count:
+        mut stack = stack_index_of(i)
+        mut carry = plane_carry(s, stack)
+        mut layer_name = text_from(stack_name(stack, count))
+        mut kind = Kind.signal
+        if carry.is_plane:
+            kind = Kind.plane
+        rows.append(Row(stack=stack, signal=signal_of_stack(s, stack), kind=kind, side=copper_side(stack, count), plane_net=carry.net.copy(), naming=Naming(kicad=layer_name.copy(), ui=layer_name.copy(), color=stack_color(stack, count)), gerber=GerberId(suffix=gerber_suffix(stack, count), function=gerber_function(stack, count))))
+        i += 1
+    for spec in tech_specs():
+        rows.append(Row(stack=stack_index_of(1), kind=spec.kind, side=spec.side, naming=Naming(kicad=text_from(spec.kicad), ui=text_from(spec.ui), color=b""), gerber=GerberId(suffix=text_from(spec.suffix), function=text_from(spec.function))))
+    return LayerTable(rows_buf=rows, len=count, stack=s.copy())
+
+
+func copper_side(stack: StackIndex, count: int) -> Side?:
+    mut i = stack_index_int(stack)
+    if i == 1:
+        return Some(Side.front)
+    if count > 1 and i == count:
+        return Some(Side.back)
+    return None
+
+
+record PlaneCarry:
+    is_plane: bool
+    net: bytes?
+
+
+func plane_carry(s: Stack, stack: StackIndex) -> PlaneCarry:
+    if s.declared:
+        mut net = stack_declared_plane_at(s, stack)
+        return PlaneCarry(is_plane=net.is_some(), net=net)
+    mut i = stack_index_int(stack)
+    if i == implicit_ground_stack:
+        return PlaneCarry(is_plane=True, net=None)
+    if i == implicit_rail_stack:
+        return PlaneCarry(is_plane=True, net=s.implicit_rail.copy())
+    return PlaneCarry(is_plane=False, net=None)
+
+
+func signal_of_stack(s: Stack, stack: StackIndex) -> SignalIndex?:
+    mut n = stack_signal_count(s)
+    mut i = 0
+    while i < n:
+        mut sig = signal_index_of(i)
+        if stack_signal_stack(s, sig) == stack:
+            return Some(sig)
+        i += 1
+    return None
+
+
+func gerber_suffix(stack: StackIndex, count: int) -> Text:
+    mut i = stack_index_int(stack)
+    if i == 1:
+        return text_from(b"F_Cu.gtl")
+    if count > 1 and i == count:
+        return text_from(b"B_Cu.gbl")
+    return text_from(("In" + str(i - 1) + "_Cu.g" + str(i)).encode())
+
+
+func gerber_function(stack: StackIndex, count: int) -> Text:
+    mut i = stack_index_int(stack)
+    mut face = "Inr"
+    if i == 1:
+        face = "Top"
+    elif count > 1 and i == count:
+        face = "Bot"
+    return text_from(("Copper,L" + str(i) + "," + face).encode())
+
+
+public func layer_audit_note(mut self: LayerAudit, layer: int, net: bytes):
+    if layer < self.signals:
+        return
+    self.over += 1
+    if self.over == 1 or layer > self.worst:
+        self.worst = layer
+        self.net = net.copy()
+
+
+public func layer_audit_clean(self: LayerAudit) -> bool:
+    return self.over == 0
+
+
+public func layer_set_unrestricted() -> LayerSet:
+    return LayerSet()
+
+
+public func layer_set_from_raw(bits: u64) -> LayerSet:
+    return LayerSet(bits=bits)
+
+
+public func layer_set_raw(self: LayerSet) -> u64:
+    return self.bits
+
+
+public func layer_set_is_unrestricted(self: LayerSet) -> bool:
+    return self.bits == 0u64
+
+
+public func layer_set_contains(self: LayerSet, sig: SignalIndex) -> bool:
+    if layer_set_is_unrestricted(self):
+        return True
+    mut b = signal_index_bit(sig)
+    if b is None:
+        return False
+    return bit_and(self.bits, shift_left(1u64, u64(b))) != 0u64
+
+
+public func layer_set_with(self: LayerSet, sig: SignalIndex) -> LayerSet:
+    mut b = signal_index_bit(sig)
+    if b is None:
+        return self
+    return LayerSet(bits=bit_or(self.bits, shift_left(1u64, u64(b))))

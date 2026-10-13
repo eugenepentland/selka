@@ -1,0 +1,28 @@
+
+# Guest test translated from the `test "..."` block of zig/src/sexpr/sexpr_paren_span.zig.
+import sexpr_paren_span as ps
+
+# `f(x) == Some(v)` is E_OPTION_INFERENCE (see gaps/g16), so compare through a typed parameter.
+func is_some(o: int?, want: int) -> bool:
+    return o == Some(want)
+
+
+# test "matchingClose skips strings and respects the comment dialect"
+public func test_matchingclose_skips_strings_and_respects_the_comment_dialect() -> bool:
+    assert is_some(ps.matching_close(b"(instance \"R1\" (cap \"100nF\"))", 0, ps.Comments.line_semicolon), 28), "plain form"
+    # A paren inside a quoted string must not close the form.
+    mut quoted = b"(model \"models/Part(rev2).step\" (offset 0))"
+    assert is_some(ps.matching_close(quoted, 0, ps.Comments.none), len(quoted) - 1), "quoted paren"
+    assert is_some(ps.end_index(quoted, 0, ps.Comments.none), len(quoted)), "end index"
+    # An escaped quote keeps the scanner inside the string.
+    mut escaped = b"(a \"x\\\")y\" b)"
+    assert is_some(ps.matching_close(escaped, 0, ps.Comments.none), len(escaped) - 1), "escaped quote"
+    # `;` ends a line only where the dialect has line comments.
+    mut commented = b"(a ; ) not a close\n b)"
+    assert is_some(ps.matching_close(commented, 0, ps.Comments.line_semicolon), len(commented) - 1), "line comment"
+    assert is_some(ps.matching_close(commented, 0, ps.Comments.none), 5), "no line comments"
+    # Refusals: not a form, and unterminated.
+    assert ps.matching_close(b"x(a)", 0, ps.Comments.none) is None, "not a form"
+    assert ps.matching_close(b"(a (b)", 0, ps.Comments.none) is None, "unterminated"
+    assert ps.matching_close(b"(a", 3, ps.Comments.none) is None, "open past end"
+    return True

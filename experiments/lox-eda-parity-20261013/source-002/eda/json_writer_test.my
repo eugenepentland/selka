@@ -1,0 +1,45 @@
+
+import json_writer as m
+import byte_builder
+import support_expect as ex
+
+# test "escape quotes and backslashes"
+public func test_escape_quotes_and_backslashes(out: Stream) -> bool:
+    mut w = byte_builder.create()
+    m.write_escaped(mut w, b"he said \"hi\" and \\")
+    return ex.eq_bytes(out, "escaped", byte_builder.finish(w), b"he said \\\"hi\\\" and \\\\")
+
+
+# test "escape control characters"
+public func test_escape_control_characters(out: Stream) -> bool:
+    mut w = byte_builder.create()
+    m.write_escaped(mut w, b"a\x01b\nc")
+    return ex.eq_bytes(out, "escaped", byte_builder.finish(w), b"a\\u0001b\\nc")
+
+
+# test "writeField surrounds value with quotes"
+public func test_writefield_surrounds_value_with_quotes(out: Stream) -> bool:
+    mut w = byte_builder.create()
+    m.write_field(mut w, b"name", b"U1")
+    return ex.eq_bytes(out, "field", byte_builder.finish(w), b"\"name\":\"U1\"")
+
+
+# test "script strings escape closing tags and JavaScript line separators"
+public func test_script_strings_escape_closing_tags_and_javascript_line_separators(out: Stream) -> bool:
+    mut w = byte_builder.create()
+    m.write_script_string(mut w, b"</script>\xe2\x80\xa8\xe2\x80\xa9")
+    return ex.eq_bytes(out, "script", byte_builder.finish(w), b"\"\\u003c/script>\\u2028\\u2029\"")
+
+
+# test "one script-context escaper answers for every page JSON writer"
+public func test_one_script_context_escaper_answers_for_every_page_json_writer(out: Stream) -> bool:
+    mut w = byte_builder.create()
+    m.write_script_string(mut w, b"a<b\"c\\d\te\x01f")
+    return ex.eq_bytes(out, "script", byte_builder.finish(w), b"\"a\\u003cb\\\"c\\\\d\\te\\u0001f\"")
+
+
+# test "the sidecar escaper leaves < alone and still escapes quote, backslash and controls"
+public func test_the_sidecar_escaper_leaves_alone_and_still_escapes_quote_backslash_and_controls(out: Stream) -> bool:
+    mut w = byte_builder.create()
+    m.write_string(mut w, b"a<b\"c\\d\x01e")
+    return ex.eq_bytes(out, "sidecar", byte_builder.finish(w), b"\"a<b\\\"c\\\\d\\u0001e\"")
