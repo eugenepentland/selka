@@ -1,6 +1,10 @@
 Prepared six regression cells: string_split, json_transform and csv_aggregate,
-each small and large. No candidate build or timing request has been submitted.
-Await the coordinator's final integrated installation prefix and compiler hash.
+each small and large. Candidate runtime and counted builds passed using final integrated compiler
+955f311e1dbf65b55f4c148ab03cdcb4881bc5668289aea93336dbfd7985206a
+(source be33ce79b5b58c3e254e73709c9dd7eb97e5a849). Six specs are frozen.
+Original pins and installation files remained unchanged through build/spec
+validation. No timing request has been submitted; await coordinator approval
+after its full verification and application qualification drain.
 
 inputs.json pins all historical common-final-002 specs/results, source/control
 binaries, benchmark inputs/contracts/oracles and existing text benchmark tools.
