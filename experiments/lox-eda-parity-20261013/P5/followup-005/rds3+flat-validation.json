@@ -1,0 +1,15 @@
+{
+  "status": {
+    "zig-fast": {
+      "status": "ok"
+    },
+    "mylang-c2": {
+      "status": "ok"
+    },
+    "mylang-borrow-binds": {
+      "status": "ok"
+    }
+  },
+  "output_oracles_checked": true,
+  "scope": "two-case diagnostic; no full EDA parity claim"
+}

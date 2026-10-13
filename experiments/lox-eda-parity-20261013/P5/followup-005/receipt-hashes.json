@@ -1,0 +1,25 @@
+{
+  "authorization": "coordinator explicit timing release after C1 validation",
+  "bounded_driver_sha256": "f675190d1272087ef6cf0bb72089c782013d5ffd73ebaa5d80564d8013d02cbf",
+  "leases": "CPU8,55s owned-child-group cleanup alarm,outer58;no nested admission",
+  "results": [
+    {
+      "case": "rds3",
+      "ticket": 1459,
+      "receipt_sha256": "adbc7e7a0a42358b787c6f0009f37a8d69ed711912774ddc3c21e11443a07917",
+      "progress_journal_sha256": "7a6541ed781f0983dd03d79d768e1f65dded70cf412bbf267445ea42147194f5",
+      "validation_sha256": "5a7f59465cf7e2aa3cd9dfb9ee761b2656dc1fbd21cc75f76133503106cdea22",
+      "admission_log_sha256": "526edc39fbcf62b833668e298f2862f20cc1164ff8dfbc54c7bc863233ba29b7",
+      "spec_sha256": "a622c1bc241a55207150054ae52a267486df65023d8844f1247ded36fa7afd26"
+    },
+    {
+      "case": "rds3+flat",
+      "ticket": 1460,
+      "receipt_sha256": "72615a4fe615921dd6138ef33feb69b278531eb065080109c4862cb77f4ab795",
+      "progress_journal_sha256": "1561bdd040de2dc3404d9435e19d9db2616835a277df62c229c0ad7359dfb26d",
+      "validation_sha256": "5a7f59465cf7e2aa3cd9dfb9ee761b2656dc1fbd21cc75f76133503106cdea22",
+      "admission_log_sha256": "7dfec61e60ff2a7291777fbcf44dd7448bca296e91425de882476d744a5ec37c",
+      "spec_sha256": "84fc926a45a9878d31c1dbc78bdc8e4585acdc8a93a9c2970beb051665d014a9"
+    }
+  ]
+}

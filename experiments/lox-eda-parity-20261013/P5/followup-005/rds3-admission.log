@@ -1,0 +1,63 @@
+build-slot: FIFO ticket 1459, position 2; earlier timing tickets must run first; waiting (0s so far)
+build-slot: FIFO ticket 1459, position 2; earlier timing tickets must run first; waiting (60s so far)
+build-slot: FIFO ticket 1459, position 2; earlier timing tickets must run first; waiting (120s so far)
+build-slot: FIFO ticket 1459, position 2; earlier timing tickets must run first; waiting (180s so far)
+build-slot: FIFO ticket 1459, position 2; earlier timing tickets must run first; waiting (240s so far)
+build-slot: FIFO ticket 1459, position 2; earlier timing tickets must run first; waiting (300s so far)
+build-slot: timing slot 1, FIFO ticket 1459 after 330s
+{
+  "zig-fast": {
+    "seconds": {
+      "median": 0.054032309,
+      "min": 0.053372454,
+      "max": 0.054550855,
+      "samples": [
+        0.054550855,
+        0.054437825,
+        0.05344882,
+        0.05364601,
+        0.054048931,
+        0.054491223,
+        0.054032309,
+        0.053714963,
+        0.053372454
+      ]
+    }
+  },
+  "mylang-c2": {
+    "seconds": {
+      "median": 0.085226673,
+      "min": 0.085098256,
+      "max": 0.086881575,
+      "samples": [
+        0.085226673,
+        0.085102692,
+        0.085165378,
+        0.085186032,
+        0.085098256,
+        0.085341238,
+        0.085547593,
+        0.086881575,
+        0.086865587
+      ]
+    }
+  },
+  "mylang-borrow-binds": {
+    "seconds": {
+      "median": 0.084917019,
+      "min": 0.083808707,
+      "max": 0.086390378,
+      "samples": [
+        0.084159704,
+        0.084456643,
+        0.085193968,
+        0.083808707,
+        0.08513115,
+        0.085217692,
+        0.084191213,
+        0.086390378,
+        0.084917019
+      ]
+    }
+  }
+}
