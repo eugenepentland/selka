@@ -14,15 +14,11 @@ func main() -> i64:
     return total
 ```
 
-The bounds evaluate once, left to right, before the loop begins. They must have
-the same integer type; generic bounds require `integer`. Empty and reversed
-ranges perform no iterations. The upper endpoint is excluded, so incrementing
-the final iteration never needs to exceed the upper endpoint's representable
-value.
-
-The iteration binding exists only inside the loop body and is read-only. To
-change a value locally, copy it into a `mut` binding. This leaves the next
-iteration and the number of iterations unchanged:
+- The bounds evaluate once, left to right, before the loop, and have the same integer type (generic bounds require
+  `integer`). Empty and reversed ranges run zero times. The upper endpoint is excluded, so the last increment never
+  overflows.
+- The iteration binding exists only inside the body and is read-only. To change a value locally, copy it into a `mut`
+  binding; the iteration count is unchanged.
 
 ```selka
 # doc: expect 5
@@ -35,30 +31,19 @@ func main() -> i64:
     return runs
 ```
 
-Every `for` form has read-only bindings: an `enumerate` position, a collection
-or fixed-array element, `reversed`, `zip` and a destructured pair. Each
-`continue` cleans up the exited scopes and advances the loop. `break` cleans up
-those scopes and exits it. Nested loops receive their own nearest `break` or
-`continue`.
-
-Range loops use the same conservative outer-ownership rules and result
-obligations as while loops. They support owned values; exited resources are released before incrementing. The first iteration
-may never occur, so a range loop alone does not prove a function returns.
-
-This form covers integer ranges. Collection iteration can currently use indices
-with explicit reads; iterator protocols are not implied by this syntax.
+- Every `for` form has read-only bindings: an `enumerate` position, an element, `reversed`, `zip` and a destructured
+  pair. `continue` and `break` clean up the exited scopes; nested loops get their own nearest one.
+- A range loop follows the ownership rules and result obligations of a `while` loop. The first iteration may never occur,
+  so a range loop alone does not prove a function returns.
 
 ## Stepped ranges
 
-`range(start, stop, step)` counts from `start` by `step`, exactly as Python's
-`range` does: upward while below `stop` for a positive step, downward while above
-it for a negative one, so `range(10, 0, -3)` visits 10, 7, 4 and 1. All three
-bounds share one integer type and evaluate once, left to right. The counter
-never steps past the end of its own type — the step that would overflow ends the
-loop instead of trapping, because the value it would produce lies beyond `stop`
-anyway. A literal zero step is `E_RANGE_STEP`, and a zero step computed at run
-time traps `R_ASSERT` with CPython's message `range() arg 3 must not be zero`
-before the first iteration. `list(range(...))` accepts the same three arguments.
+`range(start, stop, step)` counts from `start` by `step`, as Python's `range` does: upward while below `stop` for a
+positive step, downward while above it for a negative one, so `range(10, 0, -3)` visits 10, 7, 4 and 1. All three bounds
+share one integer type and evaluate once, left to right. The step that would overflow ends the loop instead of trapping.
+
+A literal zero step is `E_RANGE_STEP`; a zero step computed at run time traps `R_ASSERT` with
+`range() arg 3 must not be zero` before the first iteration. `list(range(...))` accepts the same three arguments.
 
 ```selka
 # doc: expect 42

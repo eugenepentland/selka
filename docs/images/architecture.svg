@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 884 330" role="img" aria-labelledby="t d" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title id="t">How Selka builds a program</title>
+  <desc id="d">Source modules pass through the front end, the core and zig cc to become a native program. Each stage reads its stored result when the digest of its inputs is unchanged, so an edit redoes the work of one module.</desc>
+  <style>
+    .bg { fill: #f6f8fa; }
+    .box { fill: #ffffff; stroke: #57606a; stroke-width: 1.2; }
+    .data { fill: none; stroke: #57606a; stroke-width: 1.2; stroke-dasharray: 2 3; }
+    .t { fill: #1f2328; font-size: 15px; font-weight: 600; }
+    .s { fill: #57606a; font-size: 12.5px; }
+    .c { fill: #1f2328; font-size: 13px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .ln { stroke: #57606a; stroke-width: 1.2; fill: none; }
+    .ah { fill: #57606a; }
+    .store { fill: #ddf4ff; stroke: #0969da; stroke-width: 1.2; }
+    .st { fill: #0a3069; font-size: 14px; font-weight: 600; }
+    .ss { fill: #0550ae; font-size: 12.5px; }
+    .rl { stroke: #0969da; stroke-width: 1.2; stroke-dasharray: 4 3; fill: none; }
+    .rh { fill: #0969da; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #161b22; }
+      .box { fill: #0d1117; stroke: #8b949e; }
+      .data { stroke: #8b949e; }
+      .t, .c { fill: #e6edf3; }
+      .s { fill: #9198a1; }
+      .ln { stroke: #8b949e; }
+      .ah { fill: #8b949e; }
+      .store { fill: #121d2f; stroke: #58a6ff; }
+      .st { fill: #cae8ff; }
+      .ss { fill: #79c0ff; }
+      .rl { stroke: #58a6ff; }
+      .rh { fill: #58a6ff; }
+    }
+  </style>
+  <rect class="bg" width="884" height="330" rx="10"/>
+
+  <!-- which command runs how much of the pipeline -->
+  <text class="c" x="522" y="22" text-anchor="middle">selka build · run · test</text>
+  <path class="ln" d="M176 38 V30 H868 V38"/>
+  <text class="c" x="264" y="50" text-anchor="middle">selka check · fix</text>
+  <path class="ln" d="M176 64 V57 H352 V64"/>
+
+  <!-- the pipeline -->
+  <rect class="data" x="16" y="72" width="104" height="78" rx="8"/>
+  <text class="t" x="68" y="107" text-anchor="middle">.selka</text>
+  <text class="s" x="68" y="125" text-anchor="middle">modules</text>
+
+  <rect class="box" x="176" y="72" width="176" height="78" rx="8"/>
+  <text class="t" x="264" y="100" text-anchor="middle">Front end</text>
+  <text class="s" x="264" y="119" text-anchor="middle">parse, check types</text>
+  <text class="s" x="264" y="134" text-anchor="middle">and ownership</text>
+
+  <rect class="box" x="408" y="72" width="176" height="78" rx="8"/>
+  <text class="t" x="496" y="100" text-anchor="middle">Core</text>
+  <text class="s" x="496" y="119" text-anchor="middle">plan frees, validate,</text>
+  <text class="s" x="496" y="134" text-anchor="middle">emit LLVM per module</text>
+
+  <rect class="box" x="640" y="72" width="112" height="78" rx="8"/>
+  <text class="t" x="696" y="100" text-anchor="middle">zig cc</text>
+  <text class="s" x="696" y="119" text-anchor="middle">clang, linker,</text>
+  <text class="s" x="696" y="134" text-anchor="middle">C runtime</text>
+
+  <rect class="data" x="796" y="72" width="72" height="78" rx="8"/>
+  <text class="t" x="832" y="107" text-anchor="middle">native</text>
+  <text class="s" x="832" y="125" text-anchor="middle">program</text>
+
+  <!-- data moving right -->
+  <path class="ln" d="M120 111 H168"/><polygon class="ah" points="176,111 167,106.5 167,115.5"/>
+  <path class="ln" d="M352 111 H400"/><polygon class="ah" points="408,111 399,106.5 399,115.5"/>
+  <text class="s" x="380" y="102" text-anchor="middle">checked</text>
+  <text class="s" x="380" y="128" text-anchor="middle">program</text>
+  <path class="ln" d="M584 111 H632"/><polygon class="ah" points="640,111 631,106.5 631,115.5"/>
+  <text class="s" x="612" y="102" text-anchor="middle">LLVM</text>
+  <text class="s" x="612" y="128" text-anchor="middle">text</text>
+  <path class="ln" d="M752 111 H788"/><polygon class="ah" points="796,111 787,106.5 787,115.5"/>
+
+  <!-- the stores each stage reads and writes -->
+  <text class="st" x="16" y="238">Stores</text>
+  <text class="ss" x="16" y="256">keyed by a digest</text>
+  <text class="ss" x="16" y="271">of the inputs</text>
+
+  <rect class="store" x="176" y="214" width="176" height="64" rx="8"/>
+  <text class="st" x="264" y="241" text-anchor="middle">module records</text>
+  <text class="ss" x="264" y="259" text-anchor="middle">types and ownership</text>
+
+  <rect class="store" x="408" y="214" width="176" height="64" rx="8"/>
+  <text class="st" x="496" y="241" text-anchor="middle">stage records</text>
+  <text class="ss" x="496" y="259" text-anchor="middle">Core IR and LLVM text</text>
+
+  <rect class="store" x="640" y="214" width="228" height="64" rx="8"/>
+  <text class="st" x="754" y="241" text-anchor="middle">objects and programs</text>
+  <text class="ss" x="754" y="259" text-anchor="middle">shared by all your projects</text>
+
+  <path class="rl" d="M264 159 V205"/><polygon class="rh" points="264,150 259.5,159 268.5,159"/><polygon class="rh" points="264,214 259.5,205 268.5,205"/>
+  <path class="rl" d="M496 159 V205"/><polygon class="rh" points="496,150 491.5,159 500.5,159"/><polygon class="rh" points="496,214 491.5,205 500.5,205"/>
+  <path class="rl" d="M696 159 V205"/><polygon class="rh" points="696,150 691.5,159 700.5,159"/><polygon class="rh" points="696,214 691.5,205 700.5,205"/>
+  <text class="ss" x="274" y="187">read on a match</text>
+  <text class="ss" x="506" y="187">written on a miss</text>
+
+  <text class="s" x="442" y="309" text-anchor="middle">An edit changes one module's digest, so each stage redoes that module and reads the rest.</text>
+</svg>

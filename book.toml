@@ -3,7 +3,7 @@
 # in the order docs/SUMMARY.md gives; `scripts/check-site-pages.sh` keeps that file equal to the list.
 [book]
 title = "Selka"
-description = "Selka, a statically checked, compiled language with Python-like indentation: the user guides."
+description = "Selka, a compiled language for code that AI agents write and people review: the user guides."
 language = "en"
 src = "docs"
 
@@ -17,6 +17,8 @@ site-url = "/selka/"
 git-repository-url = "https://github.com/eugenepentland/selka"
 edit-url-template = "https://github.com/eugenepentland/selka/edit/main/{path}"
 default-theme = "light"
+# The sidebar is grouped by docs/SUMMARY.md's parts; chapter numbers add nothing to it.
+no-section-label = true
 preferred-dark-theme = "navy"
 # Selka code blocks are highlighted by a small highlight.js grammar (about 60 lines, nothing is fetched).
 additional-js = ["docs-site/selka-highlight.js"]

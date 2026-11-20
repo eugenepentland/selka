@@ -3,7 +3,8 @@
 #
 # 1. docs/SUMMARY.md, the book's table of contents, names exactly the pages `src/user_docs.zig` lists (`selka docs` prints them)
 #    and docs/introduction.md; a guide added to the list without a line in SUMMARY.md would never be published.
-# 2. SITE_DIR has the .html page of each of them, and no file that docs/ holds beside its Markdown (the audits and experiments).
+# 2. SITE_DIR has the .html page of each of them, and no file that docs/ holds beside its Markdown (the audits and experiments),
+#    except the pictures of docs/images/.
 # Prints one line for each fault, then the page count, and exits 1 if there was any.
 #
 # usage: scripts/check-site-pages.sh [SITE_DIR]      (default book, where scripts/build-site.sh writes the site)
@@ -33,7 +34,7 @@ done
 for page in introduction.md $(cat "$listed"); do
     test -f "$site/${page%.md}.html" || fault "$site/${page%.md}.html is missing: the site lacks docs/$page"
 done
-(cd docs && find . -type f ! -name '*.md') | while IFS= read -r file; do
+(cd docs && find . -type f ! -name '*.md' ! -path './images/*') | while IFS= read -r file; do
     test ! -e "$site/$file" || echo "$site/$file is a docs/ file that is not a guide"
 done > "$strays"
 while IFS= read -r line; do

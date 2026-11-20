@@ -1,11 +1,7 @@
 # selka in one page — for Python programmers
 
-selka is statically typed, Python-shaped, and compiles to a native executable.
-Write it like typed Python; the differences that matter are on this page, and
-every example on it runs under `selka doctest`. Read `selka docs card` first: the rules writers
-trip on, one line each, in 6,000 characters. The compiler carries the longer
-guides with it: `selka docs` lists them and `selka docs syntax` (or `io`,
-`errors`, `tests`, `stdlib`, ...) prints one, from any directory.
+selka is statically typed, Python-shaped, and compiles to a native executable. Write it like typed Python. Read
+`selka docs card` first: the rules writers trip on, one line each. `selka docs` lists the longer guides.
 
 ## Commands
 
@@ -19,51 +15,31 @@ selka fmt prog.selka --check            # formatter (--write edits in place; --d
 selka docs primer                    # this page; `selka --help` lists every command
 ```
 
-`run` and `build` make a lean debug build by default: one unit per module, Core's passes, then code generation at
-`-O2` with LLVM's IR passes off (on for a unit of at most 50,000 bytes), so an edit recompiles only what changed. `test` builds the same way at LLVM `-O0`.
-`--debug-o0` gives `run` and `build` the `-O0` build (the cheapest cold build), `--optimize-debug` LLVM `-O2` and
-`--unoptimized` a build with no Core pass. `--release` optimizes the
-whole program as one unit and recompiles all of it after any change. Both keep
-every overflow, cast and bounds check.
-A file argument that is missing, unreadable or a directory is refused by every
-command with `selka COMMAND: cannot read 'PATH': REASON` and exit status 2.
-`run` takes its budgets as `--max-steps N`, `--max-frames N`, `--timeout N` and
-`--max-memory SIZE`, or as `--flag=N`; `test` takes `--max-steps`, `--max-frames` and
-`--max-memory` the same way. Each frame a
-`--max-frames` budget allows reserves 32 KiB of `--max-memory`, and a budget the
-memory cannot hold is refused up front with the memory it needs.
-When `fmt --check` fails, `path:line:column` identifies the first formatting
-difference and the same line says what the formatter wants there (for example
-`line 1 is followed by one blank line, and the formatter wants two blank lines
-between top-level declarations`) and names `selka fmt --write FILE` as the
-repair; `fmt FILE` prints the complete corrected source.
+`run`, `build` and `test` make a lean debug build, so an edit recompiles only what changed. Every build keeps every
+overflow, cast and bounds check.
+
+| Flag | Effect |
+| --- | --- |
+| `--debug-o0` | `run`/`build`: the cheapest cold build |
+| `--optimize-debug` | `run`/`build`: LLVM `-O2` |
+| `--unoptimized` | `run`/`build`: no Core pass |
+| `--release` | optimize the whole program as one unit; any change recompiles all of it |
+| `--max-steps N`, `--max-frames N`, `--max-memory SIZE` | budgets for `run` and `test`; `run` also takes `--timeout N`; `--flag=N` works too |
+
+Each frame a `--max-frames` budget allows reserves 32 KiB of `--max-memory`; a budget the memory cannot hold is refused up
+front. A missing, unreadable or directory file argument is refused with `selka COMMAND: cannot read 'PATH': REASON`, exit
+status 2. A failed `fmt --check` prints `path:line:column`, what the formatter wants and `selka fmt --write FILE`.
 
 ## File layout
 
-- Files need no module header. Their paths determine module names: `calc.selka`
-  is `calc`, and `shared/calc.selka` is `shared.calc` beneath the project root.
+- The path is the module name: `calc.selka` is `calc`, `shared/calc.selka` is `shared.calc`. No header is needed.
   `func main` marks an executable entry.
-- `import util` loads `util.selka` beside the entry; call `util.f(x)`. Only the
-  declarations `util` marks `public` are visible. `check`, `run`, `build` and
-  `test` follow the imports from a module entry by themselves.
-  `check name.selka` also accepts a library without `main`: it checks bodies,
-  effects and public signatures as well as imports, and a file that does declare
-  `main` keeps every check on it. `run` and `build` still need a `main`.
-  `check-module name.selka` does the same but always checks as a library and
-  accepts the same headerless module source.
-- Tests are `public func test_name() -> bool` (return `True` to pass), in the same
-  file as the code or in `name_test.selka` that does `import name` (then only
-  `name`'s `public` declarations are visible). A test may take `out: Stream`
-  and the capabilities `fs: Filesystem`, `clock: Clock`, `entropy: Entropy`,
-  `env: Environment` and `net: Network`; the runner hands each a deterministic
-  stand-in (an empty in-memory filesystem, a simulated clock, ...), never real
-  authority, so I/O code is testable without host files. `selka docs tests`
-  has the table.
-  A `*_test.selka` entry imports its sibling directly; both `test` and `fmt`
-  accept the same headerless form as other modules.
-  Run `selka test name_test.selka` to select sibling tests directly. If
-  `selka test name.selka` selects none, it points out an existing sibling test
-  file; testing the containing directory also discovers it.
+- `import util` loads `util.selka` beside the entry; call `util.f(x)`. Only what `util` marks `public` is visible.
+- `check` also accepts a library without `main`; `run` and `build` need one. `check-module` always checks as a library.
+- Tests are `public func test_name() -> bool` (return `True` to pass), in the same file or in `name_test.selka` that does
+  `import name`. A test may take `out: Stream`, `fs: Filesystem`, `clock: Clock`, `entropy: Entropy`, `env: Environment`
+  and `net: Network`, each a deterministic stand-in. `selka docs tests` has the table. `selka test name.selka` that
+  selects none points at the sibling test file.
 
 ## Program shape and I/O
 
@@ -84,11 +60,9 @@ func main(args: str[], fs: Filesystem, out: Stream, err: Stream) -> int:
     return 0
 ```
 
-- There is no bare `print`: take `out: Stream` / `err: Stream` parameters (only
-  `main` receives them from the runtime; pass them down). `debug(x)` prints to
-  stderr from anywhere, for debugging only.
-- Capabilities (`fs: Filesystem`, `clock: Clock`, `env: Environment`, ...) are
-  parameters of `main`; pass them to the helpers that need them. There is no
+- There is no bare `print`: take `out: Stream` / `err: Stream` parameters (only `main` receives them; pass them down).
+  `debug(x)` prints to stderr from anywhere, for debugging only.
+- Capabilities (`fs`, `clock`, `env`, ...) are parameters of `main`; pass them to the helpers that need them. There is no
   `import sys`, `os`, `re`, `heapq` or `collections`.
 
 ## Types and declarations
@@ -118,32 +92,15 @@ func area(s: Shape) -> float:
             return w * h
 ```
 
-Construct with keywords: `Item(name="a", count=1)`, `Shape.rect(w=2.0, h=3.0)`,
-`Node(value=1, next=None)`. Recursive trees and ASTs use records and unions;
-graphs with identity use pool handles. Loop bindings borrow elements for reading.
-Writing through one (`for it in items: it.count = 0`) is a compile error: update
-the owning collection outside that borrow, or explicitly copy and rebuild the record. Builtin types: `int`, `float`, `bool`, `str`, `bytes`,
-`T[]`, `dict[K, V]` and `set[K]` (structural hashable keys), `T?`
-(`Some(x)` / `None`) and `Result[T, E]` (`Ok(x)` / `Err(e)`).
+Construct with keywords: `Item(name="a", count=1)`, `Shape.rect(w=2.0, h=3.0)`, `Node(value=1, next=None)`. Builtin
+types: `int`, `float`, `bool`, `str`, `bytes`, `T[]`, `dict[K, V]` and `set[K]` (structural hashable keys), `T?`
+(`Some(x)` / `None`) and `Result[T, E]` (`Ok(x)` / `Err(e)`). Graphs with identity use pool handles.
 
-A public declaration can expose only public types. `E_PRIVATE_INTERFACE` on
-a `public record` means one of its fields exposes a private type: mark that
-type `public` too, or keep the enclosing record private. The same rule applies
-through containers and to public function signatures.
+A loop binding borrows its element for reading: `for it in items: it.count = 0` is a compile error. Update the owning
+collection outside the loop.
 
-```selka
-# doc: expect 2
-public record Count:
-    value: int
-
-public record ItemCount:
-    count: Count
-
-func main(out: Stream) -> int:
-    mut item = ItemCount(count=Count(value=2))
-    print(out, item.count.value)
-    return 0
-```
+A public declaration can expose only public types: `E_PRIVATE_INTERFACE` on a `public record` means a field exposes a
+private type, also through containers and in function signatures. Mark that type `public`.
 
 ## Errors: Result, Option and `try`
 
@@ -178,28 +135,11 @@ func main(out: Stream) -> int:
     return 0
 ```
 
-There are no exception handlers. Declare expected errors with `fails`, return
-success with `return`, fail with `fail`, and propagate with `try`: a statement's whole
-value, or a call's argument (`print(out, try total(s))`), never an operand.
-To retain a result for explicit comparison, use a typed declaration such as
-`const expected: Result[int, str] = Ok(3)`.
+There are no exception handlers. Declare expected errors with `fails`, succeed with `return`, fail with `fail`, and
+propagate with `try`: a statement's whole value, or a call's argument (`print(out, try total(s))`), never an operand.
 
-
-A call used as a statement must return unit (`-> Unit`, or no return
-annotation). `E_EXPLICIT_DISCARD_REQUIRED` means a non-unit result was ignored:
-use the value, handle it, or write `_ = expression` to discard it explicitly.
-For a checked result, use `match` or boundary `try` to handle failure.
-
-```selka
-# doc: expect 1
-import lists
-
-func main(out: Stream) -> int:
-    mut values = [10, 20]
-    _ = lists.pop(mut values)                  # pop returns the removed element
-    print(out, len(values))
-    return 0
-```
+A call used as a statement must return unit. `E_EXPLICIT_DISCARD_REQUIRED` means a non-unit result was ignored: use it,
+handle it, or write `_ = expression`.
 
 ## Collections
 
@@ -223,9 +163,8 @@ func main(out: Stream) -> int:
     return 0
 ```
 
-A function that keeps its argument takes it as an `own` parameter and moves it on; the
-caller writes `own x` for a name it is finished with, or passes a fresh value bare. A
-function that only reads takes a plain parameter, and one that returns part of it says
+A function that keeps its argument takes it as an `own` parameter; the caller writes `own x` for a name it is finished
+with, or passes a fresh value bare. A function that only reads takes a plain parameter; one that returns part of it says
 `-> T from p`. Write `copy(x)` only when caller and callee must both keep the value.
 
 ```selka
@@ -249,45 +188,13 @@ func main(out: Stream) -> int:
     return 0
 ```
 
-```selka
-# doc: expect {3, 1, 2} {'a': 1, 'bb': 2} 14 True
-import strings
-
-func main(out: Stream) -> int:
-    mut seen = {3, 1, 2, 3}                  # a set[int]; keeps first-insertion order
-    mut lengths: dict[str, int] = {}
-    for w in ["a", "bb"]:
-        lengths[w] = strings.char_count(w)
-    mut squares = 0
-    for x in [1, 2, 3]:
-        squares += x * x
-    mut has_large = False
-    for x in seen:
-        if x > 2:
-            has_large = True
-            break
-    print(out, seen, lengths, squares, has_large)
-    return 0
-```
-
-- list: bare `append(mut xs, own x)`, `sort(mut xs, key=...)` and `len(xs)`; `lists.pop(mut xs)`,
-  `lists.insert(mut xs, i, own x)` and `lists.contains(xs, x)` need `import lists` (a bare `pop` or `insert` is
-  `E_UNKNOWN_SYMBOL`); slices `xs[a:b]` and nonnegative indexes. Build collected results with
-  typed empty lists and explicit `for` / `if` statements.
-- dict: `d[k]`, `dicts.get(d, k, default)`, `k in d`, `for k, v in dicts.items(d)`
-  (insertion order). Populate dictionaries with assignments inside a loop.
-- set: `{1, 2}`, `seen: set[int] = set()`, `add`, `remove`, `discard`, `in`,
-  `|` `&` `-` `^`, `issubset`. Iteration and printing are in first-insertion
-  order (`set()` when empty); compare `sorted(s)` when the order matters.
-  See [Sets](sets.md).
-- Sorting: `sorted(xs)` and `sort(mut xs, key=key_function)`. Declare a named key
-  function with explicit parameter and return types.
-- `min(a, b)`, `max(xs)`, `abs(n)`, `sum(xs)`, `round(x, n)`, `range(n)`,
-  `range(a, b)` and `range(a, b, step)`;
-  `for i, x in enumerate(xs)` and `for a, b in zip(xs, ys)` unpack in loops.
-- Lambdas, comprehensions and generator arguments are retired. Use named
-  functions, typed accumulators and explicit loops; preserve early exit when
-  replacing an `any` or `all` generator.
+- list: `append(mut xs, own x)`, `sort(mut xs, key=...)` and `len(xs)` are bare; `lists.pop`, `lists.insert` and
+  `lists.contains` need `import lists` (a bare `pop` is `E_UNKNOWN_SYMBOL`). Indexes are nonnegative.
+- dict: `d[k]`, `dicts.get(d, k, default)`, `k in d`, `for k, v in dicts.items(d)` (insertion order).
+- set: `{1, 2}`, `set()`, `add`, `remove`, `discard`, `in`, `|` `&` `-` `^`, `issubset`; iteration follows
+  first-insertion order. See [Sets](sets.md).
+- `sorted(xs)`, `min(a, b)`, `max(xs)`, `abs(n)`, `sum(xs)`, `round(x, n)`, `range(a, b, step)`, `enumerate(xs)` and
+  `zip(xs, ys)`; a `sort` key is a named function with typed parameters.
 
 ## Mutating a parameter: `mut` on both sides
 
@@ -305,32 +212,17 @@ func main(out: Stream) -> int:
     return 0
 ```
 
-A function that writes a list, dict or record parameter declares it `mut`, and
-its callers write `mut arg`. An unused `mut` parameter is accepted. Mutating
-locals needs no marker. A missing or extra call-site marker carries its exact
-fix. Core checks that two `mut` arguments of one call name disjoint places:
-`f(mut a, mut a)` and `f(mut a, mut a[0])` are `E_SINGLE_OWNER_OVERLAP` (M5),
-while different fields of one local or parameter such as `f(mut s.a, mut s.b)` and
-distinct literal list indices such as `f(mut xs[0], mut xs[1])` can be proven
-disjoint. Two fields of one `match mut` payload are disjoint too, as
-`f(mut keys, mut vals)` in `case pairs(keys, vals)`, when the matched place is
-not inside a list element; so are bindings of two nested `match mut` arms. When Core cannot prove dynamic indices or dictionary selections
-disjoint, it refuses the call conservatively with the same code. Fields inside
-one list element are not proven disjoint today: a lent text, list or record field
-beside a `mut` sibling of the same element, `f(xs[0].name, mut xs[0].n)`, is
-`E_SINGLE_OWNER_OVERLAP` (the rule names the element, not the field; the same
-two fields of a local `s` pass, and so does a lent `int`, `bool` or `float`
-field, which is read before the call). Pass the element, `f(mut xs[0])`, and
-let `f` read one field and write the other, or copy the lent field into a local
-first.
+A function that writes a list, dict or record parameter declares it `mut`, and its callers write `mut arg`. Mutating
+locals needs no marker. A missing or extra call-site marker carries its exact fix.
 
-A call in an index can also conflict with its receiver's active borrow (R2):
-`items[selected(mut items)] = 9` is `E_SINGLE_OWNER_OVERLAP`. A simple case can
-carry a [split repair](tooling/fix.md#structured-fixes-in-diagnostics) that saves
-the scalar call result before the update. If the split would reorder another
-effect or an earlier observation, the compiler leaves it for a manual rewrite.
-Ordinary indexed assignment evaluates its assigned value before borrowing the
-target, so `items[0] = selected(mut items)` does not alone create this conflict.
+Two `mut` arguments of one call must name disjoint places, or the call is `E_SINGLE_OWNER_OVERLAP`:
+
+- Refused: `f(mut a, mut a)`, `f(mut a, mut a[0])`, indices Core cannot prove disjoint, and a lent text, list or record
+  field beside a `mut` sibling of one list element, `f(xs[0].name, mut xs[0].n)` (pass `f(mut xs[0])` instead).
+- Accepted: different fields of one local, `f(mut s.a, mut s.b)`; distinct literal indices, `f(mut xs[0], mut xs[1])`.
+
+A call in an index can conflict with its receiver's borrow too: `items[selected(mut items)] = 9` is refused (a simple case
+carries a [split repair](tooling/fix.md#structured-fixes-in-diagnostics)).
 
 ## Stating what code expects and promises
 
@@ -359,28 +251,11 @@ func main() -> int:
     return take_last(mut items) * 10 + len(items) + middle(Range(low=0, high=0))
 ```
 
-- `@requires` is a condition on the arguments, `@ensures` a promise about the result and about `mut` parameters as they
-  stand at return, `@invariant` something always true of a `record` (checked wherever a value is built or changed), and
-  `assert` a fact true at one point in a body. An error the caller cannot be blamed for, such as a missing file, is a `Result`.
-- A broken clause is a trap, exit status 1, in `run`, `test` and `--release` alike: `R_ASSERT`, `R_REQUIRES`, `R_ENSURES`
-  or `R_INVARIANT`. A broken `@requires` names the caller (`broken by the caller main at prog.selka:9:12`).
-- A clause is part of the declaration's interface: `selka list-interfaces` and `selka context` show it, and
-  `selka api-diff` reports a changed one as breaking. A property test (a `test_` function with data parameters) discards a
-  generated input that breaks its own `@requires` or an `@invariant` of a record it takes, instead of failing
-  ([property tests](tooling/guest-tests.md#property-tests)).
-- A condition only observes: it reads the parameters (and `result`, `old(...)`, `self`) and may allocate, but cannot use a
-  capability such as `out` or `fs`, assign, or write through a `mut` marker (`E_CONTRACT_EFFECT`). `old(len(items))` is
-  cheap; a managed value is captured by a written copy, `old(copy(items))`, made at every call.
-- An `@invariant` is checked after every write to a field, `append(mut r.items, x)`, `take(mut r.f)` and
-  `exchange(mut r.f, v)` included, on records with text, bytes or list fields as on any other. So two writes in a row can
-  trap between them: `exchange(mut r.items, new)` swaps a field in one step where `take` and then a store would not, and
-  `r = replace(r, low=low, high=high)` changes two fields at once.
-- `old(...)` may read a field (`old(cursor.pos)`), and a clause may call a function of the module
-  (`@requires(ordered(items))`).
-- A clause is checked at run time unless the compiler proves it can never fail; `selka cost prog.selka --clauses` lists
-  each one as proved, refuted or kept. A function a clause calls runs at every check, so a loop in it is paid per call.
-- There is no loop invariant (write `assert` in or after the loop) and no quantifier (write a function with a loop and
-  call it), and `@ensures` speaks of a successful return only, not of the `fail` path.
+- `@requires` constrains the arguments, `@ensures` promises the result and the `mut` parameters at return, `@invariant`
+  holds for every `record` value, `assert` states a fact at one point. A failure the caller is not to blame for is a
+  `Result`.
+- A broken clause traps with exit status 1: `R_ASSERT`, `R_REQUIRES`, `R_ENSURES` or `R_INVARIANT`. A condition only
+  observes (`E_CONTRACT_EFFECT`). [Contracts](contracts.md) has the rest.
 
 ## Numbers, strings and bytes
 
@@ -395,80 +270,49 @@ func main(out: Stream) -> int:
     return 0
 ```
 
-- `int` is 64-bit and overflow traps; `float` is binary64. Conditions must be
-  `bool`: write `if len(xs) > 0:`, not `if xs:`.
-- Number literals are Python's: `0xFF`, `0o17`, `0b1010`, `1_000`, `.5`, `5.`,
-  `1e-3`, plus an optional width suffix (`0xFFu8`). An unsuffixed integer that
-  fits the declared type needs no suffix, even in `const MASK: u32 = 0xFF00_0000`.
-  A decimal integer takes no leading zero (`0755` is an error, as in Python 3),
-  so write an octal mode `0o755`; there are no imaginary literals (`1j`).
-- `/` is float division even on ints; `//` and `%` are Python's floor forms;
-  `divtrunc` and `remtrunc` truncate like C. There is no `**`: use
-  `math.pow(2.0, 10)` (`import math`, integer exponent). Comparisons chain:
-  `0 < x < 10`.
-- `str(n)`; `parse_int(s)` and `parse_float(s)` return an `Option` (`int(s)` and
-  `float(s)` convert numbers only; on text they are `E_NUMERIC_PARSE`);
-  `ord("a")`, `chr(98)`.
-- Strings: `split`, `splitlines`, `strip`, `join`, `replace`, `find`, `count`,
-  `startswith`, `lower`, `upper`, `isdigit`, `zfill`, `encode`, ... `s[i]` is the
-  octet at byte offset `i`, an `int` (`str` is bytes underneath; see
-  [text](text.md)), and `strings.char_at(s, i)` is the one-scalar `str` at a scalar
-  position. `<` orders strings by code point, and
-  `strings.repeat("ab", 3)` repeats (`"ab" * 3` is `E_REPETITION_REMOVED`, as is
-  `[0] * n`; use `byte_builder.repeat` for bytes and `lists.filled(n, 0)` for a
-  list). f-strings take CPython's format specs (`{x:.2f}`, `{n:>5}`,
-  `{n:,}`, `{n:05d}`, `{x:.1%}`) and print exactly what CPython prints.
-- `round(x, n)` rounds the exact binary value, like C and Python
-  (`round(2.675, 2)` → `2.67`), except that an exact tie rounds away from zero
-  (`round(0.125, 2)` → `0.13`, Python `0.12`; `f"{0.125:.2f}"` is `0.12` in both).
-- Build a large string by collecting pieces in a `str[]` and
-  `strings.join(pieces, "")` (`"".join(pieces)` is `E_METHOD_REMOVED`). For byte-level scanning read with `fs.read_file`: `data[i]`
-  is an `int`, and so is `text[i]` on a `str`: compare either one with `ord` of a
-  one-character literal, as in `data[i] == ord("G")` and `text[i] == ord("G")`.
-  `ord(text[i])` is refused (`ord` takes a `str`). `data[a:b]`
-  is a `bytes` slice, `strings.decode(data)` a `Result[str, ...]`. For a file read line by
-  line see [walking the lines of a file](bytes.md#walking-the-lines-of-a-file).
-
-```selka
-# doc: expect 71 True True a
-import strings
-
-func main(out: Stream) -> int:
-    const text = "Gab"
-    const data = b"Gab"
-    print(out, text[0], text[0] == ord("G"), data[0] == ord("G"), strings.char_at(text, 1))
-    return 0
-```
+- `int` is 64-bit and overflow traps; `float` is binary64. Conditions must be `bool`: `if len(xs) > 0:`, not `if xs:`.
+- Literals are Python's (`0xFF`, `0o17`, `0b1010`, `1_000`, `.5`, `1e-3`) plus an optional width suffix (`0xFFu8`). An
+  unsuffixed integer that fits the declared type needs no suffix. `0755` is an error: write `0o755`. There are no
+  imaginary literals.
+- `/` is float division even on ints; `//` and `%` are Python's floor forms; `divtrunc` and `remtrunc` truncate like C.
+  Comparisons chain: `0 < x < 10`.
+- `str(n)`; `parse_int(s)` and `parse_float(s)` return an `Option` (`int(s)` and `float(s)` on text are
+  `E_NUMERIC_PARSE`); `ord("a")`, `chr(98)`.
+- `s[i]` is the octet at byte offset `i`, an `int` (see [text](text.md)); `strings.char_at(s, i)` is the one-scalar `str`
+  at a scalar position. Compare an octet with `ord` of a one-character literal: `data[i] == ord("G")`. `<` orders strings
+  by code point. f-strings take CPython's format specs (`{x:.2f}`, `{n:>5}`, `{n:,}`, `{n:05d}`, `{x:.1%}`).
+- `round(x, n)` rounds the exact binary value; an exact tie rounds away from zero (`round(0.125, 2)` is `0.13`, Python
+  `0.12`). `data[a:b]` is a `bytes` slice, `strings.decode(data)` a `Result[str, ...]`; see
+  [walking the lines of a file](bytes.md#walking-the-lines-of-a-file).
 
 ## Not available — do this instead
 
 | Python | selka |
 | --- | --- |
 | `x ** n` | `math.pow(x, n)` (`import math`, integer exponent) |
-| `"ab" * 3`, `[0] * n` | `strings.repeat("ab", 3)`, `lists.filled(n, 0)` (`E_REPETITION_REMOVED`) |
-| `x in xs` on a list | `lists.contains(xs, x)` (`E_LIST_MEMBERSHIP_REMOVED`); `in` still works on `str`, `dict`, `set` and `bytes` |
+| `"ab" * 3`, `[0] * n` | `strings.repeat("ab", 3)`, `lists.filled(n, 0)`, `byte_builder.repeat` (`E_REPETITION_REMOVED`) |
+| `"".join(pieces)` | `strings.join(pieces, "")` (`E_METHOD_REMOVED`) |
+| `x in xs` on a list | `lists.contains(xs, x)` (`E_LIST_MEMBERSHIP_REMOVED`); `in` works on `str`, `dict`, `set`, `bytes` |
 | `xs[-1]` | `xs[len(xs) - 1]` (`E_NEGATIVE_INDEX_REMOVED`) |
-| `a if c else b` | an `if` / `else` statement assigning or returning the value (`E_CONDITIONAL_EXPRESSION_REMOVED`) |
-| `[f(x) for x in xs]`, `lambda x: ...` | a typed accumulator with a `for` loop; a named top-level `func` |
+| `a if c else b` | an `if` / `else` statement (`E_CONDITIONAL_EXPRESSION_REMOVED`) |
+| `[f(x) for x in xs]`, `lambda`, generators | a typed accumulator with a `for` loop (keep early exit for `any`/`all`); a named `func` |
 | `(a, b)`, `a, b = b, a` | a `record` with named fields (`E_TUPLE_REMOVED`) |
-| `gen = (x for x in xs)` | build a typed list with an explicit `for` loop |
-| `try:` / `except` | `fails`, prefix `try`, or an explicit result `match` |
-| methods on classes, closures | top-level functions that take the object or state |
-| `heapq`, `re`, `collections` | write the small helper (a binary heap over `int[]`) |
+| `try:` / `except` | `fails`, prefix `try`, or a result `match` |
+| classes with methods, closures | top-level functions that take the object or state |
+| `heapq`, `re`, `collections` | write the helper |
 | `if x:` on a list, str or int | an explicit `bool` expression |
 
 ## Scoping
 
-Use `const` for an immutable local and `mut` for a writable local. Declarations
-belong to their enclosing block, and shadowing an active local or parameter is
-rejected. Ordinary assignment updates a declared writable binding. Declare a
-changing accumulator before a loop or branch if it must remain available afterward.
+`const` is an immutable local, `mut` a writable one. Declarations belong to their enclosing block; shadowing an active
+local or parameter is rejected. Declare an accumulator before the loop or branch that fills it.
 
 ## Where to read more
 
-`selka docs TOPIC` prints each of these from the compiler itself: `syntax` (the
-language guide), `io` (files, streams, capabilities), `text`, `bytes`,
-`modules`, `errors` (Result and Option), `effects`, `contracts` (`@requires`,
-`@ensures`, `@invariant`), `stdlib`, `tests` and `build`. In a large project, `selka context ENTRY.selka --symbol=module::name`
-answers one bounded question about a declaration, and `selka tests-for` and
-`selka test --affected` find the tests an edit reaches.
+`selka docs TOPIC` prints `syntax`, `io`, `text`, `bytes`, `modules`, `errors`, `effects`, `contracts`, `stdlib`, `tests`
+or `build`. In a large project, `selka context ENTRY.selka --symbol=module::name` answers one question about a
+declaration; `selka test --affected` finds the tests an edit reaches.
+
+---
+
+How the compiler does all this: [the internals notes for this page](https://github.com/eugenepentland/selka/blob/main/docs/internals/primer.md).

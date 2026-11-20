@@ -1,8 +1,7 @@
 # Structured loop exits
 
-`break` leaves the nearest enclosing `while` loop. `continue` starts that
-loop's next condition check. Both work in ordinary and generic functions,
-including inside `if`, `match` and `with` blocks.
+`break` leaves the nearest enclosing `while` loop; `continue` starts its next condition check. Both work in ordinary and
+generic functions, inside `if`, `match` and `with` blocks too.
 
 ```selka
 func sum() -> i64:
@@ -18,19 +17,13 @@ func sum() -> i64:
     return total
 ```
 
-Each exit releases the owned values it leaves before jumping. Results created
-inside the iteration must still be handled, transferred, returned, or explicitly
-acknowledged before either exit. Exit statements reject outside loops; statements
-following an unconditional exit in the same block are unreachable errors.
+- Each exit releases the owned values it leaves before jumping. Results created inside the iteration must still be
+  handled, transferred, returned or explicitly acknowledged before either exit.
+- An exit outside a loop is an error, as is a statement after an unconditional exit.
+- Outer ownership is conservative: both exits require the same ownership and partial-move state for bindings that
+  existed before the iteration. Consuming an outer owner just before a `break` is rejected.
+- The condition may be false at the start: a function that can fall through still needs a return after the loop.
 
-Outer ownership is deliberately conservative: both exits require the same
-ownership and partial-move state for bindings that existed before the iteration.
-Consuming an outer owner just before a `break` is currently rejected, even when a
-more precise loop analysis could establish that the owner will not be used again.
-Loop return analysis still permits the condition to be initially false; a return
-after the loop remains necessary when the function could fall through.
+---
 
-Lowering uses the existing checked jumps and local drops, so every
-exit path shares the same cleanup sequence.
-The formatter, source maps, generic checker and duplicate analysis preserve the
-new statements.
+How the compiler does all this: [the internals notes for this page](https://github.com/eugenepentland/selka/blob/main/docs/internals/structured-loop-exits.md).

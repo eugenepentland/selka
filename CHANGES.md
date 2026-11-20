@@ -6,6 +6,16 @@ new compiler moves a project across with no hand edits (roadmap §4.H, requireme
 
 ## Unreleased
 
+### The user guides are half as long, and the README says why Selka exists (lane GH-8.3, 20 November 2026)
+
+Not breaking: no program, diagnostic or output changes, except that `selka docs TOPIC` prints the shorter pages. The 53 guides
+(every `selka docs` topic but `card`) went from about 200,000 words of prose to about 99,000: each keeps its rules, flags, limits,
+diagnostic codes and one example per case, and every heading that something links to. What explains how the compiler does it
+(cache keys, stores, passes, measurements) moved unchanged to `docs/internals/NAME.md`, which the site does not publish; each
+guide ends with a link to its notes. The README, which is also the site's introduction, now opens with why the language was built
+(a fast edit loop, fast programs, code a reviewer can judge from signatures) with the measured figures, a short example and a
+diagram of the compiler (`docs/images/architecture.svg`). The site's sidebar is grouped into five parts.
+
 ## 0.1.1 (20 November 2026)
 
 ### Fixed: a list or option spelling (`T[]`, `T?`) kept its element's source span in a slice of a returned stack frame (lane GH-7.7, 20 November 2026)

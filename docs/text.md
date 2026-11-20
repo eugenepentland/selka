@@ -1,34 +1,12 @@
 # Text and strings
 
-`str` is the language's Unicode text type: an immutable owned value
-with the same runtime shape as the [managed collections](managed-memory.md) and
-the [`bytes`](bytes.md) byte string. This page covers the text surface itself —
-scalar-value indexing, ordering, repetition, the Python string operations as `strings` functions, `f"..."`
-interpolation with format specifications, and the two intrinsics that turn text
-back into numbers. The [`strings` module](standard-library.md#strings) keeps
-explicit helpers such as `pad_left` and `format_float` beside them.
+`str` is Selka's Unicode text type: an immutable owned UTF-8 value (see [managed collections](managed-memory.md) and [`bytes`](bytes.md)). This page covers indexing, ordering, repetition, the `strings` functions, `f"..."` formatting and number parsing. The [`strings` module](standard-library.md#strings) keeps further helpers.
 
 ## Managed Unicode strings
 
-A `str` holds validated UTF-8 and has **octet** positions, not scalar positions:
-`len(text)` counts octets, `text[0]` answers the first octet as an `int`, and
-`text[a:b]` is a **view** of the octets in `[a, b)`. Unicode scalars have their own words
-in the `strings` module
-([below](#text-is-bytes-scalars-have-helpers)). Strings are immutable: there is no `text[i] = c` and no
-`append`, and every operation that produces text — `+`, `split`, `join`, any
-other `strings` function — answers a new string value. Checked ownership controls moves,
-read-only borrows and views; `copy(value)` makes an independent owned string. A
-slice borrows its source instead of copying it, and a store or a return needs
-an explicit copy ([below](#slices-are-views-of-their-source)). A negative index
-or slice endpoint, and an index past the end, traps with `R_TEXT_BOUNDS`. Slice
-endpoints above the length clamp to the length, and a reversed interval
-produces an empty string.
-Use `strings.char_at(text, strings.char_count(text) - 1)` for the last scalar, and
-`text[len(text) - 1]` for the last octet. Constant negative positions report
-`E_NEGATIVE_INDEX_REMOVED` with a certain migration fix where available. Literals accept ordinary escapes, including
-`\u00e9` for `é` ([writing a scalar in a literal](#writing-a-scalar-in-a-literal)), and `str(value)` converts a scalar using Python's spellings, and a list, set,
-dictionary, option, record, result or fixed array as
-[the text of a collection](#the-text-of-a-collection).
+A `str` holds validated UTF-8 and has **octet** positions, not scalar positions. Strings are immutable: no `text[i] = c`, no `append`, and every operation that produces text (`+`, `split`, `join`, any `strings` function) answers a new string. `copy(value)` makes an independent owned string. A slice borrows its source, so a store or a return needs an explicit copy ([slices](#slices-are-views-of-their-source)).
+
+Literals accept the ordinary escapes, `\u00e9` for `é` included ([a scalar in a literal](#writing-a-scalar-in-a-literal)). `str(value)` converts a scalar using Python's spellings and a collection as [the text of a collection](#the-text-of-a-collection).
 
 ```selka
 # doc: expect 42
@@ -66,18 +44,9 @@ func main() -> int:
 
 ## Ordering and repetition
 
-`<`, `<=`, `>` and `>=` order two `str` values by Unicode code point and two
-`bytes` values by octet, lexicographically, with a proper prefix first — exactly
-Python's order, so `"Zebra" < "apple"` (uppercase letters come first) and
-`"é" > "z"`. It is not a locale collation. `str` and `bytes` never compare with
-each other, and no other collection is ordered (`E_TEXT_OPERATOR`).
+`<`, `<=`, `>` and `>=` order `str` by Unicode code point and `bytes` by octet, lexicographically with a proper prefix first, exactly as Python does: `"Zebra" < "apple"`, `"é" > "z"`. It is not a locale collation. `str` and `bytes` never compare with each other, and no other collection is ordered (`E_TEXT_OPERATOR`).
 
-Use `strings.repeat(text, count)` for text and `byte_builder.repeat(data, count)`
-for bytes. A nonpositive count gives an empty value. Use
-`lists.filled(count, value)` to fill a list with one value, or explicit loops to
-repeat the elements of an existing list. These are ordinary calls: arguments
-are evaluated once in source order, and managed elements retain value semantics.
-`selka fix` writes Python's `"-" * width` (or `width * "-"`) as `strings.repeat("-", width)` and adds the import.
+`strings.repeat(text, count)` and `byte_builder.repeat(data, count)` repeat text and bytes (a nonpositive count gives an empty value); `lists.filled(count, value)` fills a list. `selka fix` writes Python's `"-" * width` as `strings.repeat("-", width)` and adds the import.
 
 ```selka
 import lists
@@ -99,49 +68,33 @@ func main() -> int:
 
 ## Text is bytes; scalars have helpers
 
-A `str` is valid UTF-8, and a Unicode scalar (as Python calls a code point) is
-one to four octets wide. Text is **bytes** underneath, so the short spellings
-are byte operations:
+Text is bytes underneath (a Unicode scalar is one to four octets), so the short spellings count octets:
 
-- `len(text)` is its length in octets;
-- `text[i]` is the octet at byte offset `i`, an `int`;
-- `text[a:b]` is a view of the octets in `[a, b)` by byte offset, borrowed from
-  its source rather than copied. An endpoint that falls inside a multi-byte
-  scalar traps `R_TEXT_BOUNDARY`, so a slice of valid text is always valid text;
-  a negative bound traps `R_TEXT_BOUNDS` and an end past the length clamps.
-  A cut at a fixed width (`text[0:WIDTH - 1]`, `kind[0:1]`, `text[at:at + 1]`) passes every test with ASCII texts and traps
-  at the first long character: `strings.cut_octets(text, limit)` ends a cut at a character, `selka lint` reports the shape
-  (`L_TEXT_SLICE_OCTETS`), and the trap's message names the helpers.
+| Spelling | Meaning |
+|---|---|
+| `len(text)` | length in octets |
+| `text[i]` | the octet at byte offset `i`, an `int` |
+| `text[a:b]` | a borrowed view of the octets `[a, b)` |
 
-The scalar reading has its own words in `strings`, and each one measures
-scalars:
+A negative bound or an index past the end traps `R_TEXT_BOUNDS`; a slice end past the length clamps; a reversed interval is empty. An endpoint inside a multi-byte scalar traps `R_TEXT_BOUNDARY` at the call ([trap reports](tooling/native-build.md#trap-reports)), so a slice of valid text is valid text. A constant negative position is `E_NEGATIVE_INDEX_REMOVED` (`selka fix` repairs a certain one). A cut at a fixed width (`text[at:at + 1]`) traps at the first long character: `strings.cut_octets(text, limit)` ends a cut at a character, and `selka lint` reports the shape (`L_TEXT_SLICE_OCTETS`).
 
-- `strings.char_count(text)` — the number of Unicode scalars;
-- `strings.char_at(text, index)` — the one-scalar `str` at a scalar position;
-- `strings.char_slice(text, start, end)` — an owned `str` of the scalars in
-  `[start, end)`; an omitted endpoint is `None`, and the end clamps;
-- `strings.char_stride(text, start, end, step)` — the same, with a step;
-- `strings.chars(text)` — a loop source yielding the one-scalar `str` values in
-  order;
-- `strings.bytes(text)` — a loop source yielding the octets as `int`s; and
-- `lists.stride(values, start, end, step)` — the stepped copy of a list.
+The scalar reading has its own words:
 
-Iterating a `str` directly is an error (`E_TEXT_ITERATION`): its fix writes
-`strings.chars(text)` for scalars or `strings.bytes(text)` for octets. A stepped
-slice is an error too (`E_STEPPED_SLICE_REMOVED`), because a slice is
-contiguous: use the stride helper.
+| Function | Answers |
+|---|---|
+| `strings.char_count(text)` | the number of scalars |
+| `strings.char_at(text, index)` | the one-scalar `str` at a scalar position (the last: `char_count(text) - 1`) |
+| `strings.char_slice(text, start, end)` | an owned `str` of the scalars `[start, end)`; an omitted endpoint is `None`; the end clamps |
+| `strings.char_stride(text, start, end, step)` | the same, stepped |
+| `strings.chars(text)`, `strings.bytes(text)` | loop sources of one-scalar `str`s, and of octets as `int`s |
+| `lists.stride(values, start, end, step)` | the stepped copy of a list |
 
-The search functions (`strings.find`, `rfind`, `text_index`, `text_rindex`, `count`,
-`starts_with`, `ends_with`) take and answer **byte** offsets like every other text position, and
-an endpoint that falls inside a multi-byte scalar traps `R_TEXT_BOUNDARY` at the
-call. `strings.find` and `strings.rfind` have their bodies in the library, so the trap's own site is a line of
-`@stdlib/strings.selka`; the report's first line still names the program's call, and the frame
-`in strings::find at @stdlib/strings.selka:...` follows it as context
-([trap reports](tooling/native-build.md#trap-reports)). When the window and the answer should count scalars, the helpers do it —
-`strings.char_find`, `char_rfind`, `char_index`, `char_rindex`, `char_count_of`,
-`char_startswith` and `char_endswith` measure roles, starts, ends and answers in
-scalars, and their negative-position repair counts `strings.char_count(base)`
-rather than `len(base)`.
+| Python habit | Selka |
+|---|---|
+| `for ch in text:` | `E_TEXT_ITERATION`; `selka fix` writes `strings.chars(text)` or `strings.bytes(text)` |
+| `text[::2]` | `E_STEPPED_SLICE_REMOVED`: use the stride helper |
+
+The search functions (`strings.find`, `rfind`, `text_index`, `text_rindex`, `count`, `starts_with`, `ends_with`) take and answer **byte** offsets; `strings.char_find`, `char_rfind`, `char_index`, `char_rindex`, `char_count_of`, `char_startswith` and `char_endswith` use scalars. A *bounded* search takes optional `start` and `end`: `strings.find(text, needle, start, end)` and `rfind` answer `int?`, `text_index` and `text_rindex` trap when the needle is absent, and `count`, `starts_with` and `ends_with` take the window too. The method spelling `text.find(needle, start, end)` is `E_METHOD_REMOVED`.
 
 ```selka
 # doc: expect 42
@@ -177,10 +130,6 @@ func main() -> int:
     return 42
 ```
 
-Search offsets follow the same split. `strings.find` and `strings.rfind` answer
-octet offsets as `int?`, which is what a byte-shaped scan wants, and the scalar
-helpers answer scalar offsets, which is what a scalar-shaped one wants:
-
 ```selka
 # doc: expect 42
 import strings
@@ -202,69 +151,13 @@ func main() -> int:
     return 42
 ```
 
-A *bounded* search takes the window as the optional `start` and `end` operands of
-the same functions: `strings.find(text, needle, start, end)` and `strings.rfind`
-answer `int?`, `strings.text_index` and `strings.text_rindex` trap when the needle
-is absent, and `strings.count`, `starts_with` and `ends_with` take the window too.
-The method spellings `text.find(needle, start, end)` and the rest are refused
-(`E_METHOD_REMOVED`) and `selka fix` writes the function, with `is None` in place of a
-comparison with `-1`.
-
 ## Slices are views of their source
 
-A slice `text[a:b]` is a **byte-offset view** of its source: it names the octets
-in `[a, b)` without copying them, and it traps when an endpoint cuts a
-multi-byte scalar. A piece of `split(separator)`, `split()` or `splitlines()` is
-a new string holding its own octets, because those operations build a list of
-values. `strings.strip`, `strings.lstrip` and `strings.rstrip` answer a view too:
-the octets between the whitespace they remove, so they allocate nothing. A slice
-does not allocate while only read, so reading a small piece of a large text is
-free.
+A slice `text[a:b]` is a byte-offset view: it names the octets in `[a, b)` without copying them, allocates nothing while only read, and traps when an endpoint cuts a multi-byte scalar. `strings.strip`, `lstrip`, `rstrip` and `char_slice` answer views too; a piece of `split`, `words` or `lines` is a new string. Give owning storage (a record field, a list element, a dictionary key) an explicit copy: it outlives the slice.
 
-```selka
-# doc: expect 42
-import strings
-
-func main() -> int:
-    mut pieces: str[] = []
-    for i in range(10000):
-        append(mut pieces, f"line {i}\n")
-    mut text = strings.join(pieces, "")
-    mut start = 0
-    mut lines = 0
-    while start < strings.char_count(text):
-        mut end = strings.char_find(text, "\n", start)
-        start = end + 1
-        lines += 1
-    mut half = copy(strings.char_slice(text, strings.char_count(text) // 2, None))
-    if lines != 10000 or not strings.starts_with(half, "5055\nline"):
-        return 1
-    return strings.char_count(strings.lines(strings.strip(text))[9999]) - 7 + 40
-```
-
-A text slice is a view of its source. Read it, pass it to a function that
-borrows it, or bind it to a local; give owning storage — a record field, a list
-element, a dictionary key — an explicit copy, because that storage outlives the
-expression that made the slice. A slice **bound to a local**
-(`const piece = text[a:b]`) is a view in every build mode: it allocates
-nothing, so a `@noalloc` helper can slice text, and `len`, printing and the
-scalar helpers read the borrowed octets. Reading it through an owning operation
-— concatenation, a record field, a return — copies then, not
-before. A slice written **at its use** (`len(text[a:b])`) borrows in every
-build mode when the only thing the program does with it is a read the compiler
-can borrow for: a length is one, and so is any read inside a `@noalloc` function
-(where the promise forbids the copy, so a helper call borrows there too). A
-debug build still copies when the use needs an owned value — printing, a
-dictionary insert, a comparison whose helper has no span form — and a release
-build borrows every read-only use. A write that would
-invalidate a live view of mutable text is refused with `E_SLICE_ESCAPES`, which
-names the line of the write and offers reading the view before it, then the
-`copy(value)` repair on the binding. `strings.char_slice` is a view too, of
-the octets that hold the scalars it selects. `E_SLICE_ESCAPES` names the
-`copy(value)` repair when a text slice reaches owning storage without one — and
-the same code names a returned slice that does not borrow the function's single
-borrowable parameter. A `bytes` slice follows the same rule: it is a view, and
-storing it needs `copy(value)`.
+- A slice bound to a local (`const piece = text[a:b]`) is a view in every build mode, so a `@noalloc` helper can slice text; an owning operation (concatenation, a record field, a return) copies then.
+- A write that would invalidate a live view of mutable text is `E_SLICE_ESCAPES`, naming the write and offering the `copy(value)` repair. The same code names a slice that reaches owning storage uncopied, and a returned slice that does not borrow the function's single borrowable parameter.
+- A `bytes` slice is a view too; storing it needs `copy(value)`.
 
 ```selka
 # doc: expect 3
@@ -277,13 +170,7 @@ func main() -> int:
 
 ## Scanning text
 
-A parser walks a string to decide where a token ends and then materializes it.
-When the token is one contiguous span, scan to its end and slice once: for a
-comma-terminated field, `text[start:end]` is the whole copy. When the token needs
-unescaping or other assembly, accumulate its pieces in a `strings.Builder`; each
-`append` takes a borrowed piece, including a one-scalar `text[i]`, and `finish`
-copies the field once. There is no need for a `str[]` of one-character strings
-or a final `join`.
+For a token that is one contiguous span, scan to its end and slice once. For one that needs unescaping, accumulate pieces in a `strings.Builder`: `append` takes a borrowed piece (a one-scalar `text[i]` too) and `finish` copies the field once; no `str[]` of characters or final `join`.
 
 ```selka
 # doc: expect 42
@@ -313,34 +200,11 @@ func main() -> int:
     return 42
 ```
 
-A slice of a list, including `rows[1:]`, is an independent copy of its elements,
-not a view: changing the slice does not change `rows`. A `str` slice is likewise
-an independent string.
-
-Scanning scalar by scalar is convenient for short fields and for text whose
-encoding matters. For a large document whose delimiters are ASCII, the next
-section's byte route avoids scalar indexing altogether: encode once, scan the
-octets, and decode the finished pieces once.
+A list slice (`rows[1:]`) is an independent copy: changing it does not change `rows`.
 
 ## Indexing long text that is not ASCII
 
-A string is stored as UTF-8 and indexed by octet, so `text[i]` is free. The
-scalar reading — `strings.char_at`, `strings.char_slice`, `strings.chars` — is
-what turns a scalar position into an octet offset. On ASCII text the two are the
-same number. On a string that holds any non-ASCII scalar, the runtime finds the
-offset by counting scalars through the octets, 32 at a time, from the start
-(or from the offset of the previous lookup, when the string has one recorded).
-The runtime stops updating these lookup caches before worker threads can borrow
-text. Later reads may reuse existing metadata but do not update it, so uncached
-lookups after worker-pool startup may require a longer read-only walk.
-
-So on long non-ASCII text, a loop that visits scalar after scalar
-(`for ch in strings.chars(text)`, `strings.char_at(text, i)` for each `i`, or
-`strings.char_find(text, sub, start)` with a moving `start`) can cost time that
-grows with the square of the text's length. When the
-input is large and the work is octet-shaped (scanning for ASCII delimiters, as a
-parser does), convert it once with `encode()` and scan the `bytes`, whose indexing
-is always one octet per element:
+`text[i]` is free, but the scalar reading (`char_at`, `char_slice`, `chars`) must find an octet offset. On ASCII text the two are the same number; on a string with any non-ASCII scalar the runtime walks the octets. So on long non-ASCII text a loop that visits scalar after scalar (`for ch in strings.chars(text)`, `strings.char_at(text, i)` for each `i`, `strings.char_find(text, sub, start)` with a moving `start`) can cost time that grows with the square of the length. For large input and octet-shaped work (scanning for ASCII delimiters), convert once with `encode()` and scan the `bytes`:
 
 ```selka
 # doc: expect 42
@@ -376,38 +240,24 @@ func main() -> int:
 
 ## String functions
 
-Text operations are `strings` functions: `strings.zfill`, `strings.find`,
-`strings.rfind`, `strings.text_index`, `strings.text_rindex`, `strings.count`,
-`strings.starts_with`, `strings.ends_with`, `strings.split`, `strings.words` (the
-whitespace split), `strings.join(parts, separator)`, `strings.encode`, the trimming
-functions `strings.strip`, `lstrip` and `rstrip` (with a character set,
-`strip_chars`, `lstrip_chars` and `rstrip_chars`), `strings.upper`, `strings.lower`,
-the three classifications `strings.is_digit`, `is_alpha` and `is_space`,
-`strings.lines` and `strings.replace`; `parse_int(text)` and `parse_float(text)` are
-prelude functions. Most of these were methods once. Every method spelling is refused
-(`E_METHOD_REMOVED`; the last of them, such as `text.zfill(width)`, `text.split()`,
-`sep.join(parts)`, `text.encode()` and `text.parse_int()`, since W13-S5), and `selka
-fix` rewrites each, adding the import.
-None of them
-changes its argument or an alias of it: `strip`, `lstrip` and `rstrip` answer a view of
-the text they keep, and the others a new value. `strings.find` answers `None`
-rather than raising when the needle is absent (`strings.char_find` answers `-1`),
-the three classifications answer
-`False` for empty text, case mapping covers ASCII letters and leaves every other
-scalar alone, and `zfill` keeps a leading sign in front of its padding.
-The search functions require nonnegative positional start/end bounds in byte offsets:
-constant negatives report `E_NEGATIVE_INDEX_REMOVED` and computed negatives trap
-`R_TEXT_BOUNDS`; an endpoint inside a multi-byte scalar traps `R_TEXT_BOUNDARY`
-at the call, and the scalar-window spellings are the `strings.char_*` helpers.
-An omitted bound keeps its default, and a positive start beyond the length
-keeps an invalid search window, including for an empty needle. The trimming functions
-default to Unicode whitespace, and their `_chars` forms take a character set. Empty
-search needles match boundaries; empty split/replace needles trap `R_EMPTY_SEPARATOR`.
-See the [Python text surface](python-text-surface.md) for these exact rules. `ljust`
-and `rjust` are absent; use
-[`strings.pad_left` and `strings.pad_right`](standard-library.md#strings). Apart from
-`find` and `rfind`, which wrap a native offset search, these functions are native code
-over the C runtime's one immutable text representation.
+Text operations are `strings` functions; `parse_int` and `parse_float` are prelude functions.
+
+| Group | Functions |
+|---|---|
+| Search | `find`, `rfind`, `text_index`, `text_rindex`, `count`, `starts_with`, `ends_with` |
+| Split and join | `split`, `words`, `lines`, `join(parts, separator)` |
+| Trim | `strip`, `lstrip`, `rstrip` (Unicode whitespace); `strip_chars`, `lstrip_chars`, `rstrip_chars` (a character set) |
+| Case and class | `upper`, `lower` (ASCII letters only); `is_digit`, `is_alpha`, `is_space` (`False` for empty text) |
+| Other | `zfill` (keeps a leading sign before its padding), `replace`, `encode` |
+
+Every method spelling (`text.zfill(width)`, `text.split()`, `sep.join(parts)`, `text.encode()`) is `E_METHOD_REMOVED`; `selka fix` rewrites each and adds the import. `ljust` and `rjust` are absent: use [`strings.pad_left` and `strings.pad_right`](standard-library.md#strings).
+
+- None changes its argument or an alias of it: `strip`, `lstrip` and `rstrip` answer a view, the others a new value.
+- `strings.find` answers `None` when the needle is absent; `strings.char_find` answers `-1`.
+- Search bounds are nonnegative byte offsets: a constant negative is `E_NEGATIVE_INDEX_REMOVED`, a computed one traps `R_TEXT_BOUNDS`. An omitted bound keeps its default, and a positive start beyond the length keeps an invalid window, an empty needle included.
+- Empty search needles match boundaries; empty split and replace needles trap `R_EMPTY_SEPARATOR`.
+
+The exact rules are in the [Python text surface](python-text-surface.md).
 
 ```selka
 # doc: expect 43
@@ -462,17 +312,7 @@ func main() -> int:
 
 ## Splitting on whitespace
 
-`strings.words(text)` is Python's whitespace split (`text.split()` in Python): it breaks the
-text on runs of the same six ASCII whitespace scalars `strings.is_space` accepts —
-space, tab, line feed, carriage return, vertical tab and form feed — keeps only
-the nonempty pieces and answers `str[]`. Leading, trailing and doubled
-whitespace therefore produce no empty string, and `strings.words("")` is empty.
-`bytes.words(data)` agrees on the octets and answers `bytes[]`.
-`strings.split(text, separator)` keeps its exact-separator meaning: adjacent separators
-still produce empty pieces, an empty needle still traps `R_EMPTY_SEPARATOR`, and
-the separator form still requires its one argument. A call with any other
-argument count is rejected with the callee's rendered signature, and the `split`
-rejection also carries the accepted spelling as an `alternative` note.
+`strings.words(text)` is Python's `text.split()`: it breaks on runs of the six ASCII whitespace scalars `strings.is_space` accepts (space, tab, line feed, carriage return, vertical tab, form feed), keeps the nonempty pieces and answers `str[]`; `strings.words("")` is empty. `bytes.words(data)` does the same on octets and answers `bytes[]`. `strings.split(text, separator)` keeps its exact meaning: adjacent separators give empty pieces, an empty needle traps `R_EMPTY_SEPARATOR`, and it requires its one argument. A wrong argument count is rejected with the callee's signature.
 
 ```selka
 # doc: expect 42
@@ -496,15 +336,7 @@ func main() -> int:
 
 ## Unicode scalar values
 
-`ord(text)` answers the one Unicode scalar value of `text`, and `chr(code)`
-answers the one-scalar text for a scalar value. `ord` of a one-scalar literal
-folds at check time to an `int` constant, so `byte == ord("m")` compiles to an
-immediate comparison with no call and no allocation; any other text is measured
-at run time. Both builtins trap `R_TEXT_SCALAR` rather than answering a partial
-value: `ord` requires exactly one scalar, and `chr` requires a code point in
-`0..0x10FFFF` outside the surrogate range. The [`strings`
-module](standard-library.md#strings) keeps its `Result` forms — `strings.ord` and
-`strings.chr` — for callers that would rather handle the failure.
+`ord(text)` answers the scalar value of a one-scalar text and `chr(code)` the one-scalar text for a scalar value. `ord` of a one-scalar literal folds at check time, so `byte == ord("m")` needs no call. Both trap `R_TEXT_SCALAR` rather than answer a partial value: `ord` needs exactly one scalar, `chr` a code point in `0..0x10FFFF` outside the surrogates. `strings.ord` and `strings.chr` are the `Result` forms.
 
 ```selka
 # doc: expect 42
@@ -533,11 +365,7 @@ func main() -> int:
 
 ### Writing a scalar in a literal
 
-A text literal writes a scalar as `\u` and exactly four hexadecimal digits, `"\u00e9"` for `é`, or as `\U` and exactly eight for a
-scalar above U+FFFF, `"\U0001f600"`. There are no braces: the spelling of Rust and JavaScript, `"\u{fffd}"`, is `E_BYTE_ESCAPE`, and its
-message gives the spelling above. When the braces hold one to four hexadecimal digits, `selka fix` writes the same digits as `\u` and four
-(`"\u{e9}"` becomes `"\u00e9"`); for more digits the escape is written by hand, `"\u{1f600}"` as `"\U0001f600"`. A surrogate
-(`\ud800` to `\udfff`) is not a scalar and is refused.
+`\u` and exactly four hexadecimal digits (`"\u00e9"`), or `\U` and exactly eight above U+FFFF (`"\U0001f600"`). Braces (`"\u{fffd}"`) are `E_BYTE_ESCAPE`; `selka fix` writes one to four digits as `\u` and four, and for more digits you write `\U` by hand. A surrogate (`\ud800` to `\udfff`) is refused.
 
 ```selka
 # doc: expect 6
@@ -546,31 +374,17 @@ func main() -> int:
     return len(smile) + len("\u00e9")
 ```
 
-```selka
-# doc: expect-error E_BYTE_ESCAPE
-func main() -> int:
-    return len("\u{fffd}")
-```
-
 ## Triple-quoted text
 
-`"""..."""` and `'''...'''` write text that spans lines. The text is exactly the bytes between the opening three quotes
-and the closing three, with the escapes of a one-line text decoded and nothing else done to it:
+`"""..."""` and `'''...'''` write text that spans lines: exactly the bytes between the quotes, one-line escapes decoded, nothing else done.
 
-- **Nothing is stripped or dedented.** The line end right after the opening quotes and the one right before the closing quotes are
-  part of the text, and so are every space and tab of an indented line and every blank line. Where the text should have no
-  indentation, write its lines from the first column.
-- **A line end is kept as the file has it**: `\n`, or `\r\n` in a file saved with them.
-- **A quote of either kind needs no escape**, single or doubled. `\"` and `\'` still work, and so do the other escapes of a
-  one-line text (`\n`, `\t`, `\\`, `\xNN`, `\uXXXX`).
-- **A backslash at the end of a line is `E_BYTE_ESCAPE`**: there is no line continuation.
-- **The text ends at the first three quotes of its kind in a row that no backslash escapes.** To end a text in the quote
-  character, escape it (`"""say \"hi\""""`). Four quotes in a row close the text at the first three and leave a stray quote.
-- **A `b` before three quotes is not a triple-quoted byte string**: `b"""x"""` is `b""`, `"x"` and `""`.
-- **The tokens after the closing quotes** are on the line the text ends on and continue it as they would after any other
-  token: `x = """a\nb""" + y`, `if """a\nb""" == y:`, `"""a\nb""".upper()` and a comment after the quotes are read as they
-  look. Until 14 November 2026 the layout pass took such a token for the first of a line of its own, and the line after it
-  was refused with `E_INDENTATION` unless the text stood inside brackets.
+- **Nothing is stripped or dedented.** The line ends next to the quotes and every space, tab and blank line are part of the text; for no indentation write lines from the first column.
+- **A line end is kept as the file has it** (`\n` or `\r\n`).
+- **A quote of either kind needs no escape**; the one-line escapes still work.
+- **A backslash at the end of a line is `E_BYTE_ESCAPE`**: no line continuation.
+- **The text ends at the first three unescaped quotes of its kind.** To end it in the quote character, escape it (`"""say \"hi\""""`); four in a row leave a stray quote.
+- **`b"""x"""` is not a byte string**: it reads as `b""`, `"x"`, `""`.
+- **Tokens after the closing quotes** continue that line (`x = """a\nb""" + y`, `"""a\nb""".upper()`).
 
 ```selka
 # doc: expect 42
@@ -587,62 +401,17 @@ last
     return 42
 ```
 
-```selka
-# doc: expect 42
-func main() -> int:
-    const name = "ada"
-    const text = """first
-second""" + " " + name
-    if """a
-b""" == "a\nb":
-        return len(text) + 26
-    return 0
-```
-
 ## Format strings
 
-An `f"..."` literal interpolates each `{expression}` hole with the same conversion
-`str(value)` performs. Printing or writing one writes its literal pieces and each
-hole's rendering straight to the stream, so a scalar, text or byte hole allocates
-nothing and no pieces are joined; storing one in a `str` fills one exactly-sized
-allocation instead: its literal lengths, its text holes' lengths and each scalar
-rendering's bound. A single piece returns its rendered text directly, so
-`f"{text}"` needs no allocation when `text` is already a `str`. Each hole
-evaluates and renders once from left to right; the implementation does not
-repeatedly copy a growing prefix. A hole holds exactly one ordinary expression — a call,
-an operator, an index, a field, even a nested format string — and is checked in
-its own source position. A hole takes any value `print` can render — a list, a
-dictionary, a record, an enum case, a result, an option or a byte string as well
-as a scalar — and renders it through the very renderer `print` calls, so one
-value has one spelling wherever it is written. `{{` and `}}` write single braces
-(a brace of CSS, JSON or JavaScript in the text is a hole until it is doubled, and a refusal of a hole that reads as
-text, as `f"p { color: red; }"` does, quotes this hole's opening and writes it doubled: ``write `{{ color:` ``; so does a name the
-program lacks in a hole with white space around it or a space after its colon, `f"body { margin: 0 }"`, and a hole of the
-JSON shape `f'{"a": 1}'`; in a generic function too),
-ordinary escapes apply to the literal pieces, and `f""` is empty text. A format string may be
-[triple-quoted](#triple-quoted-format-strings) to span lines. An empty
-hole, an unmatched or unterminated brace, more than one expression in a hole, and
-a value with no rendering — a capability, an open file or a callback — are all
-rejected. A `:` after the expression starts a
-[format specification](#format-specifications). A hole has no `!r` or `!s` conversion
-after the expression: `f"{text!r}"` is `E_TOKEN` at the `!`, and the message says to call
-the function in the hole, `f"{repr(text)}"` or `f"{str(text)}"`, and `selka fix` writes it (a specification after the
-conversion stays: `{n!s:>8}` becomes `{str(n):>8}`). The `f` prefix is Python-surface
-only.
+An `f"..."` literal interpolates each `{expression}` hole with the conversion `str(value)` performs. A hole holds exactly one expression (a call, operator, index, field, even a nested format string) and takes any value `print` can render, through the same renderer, so a value has one spelling wherever it is written. Holes evaluate once, left to right. `{{` and `}}` write single braces, `f""` is empty text, and a `:` after the expression starts a [format specification](#format-specifications). A format string may be [triple-quoted](#triple-quoted-format-strings). The `f` prefix is Python-surface only.
 
-```selka
-# doc: expect-error E_TOKEN
-func main(out: Stream) -> int:
-    const text = "a"
-    print(out, f"{text!r}")
-    return 0
-```
+Rejected: an empty hole, an unmatched or unterminated brace, more than one expression in a hole, a value with no rendering (a capability, an open file, a callback). A brace of CSS, JSON or JavaScript in the text is a hole until doubled; the refusal of one that reads as text (`f"p { color: red; }"`) writes it doubled.
 
-A hole holds an expression, not escaped text, so a quote inside it is never written `\"`: `f"{d[\"k\"]}"` is `E_TOKEN` at the
-backslash, and the message says to write the key in the other kind of quote, `f"{d['k']}"`, or to put the value in a local first
-(`const k = d["k"]`, then `f"{k}"`). A quote of the literal's own kind, written plainly, ends the literal there: `f"{d["k"]}"` is
-`E_FORMAT_STRING` ("unterminated interpolation"), and its message says the quote ended the literal inside the hole and gives the same
-three ways out, the other kind of quote in the hole (`f"{d['k']}"`), the other kind for the literal (`f'{d["k"]}'`), or a local first.
+| Written | Result |
+|---|---|
+| `f"{text!r}"` | `E_TOKEN` at the `!`: no `!r` or `!s`; call the function, `f"{repr(text)}"`. `selka fix` writes it (`{n!s:>8}` becomes `{str(n):>8}`) |
+| `f"{d[\"k\"]}"` | `E_TOKEN` at the backslash: a hole holds an expression, so write the key in the other quote, `f"{d['k']}"`, or use a local |
+| `f"{d["k"]}"` | `E_FORMAT_STRING`: the quote ended the literal; use the other quote in the hole or for the literal (`f'{d["k"]}'`), or a local |
 
 ```selka
 # doc: expect 42
@@ -688,33 +457,12 @@ func main() -> int:
 
 ### The text of a collection
 
-`str(x)` and `repr(x)` take a list, a set, a dictionary, an option, a record, a result or a fixed array, and answer the
-text `print(out, x)` writes for it, without the line end. `print`, `str`, `repr` and a format string's hole write that text
-through one renderer, so the four cannot differ, and a program that reports a list or a record has no helper to write
-(D-F38-1; a record, a result and a fixed array alone are F-38b, the user's decision of 14 November 2026).
+`str(x)` and `repr(x)` take a list, set, dictionary, option, record, result or fixed array and answer the text `print(out, x)` writes, without the line end. `print`, `str`, `repr` and a format hole use one renderer.
 
-- **Which types.** A list, a set, a dictionary, an option, a record, a result or a fixed array, of any depth, whose parts all have a text: integers, `bool`,
-  `float`, `str`, `bytes`, records, enums, tagged enums, options, results, fixed arrays and further collections do.
-  A capability, an open file, an owned resource, a callback or an `extern type` handle has none, so a collection that
-  holds one is refused and the refusal names it (`str of Stream[] is refused: it holds a Stream, which has no text`).
-- **The text.** `[3, 1, 2]`, `[1.5, 2.0]`, `[True, False]`, `{'b': 2, 'a': 1}`, `{5, 1, 3}`, `Some(3)`, `None`,
-  `[Some(3), None]`, `[Point(x=1, y=2)]`, `[Kind.alpha]`, and alone `Point(x=1, y=2)`, `Ok(7)`, `Err('empty')` and `[1, 2, 3]`
-  for a fixed array. An empty list is `[]`, an empty dictionary `{}` and an empty set
-  `set()`. A text or bytes element is quoted and escaped the way `repr` writes it (`['a', "it's", 'x\ny']`, `[b'ab']`),
-  because `print` writes it that way inside a collection. Nesting deeper than 24 levels shows `...`.
-- **A generic record's name.** It is shown as the source writes it, with its type arguments spelled as in source and
-  without their modules: `Pair[int, str](left=1, right='x')`, `Holder[int[]](value=[1, 2])` and `Choice[int].nothing`, where
-  the checked name `Pair<i64,str>` printed until 14 November 2026.
-- **`repr`.** `repr(x)` of a collection is the same text as `str(x)`: its brackets around the `repr` of each element, which
-  is how every element is already written. Only a bare `str` differs between the two (`str("a")` is `a`, `repr("a")`
-  is `'a'`); inside a collection both quote.
-- **Order.** A set and a dictionary are shown in insertion order, the order of the first `add`, `include` or assignment
-  of each element or key: no hash seed and no address decides it, and every build mode and every run shows the same text.
-  Assigning an existing key keeps its place; removing an element and adding it again moves it to the end. Equal sets built
-  in different orders are equal but show different text (`{5, 1, 3}` and `{1, 3, 5}`), so sort the elements first
-  when a program needs one text for one set.
-- **Cost.** One pass over the value: the elements are read in place and not copied, the text is built in one growing
-  buffer, and the result is copied out of it once. The cost grows in step with the length: the text of 100,000 numbers takes milliseconds.
+- **Which types.** Any depth, if every part has a text. A capability, open file, owned resource, callback or `extern type` handle has none; a collection holding one is refused and the refusal names it.
+- **The text** is what `print` writes: `[3, 1, 2]`, `{'b': 2, 'a': 1}`, `{5, 1, 3}`, `Some(3)`, `None`, `Point(x=1, y=2)`, `Ok(7)`; empty is `[]`, `{}`, `set()`. A text or bytes element is quoted as `repr` writes it (`['a', "it's"]`, `[b'ab']`). Nesting deeper than 24 levels shows `...`. A generic record's name is shown as the source writes it: `Pair[int, str](left=1, right='x')`.
+- **`repr`** of a collection is the same text as `str`; a bare `str` differs (`str("a")` is `a`, `repr("a")` is `'a'`).
+- **Order.** A set and a dictionary show insertion order (the first `add`, `include` or assignment of each element or key), in every build mode and run. Assigning an existing key keeps its place; removing and re-adding moves it to the end. Equal sets built in different orders show different text, so sort first when one text is needed.
 
 ```selka
 # doc: expect positions [3, 1, 2]
@@ -731,25 +479,7 @@ func main(out: Stream) -> int:
     return 0
 ```
 
-```selka
-# doc: expect Pair[int, str](left=1, right='x') Holder[int[]](value=[1, 2])
-record Pair[A, B]:
-    left: A
-    right: B
-
-record Holder[T]:
-    value: T
-
-func main(out: Stream) -> int:
-    print(out, Pair[int, str](left=1, right="x"), Holder[int[]](value=[1, 2]))
-    return 0
-```
-
-`str` and `repr` of an enum, a tagged enum or a `bytes` by itself stay refused: the sentence names the type and what
-shows it. `case_name(value)` is an enum's bare case name, and `repr(data)` is the `b'...'` spelling of a `bytes`. A
-format string's hole takes any of them (`f"{value}"` is the text `print` writes), and inside a collection every one of them
-is shown as `print` shows it. An enum-indexed table (`[Kind]int`) is not a fixed array here: `str` and `repr` of one are
-refused, and its hole shows it.
+`str` and `repr` of an enum, a tagged enum or a `bytes` by itself stay refused: `case_name(value)` is an enum's bare case name and `repr(data)` the `b'...'` spelling. A format hole takes any of them, and inside a collection each is shown as `print` shows it. An enum-indexed table (`[Kind]int`) is not a fixed array here: `str` and `repr` of one are refused, and its hole shows it.
 
 ```selka
 # doc: expect Point(x=1, y=2) [Point(x=1, y=2)] Kind.alpha Ok(3) [1, 2]
@@ -774,14 +504,7 @@ func main(out: Stream) -> int:
 
 ### A quote inside the text
 
-Text takes either quote, `'he said "hi"'` or `"it's"`, and a quote of the kind that opened it ends it wherever it
-stands, inside a word too: `'the script's path'` is the text `'the script'`, then the code `s path`, then a quote
-that opens a text of its own. Write such text in the other quotes, or escape the quote: `\'` in single quotes, `\"`
-in double quotes. When a text ended at a quote inside a word, the refusal says so with a note at that quote: the
-quote that never closes is `E_BYTE_LITERAL` ("this quote opens a text that never closes: the single-quoted text before
-it ended at the apostrophe in `script's`"), and the code after it, when its quotes happen to pair up, is `E_SYNTAX`
-with the same explanation. A literal that does not close on its line for any other reason is named for what it is:
-an unterminated text, format string or byte literal.
+A quote of the kind that opened a text ends it wherever it stands, inside a word too: `'the script's path'` is the text `'the script'`, then the code `s path`. Write such text in the other quotes (`"it's"`) or escape the quote (`\'`, `\"`). The quote that never closes is `E_BYTE_LITERAL`, and the code after it, when its quotes pair up, is `E_SYNTAX`; both say the text ended at the apostrophe.
 
 ```selka
 # doc: expect the script's path / the script's path
@@ -793,22 +516,11 @@ func main(out: Stream) -> int:
 
 ### Triple-quoted format strings
 
-`f"""..."""` and `f'''...'''` are format strings that span lines (F-19): markup, SQL or a report with values in it, written as it
-reads. The text is the [triple-quoted text](#triple-quoted-text) of the same source, piece by piece: nothing stripped or
-dedented, every line end, space, tab and blank line kept, a quote of either kind needing no escape, a backslash at a
-line's end refused. A hole is what it is in the one-line form: `{expression}`, `{expression:spec}`, `{{` and `}}`. Three
-rules are new, and each only says what the one-line form already does:
+`f"""..."""` and `f'''...'''` are format strings that span lines (markup, SQL, a report). The text is the [triple-quoted text](#triple-quoted-text) of the same source, and a hole is as in the one-line form. Three rules:
 
-- **A hole closes on the line it opens**, its specification too. A line end inside one is `E_FORMAT_STRING` at its `{`, with
-  a message that says so (a one-line format string has no line end to span, so nothing it accepts changes). Bind a long
-  expression to a local before the literal. A brace of JSON, CSS or JavaScript in the text is a stray hole: write `{{` and `}}`.
-- **The literal ends at the first three unescaped quotes of its kind, wherever the holes stand**, as the plain form does and as a
-  one-line format string ends at its quote without looking at its holes. A hole may hold a text in either single quote
-  (`{row["name"]}`, `{row['name']}`) and a one-line format string, all on its line; it cannot hold three quotes of the
-  literal's own kind, so spell the outer literal with the other kind.
-- **A name, a call or a run-time error in a hole is reported at its own line and column** in the file, by `check`, in a trap's
-  location and in a debug build's line table. An unterminated literal is `E_BYTE_LITERAL` at its opening quotes and names
-  the line it opened on.
+- **A hole closes on the line it opens**, its specification too: a line end inside one is `E_FORMAT_STRING` at its `{`. Bind a long expression to a local first. A brace of JSON, CSS or JavaScript is a stray hole: write `{{` and `}}`.
+- **The literal ends at the first three unescaped quotes of its kind, wherever the holes stand.** A hole may hold a text in either single quote (`{row["name"]}`, `{row['name']}`), not three quotes of the literal's kind.
+- **A name, call or run-time error in a hole is reported at its own line and column.** An unterminated literal is `E_BYTE_LITERAL` at its opening quotes.
 
 ```selka
 # doc: expect 42
@@ -832,39 +544,20 @@ func main() -> int:
 
 ## Format specifications
 
-`f"{value:spec}"` formats a `str`, any integer type or a `float` under CPython's
-format-specification mini-language and answers the text CPython answers, byte
-for byte:
+`f"{value:spec}"` formats a `str`, any integer type or a `float` under CPython's format-specification mini-language and answers the text CPython answers, byte for byte:
 
 ```text
 [[fill]align][sign][z][#][0][width][grouping][.precision][type]
 ```
 
-- **align** `<` left, `>` right, `^` centre, `=` padding after the sign; **fill**
-  is any one character before it. Width and padding count Unicode scalars.
-- **sign** `+`, `-` or a space; **z** turns a negative zero into `0`; **#** adds
-  `0x`/`0o`/`0b` or keeps a decimal point; **0** pads with zeros after the sign.
-- **grouping** `,` or `_` separates thousands (`_` groups hex, octal and binary
-  digits by four), and zero padding extends the groups: `f"{1:08,}"` is `0,000,001`.
-- **type** `d b o x X n` for integers, `e E f F g G %` for floats (an integer
-  under a float type is converted first, as `float(value)` would), `s` for text.
-  With no type a float prints the shortest round-tripping digits.
+- **align** `<` left, `>` right, `^` centre, `=` padding after the sign; **fill** is any one character before it. Width and padding count scalars.
+- **sign** `+`, `-` or a space; **z** turns a negative zero into `0`; **#** adds `0x`/`0o`/`0b` or keeps a decimal point; **0** pads with zeros after the sign.
+- **grouping** `,` or `_` separates thousands (`_` groups hex, octal and binary by four); zero padding extends the groups: `f"{1:08,}"` is `0,000,001`.
+- **type** `d b o x X n` for integers, `e E f F g G %` for floats (an integer under a float type is converted first), `s` for text. With no type a float prints the shortest round-tripping digits.
 
-A float is rounded from its **exact binary value**, ties to even, as CPython does:
-`f"{2.675:.2f}"` is `2.67` because the binary value of 2.675 lies just below the
-half, `f"{0.125:.2f}"` is `0.12` because 0.125 is an exact tie, and
-`f"{-0.001:.2f}"` keeps its sign as `-0.00`. `round(x, n)` rounds the same exact
-value, but breaks an exact tie away from zero, the language's
-[declared `round` rule](python-syntax.md#prelude-builtins): `round(0.125, 2)` is
-`0.13`. `strings.format_float` also rounds ties away from zero, so it agrees with
-`round(x, n)` and differs from `:.nf` only on an exact tie.
+A float is rounded from its exact binary value, ties to even, as CPython does: `f"{2.675:.2f}"` is `2.67` and `f"{0.125:.2f}"` is `0.12`. `round(x, n)` and `strings.format_float` break an exact tie away from zero (the [declared `round` rule](python-syntax.md#prelude-builtins)): `round(0.125, 2)` is `0.13`.
 
-The specification is literal text checked with the program. One the value cannot
-take — a sign on text, a precision on an integer type, `d` on a float, `,` with
-`x` or `n`, a missing precision — is `E_FORMAT_STRING` with CPython's reason, as
-is a `bool` or any value other than a `str`, an integer or a `float`, a width or
-precision above 4095, a nested `{...}` (a computed width) and the `c` type. An
-empty specification, `f"{value:}"`, is the value's ordinary text.
+The specification is checked with the program. `E_FORMAT_STRING`, with CPython's reason: a specification the value cannot take (a sign on text, a precision on an integer type, `d` on a float, `,` with `x` or `n`, a missing precision), a `bool` or other non-`str`, non-integer, non-`float` value, a width or precision above 4095, a nested `{...}` and the `c` type. `f"{value:}"` is the value's ordinary text.
 
 ```selka
 # doc: expect 42
@@ -888,26 +581,9 @@ func main() -> int:
 
 ## Parsing numbers from text
 
-`parse_int(text)` answers `int?` and `parse_float(text)` answers `float?`. The
-language has no exceptions, so text that is not a number produces `None` and the
-caller decides what that means; `match` with `case Some(value)` and `case None`
-is the way to read the answer.
+`parse_int(text)` answers `int?` and `parse_float(text)` `float?`; text that is not a number answers `None`.
 
-Both accept one pinned base-10 grammar, the one Python's own `int()` and
-`float()` accept for base 10: optional surrounding ASCII whitespace, an optional
-`+` or `-` sign, then ASCII decimal digits that may be separated by single `_`
-characters sitting between two digits. `float` additionally accepts a `.`
-fraction, an `e`/`E` exponent with its own optional sign and digits, and the
-case-insensitive spellings `inf`, `infinity` and `nan`. An alternate base such as
-`0x10`, a non-ASCII digit, an interior space, a trailing character, a dangling
-separator and empty text all answer `None`. `int` also answers `None` for a value
-the signed 64-bit range cannot hold, so a valid-looking but oversized literal
-never silently wraps, while `float` is correctly rounded: a magnitude above
-binary64's range answers an infinity and one below it a signed zero.
-
-One compiled grammar serves every build, and one shared table of vectors drives
-the Zig unit test and the native driver, so `selka run` and `selka build`
-cannot disagree about which text is a number or about the value it names.
+Both accept Python's base-10 grammar: optional surrounding ASCII whitespace, an optional `+` or `-`, then ASCII digits that may be separated by single `_` between two digits. `float` also accepts a `.` fraction, an `e`/`E` exponent with its own sign, and `inf`, `infinity`, `nan` in any case. These answer `None`: an alternate base (`0x10`), a non-ASCII digit, an interior space, a trailing character, a dangling separator, empty text, and for `int` a value outside the signed 64-bit range (it never wraps). `float` is correctly rounded: above binary64's range it is an infinity, below it a signed zero.
 
 ```selka
 # doc: expect 8122
@@ -959,4 +635,6 @@ func main() -> int:
     return port_of("8080") + port_of(" 42 ")
 ```
 
-See [Python text surface](python-text-surface.md) for ranged searches, trim character sets and scalar repr.
+---
+
+How the compiler does all this: [the internals notes for this page](https://github.com/eugenepentland/selka/blob/main/docs/internals/text.md).

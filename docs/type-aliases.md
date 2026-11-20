@@ -15,35 +15,21 @@ record Pair[T]:
 type NumberPair = Pair[Count]
 ```
 
-Aliases may target scalars, nominal types, fixed arrays, or concrete generic
-applications. Forward references and alias chains work; cycles and duplicate
-type names reject. Aliases do not have their own type parameters in this version.
-Existing type-expression depth/work budgets bound their expansion.
-
-A value of `Count` is an `i64`, and `NumberPair` has exactly the identity of
-`Pair[i64]`. Aliasing a record preserves that record's nominal identity and
-fields. It does not convert the record to one of its field types.
-Likewise, aliases preserve owned-storage moves and must-handle result obligations.
-Use a `record` declaration when a distinct identity is required.
-
-Alias names work in annotations, constructors, generic arguments and scalar
-constant declarations. An alias does not add new function declarations.
-
-Module export and privacy rules also apply to aliases. Exported aliases must
-have public target types; a public alias cannot expose an otherwise private
-record. Private aliases cannot be named by importing modules. Public signatures
-using a local alias require that alias to be exported, just as other named types
-do. Runtime schemas and native representations use the canonical target type,
-with no wrapper allocation or conversion.
+- An alias may target a scalar, nominal type, fixed array or concrete generic application. Forward references and chains
+  work; cycles and duplicate type names reject. An alias has no type parameters of its own.
+- A value of `Count` is an `i64`, and `NumberPair` is exactly `Pair[i64]`. Aliasing a record keeps its identity and
+  fields. Moves and must-handle result obligations carry through. For a distinct identity, declare a `record`.
+- Alias names work in annotations, constructors, generic arguments and scalar constant declarations.
+- Export and privacy rules apply: a public alias needs a public target, a private alias cannot be named by an importing
+  module, and a public signature that uses a local alias needs it exported. Runtime schemas use the target type, with no
+  wrapper or conversion.
 
 ## Aliasing an enum from another module
 
-A module reaches another module's enum through the import (`tk.Kind`, `tk.Kind.colon`), and a long qualified
-name repeated on every line is the main cost of writing a lexer or a parser over a shared token enum. A
-transparent alias gives it a short name without a from-import (`from tk import Kind` is refused, with this advice in
-the diagnostic): `import tk`, then `type Kind = tk.Kind`. The alias is the enum itself, so `Kind.colon` constructs
-and compares exactly like `tk.Kind.colon`, a `Kind` parameter takes a `tk.Kind` argument, and a pattern names its
-case alone, `case colon:`, as it does for any enum. `import tk as t` shortens the module name instead.
+Another module's enum is reached through the import (`tk.Kind.colon`). An alias gives it a short name without a
+from-import (`from tk import Kind` is refused): `import tk`, then `type Kind = tk.Kind`. The alias is the enum itself,
+so `Kind.colon` constructs and compares like `tk.Kind.colon`, a `Kind` parameter takes a `tk.Kind` argument, and a
+pattern names its case alone, `case colon:`. `import tk as t` shortens the module name instead.
 
 ```selka
 # doc: expect 1 2 True

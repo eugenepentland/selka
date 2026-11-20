@@ -25,7 +25,7 @@ void myl_core_number_text_clear_ascii(myl_block *text) { text->kind &= ~MYL_TEXT
 /* Invalid packed formats or impossible bounded-frame failures are internal errors. */
 _Noreturn void myl_core_number_text_invalid(void) { abort(); }
 
-/* `int(text)` with the pinned grammar (docs/bytes.md): surrounding ASCII
+/* `int(text)` with the pinned grammar (docs/text.md): surrounding ASCII
    whitespace, one optional sign, decimal digits with single `_` separators
    between digits. An overflowing value is None. */
 bool myl_core_span_parse_int(const unsigned char *s, uint64_t len, int64_t *out) {
