@@ -445,6 +445,9 @@ pub const Index = struct {
         callback.* = .{ .syntax = syntax, .arguments = arguments };
         return .{ .callback = callback };
     }
+    /// A prelude template applied to `arguments`, spelled at `span`. The application keeps `arguments` and `sites` as given and
+    /// outlives this call, so both must be in the context's allocator, never a `&.{...}` of runtime values: that is a slice of
+    /// the caller's stack frame (GH-7.7, as GH-7.3 was).
     fn preludeExpression(self: *Index, name: []const u8, arguments: []const Expression, sites: []const Span, span: Span) Error!Expression {
         const application = try self.context.allocator.create(Application);
         application.* = .{ .syntax = .{ .span = span, .name = span, .arguments = sites }, .declaration = self.names.get(name) orelse return error.InternalError, .arguments = arguments };
@@ -461,7 +464,8 @@ pub const Index = struct {
         if (self.syntax.suffixes.get(span)) |suffix| {
             const arguments = try ctx.allocator.alloc(Expression, 1);
             arguments[0] = try self.expression(suffix.base, parameters);
-            return self.preludeExpression(if (suffix.kind == .growable) "list" else "Option", arguments, &.{suffix.base}, span);
+            const sites = try ctx.allocator.dupe(Span, &.{suffix.base});
+            return self.preludeExpression(if (suffix.kind == .growable) "list" else "Option", arguments, sites, span);
         }
         if (self.syntax.callbacks.get(span.start)) |syntax| return self.callbackExpression(syntax, parameters);
         if (self.syntax.tuples.get(span.start)) |syntax| return self.tupleExpression(syntax, parameters);

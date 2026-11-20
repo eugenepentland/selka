@@ -645,3 +645,32 @@ test "a resource as a list, dictionary or set element is refused with the reason
     try t.expectEqualStrings("type argument does not guarantee the nominal template's required operations", refusal.message);
     try t.expectEqualStrings("T", boxed.src.text(refusal.related.?.span));
 }
+
+/// Overwrite the stack below the caller, as the calls a build makes next do (GH-7.7). A slice that points into the
+/// frame of a function that has returned reads these bytes instead of its own.
+noinline fn scribbleStack() u8 {
+    var pad: [65536]u8 = undefined;
+    @memset(&pad, 0xAA);
+    std.mem.doNotOptimizeAway(&pad);
+    return pad[pad.len / 2];
+}
+
+test "a list or option spelling keeps the source span of its element after the stack below the caller is reused" {
+    var compilation = try language.Compilation.init(t.allocator, "suffix.selka",
+        \\record Bag[T]:
+        \\    items: T[]
+        \\    maybe: T?
+    );
+    defer compilation.deinit();
+    var sink: language.diagnostic.Sink = .{ .allocator = compilation.arena.allocator() };
+    var index = try collect(&compilation, &sink);
+    const bag = try named(index, "Bag");
+    const fields = compilation.syntax.?.types.records[0].fields;
+    const items_base = index.syntax.suffixes.get(fields[0].ty).?.base;
+    const maybe_base = index.syntax.suffixes.get(fields[1].ty).?.base;
+    const items = try index.expression(fields[0].ty, bag.parameters);
+    const maybe = try index.expression(fields[1].ty, bag.parameters);
+    _ = scribbleStack();
+    try t.expectEqualSlices(@TypeOf(items_base), &.{items_base}, items.application.syntax.arguments);
+    try t.expectEqualSlices(@TypeOf(maybe_base), &.{maybe_base}, maybe.application.syntax.arguments);
+}

@@ -82,3 +82,4 @@ docs/audits/velocity-implementation/**/*.csv
 docs/audits/velocity-implementation/**/*.log
 docs/audits/velocity-implementation/**/*.txt
 docs/audits/velocity-implementation/**/*.tsv
+/book/

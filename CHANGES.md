@@ -4,7 +4,29 @@ Breaking changes to the language and the standard library, newest first. From th
 port on, each one ships with a certain `selka fix` migration, so running `selka fix` with the
 new compiler moves a project across with no hand edits (roadmap §4.H, requirement R-6).
 
-## Unreleased (after 0.1.0)
+## Unreleased
+
+## 0.1.1 (20 November 2026)
+
+### Fixed: a list or option spelling (`T[]`, `T?`) kept its element's source span in a slice of a returned stack frame (lane GH-7.7, 20 November 2026)
+
+Not breaking: no program, diagnostic text or output changes. The nominal template index recorded the source span of the element of every `T[]` and `T?` as
+a pointer into the stack frame of `Index.expression`, which had already returned, so a later read of that span (the requirement check, the type graph's
+site for a layout diagnostic) saw whatever the next calls had left there. Debug builds happened to keep the slot intact and the spans only fed
+diagnostics, so no test caught it. The span list is now allocated in the template context's allocator, and a Debug test reuses the stack below the caller
+and checks the spans. A search of the compiler's, its tools' and the self-hosted components' Zig sources for the same pattern (a slice of stack storage kept
+past its function) found no other case.
+
+### The user guides are a documentation site at `eugenepentland.github.io/selka` (lane GH-8.1, 20 November 2026)
+
+Not breaking: no program, diagnostic or output changes. `.github/workflows/pages.yml` builds the pages `src/user_docs.zig` lists (the guides
+`selka docs` prints) with mdBook 0.5.4 on every push to `main` and deploys them to GitHub Pages; the README is the introduction, and a link
+to anything that is not a guide goes to that file on GitHub. New: `book.toml`, `docs/SUMMARY.md` (a guide added to the list needs a line in it),
+`docs/introduction.md`, the Selka highlighting in `docs-site/`, and `scripts/build-site.sh`, `scripts/check-site-pages.sh` and
+`scripts/check-site-links.sh`, which build the site and fail on a missing page or a link that reaches no file. The README's links to
+`docs/README.md`, `examples/`, `CONTRIBUTING.md` and `LICENSE` are absolute GitHub links now, and it names the site under "Learn more".
+
+## 0.1.0 (20 November 2026): the first public release, and everything before it
 
 ### The friction harvester is in `tools/friction/` (lane GH-7.5, 19 November 2026)
 

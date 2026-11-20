@@ -7,7 +7,7 @@ borrowed for reads and cleaned up when their owner ends. There is no garbage col
 The compiler is written in Zig, turns a program into LLVM and builds a native executable; an edit recompiles only the
 modules whose text changed. It targets Linux on x86-64, and nothing else yet.
 
-Selka is experimental. This is version 0.1.0, the first public release: the language and its diagnostics change between
+Selka is experimental. This is version 0.1.1: the language and its diagnostics change between
 releases, and a change that breaks working code ships with a `selka fix` migration that rewrites a project across it.
 
 ## Install
@@ -15,12 +15,12 @@ releases, and a change that breaks working code ships with a `selka fix` migrati
 It runs on Linux with glibc 2.31 or later (Debian 11, Ubuntu 20.04, Fedora 32 and newer) on an x86-64 processor with
 AVX2 (the `x86-64-v3` level: most Intel and AMD desktop and laptop processors made since 2015).
 
-Download `selka-0.1.0-x86_64-linux.tar.xz` from the [Releases page](https://github.com/eugenepentland/selka/releases)
+Download `selka-0.1.1-x86_64-linux.tar.xz` from the [Releases page](https://github.com/eugenepentland/selka/releases)
 (its `.sha256` file is beside it), then:
 
 ```sh
-tar -xJf selka-0.1.0-x86_64-linux.tar.xz
-./selka-0.1.0-x86_64-linux/install.sh
+tar -xJf selka-0.1.1-x86_64-linux.tar.xz
+./selka-0.1.1-x86_64-linux/install.sh
 ```
 
 That installs `selka` under `~/.local` (set `PREFIX` to choose another place) and needs nothing else: the download
@@ -62,9 +62,10 @@ public func test_double() -> bool:
 ## Learn more
 
 - `selka docs` lists the guides that ship inside the compiler; `selka docs primer` is a one-page tour for Python
-  programmers and `selka docs card` lists the rules writers trip on. The same pages are in [docs/](docs/README.md).
+  programmers and `selka docs card` lists the rules writers trip on. The same pages are in [docs/][docs-dir].
+- The guides are also online, at <https://eugenepentland.github.io/selka/>.
 - `selka --help` lists the commands. `selka reference --query TERM` looks up a feature or a diagnostic code.
-- [examples/](examples/) holds small programs, from `factorial.selka` to an HTTP server and a project that calls C. One that
+- [examples/][examples-dir] holds small programs, from `factorial.selka` to an HTTP server and a project that calls C. One that
   reads a file through the `Filesystem` it is given:
   `selka run examples/boundary-cli/main.selka -- examples/factorial.selka`.
 - Memory, ownership and the checked rules are in [the ownership guide](docs/ownership-rules.md) and
@@ -72,5 +73,12 @@ public func test_double() -> bool:
 
 ## Contributing
 
-[CONTRIBUTING.md](CONTRIBUTING.md) says how to build the compiler from source, run its tests and what a change should
-carry. Selka is released under the [MIT license](LICENSE).
+[CONTRIBUTING.md][contributing] says how to build the compiler from source, run its tests and what a change should
+carry. Selka is released under the [MIT license][license].
+
+
+<!-- Absolute, because the documentation site includes this page and publishes only the guides. -->
+[docs-dir]: https://github.com/eugenepentland/selka/tree/main/docs
+[examples-dir]: https://github.com/eugenepentland/selka/tree/main/examples
+[contributing]: https://github.com/eugenepentland/selka/blob/main/CONTRIBUTING.md
+[license]: https://github.com/eugenepentland/selka/blob/main/LICENSE

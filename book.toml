@@ -1,0 +1,40 @@
+# The documentation site, https://eugenepentland.github.io/selka/ (lane GH-8.1). `mdbook build` (see CONTRIBUTING.md,
+# "Previewing the documentation site") writes it to `book/`. The pages are the user guides that `src/user_docs.zig` lists,
+# in the order docs/SUMMARY.md gives; `scripts/check-site-pages.sh` keeps that file equal to the list.
+[book]
+title = "Selka"
+description = "Selka, a statically checked, compiled language with Python-like indentation: the user guides."
+language = "en"
+src = "docs"
+
+[build]
+build-dir = "book"
+# A page SUMMARY.md names but the folder lacks is an error, never an empty file.
+create-missing = false
+
+[output.html]
+site-url = "/selka/"
+git-repository-url = "https://github.com/eugenepentland/selka"
+edit-url-template = "https://github.com/eugenepentland/selka/edit/main/{path}"
+default-theme = "light"
+preferred-dark-theme = "navy"
+# Selka code blocks are highlighted by a small highlight.js grammar (about 60 lines, nothing is fetched).
+additional-js = ["docs-site/selka-highlight.js"]
+
+[output.html.playground]
+# The Rust playground and its run buttons are for Rust code; these guides contain none.
+runnable = false
+editable = false
+
+[output.html.search]
+enable = true
+
+[output.html.print]
+# The print page repeats every guide on one page; the site is read in the browser.
+enable = false
+
+# The links the README makes from the repository root name docs/NAME.md; on the site its text sits in introduction.md,
+# so those two guide links reach the page through a redirect (the other README links are absolute GitHub links).
+[output.html.redirect]
+"/docs/ownership-rules.html" = "../ownership-rules.html"
+"/docs/python-syntax.html" = "../python-syntax.html"

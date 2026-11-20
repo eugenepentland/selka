@@ -73,6 +73,13 @@ complete` is the maintainer's complete check: everything `zig build test` runs p
 - [docs/tooling/test-layout.md](docs/tooling/test-layout.md) has the whole matrix, and
   [docs/tooling/compiler-map.md](docs/tooling/compiler-map.md) says where each kind of change and test goes.
 
+## Previewing the documentation site
+
+The user guides in `docs/` (the pages `src/user_docs.zig` lists) are published at <https://eugenepentland.github.io/selka/> by
+`.github/workflows/pages.yml` on every push to `main`. To preview a change, install [mdBook](https://rust-lang.github.io/mdBook/)
+(the workflow pins its version) and run `mdbook serve --open` in the repository root. A guide added to the list needs a line in
+`docs/SUMMARY.md`; `scripts/build-site.sh`, `scripts/check-site-pages.sh` and `scripts/check-site-links.sh` build and check the site.
+
 ## Conventions no tool checks
 
 A review may ask for these, but no build or test fails on them:

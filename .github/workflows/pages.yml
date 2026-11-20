@@ -1,0 +1,69 @@
+name: Pages
+# The documentation site, https://eugenepentland.github.io/selka/: the user guides that `src/user_docs.zig` lists, built by
+# mdBook (book.toml, docs/SUMMARY.md) on every push to main so the site always matches the code. The owner switches the
+# repository's Pages source to "GitHub Actions" once (Settings, Pages); nothing else needs setting up.
+on:
+  push:
+    branches: [main]
+    paths:
+      - book.toml
+      - docs/**
+      - docs-site/**
+      - README.md
+      - src/user_docs.zig
+      - scripts/build-site.sh
+      - scripts/check-site-links.sh
+      - scripts/check-site-pages.sh
+      - .github/workflows/pages.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+# One deploy at a time, and a deploy that has started is finished rather than cancelled by the next push.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+env:
+  # The mdBook release and the SHA-256 of its x86_64-unknown-linux-gnu tarball (GitHub shows the same digest on the release).
+  MDBOOK_VERSION: 0.5.4
+  MDBOOK_SHA256: 3f28de05dafca9d0f2eab99c662116b0e37b89b1d96a08f8f430b9eeae958cd7
+jobs:
+  build:
+    name: Build the site
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Install mdBook ${{ env.MDBOOK_VERSION }} (SHA-256 checked)
+        run: |
+          curl --fail --silent --show-error --location --output mdbook.tar.gz \
+            "https://github.com/rust-lang/mdBook/releases/download/v${MDBOOK_VERSION}/mdbook-v${MDBOOK_VERSION}-x86_64-unknown-linux-gnu.tar.gz"
+          echo "${MDBOOK_SHA256}  mdbook.tar.gz" | sha256sum --check -
+          mkdir -p "$RUNNER_TEMP/mdbook"
+          tar -xzf mdbook.tar.gz -C "$RUNNER_TEMP/mdbook"
+          rm mdbook.tar.gz
+          echo "$RUNNER_TEMP/mdbook" >> "$GITHUB_PATH"
+      - name: mdBook is the version pinned above
+        run: test "$(mdbook --version)" = "mdbook v${MDBOOK_VERSION}"
+      - name: Build the site
+        run: scripts/build-site.sh
+      - name: The site holds the user guides and nothing else
+        run: scripts/check-site-pages.sh
+      - name: Every relative link reaches a file
+        run: scripts/check-site-links.sh
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
+        with:
+          path: book
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1

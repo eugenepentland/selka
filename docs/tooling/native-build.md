@@ -897,7 +897,7 @@ roots through the per-user `native-tests` store; `--shared-cache-dir DIR` or
 the private store and does not relocate these private frontend, executable or report caches. See
 [shared test results](guest-tests.md#reusing-unaffected-results) for eligibility.
 
-**Inputs records.** A cached step reads what its result depends on through an inputs
+<a id="inputs-records"></a>**Inputs records.** A cached step reads what its result depends on through an inputs
 handle (`src/core/inputs.zig`), which writes each input down with what was seen, and
 the record it leaves is served only while every input still matches. There are four
 kinds: a file with its content digest (or a path that was looked for and was absent), a
